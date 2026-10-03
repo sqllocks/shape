@@ -1,4 +1,4 @@
-"""Kerberos keytab sign-in for ``mssql://`` targets (``--auth kerberos --keytab REF --principal P``).
+"""Kerberos keytab sign-in for ``mssql://`` targets: ``--auth kerberos --keytab REF --principal P``.
 
 A SQL Server that takes Windows authentication only cannot be reached with a SQL login or a
 Microsoft Entra token. On Linux and macOS Shape gets a ticket the way a service does: it runs

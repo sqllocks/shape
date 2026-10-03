@@ -8,13 +8,11 @@ from __future__ import annotations
 import threading
 
 import pyarrow as pa
-import pytest
 
 from shape.generation.engine import Engine
 from shape.generation.output import TargetOptions, write_targets
 from shape.generation.schema import GenSchema
 from shape.streaming.emit.tables import _ThreadedWriter
-
 
 DOC = {
     "schema_version": 1,

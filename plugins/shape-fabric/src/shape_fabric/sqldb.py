@@ -594,7 +594,8 @@ class SqlDatabaseWriter:
         committed: list[int],
     ) -> int:
         """Each piece goes into the session temporary table and is merged into the target on the
-        primary key: non-key columns are updated (an identity column never is), the rest inserted."""
+        primary key: non-key columns are updated (an identity column never is), the rest are
+        inserted."""
         db = self.db
         key = list(plan.primary_key)
         updates = [n for n in names if n not in key and n not in plan.identity_columns]

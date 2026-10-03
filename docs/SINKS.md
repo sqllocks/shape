@@ -69,13 +69,78 @@ shape stream retail -t order --to postgresql://me@dbhost/shape --commit-rows 500
 ```
 
 `--write-mode` is `create` (the default: never touches an existing table), `append`, `truncate`
-or `replace`; `--commit-rows N` commits every N rows so readers see rows during the run (a stream
+or `replace` (`mssql://` and `duckdb://` also take `upsert`, below); `--commit-rows N` commits every N rows so readers see rows during the run (a stream
 commits every batch). Tables are created from the schema (types, primary key) with the same type
 mapping as the `sql` script sink. Identifiers are quoted and values are parameters. Passwords are
 never in a URI or on a command line: use the environment (`SHAPE_POSTGRES_PASSWORD`/`PGPASSWORD`,
 `SHAPE_MYSQL_PASSWORD`/`MYSQL_PWD`), a credential object (Entra token for SQL Server), or a
 credential reference. See `docs/plugins/fabric-writers.md` and the README of
 `sqllocks-shape-databases`.
+
+### SQL Server: identity columns, constraints, reruns (`mssql://`)
+
+* **Identity columns.** A generation-schema column with `"identity": true` (an `integer` column of
+  the `sequence` strategy; any other type or strategy is a schema error naming the column) is
+  created as `BIGINT IDENTITY(start, step)` with the sequence's `start` and `step`, and the inserts
+  are wrapped in `SET IDENTITY_INSERT [schema].[table] ON` / `OFF`, so the keys that child foreign
+  keys reference are kept. This is `identity=keep`, the default. `--sink-config mssql.identity=server`
+  (or `?identity=server` in the URI) leaves the column out and lets the server number the rows; it
+  is refused with exit 2 when a foreign key references the column
+  (`identity=server would break the foreign key <child>.<column> -> <table>.<column>`), before
+  anything is written. `shape from-ddl` writes `"identity": true` for `IDENTITY`, `SERIAL`,
+  `BIGSERIAL` and `AUTO_INCREMENT` columns. A schema with no `identity` produces the DDL and
+  scripts it always did. Fabric Warehouse has no identity semantics: it ignores the key.
+* **Constraints.** `--sql-constraints keep|disable` (`generate` and `emit`; the sink option
+  `constraints`, default `keep`). `disable` runs `ALTER TABLE ... NOCHECK CONSTRAINT ALL` on every
+  table the run writes that already exists, loads, then `ALTER TABLE ... WITH CHECK CHECK
+  CONSTRAINT ALL`. When a constraint does not hold the rows stay, the run **exits 1** and names
+  each table and constraint (`dbo.order.FK_order_customer`) and says it was **left disabled**; the
+  other constraints of the table are enabled again. A failed load puts checking back on. A table
+  the run creates has nothing to disable. `write_mode=truncate` on a table that a foreign key
+  references uses `DELETE` (SQL Server refuses `TRUNCATE` there; the delete fails while rows of a
+  child table still point at it), so the identity seed is not reset.
+* **Idempotent reruns.** `--write-mode upsert`: each batch goes into a session temporary table
+  and is merged into the target with `MERGE` on the primary key (non-key columns updated, missing
+  rows inserted; an identity column is never updated). A table without a primary key is refused
+  with exit 2 (`upsert needs a primary key on <table>`), and so is `identity=server` where the
+  identity column is the key. Rerunning the same command (same seed and scale) leaves the same
+  rows, and rerunning after a run killed mid-table (use `--commit-rows`) completes it without
+  duplicates. `upsert` is for `mssql://` and `duckdb://`; PostgreSQL, MySQL and Warehouse refuse it.
+* **Windows authentication from Linux.** `--auth kerberos --keytab REF --principal NAME@REALM`
+  (`docs/plugins/fabric-auth.md`).
+
+### DuckDB (`duckdb://`)
+
+```bash
+shape generate retail --scale small --to duckdb:///out/retail.duckdb
+shape emit retail --to duckdb:///out/retail.duckdb?schema=raw --write-mode append --max-events 10000
+```
+
+`pip install 'sqllocks-shape[duckdb]'` (the `sqllocks-shape-databases[duckdb]` extra; DuckDB is
+never a core dependency). `duckdb:///PATH.duckdb` is relative to the working directory and
+`duckdb:////abs/path.duckdb` absolute; `?schema=main` names the DuckDB schema (created when
+missing). Arrow batches are scanned by DuckDB directly, with no per-row conversion. Tables are
+created from the schema:
+
+| Arrow type | DuckDB column |
+|---|---|
+| bool | `BOOLEAN` |
+| int8 / 16 / 32 / 64, uint8 / 16 / 32 / 64 | `TINYINT` / `SMALLINT` / `INTEGER` / `BIGINT`, `UTINYINT` / `USMALLINT` / `UINTEGER` / `UBIGINT` |
+| float32 / float64 | `FLOAT` / `DOUBLE` |
+| decimal128(p, s) | `DECIMAL(p,s)` |
+| string (large, dictionary) | `VARCHAR`; `UUID` for a column typed `uuid` in the schema |
+| binary | `BLOB` |
+| date, time | `DATE`, `TIME` |
+| timestamp (no zone, µs / ns / ms / s) | `TIMESTAMP` / `TIMESTAMP_NS` / `TIMESTAMP_MS` / `TIMESTAMP_S` |
+| timestamp with a zone | `TIMESTAMPTZ` |
+
+The schema's primary key is a `PRIMARY KEY`. A type DuckDB cannot hold (nested values, durations)
+is refused with the column named. `--write-mode` takes `create` (default), `append`, `truncate`,
+`replace` and `upsert` (`INSERT OR REPLACE` on the primary key; without one:
+`upsert needs a primary key on <table>`, exit 2). One table is one transaction; `--commit-rows N`
+commits every N rows so another connection sees them. A database file locked by another process is
+exit 2 with DuckDB's message. Reading the tables back gives the same `shape.repro.dataset_id` as
+the generated tables.
 
 ## Secrets
 
@@ -84,8 +149,8 @@ A secret is never a command-line value (it would be in the process list and the 
 must be a **credential reference** (`env://NAME`, `file://PATH` (mode 600), `kv://VAULT/NAME`); a
 literal is refused. Errors and logs never contain a password, key, token or SAS signature.
 
-`--auth cli|msi|spn|sql|device-code|fabric`, `--tenant-id`, `--client-id`, `--client-secret REF`,
-`--sql-user`, `--sql-password REF` and `--connection-string STR|REF` (the same options as
+`--auth cli|msi|spn|sql|device-code|fabric|kerberos`, `--tenant-id`, `--client-id`, `--client-secret REF`,
+`--sql-user`, `--sql-password REF`, `--keytab REF`, `--principal NAME@REALM` and `--connection-string STR|REF` (the same options as
 `shape emit` to Fabric, `docs/plugins/fabric-auth.md`) sign in to `abfss://`, `delta+abfss://`,
 `mssql://` and `warehouse://` targets of `shape generate --to` and `shape emit/stream --to`;
 `--auth sql` needs `--connection-string`. PostgreSQL and MySQL sign in with their password

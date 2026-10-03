@@ -1,5 +1,5 @@
-"""W2-10 item 1: ``--auth kerberos`` (keytab sign-in) for ``mssql://`` targets, with a fake ``kinit``
-on ``PATH`` and the in-repo fake SQL Server.
+"""W2-10 item 1: ``--auth kerberos`` (keytab sign-in) for ``mssql://`` targets, with a fake
+``kinit`` on ``PATH`` and the in-repo fake SQL Server.
 
 What every test ends up checking: the credential cache is private and gone when the command ends
 (also after an error), ``KRB5CCNAME`` is set only while a connection is opened, and the keytab bytes
@@ -39,12 +39,13 @@ KINIT = textwrap.dedent(
     args = sys.argv[1:]
     log = os.environ["FAKE_KINIT_LOG"]
     keytab = args[args.index("-t") + 1] if "-t" in args else None
+    present = bool(keytab and os.path.exists(keytab))
     entry = {{
         "args": args,
         "krb5ccname": os.environ.get("KRB5CCNAME"),
-        "keytab_exists": bool(keytab and os.path.exists(keytab)),
-        "keytab_mode": oct(os.stat(keytab).st_mode & 0o777) if keytab and os.path.exists(keytab) else None,
-        "keytab_bytes": open(keytab, "rb").read().hex() if keytab and os.path.exists(keytab) else None,
+        "keytab_exists": present,
+        "keytab_mode": oct(os.stat(keytab).st_mode & 0o777) if present else None,
+        "keytab_bytes": open(keytab, "rb").read().hex() if present else None,
     }}
     with open(log, "a") as fh:
         fh.write(json.dumps(entry) + "\\n")

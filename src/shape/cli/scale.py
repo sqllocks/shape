@@ -147,7 +147,7 @@ def build_request(a: argparse.Namespace) -> dict[str, Any]:
     settings = auth.settings_from_args(a)
     if settings and settings.get("mode") == "kerberos":
         raise ValueError(
-            "--auth kerberos signs in to an mssql:// target (shape generate --to, shape emit/stream "
+            "--auth kerberos signs in to an mssql:// target (generate --to, emit/stream "
             "--to), not a --scale-mode job"
         )
     if settings:

@@ -1,6 +1,7 @@
 """W2-10 items 2 to 4 on the writer and the ``sqlserver`` sink, against the in-repo fake server:
 identity columns (``identity=keep|server``), constraint toggling (``constraints=keep|disable``) and
-idempotent reruns (``write_mode=upsert``). The command-line side is in ``test_sql_write_path_cli.py``.
+idempotent reruns (``write_mode=upsert``). The command-line side is in
+``test_sql_write_path_cli.py``.
 """
 
 from __future__ import annotations

@@ -386,9 +386,9 @@ def test_upsert_with_a_composite_key(db):
 # --- transactions ------------------------------------------------------------------------
 
 
-def failing_after(first_batches, error=RuntimeError("source died")):
+def failing_after(first_batches):
     yield from first_batches
-    raise error
+    raise RuntimeError("source died")
 
 
 def test_one_table_is_one_transaction_a_failure_leaves_nothing(db):

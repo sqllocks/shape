@@ -130,9 +130,7 @@ CREATE TABLE my_t (
 @pytest.mark.parametrize("smart", [True, False])
 def test_from_ddl_writes_identity_for_identity_serial_and_auto_increment(smart):
     schema, _ = from_ddl(DDL, smart=smart)
-    got = {
-        (t.name, c.name): c.identity for t in schema.tables.values() for c in t.columns.values()
-    }
+    got = {(t.name, c.name): c.identity for t in schema.tables.values() for c in t.columns.values()}
     assert got[("customer", "customer_id")] is True
     assert got[("pg_t", "pg_id")] is True and got[("pg_t", "big_id")] is True
     assert got[("my_t", "my_id")] is True

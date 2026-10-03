@@ -5,7 +5,6 @@ not hold after a load)."""
 
 from __future__ import annotations
 
-import copy
 import json
 
 import pytest
@@ -61,7 +60,10 @@ def doc(identity=True, rows=None):
                 "child_columns": ["customer_id"],
             }
         ],
-        "generation": {"scale": "small", "scales": {"small": rows or {"customer": 20, "order": 60}}},
+        "generation": {
+            "scale": "small",
+            "scales": {"small": rows or {"customer": 20, "order": 60}},
+        },
     }
 
 
@@ -102,7 +104,13 @@ def statements(server, prefix):
 def test_generate_creates_the_identity_column_and_keeps_the_keys_children_reference(world):
     code, _, err = world.run("generate", world.schema(), "--to", URI, "--seed", 3)
     assert code == 0, err
-    assert "[customer_id] BIGINT IDENTITY(1000, 5) NOT NULL" in statements(world.server, "CREATE TABLE [dbo].[customer]")[0].replace("    ", "").replace("\n", " ") or True
+    assert (
+        "[customer_id] BIGINT IDENTITY(1000, 5) NOT NULL"
+        in statements(world.server, "CREATE TABLE [dbo].[customer]")[0]
+        .replace("    ", "")
+        .replace("\n", " ")
+        or True
+    )
     create = " ".join(statements(world.server, "CREATE TABLE [dbo].[customer]")[0].split())
     assert "[customer_id] BIGINT IDENTITY(1000, 5) NOT NULL" in create
     parents = [r[0] for r in world.rows("customer")]
@@ -154,7 +162,9 @@ def test_identity_server_without_a_referencing_key_lets_the_server_number_the_ro
         "generate", path, "--to", URI, "--sink-config", "mssql.identity=server"
     )
     assert code == 0, err
-    assert [r[0] for r in world.rows("customer")] == [1000 + 5 * i for i in range(12)]  # server seed/step
+    assert [r[0] for r in world.rows("customer")] == [
+        1000 + 5 * i for i in range(12)
+    ]  # server seed/step
     assert not statements(world.server, "SET IDENTITY_INSERT")
     assert all("[customer_id]" not in s for s in statements(world.server, "INSERT INTO"))
 
@@ -168,9 +178,7 @@ def test_a_bad_identity_value_is_exit_2(world):
 
 
 def test_emit_to_mssql_keeps_the_identity_values(world):
-    code, _, err = world.run(
-        "emit", world.schema(), "--to", URI, "--max-events", 40, "--seed", 3
-    )
+    code, _, err = world.run("emit", world.schema(), "--to", URI, "--max-events", 40, "--seed", 3)
     assert code == 0, err
     parents = {r[0] for r in world.rows("customer")}
     assert parents <= {1000 + 5 * i for i in range(20)} and parents
@@ -196,7 +204,9 @@ def precreate(world, **flags):
     assert world.run("generate", world.schema(), "--to", URI, "--seed", 3)[0] == 0
     for table in ("order", "customer"):
         world.server.tables[("dbo", table)].rows.clear()
-    world.server.add_check(("dbo", "order"), "CK_order_customer_small", lambda r: r["customer_id"] < 1020)
+    world.server.add_check(
+        ("dbo", "order"), "CK_order_customer_small", lambda r: r["customer_id"] < 1020
+    )
 
 
 def test_without_disable_a_violating_row_stops_the_load_with_exit_2(world):

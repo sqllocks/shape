@@ -107,7 +107,7 @@ class Column:
     precision: int | None = None
     scale: int | None = None
     #: A database identity column (``IDENTITY``, ``SERIAL``, ``AUTO_INCREMENT``): an ``integer``
-    #: column of the ``sequence`` strategy, whose values a SQL writer keeps or lets the server number.
+    #: column of the ``sequence`` strategy; a SQL writer keeps its values or lets the server number.
     identity: bool = False
 
     @property

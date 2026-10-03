@@ -216,7 +216,8 @@ def check_one_sql(schema_name: str, table: str, constraint: str) -> str:
 
 
 def enable_sql(schema_name: str, table: str) -> str:
-    """Re-enable every constraint without validating the rows already there (never fails on data)."""
+    """Re-enable every constraint without validating the rows already there (it never fails on
+    data)."""
     return f"ALTER TABLE {qualified(schema_name, table)} CHECK CONSTRAINT ALL"
 
 
@@ -265,12 +266,8 @@ def merge_sql(
     """``MERGE`` of the staged rows into ``table`` on ``key``: matched rows get ``updates``, the
     others are inserted with ``names``. ``HOLDLOCK`` makes the match-and-insert atomic."""
     on = " AND ".join(f"t.{ident(k)} = s.{ident(k)}" for k in key)
-    matched = (
-        " WHEN MATCHED THEN UPDATE SET "
-        + ", ".join(f"t.{ident(c)} = s.{ident(c)}" for c in updates)
-        if updates
-        else ""
-    )
+    assignments = ", ".join(f"t.{ident(c)} = s.{ident(c)}" for c in updates)
+    matched = f" WHEN MATCHED THEN UPDATE SET {assignments}" if updates else ""  # nosec B608
     cols = ", ".join(ident(n) for n in names)
     values = ", ".join(f"s.{ident(n)}" for n in names)
     # every name went through ident(); the rows are in the staging table, not in the statement

@@ -352,9 +352,10 @@ class FakeSqlServer:
 
     It also models what the SQL Server write path relies on: ``IDENTITY(seed, step)`` columns
     (an explicit value needs ``SET IDENTITY_INSERT ... ON``, one table at a time per server),
-    primary keys (a duplicate raises once ``enforce_keys`` is set), foreign keys and check constraints (``add_foreign_key``,
-    ``add_check``; ``ALTER TABLE ... NOCHECK CONSTRAINT ALL`` and ``WITH CHECK CHECK CONSTRAINT``
-    that re-validates and fails naming the constraint), ``TRUNCATE`` refused on a referenced table,
+    primary keys (a duplicate raises once ``enforce_keys`` is set), foreign keys and check
+    constraints (``add_foreign_key``, ``add_check``; ``ALTER TABLE ... NOCHECK CONSTRAINT ALL``
+    and ``WITH CHECK CHECK CONSTRAINT`` that re-validates and fails naming the constraint),
+    ``TRUNCATE`` refused on a referenced table,
     ``DELETE``, session temporary tables (``[#name]``) and the ``MERGE`` the upsert sends.
 
     ``fail`` is called with ``(sql, params)`` before each statement and may raise;

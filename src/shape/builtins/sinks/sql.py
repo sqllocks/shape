@@ -5,11 +5,11 @@ function of the data and the options (no timestamp), so the same input gives the
 
 **Identity columns.** A column whose ``columns`` entry has ``identity`` (``{"start", "step"}``, as
 ``shape.generation.output.sql_options`` writes it for a generation-schema column with
-``"identity": true``) is created as ``BIGINT IDENTITY(start, step)`` by the ``tsql`` dialect, and its
-``INSERT`` statements are wrapped in ``SET IDENTITY_INSERT [schema].[table] ON`` / ``OFF`` so the
-generated keys that child foreign keys reference are kept. ``tsql-fabric-warehouse`` (no identity
-semantics there) and the other dialects ignore ``identity`` and say so in a ``-- NOTE:`` comment and a
-log warning. Without ``identity`` the script is byte-for-byte what it always was.
+``"identity": true``) is created as ``BIGINT IDENTITY(start, step)`` by the ``tsql`` dialect, and
+its ``INSERT`` statements are wrapped in ``SET IDENTITY_INSERT [schema].[table] ON`` / ``OFF`` so
+the generated keys that child foreign keys reference are kept. ``tsql-fabric-warehouse`` (no
+identity semantics there) and the other dialects ignore ``identity`` and say so in a ``-- NOTE:``
+comment and a log warning. Without ``identity`` the script is byte-for-byte what it always was.
 
 Options: ``sql_dialect``, ``schema_name``, ``batch_size``, ``ddl`` / ``drop`` / ``go`` (the
 ``--sql-ddl``, ``--sql-drop`` and ``--sql-go`` switches), ``columns`` (per column
