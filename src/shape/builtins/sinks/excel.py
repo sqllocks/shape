@@ -13,6 +13,7 @@ from typing import Any
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.builtins.sources.files import local_path
+from shape.io.store import replace_atomically
 from shape.plugins.schemes import require_scheme
 
 MAX_SHEET_ROWS = 1_048_576
@@ -68,7 +69,8 @@ class ExcelSink:
                 sheet.append(
                     cells.header_plain(sheet, (options.get("schema") or pa.schema([])).names)
                 )
-            _save(workbook, target)
+            with replace_atomically(target) as temp:
+                _save(workbook, temp)
         finally:
             workbook.close()
         return rows

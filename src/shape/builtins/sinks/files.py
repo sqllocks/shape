@@ -18,14 +18,10 @@ created as needed.
 from __future__ import annotations
 
 import base64
-import contextlib
 import datetime as dt
 import io
 import json
 import math
-import os
-import shutil
-import uuid
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -36,6 +32,7 @@ import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from shape.builtins.sources.files import local_path
 from shape.io.landing import render_path
+from shape.io.store import replace_atomically
 from shape.plugins.schemes import require_scheme
 
 DEFAULT_ROLL_TEMPLATE = "{table}/{table}-{part}.{ext}"
@@ -91,22 +88,8 @@ class _FileSink:
                 raise
             return int(rolling.close(schema=options.get("schema")))
         target = self._target(uri, table, options)
-        if target.exists() and not target.is_file():  # a device or a pipe: nothing to replace
-            return self._write_file(target, batches, options)
-        final = Path(os.path.realpath(target)) if target.is_symlink() else target
-        # Written under a temporary name and renamed when complete, so a failed or interrupted
-        # run keeps the previous file and a reader never sees a partial one.
-        temp = final.with_name(f".shape-{uuid.uuid4().hex[:12]}.tmp")
-        try:
-            rows = self._write_file(temp, batches, options)
-            if final.exists():
-                shutil.copymode(final, temp)
-            os.replace(temp, final)
-        except BaseException:
-            with contextlib.suppress(OSError):
-                temp.unlink()
-            raise
-        return rows
+        with replace_atomically(target) as temp:
+            return self._write_file(temp, batches, options)
 
     def _write_file(
         self, target: Path, batches: Iterable[pa.RecordBatch], options: dict[str, Any]

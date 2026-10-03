@@ -631,7 +631,7 @@ def _script(tmp_path: Path, table: pa.Table, **options: object) -> str:
     from shape.builtins.sinks.sql import SqlSink
 
     SqlSink().write(str(tmp_path / "o.sql"), "t", table.to_batches(), **options)
-    return (tmp_path / "o.sql").read_text("utf-8")
+    return (tmp_path / "o.sql").read_bytes().decode("utf-8")
 
 
 def _go_lines(script: str) -> int:
@@ -665,10 +665,11 @@ def test_other_dialects_keep_line_breaks_in_a_literal(tmp_path: Path, dialect: s
 
 
 def test_tsql_text_without_a_go_line_is_unchanged(tmp_path: Path) -> None:
-    t = pa.table({"s": ["a\nb", "GOTO\nlabel", "ago\nx", "-- go", "it's"]})
+    t = pa.table({"s": ["a\nb", "GOTO\nlabel", "ago\nx", "-- go", "it's", "x\ngo home"]})
     script = _script(tmp_path, t, ddl=False)
     assert "(N'a\nb')" in script
-    assert "(N'GOTO\nlabel')" not in script  # a line that starts with go is written in pieces
+    assert "(N'GOTO\nlabel')" in script  # GOTO is not GO
+    assert "(N'x' + NCHAR(10) + N'go home')" in script  # a line that starts with go is cut
     assert "(N'ago\nx')" in script
     assert "(N'-- go')" in script
     assert "(N'it''s')" in script

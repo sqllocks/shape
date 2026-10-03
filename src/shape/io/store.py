@@ -22,7 +22,7 @@ import shutil
 import tempfile
 import time
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from pathlib import Path, PurePosixPath
 from typing import Any, BinaryIO, TypeVar
 
@@ -103,6 +103,30 @@ class Store:
     def mark_success(self, rel_dir: str = "") -> None:
         """Write the ``_SUCCESS`` file in ``rel_dir``."""
         self.put_bytes(str(PurePosixPath(rel_dir) / SUCCESS_FILE), b"")
+
+
+@contextlib.contextmanager
+def replace_atomically(target: Path) -> Iterator[Path]:
+    """The path to write instead of ``target``: a hidden temporary file next to it, renamed onto
+    ``target`` when the block completes and removed when it raises, so a failed or interrupted
+    write keeps the previous file and a reader never sees a partial one.
+
+    A symlink is written through; the mode of an existing file is kept; a device or a pipe
+    (nothing to replace) is written in place."""
+    if target.exists() and not target.is_file():
+        yield target
+        return
+    final = Path(os.path.realpath(target)) if target.is_symlink() else target
+    temp = final.with_name(f".shape-{uuid.uuid4().hex[:12]}.tmp")
+    try:
+        yield temp
+        if final.exists():
+            shutil.copymode(final, temp)
+        os.replace(temp, final)
+    except BaseException:
+        with contextlib.suppress(OSError):
+            temp.unlink()
+        raise
 
 
 def _clean(rel: str) -> str:
