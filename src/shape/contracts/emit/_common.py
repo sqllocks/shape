@@ -174,6 +174,7 @@ def prepare(contract: Any, table: str | None) -> dict[str, dict[str, Any]]:
     doc = _load_contract(contract)
     _validate_contract(doc)
     if "tables" not in doc:
+        _check_numbers(doc, None)
         return {table or DEFAULT_TABLE: normalize_table(doc)}
     subs = doc["tables"]
     if not isinstance(subs, dict):
@@ -184,6 +185,7 @@ def prepare(contract: Any, table: str | None) -> dict[str, dict[str, Any]]:
         if "tables" in sub:
             raise ContractError("'tables' cannot be nested")
         _validate_contract(sub)
+        _check_numbers(sub, name)
     if table is not None:
         if table not in subs:
             raise EmitError(
@@ -191,6 +193,41 @@ def prepare(contract: Any, table: str | None) -> dict[str, dict[str, Any]]:
             )
         return {table: normalize_table(subs[table])}
     return {name: normalize_table(sub) for name, sub in subs.items()}
+
+
+_RATES = ("max_null_rate", "min_true_rate", "max_true_rate")
+
+
+def _check_numbers(contract: Mapping[str, Any], table: str | None) -> None:
+    """Refuse a NaN or infinite number, or a rate outside 0..1, in a contract to emit: no
+    target can state it, and JSON (JSON Schema, GX) cannot even hold it (#644)."""
+    from shape.contracts.v1 import ContractError
+
+    where = f"table {table!r} " if table is not None else ""
+
+    def walk(value: Any, path: str) -> None:
+        if isinstance(value, float) and not math.isfinite(value):
+            raise ContractError(f"{where}{path} must be a finite number, got {value!r}")
+        if isinstance(value, Mapping):
+            for key, inner in value.items():
+                walk(inner, f"{path}.{key}" if path else str(key))
+        elif isinstance(value, list):
+            for i, inner in enumerate(value):
+                walk(inner, f"{path}[{i}]")
+
+    for name, rules in (contract.get("columns") or {}).items():
+        if not isinstance(rules, Mapping):
+            continue
+        walk(rules, f"column {name!r}")
+        for key in _RATES:
+            value: Any = rules.get(key)
+            if is_number(value) and not 0 <= value <= 1:
+                raise ContractError(
+                    f"{where}column {name!r}: {key} must be between 0 and 1, got {value!r}"
+                )
+    for key, value in contract.items():
+        if key != "columns":
+            walk(value, str(key))
 
 
 def json_text(doc: Any) -> str:

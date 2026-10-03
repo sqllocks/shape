@@ -34,7 +34,8 @@ metadata where the target has a place for it. A column a contract names with no 
 | `--json` | print the result (below) as JSON on stdout |
 
 Exit codes: **0** written; **1** `--strict` and something is not expressible; **2** a malformed
-contract (the `ContractError` message that `shape check` gives), an unknown target, an unknown
+contract (the `ContractError` message that `shape check` gives, or a NaN or infinite number, or a
+rate such as `max_null_rate` outside 0 to 1, which no target can state), an unknown target, an unknown
 dialect or table, or `--dialect` with a target other than `ddl`.
 
 ### The result: `shape-contract-emit`, version 1
