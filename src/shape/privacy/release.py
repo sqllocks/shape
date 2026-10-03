@@ -32,6 +32,8 @@ def suppress_shape(
     cells = 0
     for name, c in shape.get("columns", {}).items():
         count = c.get("count", rows)
+        if not isinstance(count, int | float) or isinstance(count, bool):
+            count = 0  # an unknown count cannot be shown to reach the minimum (#424)
         if count < policy.min_count:
             out["columns"][name] = {
                 "kind": c.get("kind"),
@@ -70,6 +72,8 @@ def redact_sensitive(
     every key that can carry an original value or a tight bound (``policy.VALUE_KEYS``, the set
     ``release_for`` strips) is removed.
     """
+    if not redact_at:
+        raise ValueError("redact_at needs at least one classification (for example 'PII')")
     out: dict[str, Any] = {"rows": shape.get("rows", 0), "columns": {}}
     floor = min(DEFAULT_TAXONOMY.rank(x) for x in redact_at)
     for name, c in shape.get("columns", {}).items():
