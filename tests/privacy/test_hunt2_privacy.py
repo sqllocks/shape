@@ -40,7 +40,9 @@ def test_the_smallest_cohort_is_two_and_default_still_works():
     assert SafeConfig(unsafe_full_fidelity=True).column_k("x") == 1  # the one explicit opt-out
 
 
-@pytest.mark.parametrize("flag", [["--k", "1"], ["--k", "0"], ["--k", "-3"], ["--column-k", "city=0"]])
+@pytest.mark.parametrize(
+    "flag", [["--k", "1"], ["--k", "0"], ["--k", "-3"], ["--column-k", "city=0"]]
+)
 def test_the_safe_command_refuses_a_cohort_below_two(rare_profile, tmp_path, flag, capsys):
     out = tmp_path / "s.json"
     assert privacy_main(["safe", str(rare_profile), "-o", str(out), *flag]) == 2
