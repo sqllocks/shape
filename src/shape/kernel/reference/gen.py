@@ -13,8 +13,10 @@ Rust standard library use different libm routines.
 
 from __future__ import annotations
 
+import bisect
+import json
 import math
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Any
 
 import numpy as np
@@ -249,18 +251,108 @@ def join_strings(columns: Sequence[Any], sep: str, skip_nulls: bool = False) -> 
     return arrow_array(out, type=pa.string())
 
 
+class _UnicodeCase:
+    """The native kernel's word rule and case mappings outside ASCII (``unicode_case.json``).
+
+    The table is read off the native kernel by ``scripts/gen_unicode_case_table.py``, so the
+    twin never depends on the running Python's Unicode version. ``cased`` and
+    ``case_ignorable`` drive the ``Final_Sigma`` rule of ``lower`` (on every code point, ASCII
+    included); ``alnum``, ``upper`` and ``lower`` cover non-ASCII code points only.
+    """
+
+    def __init__(self) -> None:
+        from importlib.resources import files
+
+        raw = json.loads(
+            files("shape.kernel.reference").joinpath("unicode_case.json").read_text("utf-8")
+        )
+        self._alnum = self._ranges(raw["alnum"])
+        self._cased = self._ranges(raw["cased"])
+        self._ignorable = self._ranges(raw["case_ignorable"])
+        self.upper = {r[0]: "".join(map(chr, r[1:])) for r in raw["upper"]}
+        self.lower = {r[0]: "".join(map(chr, r[1:])) for r in raw["lower"]}
+
+    @staticmethod
+    def _ranges(rows: list[list[int]]) -> tuple[list[int], list[int]]:
+        return [r[0] for r in rows], [r[1] for r in rows]
+
+    @staticmethod
+    def _within(ranges: tuple[list[int], list[int]], cp: int) -> bool:
+        starts, ends = ranges
+        i = bisect.bisect_right(starts, cp) - 1
+        return i >= 0 and cp <= ends[i]
+
+    def alnum(self, c: str) -> bool:
+        return c.isalnum() if c.isascii() else self._within(self._alnum, ord(c))
+
+    def to_upper(self, c: str) -> str:
+        return c.upper() if c.isascii() else self.upper.get(ord(c), c)
+
+    def to_lower(self, c: str) -> str:
+        return c.lower() if c.isascii() else self.lower.get(ord(c), c)
+
+    def _cased_next(self, chars: Sequence[str]) -> bool:
+        """The first character that is not case-ignorable exists and is cased."""
+        for c in chars:
+            if not self._within(self._ignorable, ord(c)):
+                return self._within(self._cased, ord(c))
+        return False
+
+    def final_sigma(self, s: str, i: int) -> bool:
+        return self._cased_next(s[i - 1 :: -1] if i else "") and not self._cased_next(s[i + 1 :])
+
+
+_UNICODE: _UnicodeCase | None = None
+
+
+def _unicode() -> _UnicodeCase:
+    global _UNICODE
+    if _UNICODE is None:
+        _UNICODE = _UnicodeCase()
+    return _UNICODE
+
+
+def _upper(s: str) -> str:
+    if s.isascii():
+        return s.upper()
+    u = _unicode()
+    return "".join(u.to_upper(c) for c in s)
+
+
+def _lower(s: str) -> str:
+    if s.isascii():
+        return s.lower()
+    u = _unicode()
+    out: list[str] = []
+    for i, c in enumerate(s):
+        if c == "Σ":  # capital sigma: the one contextual mapping (Final_Sigma)
+            out.append("ς" if u.final_sigma(s, i) else "σ")
+        else:
+            out.append(u.to_lower(c))
+    return "".join(out)
+
+
 def _title(s: str) -> str:
+    """Upper-case the first character of every run of word characters, lower-case the rest."""
+    alnum: Callable[[str], bool]
+    up: Callable[[str], str]
+    low: Callable[[str], str]
+    if s.isascii():
+        alnum, up, low = str.isalnum, str.upper, str.lower
+    else:
+        u = _unicode()
+        alnum, up, low = u.alnum, u.to_upper, u.to_lower
     out: list[str] = []
     prev = False
     for c in s:
-        alnum = c.isalnum()
-        out.append(c.upper() if alnum and not prev else c.lower())
-        prev = alnum
+        word = alnum(c)
+        out.append(up(c) if word and not prev else low(c))
+        prev = word
     return "".join(out)
 
 
 def string_case(array: Any, mode: str) -> pa.Array:
-    fn = {"upper": str.upper, "lower": str.lower, "title": _title}.get(mode)
+    fn = {"upper": _upper, "lower": _lower, "title": _title}.get(mode)
     if fn is None:
         raise ValueError(f"case mode must be upper, lower or title, got {mode!r}")
     out = [

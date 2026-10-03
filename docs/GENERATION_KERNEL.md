@@ -42,7 +42,7 @@ Conversions (shared by both implementations):
 | `pool_take(pool, indices)` | | `string`: `pool[indices]`, nulls stay null; `pool` is string or large_string |
 | `template_strings(literals, slots, columns, n_rows)` | | `string`: `literals[0] + col + literals[1] + ...`; `slots` are `(column index, zero-pad width)`; a null in a used column gives null; columns are string, large_string or int64 |
 | `join_strings(columns, sep, skip_nulls=False)` | | `string`: the columns joined with `sep` |
-| `string_case(array, mode)` | | `string`: `upper`, `lower` or `title` (first letter of each alphanumeric run upper, the rest lower) |
+| `string_case(array, mode)` | | `string`: `upper`, `lower` or `title` (first letter of each alphanumeric run upper, the rest lower; see [Case outside ASCII](#case-outside-ascii)) |
 | `uuid4_strings(k0, k1, row_start, n_rows)` | 2 | `string`: version-4 UUIDs; the 16 bytes are word 0 then word 1, little-endian |
 | `random_strings(k0, k1, row_start, n_rows, length, alphabet)` | `length` | `string`: `length` characters per row, one word each |
 | `day_weights(start_day, n_days, month_weights, dow_weights, per_bucket=True)` | | float64 per day: `month_w[m] * dow_w[d]`, divided (with `per_bucket`) by the number of days in the range with that month and weekday, so each (month, weekday) pair carries its own weight |
@@ -84,6 +84,20 @@ They are functions of their inputs and the stream key alone: threads, chunking a
   candidate parents from word `row * 64 + attempt` of the stream (`below(word, pool)`), takes the first with room,
   and after 64 failed draws the first parent with room after its first draw; if every parent is full it takes its
   first draw. A row whose parent has room keeps it.
+
+## Case outside ASCII
+
+`string_case` follows the Rust standard library on every code point: `title` treats a character
+as part of a word when `char::is_alphanumeric` holds (Unicode `Alphabetic` or `Numeric`, so marks
+such as U+0345 and letter-like symbols such as Ⓐ count), `upper` and `lower` use the standard
+library's case tables (special casing included, so `ß` becomes `SS`), and `lower` maps a capital
+sigma to `ς` at the end of a word by the Unicode `Final_Sigma` rule. The twin does not use the
+running Python's Unicode data outside ASCII, whose version differs between Python releases:
+it reads `shape/kernel/reference/unicode_case.json`, a table generated from the native kernel by
+`scripts/gen_unicode_case_table.py`. `tests/kernel/test_unicode_case.py` compares the two
+implementations on every code point in all three modes, and fails when the table no longer
+matches the native kernel; after a Rust toolchain update that changes the standard library's
+Unicode version, rebuild the kernel and regenerate the table.
 
 ## Microbenchmarks
 
