@@ -76,3 +76,33 @@ def test_666_list_reports_a_broken_link_as_invalid(capsys, tmp_path):
     code, out, err = run(capsys, "pack", "list", tmp_path, "--json")
     assert code == 0, err
     assert [(r["id"], r["kind"]) for r in json.loads(out)] == [("gone", "invalid")]
+
+
+# ---- #705: validate takes the domain --domain names, for a spec too -------------------------
+
+
+def test_705_validate_of_a_spec_refuses_a_domain_that_is_not_installed(capsys):
+    code, _, err = run(
+        capsys, "pack", "validate", FIXTURES / "retail_basic.gsl.yaml", "--domain", "nonexistent"
+    )
+    assert code == 2 and "no domain named 'nonexistent'" in err
+
+
+def test_705_validate_of_a_spec_checks_the_pack_against_the_given_domain(capsys):
+    code, out, _ = run(
+        capsys, "pack", "validate", FIXTURES / "retail_basic.gsl.yaml", "--domain", "healthcare"
+    )
+    assert code == 1 and "Entity" in out and "not found in domain schema" in out
+
+
+def test_705_validate_of_a_spec_without_domain_is_unchanged(capsys):
+    code, out, _ = run(capsys, "pack", "validate", FIXTURES / "retail_basic.gsl.yaml")
+    assert code == 0 and "PASS" in out
+
+
+def test_705_run_checks_the_spec_against_the_domain_it_will_run(capsys, tmp_path):
+    code, out, _ = run(
+        capsys, "pack", "run", FIXTURES / "retail_basic.gsl.yaml", "--domain", "healthcare",
+        "-o", tmp_path / "o",
+    )  # fmt: skip
+    assert code == 1 and "not found in domain schema" in out
