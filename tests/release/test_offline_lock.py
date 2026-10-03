@@ -140,7 +140,16 @@ def test_check_directory_flags_dropped_dependency(tmp_path, bad):
         ]
         (tmp_path / offline_lock.lock_name(name)).write_text(_lock(*entries))
     problems = offline_lock.check_directory(tmp_path, ROOT)
-    if bad == "pyarrow":
-        assert any("pyarrow" in p for p in problems)
-    else:
-        assert problems == []  # tzdata is Windows-only: not required on this platform
+    # A universal lock covers every platform (docs/INSTALL.md): tzdata is Windows-only, but the lock
+    # must still carry it, so dropping it is a finding on any host.
+    assert any(bad in p for p in problems)
+
+
+def test_check_requires_marked_dependency_that_holds_on_some_supported_platform():
+    reqs = [offline_lock.parse_requirement("tzdata; sys_platform == 'win32'")]
+    assert any("tzdata" in p for p in offline_lock.check_lock("", reqs))
+
+
+def test_check_requires_dependency_marked_for_one_python_only():
+    reqs = [offline_lock.parse_requirement("backports; python_version == '3.14'")]
+    assert any("backports" in p for p in offline_lock.check_lock("", reqs))

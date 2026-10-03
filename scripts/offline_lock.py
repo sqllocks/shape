@@ -4,7 +4,8 @@
 (``core`` and every extra of ``pyproject.toml``) with ``uv pip compile --generate-hashes``. It
 needs a network, so CI runs it. ``python scripts/offline_lock.py check OUTDIR`` needs none: it
 fails when a lock file is missing, holds an entry that is not pinned to one version and hashed, or
-does not satisfy every dependency the project declares. First-party extras (``kafka`` and the
+does not satisfy every dependency the project declares. The lock is universal, so a dependency
+whose marker holds on any supported platform or Python (a Windows-only ``tzdata``) must be in it. First-party extras (``kafka`` and the
 like) are expanded to their plugin's third-party dependencies; the first-party wheels themselves
 are built in the connected enclave and carried across with the wheelhouse (docs/INSTALL.md).
 """
@@ -25,6 +26,29 @@ from packaging.version import Version
 ROOT = Path(__file__).resolve().parent.parent
 FIRST_PARTY_PREFIX = "sqllocks-shape"
 PYTHON_VERSION = "3.11"
+# A universal lock covers every platform and Python the project supports (T-06, docs/INSTALL.md).
+LOCK_PLATFORMS = ("linux", "darwin", "win32")
+LOCK_PYTHONS = ("3.11", "3.12", "3.13", "3.14")
+
+
+def _needed_by_universal_lock(req: Requirement) -> bool:
+    """True unless the marker is false on every supported platform and Python, not just here."""
+    if req.marker is None:
+        return True
+    return any(
+        req.marker.evaluate(
+            {
+                "sys_platform": platform,
+                "platform_system": {"linux": "Linux", "darwin": "Darwin", "win32": "Windows"}[
+                    platform
+                ],
+                "python_version": python,
+                "python_full_version": f"{python}.0",
+            }
+        )
+        for platform in LOCK_PLATFORMS
+        for python in LOCK_PYTHONS
+    )
 
 
 def canonical(name: str) -> str:
@@ -126,7 +150,7 @@ def check_lock(text: str, reqs: list[Requirement]) -> list[str]:
         except ValueError:
             problems.append(f"{key}: unreadable version {spec[2:]!r}")
     for req in reqs:
-        if req.marker is not None and not req.marker.evaluate():
+        if not _needed_by_universal_lock(req):
             continue
         key = canonical(req.name)
         if key not in pinned:
