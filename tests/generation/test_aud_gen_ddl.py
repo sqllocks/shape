@@ -18,3 +18,25 @@ def test_declared_foreign_keys_match_tables_and_columns_whatever_their_case():
     res = Engine(schema, row_counts={"Customer": 10, "Orders": 50}).generate()
     keys = set(res.tables["Customer"]["Id"].to_pylist())
     assert set(res.tables["Orders"]["CustId"].to_pylist()) <= keys
+
+
+def test_bracket_quoted_types_are_read_as_their_type():
+    # 173: SSMS "Script Table as" writes [int] and [decimal](18, 2); both became string + faker.
+    schema, _ = from_ddl(
+        "CREATE TABLE [dbo].[Sales]([SaleId] [int] IDENTITY(1,1) NOT NULL, "
+        "[BuyerKey] [int] NOT NULL, [Amount] [decimal](18, 2) NOT NULL, "
+        "[Note] [nvarchar](40) NULL)",
+        smart=False,
+    )
+    cols = schema.tables["Sales"].columns
+    assert cols["BuyerKey"].type == "integer"
+    assert (cols["Amount"].type, cols["Amount"].precision, cols["Amount"].scale) == (
+        "decimal",
+        18,
+        2,
+    )
+    assert (cols["Note"].type, cols["Note"].max_length, cols["Note"].nullable) == (
+        "string",
+        40,
+        True,
+    )
