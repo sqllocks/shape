@@ -182,7 +182,8 @@ such a column reaches the decision file. A column is personal data when
 * a `pii` proposal for it, not rejected, is at or above **0.5** (the default threshold), whether in
   the file or found by this run (by name, and by value with `--data`),
 
-and a **rejected** `pii` decision means it is not. A rule already accepted whose column becomes
+and a **rejected** `pii` decision means it is not. With several profiles the personal-data check
+reads the first profile (and `--data`, which is the data of that profile). A rule already accepted whose column becomes
 sensitive is no longer found and goes stale (below).
 
 ### Several profiles
