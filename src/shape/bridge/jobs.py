@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import stat
 import tempfile
 import threading
 import time
@@ -41,7 +42,7 @@ JOB_VERSION = 1
 JOBS_DIR_ENV = "SHAPE_JOBS_DIR"
 ACTIVE = ("running", "submitted")
 FINAL = ("succeeded", "failed", "cancelled", "interrupted")
-_ID = re.compile(r"^job-[0-9a-f]{12}$")
+_ID = re.compile(r"job-[0-9a-f]{12}")
 _SECRET_KEY = re.compile(
     r"token|secret|passw|credential|connection_?string|api_?key|access_?key|sas", re.IGNORECASE
 )
@@ -96,15 +97,32 @@ class JobStore:
         self._lock = threading.RLock()
 
     def path(self, job_id: str) -> Path:
-        if not _ID.match(job_id):
+        if not _ID.fullmatch(job_id):
             raise BridgeError(
                 "input.unknown_job", f"no job {job_id!r}", "job ids look like job-0123456789ab"
             )
         return self.dir / f"{job_id}.json"
 
+    def _private_dir(self) -> None:
+        """Create the directory with mode 0700, or make an existing one 0700: a directory others
+        can write to would let them plant or swap job records."""
+        self.dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+        if os.name == "nt":  # POSIX modes do not apply; the profile directory's ACL does
+            return
+        if stat.S_IMODE(self.dir.stat().st_mode) & 0o077:
+            try:
+                os.chmod(self.dir, 0o700)
+            except OSError as exc:
+                raise BridgeError(
+                    "io.write_failed",
+                    f"the jobs directory {self.dir} is open to other users and cannot be made "
+                    f"private: {exc}",
+                    "use a --jobs-dir you own",
+                ) from exc
+
     def write(self, record: dict[str, Any]) -> None:
         with self._lock:
-            self.dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+            self._private_dir()
             record["updated_at"] = now_iso()
             target = self.path(record["job_id"])
             fd, tmp = tempfile.mkstemp(dir=self.dir, prefix=".job-", suffix=".tmp")
@@ -128,7 +146,7 @@ class JobStore:
                 ) from None
         try:
             record = json.loads(text)
-        except ValueError as exc:
+        except (ValueError, RecursionError) as exc:
             raise BridgeError(
                 "input.invalid_schema", f"the job file for {job_id} is not valid JSON: {exc}"
             ) from exc
@@ -137,7 +155,7 @@ class JobStore:
     def ids(self) -> list[str]:
         if not self.dir.is_dir():
             return []
-        return sorted(p.stem for p in self.dir.glob("job-*.json") if _ID.match(p.stem))
+        return sorted(p.stem for p in self.dir.glob("job-*.json") if _ID.fullmatch(p.stem))
 
 
 def check_record(record: Any, job_id: str) -> dict[str, Any]:
@@ -150,6 +168,11 @@ def check_record(record: Any, job_id: str) -> dict[str, Any]:
     if not isinstance(version, int) or isinstance(version, bool) or version < 1:
         raise BridgeError(
             "input.invalid_schema", f"the job file for {job_id} has no valid version number"
+        )
+    if not all(isinstance(record.get(k), str) for k in ("job_id", "status", "created_at")):
+        raise BridgeError(
+            "input.invalid_schema",
+            f"the job file for {job_id} lacks its job_id, status or created_at",
         )
     if version > JOB_VERSION:
         raise BridgeError(

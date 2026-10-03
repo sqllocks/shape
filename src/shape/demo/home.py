@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 
 HOME_ENV = "SHAPE_HOME"
-_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
 
 
 def shape_home() -> Path:
@@ -31,7 +31,7 @@ def sessions_dir() -> Path:
 def check_name(value: str, what: str) -> str:
     """``value`` when it is a plain name (letters, digits, ``.``, ``_``, ``-``): a name is used in
     a file name, so it must not hold a path separator or start with a dot."""
-    if not _NAME.match(value):
+    if not _NAME.fullmatch(value):
         raise ValueError(
             f"{what} {value!r} is not a plain name: use letters, digits, '.', '_' and '-' "
             "(at most 64 characters, starting with a letter or digit)"

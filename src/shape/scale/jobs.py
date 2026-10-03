@@ -46,7 +46,7 @@ def _safe(text: str) -> str:
 ACTIVE = ("submitted", "running")
 FINAL = ("succeeded", "failed", "cancelled")
 RESUMABLE = ("failed", "cancelled")
-_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$")
+_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}")
 
 # Fabric's job status names, as Shape reports them.
 STATUS_MAP: dict[str, str] = {
@@ -125,7 +125,7 @@ class JobStore:
     def _path(self, job_id: str) -> Path:
         if self._root is None:
             raise AssertionError("memory store has no path")
-        if not _ID.match(job_id):
+        if not _ID.fullmatch(job_id):
             raise JobNotFoundError(job_id)
         return self._root / f"{job_id}.json"
 
@@ -146,7 +146,7 @@ class JobStore:
 
     def put(self, record: JobRecord) -> JobRecord:
         with self._lock:
-            if not _ID.match(record.job_id):
+            if not _ID.fullmatch(record.job_id):
                 raise ValueError(f"invalid job id {record.job_id!r}")
             record.updated_at = now_iso()
             self._jobs[record.job_id] = record
@@ -156,7 +156,7 @@ class JobStore:
     def get(self, job_id: str) -> JobRecord:
         """The job's record; reads the file when this store has not seen it (another process)."""
         with self._lock:
-            if self._root is not None and _ID.match(job_id):
+            if self._root is not None and _ID.fullmatch(job_id):
                 path = self._path(job_id)
                 if path.is_file():
                     cached = self._jobs.get(job_id)
@@ -191,7 +191,7 @@ class JobStore:
     def delete(self, job_id: str) -> None:
         with self._lock:
             self._jobs.pop(job_id, None)
-            if self._root is not None and _ID.match(job_id):
+            if self._root is not None and _ID.fullmatch(job_id):
                 self._path(job_id).unlink(missing_ok=True)
 
 
