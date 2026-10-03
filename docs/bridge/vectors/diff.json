@@ -1,5 +1,5 @@
 {
-  "api_version": "1.0",
+  "api_version": "1.1",
   "cases": [
     {
       "name": "drift",
@@ -13,7 +13,7 @@
         "id": "drift"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.1",
         "command": "diff",
         "id": "drift",
         "ok": true,
@@ -109,7 +109,7 @@
         "id": "no-drift"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.1",
         "command": "diff",
         "id": "no-drift",
         "ok": true,
@@ -142,7 +142,7 @@
         "id": "missing-profile"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.1",
         "command": "diff",
         "error": {
           "code": "input.not_found",

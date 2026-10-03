@@ -11,11 +11,15 @@
       "properties": {
         "contract": {
           "description": "the contract JSON file",
-          "type": "string"
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.0"
         },
         "profile": {
           "description": "the .shape profile",
-          "type": "string"
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.0"
         }
       },
       "required": [
@@ -41,18 +45,21 @@
         "async": {
           "default": false,
           "description": "for a command that can run as a job: return a job id at once and run in the background",
-          "type": "boolean"
+          "type": "boolean",
+          "x-since": "1.0"
         },
         "include_raw_values": {
           "default": false,
           "description": "return raw values (minimum, maximum, category values, offending values) even for classified columns; off by default",
-          "type": "boolean"
+          "type": "boolean",
+          "x-since": "1.0"
         },
         "max_inline_bytes": {
           "default": 262144,
           "description": "a result part larger than this is written to a file and returned as a reference",
           "minimum": 1024,
-          "type": "integer"
+          "type": "integer",
+          "x-since": "1.0"
         }
       },
       "type": "object"
@@ -64,5 +71,6 @@
   ],
   "title": "check request",
   "type": "object",
-  "x-api-version": "1.0"
+  "x-api-version": "1.1",
+  "x-since": "1.0"
 }

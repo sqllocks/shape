@@ -18,7 +18,7 @@ from shape.bridge.protocol import (
     parse_request,
 )
 from shape.bridge.registry import COMMANDS
-from shape.bridge.spec import Command, check_args, check_options
+from shape.bridge.spec import Command, check_args, check_options, minor_of
 
 
 class Bridge:
@@ -40,15 +40,11 @@ class Bridge:
         except Exception as exc:
             return error_response(to_bridge_error(exc))
         command: Command | None = None
-        context = Context(self.jobs)
+        context = Context(self.jobs, minor=request.minor)
         try:
             command = COMMANDS.get(request.command)
-            if command is None:
-                raise BridgeError(
-                    "usage.unknown_command",
-                    f"unknown command {request.command!r}",
-                    f"the commands are: {', '.join(COMMANDS)}",
-                )
+            if command is None or minor_of(command.since) > request.minor:
+                raise _unknown_command(request)
             result = self._run(command, request, context)
         except Exception as exc:
             return error_response(
@@ -65,7 +61,7 @@ class Bridge:
         drain(self.jobs, timeout)
 
     def _run(self, command: Command, request: Request, context: Context) -> Any:
-        args = check_args(command, request.args)
+        args = check_args(command, request.args, request.minor)
         options = check_options(request.options)
         context.options = options
         wants_job = bool(options.get("async"))
@@ -83,16 +79,29 @@ class Bridge:
             args,
             options,
             lambda job_context: command.handler(args, job_context),
-            _job_context(self.jobs, options),
+            _job_context(self.jobs, options, request.minor),
             cancellable=command.cancellable,
         )
         return command.started(record) if command.started else describe(record)
 
 
+def _unknown_command(request: Request) -> BridgeError:
+    """``usage.unknown_command`` as the minor the request is served as would give it: the list
+    names only the commands of that minor, and a command added later says which version has it."""
+    known = [n for n, c in COMMANDS.items() if minor_of(c.since) <= request.minor]
+    hint = f"the commands are: {', '.join(known)}"
+    later = COMMANDS.get(request.command)
+    if later is not None:
+        hint += f"; {request.command} needs api_version {later.since}"
+    return BridgeError("usage.unknown_command", f"unknown command {request.command!r}", hint)
+
+
 def _job_context(
-    jobs: Jobs, options: dict[str, Any]
+    jobs: Jobs, options: dict[str, Any], minor: int
 ) -> Callable[[Any, Callable[[dict[str, Any]], None]], Context]:
     def make(cancel: Any, progress: Callable[[dict[str, Any]], None]) -> Context:
-        return Context(jobs, options=options, cancel=cancel, progress=progress, in_job=True)
+        return Context(
+            jobs, options=options, cancel=cancel, progress=progress, in_job=True, minor=minor
+        )
 
     return make

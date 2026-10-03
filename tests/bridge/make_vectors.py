@@ -22,6 +22,9 @@ import vectors_lib as lib  # noqa: E402
 from fakes import LH, WS, FakeFabric  # noqa: E402
 from scale_schemas import plain_doc  # noqa: E402
 
+from shape.bridge.protocol import API_VERSION  # noqa: E402
+from shape.bridge.registry import COMMANDS  # noqa: E402
+
 D = "${DIR}"
 ROWS = {"customer": 40, "order": 1200, "order_line": 3100}
 
@@ -75,10 +78,13 @@ def case(
     command: str,
     args: dict[str, Any] | None = None,
     options: dict[str, Any] | None = None,
+    version: str | None = None,
     **flags: Any,
 ) -> dict[str, Any]:
+    """A vector case. Its request declares the version of the command (a 1.1 command declares
+    1.1), or ``version``: a 1.0 command's vectors keep declaring 1.0, which is the 1.0 promise."""
     request: dict[str, Any] = {
-        "api_version": "1.0",
+        "api_version": version or COMMANDS[command].since,
         "id": name,
         "command": command,
         "args": args or {},
@@ -415,7 +421,7 @@ def main() -> None:
             out = {
                 "format": "shape-bridge-vectors",
                 "version": 1,
-                "api_version": "1.0",
+                "api_version": API_VERSION,
                 "command": command,
                 **({"jobs": doc["jobs"]} if doc.get("jobs") else {}),
                 **({"setup": doc["setup"]} if doc.get("setup") else {}),

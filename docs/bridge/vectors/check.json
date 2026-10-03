@@ -1,5 +1,5 @@
 {
-  "api_version": "1.0",
+  "api_version": "1.1",
   "cases": [
     {
       "name": "passes",
@@ -13,7 +13,7 @@
         "id": "passes"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.1",
         "command": "check",
         "id": "passes",
         "ok": true,
@@ -42,7 +42,7 @@
         "id": "fails"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.1",
         "command": "check",
         "id": "fails",
         "ok": true,
@@ -78,7 +78,7 @@
         "id": "missing-contract"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.1",
         "command": "check",
         "error": {
           "code": "input.not_found",

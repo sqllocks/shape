@@ -5,6 +5,10 @@ are committed under ``docs/bridge/schema/`` and a test fails when the committed 
 what this module generates: changing a schema is a visible, deliberate edit
 (``shape bridge schema --out docs/bridge/schema``).
 
+Frozen copies of earlier minors live in folders named ``MAJOR.MINOR`` beside them (``1.0/``):
+they are never regenerated or checked here; ``tests/bridge/test_compat_1_0.py`` holds the current
+schemas to them.
+
 Files: ``index.json``; ``request.schema.json`` and ``response.schema.json`` (the envelope);
 ``error.schema.json``; ``job.schema.json``; and per command ``commands/NAME.request.schema.json``
 (the whole request) and ``commands/NAME.result.schema.json`` (the ``result`` of a success).
@@ -13,14 +17,16 @@ Files: ``index.json``; ``request.schema.json`` and ``response.schema.json`` (the
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
 from shape.bridge.handlers.scale import JOB
-from shape.bridge.protocol import API_VERSION, ERROR_CODES, GROUPS
+from shape.bridge.protocol import API_VERSION, ERROR_CODES, GROUPS, WARNING_CODES
 from shape.bridge.registry import COMMANDS
 from shape.bridge.spec import Command, options_schema
 
+_FROZEN = re.compile(r"^[0-9]+\.[0-9]+$")  # a folder of a frozen earlier minor, e.g. 1.0
 DRAFT = "https://json-schema.org/draft/2020-12/schema"
 _ID: dict[str, Any] = {"type": ["string", "integer", "null"], "maxLength": 128}
 _VERSION: dict[str, Any] = {
@@ -102,6 +108,7 @@ def command_request(command: Command) -> dict[str, Any]:
     return _doc(
         f"{command.name} request",
         {
+            "x-since": command.since,
             "type": "object",
             "properties": {
                 "api_version": _VERSION,
@@ -117,7 +124,7 @@ def command_request(command: Command) -> dict[str, Any]:
 
 
 def command_result(command: Command) -> dict[str, Any]:
-    return _doc(f"{command.name} result", dict(command.result))
+    return _doc(f"{command.name} result", {"x-since": command.since, **command.result})
 
 
 def all_schemas() -> dict[str, dict[str, Any]]:
@@ -139,6 +146,9 @@ def all_schemas() -> dict[str, dict[str, Any]]:
             "job": "always" if command.always_job else ("optional" if command.job else "never"),
             "cancellable": command.cancellable,
             "pending": command.pending,
+            "since": command.since,
+            "effects": list(command.effects),
+            "args": {k: a.since for k, a in command.args.items()},
         }
     files["index.json"] = {
         "format": "shape-bridge-schema-index",
@@ -146,6 +156,7 @@ def all_schemas() -> dict[str, dict[str, Any]]:
         "api_version": API_VERSION,
         "commands": listing,
         "error_codes": dict(sorted(ERROR_CODES.items())),
+        "warning_codes": dict(sorted(WARNING_CODES.items())),
     }
     return files
 
@@ -177,6 +188,10 @@ def check_schemas(directory: str | Path) -> list[str]:
         elif target.read_text(encoding="utf-8") != render(doc):
             problems.append(f"changed: {rel}")
     if root.is_dir():
-        have = {str(p.relative_to(root)).replace("\\", "/") for p in root.rglob("*.json")}
+        have = {
+            str(p.relative_to(root)).replace("\\", "/")
+            for p in root.rglob("*.json")
+            if not _FROZEN.match(p.relative_to(root).parts[0])
+        }
         problems.extend(f"unexpected: {rel}" for rel in sorted(have - set(expected)))
     return problems

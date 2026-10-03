@@ -70,7 +70,7 @@ def test_an_incompatible_major_is_refused_naming_the_supported_range(bridge, ver
     r = handle(bridge, {"api_version": version, "id": "v", "command": "list"})
     assert r["ok"] is False and r["id"] == "v"
     assert r["error"]["code"] == "usage.unsupported_version"
-    assert "1.0 to 1.0" in r["error"]["message"] and version in r["error"]["message"]
+    assert "1.0 to 1.1" in r["error"]["message"] and version in r["error"]["message"]
     assert r["api_version"] == API_VERSION  # the response always says what this bridge speaks
 
 

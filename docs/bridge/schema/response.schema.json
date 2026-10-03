@@ -82,7 +82,10 @@
                 "input.job_state",
                 "input.not_found",
                 "input.unknown_domain",
+                "input.unknown_format",
                 "input.unknown_job",
+                "input.unknown_proposal",
+                "input.unknown_source",
                 "input.unsupported_format_version",
                 "internal.error",
                 "io.read_failed",
@@ -174,5 +177,5 @@
     }
   ],
   "title": "bridge response",
-  "x-api-version": "1.0"
+  "x-api-version": "1.1"
 }

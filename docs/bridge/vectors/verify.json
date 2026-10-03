@@ -1,5 +1,5 @@
 {
-  "api_version": "1.0",
+  "api_version": "1.1",
   "cases": [
     {
       "name": "csv",
@@ -12,7 +12,7 @@
         "id": "csv"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.1",
         "command": "verify",
         "id": "csv",
         "ok": true,
@@ -38,7 +38,7 @@
         "id": "missing-data"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.1",
         "command": "verify",
         "error": {
           "code": "input.not_found",

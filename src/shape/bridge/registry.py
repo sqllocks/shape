@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from shape.bridge.annotations import annotate
 from shape.bridge.spec import Command
 
 
@@ -14,7 +15,7 @@ def _build() -> dict[str, Command]:
             if command.name in table:
                 raise AssertionError(f"duplicate bridge command {command.name!r}")
             table[command.name] = command
-    return table
+    return annotate(table)
 
 
 COMMANDS: dict[str, Command] = _build()
