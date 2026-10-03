@@ -19,3 +19,5 @@ Changes to artifacts, evidence, generation, classification or query parsing requ
 - After an **additive** change (a new exported name, a new method, a new keyword parameter with a default after the existing ones, a new optional dataclass field with a default at the end), run `python scripts/stable_api_compat.py --write` and commit the baseline. `--write` refuses a breaking change.
 - A **breaking change** (anything `--check` reports as `BREAKING`) needs a new major version. Do not edit the baseline to make the check pass; deprecate the old member instead (it keeps working with a `DeprecationWarning` until the next major version).
 - A new exported name also goes into the table in `docs/API_STABILITY.md` and into the module's `__all__`.
+
+Before proposing a feature, see [NOT_BUILDING.md](NOT_BUILDING.md) for what the project has decided not to build. The command line's stability promise is [CLI_STABILITY.md](CLI_STABILITY.md), and what 1.0 requires is [V1_DONE.md](V1_DONE.md).

@@ -1645,6 +1645,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.changes import add_arguments as add_changes_arguments
 
     add_changes_arguments(sub)
+    from shape.cli.stability import annotate
+
+    annotate(p)
     for rec in plugin_commands:  # listed in --help only; the plugin loads when it is run
         sub.add_parser(rec.name, help=f"(plugin {rec.source})", add_help=False)
     return p

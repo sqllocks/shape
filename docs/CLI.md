@@ -12,6 +12,9 @@ environment that is not activated, a CI step, a notebook). Both start the same p
 | 2 | bad input: a missing or unreadable file, the wrong kind of file, a bad argument |
 | 3 and above | a command's own verdict (a certificate below its threshold, a failed contract, an incompatible change); each command's `--help` says which |
 
+The classes, and what is stable about each command, are promised in
+[CLI_STABILITY.md](CLI_STABILITY.md).
+
 ## Errors
 
 An expected error is one line on stderr and exit code 2:

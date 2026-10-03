@@ -71,3 +71,5 @@ The window of plugin API v1 applies (`docs/plugins/stability.md`): nothing is re
 deprecated member keeps working and raises a `DeprecationWarning` until the next major version.
 
 The Python API that `import shape` exports is documented, with its signatures, in `docs/API.md`.
+
+The command line has its own promise, with the stable and experimental commands, what counts as a breaking change and the deprecation process: `docs/CLI_STABILITY.md`. The definition of done for 1.0 is `docs/V1_DONE.md`.
