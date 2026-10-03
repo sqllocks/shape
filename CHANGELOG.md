@@ -503,6 +503,18 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ### Fixed
 
+- Fixed (quality hunt, #569-#578, #589, #590, #605-#607): `shape scorecard` no longer rounds a
+  failing check up to 100 (capped at 99.99), scores a gate that failed without a row-level cause as
+  its own 0 check, scores the reconciliation and time-series gates (consistency and timeliness),
+  refuses `--history` without `--name` and says when no schema or config was given; `reconcile`
+  treats NaN as equal to NaN, accepts a key column that is also an aggregate column, reports a
+  sum or mean of a non-numeric column as a `reconcile.column_type` finding, and sums integers
+  without wrapping at 2**63; the time-series stuck check reports a column it cannot compare;
+  `psi_report` no longer returns NaN (and "not drifted") for a column that gained infinite values;
+  `bootstrap_table` names a negative `n_rows`; the `no_future` check reads timestamps without a
+  zone as UTC instead of the machine's local time; quarantine keeps a second item of the same name
+  (`-2` suffix), writes strict JSON Lines (non-finite floats as null) and lists past a bad
+  metadata file.
 - `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references` no longer depends on test order (#77): it resolves the references in a fresh interpreter and reports which cloud SDK modules got imported, so `azure*` modules left in `sys.modules` by `tests/demo/fabric` cannot fail it.
 - Issue #76. The three tests that failed were not numpy-dependent: they called pyarrow in ways older
   releases reject (float16 from Python floats, `if_else` on half-float, hive partition inference on a
