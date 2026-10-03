@@ -25,13 +25,21 @@ Sign-in: ``token`` (a bearer token, or a function returning one), else the envir
 
 Options of :meth:`EventhouseEmitter.emit`: ``envelope`` (only ``"flat"``; a KQL table holds the
 flat event), ``token``, ``max_request_bytes`` (default 3,000,000; the service limit is 4 MB),
-``busy_retries`` (default 6), ``timeout`` (seconds per request, default 100), ``resuming``
-(ignored).
+``busy_retries`` (default 6), ``timeout`` (seconds per request, default 100), ``ready_timeout``
+(seconds to wait for a table the emitter has just created to accept streaming ingestion, default
+120), ``resuming`` (ignored).
+
+A table created a moment ago is not always ready: until the service has propagated it (and its
+streaming-ingestion policy), a request is answered "entity not found" (400) or with a streaming
+ingestion initialisation error (5xx). The first request to each table waits for that, with
+backoff, for up to ``ready_timeout``; nothing was ingested by such a request, and the key makes
+a repeat harmless either way.
 """
 
 from __future__ import annotations
 
 import os
+import time
 from collections.abc import Iterable
 from typing import Any, NamedTuple
 from urllib.parse import parse_qs, unquote, urlsplit
@@ -124,6 +132,13 @@ def token_source(target: KustoTarget, token: Any = None, credential: Any = None)
     return lambda: token_for(credential, scope)
 
 
+def _not_ready(exc: Exception) -> bool:
+    """A new table the service has not finished setting up: it is not found yet, or streaming
+    ingestion on it is still initialising."""
+    text = str(exc)
+    return "EntityNotFound" in text or "StreamingIngestion" in text
+
+
 class EventhouseEmitter:
     """Events to a KQL database by streaming ingestion.
 
@@ -137,6 +152,7 @@ class EventhouseEmitter:
         self._transport = transport
         self._busy_pause = busy_pause
         self._clients: dict[tuple[str, str, bool], KustoClient] = {}
+        self._warm: set[tuple[str, str, str]] = set()  # tables that have accepted a request
 
     def _client(
         self,
@@ -172,6 +188,7 @@ class EventhouseEmitter:
         max_request_bytes: int = 3_000_000,
         busy_retries: int = 6,
         timeout: float = 100.0,
+        ready_timeout: float = 120.0,
         **options: Any,
     ) -> int:
         """Send every batch; return the number of events, after the service accepted them."""
@@ -192,12 +209,65 @@ class EventhouseEmitter:
                     part = batch.slice(start, i - start)
                     table = target.table or str(tables[start])
                     client.prepare(table, part.schema)
-                    client.ingest_lines(
-                        table, (ev.body for ev in encode_events(part, "flat")), max_request_bytes
+                    self._ingest(
+                        client,
+                        target,
+                        table,
+                        (ev.body for ev in encode_events(part, "flat")),
+                        max_request_bytes,
+                        ready_timeout,
                     )
                     start = i
             sent += batch.num_rows
         return sent
+
+    def _ingest(
+        self,
+        client: KustoClient,
+        target: EventhouseTarget,
+        table: str,
+        lines: Iterable[bytes],
+        max_bytes: int,
+        ready_timeout: float,
+    ) -> None:
+        """Send JSON ``lines`` in requests of at most ``max_bytes``; a single line above the limit
+        goes alone (the service decides)."""
+        chunk: list[bytes] = []
+        size = 0
+        for line in lines:
+            if chunk and size + len(line) + 1 > max_bytes:
+                self._stream(client, target, table, chunk, ready_timeout)
+                chunk, size = [], 0
+            chunk.append(line)
+            size += len(line) + 1
+        if chunk:
+            self._stream(client, target, table, chunk, ready_timeout)
+
+    def _stream(
+        self,
+        client: KustoClient,
+        target: EventhouseTarget,
+        table: str,
+        chunk: list[bytes],
+        ready_timeout: float,
+    ) -> None:
+        body = b"\n".join(chunk) + b"\n"
+        key = (target.base, target.database, table)
+        if key in self._warm:
+            client.ingest(table, body)
+            return
+        deadline = time.monotonic() + ready_timeout
+        pause = self._busy_pause
+        while True:
+            try:
+                client.ingest(table, body)
+                break
+            except (ShapeError, ConnectionError) as exc:
+                if not _not_ready(exc) or time.monotonic() + pause > deadline:
+                    raise
+                time.sleep(pause)
+                pause = min(pause * 2, 10.0)
+        self._warm.add(key)
 
     def flush(self) -> None:
         return None  # every emit() returns after the service answered

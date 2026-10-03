@@ -117,9 +117,9 @@ def test_a_run_lands_every_event_once_with_typed_columns(kusto_is_up, tmp_path):
     table = f"e2e_{uuid.uuid4().hex[:8]}"
     report = run(table, tmp_path)
     assert report.events == contract.EVENTS
-    ((rows, keys, total),) = kql(
-        f"['{table}'] | summarize count(), dcount(_shape_seq), sum(order_line_id)"
-    )
+    ((rows, total),) = kql(f"['{table}'] | summarize count(), sum(order_line_id)")
+    # dcount() is an approximate distinct count in KQL (HyperLogLog); `distinct` is exact
+    ((keys,),) = kql(f"['{table}'] | distinct _shape_seq | count")
     assert (rows, keys, total) == (contract.EVENTS, contract.EVENTS, reference_sum())
     cols = {r[0]: r[1] for r in kql(f"['{table}'] | getschema | project ColumnName, ColumnType")}
     assert cols["_shape_table"] == "string" and cols["_shape_seq"] == "long"
