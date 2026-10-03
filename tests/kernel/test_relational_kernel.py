@@ -179,3 +179,25 @@ def test_cap_per_parent_rejects_bad_arguments(nat):
             impl.cap_per_parent(_i64([0]), 1, 0, *KEY)
         with pytest.raises(ValueError, match="0..pool"):
             impl.cap_per_parent(_i64([3]), 3, 1, *KEY)
+
+
+@pytest.mark.parametrize(
+    "call",
+    [
+        lambda m: m.first_flags(pa.array([0, None, 0])),
+        lambda m: m.group_order(pa.array([0, 0, None]), pa.array([1, 2, 3])),
+        lambda m: m.group_order(pa.array([0, 0, 0]), pa.array([1, None, 3])),
+        lambda m: m.scd2_offsets(pa.array([0, None, 0]), 10, 1, 1, 2),
+        lambda m: m.cap_per_parent(pa.array([0, None, 0]), 3, 1, 1, 2),
+        lambda m: m.alias_sample(pa.array([1.0, 1.0]), pa.array([0, None]), 1, 2, 0, 3),
+        lambda m: m.lognorm_probe(pa.array([1.0, None, 3.0]), 0.0),
+    ],
+    ids=["first_flags", "group_order_codes", "group_order_keys", "scd2", "cap", "alias", "probe"],
+)
+def test_nulls_in_dense_inputs_are_value_errors_in_both_kernels(call):
+    # Regression #550: the native kernel read the value under a null (usually 0).
+    from shape.kernel import dispatch, reference
+
+    for mod in (dispatch._import_native(), reference):
+        with pytest.raises(ValueError, match="null"):
+            call(mod)
