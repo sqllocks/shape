@@ -83,6 +83,21 @@ def jsonable(value: Any) -> Any:
         return {str(k): jsonable(v) for k, v in value.items()}
     if isinstance(value, list | tuple | set | frozenset):
         return [jsonable(v) for v in value]
+    if type(value).__module__ == "numpy":
+        return _numpy(value)
+    return str(value)
+
+
+def _numpy(value: Any) -> Any:
+    """A NumPy scalar or array as plain JSON: numbers stay numbers, dates and times are text."""
+    import numpy as np  # loaded already: ``value`` is one of its objects
+
+    if isinstance(value, np.datetime64 | np.timedelta64):
+        return str(value)
+    if isinstance(value, np.ndarray) and value.dtype.kind in "mM":
+        return [str(v) for v in value.ravel()]
+    if isinstance(value, np.generic | np.ndarray):
+        return jsonable(value.tolist())
     return str(value)
 
 

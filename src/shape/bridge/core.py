@@ -30,6 +30,7 @@ class Bridge:
 
     def __init__(self, jobs_dir: str | Path | None = None) -> None:
         root = Path(jobs_dir) if jobs_dir is not None else default_jobs_dir()
+        root = root.absolute()  # result paths are given to a client that may run elsewhere
         self.jobs = Jobs(JobStore(root))
 
     def handle(self, raw: str | bytes | Any) -> dict[str, Any]:
@@ -49,7 +50,7 @@ class Bridge:
                     f"unknown command {request.command!r}",
                     f"the commands are: {', '.join(COMMANDS)}",
                 )
-            result = self._run(command, request, context)
+            result = jsonable(self._run(command, request, context))
         except Exception as exc:
             return error_response(
                 to_bridge_error(exc),
@@ -57,7 +58,7 @@ class Bridge:
                 command=request.command,
                 warnings=[*request.warnings, *context.warnings],
             )
-        return ok_response(request, jsonable(result), context.warnings)
+        return ok_response(request, result, context.warnings)
 
     def close(self, timeout: float = 300.0) -> None:
         """Stop what this bridge started: streams and scale runs are cancelled, the other jobs

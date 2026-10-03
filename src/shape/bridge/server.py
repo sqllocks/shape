@@ -82,7 +82,7 @@ def _serve_lines(bridge: Bridge, source: IO[str], send: Callable[[dict[str, Any]
                 )
             )
             continue
-        send(bridge.handle(line))
+        send(bridge.handle(line.rstrip("\r\n")))  # the line end is not part of the request
 
 
 def _skip_rest_of_line(source: IO[str]) -> None:

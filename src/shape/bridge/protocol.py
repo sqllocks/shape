@@ -153,7 +153,7 @@ def check_version(text: Any) -> list[dict[str, str]]:
 def parse_request(raw: str | bytes | Any) -> Request:
     """Parse one request from its JSON text (or an already-decoded value)."""
     if isinstance(raw, str | bytes):
-        if len(raw) > MAX_REQUEST_BYTES:
+        if _size(raw) > MAX_REQUEST_BYTES:
             raise BridgeError(
                 "usage.request_too_large",
                 f"a request may be at most {MAX_REQUEST_BYTES} bytes",
@@ -216,6 +216,14 @@ def parse_request(raw: str | bytes | Any) -> Request:
     except BridgeError as exc:
         raise _with_id(exc, request_id) from None
     return Request(command, args, options, request_id, version, warnings)
+
+
+def _size(raw: str | bytes) -> int:
+    """A request's size in bytes (UTF-8 for text; a text longer than the limit in characters is
+    over it in bytes too, and is not encoded to say so)."""
+    if isinstance(raw, bytes) or len(raw) > MAX_REQUEST_BYTES:
+        return len(raw)
+    return len(raw.encode("utf-8", "surrogatepass"))
 
 
 def _with_id(exc: BridgeError, request_id: str | int | None) -> BridgeError:

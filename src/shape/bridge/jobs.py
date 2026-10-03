@@ -273,6 +273,9 @@ class Jobs:
 
         thread = threading.Thread(target=work, name=f"shape-bridge-{job_id}", daemon=True)
         with self._lock:
+            # A finished thread has recorded its job's end: let it go (a long session would
+            # otherwise keep every job's thread).
+            self._live = {k: v for k, v in self._live.items() if v[0].is_alive()}
             self._live[job_id] = (thread, cancel)
         thread.start()
         return self.get(job_id)
