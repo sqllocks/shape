@@ -1057,6 +1057,12 @@ def _build_parser(plugin_commands=()):
         add_help=False,
     )
     mg.add_argument("rest", nargs=argparse.REMAINDER)
+    vt = sub.add_parser(
+        "vault",
+        help="the value vault: keygen, inspect, verify, rekey",
+        add_help=False,
+    )
+    vt.add_argument("rest", nargs=argparse.REMAINDER)
     kg = sub.add_parser("keygen", help="generate an Ed25519 signing key pair")
     kg.add_argument(
         "prefix",
@@ -1422,6 +1428,10 @@ def _dispatch(argv):
     if argv[:1] in (["--version"], ["-V"]):
         print(f"shape {_version()}")
         return 0
+    if argv[:1] == ["vault"]:
+        from shape.cli import vault as vault_cli
+
+        return vault_cli.main(argv[1:])
     if argv[:1] == ["migrate"]:
         from shape.cli import migrate as migrate_cli
 
