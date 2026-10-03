@@ -103,7 +103,7 @@ jobs:
         with: {python-version: '3.11'}
       - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait azurite eventhubs
       - run: docker compose -f ci/emulators/docker-compose.yml up -d kusto
-      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-eventhubs -e plugins/shape-fabric
+      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e plugins/shape-fabric
       # the Kusto emulator tests: the emitter and the Eventhouse writer (the SQL writer's
       # emulator tests run in sqlserver-e2e)
       - run: python -m pytest -m emulator plugins/shape-fabric/tests/test_emulator.py plugins/shape-fabric/tests/test_kusto_emulator.py -q
@@ -134,7 +134,7 @@ jobs:
         uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - if: env.HAVE_LIVE == 'true'
-        run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-kafka -e plugins/shape-eventhubs -e plugins/shape-fabric
+        run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-kafka -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e plugins/shape-fabric
       - if: env.HAVE_LIVE == 'true' && env.KAFKA_SERVERS != ''
         run: python -m pytest -m live plugins/shape-kafka/tests -q
       - if: env.HAVE_LIVE == 'true' && env.EVENTHUBS_CONNECTION_STRING != ''
