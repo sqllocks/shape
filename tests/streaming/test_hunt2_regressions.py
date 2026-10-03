@@ -104,3 +104,29 @@ def test_695_a_complete_run_lists_every_fault():
         return {(r["kind"], r["table"], r["seq"]) for r in key.records}
 
     assert run(staged=True) == run(staged=False) != set()
+
+
+def test_697_input_without_a_decodable_event_is_an_error(tmp_path, capsys):
+    bad = tmp_path / "bad.jsonl"
+    bad.write_text("not json\n[1,2]\n42\n\n")
+    out = tmp_path / "out.json"
+    assert main(["stream-profile", str(bad), "-o", str(out)]) == 2
+    err = capsys.readouterr().err
+    assert "3" in err and "undecodable" in err and "--option format=" in err
+    assert not out.exists()
+
+
+def test_697_empty_and_blank_input_is_still_no_events(tmp_path, capsys):
+    for text in ("", "\n\n  \n"):
+        empty = tmp_path / "empty.jsonl"
+        empty.write_text(text)
+        assert main(["stream-profile", str(empty), "-o", str(tmp_path / "o.json")]) == 0
+        assert "no events" in capsys.readouterr().err
+
+
+def test_697_one_decodable_event_among_bad_lines_is_profiled(tmp_path, capsys):
+    mixed = tmp_path / "mixed.jsonl"
+    mixed.write_text('garbage\n{"v": 1}\n[2]\n')
+    assert main(["stream-profile", str(mixed), "-o", str(tmp_path / "o.json")]) == 0
+    summary = json.loads(capsys.readouterr().out)
+    assert summary["events"] == 1 and summary["undecodable"] == 2
