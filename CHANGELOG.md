@@ -21,6 +21,15 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   for a single table and off for a dataset (several tables): `--joint` / `joint=True` turn it on,
   `--no-joint` / `joint=False` off, `SHAPE_PROFILE_JOINT` when the call does not choose.
 
+- `shape fabric publish|notebook|deploy-notebook|setup|export-model` and the top-level `shape publish`,
+  `shape notebook`, `shape deploy-notebook`, `shape setup-fabric`, `shape export-model`
+  (`docs/plugins/fabric-commands.md`): publish a domain to a Lakehouse (landing zone and run manifest),
+  Warehouse, SQL Database or Eventhouse; make and deploy a Fabric notebook; make a Fabric Environment;
+  export a Power BI semantic model (`.bim`). Names that reach M and DAX are quoted, an accepted (202)
+  creation is followed to its end, the workspace listing is read across pages, and the notebook part is
+  named for its format. Harness: `benchmarks/vs_spindle/fabric_commands_1to1/` (the `.bim`, the
+  notebook, the requests and the landing zone against the baseline, an allow-list with probes,
+  negative controls).
 - `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
   the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
   clearing cover every month of a multi-month table. `duration_hours` still overrides it
