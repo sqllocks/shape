@@ -1,0 +1,7 @@
+tests as run (cell x table/column): {'<table>': 486, 'column': 3422}
+table: as run n=486 p<.05 35 (0.072); distinct draws n=434 p<.05 35 (0.081, null 0.05) p<.01 5 (0.0115, null 0.01) min p 2.3e-06
+   significant after Bonferroni over distinct draws: [('medium', 'hr_department', '<table>', 2.2877684874884908e-06), ('small', 'hr_department', '<table>', 2.2877684874884908e-06)]
+   Shape mean higher in 202 of 434
+column: as run n=3422 p<.05 136 (0.040); distinct draws n=2019 p<.05 95 (0.047, null 0.05) p<.01 21 (0.0104, null 0.01) min p 2.9e-11
+   significant after Bonferroni over distinct draws: [('medium', 'hr_department', 'department_name', 2.8609977053686734e-11), ('small', 'hr_department', 'department_name', 2.8609977053686734e-11), ('medium', 'retail_order', 'customer_id', 8.197497229004642e-07), ('medium', 'financial_transaction', 'account_id', 1.2493242098147689e-05), ('small', 'retail_order', 'customer_id', 1.4918040168154107e-06), ('medium', 'retail_order', 'customer_id', 8.882879790830555e-06)]
+   Shape mean higher in 842 of 2019

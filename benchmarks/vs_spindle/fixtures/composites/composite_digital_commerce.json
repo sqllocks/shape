@@ -1,0 +1,4711 @@
+{
+ "plan": {
+  "columns": {
+   "financial_account": [
+    "account_id",
+    "customer_id",
+    "account_type",
+    "opened_date",
+    "current_balance",
+    "currency",
+    "status"
+   ],
+   "financial_branch": [
+    "branch_id",
+    "shared_location_retail_store_id",
+    "branch_name",
+    "city",
+    "opened_date",
+    "is_active",
+    "state",
+    "zip_code",
+    "lat",
+    "lng"
+   ],
+   "financial_card": [
+    "card_id",
+    "account_id",
+    "card_type",
+    "card_network",
+    "last_four",
+    "issued_date",
+    "is_active",
+    "expiry_date"
+   ],
+   "financial_customer": [
+    "customer_id",
+    "primary_branch_id",
+    "shared_person_retail_customer_id",
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "date_of_birth",
+    "credit_tier",
+    "customer_since",
+    "is_active"
+   ],
+   "financial_fraud_flag": [
+    "flag_id",
+    "transaction_id",
+    "flag_type",
+    "risk_score",
+    "flagged_date",
+    "resolution"
+   ],
+   "financial_loan": [
+    "loan_id",
+    "customer_id",
+    "loan_type",
+    "principal_amount",
+    "interest_rate",
+    "term_months",
+    "origination_date",
+    "status",
+    "outstanding_balance"
+   ],
+   "financial_loan_payment": [
+    "payment_id",
+    "loan_id",
+    "payment_date",
+    "payment_amount",
+    "payment_method",
+    "principal_portion",
+    "interest_portion"
+   ],
+   "financial_statement": [
+    "statement_id",
+    "account_id",
+    "statement_date",
+    "opening_balance",
+    "total_deposits",
+    "total_withdrawals",
+    "fees_charged",
+    "closing_balance"
+   ],
+   "financial_transaction": [
+    "transaction_id",
+    "account_id",
+    "category_id",
+    "transaction_type",
+    "amount",
+    "transaction_date",
+    "channel",
+    "merchant_name",
+    "status"
+   ],
+   "financial_transaction_category": [
+    "category_id",
+    "category_name",
+    "parent_category_id",
+    "level"
+   ],
+   "marketing_campaign": [
+    "campaign_id",
+    "campaign_type_id",
+    "campaign_name",
+    "start_date",
+    "budget",
+    "status",
+    "end_date"
+   ],
+   "marketing_campaign_type": [
+    "type_id",
+    "type_name",
+    "channel",
+    "avg_conversion_rate"
+   ],
+   "marketing_contact": [
+    "contact_id",
+    "industry_id",
+    "lead_source_id",
+    "shared_person_retail_customer_id",
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "company",
+    "created_date"
+   ],
+   "marketing_conversion": [
+    "conversion_id",
+    "lead_id",
+    "campaign_id",
+    "conversion_date",
+    "conversion_type",
+    "revenue"
+   ],
+   "marketing_email_send": [
+    "send_id",
+    "campaign_id",
+    "contact_id",
+    "sent_date",
+    "opened",
+    "clicked",
+    "bounced"
+   ],
+   "marketing_industry": [
+    "industry_id",
+    "shared_organization_financial_branch_id",
+    "industry_name",
+    "sector"
+   ],
+   "marketing_lead": [
+    "lead_id",
+    "contact_id",
+    "campaign_id",
+    "lead_score",
+    "status",
+    "created_date"
+   ],
+   "marketing_lead_source": [
+    "source_id",
+    "source_name",
+    "source_type",
+    "cost_per_lead"
+   ],
+   "marketing_opportunity": [
+    "opp_id",
+    "lead_id",
+    "opp_name",
+    "stage",
+    "amount",
+    "close_date",
+    "probability"
+   ],
+   "marketing_web_visit": [
+    "visit_id",
+    "contact_id",
+    "visit_date",
+    "page_url",
+    "referrer",
+    "duration_seconds",
+    "pages_viewed"
+   ],
+   "retail_address": [
+    "address_id",
+    "customer_id",
+    "address_type",
+    "street",
+    "city",
+    "state",
+    "zip_code",
+    "lat",
+    "lng",
+    "is_primary"
+   ],
+   "retail_customer": [
+    "customer_id",
+    "first_name",
+    "last_name",
+    "email",
+    "gender",
+    "loyalty_tier",
+    "signup_date",
+    "is_active"
+   ],
+   "retail_order": [
+    "order_id",
+    "customer_id",
+    "store_id",
+    "shipping_address_id",
+    "promotion_id",
+    "order_date",
+    "status",
+    "order_total"
+   ],
+   "retail_order_line": [
+    "order_line_id",
+    "order_id",
+    "product_id",
+    "quantity",
+    "promotion_id",
+    "unit_price",
+    "discount_percent",
+    "line_total"
+   ],
+   "retail_product": [
+    "product_id",
+    "category_id",
+    "product_name",
+    "unit_price",
+    "product_status",
+    "cost"
+   ],
+   "retail_product_category": [
+    "category_id",
+    "category_name",
+    "parent_category_id",
+    "level"
+   ],
+   "retail_promotion": [
+    "promotion_id",
+    "promo_name",
+    "promo_type",
+    "discount_pct",
+    "start_date",
+    "end_date"
+   ],
+   "retail_return": [
+    "return_id",
+    "order_id",
+    "reason",
+    "refund_amount",
+    "return_date"
+   ],
+   "retail_store": [
+    "store_id",
+    "store_name",
+    "store_type",
+    "city",
+    "state"
+   ]
+  },
+  "levels": [
+   [
+    "financial_transaction_category",
+    "marketing_campaign_type",
+    "marketing_lead_source",
+    "retail_customer",
+    "retail_product_category",
+    "retail_promotion",
+    "retail_store"
+   ],
+   [
+    "marketing_campaign",
+    "retail_address",
+    "retail_product",
+    "financial_branch"
+   ],
+   [
+    "financial_customer",
+    "marketing_industry",
+    "retail_order"
+   ],
+   [
+    "financial_account",
+    "financial_loan",
+    "marketing_contact",
+    "retail_order_line",
+    "retail_return"
+   ],
+   [
+    "financial_card",
+    "financial_loan_payment",
+    "financial_statement",
+    "financial_transaction",
+    "marketing_email_send",
+    "marketing_lead",
+    "marketing_web_visit"
+   ],
+   [
+    "financial_fraud_flag",
+    "marketing_conversion",
+    "marketing_opportunity"
+   ]
+  ],
+  "order": [
+   "financial_transaction_category",
+   "marketing_campaign_type",
+   "marketing_campaign",
+   "marketing_lead_source",
+   "retail_customer",
+   "retail_address",
+   "retail_product_category",
+   "retail_product",
+   "retail_promotion",
+   "retail_store",
+   "financial_branch",
+   "financial_customer",
+   "financial_account",
+   "financial_card",
+   "financial_loan",
+   "financial_loan_payment",
+   "financial_statement",
+   "financial_transaction",
+   "financial_fraud_flag",
+   "marketing_industry",
+   "marketing_contact",
+   "marketing_email_send",
+   "marketing_lead",
+   "marketing_conversion",
+   "marketing_opportunity",
+   "marketing_web_visit",
+   "retail_order",
+   "retail_order_line",
+   "retail_return"
+  ],
+  "row_counts": {
+   "fabric_demo": {
+    "financial_account": 220,
+    "financial_branch": 200,
+    "financial_card": 176,
+    "financial_customer": 100,
+    "financial_fraud_flag": 20,
+    "financial_loan": 40,
+    "financial_loan_payment": 480,
+    "financial_statement": 1320,
+    "financial_transaction": 1000,
+    "financial_transaction_category": 40,
+    "marketing_campaign": 20,
+    "marketing_campaign_type": 15,
+    "marketing_contact": 500,
+    "marketing_conversion": 60,
+    "marketing_email_send": 1000,
+    "marketing_industry": 25,
+    "marketing_lead": 200,
+    "marketing_lead_source": 20,
+    "marketing_opportunity": 100,
+    "marketing_web_visit": 2500,
+    "retail_address": 300,
+    "retail_customer": 200,
+    "retail_order": 1000,
+    "retail_order_line": 2500,
+    "retail_product": 100,
+    "retail_product_category": 50,
+    "retail_promotion": 200,
+    "retail_return": 170,
+    "retail_store": 150
+   },
+   "large": {
+    "financial_account": 1100000,
+    "financial_branch": 200,
+    "financial_card": 880000,
+    "financial_customer": 500000,
+    "financial_fraud_flag": 100000,
+    "financial_loan": 200000,
+    "financial_loan_payment": 2400000,
+    "financial_statement": 6600000,
+    "financial_transaction": 5000000,
+    "financial_transaction_category": 40,
+    "marketing_campaign": 20000,
+    "marketing_campaign_type": 15,
+    "marketing_contact": 500000,
+    "marketing_conversion": 60000,
+    "marketing_email_send": 1000000,
+    "marketing_industry": 25,
+    "marketing_lead": 200000,
+    "marketing_lead_source": 20,
+    "marketing_opportunity": 100000,
+    "marketing_web_visit": 2500000,
+    "retail_address": 750000,
+    "retail_customer": 500000,
+    "retail_order": 5000000,
+    "retail_order_line": 12500000,
+    "retail_product": 25000,
+    "retail_product_category": 50,
+    "retail_promotion": 200,
+    "retail_return": 850000,
+    "retail_store": 150
+   },
+   "medium": {
+    "financial_account": 110000,
+    "financial_branch": 200,
+    "financial_card": 88000,
+    "financial_customer": 50000,
+    "financial_fraud_flag": 10000,
+    "financial_loan": 20000,
+    "financial_loan_payment": 240000,
+    "financial_statement": 660000,
+    "financial_transaction": 500000,
+    "financial_transaction_category": 40,
+    "marketing_campaign": 2000,
+    "marketing_campaign_type": 15,
+    "marketing_contact": 50000,
+    "marketing_conversion": 6000,
+    "marketing_email_send": 100000,
+    "marketing_industry": 25,
+    "marketing_lead": 20000,
+    "marketing_lead_source": 20,
+    "marketing_opportunity": 10000,
+    "marketing_web_visit": 250000,
+    "retail_address": 75000,
+    "retail_customer": 50000,
+    "retail_order": 500000,
+    "retail_order_line": 1250000,
+    "retail_product": 5000,
+    "retail_product_category": 50,
+    "retail_promotion": 200,
+    "retail_return": 85000,
+    "retail_store": 150
+   },
+   "small": {
+    "financial_account": 2200,
+    "financial_branch": 200,
+    "financial_card": 1760,
+    "financial_customer": 1000,
+    "financial_fraud_flag": 200,
+    "financial_loan": 400,
+    "financial_loan_payment": 4800,
+    "financial_statement": 13200,
+    "financial_transaction": 10000,
+    "financial_transaction_category": 40,
+    "marketing_campaign": 200,
+    "marketing_campaign_type": 15,
+    "marketing_contact": 5000,
+    "marketing_conversion": 600,
+    "marketing_email_send": 10000,
+    "marketing_industry": 25,
+    "marketing_lead": 2000,
+    "marketing_lead_source": 20,
+    "marketing_opportunity": 1000,
+    "marketing_web_visit": 25000,
+    "retail_address": 1500,
+    "retail_customer": 1000,
+    "retail_order": 5000,
+    "retail_order_line": 12500,
+    "retail_product": 500,
+    "retail_product_category": 50,
+    "retail_promotion": 200,
+    "retail_return": 850,
+    "retail_store": 150
+   },
+   "warehouse": {
+    "financial_account": 22000000,
+    "financial_branch": 200,
+    "financial_card": 17600000,
+    "financial_customer": 10000000,
+    "financial_fraud_flag": 40000000,
+    "financial_loan": 4000000,
+    "financial_loan_payment": 48000000,
+    "financial_statement": 132000000,
+    "financial_transaction": 2000000000,
+    "financial_transaction_category": 40,
+    "marketing_campaign": 200000,
+    "marketing_campaign_type": 15,
+    "marketing_contact": 5000000,
+    "marketing_conversion": 600000,
+    "marketing_email_send": 10000000,
+    "marketing_industry": 25,
+    "marketing_lead": 2000000,
+    "marketing_lead_source": 20,
+    "marketing_opportunity": 1000000,
+    "marketing_web_visit": 25000000,
+    "retail_address": 1500000,
+    "retail_customer": 1000000,
+    "retail_order": 10000000,
+    "retail_order_line": 25000000,
+    "retail_product": 50000,
+    "retail_product_category": 50,
+    "retail_promotion": 200,
+    "retail_return": 1700000,
+    "retail_store": 150
+   },
+   "xlarge": {
+    "financial_account": 11000000,
+    "financial_branch": 200,
+    "financial_card": 8800000,
+    "financial_customer": 5000000,
+    "financial_fraud_flag": 2000000,
+    "financial_loan": 2000000,
+    "financial_loan_payment": 24000000,
+    "financial_statement": 66000000,
+    "financial_transaction": 100000000,
+    "financial_transaction_category": 40,
+    "marketing_campaign": 500000,
+    "marketing_campaign_type": 15,
+    "marketing_contact": 12500000,
+    "marketing_conversion": 1500000,
+    "marketing_email_send": 25000000,
+    "marketing_industry": 25,
+    "marketing_lead": 5000000,
+    "marketing_lead_source": 20,
+    "marketing_opportunity": 2500000,
+    "marketing_web_visit": 62500000,
+    "retail_address": 7500000,
+    "retail_customer": 5000000,
+    "retail_order": 100000000,
+    "retail_order_line": 250000000,
+    "retail_product": 100000,
+    "retail_product_category": 50,
+    "retail_promotion": 200,
+    "retail_return": 17000000,
+    "retail_store": 150
+   },
+   "xxl": {
+    "financial_account": 44000000,
+    "financial_branch": 200,
+    "financial_card": 35200000,
+    "financial_customer": 20000000,
+    "financial_fraud_flag": 200000000,
+    "financial_loan": 8000000,
+    "financial_loan_payment": 96000000,
+    "financial_statement": 264000000,
+    "financial_transaction": 10000000000,
+    "financial_transaction_category": 40,
+    "marketing_campaign": 2000000,
+    "marketing_campaign_type": 15,
+    "marketing_contact": 50000000,
+    "marketing_conversion": 6000000,
+    "marketing_email_send": 100000000,
+    "marketing_industry": 25,
+    "marketing_lead": 20000000,
+    "marketing_lead_source": 20,
+    "marketing_opportunity": 10000000,
+    "marketing_web_visit": 250000000,
+    "retail_address": 30000000,
+    "retail_customer": 20000000,
+    "retail_order": 1000000000,
+    "retail_order_line": 2500000000,
+    "retail_product": 200000,
+    "retail_product_category": 50,
+    "retail_promotion": 200,
+    "retail_return": 170000000,
+    "retail_store": 150
+   },
+   "xxxl": {
+    "financial_account": 220000000,
+    "financial_branch": 200,
+    "financial_card": 176000000,
+    "financial_customer": 100000000,
+    "financial_fraud_flag": 2000000000,
+    "financial_loan": 40000000,
+    "financial_loan_payment": 480000000,
+    "financial_statement": 1320000000,
+    "financial_transaction": 100000000000,
+    "financial_transaction_category": 40,
+    "marketing_campaign": 10000000,
+    "marketing_campaign_type": 15,
+    "marketing_contact": 250000000,
+    "marketing_conversion": 30000000,
+    "marketing_email_send": 500000000,
+    "marketing_industry": 25,
+    "marketing_lead": 100000000,
+    "marketing_lead_source": 20,
+    "marketing_opportunity": 50000000,
+    "marketing_web_visit": 1250000000,
+    "retail_address": 150000000,
+    "retail_customer": 100000000,
+    "retail_order": 10000000000,
+    "retail_order_line": 25000000000,
+    "retail_product": 500000,
+    "retail_product_category": 50,
+    "retail_promotion": 200,
+    "retail_return": 1700000000,
+    "retail_store": 150
+   }
+  }
+ },
+ "preset": {
+  "description": "Digital commerce with retail, marketing, and financial data",
+  "domains": [
+   "retail",
+   "marketing",
+   "financial"
+  ],
+  "name": "digital_commerce",
+  "shared_entities": {}
+ },
+ "schema": {
+  "business_rules": [
+   {
+    "name": "retail_order_date_after_signup",
+    "rule": "retail_order.order_date >= retail_customer.signup_date",
+    "table": null,
+    "type": "cross_table",
+    "via": "customer_id",
+    "when": null
+   },
+   {
+    "name": "retail_return_after_order",
+    "rule": "retail_return.return_date > retail_order.order_date",
+    "table": null,
+    "type": "cross_table",
+    "via": "order_id",
+    "when": null
+   },
+   {
+    "name": "retail_cost_less_than_price",
+    "rule": "cost < unit_price",
+    "table": "retail_product",
+    "type": "cross_column",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "retail_refund_leq_order_total",
+    "rule": "retail_return.refund_amount <= retail_order.order_total",
+    "table": null,
+    "type": "cross_table",
+    "via": "order_id",
+    "when": null
+   },
+   {
+    "name": "retail_line_total_positive",
+    "rule": "line_total > 0",
+    "table": "retail_order_line",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "marketing_budget_positive",
+    "rule": "budget > 0",
+    "table": "marketing_campaign",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "marketing_lead_score_range",
+    "rule": "lead_score >= 0 AND lead_score <= 100",
+    "table": "marketing_lead",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "financial_account_opened_after_customer_since",
+    "rule": "",
+    "table": null,
+    "type": "temporal_order",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "financial_loan_after_customer_since",
+    "rule": "",
+    "table": null,
+    "type": "temporal_order",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "financial_outstanding_leq_principal",
+    "rule": "",
+    "table": "financial_loan",
+    "type": "column_comparison",
+    "via": null,
+    "when": null
+   }
+  ],
+  "correlated_columns": {},
+  "generation": {
+   "derived_counts": {
+    "financial_account": {
+     "per_parent": "financial_customer",
+     "ratio": 2.2
+    },
+    "financial_branch": {
+     "fixed": 200
+    },
+    "financial_card": {
+     "per_parent": "financial_account",
+     "ratio": 0.8
+    },
+    "financial_fraud_flag": {
+     "per_parent": "financial_transaction",
+     "ratio": 0.02
+    },
+    "financial_loan": {
+     "per_parent": "financial_customer",
+     "ratio": 0.4
+    },
+    "financial_loan_payment": {
+     "per_parent": "financial_loan",
+     "ratio": 12
+    },
+    "financial_statement": {
+     "per_parent": "financial_account",
+     "ratio": 6
+    },
+    "financial_transaction_category": {
+     "fixed": 40
+    },
+    "marketing_campaign_type": {
+     "fixed": 15
+    },
+    "marketing_contact": {
+     "per_parent": "marketing_campaign",
+     "ratio": 25.0
+    },
+    "marketing_conversion": {
+     "per_parent": "marketing_lead",
+     "ratio": 0.3
+    },
+    "marketing_email_send": {
+     "per_parent": "marketing_campaign",
+     "ratio": 50.0
+    },
+    "marketing_industry": {
+     "fixed": 25
+    },
+    "marketing_lead": {
+     "per_parent": "marketing_contact",
+     "ratio": 0.4
+    },
+    "marketing_lead_source": {
+     "fixed": 20
+    },
+    "marketing_opportunity": {
+     "per_parent": "marketing_lead",
+     "ratio": 0.5
+    },
+    "marketing_web_visit": {
+     "per_parent": "marketing_contact",
+     "ratio": 5.0
+    },
+    "retail_address": {
+     "per_parent": "retail_customer",
+     "ratio": 1.5
+    },
+    "retail_order_line": {
+     "per_parent": "retail_order",
+     "ratio": 2.5
+    },
+    "retail_product_category": {
+     "fixed": 50
+    },
+    "retail_promotion": {
+     "per_year": 50
+    },
+    "retail_return": {
+     "per_parent": "retail_order",
+     "ratio": 0.17
+    },
+    "retail_store": {
+     "fixed": 150
+    }
+   },
+   "output": {
+    "format": "dataframe"
+   },
+   "scale": "small",
+   "scales": {
+    "fabric_demo": {
+     "financial_customer": 100,
+     "financial_transaction": 1000,
+     "marketing_campaign": 20,
+     "retail_customer": 200,
+     "retail_order": 1000,
+     "retail_product": 100
+    },
+    "large": {
+     "financial_customer": 500000,
+     "financial_transaction": 5000000,
+     "marketing_campaign": 20000,
+     "retail_customer": 500000,
+     "retail_order": 5000000,
+     "retail_product": 25000
+    },
+    "medium": {
+     "financial_customer": 50000,
+     "financial_transaction": 500000,
+     "marketing_campaign": 2000,
+     "retail_customer": 50000,
+     "retail_order": 500000,
+     "retail_product": 5000
+    },
+    "small": {
+     "financial_customer": 1000,
+     "financial_transaction": 10000,
+     "marketing_campaign": 200,
+     "retail_customer": 1000,
+     "retail_order": 5000,
+     "retail_product": 500
+    },
+    "warehouse": {
+     "financial_customer": 10000000,
+     "financial_transaction": 2000000000,
+     "marketing_campaign": 200000,
+     "retail_customer": 1000000,
+     "retail_order": 10000000,
+     "retail_product": 50000
+    },
+    "xlarge": {
+     "financial_customer": 5000000,
+     "financial_transaction": 100000000,
+     "marketing_campaign": 500000,
+     "retail_customer": 5000000,
+     "retail_order": 100000000,
+     "retail_product": 100000
+    },
+    "xxl": {
+     "financial_customer": 20000000,
+     "financial_transaction": 10000000000,
+     "marketing_campaign": 2000000,
+     "retail_customer": 20000000,
+     "retail_order": 1000000000,
+     "retail_product": 200000
+    },
+    "xxxl": {
+     "financial_customer": 100000000,
+     "financial_transaction": 100000000000,
+     "marketing_campaign": 10000000,
+     "retail_customer": 100000000,
+     "retail_order": 10000000000,
+     "retail_product": 500000
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2022-01-01"
+   },
+   "description": "Cross-domain composition of: retail, marketing, financial",
+   "domain": "composite",
+   "locale": "en_US",
+   "name": "composite_financial_marketing_retail",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "cardinality": {},
+    "child": "retail_address",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "retail_customer_addresses",
+    "optional": false,
+    "parent": "retail_customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "retail_product",
+    "child_columns": [
+     "category_id"
+    ],
+    "name": "retail_product_in_category",
+    "optional": false,
+    "parent": "retail_product_category",
+    "parent_columns": [
+     "category_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "retail_order",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "retail_customer_orders",
+    "optional": false,
+    "parent": "retail_customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "retail_order",
+    "child_columns": [
+     "store_id"
+    ],
+    "name": "retail_order_store",
+    "optional": false,
+    "parent": "retail_store",
+    "parent_columns": [
+     "store_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "retail_order",
+    "child_columns": [
+     "shipping_address_id"
+    ],
+    "name": "retail_order_address",
+    "optional": false,
+    "parent": "retail_address",
+    "parent_columns": [
+     "address_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "retail_order",
+    "child_columns": [
+     "promotion_id"
+    ],
+    "name": "retail_order_promotion",
+    "optional": true,
+    "parent": "retail_promotion",
+    "parent_columns": [
+     "promotion_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "retail_order_line",
+    "child_columns": [
+     "order_id"
+    ],
+    "name": "retail_order_lines",
+    "optional": false,
+    "parent": "retail_order",
+    "parent_columns": [
+     "order_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "retail_order_line",
+    "child_columns": [
+     "product_id"
+    ],
+    "name": "retail_order_line_product",
+    "optional": false,
+    "parent": "retail_product",
+    "parent_columns": [
+     "product_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "retail_return",
+    "child_columns": [
+     "order_id"
+    ],
+    "name": "retail_order_returns",
+    "optional": false,
+    "parent": "retail_order",
+    "parent_columns": [
+     "order_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "marketing_campaign",
+    "child_columns": [
+     "campaign_type_id"
+    ],
+    "name": "marketing_campaign_campaign_type",
+    "optional": false,
+    "parent": "marketing_campaign_type",
+    "parent_columns": [
+     "type_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "marketing_contact",
+    "child_columns": [
+     "industry_id"
+    ],
+    "name": "marketing_contact_industry",
+    "optional": false,
+    "parent": "marketing_industry",
+    "parent_columns": [
+     "industry_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "marketing_contact",
+    "child_columns": [
+     "lead_source_id"
+    ],
+    "name": "marketing_contact_lead_source",
+    "optional": false,
+    "parent": "marketing_lead_source",
+    "parent_columns": [
+     "source_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "marketing_lead",
+    "child_columns": [
+     "contact_id"
+    ],
+    "name": "marketing_lead_contact",
+    "optional": false,
+    "parent": "marketing_contact",
+    "parent_columns": [
+     "contact_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "marketing_lead",
+    "child_columns": [
+     "campaign_id"
+    ],
+    "name": "marketing_lead_campaign",
+    "optional": false,
+    "parent": "marketing_campaign",
+    "parent_columns": [
+     "campaign_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "marketing_opportunity",
+    "child_columns": [
+     "lead_id"
+    ],
+    "name": "marketing_opportunity_lead",
+    "optional": false,
+    "parent": "marketing_lead",
+    "parent_columns": [
+     "lead_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "marketing_email_send",
+    "child_columns": [
+     "campaign_id"
+    ],
+    "name": "marketing_email_send_campaign",
+    "optional": false,
+    "parent": "marketing_campaign",
+    "parent_columns": [
+     "campaign_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "marketing_email_send",
+    "child_columns": [
+     "contact_id"
+    ],
+    "name": "marketing_email_send_contact",
+    "optional": false,
+    "parent": "marketing_contact",
+    "parent_columns": [
+     "contact_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "marketing_web_visit",
+    "child_columns": [
+     "contact_id"
+    ],
+    "name": "marketing_web_visit_contact",
+    "optional": false,
+    "parent": "marketing_contact",
+    "parent_columns": [
+     "contact_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "marketing_conversion",
+    "child_columns": [
+     "lead_id"
+    ],
+    "name": "marketing_conversion_lead",
+    "optional": false,
+    "parent": "marketing_lead",
+    "parent_columns": [
+     "lead_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "marketing_conversion",
+    "child_columns": [
+     "campaign_id"
+    ],
+    "name": "marketing_conversion_campaign",
+    "optional": false,
+    "parent": "marketing_campaign",
+    "parent_columns": [
+     "campaign_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "financial_customer",
+    "child_columns": [
+     "primary_branch_id"
+    ],
+    "name": "financial_customer_primary_branch",
+    "optional": false,
+    "parent": "financial_branch",
+    "parent_columns": [
+     "branch_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "financial_account",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "financial_customer_accounts",
+    "optional": false,
+    "parent": "financial_customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "financial_card",
+    "child_columns": [
+     "account_id"
+    ],
+    "name": "financial_account_cards",
+    "optional": false,
+    "parent": "financial_account",
+    "parent_columns": [
+     "account_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "financial_transaction",
+    "child_columns": [
+     "account_id"
+    ],
+    "name": "financial_account_transactions",
+    "optional": false,
+    "parent": "financial_account",
+    "parent_columns": [
+     "account_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "financial_transaction",
+    "child_columns": [
+     "category_id"
+    ],
+    "name": "financial_transaction_category_ref",
+    "optional": false,
+    "parent": "financial_transaction_category",
+    "parent_columns": [
+     "category_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "financial_loan",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "financial_customer_loans",
+    "optional": false,
+    "parent": "financial_customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "financial_loan_payment",
+    "child_columns": [
+     "loan_id"
+    ],
+    "name": "financial_loan_payments",
+    "optional": false,
+    "parent": "financial_loan",
+    "parent_columns": [
+     "loan_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "financial_fraud_flag",
+    "child_columns": [
+     "transaction_id"
+    ],
+    "name": "financial_transaction_fraud_flags",
+    "optional": false,
+    "parent": "financial_transaction",
+    "parent_columns": [
+     "transaction_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "financial_statement",
+    "child_columns": [
+     "account_id"
+    ],
+    "name": "financial_account_statements",
+    "optional": false,
+    "parent": "financial_account",
+    "parent_columns": [
+     "account_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "financial_customer",
+    "child_columns": [
+     "shared_person_retail_customer_id"
+    ],
+    "name": "xdomain_person_retail_to_financial",
+    "optional": true,
+    "parent": "retail_customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "marketing_contact",
+    "child_columns": [
+     "shared_person_retail_customer_id"
+    ],
+    "name": "xdomain_person_retail_to_marketing",
+    "optional": true,
+    "parent": "retail_customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "financial_branch",
+    "child_columns": [
+     "shared_location_retail_store_id"
+    ],
+    "name": "xdomain_location_retail_to_financial",
+    "optional": true,
+    "parent": "retail_store",
+    "parent_columns": [
+     "store_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "marketing_industry",
+    "child_columns": [
+     "shared_organization_financial_branch_id"
+    ],
+    "name": "xdomain_organization_financial_to_marketing",
+    "optional": true,
+    "parent": "financial_branch",
+    "parent_columns": [
+     "branch_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "financial_account": {
+    "cdm_mapping": null,
+    "columns": {
+     "account_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "account_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "account_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "CD": 0.08,
+        "Checking": 0.45,
+        "Investment": 0.07,
+        "Money Market": 0.1,
+        "Savings": 0.3
+       }
+      },
+      "max_length": null,
+      "name": "account_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "currency": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "USD": 1.0
+       }
+      },
+      "max_length": 3,
+      "name": "currency",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "current_balance": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 5000000.0,
+       "mean": 8.5,
+       "min": 0.0,
+       "round": 2,
+       "sigma": 1.8,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "current_balance",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "customer_id": {
+      "generator": {
+       "ref": "financial_customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "opened_date": {
+      "generator": {
+       "end": "2025-06-30",
+       "pattern": "uniform",
+       "start": "2015-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "opened_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Active": 0.85,
+        "Closed": 0.05,
+        "Dormant": 0.08,
+        "Frozen": 0.02
+       }
+      },
+      "max_length": null,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[financial] Customer bank accounts",
+    "name": "financial_account",
+    "primary_key": [
+     "account_id"
+    ]
+   },
+   "financial_branch": {
+    "cdm_mapping": null,
+    "columns": {
+     "branch_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "branch_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "branch_name": {
+      "generator": {
+       "dataset": "branch_names",
+       "strategy": "reference_data"
+      },
+      "max_length": 100,
+      "name": "branch_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "city": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "city",
+       "strategy": "record_sample"
+      },
+      "max_length": 100,
+      "name": "city",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "is_active": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.08,
+        "true": 0.92
+       }
+      },
+      "max_length": null,
+      "name": "is_active",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "boolean"
+     },
+     "lat": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "lat",
+       "strategy": "record_field"
+      },
+      "max_length": null,
+      "name": "lat",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "lng": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "lng",
+       "strategy": "record_field"
+      },
+      "max_length": null,
+      "name": "lng",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "opened_date": {
+      "generator": {
+       "end": "2024-12-31",
+       "pattern": "uniform",
+       "start": "2000-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "opened_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "shared_location_retail_store_id": {
+      "generator": {
+       "ref": "retail_store.store_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "shared_location_retail_store_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "state": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "state",
+       "strategy": "record_field"
+      },
+      "max_length": 2,
+      "name": "state",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "zip_code": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "zip",
+       "strategy": "record_field"
+      },
+      "max_length": 10,
+      "name": "zip_code",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[financial] Bank branches with locations",
+    "name": "financial_branch",
+    "primary_key": [
+     "branch_id"
+    ]
+   },
+   "financial_card": {
+    "cdm_mapping": null,
+    "columns": {
+     "account_id": {
+      "generator": {
+       "ref": "financial_account.account_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "account_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "card_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "card_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "card_network": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Amex": 0.15,
+        "Discover": 0.09,
+        "Mastercard": 0.24,
+        "Visa": 0.52
+       }
+      },
+      "max_length": null,
+      "name": "card_network",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "card_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Credit": 0.35,
+        "Debit": 0.55,
+        "Prepaid": 0.1
+       }
+      },
+      "max_length": null,
+      "name": "card_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "expiry_date": {
+      "generator": {
+       "days": 1095,
+       "operation": "add_days",
+       "source": "issued_date",
+       "strategy": "derived"
+      },
+      "max_length": null,
+      "name": "expiry_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "is_active": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.1,
+        "true": 0.9
+       }
+      },
+      "max_length": null,
+      "name": "is_active",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "boolean"
+     },
+     "issued_date": {
+      "generator": {
+       "end": "2025-06-30",
+       "pattern": "uniform",
+       "start": "2020-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "issued_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "last_four": {
+      "generator": {
+       "format": "{seq:4}",
+       "strategy": "pattern"
+      },
+      "max_length": 4,
+      "name": "last_four",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[financial] Credit and debit cards linked to accounts",
+    "name": "financial_card",
+    "primary_key": [
+     "card_id"
+    ]
+   },
+   "financial_customer": {
+    "cdm_mapping": null,
+    "columns": {
+     "credit_tier": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Excellent": 0.22,
+        "Fair": 0.28,
+        "Good": 0.35,
+        "Poor": 0.15
+       }
+      },
+      "max_length": null,
+      "name": "credit_tier",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "customer_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "customer_since": {
+      "generator": {
+       "end": "2025-06-30",
+       "pattern": "uniform",
+       "start": "2010-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "customer_since",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "date_of_birth": {
+      "generator": {
+       "end": "2005-12-31",
+       "pattern": "uniform",
+       "start": "1945-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "date_of_birth",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "email": {
+      "generator": {
+       "provider": "email",
+       "strategy": "faker"
+      },
+      "max_length": 255,
+      "name": "email",
+      "null_rate": 0.03,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "first_name": {
+      "generator": {
+       "provider": "first_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "first_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "is_active": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.12,
+        "true": 0.88
+       }
+      },
+      "max_length": null,
+      "name": "is_active",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "boolean"
+     },
+     "last_name": {
+      "generator": {
+       "provider": "last_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "last_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "phone": {
+      "generator": {
+       "provider": "phone_number",
+       "strategy": "faker"
+      },
+      "max_length": 20,
+      "name": "phone",
+      "null_rate": 0.1,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "primary_branch_id": {
+      "generator": {
+       "alpha": 1.3,
+       "distribution": "zipf",
+       "ref": "financial_branch.branch_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "primary_branch_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "shared_person_retail_customer_id": {
+      "generator": {
+       "ref": "retail_customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "shared_person_retail_customer_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[financial] Bank customers with demographics and credit tiers",
+    "name": "financial_customer",
+    "primary_key": [
+     "customer_id"
+    ]
+   },
+   "financial_fraud_flag": {
+    "cdm_mapping": null,
+    "columns": {
+     "flag_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "flag_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "flag_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Account Takeover": 0.1,
+        "Card Not Present": 0.1,
+        "Rapid Succession": 0.15,
+        "Unusual Amount": 0.3,
+        "Unusual Location": 0.25,
+        "Velocity Check": 0.1
+       }
+      },
+      "max_length": null,
+      "name": "flag_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "flagged_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2022-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "flagged_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "datetime"
+     },
+     "resolution": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Confirmed Fraud": 0.15,
+        "Customer Verified": 0.1,
+        "False Positive": 0.55,
+        "Under Review": 0.2
+       }
+      },
+      "max_length": null,
+      "name": "resolution",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "risk_score": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 1.0,
+       "min": 0.5,
+       "round": 3,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "risk_score",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "transaction_id": {
+      "generator": {
+       "ref": "financial_transaction.transaction_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "transaction_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[financial] Suspicious transaction flags for fraud detection",
+    "name": "financial_fraud_flag",
+    "primary_key": [
+     "flag_id"
+    ]
+   },
+   "financial_loan": {
+    "cdm_mapping": null,
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "ref": "financial_customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "interest_rate": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 18.0,
+       "min": 2.5,
+       "round": 2,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "interest_rate",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "loan_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "loan_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "loan_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Auto": 0.25,
+        "Business": 0.08,
+        "Mortgage": 0.35,
+        "Personal": 0.2,
+        "Student": 0.12
+       }
+      },
+      "max_length": null,
+      "name": "loan_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "origination_date": {
+      "generator": {
+       "end": "2025-06-30",
+       "pattern": "uniform",
+       "start": "2018-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "origination_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "outstanding_balance": {
+      "generator": {
+       "operation": "multiply",
+       "params": {
+        "factor_max": 0.95,
+        "factor_min": 0.1
+       },
+       "source_column": "principal_amount",
+       "strategy": "correlated"
+      },
+      "max_length": null,
+      "name": "outstanding_balance",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "principal_amount": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 2000000.0,
+       "mean": 10.5,
+       "min": 1000.0,
+       "round": 2,
+       "sigma": 1.2,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "principal_amount",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Current": 0.78,
+        "Default": 0.03,
+        "Delinquent": 0.06,
+        "Forbearance": 0.03,
+        "Paid Off": 0.1
+       }
+      },
+      "max_length": null,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "term_months": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "12": 0.05,
+        "120": 0.1,
+        "180": 0.1,
+        "24": 0.08,
+        "240": 0.1,
+        "36": 0.12,
+        "360": 0.2,
+        "48": 0.1,
+        "60": 0.15
+       }
+      },
+      "max_length": null,
+      "name": "term_months",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[financial] Customer loans (mortgage, auto, personal, student)",
+    "name": "financial_loan",
+    "primary_key": [
+     "loan_id"
+    ]
+   },
+   "financial_loan_payment": {
+    "cdm_mapping": null,
+    "columns": {
+     "interest_portion": {
+      "generator": {
+       "expression": "payment_amount - principal_portion",
+       "strategy": "formula"
+      },
+      "max_length": null,
+      "name": "interest_portion",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "loan_id": {
+      "generator": {
+       "ref": "financial_loan.loan_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "loan_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "payment_amount": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 50000.0,
+       "mean": 7.0,
+       "min": 50.0,
+       "round": 2,
+       "sigma": 1.0,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "payment_amount",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "payment_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2022-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "payment_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "payment_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "payment_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "payment_method": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Auto-debit": 0.55,
+        "Branch": 0.07,
+        "Check": 0.1,
+        "Online": 0.25,
+        "Phone": 0.03
+       }
+      },
+      "max_length": null,
+      "name": "payment_method",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "principal_portion": {
+      "generator": {
+       "operation": "multiply",
+       "params": {
+        "factor_max": 0.7,
+        "factor_min": 0.3
+       },
+       "source_column": "payment_amount",
+       "strategy": "correlated"
+      },
+      "max_length": null,
+      "name": "principal_portion",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     }
+    },
+    "description": "[financial] Monthly loan payments",
+    "name": "financial_loan_payment",
+    "primary_key": [
+     "payment_id"
+    ]
+   },
+   "financial_statement": {
+    "cdm_mapping": null,
+    "columns": {
+     "account_id": {
+      "generator": {
+       "ref": "financial_account.account_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "account_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "closing_balance": {
+      "generator": {
+       "operation": "multiply",
+       "params": {
+        "factor_max": 1.15,
+        "factor_min": 0.85
+       },
+       "source_column": "opening_balance",
+       "strategy": "correlated"
+      },
+      "max_length": null,
+      "name": "closing_balance",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "fees_charged": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 500.0,
+       "mean": 2.0,
+       "min": 0.0,
+       "round": 2,
+       "sigma": 1.0,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "fees_charged",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "opening_balance": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 2000000.0,
+       "mean": 8.0,
+       "min": 0.0,
+       "round": 2,
+       "sigma": 1.5,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "opening_balance",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "statement_date": {
+      "generator": {
+       "end": "2025-06-30",
+       "pattern": "uniform",
+       "start": "2024-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "statement_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "statement_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "statement_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "total_deposits": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 500000.0,
+       "mean": 7.5,
+       "min": 0.0,
+       "round": 2,
+       "sigma": 1.2,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "total_deposits",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "total_withdrawals": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 500000.0,
+       "mean": 7.3,
+       "min": 0.0,
+       "round": 2,
+       "sigma": 1.2,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "total_withdrawals",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     }
+    },
+    "description": "[financial] Monthly account statements",
+    "name": "financial_statement",
+    "primary_key": [
+     "statement_id"
+    ]
+   },
+   "financial_transaction": {
+    "cdm_mapping": null,
+    "columns": {
+     "account_id": {
+      "generator": {
+       "alpha": 1.2,
+       "distribution": "pareto",
+       "max_per_parent": 200,
+       "ref": "financial_account.account_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "account_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "amount": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 100000.0,
+       "mean": 4.2,
+       "min": 0.01,
+       "round": 2,
+       "sigma": 1.5,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "amount",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "category_id": {
+      "generator": {
+       "alpha": 1.4,
+       "distribution": "zipf",
+       "ref": "financial_transaction_category.category_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "category_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "channel": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "ATM": 0.15,
+        "Branch": 0.12,
+        "Mobile": 0.3,
+        "Online": 0.35,
+        "Phone": 0.05,
+        "Wire": 0.03
+       }
+      },
+      "max_length": null,
+      "name": "channel",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "merchant_name": {
+      "generator": {
+       "dataset": "merchant_names",
+       "strategy": "reference_data"
+      },
+      "max_length": 200,
+      "name": "merchant_name",
+      "null_rate": 0.3,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Completed": 0.92,
+        "Failed": 0.02,
+        "Pending": 0.04,
+        "Reversed": 0.02
+       }
+      },
+      "max_length": null,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "transaction_date": {
+      "generator": {
+       "day_of_week_weights": {
+        "Fri": 0.16,
+        "Mon": 0.165,
+        "Sat": 0.105,
+        "Sun": 0.1,
+        "Thu": 0.155,
+        "Tue": 0.16,
+        "Wed": 0.155
+       },
+       "end": "2025-12-31",
+       "month_weights": {
+        "Apr": 0.082,
+        "Aug": 0.085,
+        "Dec": 0.094,
+        "Feb": 0.072,
+        "Jan": 0.078,
+        "Jul": 0.084,
+        "Jun": 0.083,
+        "Mar": 0.083,
+        "May": 0.085,
+        "Nov": 0.088,
+        "Oct": 0.084,
+        "Sep": 0.082
+       },
+       "pattern": "seasonal",
+       "start": "2022-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "transaction_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "datetime"
+     },
+     "transaction_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "transaction_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "transaction_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Deposit": 0.25,
+        "Fee": 0.05,
+        "Interest": 0.05,
+        "Payment": 0.22,
+        "Refund": 0.05,
+        "Transfer": 0.18,
+        "Withdrawal": 0.2
+       }
+      },
+      "max_length": null,
+      "name": "transaction_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[financial] Financial transactions (deposits, withdrawals, transfers, payments)",
+    "name": "financial_transaction",
+    "primary_key": [
+     "transaction_id"
+    ]
+   },
+   "financial_transaction_category": {
+    "cdm_mapping": null,
+    "columns": {
+     "category_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "category_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "category_name": {
+      "generator": {
+       "dataset": "transaction_categories",
+       "strategy": "reference_data"
+      },
+      "max_length": 100,
+      "name": "category_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "level": {
+      "generator": {
+       "field": "level",
+       "strategy": "self_ref_field"
+      },
+      "max_length": null,
+      "name": "level",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "parent_category_id": {
+      "generator": {
+       "max_depth": 2,
+       "pk_column": "category_id",
+       "root_count": 8,
+       "strategy": "self_referencing"
+      },
+      "max_length": null,
+      "name": "parent_category_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[financial] Transaction category hierarchy",
+    "name": "financial_transaction_category",
+    "primary_key": [
+     "category_id"
+    ]
+   },
+   "marketing_campaign": {
+    "cdm_mapping": null,
+    "columns": {
+     "budget": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 500000.0,
+       "mean": 9.5,
+       "min": 1000.0,
+       "round": 2,
+       "sigma": 1.0,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "budget",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "campaign_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "campaign_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "campaign_name": {
+      "generator": {
+       "format": "CMP-{seq:4}",
+       "strategy": "pattern"
+      },
+      "max_length": 200,
+      "name": "campaign_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "campaign_type_id": {
+      "generator": {
+       "ref": "marketing_campaign_type.type_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "campaign_type_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "end_date": {
+      "generator": {
+       "days": 30,
+       "operation": "add_days",
+       "source": "start_date",
+       "strategy": "derived"
+      },
+      "max_length": null,
+      "name": "end_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "start_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2022-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "start_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Active": 0.25,
+        "Completed": 0.45,
+        "Draft": 0.15,
+        "Paused": 0.15
+       }
+      },
+      "max_length": null,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[marketing] Marketing campaigns",
+    "name": "marketing_campaign",
+    "primary_key": [
+     "campaign_id"
+    ]
+   },
+   "marketing_campaign_type": {
+    "cdm_mapping": null,
+    "columns": {
+     "avg_conversion_rate": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 0.15,
+       "min": 0.01,
+       "round": 4,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "avg_conversion_rate",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "channel": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Content": 0.15,
+        "Direct Mail": 0.1,
+        "Email": 0.25,
+        "Event": 0.12,
+        "PPC": 0.18,
+        "Social": 0.2
+       }
+      },
+      "max_length": null,
+      "name": "channel",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "type_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "type_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "type_name": {
+      "generator": {
+       "dataset": "campaign_types",
+       "strategy": "reference_data"
+      },
+      "max_length": 100,
+      "name": "type_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[marketing] Campaign categories",
+    "name": "marketing_campaign_type",
+    "primary_key": [
+     "type_id"
+    ]
+   },
+   "marketing_contact": {
+    "cdm_mapping": null,
+    "columns": {
+     "company": {
+      "generator": {
+       "provider": "company",
+       "strategy": "faker"
+      },
+      "max_length": 200,
+      "name": "company",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "contact_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "contact_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "created_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2022-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "created_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "email": {
+      "generator": {
+       "provider": "email",
+       "strategy": "faker"
+      },
+      "max_length": 255,
+      "name": "email",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "first_name": {
+      "generator": {
+       "provider": "first_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "first_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "industry_id": {
+      "generator": {
+       "ref": "marketing_industry.industry_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "industry_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "last_name": {
+      "generator": {
+       "provider": "last_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "last_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "lead_source_id": {
+      "generator": {
+       "ref": "marketing_lead_source.source_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "lead_source_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "phone": {
+      "generator": {
+       "provider": "phone_number",
+       "strategy": "faker"
+      },
+      "max_length": 20,
+      "name": "phone",
+      "null_rate": 0.15,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "shared_person_retail_customer_id": {
+      "generator": {
+       "ref": "retail_customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "shared_person_retail_customer_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[marketing] Marketing contacts",
+    "name": "marketing_contact",
+    "primary_key": [
+     "contact_id"
+    ]
+   },
+   "marketing_conversion": {
+    "cdm_mapping": null,
+    "columns": {
+     "campaign_id": {
+      "generator": {
+       "ref": "marketing_campaign.campaign_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "campaign_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "conversion_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2022-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "conversion_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "conversion_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "conversion_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "conversion_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Demo": 0.25,
+        "Purchase": 0.3,
+        "Signup": 0.2,
+        "Trial": 0.25
+       }
+      },
+      "max_length": null,
+      "name": "conversion_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "lead_id": {
+      "generator": {
+       "ref": "marketing_lead.lead_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "lead_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "revenue": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 100000.0,
+       "mean": 7.5,
+       "min": 0.0,
+       "round": 2,
+       "sigma": 1.2,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "revenue",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     }
+    },
+    "description": "[marketing] Conversion events from leads",
+    "name": "marketing_conversion",
+    "primary_key": [
+     "conversion_id"
+    ]
+   },
+   "marketing_email_send": {
+    "cdm_mapping": null,
+    "columns": {
+     "bounced": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.97,
+        "true": 0.03
+       }
+      },
+      "max_length": null,
+      "name": "bounced",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "boolean"
+     },
+     "campaign_id": {
+      "generator": {
+       "ref": "marketing_campaign.campaign_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "campaign_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "clicked": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.92,
+        "true": 0.08
+       }
+      },
+      "max_length": null,
+      "name": "clicked",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "boolean"
+     },
+     "contact_id": {
+      "generator": {
+       "ref": "marketing_contact.contact_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "contact_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "opened": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.75,
+        "true": 0.25
+       }
+      },
+      "max_length": null,
+      "name": "opened",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "boolean"
+     },
+     "send_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "send_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "sent_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2022-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "sent_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "datetime"
+     }
+    },
+    "description": "[marketing] Email send events per campaign",
+    "name": "marketing_email_send",
+    "primary_key": [
+     "send_id"
+    ]
+   },
+   "marketing_industry": {
+    "cdm_mapping": null,
+    "columns": {
+     "industry_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "industry_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "industry_name": {
+      "generator": {
+       "dataset": "industry_names",
+       "strategy": "reference_data"
+      },
+      "max_length": 100,
+      "name": "industry_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "sector": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Finance": 0.16,
+        "Healthcare": 0.18,
+        "Manufacturing": 0.15,
+        "Retail": 0.15,
+        "Services": 0.14,
+        "Technology": 0.22
+       }
+      },
+      "max_length": null,
+      "name": "sector",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "shared_organization_financial_branch_id": {
+      "generator": {
+       "ref": "financial_branch.branch_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "shared_organization_financial_branch_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[marketing] Target industries",
+    "name": "marketing_industry",
+    "primary_key": [
+     "industry_id"
+    ]
+   },
+   "marketing_lead": {
+    "cdm_mapping": null,
+    "columns": {
+     "campaign_id": {
+      "generator": {
+       "alpha": 1.3,
+       "distribution": "zipf",
+       "ref": "marketing_campaign.campaign_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "campaign_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "contact_id": {
+      "generator": {
+       "ref": "marketing_contact.contact_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "contact_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "created_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2022-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "created_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "lead_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "lead_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "lead_score": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 100,
+       "min": 0,
+       "round": 0,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "lead_score",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Contacted": 0.25,
+        "Converted": 0.2,
+        "New": 0.2,
+        "Qualified": 0.2,
+        "Unqualified": 0.15
+       }
+      },
+      "max_length": null,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[marketing] Qualified leads from contacts",
+    "name": "marketing_lead",
+    "primary_key": [
+     "lead_id"
+    ]
+   },
+   "marketing_lead_source": {
+    "cdm_mapping": null,
+    "columns": {
+     "cost_per_lead": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 500.0,
+       "mean": 3.5,
+       "min": 5.0,
+       "round": 2,
+       "sigma": 0.8,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "cost_per_lead",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "source_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "source_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "source_name": {
+      "generator": {
+       "dataset": "lead_sources",
+       "strategy": "reference_data"
+      },
+      "max_length": 100,
+      "name": "source_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "source_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Inbound": 0.35,
+        "Outbound": 0.25,
+        "Partner": 0.18,
+        "Referral": 0.22
+       }
+      },
+      "max_length": null,
+      "name": "source_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[marketing] Lead origins",
+    "name": "marketing_lead_source",
+    "primary_key": [
+     "source_id"
+    ]
+   },
+   "marketing_opportunity": {
+    "cdm_mapping": null,
+    "columns": {
+     "amount": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 500000.0,
+       "mean": 9.0,
+       "min": 500.0,
+       "round": 2,
+       "sigma": 1.2,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "amount",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "close_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2022-06-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "close_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "lead_id": {
+      "generator": {
+       "ref": "marketing_lead.lead_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "lead_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "opp_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "opp_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "opp_name": {
+      "generator": {
+       "format": "OPP-{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 200,
+      "name": "opp_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "probability": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 0.95,
+       "min": 0.05,
+       "round": 2,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "probability",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "stage": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Closed Lost": 0.12,
+        "Closed Won": 0.18,
+        "Negotiation": 0.17,
+        "Proposal": 0.2,
+        "Prospecting": 0.15,
+        "Qualification": 0.18
+       }
+      },
+      "max_length": null,
+      "name": "stage",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[marketing] Sales opportunities from leads",
+    "name": "marketing_opportunity",
+    "primary_key": [
+     "opp_id"
+    ]
+   },
+   "marketing_web_visit": {
+    "cdm_mapping": null,
+    "columns": {
+     "contact_id": {
+      "generator": {
+       "ref": "marketing_contact.contact_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "contact_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "duration_seconds": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 3600.0,
+       "mean": 4.5,
+       "min": 1.0,
+       "round": 0,
+       "sigma": 1.2,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "duration_seconds",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "page_url": {
+      "generator": {
+       "provider": "uri",
+       "strategy": "faker"
+      },
+      "max_length": 500,
+      "name": "page_url",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "pages_viewed": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 20,
+       "min": 1,
+       "round": 0,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "pages_viewed",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "referrer": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Direct": 0.18,
+        "Email": 0.12,
+        "Organic": 0.3,
+        "Paid": 0.22,
+        "Social": 0.18
+       }
+      },
+      "max_length": null,
+      "name": "referrer",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "visit_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2022-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "visit_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "datetime"
+     },
+     "visit_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "visit_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[marketing] Website visits per contact",
+    "name": "marketing_web_visit",
+    "primary_key": [
+     "visit_id"
+    ]
+   },
+   "retail_address": {
+    "cdm_mapping": null,
+    "columns": {
+     "address_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "address_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "address_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "billing": 0.5,
+        "both": 0.1,
+        "shipping": 0.4
+       }
+      },
+      "max_length": null,
+      "name": "address_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "city": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "city",
+       "strategy": "record_sample"
+      },
+      "max_length": null,
+      "name": "city",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "customer_id": {
+      "generator": {
+       "ref": "retail_customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "is_primary": {
+      "generator": {
+       "default": true,
+       "parent_column": "customer_id",
+       "strategy": "first_per_parent"
+      },
+      "max_length": null,
+      "name": "is_primary",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "boolean"
+     },
+     "lat": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "lat",
+       "strategy": "record_field"
+      },
+      "max_length": null,
+      "name": "lat",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "decimal"
+     },
+     "lng": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "lng",
+       "strategy": "record_field"
+      },
+      "max_length": null,
+      "name": "lng",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "decimal"
+     },
+     "state": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "state",
+       "strategy": "record_field"
+      },
+      "max_length": 2,
+      "name": "state",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "street": {
+      "generator": {
+       "provider": "street_address",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "street",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "zip_code": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "zip",
+       "strategy": "record_field"
+      },
+      "max_length": null,
+      "name": "zip_code",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[retail] Customer addresses \u2014 one customer can have multiple (billing, shipping)",
+    "name": "retail_address",
+    "primary_key": [
+     "address_id"
+    ]
+   },
+   "retail_customer": {
+    "cdm_mapping": null,
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "email": {
+      "generator": {
+       "provider": "email",
+       "strategy": "faker"
+      },
+      "max_length": 255,
+      "name": "email",
+      "null_rate": 0.05,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "first_name": {
+      "generator": {
+       "provider": "first_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "first_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "gender": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "F": 0.51,
+        "M": 0.49
+       }
+      },
+      "max_length": null,
+      "name": "gender",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "is_active": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.15,
+        "true": 0.85
+       }
+      },
+      "max_length": null,
+      "name": "is_active",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "last_name": {
+      "generator": {
+       "provider": "last_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "last_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "loyalty_tier": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Basic": 0.55,
+        "Gold": 0.13,
+        "Platinum": 0.07,
+        "Silver": 0.25
+       }
+      },
+      "max_length": null,
+      "name": "loyalty_tier",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "signup_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "signup_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     }
+    },
+    "description": "[retail] Individual customers",
+    "name": "retail_customer",
+    "primary_key": [
+     "customer_id"
+    ]
+   },
+   "retail_order": {
+    "cdm_mapping": null,
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "params": {
+        "alpha": 1.16,
+        "max_per_parent": 50
+       },
+       "ref": "retail_customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "order_date": {
+      "generator": {
+       "pattern": "seasonal",
+       "profiles": {
+        "day_of_week": {
+         "Fri": 0.147,
+         "Mon": 0.155,
+         "Sat": 0.115,
+         "Sun": 0.13,
+         "Thu": 0.153,
+         "Tue": 0.152,
+         "Wed": 0.148
+        },
+        "hour_of_day": {
+         "peaks": [
+          12,
+          20
+         ],
+         "std_dev": 2
+        },
+        "month": {
+         "Apr": 0.079,
+         "Aug": 0.088,
+         "Dec": 0.106,
+         "Feb": 0.068,
+         "Jan": 0.071,
+         "Jul": 0.085,
+         "Jun": 0.083,
+         "Mar": 0.079,
+         "May": 0.083,
+         "Nov": 0.096,
+         "Oct": 0.083,
+         "Sep": 0.079
+        }
+       },
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "order_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "order_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "order_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "order_total": {
+      "generator": {
+       "child_column": "line_total",
+       "child_table": "retail_order_line",
+       "rule": "sum_children",
+       "strategy": "computed"
+      },
+      "max_length": null,
+      "name": "order_total",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": 12,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "promotion_id": {
+      "generator": {
+       "ref": "retail_promotion.promotion_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "promotion_id",
+      "null_rate": 0.7,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "shipping_address_id": {
+      "generator": {
+       "constrained_by": "customer_id",
+       "ref": "retail_address.address_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "shipping_address_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "cancelled": 0.04,
+        "completed": 0.77,
+        "processing": 0.02,
+        "returned": 0.09,
+        "shipped": 0.08
+       }
+      },
+      "max_length": null,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "store_id": {
+      "generator": {
+       "distribution": "zipf",
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "retail_store.store_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "store_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[retail] Customer orders (header)",
+    "name": "retail_order",
+    "primary_key": [
+     "order_id"
+    ]
+   },
+   "retail_order_line": {
+    "cdm_mapping": null,
+    "columns": {
+     "discount_percent": {
+      "generator": {
+       "condition": "promotion_id IS NOT NULL",
+       "false_generator": {
+        "fixed": 0.0
+       },
+       "strategy": "conditional",
+       "true_generator": {
+        "source_column": "discount_pct",
+        "source_table": "retail_promotion",
+        "strategy": "lookup",
+        "via": "promotion_id"
+       }
+      },
+      "max_length": null,
+      "name": "discount_percent",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": 5,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "line_total": {
+      "generator": {
+       "expression": "quantity * unit_price * (1 - discount_percent / 100)",
+       "strategy": "formula"
+      },
+      "max_length": null,
+      "name": "line_total",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": 12,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "order_id": {
+      "generator": {
+       "ref": "retail_order.order_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "order_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "order_line_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "order_line_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "product_id": {
+      "generator": {
+       "distribution": "zipf",
+       "params": {
+        "alpha": 1.5
+       },
+       "ref": "retail_product.product_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "product_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "promotion_id": {
+      "generator": {
+       "source_column": "promotion_id",
+       "source_table": "retail_order",
+       "strategy": "lookup",
+       "via": "order_id"
+      },
+      "max_length": null,
+      "name": "promotion_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "quantity": {
+      "generator": {
+       "distribution": "geometric",
+       "params": {
+        "max": 20,
+        "min": 1,
+        "p": 0.6
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "quantity",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "unit_price": {
+      "generator": {
+       "source_column": "unit_price",
+       "source_table": "retail_product",
+       "strategy": "lookup",
+       "via": "product_id"
+      },
+      "max_length": null,
+      "name": "unit_price",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "description": "[retail] Individual line items within an order",
+    "name": "retail_order_line",
+    "primary_key": [
+     "order_line_id"
+    ]
+   },
+   "retail_product": {
+    "cdm_mapping": null,
+    "columns": {
+     "category_id": {
+      "generator": {
+       "ref": "retail_product_category.category_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "category_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "cost": {
+      "generator": {
+       "params": {
+        "factor_max": 0.7,
+        "factor_min": 0.3
+       },
+       "rule": "multiply",
+       "source_column": "unit_price",
+       "strategy": "correlated"
+      },
+      "max_length": null,
+      "name": "cost",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "product_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "product_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "product_name": {
+      "generator": {
+       "dataset": "product_names",
+       "strategy": "reference_data"
+      },
+      "max_length": null,
+      "name": "product_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "product_status": {
+      "generator": {
+       "phases": {
+        "active": 0.75,
+        "discontinued": 0.15,
+        "introduced": 0.1
+       },
+       "strategy": "lifecycle"
+      },
+      "max_length": null,
+      "name": "product_status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "unit_price": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 999.99,
+        "mean": 3.0,
+        "min": 0.99,
+        "sigma": 1.0
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "unit_price",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "description": "[retail] Individual products (SKUs)",
+    "name": "retail_product",
+    "primary_key": [
+     "product_id"
+    ]
+   },
+   "retail_product_category": {
+    "cdm_mapping": null,
+    "columns": {
+     "category_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "category_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "category_name": {
+      "generator": {
+       "dataset": "categories",
+       "strategy": "reference_data"
+      },
+      "max_length": null,
+      "name": "category_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "level": {
+      "generator": {
+       "field": "level",
+       "strategy": "self_ref_field"
+      },
+      "max_length": null,
+      "name": "level",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "parent_category_id": {
+      "generator": {
+       "levels": 3,
+       "pk_column": "category_id",
+       "root_count": 8,
+       "strategy": "self_referencing"
+      },
+      "max_length": null,
+      "name": "parent_category_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[retail] Product category hierarchy \u2014 3 levels",
+    "name": "retail_product_category",
+    "primary_key": [
+     "category_id"
+    ]
+   },
+   "retail_promotion": {
+    "cdm_mapping": null,
+    "columns": {
+     "discount_pct": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "10.0": 0.25,
+        "15.0": 0.2,
+        "20.0": 0.25,
+        "25.0": 0.1,
+        "5.0": 0.05,
+        "50.0": 0.15
+       }
+      },
+      "max_length": null,
+      "name": "discount_pct",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": 5,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "end_date": {
+      "generator": {
+       "params": {
+        "distribution": "uniform",
+        "max": 30,
+        "min": 3
+       },
+       "rule": "add_days",
+       "source": "start_date",
+       "strategy": "derived"
+      },
+      "max_length": null,
+      "name": "end_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "promo_name": {
+      "generator": {
+       "dataset": "promo_names",
+       "strategy": "reference_data"
+      },
+      "max_length": null,
+      "name": "promo_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "promo_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "bogo": 0.15,
+        "bundle": 0.1,
+        "fixed_amount": 0.2,
+        "free_shipping": 0.15,
+        "percent_off": 0.4
+       }
+      },
+      "max_length": null,
+      "name": "promo_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "promotion_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "promotion_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "start_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "start_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     }
+    },
+    "description": "[retail] Marketing promotions",
+    "name": "retail_promotion",
+    "primary_key": [
+     "promotion_id"
+    ]
+   },
+   "retail_return": {
+    "cdm_mapping": null,
+    "columns": {
+     "order_id": {
+      "generator": {
+       "ref": "retail_order.order_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "order_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "reason": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "arrived_late": 0.05,
+        "changed_mind": 0.22,
+        "damaged_shipping": 0.1,
+        "defective": 0.15,
+        "not_as_described": 0.2,
+        "other": 0.03,
+        "wrong_size": 0.25
+       }
+      },
+      "max_length": null,
+      "name": "reason",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "refund_amount": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 2000.0,
+        "mean": 3.5,
+        "min": 5.0,
+        "sigma": 1.0
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "refund_amount",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": 12,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "return_date": {
+      "generator": {
+       "params": {
+        "distribution": "log_normal",
+        "max": 90,
+        "mean": 2.0,
+        "min": 1,
+        "sigma": 0.8
+       },
+       "rule": "add_days",
+       "source": "retail_order.order_date",
+       "strategy": "derived",
+       "via": "order_id"
+      },
+      "max_length": null,
+      "name": "return_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "return_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "return_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[retail] Return transactions",
+    "name": "retail_return",
+    "primary_key": [
+     "return_id"
+    ]
+   },
+   "retail_store": {
+    "cdm_mapping": null,
+    "columns": {
+     "city": {
+      "generator": {
+       "provider": "city",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "city",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "state": {
+      "generator": {
+       "provider": "state_abbr",
+       "strategy": "faker"
+      },
+      "max_length": 2,
+      "name": "state",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "store_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "store_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "store_name": {
+      "generator": {
+       "format": "Store #{seq:4}",
+       "strategy": "pattern"
+      },
+      "max_length": null,
+      "name": "store_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "store_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "online": 0.1,
+        "physical": 0.85,
+        "warehouse": 0.05
+       }
+      },
+      "max_length": null,
+      "name": "store_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[retail] Physical and online store locations",
+    "name": "retail_store",
+    "primary_key": [
+     "store_id"
+    ]
+   }
+  }
+ },
+ "spec": "digital_commerce"
+}

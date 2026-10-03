@@ -1,0 +1,18 @@
+[medium] spindle          warm-up 1: total 0.98s
+[medium] shape            warm-up 1: total 0.15s
+[medium] spindle          run 1: total 1.22s  gen 0.59s  write 0.63s  rss 336MB  load 1.28
+[medium] shape            run 1: total 0.17s  gen 0.17s  write 0.00s  rss 190MB  load 1.26
+[medium] spindle          run 2: total 1.52s  gen 0.70s  write 0.82s  rss 333MB  load 1.26
+[medium] shape            run 2: total 0.17s  gen 0.17s  write 0.00s  rss 189MB  load 1.24
+[medium] spindle          run 3: total 0.79s  gen 0.37s  write 0.41s  rss 338MB  load 1.24
+[medium] shape            run 3: total 0.15s  gen 0.15s  write 0.00s  rss 189MB  load 1.22
+[medium] spindle          run 4: total 0.81s  gen 0.32s  write 0.49s  rss 338MB  load 1.22
+[medium] shape            run 4: total 0.15s  gen 0.15s  write 0.00s  rss 195MB  load 1.28
+[medium] spindle          run 5: total 1.27s  gen 0.60s  write 0.68s  rss 336MB  load 1.28
+[medium] shape            run 5: total 0.15s  gen 0.15s  write 0.00s  rss 188MB  load 1.28
+
+== education medium: median of 5 fresh-process runs, 4 cores
+tool                     rows  total s   gen s  write s  rows/s total   rows/s gen  peak RSS MB
+spindle               238,275     1.22    0.59     0.63       195,663      402,557          336
+shape                 238,275     0.15    0.15     0.00     1,585,894    1,585,894          189
+speedup (shape vs spindle): total 8.11x

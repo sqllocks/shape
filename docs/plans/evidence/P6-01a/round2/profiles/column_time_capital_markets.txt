@@ -1,0 +1,27 @@
+wall 0.232 sum column time 0.331
+by strategy (calls, ms, rows, ns/row):
+  distribution         25    81.2  1258750      65
+  foreign_key          15    68.2   629836     108
+  correlated           17    52.4   506000     104
+  temporal             14    43.6   629775      69
+  weighted_enum        12    40.1   504800      79
+  sequence             17    23.4   629850      37
+  reference_data        8     6.7       40  167466
+  faker                 1     6.4     1000    6383
+  record_field          9     4.9     4500    1080
+  derived               1     2.2      750    2916
+  record_sample         1     2.0      500    3972
+  constant              1     0.2       61    3272
+top columns (ms):
+    51.4 trade.ticker [foreign_key]
+    34.3 trade.side [weighted_enum]
+    32.5 trade.timestamp [temporal]
+    24.9 trade.volume [distribution]
+    23.0 trade.price [distribution]
+    15.8 daily_price.volume [distribution]
+    14.3 daily_price.high [correlated]
+    13.6 trade.trade_id [sequence]
+    12.9 daily_price.open [distribution]
+    12.8 daily_price.low [correlated]
+    12.2 daily_price.adj_close [correlated]
+    11.5 daily_price.close [correlated]

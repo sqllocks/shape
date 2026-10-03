@@ -1,0 +1,9 @@
+campus                                   medium tables  18 | fresh baseline  0.62 (0-2) | shape  0.80 (0-3) | 1042: 2 (share of seeds >= 0.27) | MW p 0.53 | no-miss seeds bl 0.54 sh 0.50
+capital_markets-marketing-education      medium tables  29 | fresh baseline  1.92 (0-5) | shape  2.13 (1-5) | 1042: 2 (share of seeds >= 0.63) | MW p 0.35 | no-miss seeds bl 0.08 sh 0.00
+digital_commerce                         medium tables  29 | fresh baseline  1.19 (0-4) | shape  1.23 (0-4) | 1042: 4 (share of seeds >= 0.17) | MW p 0.68 | no-miss seeds bl 0.35 sh 0.50
+enterprise                               medium tables  28 | fresh baseline  1.08 (0-4) | shape  1.50 (0-6) | 1042: 6 (share of seeds >= 0.07) | MW p 0.67 | no-miss seeds bl 0.31 sh 0.40
+healthcare_system                        medium tables  27 | fresh baseline  1.88 (0-4) | shape  2.63 (0-7) | 1042: 3 (share of seeds >= 0.63) | MW p 0.09 | no-miss seeds bl 0.12 sh 0.20
+retail-hr-financial                      medium tables  28 | fresh baseline  1.12 (0-5) | shape  1.43 (0-5) | 1042: 4 (share of seeds >= 0.13) | MW p 0.66 | no-miss seeds bl 0.31 sh 0.40
+smart_factory                            medium tables  27 | fresh baseline  1.65 (0-4) | shape  1.03 (0-3) | 1042: 0 (share of seeds >= 1.00) | MW p 0.03 | no-miss seeds bl 0.12 sh 0.33
+supply_chain-real_estate-manufacturing   medium tables  28 | fresh baseline  1.65 (0-3) | shape  1.30 (0-4) | 1042: 1 (share of seeds >= 0.80) | MW p 0.15 | no-miss seeds bl 0.08 sh 0.20
+telecom_bundle                           medium tables  29 | fresh baseline  1.58 (0-3) | shape  1.23 (0-3) | 1042: 3 (share of seeds >= 0.10) | MW p 0.24 | no-miss seeds bl 0.23 sh 0.23

@@ -1,0 +1,59 @@
+{
+ "args": {
+  "domain": "composite_telecom_bundle",
+  "scale": "small",
+  "table": "financial_transaction",
+  "column": "account_id",
+  "parent_table": "financial_account",
+  "n": 30,
+  "out": "docs/plans/evidence/P6-01e-seed/fk/fk_composite_telecom_bundle_financial_transaction_account_id.json"
+ },
+ "pooled_chi2": {
+  "chi2": 1051.7657329256049,
+  "dof": 1019,
+  "p": 0.23181159999143797,
+  "bins": 1020
+ },
+ "per_run": {
+  "max_share": {
+   "spindle_mean": 0.020000000000000004,
+   "spindle_sd": 3.5287580338023136e-18,
+   "shape_mean": 0.020000000000000004,
+   "shape_sd": 3.5287580338023136e-18,
+   "p_mannwhitney": 1.0,
+   "p_ks": 1.0
+  },
+  "top10_share": {
+   "spindle_mean": 0.20000000000000007,
+   "spindle_sd": 5.646012854083702e-17,
+   "shape_mean": 0.20000000000000007,
+   "shape_sd": 5.646012854083702e-17,
+   "p_mannwhitney": 1.0,
+   "p_ks": 1.0
+  },
+  "distinct": {
+   "spindle_mean": 1284.8666666666666,
+   "spindle_sd": 99.69253883240498,
+   "shape_mean": 1280.3,
+   "shape_sd": 22.823384861841244,
+   "p_mannwhitney": 0.7674365930899181,
+   "p_ks": 0.07088798787114439
+  },
+  "mean_rank": {
+   "spindle_mean": 0.09566205909090911,
+   "spindle_sd": 0.011468274321962691,
+   "shape_mean": 0.09525130757575759,
+   "shape_sd": 0.0025382464078234474,
+   "p_mannwhitney": 0.6520436224006357,
+   "p_ks": 0.13500350250095441
+  },
+  "null_rate": {
+   "spindle_mean": 0.0,
+   "spindle_sd": 0.0,
+   "shape_mean": 0.0,
+   "shape_sd": 0.0,
+   "p_mannwhitney": 1.0,
+   "p_ks": 1.0
+  }
+ }
+}

@@ -1,0 +1,11 @@
+............                                                             [100%]
+12 passed in 2.00s
+Built-ins load only through the plugin registry (plan 4.3) KEPT (1 ignored import)
+
+Contracts: 1 kept, 0 broken.
+check_user_facing: clean
+tree check exit 0
+check_user_facing: clean
+wheel check exit 0
+sqllocks_shape-0.9.0-cp311-abi3-linux_x86_64.whl
+sqllocks_shape_domains-0.9.0-py3-none-any.whl

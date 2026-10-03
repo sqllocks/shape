@@ -6,7 +6,10 @@ start-up budget (T-18). ``from-ddl`` and ``validate`` live in ``main`` and ``val
 
 A *target* is the name of an installed domain (``retail``) or the path of a generation schema file
 (what ``shape from-ddl`` writes). A domain may offer a ``star`` schema next to ``3nf``
-(``--mode``); a schema file has the one mode it was written in.
+(``--mode``); a schema file has the one mode it was written in. A *composite* (``shape composite``,
+P6-01e) generates several domains as one dataset: a preset name (``shape presets --composites``)
+or domains joined by ``+`` (``retail+hr``); it is a target of ``generate``, ``describe`` and
+``presets`` too.
 """
 
 from __future__ import annotations
@@ -20,6 +23,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from shape.generation.schema import GenSchema
 
 DEFAULT_TEMPLATE = "{table}/ingest_date={date}/{table}_{yyyymmdd}.{ext}"
@@ -45,8 +50,70 @@ _TARGET_HELP = (
 )
 
 
+def _run_options(parser: argparse.ArgumentParser) -> None:
+    """The options of a run (``generate`` and ``composite``): scale, seed, output and format."""
+    parser.add_argument("--scale", metavar="PRESET", help="the scale preset (see `shape presets`)")
+    parser.add_argument("--seed", type=int, help="the seed (default: the schema's)")
+    parser.add_argument(
+        "--format",
+        "-f",
+        type=_format,
+        default="summary",
+        metavar="FORMAT",
+        help="summary (default: print the plan result, write nothing), or csv, tsv, jsonl, "
+        "parquet, ipc, excel, sql, delta, or any installed sink (see `shape plugins list`)",
+    )
+    parser.add_argument(
+        "-o", "--output", "--out", metavar="DIR", help="the output directory (needed to write)"
+    )
+    parser.add_argument("--dry-run", action="store_true", help="plan the run; generate nothing")
+    parser.add_argument("--json", action="store_true", help="print the result or the plan as JSON")
+    parser.add_argument(
+        "--chunk-rows", type=int, metavar="N", help="rows per chunk (output does not depend on it)"
+    )
+    sql = parser.add_argument_group("sql output (--format sql)")
+    sql.add_argument("--sql-dialect", choices=SQL_DIALECTS, default="tsql", help="default: tsql")
+    sql.add_argument("--schema-name", metavar="NAME", help="qualify tables with this schema")
+    sql.add_argument(
+        "--batch-size", type=int, metavar="N", help="rows per INSERT (T-SQL: at most 1000)"
+    )
+    for flag, what in (
+        ("sql-ddl", "CREATE TABLE"),
+        ("sql-drop", "DROP TABLE IF EXISTS"),
+        ("sql-go", "GO"),
+    ):
+        sql.add_argument(
+            f"--{flag}",
+            action=argparse.BooleanOptionalAction,
+            default=None,
+            help=f"write {what} statements (default: yes)",
+        )
+    xl = parser.add_argument_group(
+        "excel output (--format excel: one workbook, a sheet per table)"
+    )
+    xl.add_argument(
+        "--chaos-log",
+        metavar="FILE",
+        help="a chaos ground-truth log (`shape chaos`): the _README sheet lists what it planted",
+    )
+    xl.add_argument(
+        "--drift-plan",
+        metavar="FILE",
+        help="a drift plan or its answer key: the _README sheet lists the planted drift",
+    )
+    dl = parser.add_argument_group("delta output (--format delta)")
+    dl.add_argument("--delta-mode", choices=("overwrite", "append"), default="overwrite")
+    dl.add_argument("--partition-by", metavar="COLUMN", action="append", help="repeatable")
+    from shape.cli.landing import add_landing_arguments
+
+    add_landing_arguments(parser, default_template=DEFAULT_TEMPLATE)
+    from shape.cli.to import add_to_arguments
+
+    add_to_arguments(parser)
+
+
 def add_arguments(sub: Any) -> None:
-    """Register ``generate``, ``describe``, ``list`` and ``presets`` on the subparsers."""
+    """Register ``generate``, ``composite``, ``describe``, ``list`` and ``presets``."""
     ge = sub.add_parser(
         "generate",
         help="generate data for a domain or a generation schema",
@@ -59,25 +126,7 @@ def add_arguments(sub: Any) -> None:
     ge.add_argument(
         "--mode", choices=MODES, help="the schema mode of a domain (default: its own default)"
     )
-    ge.add_argument("--scale", metavar="PRESET", help="the scale preset (see `shape presets`)")
-    ge.add_argument("--seed", type=int, help="the seed (default: the schema's)")
-    ge.add_argument(
-        "--format",
-        "-f",
-        type=_format,
-        default="summary",
-        metavar="FORMAT",
-        help="summary (default: print the plan result, write nothing), or csv, tsv, jsonl, "
-        "parquet, ipc, excel, sql, delta, or any installed sink (see `shape plugins list`)",
-    )
-    ge.add_argument(
-        "-o", "--output", "--out", metavar="DIR", help="the output directory (needed to write)"
-    )
-    ge.add_argument("--dry-run", action="store_true", help="plan the run; generate nothing")
-    ge.add_argument("--json", action="store_true", help="print the result or the plan as JSON")
-    ge.add_argument(
-        "--chunk-rows", type=int, metavar="N", help="rows per chunk (output does not depend on it)"
-    )
+    _run_options(ge)
     ge.add_argument(
         "--from",
         dest="from_profile",
@@ -99,43 +148,17 @@ def add_arguments(sub: Any) -> None:
     from shape.cli.scale import add_arguments as add_scale_arguments
 
     add_scale_arguments(ge)
-    sql = ge.add_argument_group("sql output (--format sql)")
-    sql.add_argument("--sql-dialect", choices=SQL_DIALECTS, default="tsql", help="default: tsql")
-    sql.add_argument("--schema-name", metavar="NAME", help="qualify tables with this schema")
-    sql.add_argument(
-        "--batch-size", type=int, metavar="N", help="rows per INSERT (T-SQL: at most 1000)"
-    )
-    for flag, what in (
-        ("sql-ddl", "CREATE TABLE"),
-        ("sql-drop", "DROP TABLE IF EXISTS"),
-        ("sql-go", "GO"),
-    ):
-        sql.add_argument(
-            f"--{flag}",
-            action=argparse.BooleanOptionalAction,
-            default=None,
-            help=f"write {what} statements (default: yes)",
-        )
-    xl = ge.add_argument_group("excel output (--format excel: one workbook, a sheet per table)")
-    xl.add_argument(
-        "--chaos-log",
-        metavar="FILE",
-        help="a chaos ground-truth log (`shape chaos`): the _README sheet lists what it planted",
-    )
-    xl.add_argument(
-        "--drift-plan",
-        metavar="FILE",
-        help="a drift plan or its answer key: the _README sheet lists the planted drift",
-    )
-    dl = ge.add_argument_group("delta output (--format delta)")
-    dl.add_argument("--delta-mode", choices=("overwrite", "append"), default="overwrite")
-    dl.add_argument("--partition-by", metavar="COLUMN", action="append", help="repeatable")
-    from shape.cli.landing import add_landing_arguments
 
-    add_landing_arguments(ge, default_template=DEFAULT_TEMPLATE)
-    from shape.cli.to import add_to_arguments
-
-    add_to_arguments(ge)
+    co = sub.add_parser(
+        "composite",
+        help="generate several domains as one dataset",
+        description="Generate a composite: the domains of a preset (see `shape presets "
+        "--composites`) or domains joined by '+' (retail+hr+financial), merged into one dataset "
+        "whose tables are prefixed with their domain (retail_customer). Shared entities (a "
+        "person, a location, an organisation) link the domains by bridge columns.",
+    )
+    co.add_argument("target", metavar="PRESET|DOMAIN+DOMAIN", help="a composite preset or domains")
+    _run_options(co)
 
     de = sub.add_parser(
         "describe",
@@ -160,6 +183,11 @@ def add_arguments(sub: Any) -> None:
     pr.add_argument("target", nargs="?", metavar="DOMAIN|SCHEMA.json", help=_TARGET_HELP)
     pr.add_argument("--mode", choices=MODES, help="the schema mode of a domain")
     pr.add_argument("--json", action="store_true", help="print the presets as JSON")
+    pr.add_argument(
+        "--composites",
+        action="store_true",
+        help="list the composite presets (`shape composite`) instead",
+    )
 
 
 # ---- targets ------------------------------------------------------------------------------
@@ -182,8 +210,16 @@ def load_target(target: str, mode: str | None = None) -> GenSchema:
                 f"(--mode {mode} is for domains)"
             )
         return schema
+    from shape.generation.composite import MODES as COMPOSITE_MODES
+    from shape.generation.composite import is_composite, resolve
     from shape.generation.domains import load_domain
 
+    if is_composite(target):
+        if mode is not None and mode not in COMPOSITE_MODES:
+            raise ValueError(
+                f"a composite has the {COMPOSITE_MODES[0]!r} mode only (--mode {mode})"
+            )
+        return resolve(target).schema
     return load_domain(target, mode=mode).schema
 
 
@@ -286,6 +322,19 @@ def cmd_generate(a: argparse.Namespace) -> int:
         from shape.cli.scale import run_scale
 
         return run_scale(a)
+    return _generate_schema(a, lambda: load_target(a.target, a.mode), per_table)
+
+
+def cmd_composite(a: argparse.Namespace) -> int:
+    """``shape composite``: ``generate`` for a preset or a ``+`` list of domains."""
+    from shape.generation.composite import resolve
+
+    return _generate_schema(a, lambda: resolve(a.target).schema, {})
+
+
+def _generate_schema(
+    a: argparse.Namespace, load: Callable[[], GenSchema], per_table: dict[str, int]
+) -> int:
     from shape.cli import lifecycle
 
     if lifecycle.quick_exit_allowed:
@@ -296,11 +345,11 @@ def cmd_generate(a: argparse.Namespace) -> int:
         # A process that ends when the files are written: the collector would only walk the
         # objects the imports make (about 10 ms), and generation makes no reference cycles.
         gc.disable()
+    schema = load()
     from shape.generation.engine import Engine
     from shape.runlog import current
 
     run = current()
-    schema = load_target(a.target, a.mode)
     _check_scale(schema, a.scale)
     kwargs: dict[str, Any] = {}
     if a.chunk_rows:
@@ -568,7 +617,37 @@ def cmd_list(a: argparse.Namespace) -> int:
     return 0
 
 
+def _composite_presets(a: argparse.Namespace) -> int:
+    from shape.generation.composite import composition
+
+    presets = composition().presets
+    if a.json:
+        _dump(
+            {
+                p.name: {
+                    "description": p.description,
+                    "domains": list(p.domains),
+                    "shared_entities": {k: dict(v) for k, v in p.shared_entities.items()},
+                }
+                for p in presets
+            }
+        )
+        return 0
+    if not presets:
+        print("no composite presets: pip install 'sqllocks-shape[domains]'")
+        return 0
+    print(f"Composite presets ({len(presets)}):\n")
+    for p in presets:
+        print(f"  {p.name:<20} {p.description}")
+        print(f"  {'':<20} Domains: {', '.join(p.domains)}\n")
+    return 0
+
+
 def cmd_presets(a: argparse.Namespace) -> int:
+    if a.composites:
+        if a.target is not None:
+            raise ValueError("--composites lists the composite presets and takes no target")
+        return _composite_presets(a)
     if a.target is None:
         from shape.generation.domains import domain_names, load_domain
 
@@ -578,6 +657,7 @@ def cmd_presets(a: argparse.Namespace) -> int:
         else:
             for name, presets in every.items():
                 print(f"{name:<24}{', '.join(presets)}")
+            print("\ncomposite presets: shape presets --composites")
         return 0
     schema = load_target(a.target, a.mode)
     scales = schema.generation.scales
@@ -600,6 +680,7 @@ COMMANDS = {
     "describe": cmd_describe,
     "list": cmd_list,
     "presets": cmd_presets,
+    "composite": cmd_composite,
 }
 
 

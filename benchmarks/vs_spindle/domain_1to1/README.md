@@ -12,6 +12,10 @@ tools under the same conditions.
 | `generate.py` | Writes one run of a domain as Parquet, for `--impl spindle\|reference_port\|shape`, into `$BENCH_OUT_DIR/<impl>/<domain>/<scale>/seed<N>/`. Each impl runs in its own venv. |
 | `verify.py` | Equivalence verifier (T-21 clauses (a)-(h)); reads Parquet only, in the Spindle venv. Tables, FKs and business rules come from `../dump_schema.py`. Exits 1 unless every clause holds, 2 if a required run directory is missing. |
 | `export_retail.py` | Writes the `shape-domains` plugin's retail data (the schema, from the baseline's dump, and the four reference datasets, from the baseline checkout); `--check` proves the shipped files equal what it would write. |
+| `export_domains.py` | The same for every domain, retail included (`capital_markets` to `telecom`; 3nf and star schemas, every reference file of the baseline's domain); `--check` proves the shipped files equal what it would write. One documented schema difference (`OVERRIDES`). |
+| `rowcounts.py` | Row counts equal the baseline's for every domain (3nf and star) and every composite at every scale preset (planned) and at `fabric_demo`, `demo` and `small` (generated). Exits 1 on any difference; runs a negative control first (exit 3 if the comparator is blind). No allow-list. |
+| `allowlist.py` | The narrow, named places where Shape deliberately differs from the baseline (composites only): CMP-1 (a link to a table's own key gets a bridge column) and CMP-2 (clashing dataset names). `verify.py` applies them to composite runs and nothing else. |
+| `full_seed_study.py` | Runs `verify.py`'s every clause for Shape seeds 1042-1049 and counts, per finding, the seeds it appears at (a chance miss at 1042 against a defect). Changes no verdict. |
 | `pipeline_run.py` | Writes what the Fabric generate notebook and the `generateSample` function produce (run in the `fabric-demo` environment) as a run directory, so `verify.py --impl shape` checks the pipeline path against T-21. Use a `BENCH_OUT_DIR` of its own: it replaces the product path's run. |
 | `bench.py` | Benchmark harness: every run is a fresh process (median of `--runs`), timing generate + write through `generate.py`. |
 
@@ -38,6 +42,12 @@ source scripts/env.sh
 # benchmark (holds the exclusive lock $BENCH_OUT_DIR/bench.lock)
 "$SHAPE_VENV/bin/python" benchmarks/vs_spindle/domain_1to1/bench.py \
     --impl reference_port --domain retail --scales medium,large --runs 3
+
+# row counts of every domain and composite at every scale (both venvs are run for you)
+"$SHAPE_VENV/bin/python" benchmarks/vs_spindle/domain_1to1/rowcounts.py
+
+# a composite, with the T-21 clauses: --domain composite_<preset> or composite_<a>-<b>-<c>
+"$SPINDLE_PY" benchmarks/vs_spindle/domain_1to1/verify.py --domain composite_campus --scale small --impl shape
 
 # everything, in order (verifiers, benchmarks, re-verification of the timed output)
 python benchmarks/vs_spindle/run.py --quick

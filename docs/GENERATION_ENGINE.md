@@ -256,11 +256,56 @@ from shape.generation.engine import Engine
 result = Engine(load_domain("retail").schema, scale="medium", seed=1).generate()
 ```
 
-The `sqllocks-shape-domains` package (`pip install sqllocks-shape[domains]`) ships `retail`: nine
+The `sqllocks-shape-domains` package (`pip install sqllocks-shape[domains]`) ships `retail`, `capital_markets`,
+`education`, `financial`, `healthcare`, `hr`, `insurance`, `iot`, `manufacturing`, `marketing`, `pulse`, `real_estate`,
+`supply_chain` and `telecom` (each also in `star` mode; see the package's README for their tables). `retail` is nine
 tables (customer, address, product_category, product, store, promotion, order, order_line, return),
 the row counts of the `small`, `medium`, `large` and `xlarge` presets, and its reference data. Its
 uniform dates are `timestamp[ns]` (`temporal` with `unit: "ns"`) and the seasonal ones
-`timestamp[us]`.
+`timestamp[us]`; the other domains follow the same rule (every non-seasonal `temporal` column is `ns`,
+including the `trading_days` pattern of `capital_markets`, which is uniform). `financial`, `healthcare`, `insurance`, `iot`, `real_estate`,
+`supply_chain` and `telecom` read the ZIP
+locations that `retail` ships. In `capital_markets`, `industry.industry_name` is the empty string for
+every row, as in the reference output it is checked against (its schema says `constant ""`).
+
+All fourteen domains are one packaged layout (`data/<domain>/schema.json`, `schema_star.json`,
+`reference/*.arrow`; `retail` also `transforms.json`, the maps behind `shape transform star|cdm`), built
+by the repository's domain export script and checked against it in CI. Core ships no domain data and
+no domain code.
+
+### Composites
+
+`shape composite` generates several domains as one dataset (`shape.generation.composite`). The merged
+schema prefixes every table with its domain (`retail_customer`, `hr_employee`) and follows the prefix in
+every reference (foreign keys, lookups, computed children, derived sources, business rules, scale
+presets and derived counts). Domains are linked by **shared entities**: a person, a location, an
+organisation. Each concept lists the table that plays it in each domain; the first listed domain in a
+composite is the concept's primary and the others get a bridge column
+`shared_<concept>_<domain>_<table>_id`, a foreign key to the primary's key. A preset may instead name its
+links (`person: hr.employee`, `retail: customer.customer_id`).
+
+```
+shape presets --composites                    # the six presets: enterprise, healthcare_system, smart_factory,
+                                              # digital_commerce, campus, telecom_bundle
+shape composite enterprise --scale small      # a preset ...
+shape composite retail+hr+financial -f parquet -o out/    # ... or domains joined by '+'
+shape presets campus                          # rows per table, as for a domain
+```
+
+`generate`, `describe` and `presets` take a composite as their target too, and
+`shape.api.generate("enterprise", scale="small")` returns its tables. A composite has the `3nf` mode only.
+A domain without the scale asked for (`pulse` has no `warehouse`) generates at its first scale. The
+domains offer their presets and shared-entity tables through an optional `composition()` method on the
+`shape.domains` plugin object (`shape_domains.composition`); core holds no domain knowledge.
+
+Two things differ from the reference output on purpose, because reproducing them would give wrong data:
+
+* A link to a column a table already has (a preset's `customer.customer_id`, the table's own key) cannot
+  make that column a foreign key. The key keeps its values and the link gets its own bridge column.
+* Two domains' reference datasets with one name and different content (`department_names` of education
+  and of HR) are kept apart: each domain reads its own.
+
+Both are named, with the columns they touch, in the comparison harness and asserted by the tests.
 
 ## Writers
 
@@ -330,10 +375,26 @@ leading business rules are repaired on a helper thread once the tables they name
 arrays and reads them back through `shape.generation.arrowkit`, which never imports pandas (pyarrow's
 own `array`, `to_numpy` and `scalar` do, about 0.16 s of start-up).
 
-`generate()` runs with Arrow's system memory pool (`shape.generation.runtime.generation_memory`; set
-`SHAPE_MEMORY_POOL=default` to keep Arrow's default). The default pool maps fresh memory for each large
-array and returns it soon after, which on a virtual machine makes the page faults of short-lived arrays
-a large part of a run. Values are unaffected; arrays stay valid after the block.
+`import shape` sets Arrow's allocator for the whole process, in one place (`shape._process.configure`),
+so the command line and the Python API behave alike. Arrow's default pool (mimalloc) reserves a large
+arena with `MADV_HUGEPAGE` at its first allocation, which on a virtual machine with transparent huge
+pages in `madvise` mode stalls 10 to 13 ms of system time in about half of all processes, and it maps
+fresh memory for each large array and returns it soon after, which makes the page faults of
+short-lived arrays a large part of a run. Two cases:
+
+* `shape` is imported before `pyarrow` (the command line always is): `ARROW_DEFAULT_MEMORY_POOL=system`
+  is set for the process, so every Arrow user in it, the Parquet encoder included, takes the system
+  pool. A value the environment already has is kept.
+* `pyarrow` was imported first: its C++ default pool can no longer change, so transparent huge pages
+  are switched off for the process (`prctl(PR_SET_THP_DISABLE)`, Linux), which removes the stall.
+  `generate()` additionally runs with Arrow's system pool for the Python-level allocations
+  (`shape.generation.runtime.generation_memory`).
+
+`SHAPE_MEMORY_POOL=default` turns all of it off. Values are unaffected (a test compares a run with and
+without it); arrays stay valid whichever pool made them. Measured on 4 vCPU (Intel Xeon @ 2.80GHz, KVM),
+fresh process per run, interleaved, the `generate.py` timed region at medium: education median 0.205 s
+default, 0.148 s with the environment variable, 0.149 s with huge pages off; financial 0.728 s, 0.566 s,
+0.586 s (12 runs each, `docs/plans/lane_status/P6-01a.md`, "Escalation 2, round 2").
 
 `shape.generation.keypos` finds the row of a key (`first_positions`, `first_rows`): for the primary key
 of a parent that is a sequence (`start`, `start + 1`, ...) the row is `key - start`, found by the native
@@ -357,6 +418,7 @@ warehouse does not enforce it) and emits no `DISTRIBUTION` clause; `NaN` and inf
 ```
 shape list                                   # installed domains and their modes
 shape presets retail                         # rows per table for every scale preset
+shape composite enterprise                   # several domains as one dataset (see Composites)
 shape describe retail --mode star --scale medium
 shape generate retail --scale medium --seed 42 --format parquet -o out/
 shape generate retail --dry-run              # the plan: order, rows, memory; generates nothing

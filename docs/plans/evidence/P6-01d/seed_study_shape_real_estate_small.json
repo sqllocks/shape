@@ -1,0 +1,202 @@
+{
+ "domain": "real_estate",
+ "scale": "small",
+ "impl": "shape",
+ "floor": {
+  "neighborhood": 74.25437247342042,
+  "agent": 67.05390524667229,
+  "property": 90.65866720948125,
+  "listing": 97.89950857808529,
+  "showing": 93.79352203289619,
+  "offer": 98.37964518867044,
+  "transaction": 95.82804920270416,
+  "inspection": 88.59813802582372,
+  "appraisal": 87.8983187744415
+ },
+ "baseline": {
+  "43": {
+   "neighborhood": 76.77615150626721,
+   "agent": 67.793282222707,
+   "property": 91.15866720948125,
+   "listing": 98.39950857808529,
+   "showing": 94.45218105367883,
+   "offer": 98.94927347873814,
+   "transaction": 98.28364396404035,
+   "inspection": 89.75647623986679,
+   "appraisal": 89.75451315773097
+  },
+  "44": {
+   "neighborhood": 74.75437247342042,
+   "agent": 67.81237117333929,
+   "property": 92.87563193550197,
+   "listing": 98.59447111114463,
+   "showing": 94.29352203289619,
+   "offer": 98.92880071341303,
+   "transaction": 97.09072458447797,
+   "inspection": 89.09813802582372,
+   "appraisal": 89.28590081642949
+  },
+  "45": {
+   "neighborhood": 75.9858396969772,
+   "agent": 67.55390524667229,
+   "property": 92.30408515595254,
+   "listing": 99.12312044317378,
+   "showing": 94.33668943130725,
+   "offer": 99.1177146456997,
+   "transaction": 96.32804920270416,
+   "inspection": 89.62428040044934,
+   "appraisal": 88.503372071704
+  },
+  "46": {
+   "neighborhood": 75.4433799944384,
+   "agent": 67.70723548099659,
+   "property": 91.85607464557208,
+   "listing": 98.66386052500776,
+   "showing": 94.36503476196297,
+   "offer": 98.87964518867044,
+   "transaction": 97.24957138727791,
+   "inspection": 90.53298454393806,
+   "appraisal": 88.3983187744415
+  }
+ },
+ "impl_seeds": {
+  "1042": {
+   "scores": {
+    "neighborhood": 72.75279750601037,
+    "agent": 67.79483599754649,
+    "property": 92.46482091291212,
+    "listing": 99.04553984291641,
+    "showing": 94.27136858927967,
+    "offer": 98.97448451225323,
+    "transaction": 97.69278581287615,
+    "inspection": 89.89584558177746,
+    "appraisal": 87.9814761406086
+   },
+   "below_floor": [
+    "neighborhood"
+   ],
+   "shortfall": {
+    "neighborhood": 1.5015749674100505
+   }
+  },
+  "1043": {
+   "scores": {
+    "neighborhood": 76.90329122912662,
+    "agent": 68.06551298539411,
+    "property": 92.70051389784899,
+    "listing": 98.51535836015259,
+    "showing": 94.39625505115193,
+    "offer": 99.27811162943806,
+    "transaction": 96.75287490638583,
+    "inspection": 89.98726667483265,
+    "appraisal": 88.66441700801909
+   },
+   "below_floor": [],
+   "shortfall": {}
+  },
+  "1044": {
+   "scores": {
+    "neighborhood": 74.2565135417826,
+    "agent": 67.98454702950416,
+    "property": 93.01421806021374,
+    "listing": 98.84843334143801,
+    "showing": 93.76522573750997,
+    "offer": 99.44829238001462,
+    "transaction": 97.64074969813635,
+    "inspection": 90.64994917936848,
+    "appraisal": 88.23040547367107
+   },
+   "below_floor": [
+    "showing"
+   ],
+   "shortfall": {
+    "showing": 0.02829629538622669
+   }
+  },
+  "1045": {
+   "scores": {
+    "neighborhood": 74.73033223411495,
+    "agent": 68.0693114153971,
+    "property": 92.97199195895618,
+    "listing": 99.17100114881035,
+    "showing": 94.40359413518233,
+    "offer": 98.96887584278774,
+    "transaction": 98.35274343261469,
+    "inspection": 90.69112899144297,
+    "appraisal": 88.54759232079017
+   },
+   "below_floor": [],
+   "shortfall": {}
+  },
+  "1046": {
+   "scores": {
+    "neighborhood": 74.84079087079074,
+    "agent": 67.79840070318855,
+    "property": 92.20665276443,
+    "listing": 98.27481223943431,
+    "showing": 94.4298579792449,
+    "offer": 99.03440023550873,
+    "transaction": 96.58238611393621,
+    "inspection": 90.2605935383331,
+    "appraisal": 89.40110599118516
+   },
+   "below_floor": [],
+   "shortfall": {}
+  },
+  "1047": {
+   "scores": {
+    "neighborhood": 74.21399657414462,
+    "agent": 67.96815371128098,
+    "property": 92.8058617267883,
+    "listing": 98.24014424714855,
+    "showing": 94.38793985258508,
+    "offer": 97.51035020188054,
+    "transaction": 96.47493652067386,
+    "inspection": 90.95892636904304,
+    "appraisal": 89.33117469035267
+   },
+   "below_floor": [
+    "neighborhood",
+    "offer"
+   ],
+   "shortfall": {
+    "neighborhood": 0.04037589927580143,
+    "offer": 0.869294986789896
+   }
+  },
+  "1048": {
+   "scores": {
+    "neighborhood": 73.4616312673124,
+    "agent": 67.72650374987174,
+    "property": 92.48970823544248,
+    "listing": 98.7264365007457,
+    "showing": 94.26301767256787,
+    "offer": 99.01397749382495,
+    "transaction": 96.98506158895903,
+    "inspection": 90.06578328865365,
+    "appraisal": 89.46799561640294
+   },
+   "below_floor": [
+    "neighborhood"
+   ],
+   "shortfall": {
+    "neighborhood": 0.792741206108019
+   }
+  },
+  "1049": {
+   "scores": {
+    "neighborhood": 74.9021112470222,
+    "agent": 67.42879044679353,
+    "property": 92.57772591109742,
+    "listing": 98.5488371419075,
+    "showing": 94.50692142082026,
+    "offer": 99.10518773195669,
+    "transaction": 96.04744455958583,
+    "inspection": 90.46054683671245,
+    "appraisal": 88.331510176304
+   },
+   "below_floor": [],
+   "shortfall": {}
+  }
+ }
+}

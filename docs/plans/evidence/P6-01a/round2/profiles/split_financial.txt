@@ -1,0 +1,7 @@
+# machine: model name	: Intel(R) Xeon(R) Processor @ 2.80GHz, 4 vCPU; 3 runs, generate() with 4 threads, then the same tables written serially with pyarrow
+generate only: wall 0.352 cpu 0.820
+parquet encode (serial, all tables): wall 0.476 cpu 0.473
+generate only: wall 0.420 cpu 0.905
+parquet encode (serial, all tables): wall 0.403 cpu 0.403
+generate only: wall 0.406 cpu 0.923
+parquet encode (serial, all tables): wall 0.458 cpu 0.456

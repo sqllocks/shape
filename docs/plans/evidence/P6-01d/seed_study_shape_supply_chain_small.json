@@ -1,0 +1,221 @@
+{
+ "domain": "supply_chain",
+ "scale": "small",
+ "impl": "shape",
+ "floor": {
+  "warehouse": 78.78496396954719,
+  "supplier": 75.21937799756884,
+  "material": 95.3146824252584,
+  "purchase_order": 98.09231163612428,
+  "purchase_order_line": 97.66611253877491,
+  "inventory": 96.68466977041089,
+  "shipment": 96.07427329396022,
+  "shipment_event": 88.53531334265439,
+  "quality_inspection": 81.63137471074843,
+  "demand_forecast": 97.5519112502595
+ },
+ "baseline": {
+  "43": {
+   "warehouse": 84.64192100041069,
+   "supplier": 76.2852979168597,
+   "material": 95.8165225118664,
+   "purchase_order": 98.59231163612428,
+   "purchase_order_line": 99.02158444697719,
+   "inventory": 97.18466977041089,
+   "shipment": 98.1565557371186,
+   "shipment_event": 89.06090903806923,
+   "quality_inspection": 82.13137471074843,
+   "demand_forecast": 98.23795613764656
+  },
+  "44": {
+   "warehouse": 84.7851616310936,
+   "supplier": 75.71937799756884,
+   "material": 95.8146824252584,
+   "purchase_order": 98.86441363664815,
+   "purchase_order_line": 98.54683807664551,
+   "inventory": 97.76337913872644,
+   "shipment": 96.57427329396022,
+   "shipment_event": 89.09540631828717,
+   "quality_inspection": 82.43425807428208,
+   "demand_forecast": 98.26124462400004
+  },
+  "45": {
+   "warehouse": 85.70512556039553,
+   "supplier": 76.56854615156838,
+   "material": 96.59526723592982,
+   "purchase_order": 98.62277524103425,
+   "purchase_order_line": 98.41856870789516,
+   "inventory": 97.38613956566276,
+   "shipment": 98.85734743132973,
+   "shipment_event": 89.03531334265439,
+   "quality_inspection": 82.76217067474236,
+   "demand_forecast": 98.0519112502595
+  },
+  "46": {
+   "warehouse": 79.28496396954719,
+   "supplier": 76.17552606726844,
+   "material": 96.2093930586168,
+   "purchase_order": 98.79010487232316,
+   "purchase_order_line": 98.16611253877491,
+   "inventory": 98.32757021806928,
+   "shipment": 99.4258621492126,
+   "shipment_event": 89.06523969190732,
+   "quality_inspection": 82.4112222655397,
+   "demand_forecast": 98.48057744366285
+  }
+ },
+ "impl_seeds": {
+  "1042": {
+   "scores": {
+    "warehouse": 84.81534163338509,
+    "supplier": 77.05555989644,
+    "material": 96.5922447221484,
+    "purchase_order": 98.16106354201514,
+    "purchase_order_line": 97.65252992912158,
+    "inventory": 98.25830244015603,
+    "shipment": 98.02526314403437,
+    "shipment_event": 89.08178092606919,
+    "quality_inspection": 82.22517135634334,
+    "demand_forecast": 97.58354148812715
+   },
+   "below_floor": [
+    "purchase_order_line"
+   ],
+   "shortfall": {
+    "purchase_order_line": 0.013582609653326472
+   }
+  },
+  "1043": {
+   "scores": {
+    "warehouse": 83.47992948806504,
+    "supplier": 77.49891338053595,
+    "material": 98.64242082939695,
+    "purchase_order": 98.67315552691632,
+    "purchase_order_line": 98.02174257075372,
+    "inventory": 98.58771344413807,
+    "shipment": 96.81936011546631,
+    "shipment_event": 89.14113095863583,
+    "quality_inspection": 82.35742895943392,
+    "demand_forecast": 98.87776406594439
+   },
+   "below_floor": [],
+   "shortfall": {}
+  },
+  "1044": {
+   "scores": {
+    "warehouse": 83.88832496901297,
+    "supplier": 76.93019995990531,
+    "material": 96.97905086711033,
+    "purchase_order": 98.15186038496805,
+    "purchase_order_line": 96.27386798234359,
+    "inventory": 97.00040835746236,
+    "shipment": 98.63907029295537,
+    "shipment_event": 88.95550069098152,
+    "quality_inspection": 82.68008355541178,
+    "demand_forecast": 98.72342755794266
+   },
+   "below_floor": [
+    "purchase_order_line"
+   ],
+   "shortfall": {
+    "purchase_order_line": 1.3922445564313222
+   }
+  },
+  "1045": {
+   "scores": {
+    "warehouse": 84.68862768883943,
+    "supplier": 77.0009372803309,
+    "material": 95.18269894822053,
+    "purchase_order": 98.20313137373344,
+    "purchase_order_line": 98.75444874244135,
+    "inventory": 97.35113718603318,
+    "shipment": 97.18883140633875,
+    "shipment_event": 89.09322616602469,
+    "quality_inspection": 82.81878853783026,
+    "demand_forecast": 98.78211109295984
+   },
+   "below_floor": [
+    "material"
+   ],
+   "shortfall": {
+    "material": 0.1319834770378634
+   }
+  },
+  "1046": {
+   "scores": {
+    "warehouse": 86.20962164637217,
+    "supplier": 75.5883463992636,
+    "material": 94.78785603331536,
+    "purchase_order": 98.25783182166936,
+    "purchase_order_line": 97.99106045662597,
+    "inventory": 97.40041109953064,
+    "shipment": 99.33469644417758,
+    "shipment_event": 89.18818276141877,
+    "quality_inspection": 82.78251383914257,
+    "demand_forecast": 98.87242847057439
+   },
+   "below_floor": [
+    "material"
+   ],
+   "shortfall": {
+    "material": 0.5268263919430325
+   }
+  },
+  "1047": {
+   "scores": {
+    "warehouse": 87.03525135518215,
+    "supplier": 77.54313742216581,
+    "material": 94.91050591907924,
+    "purchase_order": 98.54568989589845,
+    "purchase_order_line": 98.740646724156,
+    "inventory": 98.12379631031115,
+    "shipment": 96.91188751266648,
+    "shipment_event": 89.1603762933908,
+    "quality_inspection": 83.04943566176179,
+    "demand_forecast": 97.98453811922457
+   },
+   "below_floor": [
+    "material"
+   ],
+   "shortfall": {
+    "material": 0.4041765061791551
+   }
+  },
+  "1048": {
+   "scores": {
+    "warehouse": 84.91354823754504,
+    "supplier": 77.65909429023876,
+    "material": 93.21543708529586,
+    "purchase_order": 99.01665720904774,
+    "purchase_order_line": 98.73424349632455,
+    "inventory": 97.57969037170967,
+    "shipment": 98.5186484938204,
+    "shipment_event": 89.14207068591799,
+    "quality_inspection": 82.25513260746268,
+    "demand_forecast": 98.53363197636877
+   },
+   "below_floor": [
+    "material"
+   ],
+   "shortfall": {
+    "material": 2.099245339962536
+   }
+  },
+  "1049": {
+   "scores": {
+    "warehouse": 83.3097564446545,
+    "supplier": 76.05219729226013,
+    "material": 96.39792020935413,
+    "purchase_order": 98.40316607491374,
+    "purchase_order_line": 98.4362145158746,
+    "inventory": 98.84700533512421,
+    "shipment": 98.04073786558362,
+    "shipment_event": 89.09450774888445,
+    "quality_inspection": 83.1229272631919,
+    "demand_forecast": 98.2447725235066
+   },
+   "below_floor": [],
+   "shortfall": {}
+  }
+ }
+}

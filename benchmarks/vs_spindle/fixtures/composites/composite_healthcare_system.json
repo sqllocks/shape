@@ -1,0 +1,4607 @@
+{
+ "plan": {
+  "columns": {
+   "healthcare_claim": [
+    "claim_id",
+    "encounter_id",
+    "claim_number",
+    "claim_type",
+    "status",
+    "patient_id",
+    "filing_date",
+    "total_amount",
+    "allowed_amount",
+    "paid_amount"
+   ],
+   "healthcare_claim_line": [
+    "claim_line_id",
+    "claim_id",
+    "procedure_id",
+    "patient_copay",
+    "cpt_code",
+    "charge_amount",
+    "allowed_amount",
+    "paid_amount"
+   ],
+   "healthcare_diagnosis": [
+    "diagnosis_id",
+    "encounter_id",
+    "icd10_code",
+    "diagnosis_type",
+    "is_chronic",
+    "description"
+   ],
+   "healthcare_encounter": [
+    "encounter_id",
+    "patient_id",
+    "provider_id",
+    "facility_id",
+    "encounter_type",
+    "encounter_date",
+    "status"
+   ],
+   "healthcare_facility": [
+    "facility_id",
+    "facility_name",
+    "facility_type",
+    "bed_count",
+    "street",
+    "city",
+    "phone",
+    "state",
+    "zip_code",
+    "lat",
+    "lng"
+   ],
+   "healthcare_medication": [
+    "medication_id",
+    "encounter_id",
+    "medication_name",
+    "dosage",
+    "frequency",
+    "days_supply",
+    "patient_id"
+   ],
+   "healthcare_patient": [
+    "patient_id",
+    "mrn",
+    "first_name",
+    "last_name",
+    "date_of_birth",
+    "gender",
+    "race",
+    "street",
+    "city",
+    "phone",
+    "email",
+    "insurance_plan",
+    "insurance_member_id",
+    "registration_date",
+    "is_active",
+    "state",
+    "zip_code"
+   ],
+   "healthcare_procedure": [
+    "procedure_id",
+    "encounter_id",
+    "performing_provider_id",
+    "cpt_code",
+    "modifier",
+    "cpt_description",
+    "standard_charge"
+   ],
+   "healthcare_provider": [
+    "provider_id",
+    "npi",
+    "first_name",
+    "last_name",
+    "credential",
+    "specialty",
+    "is_active"
+   ],
+   "hr_compensation": [
+    "compensation_id",
+    "employee_id",
+    "effective_date",
+    "base_salary",
+    "bonus_pct",
+    "change_reason"
+   ],
+   "hr_department": [
+    "department_id",
+    "department_name",
+    "cost_center",
+    "is_active"
+   ],
+   "hr_employee": [
+    "employee_id",
+    "department_id",
+    "position_id",
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "hire_date",
+    "manager_id",
+    "employment_status",
+    "employment_type"
+   ],
+   "hr_performance_review": [
+    "review_id",
+    "employee_id",
+    "reviewer_id",
+    "review_date",
+    "review_period_year",
+    "rating",
+    "comments"
+   ],
+   "hr_position": [
+    "position_id",
+    "position_title",
+    "pay_grade",
+    "is_exempt",
+    "min_salary",
+    "max_salary"
+   ],
+   "hr_termination": [
+    "termination_id",
+    "employee_id",
+    "termination_date",
+    "termination_type",
+    "reason",
+    "eligible_for_rehire"
+   ],
+   "hr_time_off_request": [
+    "request_id",
+    "employee_id",
+    "leave_type",
+    "start_date",
+    "hours_requested",
+    "status",
+    "end_date"
+   ],
+   "hr_training": [
+    "training_id",
+    "course_name",
+    "category",
+    "duration_hours",
+    "is_mandatory"
+   ],
+   "hr_training_enrollment": [
+    "enrollment_id",
+    "employee_id",
+    "training_id",
+    "enrollment_date",
+    "status",
+    "score",
+    "completion_date"
+   ],
+   "insurance_agent": [
+    "agent_id",
+    "first_name",
+    "last_name",
+    "email",
+    "license_number",
+    "specialization",
+    "years_experience",
+    "is_active"
+   ],
+   "insurance_claim": [
+    "claim_id",
+    "policy_id",
+    "claim_number",
+    "incident_date",
+    "claim_amount",
+    "status",
+    "cause",
+    "filed_date"
+   ],
+   "insurance_claim_payment": [
+    "payment_id",
+    "claim_id",
+    "payment_date",
+    "payment_amount",
+    "payment_type"
+   ],
+   "insurance_coverage": [
+    "coverage_id",
+    "policy_id",
+    "coverage_type",
+    "coverage_limit",
+    "coverage_premium"
+   ],
+   "insurance_policy": [
+    "policy_id",
+    "policyholder_id",
+    "policy_type_id",
+    "policy_number",
+    "effective_date",
+    "premium_amount",
+    "deductible",
+    "status",
+    "expiration_date"
+   ],
+   "insurance_policy_type": [
+    "policy_type_id",
+    "type_name",
+    "category",
+    "base_premium_min",
+    "base_premium_max"
+   ],
+   "insurance_policyholder": [
+    "policyholder_id",
+    "agent_id",
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "date_of_birth",
+    "address_city",
+    "credit_score",
+    "address_state",
+    "address_zip"
+   ],
+   "insurance_premium_payment": [
+    "payment_id",
+    "policy_id",
+    "payment_date",
+    "amount",
+    "payment_method",
+    "status"
+   ],
+   "insurance_underwriting": [
+    "underwriting_id",
+    "policy_id",
+    "assessed_date",
+    "risk_score",
+    "risk_tier",
+    "notes"
+   ]
+  },
+  "levels": [
+   [
+    "healthcare_facility",
+    "healthcare_provider",
+    "hr_department",
+    "hr_position",
+    "healthcare_patient",
+    "hr_training",
+    "insurance_agent",
+    "insurance_policy_type"
+   ],
+   [
+    "hr_employee",
+    "healthcare_encounter",
+    "insurance_policyholder"
+   ],
+   [
+    "healthcare_claim",
+    "healthcare_diagnosis",
+    "healthcare_medication",
+    "healthcare_procedure",
+    "hr_compensation",
+    "hr_performance_review",
+    "hr_termination",
+    "hr_time_off_request",
+    "hr_training_enrollment",
+    "insurance_policy"
+   ],
+   [
+    "healthcare_claim_line",
+    "insurance_claim",
+    "insurance_coverage",
+    "insurance_premium_payment",
+    "insurance_underwriting"
+   ],
+   [
+    "insurance_claim_payment"
+   ]
+  ],
+  "order": [
+   "healthcare_facility",
+   "healthcare_provider",
+   "hr_department",
+   "hr_position",
+   "hr_employee",
+   "healthcare_patient",
+   "healthcare_encounter",
+   "healthcare_claim",
+   "healthcare_diagnosis",
+   "healthcare_medication",
+   "healthcare_procedure",
+   "healthcare_claim_line",
+   "hr_compensation",
+   "hr_performance_review",
+   "hr_termination",
+   "hr_time_off_request",
+   "hr_training",
+   "hr_training_enrollment",
+   "insurance_agent",
+   "insurance_policy_type",
+   "insurance_policyholder",
+   "insurance_policy",
+   "insurance_claim",
+   "insurance_claim_payment",
+   "insurance_coverage",
+   "insurance_premium_payment",
+   "insurance_underwriting"
+  ],
+  "row_counts": {
+   "fabric_demo": {
+    "healthcare_claim": 475,
+    "healthcare_claim_line": 1187,
+    "healthcare_diagnosis": 900,
+    "healthcare_encounter": 500,
+    "healthcare_facility": 50,
+    "healthcare_medication": 450,
+    "healthcare_patient": 100,
+    "healthcare_procedure": 600,
+    "healthcare_provider": 20,
+    "hr_compensation": 300,
+    "hr_department": 30,
+    "hr_employee": 100,
+    "hr_performance_review": 250,
+    "hr_position": 80,
+    "hr_termination": 15,
+    "hr_time_off_request": 500,
+    "hr_training": 100,
+    "hr_training_enrollment": 400,
+    "insurance_agent": 100,
+    "insurance_claim": 54,
+    "insurance_claim_payment": 81,
+    "insurance_coverage": 450,
+    "insurance_policy": 180,
+    "insurance_policy_type": 30,
+    "insurance_policyholder": 100,
+    "insurance_premium_payment": 1080,
+    "insurance_underwriting": 180
+   },
+   "large": {
+    "healthcare_claim": 1425000,
+    "healthcare_claim_line": 3562500,
+    "healthcare_diagnosis": 2700000,
+    "healthcare_encounter": 1500000,
+    "healthcare_facility": 50,
+    "healthcare_medication": 1350000,
+    "healthcare_patient": 250000,
+    "healthcare_procedure": 1800000,
+    "healthcare_provider": 15000,
+    "hr_compensation": 150000,
+    "hr_department": 30,
+    "hr_employee": 50000,
+    "hr_performance_review": 125000,
+    "hr_position": 80,
+    "hr_termination": 7500,
+    "hr_time_off_request": 250000,
+    "hr_training": 100,
+    "hr_training_enrollment": 200000,
+    "insurance_agent": 100,
+    "insurance_claim": 54000,
+    "insurance_claim_payment": 81000,
+    "insurance_coverage": 450000,
+    "insurance_policy": 180000,
+    "insurance_policy_type": 30,
+    "insurance_policyholder": 100000,
+    "insurance_premium_payment": 1080000,
+    "insurance_underwriting": 180000
+   },
+   "medium": {
+    "healthcare_claim": 142500,
+    "healthcare_claim_line": 356250,
+    "healthcare_diagnosis": 270000,
+    "healthcare_encounter": 150000,
+    "healthcare_facility": 50,
+    "healthcare_medication": 135000,
+    "healthcare_patient": 25000,
+    "healthcare_procedure": 180000,
+    "healthcare_provider": 2000,
+    "hr_compensation": 15000,
+    "hr_department": 30,
+    "hr_employee": 5000,
+    "hr_performance_review": 12500,
+    "hr_position": 80,
+    "hr_termination": 750,
+    "hr_time_off_request": 25000,
+    "hr_training": 100,
+    "hr_training_enrollment": 20000,
+    "insurance_agent": 100,
+    "insurance_claim": 5400,
+    "insurance_claim_payment": 8100,
+    "insurance_coverage": 45000,
+    "insurance_policy": 18000,
+    "insurance_policy_type": 30,
+    "insurance_policyholder": 10000,
+    "insurance_premium_payment": 108000,
+    "insurance_underwriting": 18000
+   },
+   "small": {
+    "healthcare_claim": 2375,
+    "healthcare_claim_line": 5937,
+    "healthcare_diagnosis": 4500,
+    "healthcare_encounter": 2500,
+    "healthcare_facility": 50,
+    "healthcare_medication": 2250,
+    "healthcare_patient": 500,
+    "healthcare_procedure": 3000,
+    "healthcare_provider": 100,
+    "hr_compensation": 1500,
+    "hr_department": 30,
+    "hr_employee": 500,
+    "hr_performance_review": 1250,
+    "hr_position": 80,
+    "hr_termination": 75,
+    "hr_time_off_request": 2500,
+    "hr_training": 100,
+    "hr_training_enrollment": 2000,
+    "insurance_agent": 100,
+    "insurance_claim": 540,
+    "insurance_claim_payment": 810,
+    "insurance_coverage": 4500,
+    "insurance_policy": 1800,
+    "insurance_policy_type": 30,
+    "insurance_policyholder": 1000,
+    "insurance_premium_payment": 10800,
+    "insurance_underwriting": 1800
+   },
+   "warehouse": {
+    "healthcare_claim": 4750000,
+    "healthcare_claim_line": 11875000,
+    "healthcare_diagnosis": 9000000,
+    "healthcare_encounter": 5000000,
+    "healthcare_facility": 50,
+    "healthcare_medication": 4500000,
+    "healthcare_patient": 500000,
+    "healthcare_procedure": 6000000,
+    "healthcare_provider": 30000,
+    "hr_compensation": 15000000,
+    "hr_department": 30,
+    "hr_employee": 5000000,
+    "hr_performance_review": 12500000,
+    "hr_position": 80,
+    "hr_termination": 750000,
+    "hr_time_off_request": 25000000,
+    "hr_training": 100,
+    "hr_training_enrollment": 20000000,
+    "insurance_agent": 100,
+    "insurance_claim": 540000,
+    "insurance_claim_payment": 810000,
+    "insurance_coverage": 4500000,
+    "insurance_policy": 1800000,
+    "insurance_policy_type": 30,
+    "insurance_policyholder": 1000000,
+    "insurance_premium_payment": 10800000,
+    "insurance_underwriting": 1800000
+   },
+   "xlarge": {
+    "healthcare_claim": 19000000,
+    "healthcare_claim_line": 47500000,
+    "healthcare_diagnosis": 36000000,
+    "healthcare_encounter": 20000000,
+    "healthcare_facility": 50,
+    "healthcare_medication": 18000000,
+    "healthcare_patient": 2500000,
+    "healthcare_procedure": 24000000,
+    "healthcare_provider": 100000,
+    "hr_compensation": 1500000,
+    "hr_department": 30,
+    "hr_employee": 500000,
+    "hr_performance_review": 1250000,
+    "hr_position": 80,
+    "hr_termination": 75000,
+    "hr_time_off_request": 2500000,
+    "hr_training": 100,
+    "hr_training_enrollment": 2000000,
+    "insurance_agent": 100,
+    "insurance_claim": 2700000,
+    "insurance_claim_payment": 4050000,
+    "insurance_coverage": 22500000,
+    "insurance_policy": 9000000,
+    "insurance_policy_type": 30,
+    "insurance_policyholder": 5000000,
+    "insurance_premium_payment": 54000000,
+    "insurance_underwriting": 9000000
+   },
+   "xxl": {
+    "healthcare_claim": 95000000,
+    "healthcare_claim_line": 237500000,
+    "healthcare_diagnosis": 180000000,
+    "healthcare_encounter": 100000000,
+    "healthcare_facility": 50,
+    "healthcare_medication": 90000000,
+    "healthcare_patient": 10000000,
+    "healthcare_procedure": 120000000,
+    "healthcare_provider": 200000,
+    "hr_compensation": 60000000,
+    "hr_department": 30,
+    "hr_employee": 20000000,
+    "hr_performance_review": 50000000,
+    "hr_position": 80,
+    "hr_termination": 3000000,
+    "hr_time_off_request": 100000000,
+    "hr_training": 100,
+    "hr_training_enrollment": 80000000,
+    "insurance_agent": 100,
+    "insurance_claim": 10800000,
+    "insurance_claim_payment": 16200000,
+    "insurance_coverage": 90000000,
+    "insurance_policy": 36000000,
+    "insurance_policy_type": 30,
+    "insurance_policyholder": 20000000,
+    "insurance_premium_payment": 216000000,
+    "insurance_underwriting": 36000000
+   },
+   "xxxl": {
+    "healthcare_claim": 950000000,
+    "healthcare_claim_line": 2375000000,
+    "healthcare_diagnosis": 1800000000,
+    "healthcare_encounter": 1000000000,
+    "healthcare_facility": 50,
+    "healthcare_medication": 900000000,
+    "healthcare_patient": 50000000,
+    "healthcare_procedure": 1200000000,
+    "healthcare_provider": 500000,
+    "hr_compensation": 300000000,
+    "hr_department": 30,
+    "hr_employee": 100000000,
+    "hr_performance_review": 250000000,
+    "hr_position": 80,
+    "hr_termination": 15000000,
+    "hr_time_off_request": 500000000,
+    "hr_training": 100,
+    "hr_training_enrollment": 400000000,
+    "insurance_agent": 100,
+    "insurance_claim": 54000000,
+    "insurance_claim_payment": 81000000,
+    "insurance_coverage": 450000000,
+    "insurance_policy": 180000000,
+    "insurance_policy_type": 30,
+    "insurance_policyholder": 100000000,
+    "insurance_premium_payment": 1080000000,
+    "insurance_underwriting": 180000000
+   }
+  }
+ },
+ "preset": {
+  "description": "Healthcare system with insurance and HR",
+  "domains": [
+   "healthcare",
+   "insurance",
+   "hr"
+  ],
+  "name": "healthcare_system",
+  "shared_entities": {
+   "person": {
+    "links": {
+     "healthcare": "patient.patient_id",
+     "insurance": "policy.policy_id"
+    },
+    "primary": "hr.employee"
+   }
+  }
+ },
+ "schema": {
+  "business_rules": [
+   {
+    "name": "healthcare_encounter_after_registration",
+    "rule": "healthcare_encounter.encounter_date >= healthcare_patient.registration_date",
+    "table": null,
+    "type": "cross_table",
+    "via": "patient_id",
+    "when": null
+   },
+   {
+    "name": "healthcare_claim_filed_after_encounter",
+    "rule": "healthcare_claim.filing_date >= healthcare_encounter.encounter_date",
+    "table": null,
+    "type": "cross_table",
+    "via": "encounter_id",
+    "when": null
+   },
+   {
+    "name": "healthcare_allowed_leq_charge",
+    "rule": "allowed_amount <= charge_amount",
+    "table": "healthcare_claim_line",
+    "type": "cross_column",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "healthcare_paid_leq_allowed",
+    "rule": "paid_amount <= allowed_amount",
+    "table": "healthcare_claim_line",
+    "type": "cross_column",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "healthcare_charge_amount_positive",
+    "rule": "charge_amount > 0",
+    "table": "healthcare_claim_line",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "insurance_claim_after_policy_effective",
+    "rule": "",
+    "table": null,
+    "type": "temporal_order",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "insurance_filed_after_incident",
+    "rule": "",
+    "table": null,
+    "type": "temporal_order",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "hr_max_salary_exceeds_min",
+    "rule": "",
+    "table": "hr_position",
+    "type": "column_comparison",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "hr_rating_in_range",
+    "rule": "rating >= 1 AND rating <= 5",
+    "table": "hr_performance_review",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "hr_hours_positive",
+    "rule": "hours_requested > 0",
+    "table": "hr_time_off_request",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   }
+  ],
+  "correlated_columns": {},
+  "generation": {
+   "derived_counts": {
+    "healthcare_claim": {
+     "per_parent": "healthcare_encounter",
+     "ratio": 0.95
+    },
+    "healthcare_claim_line": {
+     "per_parent": "healthcare_claim",
+     "ratio": 2.5
+    },
+    "healthcare_diagnosis": {
+     "per_parent": "healthcare_encounter",
+     "ratio": 1.8
+    },
+    "healthcare_facility": {
+     "fixed": 50
+    },
+    "healthcare_medication": {
+     "per_parent": "healthcare_encounter",
+     "ratio": 0.9
+    },
+    "healthcare_procedure": {
+     "per_parent": "healthcare_encounter",
+     "ratio": 1.2
+    },
+    "hr_compensation": {
+     "per_parent": "hr_employee",
+     "ratio": 3.0
+    },
+    "hr_department": {
+     "fixed": 30
+    },
+    "hr_performance_review": {
+     "per_parent": "hr_employee",
+     "ratio": 2.5
+    },
+    "hr_position": {
+     "fixed": 80
+    },
+    "hr_termination": {
+     "per_parent": "hr_employee",
+     "ratio": 0.15
+    },
+    "hr_time_off_request": {
+     "per_parent": "hr_employee",
+     "ratio": 5.0
+    },
+    "hr_training": {
+     "fixed": 100
+    },
+    "hr_training_enrollment": {
+     "per_parent": "hr_employee",
+     "ratio": 4.0
+    },
+    "insurance_agent": {
+     "fixed": 100
+    },
+    "insurance_claim": {
+     "per_parent": "insurance_policy",
+     "ratio": 0.3
+    },
+    "insurance_claim_payment": {
+     "per_parent": "insurance_claim",
+     "ratio": 1.5
+    },
+    "insurance_coverage": {
+     "per_parent": "insurance_policy",
+     "ratio": 2.5
+    },
+    "insurance_policy": {
+     "per_parent": "insurance_policyholder",
+     "ratio": 1.8
+    },
+    "insurance_policy_type": {
+     "fixed": 30
+    },
+    "insurance_premium_payment": {
+     "per_parent": "insurance_policy",
+     "ratio": 6.0
+    },
+    "insurance_underwriting": {
+     "per_parent": "insurance_policy",
+     "ratio": 1.0
+    }
+   },
+   "output": {
+    "format": "dataframe"
+   },
+   "scale": "small",
+   "scales": {
+    "fabric_demo": {
+     "healthcare_encounter": 500,
+     "healthcare_patient": 100,
+     "healthcare_provider": 20,
+     "hr_employee": 100,
+     "insurance_policyholder": 100
+    },
+    "large": {
+     "healthcare_encounter": 1500000,
+     "healthcare_patient": 250000,
+     "healthcare_provider": 15000,
+     "hr_employee": 50000,
+     "insurance_policyholder": 100000
+    },
+    "medium": {
+     "healthcare_encounter": 150000,
+     "healthcare_patient": 25000,
+     "healthcare_provider": 2000,
+     "hr_employee": 5000,
+     "insurance_policyholder": 10000
+    },
+    "small": {
+     "healthcare_encounter": 2500,
+     "healthcare_patient": 500,
+     "healthcare_provider": 100,
+     "hr_employee": 500,
+     "insurance_policyholder": 1000
+    },
+    "warehouse": {
+     "healthcare_encounter": 5000000,
+     "healthcare_patient": 500000,
+     "healthcare_provider": 30000,
+     "hr_employee": 5000000,
+     "insurance_policyholder": 1000000
+    },
+    "xlarge": {
+     "healthcare_encounter": 20000000,
+     "healthcare_patient": 2500000,
+     "healthcare_provider": 100000,
+     "hr_employee": 500000,
+     "insurance_policyholder": 5000000
+    },
+    "xxl": {
+     "healthcare_encounter": 100000000,
+     "healthcare_patient": 10000000,
+     "healthcare_provider": 200000,
+     "hr_employee": 20000000,
+     "insurance_policyholder": 20000000
+    },
+    "xxxl": {
+     "healthcare_encounter": 1000000000,
+     "healthcare_patient": 50000000,
+     "healthcare_provider": 500000,
+     "hr_employee": 100000000,
+     "insurance_policyholder": 100000000
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2020-01-01"
+   },
+   "description": "Cross-domain composition of: healthcare, insurance, hr",
+   "domain": "composite",
+   "locale": "en_US",
+   "name": "composite_healthcare_hr_insurance",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "cardinality": {},
+    "child": "healthcare_encounter",
+    "child_columns": [
+     "patient_id"
+    ],
+    "name": "healthcare_patient_encounters",
+    "optional": false,
+    "parent": "healthcare_patient",
+    "parent_columns": [
+     "patient_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "healthcare_encounter",
+    "child_columns": [
+     "provider_id"
+    ],
+    "name": "healthcare_provider_encounters",
+    "optional": false,
+    "parent": "healthcare_provider",
+    "parent_columns": [
+     "provider_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "healthcare_encounter",
+    "child_columns": [
+     "facility_id"
+    ],
+    "name": "healthcare_facility_encounters",
+    "optional": false,
+    "parent": "healthcare_facility",
+    "parent_columns": [
+     "facility_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "healthcare_diagnosis",
+    "child_columns": [
+     "encounter_id"
+    ],
+    "name": "healthcare_encounter_diagnoses",
+    "optional": false,
+    "parent": "healthcare_encounter",
+    "parent_columns": [
+     "encounter_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "healthcare_procedure",
+    "child_columns": [
+     "encounter_id"
+    ],
+    "name": "healthcare_encounter_procedures",
+    "optional": false,
+    "parent": "healthcare_encounter",
+    "parent_columns": [
+     "encounter_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "healthcare_medication",
+    "child_columns": [
+     "encounter_id"
+    ],
+    "name": "healthcare_encounter_medications",
+    "optional": false,
+    "parent": "healthcare_encounter",
+    "parent_columns": [
+     "encounter_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "healthcare_claim",
+    "child_columns": [
+     "encounter_id"
+    ],
+    "name": "healthcare_encounter_claims",
+    "optional": false,
+    "parent": "healthcare_encounter",
+    "parent_columns": [
+     "encounter_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "healthcare_claim_line",
+    "child_columns": [
+     "claim_id"
+    ],
+    "name": "healthcare_claim_lines",
+    "optional": false,
+    "parent": "healthcare_claim",
+    "parent_columns": [
+     "claim_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "healthcare_claim_line",
+    "child_columns": [
+     "procedure_id"
+    ],
+    "name": "healthcare_claim_line_procedures",
+    "optional": false,
+    "parent": "healthcare_procedure",
+    "parent_columns": [
+     "procedure_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "healthcare_procedure",
+    "child_columns": [
+     "performing_provider_id"
+    ],
+    "name": "healthcare_provider_procedures",
+    "optional": false,
+    "parent": "healthcare_provider",
+    "parent_columns": [
+     "provider_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "insurance_policyholder",
+    "child_columns": [
+     "agent_id"
+    ],
+    "name": "insurance_policyholder_agent",
+    "optional": false,
+    "parent": "insurance_agent",
+    "parent_columns": [
+     "agent_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "insurance_policy",
+    "child_columns": [
+     "policyholder_id"
+    ],
+    "name": "insurance_policy_policyholder",
+    "optional": false,
+    "parent": "insurance_policyholder",
+    "parent_columns": [
+     "policyholder_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "insurance_policy",
+    "child_columns": [
+     "policy_type_id"
+    ],
+    "name": "insurance_policy_type_ref",
+    "optional": false,
+    "parent": "insurance_policy_type",
+    "parent_columns": [
+     "policy_type_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "insurance_coverage",
+    "child_columns": [
+     "policy_id"
+    ],
+    "name": "insurance_coverage_policy",
+    "optional": false,
+    "parent": "insurance_policy",
+    "parent_columns": [
+     "policy_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "insurance_claim",
+    "child_columns": [
+     "policy_id"
+    ],
+    "name": "insurance_claim_policy",
+    "optional": false,
+    "parent": "insurance_policy",
+    "parent_columns": [
+     "policy_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "insurance_claim_payment",
+    "child_columns": [
+     "claim_id"
+    ],
+    "name": "insurance_claim_payment_claim",
+    "optional": false,
+    "parent": "insurance_claim",
+    "parent_columns": [
+     "claim_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "insurance_premium_payment",
+    "child_columns": [
+     "policy_id"
+    ],
+    "name": "insurance_premium_payment_policy",
+    "optional": false,
+    "parent": "insurance_policy",
+    "parent_columns": [
+     "policy_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "insurance_underwriting",
+    "child_columns": [
+     "policy_id"
+    ],
+    "name": "insurance_underwriting_policy",
+    "optional": false,
+    "parent": "insurance_policy",
+    "parent_columns": [
+     "policy_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "hr_employee",
+    "child_columns": [
+     "department_id"
+    ],
+    "name": "hr_employee_department",
+    "optional": false,
+    "parent": "hr_department",
+    "parent_columns": [
+     "department_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "hr_employee",
+    "child_columns": [
+     "position_id"
+    ],
+    "name": "hr_employee_position",
+    "optional": false,
+    "parent": "hr_position",
+    "parent_columns": [
+     "position_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "hr_compensation",
+    "child_columns": [
+     "employee_id"
+    ],
+    "name": "hr_employee_compensation",
+    "optional": false,
+    "parent": "hr_employee",
+    "parent_columns": [
+     "employee_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "hr_performance_review",
+    "child_columns": [
+     "employee_id"
+    ],
+    "name": "hr_employee_reviews",
+    "optional": false,
+    "parent": "hr_employee",
+    "parent_columns": [
+     "employee_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "hr_time_off_request",
+    "child_columns": [
+     "employee_id"
+    ],
+    "name": "hr_employee_time_off",
+    "optional": false,
+    "parent": "hr_employee",
+    "parent_columns": [
+     "employee_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "hr_training_enrollment",
+    "child_columns": [
+     "employee_id"
+    ],
+    "name": "hr_employee_training_enrollment",
+    "optional": false,
+    "parent": "hr_employee",
+    "parent_columns": [
+     "employee_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "hr_training_enrollment",
+    "child_columns": [
+     "training_id"
+    ],
+    "name": "hr_training_enrollment_course",
+    "optional": false,
+    "parent": "hr_training",
+    "parent_columns": [
+     "training_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "hr_termination",
+    "child_columns": [
+     "employee_id"
+    ],
+    "name": "hr_employee_termination",
+    "optional": false,
+    "parent": "hr_employee",
+    "parent_columns": [
+     "employee_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "healthcare_patient",
+    "child_columns": [
+     "patient_id"
+    ],
+    "name": "xdomain_person_hr_to_healthcare",
+    "optional": false,
+    "parent": "hr_employee",
+    "parent_columns": [
+     "employee_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "insurance_policy",
+    "child_columns": [
+     "policy_id"
+    ],
+    "name": "xdomain_person_hr_to_insurance",
+    "optional": false,
+    "parent": "hr_employee",
+    "parent_columns": [
+     "employee_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "healthcare_claim": {
+    "cdm_mapping": null,
+    "columns": {
+     "allowed_amount": {
+      "generator": {
+       "child_column": "allowed_amount",
+       "child_table": "healthcare_claim_line",
+       "rule": "sum_children",
+       "strategy": "computed"
+      },
+      "max_length": null,
+      "name": "allowed_amount",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "decimal"
+     },
+     "claim_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "claim_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "claim_number": {
+      "generator": {
+       "format": "CLM{seq:9}",
+       "strategy": "pattern"
+      },
+      "max_length": 15,
+      "name": "claim_number",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "claim_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Institutional": 0.3,
+        "Pharmacy": 0.15,
+        "Professional": 0.55
+       }
+      },
+      "max_length": 20,
+      "name": "claim_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "encounter_id": {
+      "generator": {
+       "ref": "healthcare_encounter.encounter_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "encounter_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "filing_date": {
+      "generator": {
+       "params": {
+        "distribution": "log_normal",
+        "max": 30,
+        "mean": 1.5,
+        "min": 0,
+        "sigma": 0.6
+       },
+       "rule": "add_days",
+       "source": "healthcare_encounter.encounter_date",
+       "strategy": "derived",
+       "via": "encounter_id"
+      },
+      "max_length": null,
+      "name": "filing_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "paid_amount": {
+      "generator": {
+       "child_column": "paid_amount",
+       "child_table": "healthcare_claim_line",
+       "rule": "sum_children",
+       "strategy": "computed"
+      },
+      "max_length": null,
+      "name": "paid_amount",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "decimal"
+     },
+     "patient_id": {
+      "generator": {
+       "source_column": "patient_id",
+       "source_table": "healthcare_encounter",
+       "strategy": "lookup",
+       "via": "encounter_id"
+      },
+      "max_length": null,
+      "name": "patient_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Appealed": 0.03,
+        "Denied": 0.15,
+        "Paid": 0.72,
+        "Partially Paid": 0.05,
+        "Pending": 0.05
+       }
+      },
+      "max_length": 20,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "total_amount": {
+      "generator": {
+       "child_column": "charge_amount",
+       "child_table": "healthcare_claim_line",
+       "rule": "sum_children",
+       "strategy": "computed"
+      },
+      "max_length": null,
+      "name": "total_amount",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "decimal"
+     }
+    },
+    "description": "[healthcare] Insurance claims linked to encounters",
+    "name": "healthcare_claim",
+    "primary_key": [
+     "claim_id"
+    ]
+   },
+   "healthcare_claim_line": {
+    "cdm_mapping": null,
+    "columns": {
+     "allowed_amount": {
+      "generator": {
+       "params": {
+        "factor_max": 0.9,
+        "factor_min": 0.55
+       },
+       "rule": "multiply",
+       "source_column": "charge_amount",
+       "strategy": "correlated"
+      },
+      "max_length": null,
+      "name": "allowed_amount",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "decimal"
+     },
+     "charge_amount": {
+      "generator": {
+       "source_column": "standard_charge",
+       "source_table": "healthcare_procedure",
+       "strategy": "lookup",
+       "via": "procedure_id"
+      },
+      "max_length": null,
+      "name": "charge_amount",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "decimal"
+     },
+     "claim_id": {
+      "generator": {
+       "ref": "healthcare_claim.claim_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "claim_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "claim_line_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "claim_line_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "cpt_code": {
+      "generator": {
+       "source_column": "cpt_code",
+       "source_table": "healthcare_procedure",
+       "strategy": "lookup",
+       "via": "procedure_id"
+      },
+      "max_length": 10,
+      "name": "cpt_code",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "paid_amount": {
+      "generator": {
+       "params": {
+        "factor_max": 1.0,
+        "factor_min": 0.7
+       },
+       "rule": "multiply",
+       "source_column": "allowed_amount",
+       "strategy": "correlated"
+      },
+      "max_length": null,
+      "name": "paid_amount",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "decimal"
+     },
+     "patient_copay": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "0.00": 0.1,
+        "100.00": 0.05,
+        "15.00": 0.15,
+        "25.00": 0.2,
+        "30.00": 0.15,
+        "40.00": 0.15,
+        "50.00": 0.1,
+        "75.00": 0.1
+       }
+      },
+      "max_length": null,
+      "name": "patient_copay",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "decimal"
+     },
+     "procedure_id": {
+      "generator": {
+       "distribution": "zipf",
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "healthcare_procedure.procedure_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "procedure_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[healthcare] Line items on insurance claims",
+    "name": "healthcare_claim_line",
+    "primary_key": [
+     "claim_line_id"
+    ]
+   },
+   "healthcare_diagnosis": {
+    "cdm_mapping": null,
+    "columns": {
+     "description": {
+      "generator": {
+       "dataset": "icd10_codes",
+       "field": "description",
+       "strategy": "record_field"
+      },
+      "max_length": 255,
+      "name": "description",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "diagnosis_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "diagnosis_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "diagnosis_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Admitting": 0.15,
+        "External Cause": 0.1,
+        "Primary": 0.35,
+        "Secondary": 0.4
+       }
+      },
+      "max_length": 20,
+      "name": "diagnosis_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "encounter_id": {
+      "generator": {
+       "ref": "healthcare_encounter.encounter_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "encounter_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "icd10_code": {
+      "generator": {
+       "dataset": "icd10_codes",
+       "field": "code",
+       "strategy": "record_sample",
+       "weight_field": "weight"
+      },
+      "max_length": 10,
+      "name": "icd10_code",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "is_chronic": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.7,
+        "true": 0.3
+       }
+      },
+      "max_length": null,
+      "name": "is_chronic",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[healthcare] ICD-10 diagnoses linked to encounters",
+    "name": "healthcare_diagnosis",
+    "primary_key": [
+     "diagnosis_id"
+    ]
+   },
+   "healthcare_encounter": {
+    "cdm_mapping": null,
+    "columns": {
+     "encounter_date": {
+      "generator": {
+       "pattern": "seasonal",
+       "profiles": {
+        "day_of_week": {
+         "Fri": 0.165,
+         "Mon": 0.195,
+         "Sat": 0.065,
+         "Sun": 0.05,
+         "Thu": 0.175,
+         "Tue": 0.175,
+         "Wed": 0.175
+        },
+        "hour_of_day": {
+         "peaks": [
+          9,
+          14
+         ],
+         "std_dev": 2
+        },
+        "month": {
+         "Apr": 0.083,
+         "Aug": 0.079,
+         "Dec": 0.086,
+         "Feb": 0.091,
+         "Jan": 0.096,
+         "Jul": 0.075,
+         "Jun": 0.075,
+         "Mar": 0.087,
+         "May": 0.079,
+         "Nov": 0.079,
+         "Oct": 0.087,
+         "Sep": 0.083
+        }
+       },
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "encounter_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "encounter_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "encounter_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "encounter_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Emergency": 0.1,
+        "Inpatient": 0.08,
+        "Observation": 0.04,
+        "Outpatient": 0.7,
+        "Telehealth": 0.08
+       }
+      },
+      "max_length": 30,
+      "name": "encounter_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "facility_id": {
+      "generator": {
+       "distribution": "zipf",
+       "params": {
+        "alpha": 1.4
+       },
+       "ref": "healthcare_facility.facility_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "facility_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "patient_id": {
+      "generator": {
+       "distribution": "pareto",
+       "params": {
+        "alpha": 1.05,
+        "max_per_parent": 80
+       },
+       "ref": "healthcare_patient.patient_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "patient_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "provider_id": {
+      "generator": {
+       "distribution": "zipf",
+       "params": {
+        "alpha": 1.2
+       },
+       "ref": "healthcare_provider.provider_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "provider_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Cancelled": 0.05,
+        "Completed": 0.85,
+        "In Progress": 0.05,
+        "No Show": 0.05
+       }
+      },
+      "max_length": 20,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[healthcare] Patient visits and admissions",
+    "name": "healthcare_encounter",
+    "primary_key": [
+     "encounter_id"
+    ]
+   },
+   "healthcare_facility": {
+    "cdm_mapping": null,
+    "columns": {
+     "bed_count": {
+      "generator": {
+       "distribution": "log_normal",
+       "params": {
+        "max": 1500,
+        "mean": 4.5,
+        "min": 5,
+        "sigma": 1.0
+       },
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "bed_count",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "city": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "city",
+       "strategy": "record_sample"
+      },
+      "max_length": 100,
+      "name": "city",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "facility_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "facility_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "facility_name": {
+      "generator": {
+       "format": "Medical Center #{seq:4}",
+       "strategy": "pattern"
+      },
+      "max_length": 150,
+      "name": "facility_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "facility_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Clinic": 0.35,
+        "Hospital": 0.25,
+        "Long-Term Care": 0.03,
+        "Psychiatric": 0.04,
+        "Rehabilitation": 0.08,
+        "Surgery Center": 0.1,
+        "Urgent Care": 0.15
+       }
+      },
+      "max_length": 50,
+      "name": "facility_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "lat": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "lat",
+       "strategy": "record_field"
+      },
+      "max_length": null,
+      "name": "lat",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "decimal"
+     },
+     "lng": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "lng",
+       "strategy": "record_field"
+      },
+      "max_length": null,
+      "name": "lng",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "decimal"
+     },
+     "phone": {
+      "generator": {
+       "provider": "phone_number",
+       "strategy": "faker"
+      },
+      "max_length": 15,
+      "name": "phone",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "state": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "state",
+       "strategy": "record_field"
+      },
+      "max_length": 2,
+      "name": "state",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "street": {
+      "generator": {
+       "provider": "street_address",
+       "strategy": "faker"
+      },
+      "max_length": 200,
+      "name": "street",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "zip_code": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "zip",
+       "strategy": "record_field"
+      },
+      "max_length": 5,
+      "name": "zip_code",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[healthcare] Healthcare facilities (hospitals, clinics, etc.)",
+    "name": "healthcare_facility",
+    "primary_key": [
+     "facility_id"
+    ]
+   },
+   "healthcare_medication": {
+    "cdm_mapping": null,
+    "columns": {
+     "days_supply": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "14": 0.1,
+        "30": 0.5,
+        "60": 0.07,
+        "7": 0.08,
+        "90": 0.25
+       }
+      },
+      "max_length": null,
+      "name": "days_supply",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "dosage": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "1000mg": 0.06,
+        "100mg": 0.12,
+        "10mg": 0.2,
+        "20mg": 0.15,
+        "250mg": 0.1,
+        "25mg": 0.12,
+        "500mg": 0.1,
+        "50mg": 0.15
+       }
+      },
+      "max_length": 50,
+      "name": "dosage",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "encounter_id": {
+      "generator": {
+       "ref": "healthcare_encounter.encounter_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "encounter_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "frequency": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "As needed": 0.15,
+        "Four times daily": 0.05,
+        "Monthly": 0.05,
+        "Once daily": 0.35,
+        "Three times daily": 0.1,
+        "Twice daily": 0.25,
+        "Weekly": 0.05
+       }
+      },
+      "max_length": 30,
+      "name": "frequency",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "medication_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "medication_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "medication_name": {
+      "generator": {
+       "dataset": "medication_names",
+       "field": "name",
+       "strategy": "reference_data",
+       "weight_field": "weight"
+      },
+      "max_length": 150,
+      "name": "medication_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "patient_id": {
+      "generator": {
+       "source_column": "patient_id",
+       "source_table": "healthcare_encounter",
+       "strategy": "lookup",
+       "via": "encounter_id"
+      },
+      "max_length": null,
+      "name": "patient_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[healthcare] Prescriptions linked to encounters",
+    "name": "healthcare_medication",
+    "primary_key": [
+     "medication_id"
+    ]
+   },
+   "healthcare_patient": {
+    "cdm_mapping": null,
+    "columns": {
+     "city": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "city",
+       "strategy": "record_sample"
+      },
+      "max_length": 100,
+      "name": "city",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "date_of_birth": {
+      "generator": {
+       "pattern": "uniform",
+       "range": {
+        "end": "2020-12-31",
+        "start": "1930-01-01"
+       },
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "date_of_birth",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "email": {
+      "generator": {
+       "provider": "email",
+       "strategy": "faker"
+      },
+      "max_length": 255,
+      "name": "email",
+      "null_rate": 0.15,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "first_name": {
+      "generator": {
+       "provider": "first_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "first_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "gender": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "F": 0.5,
+        "M": 0.49,
+        "NB": 0.01
+       }
+      },
+      "max_length": 5,
+      "name": "gender",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "insurance_member_id": {
+      "generator": {
+       "format": "INS{seq:9}",
+       "strategy": "pattern"
+      },
+      "max_length": 20,
+      "name": "insurance_member_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "insurance_plan": {
+      "generator": {
+       "dataset": "insurance_plans",
+       "field": "name",
+       "strategy": "reference_data",
+       "weight_field": "weight"
+      },
+      "max_length": 100,
+      "name": "insurance_plan",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "is_active": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.12,
+        "true": 0.88
+       }
+      },
+      "max_length": null,
+      "name": "is_active",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "last_name": {
+      "generator": {
+       "provider": "last_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "last_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "mrn": {
+      "generator": {
+       "format": "MRN{seq:8}",
+       "strategy": "pattern"
+      },
+      "max_length": 12,
+      "name": "mrn",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "patient_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "patient_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "phone": {
+      "generator": {
+       "provider": "phone_number",
+       "strategy": "faker"
+      },
+      "max_length": 15,
+      "name": "phone",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "race": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Asian": 0.06,
+        "Black": 0.124,
+        "Hispanic": 0.187,
+        "Other": 0.051,
+        "White": 0.578
+       }
+      },
+      "max_length": 30,
+      "name": "race",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "registration_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "registration_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "timestamp"
+     },
+     "state": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "state",
+       "strategy": "record_field"
+      },
+      "max_length": 2,
+      "name": "state",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "street": {
+      "generator": {
+       "provider": "street_address",
+       "strategy": "faker"
+      },
+      "max_length": 200,
+      "name": "street",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "zip_code": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "zip",
+       "strategy": "record_field"
+      },
+      "max_length": 5,
+      "name": "zip_code",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[healthcare] Patient demographics and insurance",
+    "name": "healthcare_patient",
+    "primary_key": [
+     "patient_id"
+    ]
+   },
+   "healthcare_procedure": {
+    "cdm_mapping": null,
+    "columns": {
+     "cpt_code": {
+      "generator": {
+       "dataset": "cpt_codes",
+       "field": "code",
+       "strategy": "record_sample",
+       "weight_field": "weight"
+      },
+      "max_length": 10,
+      "name": "cpt_code",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "cpt_description": {
+      "generator": {
+       "dataset": "cpt_codes",
+       "field": "description",
+       "strategy": "record_field"
+      },
+      "max_length": 255,
+      "name": "cpt_description",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "encounter_id": {
+      "generator": {
+       "ref": "healthcare_encounter.encounter_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "encounter_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "modifier": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "25": 0.15,
+        "26": 0.3,
+        "59": 0.2,
+        "76": 0.1,
+        "TC": 0.25
+       }
+      },
+      "max_length": 5,
+      "name": "modifier",
+      "null_rate": 0.7,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "performing_provider_id": {
+      "generator": {
+       "distribution": "zipf",
+       "params": {
+        "alpha": 1.3
+       },
+       "ref": "healthcare_provider.provider_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "performing_provider_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "procedure_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "procedure_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "standard_charge": {
+      "generator": {
+       "dataset": "cpt_codes",
+       "field": "charge",
+       "strategy": "record_field"
+      },
+      "max_length": null,
+      "name": "standard_charge",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "decimal"
+     }
+    },
+    "description": "[healthcare] CPT procedures linked to encounters",
+    "name": "healthcare_procedure",
+    "primary_key": [
+     "procedure_id"
+    ]
+   },
+   "healthcare_provider": {
+    "cdm_mapping": null,
+    "columns": {
+     "credential": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "DO": 0.11,
+        "MD": 0.55,
+        "NP": 0.2,
+        "PA": 0.1,
+        "RN": 0.04
+       }
+      },
+      "max_length": 10,
+      "name": "credential",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "first_name": {
+      "generator": {
+       "provider": "first_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "first_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "is_active": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.1,
+        "true": 0.9
+       }
+      },
+      "max_length": null,
+      "name": "is_active",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "last_name": {
+      "generator": {
+       "provider": "last_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "last_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "npi": {
+      "generator": {
+       "format": "{seq:10}",
+       "strategy": "pattern"
+      },
+      "max_length": 10,
+      "name": "npi",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "provider_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "provider_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "specialty": {
+      "generator": {
+       "dataset": "specialties",
+       "field": "name",
+       "strategy": "reference_data",
+       "weight_field": "weight"
+      },
+      "max_length": 100,
+      "name": "specialty",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[healthcare] Healthcare providers (doctors, nurses, etc.)",
+    "name": "healthcare_provider",
+    "primary_key": [
+     "provider_id"
+    ]
+   },
+   "hr_compensation": {
+    "cdm_mapping": null,
+    "columns": {
+     "base_salary": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 350000.0,
+       "mean": 11.0,
+       "min": 28000.0,
+       "round": 2,
+       "sigma": 0.5,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "base_salary",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "bonus_pct": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 25.0,
+       "min": 0.0,
+       "round": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "bonus_pct",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "change_reason": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Annual Review": 0.4,
+        "Market Adjustment": 0.15,
+        "New Hire": 0.12,
+        "Promotion": 0.25,
+        "Transfer": 0.08
+       }
+      },
+      "max_length": null,
+      "name": "change_reason",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "compensation_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "compensation_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "effective_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2015-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "effective_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "employee_id": {
+      "generator": {
+       "ref": "hr_employee.employee_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "employee_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[hr] Salary history with effective dates",
+    "name": "hr_compensation",
+    "primary_key": [
+     "compensation_id"
+    ]
+   },
+   "hr_department": {
+    "cdm_mapping": null,
+    "columns": {
+     "cost_center": {
+      "generator": {
+       "format": "CC-{seq:4}",
+       "strategy": "pattern"
+      },
+      "max_length": 10,
+      "name": "cost_center",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "department_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "department_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "department_name": {
+      "generator": {
+       "dataset": "department_names",
+       "strategy": "reference_data"
+      },
+      "max_length": 100,
+      "name": "department_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "is_active": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.07,
+        "true": 0.93
+       }
+      },
+      "max_length": null,
+      "name": "is_active",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "boolean"
+     }
+    },
+    "description": "[hr] Organizational departments",
+    "name": "hr_department",
+    "primary_key": [
+     "department_id"
+    ]
+   },
+   "hr_employee": {
+    "cdm_mapping": null,
+    "columns": {
+     "department_id": {
+      "generator": {
+       "alpha": 1.3,
+       "distribution": "zipf",
+       "ref": "hr_department.department_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "department_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "email": {
+      "generator": {
+       "provider": "email",
+       "strategy": "faker"
+      },
+      "max_length": 255,
+      "name": "email",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "employee_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "employee_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "employment_status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Active": 0.82,
+        "On Leave": 0.05,
+        "Retired": 0.03,
+        "Terminated": 0.1
+       }
+      },
+      "max_length": null,
+      "name": "employment_status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "employment_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Contract": 0.08,
+        "Full-Time": 0.75,
+        "Part-Time": 0.12,
+        "Temporary": 0.05
+       }
+      },
+      "max_length": null,
+      "name": "employment_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "first_name": {
+      "generator": {
+       "provider": "first_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "first_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "hire_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2015-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "hire_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "last_name": {
+      "generator": {
+       "provider": "last_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "last_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "manager_id": {
+      "generator": {
+       "max_depth": 4,
+       "pk_column": "employee_id",
+       "root_count": 5,
+       "strategy": "self_referencing"
+      },
+      "max_length": null,
+      "name": "manager_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "phone": {
+      "generator": {
+       "provider": "phone_number",
+       "strategy": "faker"
+      },
+      "max_length": 20,
+      "name": "phone",
+      "null_rate": 0.08,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "position_id": {
+      "generator": {
+       "alpha": 1.2,
+       "distribution": "zipf",
+       "ref": "hr_position.position_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "position_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[hr] Employees with department and position assignments",
+    "name": "hr_employee",
+    "primary_key": [
+     "employee_id"
+    ]
+   },
+   "hr_performance_review": {
+    "cdm_mapping": null,
+    "columns": {
+     "comments": {
+      "generator": {
+       "provider": "sentence",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "comments",
+      "null_rate": 0.2,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "employee_id": {
+      "generator": {
+       "ref": "hr_employee.employee_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "employee_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "rating": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "1": 0.05,
+        "2": 0.12,
+        "3": 0.45,
+        "4": 0.28,
+        "5": 0.1
+       }
+      },
+      "max_length": null,
+      "name": "rating",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "review_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2020-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "review_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "review_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "review_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "review_period_year": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "2020": 0.15,
+        "2021": 0.18,
+        "2022": 0.2,
+        "2023": 0.22,
+        "2024": 0.25
+       }
+      },
+      "max_length": null,
+      "name": "review_period_year",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "reviewer_id": {
+      "generator": {
+       "ref": "hr_employee.employee_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "reviewer_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[hr] Annual performance reviews with ratings",
+    "name": "hr_performance_review",
+    "primary_key": [
+     "review_id"
+    ]
+   },
+   "hr_position": {
+    "cdm_mapping": null,
+    "columns": {
+     "is_exempt": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.4,
+        "true": 0.6
+       }
+      },
+      "max_length": null,
+      "name": "is_exempt",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "boolean"
+     },
+     "max_salary": {
+      "generator": {
+       "operation": "multiply",
+       "params": {
+        "factor_max": 1.8,
+        "factor_min": 1.3
+       },
+       "source_column": "min_salary",
+       "strategy": "correlated"
+      },
+      "max_length": null,
+      "name": "max_salary",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "min_salary": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 120000.0,
+       "min": 30000.0,
+       "round": 2,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "min_salary",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "pay_grade": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "G1": 0.15,
+        "G2": 0.2,
+        "G3": 0.25,
+        "G4": 0.2,
+        "G5": 0.12,
+        "G6": 0.05,
+        "G7": 0.03
+       }
+      },
+      "max_length": null,
+      "name": "pay_grade",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "position_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "position_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "position_title": {
+      "generator": {
+       "dataset": "position_titles",
+       "strategy": "reference_data"
+      },
+      "max_length": 150,
+      "name": "position_title",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[hr] Job titles and levels",
+    "name": "hr_position",
+    "primary_key": [
+     "position_id"
+    ]
+   },
+   "hr_termination": {
+    "cdm_mapping": null,
+    "columns": {
+     "eligible_for_rehire": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.3,
+        "true": 0.7
+       }
+      },
+      "max_length": null,
+      "name": "eligible_for_rehire",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "boolean"
+     },
+     "employee_id": {
+      "generator": {
+       "ref": "hr_employee.employee_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "employee_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "reason": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Better Opportunity": 0.3,
+        "Conduct": 0.08,
+        "Other": 0.08,
+        "Performance": 0.15,
+        "Personal": 0.1,
+        "Relocation": 0.12,
+        "Restructuring": 0.1,
+        "Retirement": 0.07
+       }
+      },
+      "max_length": null,
+      "name": "reason",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "termination_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2020-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "termination_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "termination_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "termination_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "termination_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "End of Contract": 0.03,
+        "Involuntary": 0.25,
+        "Layoff": 0.1,
+        "Retirement": 0.07,
+        "Voluntary": 0.55
+       }
+      },
+      "max_length": null,
+      "name": "termination_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[hr] Employee terminations",
+    "name": "hr_termination",
+    "primary_key": [
+     "termination_id"
+    ]
+   },
+   "hr_time_off_request": {
+    "cdm_mapping": null,
+    "columns": {
+     "employee_id": {
+      "generator": {
+       "ref": "hr_employee.employee_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "employee_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "end_date": {
+      "generator": {
+       "params": {
+        "distribution": "uniform",
+        "max": 14,
+        "min": 1
+       },
+       "rule": "add_days",
+       "source": "start_date",
+       "strategy": "derived"
+      },
+      "max_length": null,
+      "name": "end_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "hours_requested": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 80.0,
+       "min": 4.0,
+       "round": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "hours_requested",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "leave_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Bereavement": 0.04,
+        "Jury Duty": 0.03,
+        "PTO": 0.45,
+        "Parental": 0.06,
+        "Personal": 0.12,
+        "Sick": 0.25,
+        "Unpaid": 0.05
+       }
+      },
+      "max_length": null,
+      "name": "leave_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "request_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "request_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "start_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2020-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "start_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Approved": 0.75,
+        "Cancelled": 0.07,
+        "Denied": 0.08,
+        "Pending": 0.1
+       }
+      },
+      "max_length": null,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[hr] PTO, sick, and personal leave requests",
+    "name": "hr_time_off_request",
+    "primary_key": [
+     "request_id"
+    ]
+   },
+   "hr_training": {
+    "cdm_mapping": null,
+    "columns": {
+     "category": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Compliance": 0.25,
+        "Diversity": 0.05,
+        "Leadership": 0.15,
+        "Onboarding": 0.08,
+        "Safety": 0.13,
+        "Soft Skills": 0.12,
+        "Technical": 0.22
+       }
+      },
+      "max_length": null,
+      "name": "category",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "course_name": {
+      "generator": {
+       "dataset": "training_courses",
+       "strategy": "reference_data"
+      },
+      "max_length": 200,
+      "name": "course_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "duration_hours": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 40.0,
+       "min": 0.5,
+       "round": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "duration_hours",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "is_mandatory": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.65,
+        "true": 0.35
+       }
+      },
+      "max_length": null,
+      "name": "is_mandatory",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "boolean"
+     },
+     "training_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "training_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[hr] Training course catalog",
+    "name": "hr_training",
+    "primary_key": [
+     "training_id"
+    ]
+   },
+   "hr_training_enrollment": {
+    "cdm_mapping": null,
+    "columns": {
+     "completion_date": {
+      "generator": {
+       "params": {
+        "distribution": "uniform",
+        "max": 90,
+        "min": 1
+       },
+       "rule": "add_days",
+       "source": "enrollment_date",
+       "strategy": "derived"
+      },
+      "max_length": null,
+      "name": "completion_date",
+      "null_rate": 0.15,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "employee_id": {
+      "generator": {
+       "ref": "hr_employee.employee_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "employee_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "enrollment_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2020-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "enrollment_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "enrollment_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "enrollment_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "score": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 100.0,
+       "min": 50.0,
+       "round": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "score",
+      "null_rate": 0.25,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Completed": 0.65,
+        "Dropped": 0.07,
+        "Enrolled": 0.1,
+        "Failed": 0.03,
+        "In Progress": 0.15
+       }
+      },
+      "max_length": null,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "training_id": {
+      "generator": {
+       "alpha": 1.2,
+       "distribution": "zipf",
+       "ref": "hr_training.training_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "training_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[hr] Employee training enrollments",
+    "name": "hr_training_enrollment",
+    "primary_key": [
+     "enrollment_id"
+    ]
+   },
+   "insurance_agent": {
+    "cdm_mapping": null,
+    "columns": {
+     "agent_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "agent_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "email": {
+      "generator": {
+       "provider": "email",
+       "strategy": "faker"
+      },
+      "max_length": 255,
+      "name": "email",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "first_name": {
+      "generator": {
+       "provider": "first_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "first_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "is_active": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.1,
+        "true": 0.9
+       }
+      },
+      "max_length": null,
+      "name": "is_active",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "boolean"
+     },
+     "last_name": {
+      "generator": {
+       "provider": "last_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "last_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "license_number": {
+      "generator": {
+       "format": "AGT-{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 20,
+      "name": "license_number",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "specialization": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Commercial": 0.15,
+        "Health": 0.2,
+        "Life": 0.2,
+        "Multi-Line": 0.15,
+        "P&C": 0.3
+       }
+      },
+      "max_length": null,
+      "name": "specialization",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "years_experience": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 35,
+       "min": 1,
+       "round": 0,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "years_experience",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[insurance] Insurance agents with licensing info",
+    "name": "insurance_agent",
+    "primary_key": [
+     "agent_id"
+    ]
+   },
+   "insurance_claim": {
+    "cdm_mapping": null,
+    "columns": {
+     "cause": {
+      "generator": {
+       "dataset": "claim_categories",
+       "strategy": "reference_data"
+      },
+      "max_length": 100,
+      "name": "cause",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "claim_amount": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 1000000.0,
+       "mean": 8.5,
+       "min": 100.0,
+       "round": 2,
+       "sigma": 1.5,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "claim_amount",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "claim_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "claim_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "claim_number": {
+      "generator": {
+       "format": "CLM-{seq:8}",
+       "strategy": "pattern"
+      },
+      "max_length": 20,
+      "name": "claim_number",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "filed_date": {
+      "generator": {
+       "days": 7,
+       "operation": "add_days",
+       "source": "incident_date",
+       "strategy": "derived"
+      },
+      "max_length": null,
+      "name": "filed_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "incident_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2020-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "incident_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "policy_id": {
+      "generator": {
+       "ref": "insurance_policy.policy_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "policy_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Approved": 0.4,
+        "Closed": 0.25,
+        "Denied": 0.1,
+        "Open": 0.1,
+        "Under Review": 0.15
+       }
+      },
+      "max_length": null,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[insurance] Claims filed against policies",
+    "name": "insurance_claim",
+    "primary_key": [
+     "claim_id"
+    ]
+   },
+   "insurance_claim_payment": {
+    "cdm_mapping": null,
+    "columns": {
+     "claim_id": {
+      "generator": {
+       "ref": "insurance_claim.claim_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "claim_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "payment_amount": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 500000.0,
+       "mean": 7.5,
+       "min": 50.0,
+       "round": 2,
+       "sigma": 1.5,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "payment_amount",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "payment_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2020-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "payment_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "payment_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "payment_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "payment_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Check": 0.2,
+        "EFT": 0.7,
+        "Wire": 0.1
+       }
+      },
+      "max_length": null,
+      "name": "payment_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[insurance] Payouts on claims",
+    "name": "insurance_claim_payment",
+    "primary_key": [
+     "payment_id"
+    ]
+   },
+   "insurance_coverage": {
+    "cdm_mapping": null,
+    "columns": {
+     "coverage_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "coverage_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "coverage_limit": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 5000000.0,
+       "mean": 11.0,
+       "min": 5000.0,
+       "round": 2,
+       "sigma": 1.2,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "coverage_limit",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "coverage_premium": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 10000.0,
+       "mean": 5.5,
+       "min": 50.0,
+       "round": 2,
+       "sigma": 0.8,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "coverage_premium",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "coverage_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Collision": 0.18,
+        "Comprehensive": 0.17,
+        "Liability": 0.25,
+        "Medical": 0.15,
+        "Property": 0.15,
+        "Uninsured": 0.1
+       }
+      },
+      "max_length": null,
+      "name": "coverage_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "policy_id": {
+      "generator": {
+       "ref": "insurance_policy.policy_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "policy_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[insurance] Coverage line items per policy",
+    "name": "insurance_coverage",
+    "primary_key": [
+     "coverage_id"
+    ]
+   },
+   "insurance_policy": {
+    "cdm_mapping": null,
+    "columns": {
+     "deductible": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "1000": 0.35,
+        "2000": 0.2,
+        "500": 0.3,
+        "5000": 0.15
+       }
+      },
+      "max_length": null,
+      "name": "deductible",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "effective_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2020-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "effective_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "expiration_date": {
+      "generator": {
+       "days": 365,
+       "operation": "add_days",
+       "source": "effective_date",
+       "strategy": "derived"
+      },
+      "max_length": null,
+      "name": "expiration_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "policy_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "policy_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "policy_number": {
+      "generator": {
+       "format": "POL-{seq:8}",
+       "strategy": "pattern"
+      },
+      "max_length": 20,
+      "name": "policy_number",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "policy_type_id": {
+      "generator": {
+       "ref": "insurance_policy_type.policy_type_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "policy_type_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "policyholder_id": {
+      "generator": {
+       "ref": "insurance_policyholder.policyholder_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "policyholder_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "premium_amount": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 50000.0,
+       "mean": 7.0,
+       "min": 200.0,
+       "round": 2,
+       "sigma": 0.8,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "premium_amount",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Active": 0.72,
+        "Cancelled": 0.08,
+        "Expired": 0.15,
+        "Lapsed": 0.05
+       }
+      },
+      "max_length": null,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[insurance] Insurance policies",
+    "name": "insurance_policy",
+    "primary_key": [
+     "policy_id"
+    ]
+   },
+   "insurance_policy_type": {
+    "cdm_mapping": null,
+    "columns": {
+     "base_premium_max": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 15000.0,
+       "min": 2000.0,
+       "round": 2,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "base_premium_max",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "base_premium_min": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 2000.0,
+       "min": 200.0,
+       "round": 2,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "base_premium_min",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "category": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Auto": 0.25,
+        "Commercial": 0.15,
+        "Health": 0.15,
+        "Home": 0.2,
+        "Life": 0.18,
+        "Umbrella": 0.07
+       }
+      },
+      "max_length": null,
+      "name": "category",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "policy_type_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "policy_type_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "type_name": {
+      "generator": {
+       "dataset": "policy_types",
+       "strategy": "reference_data"
+      },
+      "max_length": 100,
+      "name": "type_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[insurance] Policy categories and base premiums",
+    "name": "insurance_policy_type",
+    "primary_key": [
+     "policy_type_id"
+    ]
+   },
+   "insurance_policyholder": {
+    "cdm_mapping": null,
+    "columns": {
+     "address_city": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "city",
+       "strategy": "record_sample"
+      },
+      "max_length": 100,
+      "name": "address_city",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "address_state": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "state",
+       "strategy": "record_field"
+      },
+      "max_length": 2,
+      "name": "address_state",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "address_zip": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "zip",
+       "strategy": "record_field"
+      },
+      "max_length": 10,
+      "name": "address_zip",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "agent_id": {
+      "generator": {
+       "ref": "insurance_agent.agent_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "agent_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "credit_score": {
+      "generator": {
+       "distribution": "normal",
+       "max": 850,
+       "mean": 700,
+       "min": 300,
+       "round": 0,
+       "sigma": 80,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "credit_score",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "date_of_birth": {
+      "generator": {
+       "end": "2005-12-31",
+       "pattern": "uniform",
+       "start": "1940-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "date_of_birth",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "email": {
+      "generator": {
+       "provider": "email",
+       "strategy": "faker"
+      },
+      "max_length": 255,
+      "name": "email",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "first_name": {
+      "generator": {
+       "provider": "first_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "first_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "last_name": {
+      "generator": {
+       "provider": "last_name",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "last_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "phone": {
+      "generator": {
+       "provider": "phone_number",
+       "strategy": "faker"
+      },
+      "max_length": 20,
+      "name": "phone",
+      "null_rate": 0.08,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "policyholder_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "policyholder_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[insurance] Insurance customers with demographics",
+    "name": "insurance_policyholder",
+    "primary_key": [
+     "policyholder_id"
+    ]
+   },
+   "insurance_premium_payment": {
+    "cdm_mapping": null,
+    "columns": {
+     "amount": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 10000.0,
+       "mean": 5.5,
+       "min": 25.0,
+       "round": 2,
+       "sigma": 0.8,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "amount",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "payment_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2020-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "payment_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "payment_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "payment_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "payment_method": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Agent": 0.1,
+        "Auto-Pay": 0.45,
+        "Mail": 0.15,
+        "Online": 0.3
+       }
+      },
+      "max_length": null,
+      "name": "payment_method",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "policy_id": {
+      "generator": {
+       "ref": "insurance_policy.policy_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "policy_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Late": 0.07,
+        "Paid": 0.82,
+        "Pending": 0.08,
+        "Returned": 0.03
+       }
+      },
+      "max_length": null,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[insurance] Premium payments by policyholders",
+    "name": "insurance_premium_payment",
+    "primary_key": [
+     "payment_id"
+    ]
+   },
+   "insurance_underwriting": {
+    "cdm_mapping": null,
+    "columns": {
+     "assessed_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2020-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "assessed_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "notes": {
+      "generator": {
+       "provider": "sentence",
+       "strategy": "faker"
+      },
+      "max_length": 500,
+      "name": "notes",
+      "null_rate": 0.4,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "policy_id": {
+      "generator": {
+       "ref": "insurance_policy.policy_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "policy_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "risk_score": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 100,
+       "min": 0,
+       "round": 0,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "risk_score",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "risk_tier": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "High": 0.2,
+        "Low": 0.35,
+        "Medium": 0.35,
+        "Very High": 0.1
+       }
+      },
+      "max_length": null,
+      "name": "risk_tier",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "underwriting_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "underwriting_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[insurance] Risk assessment records per policy",
+    "name": "insurance_underwriting",
+    "primary_key": [
+     "underwriting_id"
+    ]
+   }
+  }
+ },
+ "spec": "healthcare_system"
+}

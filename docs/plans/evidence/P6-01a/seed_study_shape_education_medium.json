@@ -1,0 +1,194 @@
+{
+ "domain": "education",
+ "scale": "medium",
+ "impl": "shape",
+ "floor": {
+  "department": 83.62880676730413,
+  "instructor": 75.5082768392898,
+  "course": 91.43663673773246,
+  "student": 87.37998169514694,
+  "enrollment": 97.4459536494716,
+  "financial_aid": 97.08093048933803,
+  "course_section": 96.87263400448983,
+  "grade_appeal": 97.61456398891805,
+  "academic_standing": 98.49018295156822
+ },
+ "baseline": {
+  "43": {
+   "department": 84.65066186061763,
+   "instructor": 76.0082768392898,
+   "course": 92.04648708232882,
+   "student": 87.87998169514694,
+   "enrollment": 99.86606507461546,
+   "financial_aid": 97.58093048933803,
+   "course_section": 97.37263400448983,
+   "grade_appeal": 99.40089583212868,
+   "academic_standing": 99.27744277938889
+  },
+  "44": {
+   "department": 84.33965585912247,
+   "instructor": 77.22720576547508,
+   "course": 91.93663673773246,
+   "student": 88.16022736071386,
+   "enrollment": 99.9242731543925,
+   "financial_aid": 97.87245650551274,
+   "course_section": 97.98240015319051,
+   "grade_appeal": 98.11456398891805,
+   "academic_standing": 99.14589830840549
+  },
+  "45": {
+   "department": 85.9695395949455,
+   "instructor": 77.91010388341051,
+   "course": 92.95186905387571,
+   "student": 88.09193906575692,
+   "enrollment": 97.9459536494716,
+   "financial_aid": 98.41440507090108,
+   "course_section": 97.67930191110325,
+   "grade_appeal": 99.42387468148941,
+   "academic_standing": 99.19967836069901
+  },
+  "46": {
+   "department": 84.12880676730413,
+   "instructor": 76.14868405337862,
+   "course": 93.67158190237706,
+   "student": 88.23599928700726,
+   "enrollment": 99.51988217566328,
+   "financial_aid": 98.24201511637484,
+   "course_section": 98.14583558446573,
+   "grade_appeal": 98.23296381940902,
+   "academic_standing": 98.99018295156822
+  }
+ },
+ "impl_seeds": {
+  "1042": {
+   "scores": {
+    "department": 80.07518191194652,
+    "instructor": 76.04872189495427,
+    "course": 92.94604922854562,
+    "student": 87.56711671427755,
+    "enrollment": 98.96509488765287,
+    "financial_aid": 99.76974752482421,
+    "course_section": 97.9155633629571,
+    "grade_appeal": 99.28037717144228,
+    "academic_standing": 99.10270633048357
+   },
+   "below_floor": [
+    "department"
+   ],
+   "shortfall": {
+    "department": 3.5536248553576115
+   }
+  },
+  "1043": {
+   "scores": {
+    "department": 86.86229025340793,
+    "instructor": 77.31661085968344,
+    "course": 93.24229006214414,
+    "student": 87.91668727527392,
+    "enrollment": 99.9116160490786,
+    "financial_aid": 98.41506165099723,
+    "course_section": 98.37760744736765,
+    "grade_appeal": 98.55263954253792,
+    "academic_standing": 99.19825535609438
+   },
+   "below_floor": [],
+   "shortfall": {}
+  },
+  "1044": {
+   "scores": {
+    "department": 85.45009049168551,
+    "instructor": 77.08588607897573,
+    "course": 92.62144541116135,
+    "student": 88.14118171727169,
+    "enrollment": 99.5022401314972,
+    "financial_aid": 99.34869273334672,
+    "course_section": 98.1053445837274,
+    "grade_appeal": 98.70133624213133,
+    "academic_standing": 99.81560443784956
+   },
+   "below_floor": [],
+   "shortfall": {}
+  },
+  "1045": {
+   "scores": {
+    "department": 86.66219641257786,
+    "instructor": 76.78590977427311,
+    "course": 92.68924274322437,
+    "student": 88.16101131893261,
+    "enrollment": 99.89109289291913,
+    "financial_aid": 98.8896735361463,
+    "course_section": 97.79608528069356,
+    "grade_appeal": 98.14514103687499,
+    "academic_standing": 99.16773094159286
+   },
+   "below_floor": [],
+   "shortfall": {}
+  },
+  "1046": {
+   "scores": {
+    "department": 84.41478258737155,
+    "instructor": 75.36007427634101,
+    "course": 92.35720578806801,
+    "student": 88.14677044133136,
+    "enrollment": 98.8981115302903,
+    "financial_aid": 98.47989486246355,
+    "course_section": 98.36022787243051,
+    "grade_appeal": 98.79855359699808,
+    "academic_standing": 98.35676618664633
+   },
+   "below_floor": [
+    "academic_standing",
+    "instructor"
+   ],
+   "shortfall": {
+    "instructor": 0.1482025629487964,
+    "academic_standing": 0.1334167649218898
+   }
+  },
+  "1047": {
+   "scores": {
+    "department": 85.07256486505642,
+    "instructor": 76.83919469160406,
+    "course": 92.6327535478351,
+    "student": 88.15313359693077,
+    "enrollment": 98.6710905782204,
+    "financial_aid": 99.75493980950273,
+    "course_section": 98.43134630051074,
+    "grade_appeal": 99.24811390892108,
+    "academic_standing": 99.33174736898519
+   },
+   "below_floor": [],
+   "shortfall": {}
+  },
+  "1048": {
+   "scores": {
+    "department": 85.71357531033036,
+    "instructor": 76.44337180479923,
+    "course": 92.32756860888601,
+    "student": 88.24975656528906,
+    "enrollment": 99.90956214762306,
+    "financial_aid": 99.81849382812902,
+    "course_section": 97.86491022733226,
+    "grade_appeal": 98.58602890725427,
+    "academic_standing": 99.88301881188437
+   },
+   "below_floor": [],
+   "shortfall": {}
+  },
+  "1049": {
+   "scores": {
+    "department": 85.41298299367956,
+    "instructor": 77.37490879662015,
+    "course": 92.67107597309179,
+    "student": 88.23973951536914,
+    "enrollment": 98.5141245478625,
+    "financial_aid": 98.6742746951044,
+    "course_section": 97.95185015829745,
+    "grade_appeal": 99.38125430196312,
+    "academic_standing": 98.6892904770993
+   },
+   "below_floor": [],
+   "shortfall": {}
+  }
+ }
+}

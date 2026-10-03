@@ -1,0 +1,154 @@
+{
+ "domain": "composite_telecom_bundle",
+ "scale": "small",
+ "impl": "shape",
+ "seeds": [
+  "1042",
+  "1043",
+  "1044",
+  "1045",
+  "1046",
+  "1047",
+  "1048",
+  "1049"
+ ],
+ "findings_per_seed": {
+  "1042": 7,
+  "1043": 1,
+  "1044": 1,
+  "1045": 2,
+  "1046": 4,
+  "1047": 1,
+  "1048": 1,
+  "1049": 2
+ },
+ "by_finding": {
+  "(b-e) marketing_contact.last_name: failed ['distinct_ratio']": {
+   "seeds": [
+    "1045"
+   ],
+   "count": 1
+  },
+  "(b-e) telecom_usage_record.duration_seconds: failed ['ks']": {
+   "seeds": [
+    "1046"
+   ],
+   "count": 1
+  },
+  "(h) fidelity financial_account:": {
+   "seeds": [
+    "1042"
+   ],
+   "count": 1
+  },
+  "(h) fidelity financial_branch:": {
+   "seeds": [
+    "1042"
+   ],
+   "count": 1
+  },
+  "(h) fidelity financial_fraud_flag:": {
+   "seeds": [
+    "1043",
+    "1047"
+   ],
+   "count": 2
+  },
+  "(h) fidelity financial_loan_payment:": {
+   "seeds": [
+    "1042"
+   ],
+   "count": 1
+  },
+  "(h) fidelity financial_transaction_category:": {
+   "seeds": [
+    "1048"
+   ],
+   "count": 1
+  },
+  "(h) fidelity marketing_campaign:": {
+   "seeds": [
+    "1042"
+   ],
+   "count": 1
+  },
+  "(h) fidelity marketing_campaign_type:": {
+   "seeds": [
+    "1049"
+   ],
+   "count": 1
+  },
+  "(h) fidelity marketing_industry:": {
+   "seeds": [
+    "1042",
+    "1044"
+   ],
+   "count": 2
+  },
+  "(h) fidelity marketing_lead_source:": {
+   "seeds": [
+    "1045",
+    "1046",
+    "1049"
+   ],
+   "count": 3
+  },
+  "(h) fidelity marketing_web_visit:": {
+   "seeds": [
+    "1042"
+   ],
+   "count": 1
+  },
+  "(h) fidelity telecom_device_model:": {
+   "seeds": [
+    "1042",
+    "1046"
+   ],
+   "count": 2
+  },
+  "(h) fidelity telecom_payment:": {
+   "seeds": [
+    "1046"
+   ],
+   "count": 1
+  }
+ },
+ "systematic": [],
+ "flagged": {
+  "1042": [
+   "(h) fidelity financial_account: 95.97 < floor 96.07",
+   "(h) fidelity financial_branch: 84.79 < floor 84.88",
+   "(h) fidelity financial_loan_payment: 97.66 < floor 97.68",
+   "(h) fidelity marketing_campaign: 96.15 < floor 96.22",
+   "(h) fidelity marketing_industry: 81.49 < floor 82.77",
+   "(h) fidelity marketing_web_visit: 92.61 < floor 92.74",
+   "(h) fidelity telecom_device_model: 86.26 < floor 87.59"
+  ],
+  "1043": [
+   "(h) fidelity financial_fraud_flag: 96.91 < floor 97.28"
+  ],
+  "1044": [
+   "(h) fidelity marketing_industry: 82.65 < floor 82.77"
+  ],
+  "1045": [
+   "(b-e) marketing_contact.last_name: failed ['distinct_ratio']",
+   "(h) fidelity marketing_lead_source: 79.25 < floor 83.05"
+  ],
+  "1046": [
+   "(b-e) telecom_usage_record.duration_seconds: failed ['ks']",
+   "(h) fidelity marketing_lead_source: 78.47 < floor 83.05",
+   "(h) fidelity telecom_device_model: 85.29 < floor 87.59",
+   "(h) fidelity telecom_payment: 98.82 < floor 98.98"
+  ],
+  "1047": [
+   "(h) fidelity financial_fraud_flag: 96.76 < floor 97.28"
+  ],
+  "1048": [
+   "(h) fidelity financial_transaction_category: 84.05 < floor 85.13"
+  ],
+  "1049": [
+   "(h) fidelity marketing_campaign_type: 78.20 < floor 78.53",
+   "(h) fidelity marketing_lead_source: 80.97 < floor 83.05"
+  ]
+ }
+}

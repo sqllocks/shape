@@ -1,0 +1,111 @@
+{
+ "meta": {
+  "cores": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+  "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-10-02 07:24:24",
+  "domain": "retail",
+  "runs": 5,
+  "warmup": 1,
+  "shape_threads": null,
+  "loadavg_start": 1.2998046875
+ },
+ "scales": {
+  "medium": {
+   "spindle_median_s": 12.729572087000179,
+   "shape_median_s": 1.038590959999965,
+   "ratio": 12.256578939412883,
+   "spindle_runs_s": [
+    13.418,
+    12.078,
+    12.73,
+    12.928,
+    12.533
+   ],
+   "shape_runs_s": [
+    1.099,
+    1.047,
+    0.928,
+    1.039,
+    0.986
+   ],
+   "raw": {
+    "spindle": [
+     {
+      "wall_s": 13.41753898800016,
+      "cpu_s": 13.838878000000001,
+      "rows": 1965400,
+      "loadavg_before": 1.232421875,
+      "cmd": "/root/.venvs/spindle/bin/spindle generate retail --scale medium --seed 42 --format parquet -o /root/bench-out/spindle-cli/retail/medium/seed42.tmp16920"
+     },
+     {
+      "wall_s": 12.078091906999816,
+      "cpu_s": 12.657586000000006,
+      "rows": 1965400,
+      "loadavg_before": 1.18017578125,
+      "cmd": "/root/.venvs/spindle/bin/spindle generate retail --scale medium --seed 42 --format parquet -o /root/bench-out/spindle-cli/retail/medium/seed42.tmp16920"
+     },
+     {
+      "wall_s": 12.729572087000179,
+      "cpu_s": 13.186610000000002,
+      "rows": 1965400,
+      "loadavg_before": 1.38037109375,
+      "cmd": "/root/.venvs/spindle/bin/spindle generate retail --scale medium --seed 42 --format parquet -o /root/bench-out/spindle-cli/retail/medium/seed42.tmp16920"
+     },
+     {
+      "wall_s": 12.92767132400013,
+      "cpu_s": 13.447990000000004,
+      "rows": 1965400,
+      "loadavg_before": 1.3212890625,
+      "cmd": "/root/.venvs/spindle/bin/spindle generate retail --scale medium --seed 42 --format parquet -o /root/bench-out/spindle-cli/retail/medium/seed42.tmp16920"
+     },
+     {
+      "wall_s": 12.532823729999564,
+      "cpu_s": 13.072547,
+      "rows": 1965400,
+      "loadavg_before": 1.32373046875,
+      "cmd": "/root/.venvs/spindle/bin/spindle generate retail --scale medium --seed 42 --format parquet -o /root/bench-out/spindle-cli/retail/medium/seed42.tmp16920"
+     }
+    ],
+    "shape": [
+     {
+      "wall_s": 1.098856670999794,
+      "cpu_s": 2.302736999999997,
+      "rows": 1965400,
+      "loadavg_before": 1.18017578125,
+      "cmd": "/root/.venvs/shape/bin/shape generate retail --scale medium --seed 1042 --format parquet -o /root/bench-out/shape-cli/retail/medium/seed1042.tmp16920"
+     },
+     {
+      "wall_s": 1.047195114999795,
+      "cpu_s": 2.295653999999999,
+      "rows": 1965400,
+      "loadavg_before": 1.15185546875,
+      "cmd": "/root/.venvs/shape/bin/shape generate retail --scale medium --seed 1042 --format parquet -o /root/bench-out/shape-cli/retail/medium/seed1042.tmp16920"
+     },
+     {
+      "wall_s": 0.9276031079998575,
+      "cpu_s": 2.132083999999992,
+      "rows": 1965400,
+      "loadavg_before": 1.3212890625,
+      "cmd": "/root/.venvs/shape/bin/shape generate retail --scale medium --seed 1042 --format parquet -o /root/bench-out/shape-cli/retail/medium/seed1042.tmp16920"
+     },
+     {
+      "wall_s": 1.038590959999965,
+      "cpu_s": 2.237639999999999,
+      "rows": 1965400,
+      "loadavg_before": 1.32373046875,
+      "cmd": "/root/.venvs/shape/bin/shape generate retail --scale medium --seed 1042 --format parquet -o /root/bench-out/shape-cli/retail/medium/seed1042.tmp16920"
+     },
+     {
+      "wall_s": 0.985700719000306,
+      "cpu_s": 2.1492880000000127,
+      "rows": 1965400,
+      "loadavg_before": 1.25146484375,
+      "cmd": "/root/.venvs/shape/bin/shape generate retail --scale medium --seed 1042 --format parquet -o /root/bench-out/shape-cli/retail/medium/seed1042.tmp16920"
+     }
+    ]
+   }
+  }
+ }
+}

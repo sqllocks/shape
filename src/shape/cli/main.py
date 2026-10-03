@@ -1678,7 +1678,7 @@ def _dispatch(argv):
         from shape.cli.project import run as run_project
 
         return _run(run_project, a)
-    if a.cmd in ("generate", "describe", "list", "presets"):
+    if a.cmd in ("generate", "describe", "list", "presets", "composite"):
         from shape.cli.generation import run as run_generation
 
         return _run(run_generation, a)

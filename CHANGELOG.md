@@ -241,6 +241,12 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   (Arrow kernels, several threads for large batches) with byte-identical output. Harness:
   `benchmarks/vs_spindle/stream_1to1/` (equivalence verifier, bench, negative control; wired into
   `run.py --only stream`).
+- Composites (`docs/GENERATION_ENGINE.md`): `shape composite PRESET|DOMAIN+DOMAIN` generates several domains
+  as one dataset, tables prefixed with their domain and linked by shared entities (a person, a location,
+  an organisation). Six presets (`enterprise`, `healthcare_system`, `smart_factory`, `digital_commerce`,
+  `campus`, `telecom_bundle`; `shape presets --composites`); `generate`, `describe` and `presets` take a
+  composite as a target, and `shape.api.generate("enterprise")` returns its tables. `retail` is a packaged
+  domain like the other thirteen.
 - Live fidelity (`shape emit --live-target`, `docs/EMIT.md`): the emitted events are teed into the
   stream profiler and scored against a target as they go, with the score of `shape fidelity`
   (`score_prepared` is now its single scoring function), drift alerts (`score-low`, `score-drop`,
@@ -288,6 +294,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Profile files and the profile registry (`docs/PROFILE_REGISTRY.md`): `shape profile export|import|list|validate` and
   `shape profile registry list|save|delete|tag|diff|reindex|validate` (named, tagged `.shape` profiles under
   `system/table/name`; `shape registry` keeps its meaning).
+- Generation start-up: `import shape` now selects Arrow's system memory pool for the whole process (`ARROW_DEFAULT_MEMORY_POOL=system` when `pyarrow` is not loaded yet; otherwise transparent huge pages are switched off for the process on Linux), which removes a 10 to 13 ms stall at the first allocation and about a fifth of the time of a medium run on a virtual machine; `SHAPE_MEMORY_POOL=default` turns it off (`docs/GENERATION_ENGINE.md`). The text providers build their name pools from the file bytes (10 to 20 ms less on the first name column). Generated values are unchanged.
 - Fixes (PF-06b): `shape check` / `shape.check` no longer passes a multi-table contract
   (`{"tables": {...}}`) against a single-table profile without testing it: that is now a
   `ContractError` (exit 2), and a table the contract names that the profile lacks is a

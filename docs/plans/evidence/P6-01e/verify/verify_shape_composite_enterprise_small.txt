@@ -1,0 +1,340 @@
+Spindle composite_enterprise (seed 42) vs shape (seed 1042) - scale=small  (baseline = max distance of Spindle seeds [43, 44, 45, 46] to Spindle seed 42)
+table order identical: False
+
+table.column                       kind        type         null s/i       dist  baseline     tol  vocab  verdict
+-- retail_customer: rows 1,000 / 1,000  cols identical+ordered=True  types identical=True
+retail_customer.customer_id        numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0872         EQUIVALENT
+retail_customer.first_name         categorical ok    0.0000/0.0000 TVD  0.8480    0.8540  2.2821 1.0000  EQUIVALENT
+retail_customer.last_name          categorical ok    0.0000/0.0000 TVD  0.8410    0.8500  2.2746 1.0000  EQUIVALENT
+retail_customer.email              categorical ok    0.0410/0.0470 |dR-1|  0.0063    0.0198  0.0297 1.0000  EQUIVALENT
+retail_customer.gender             categorical ok    0.0000/0.0000 TVD  0.0560    0.0560  0.1070 1.0000  EQUIVALENT
+retail_customer.loyalty_tier       categorical ok    0.0000/0.0000 TVD  0.0320    0.0380  0.1514 1.0000  EQUIVALENT
+retail_customer.signup_date        datetime    ok    0.0000/0.0000  KS  0.0580    0.0760  0.1160         EQUIVALENT
+retail_customer.is_active          categorical ok    0.0000/0.0000 TVD  0.0320    0.0170  0.1070 1.0000  EQUIVALENT
+-- retail_address: rows 1,500 / 1,500  cols identical+ordered=True  types identical=True
+retail_address.address_id          numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0712         EQUIVALENT
+retail_address.customer_id         numeric     ok    0.0000/0.0000  KS  0.0187    0.0413  0.0712         EQUIVALENT
+retail_address.address_type        categorical ok    0.0000/0.0000 TVD  0.0187    0.0313  0.1070 1.0000  EQUIVALENT
+retail_address.street              categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+retail_address.city                categorical ok    0.0000/0.0000 |dR-1|  0.0072    0.0040  0.0200 1.0000  EQUIVALENT
+retail_address.state               categorical ok    0.0000/0.0000 TVD  0.0933    0.1027  0.4414 1.0000  EQUIVALENT
+retail_address.zip_code            categorical ok    0.0000/0.0000 |dR-1|  0.0020    0.0047  0.0200 1.0000  EQUIVALENT
+retail_address.lat                 numeric     ok    0.0000/0.0000  KS  0.0313    0.0347  0.0712         EQUIVALENT
+retail_address.lng                 numeric     ok    0.0000/0.0000  KS  0.0200    0.0447  0.0712         EQUIVALENT
+retail_address.is_primary          categorical ok    0.0000/0.0000 TVD  0.0093    0.0187  0.0874 1.0000  EQUIVALENT
+-- retail_product_category: rows 50 / 50  cols identical+ordered=True  types identical=True
+retail_product_category.category_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3899         EQUIVALENT
+retail_product_category.category_name categorical ok    0.0000/0.0000 TVD  0.4800    0.5400  1.8848 1.0000  EQUIVALENT
+retail_product_category.parent_category_id numeric     ok    0.1600/0.1600  KS  0.0952    0.1190  0.4254         EQUIVALENT
+retail_product_category.level      numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3899         EQUIVALENT
+-- retail_product: rows 500 / 500  cols identical+ordered=True  types identical=True
+retail_product.product_id          numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1233         EQUIVALENT
+retail_product.category_id         numeric     ok    0.0000/0.0000  KS  0.0240    0.0660  0.1233         EQUIVALENT
+retail_product.product_name        categorical ok    0.0000/0.0000 TVD  0.2820    0.3100  1.1227 1.0000  EQUIVALENT
+retail_product.unit_price          numeric     ok    0.0000/0.0000  KS  0.0420    0.0520  0.1233         EQUIVALENT
+retail_product.product_status      categorical ok    0.0000/0.0000 TVD  0.0140    0.0500  0.1854 1.0000  EQUIVALENT
+retail_product.cost                numeric     ok    0.0000/0.0000  KS  0.0420    0.0440  0.1233         EQUIVALENT
+-- retail_store: rows 150 / 150  cols identical+ordered=True  types identical=True
+retail_store.store_id              numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.2251         EQUIVALENT
+retail_store.store_name            categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+retail_store.store_type            categorical ok    0.0000/0.0000 TVD  0.0533    0.0600  0.3385 1.0000  EQUIVALENT
+retail_store.city                  categorical ok    0.0000/0.0000 TVD  0.4133    0.5267  1.7481 1.0000  EQUIVALENT
+retail_store.state                 categorical ok    0.0000/0.0000 TVD  0.3133    0.3600  1.3111 1.0000  EQUIVALENT
+-- retail_promotion: rows 300 / 300  cols identical+ordered=True  types identical=True
+retail_promotion.promotion_id      numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1592         EQUIVALENT
+retail_promotion.promo_name        categorical ok    0.0000/0.0000 TVD  0.2033    0.2633  0.9772 1.0000  EQUIVALENT
+retail_promotion.promo_type        categorical ok    0.0000/0.0000 TVD  0.0533    0.0700  0.3090 1.0000  EQUIVALENT
+retail_promotion.discount_pct      numeric     ok    0.0000/0.0000  KS  0.0433    0.0500  0.1592         EQUIVALENT
+retail_promotion.start_date        datetime    ok    0.0000/0.0000  KS  0.0600    0.1200  0.1820         EQUIVALENT
+retail_promotion.end_date          datetime    ok    0.0000/0.0000  KS  0.0633    0.1133  0.1720         EQUIVALENT
+-- retail_order: rows 5,000 / 5,000  cols identical+ordered=True  types identical=True
+retail_order.order_id              numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0390         EQUIVALENT
+retail_order.customer_id           numeric     ok    0.0000/0.0000  KS  0.0424    0.0486  0.0749         EQUIVALENT
+retail_order.store_id              numeric     ok    0.0000/0.0000  KS  0.0120    0.0116  0.0390         EQUIVALENT
+retail_order.shipping_address_id   numeric     ok    0.2192/0.2260  KS  0.0750    0.0836  0.1275         EQUIVALENT
+retail_order.promotion_id          numeric     ok    0.7060/0.7058  KS  0.0402    0.0375  0.0719         EQUIVALENT
+retail_order.order_date            datetime    ok    0.0000/0.0000  KS  0.0374    0.0554  0.0851         EQUIVALENT
+retail_order.status                categorical ok    0.0000/0.0000 TVD  0.0068    0.0158  0.0757 1.0000  EQUIVALENT
+retail_order.order_total           numeric     ok    0.0000/0.0000  KS  0.3190    0.2760  0.4160         EQUIVALENT
+-- retail_order_line: rows 12,500 / 12,500  cols identical+ordered=True  types identical=True
+retail_order_line.order_line_id    numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0247         EQUIVALENT
+retail_order_line.order_id         numeric     ok    0.0000/0.0000  KS  0.0098    0.0142  0.0247         EQUIVALENT
+retail_order_line.product_id       numeric     ok    0.0000/0.0000  KS  0.0060    0.0072  0.0247         EQUIVALENT
+retail_order_line.quantity         numeric     ok    0.0000/0.0000  KS  0.0024    0.0075  0.0247         EQUIVALENT
+retail_order_line.promotion_id     numeric     ok    0.7079/0.7034  KS  0.0494    0.0539  0.0829         EQUIVALENT
+retail_order_line.unit_price       numeric     ok    0.0000/0.0000  KS  0.5666    0.5542  0.8332         EQUIVALENT
+retail_order_line.discount_percent numeric     ok    0.0000/0.0000  KS  0.0137    0.0279  0.0439         EQUIVALENT
+retail_order_line.line_total       numeric     ok    0.0000/0.0000  KS  0.4852    0.4766  0.7170         EQUIVALENT
+-- retail_return: rows 850 / 850  cols identical+ordered=True  types identical=True
+retail_return.return_id            numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0946         EQUIVALENT
+retail_return.order_id             numeric     ok    0.0000/0.0000  KS  0.0624    0.0682  0.1044         EQUIVALENT
+retail_return.reason               categorical ok    0.0000/0.0000 TVD  0.0659    0.0729  0.2172 1.0000  EQUIVALENT
+retail_return.refund_amount        numeric     ok    0.0000/0.0000  KS  0.2141    0.2129  0.3214         EQUIVALENT
+retail_return.return_date          datetime    ok    0.0000/0.0000  KS  0.0529    0.1000  0.1520         EQUIVALENT
+-- hr_department: rows 30 / 30  cols identical+ordered=True  types identical=True
+hr_department.department_id        numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.5034         EQUIVALENT
+hr_department.department_name      categorical ok    0.0000/0.0000 TVD  0.5000    0.6000  1.8019 1.0000  EQUIVALENT
+hr_department.cost_center          categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+hr_department.is_active            categorical ok    0.0000/0.0000 TVD  0.0667    0.0333  0.6180 1.0000  EQUIVALENT
+-- hr_position: rows 80 / 80  cols identical+ordered=True  types identical=True
+hr_position.position_id            numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3082         EQUIVALENT
+hr_position.position_title         categorical ok    0.0000/0.0000 TVD  0.5250    0.6125  1.7952 1.0000  EQUIVALENT
+hr_position.pay_grade              categorical ok    0.0000/0.0000 TVD  0.1250    0.2250  0.7081 1.0000  EQUIVALENT
+hr_position.is_exempt              categorical ok    0.0000/0.0000 TVD  0.0250    0.0625  0.3785 1.0000  EQUIVALENT
+hr_position.min_salary             numeric     ok    0.0000/0.0000  KS  0.1000    0.1500  0.3082         EQUIVALENT
+hr_position.max_salary             numeric     ok    0.0000/0.0000  KS  0.1000    0.1625  0.3082         EQUIVALENT
+-- hr_employee: rows 500 / 500  cols identical+ordered=True  types identical=True
+hr_employee.employee_id            numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1233         EQUIVALENT
+hr_employee.department_id          numeric     ok    0.0000/0.0000  KS  0.0760    0.0420  0.1233         EQUIVALENT
+hr_employee.position_id            numeric     ok    0.0000/0.0000  KS  0.0460    0.0600  0.1233         EQUIVALENT
+hr_employee.first_name             categorical ok    0.0000/0.0000 TVD  0.9200    0.9180  2.3207 1.0000  EQUIVALENT
+hr_employee.last_name              categorical ok    0.0000/0.0000 TVD  0.9060    0.9160  2.3257 1.0000  EQUIVALENT
+hr_employee.email                  categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+hr_employee.phone                  categorical ok    0.0640/0.0820 |dR-1|  0.0192    0.0321  0.0481 1.0000  EQUIVALENT
+hr_employee.hire_date              datetime    ok    0.0000/0.0000  KS  0.0700    0.0620  0.1233         EQUIVALENT
+hr_employee.manager_id             numeric     ok    0.0100/0.0100  KS  0.0465    0.0364  0.1239         EQUIVALENT
+hr_employee.employment_status      categorical ok    0.0000/0.0000 TVD  0.0380    0.0440  0.2141 1.0000  EQUIVALENT
+hr_employee.employment_type        categorical ok    0.0000/0.0000 TVD  0.0260    0.0520  0.2141 1.0000  EQUIVALENT
+-- hr_compensation: rows 1,500 / 1,500  cols identical+ordered=True  types identical=True
+hr_compensation.compensation_id    numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0712         EQUIVALENT
+hr_compensation.employee_id        numeric     ok    0.0000/0.0000  KS  0.0233    0.0533  0.0820         EQUIVALENT
+hr_compensation.effective_date     datetime    ok    0.0000/0.0000  KS  0.0260    0.0487  0.0750         EQUIVALENT
+hr_compensation.base_salary        numeric     ok    0.0000/0.0000  KS  0.0273    0.0300  0.0712         EQUIVALENT
+hr_compensation.bonus_pct          numeric     ok    0.0000/0.0000  KS  0.0247    0.0520  0.0800         EQUIVALENT
+hr_compensation.change_reason      categorical ok    0.0000/0.0000 TVD  0.0093    0.0327  0.1382 1.0000  EQUIVALENT
+-- hr_performance_review: rows 1,250 / 1,250  cols identical+ordered=True  types identical=True
+hr_performance_review.review_id    numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0780         EQUIVALENT
+hr_performance_review.employee_id  numeric     ok    0.0000/0.0000  KS  0.0464    0.0816  0.1244         EQUIVALENT
+hr_performance_review.reviewer_id  numeric     ok    0.0000/0.0000  KS  0.0416    0.0608  0.0932         EQUIVALENT
+hr_performance_review.review_date  datetime    ok    0.0000/0.0000  KS  0.0304    0.0520  0.0800         EQUIVALENT
+hr_performance_review.review_period_year numeric     ok    0.0000/0.0000  KS  0.0096    0.0216  0.0780         EQUIVALENT
+hr_performance_review.rating       numeric     ok    0.0000/0.0000  KS  0.0368    0.0416  0.0780         EQUIVALENT
+hr_performance_review.comments     categorical ok    0.1864/0.1840 TVD  0.6714    0.6912  1.9257 1.0000  EQUIVALENT
+-- hr_time_off_request: rows 2,500 / 2,500  cols identical+ordered=True  types identical=True
+hr_time_off_request.request_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0551         EQUIVALENT
+hr_time_off_request.employee_id    numeric     ok    0.0000/0.0000  KS  0.0208    0.0284  0.0551         EQUIVALENT
+hr_time_off_request.leave_type     categorical ok    0.0000/0.0000 TVD  0.0252    0.0240  0.1267 1.0000  EQUIVALENT
+hr_time_off_request.start_date     datetime    ok    0.0000/0.0000  KS  0.0264    0.0332  0.0551         EQUIVALENT
+hr_time_off_request.hours_requested numeric     ok    0.0000/0.0000  KS  0.0228    0.0228  0.0551         EQUIVALENT
+hr_time_off_request.status         categorical ok    0.0000/0.0000 TVD  0.0160    0.0220  0.0957 1.0000  EQUIVALENT
+hr_time_off_request.end_date       datetime    ok    0.0000/0.0000  KS  0.0272    0.0328  0.0551         EQUIVALENT
+-- hr_training: rows 100 / 100  cols identical+ordered=True  types identical=True
+hr_training.training_id            numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.2757         EQUIVALENT
+hr_training.course_name            categorical ok    0.0000/0.0000 TVD  0.4000    0.3400  1.6235 1.0000  EQUIVALENT
+hr_training.category               categorical ok    0.0000/0.0000 TVD  0.1500    0.1700  0.6333 1.0000  EQUIVALENT
+hr_training.duration_hours         numeric     ok    0.0000/0.0000  KS  0.1500    0.1500  0.2757         EQUIVALENT
+hr_training.is_mandatory           categorical ok    0.0000/0.0000 TVD  0.0200    0.1100  0.3385 1.0000  EQUIVALENT
+-- hr_training_enrollment: rows 2,000 / 2,000  cols identical+ordered=True  types identical=True
+hr_training_enrollment.enrollment_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0616         EQUIVALENT
+hr_training_enrollment.employee_id numeric     ok    0.0000/0.0000  KS  0.0130    0.0320  0.0616         EQUIVALENT
+hr_training_enrollment.training_id numeric     ok    0.0000/0.0000  KS  0.0245    0.0320  0.0616         EQUIVALENT
+hr_training_enrollment.enrollment_date datetime    ok    0.0000/0.0000  KS  0.0285    0.0380  0.0616         EQUIVALENT
+hr_training_enrollment.status      categorical ok    0.0000/0.0000 TVD  0.0115    0.0210  0.1197 1.0000  EQUIVALENT
+hr_training_enrollment.score       numeric     ok    0.2560/0.2570  KS  0.0193    0.0326  0.0715         EQUIVALENT
+hr_training_enrollment.completion_date datetime    ok    0.1445/0.1545  KS  0.0349    0.0388  0.0668         EQUIVALENT
+-- hr_termination: rows 75 / 75  cols identical+ordered=True  types identical=True
+hr_termination.termination_id      numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3183         EQUIVALENT
+hr_termination.employee_id         numeric     ok    0.0000/0.0000  KS  0.1467    0.1600  0.3183         EQUIVALENT
+hr_termination.termination_date    datetime    ok    0.0000/0.0000  KS  0.1200    0.1333  0.3183         EQUIVALENT
+hr_termination.termination_type    categorical ok    0.0000/0.0000 TVD  0.1467    0.1733  0.5528 1.0000  EQUIVALENT
+hr_termination.reason              categorical ok    0.0000/0.0000 TVD  0.1733    0.2267  0.7818 1.0000  EQUIVALENT
+hr_termination.eligible_for_rehire categorical ok    0.0000/0.0000 TVD  0.2267    0.2267  0.3909 1.0000  EQUIVALENT
+-- financial_branch: rows 200 / 200  cols identical+ordered=True  types identical=True
+financial_branch.branch_id         numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1949         EQUIVALENT
+financial_branch.branch_name       categorical ok    0.0000/0.0000 TVD  0.2500    0.2000  0.9271 1.0000  EQUIVALENT
+financial_branch.city              categorical ok    0.0000/0.0000 TVD  0.9500    0.9450  2.3635 1.0000  EQUIVALENT
+financial_branch.opened_date       datetime    ok    0.0000/0.0000  KS  0.1050    0.1400  0.2120         EQUIVALENT
+financial_branch.is_active         categorical ok    0.0000/0.0000 TVD  0.0200    0.0250  0.2394 1.0000  EQUIVALENT
+financial_branch.state             categorical ok    0.0000/0.0000 TVD  0.2600    0.2700  1.1480 1.0000  EQUIVALENT
+financial_branch.zip_code          categorical ok    0.0000/0.0000 TVD  0.9900    0.9950  2.3937 1.0000  EQUIVALENT
+financial_branch.lat               numeric     ok    0.0000/0.0000  KS  0.0750    0.1400  0.2120         EQUIVALENT
+financial_branch.lng               numeric     ok    0.0000/0.0000  KS  0.1100    0.1350  0.2045         EQUIVALENT
+-- financial_transaction_category: rows 40 / 40  cols identical+ordered=True  types identical=True
+financial_transaction_category.category_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.4359         EQUIVALENT
+financial_transaction_category.category_name categorical ok    0.0000/0.0000 TVD  0.6000    0.4750  1.8541 1.0000  EQUIVALENT
+financial_transaction_category.parent_category_id numeric     ok    0.2000/0.2000  KS  0.1250    0.1875  0.4874         EQUIVALENT
+financial_transaction_category.level numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.4359         EQUIVALENT
+-- financial_customer: rows 1,000 / 1,000  cols identical+ordered=True  types identical=True
+financial_customer.customer_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0872         EQUIVALENT
+financial_customer.primary_branch_id numeric     ok    0.0000/0.0000  KS  0.0460    0.0460  0.0872         EQUIVALENT
+financial_customer.first_name      categorical ok    0.0000/0.0000 TVD  0.8450    0.8400  2.2771 1.0000  EQUIVALENT
+financial_customer.last_name       categorical ok    0.0000/0.0000 TVD  0.8240    0.8280  2.2872 1.0000  EQUIVALENT
+financial_customer.email           categorical ok    0.0280/0.0330 |dR-1|  0.0051    0.0041  0.0200 1.0000  EQUIVALENT
+financial_customer.phone           categorical ok    0.1050/0.1050 |dR-1|  0.0000    0.0268  0.0402 1.0000  EQUIVALENT
+financial_customer.date_of_birth   datetime    ok    0.0000/0.0000  KS  0.0500    0.0460  0.0872         EQUIVALENT
+financial_customer.credit_tier     categorical ok    0.0000/0.0000 TVD  0.0170    0.0390  0.1514 1.0000  EQUIVALENT
+financial_customer.customer_since  datetime    ok    0.0000/0.0000  KS  0.0370    0.0320  0.0872         EQUIVALENT
+financial_customer.is_active       categorical ok    0.0000/0.0000 TVD  0.0030    0.0100  0.1070 1.0000  EQUIVALENT
+-- financial_account: rows 2,200 / 2,200  cols identical+ordered=True  types identical=True
+financial_account.account_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0588         EQUIVALENT
+financial_account.customer_id      numeric     ok    0.0000/0.0000  KS  0.0223    0.0414  0.0640         EQUIVALENT
+financial_account.account_type     categorical ok    0.0000/0.0000 TVD  0.0218    0.0232  0.1141 1.0000  EQUIVALENT
+financial_account.opened_date      datetime    ok    0.0000/0.0000  KS  0.0350    0.0318  0.0588         EQUIVALENT
+financial_account.current_balance  numeric     ok    0.0000/0.0000  KS  0.0273    0.0255  0.0588         EQUIVALENT
+financial_account.currency         categorical ok    0.0000/0.0000 TVD  0.0000    0.0000  0.0722 1.0000  EQUIVALENT
+financial_account.status           categorical ok    0.0000/0.0000 TVD  0.0227    0.0295  0.1021 1.0000  EQUIVALENT
+-- financial_card: rows 1,760 / 1,760  cols identical+ordered=True  types identical=True
+financial_card.card_id             numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0657         EQUIVALENT
+financial_card.account_id          numeric     ok    0.0000/0.0000  KS  0.0227    0.0352  0.0657         EQUIVALENT
+financial_card.card_type           categorical ok    0.0000/0.0000 TVD  0.0199    0.0284  0.0988 1.0000  EQUIVALENT
+financial_card.card_network        categorical ok    0.0000/0.0000 TVD  0.0364    0.0415  0.1141 1.0000  EQUIVALENT
+financial_card.last_four           categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+financial_card.issued_date         datetime    ok    0.0000/0.0000  KS  0.0290    0.0312  0.0657         EQUIVALENT
+financial_card.is_active           categorical ok    0.0000/0.0000 TVD  0.0040    0.0080  0.0807 1.0000  EQUIVALENT
+financial_card.expiry_date         datetime    ok    0.0000/0.0000  KS  0.0290    0.0312  0.0657         EQUIVALENT
+-- financial_transaction: rows 10,000 / 10,000  cols identical+ordered=True  types identical=True
+financial_transaction.transaction_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0276         EQUIVALENT
+financial_transaction.account_id   numeric     ok    0.0000/0.0000  KS  0.0157    0.0520  0.0800         EQUIVALENT
+financial_transaction.category_id  numeric     ok    0.0000/0.0000  KS  0.0125    0.0140  0.0276         EQUIVALENT
+financial_transaction.transaction_type categorical ok    0.0000/0.0000 TVD  0.0136    0.0166  0.0633 1.0000  EQUIVALENT
+financial_transaction.amount       numeric     ok    0.0000/0.0000  KS  0.0133    0.0108  0.0276         EQUIVALENT
+financial_transaction.transaction_date datetime    ok    0.0000/0.0000  KS  0.0059    0.0156  0.0276         EQUIVALENT
+financial_transaction.channel      categorical ok    0.0000/0.0000 TVD  0.0075    0.0128  0.0586 1.0000  EQUIVALENT
+financial_transaction.merchant_name categorical ok    0.3009/0.3009 TVD  0.0442    0.0448  0.1693 1.0000  EQUIVALENT
+financial_transaction.status       categorical ok    0.0000/0.0000 TVD  0.0067    0.0106  0.0479 1.0000  EQUIVALENT
+-- financial_loan: rows 400 / 400  cols identical+ordered=True  types identical=True
+financial_loan.loan_id             numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1378         EQUIVALENT
+financial_loan.customer_id         numeric     ok    0.0000/0.0000  KS  0.0650    0.0875  0.1378         EQUIVALENT
+financial_loan.loan_type           categorical ok    0.0000/0.0000 TVD  0.0450    0.0550  0.2676 1.0000  EQUIVALENT
+financial_loan.principal_amount    numeric     ok    0.0000/0.0000  KS  0.0575    0.0475  0.1378         EQUIVALENT
+financial_loan.interest_rate       numeric     ok    0.0000/0.0000  KS  0.0575    0.0725  0.1378         EQUIVALENT
+financial_loan.term_months         numeric     ok    0.0000/0.0000  KS  0.0725    0.0600  0.1378         EQUIVALENT
+financial_loan.origination_date    datetime    ok    0.0000/0.0000  KS  0.1250    0.1075  0.1633         EQUIVALENT
+financial_loan.status              categorical ok    0.0000/0.0000 TVD  0.0600    0.0475  0.2676 1.0000  EQUIVALENT
+financial_loan.outstanding_balance numeric     ok    0.0000/0.0000  KS  0.0400    0.0500  0.1378         EQUIVALENT
+-- financial_loan_payment: rows 4,800 / 4,800  cols identical+ordered=True  types identical=True
+financial_loan_payment.payment_id  numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0398         EQUIVALENT
+financial_loan_payment.loan_id     numeric     ok    0.0000/0.0000  KS  0.0198    0.0196  0.0398         EQUIVALENT
+financial_loan_payment.payment_date datetime    ok    0.0000/0.0000  KS  0.0240    0.0231  0.0398         EQUIVALENT
+financial_loan_payment.payment_amount numeric     ok    0.0000/0.0000  KS  0.0160    0.0188  0.0398         EQUIVALENT
+financial_loan_payment.payment_method categorical ok    0.0000/0.0000 TVD  0.0329    0.0237  0.0773 1.0000  EQUIVALENT
+financial_loan_payment.principal_portion numeric     ok    0.0000/0.0000  KS  0.0146    0.0265  0.0417         EQUIVALENT
+financial_loan_payment.interest_portion numeric     ok    0.0000/0.0000  KS  0.0296    0.0225  0.0398         EQUIVALENT
+-- financial_fraud_flag: rows 200 / 200  cols identical+ordered=True  types identical=True
+financial_fraud_flag.flag_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1949         EQUIVALENT
+financial_fraud_flag.transaction_id numeric     ok    0.0000/0.0000  KS  0.1650    0.1100  0.1949         EQUIVALENT
+financial_fraud_flag.flag_type     categorical ok    0.0000/0.0000 TVD  0.0400    0.0850  0.4146 1.0000  EQUIVALENT
+financial_fraud_flag.risk_score    numeric     ok    0.0000/0.0000  KS  0.1000    0.1100  0.1949         EQUIVALENT
+financial_fraud_flag.flagged_date  datetime    ok    0.0000/0.0000  KS  0.0700    0.1050  0.1949         EQUIVALENT
+financial_fraud_flag.resolution    categorical ok    0.0000/0.0000 TVD  0.0700    0.1000  0.3385 1.0000  EQUIVALENT
+-- financial_statement: rows 13,200 / 13,200  cols identical+ordered=True  types identical=True
+financial_statement.statement_id   numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0240         EQUIVALENT
+financial_statement.account_id     numeric     ok    0.0000/0.0000  KS  0.0072    0.0131  0.0240         EQUIVALENT
+financial_statement.statement_date datetime    ok    0.0000/0.0000  KS  0.0086    0.0105  0.0240         EQUIVALENT
+financial_statement.opening_balance numeric     ok    0.0000/0.0000  KS  0.0086    0.0128  0.0240         EQUIVALENT
+financial_statement.total_deposits numeric     ok    0.0000/0.0000  KS  0.0110    0.0094  0.0240         EQUIVALENT
+financial_statement.total_withdrawals numeric     ok    0.0000/0.0000  KS  0.0120    0.0113  0.0240         EQUIVALENT
+financial_statement.fees_charged   numeric     ok    0.0000/0.0000  KS  0.0077    0.0120  0.0240         EQUIVALENT
+financial_statement.closing_balance numeric     ok    0.0000/0.0000  KS  0.0083    0.0123  0.0240         EQUIVALENT
+
+FK integrity (spindle / impl):
+  retail_address.customer_id->retail_customer.customer_id 1.0000 / 1.0000
+  retail_product.category_id->retail_product_category.category_id 1.0000 / 1.0000
+  retail_order.customer_id->retail_customer.customer_id   1.0000 / 1.0000
+  retail_order.store_id->retail_store.store_id            1.0000 / 1.0000
+  retail_order.shipping_address_id->retail_address.address_id 1.0000 / 1.0000
+  retail_order.promotion_id->retail_promotion.promotion_id 1.0000 / 1.0000
+  retail_order_line.order_id->retail_order.order_id       1.0000 / 1.0000
+  retail_order_line.product_id->retail_product.product_id 1.0000 / 1.0000
+  retail_return.order_id->retail_order.order_id           1.0000 / 1.0000
+  hr_employee.department_id->hr_department.department_id  1.0000 / 1.0000
+  hr_employee.position_id->hr_position.position_id        1.0000 / 1.0000
+  hr_compensation.employee_id->hr_employee.employee_id    1.0000 / 1.0000
+  hr_performance_review.employee_id->hr_employee.employee_id 1.0000 / 1.0000
+  hr_time_off_request.employee_id->hr_employee.employee_id 1.0000 / 1.0000
+  hr_training_enrollment.employee_id->hr_employee.employee_id 1.0000 / 1.0000
+  hr_training_enrollment.training_id->hr_training.training_id 1.0000 / 1.0000
+  hr_termination.employee_id->hr_employee.employee_id     1.0000 / 1.0000
+  financial_customer.primary_branch_id->financial_branch.branch_id 1.0000 / 1.0000
+  financial_account.customer_id->financial_customer.customer_id 1.0000 / 1.0000
+  financial_card.account_id->financial_account.account_id 1.0000 / 1.0000
+  financial_transaction.account_id->financial_account.account_id 1.0000 / 1.0000
+  financial_transaction.category_id->financial_transaction_category.category_id 1.0000 / 1.0000
+  financial_loan.customer_id->financial_customer.customer_id 1.0000 / 1.0000
+  financial_loan_payment.loan_id->financial_loan.loan_id  1.0000 / 1.0000
+  financial_fraud_flag.transaction_id->financial_transaction.transaction_id 1.0000 / 1.0000
+  financial_statement.account_id->financial_account.account_id 1.0000 / 1.0000
+  retail_customer.customer_id->hr_employee.employee_id    0.5000 / moved (CMP-1)
+  financial_account.account_id->hr_employee.employee_id   0.2273 / moved (CMP-1)
+  retail_product_category.parent_category_id->retail_product_category.category_id 1.0000 / 1.0000
+  hr_employee.manager_id->hr_employee.employee_id         1.0000 / 1.0000
+  financial_transaction_category.parent_category_id->financial_transaction_category.category_id 1.0000 / 1.0000
+  retail_order_line.promotion_id->retail_promotion.promotion_id 1.0000 / 1.0000
+  retail_customer.shared_person_hr_employee_id->hr_employee.employee_id (bridge, CMP-1) / 1.0000
+  financial_account.shared_person_hr_employee_id->hr_employee.employee_id (bridge, CMP-1) / 1.0000
+FK fan-out (children per parent)  spindle p50/p90/p99/max/zero% | impl | KS (baseline max, tol)
+  retail_customer->retail_address.customer_id 1/3/5/6/0.217 | 1/3/5/6/0.231 | 0.0140 (0.0280, 0.0872)
+  retail_product_category->retail_product.category_id 10/13/16/18/0.000 | 10/14/17/17/0.000 | 0.1000 (0.1400, 0.3899)
+  retail_customer->retail_order.customer_id 3/7/50/50/0.050 | 3/7/50/50/0.046 | 0.0470 (0.0490, 0.0872)
+  retail_store->retail_order.store_id      6/44/498/1549/0.027 | 6/39/505/1593/0.020 | 0.0333 (0.0533, 0.2251)
+  retail_address->retail_order.shipping_address_id 1/5/30/50/0.230 | 1/5/25/50/0.267 | 0.0367 (0.0393, 0.0712)
+  retail_promotion->retail_order.promotion_id 5/8/11/12/0.003 | 5/8/11/11/0.013 | 0.0233 (0.0533, 0.1592)
+  retail_order->retail_order_line.order_id 2/5/7/10/0.080 | 2/5/7/11/0.078 | 0.0060 (0.0114, 0.0390)
+  retail_product->retail_order_line.product_id 1/14/359/4936/0.272 | 1/13/336/4894/0.260 | 0.0140 (0.0320, 0.1233)
+  retail_order->retail_return.order_id     0/1/2/3/0.846 | 0/1/2/3/0.841 | 0.0050 (0.0044, 0.0390)
+  hr_department->hr_employee.department_id 6/40/139/169/0.000 | 5/26/158/188/0.000 | 0.1000 (0.1333, 0.5034)
+  hr_position->hr_employee.position_id     2/10/81/146/0.175 | 2/10/78/138/0.237 | 0.0625 (0.1000, 0.3082)
+  hr_employee->hr_compensation.employee_id 3/5/7/9/0.050 | 3/5/8/10/0.050 | 0.0160 (0.0240, 0.1233)
+  hr_employee->hr_performance_review.employee_id 2/5/6/9/0.082 | 2/5/7/9/0.088 | 0.0280 (0.0260, 0.1233)
+  hr_employee->hr_time_off_request.employee_id 5/8/11/12/0.006 | 5/8/11/16/0.008 | 0.0340 (0.0440, 0.1233)
+  hr_employee->hr_training_enrollment.employee_id 4/7/9/11/0.012 | 4/7/8/10/0.018 | 0.0360 (0.0240, 0.1233)
+  hr_training->hr_training_enrollment.training_id 6/30/247/575/0.010 | 5/37/250/577/0.030 | 0.0500 (0.0600, 0.2757)
+  hr_employee->hr_termination.employee_id  0/1/1/2/0.860 | 0/1/1/2/0.858 | 0.0020 (0.0160, 0.1233)
+  financial_branch->financial_customer.primary_branch_id 1/5/78/318/0.415 | 1/7/66/315/0.355 | 0.0600 (0.0850, 0.1949)
+  financial_customer->financial_account.customer_id 2/4/6/10/0.119 | 2/4/6/9/0.117 | 0.0120 (0.0190, 0.0872)
+  financial_account->financial_card.account_id 1/2/3/5/0.441 | 1/2/4/5/0.456 | 0.0145 (0.0114, 0.0588)
+  financial_account->financial_transaction.account_id 1/4/115/200/0.365 | 1/4/119/200/0.406 | 0.0409 (0.1241, 0.1881)
+  financial_transaction_category->financial_transaction.category_id 58/435/3017/3974/0.000 | 58/421/2978/3920/0.000 | 0.1000 (0.1000, 0.4359)
+  financial_customer->financial_loan.customer_id 0/1/2/4/0.675 | 0/1/2/5/0.667 | 0.0100 (0.0130, 0.0872)
+  financial_loan->financial_loan_payment.loan_id 12/17/20/24/0.000 | 12/17/20/21/0.000 | 0.0450 (0.0475, 0.1378)
+  financial_transaction->financial_fraud_flag.transaction_id 0/0/1/1/0.980 | 0/0/1/2/0.980 | 0.0001 (0.0004, 0.0276)
+  financial_account->financial_statement.account_id 6/9/12/14/0.002 | 6/9/12/18/0.003 | 0.0173 (0.0100, 0.0588)
+  retail_promotion->retail_order_line.promotion_id 11/20/28/39/0.003 | 12/22/28/30/0.013 | 0.0467 (0.0700, 0.1592)
+record_coherence (impl / min over Spindle seeds, floor):
+  retail_address.city+state+zip_code+lat+lng in us_zip_locations 1.0000 / 1.0000  floor 0.9950
+  financial_branch.city+state+zip_code+lat+lng in us_zip_locations 1.0000 / 1.0000  floor 0.9950
+strategy_semantics (impl / min over Spindle seeds, floor):
+  retail_promotion.end_date - start_date in [3,30] days        1.0000 / 1.0000  floor 0.9950
+  retail_order.order_total == sum(retail_order_line.line_total) 1.0000 / 1.0000  floor 0.9950
+  retail_order_line.promotion_id == lookup retail_order.promotion_id via order_id 1.0000 / 1.0000  floor 0.9950
+  retail_order_line.unit_price == lookup retail_product.unit_price via product_id 1.0000 / 1.0000  floor 0.9950
+  retail_return.return_date - retail_order.order_date in [1,90] days 1.0000 / 0.9976  floor 0.9926
+  hr_time_off_request.end_date - start_date in [1,14] days     1.0000 / 1.0000  floor 0.9950
+  hr_training_enrollment.completion_date - enrollment_date in [1,90] days 0.8455 / 0.8510  floor 0.8460
+Spindle BusinessRulesEngine violations on impl output: {}
+Spindle FidelityComparator (real=Spindle seed 42, synthetic=impl): overall impl=91.59  Spindle-vs-Spindle baselines=[91.78, 91.92, 91.77, 91.65]
+  financial_account  impl  95.98  floor  95.94  baselines [96.49, 96.74, 96.94, 96.44]  ok
+  financial_branch   impl  84.79  floor  84.88  baselines [85.38, 86.59, 85.57, 86.22]  FAIL
+  financial_card     impl  98.97  floor  98.24  baselines [99.0, 99.44, 98.91, 98.74]  ok
+  financial_customer impl  76.79  floor  76.21  baselines [77.37, 76.71, 76.73, 77.28]  ok
+  financial_fraud_flag impl  97.36  floor  96.95  baselines [97.85, 97.45, 97.6, 97.89]  ok
+  financial_loan     impl  96.55  floor  96.45  baselines [97.23, 97.97, 96.95, 97.18]  ok
+  financial_loan_payment impl  97.61  floor  97.69  baselines [98.29, 99.1, 99.4, 98.19]  FAIL
+  financial_statement impl  99.38  floor  97.02  baselines [99.55, 99.52, 98.48, 97.52]  ok
+  financial_transaction impl  95.45  floor  93.72  baselines [95.81, 94.36, 94.22, 95.76]  ok
+  financial_transaction_category impl  87.16  floor  85.13  baselines [86.93, 85.63, 89.59, 86.41]  ok
+  hr_compensation    impl  99.38  floor  97.78  baselines [98.28, 98.58, 98.78, 99.38]  ok
+  hr_department      impl  87.13  floor  82.92  baselines [88.44, 88.44, 88.87, 83.42]  ok
+  hr_employee        impl  78.23  floor  77.34  baselines [77.84, 78.1, 78.21, 78.72]  ok
+  hr_performance_review impl  91.13  floor  90.10  baselines [90.93, 90.6, 91.16, 91.46]  ok
+  hr_position        impl  91.57  floor  87.83  baselines [89.62, 90.37, 88.33, 89.98]  ok
+  hr_termination     impl  89.45  floor  89.28  baselines [97.39, 91.1, 89.78, 92.35]  ok
+  hr_time_off_request impl  99.28  floor  98.33  baselines [98.83, 99.27, 98.87, 99.21]  ok
+  hr_training        impl  90.30  floor  90.52  baselines [91.06, 92.08, 91.46, 91.02]  FAIL
+  hr_training_enrollment impl  99.23  floor  97.75  baselines [98.25, 99.02, 98.97, 99.03]  ok
+  retail_address     impl  85.35  floor  84.67  baselines [85.42, 85.17, 85.65, 85.37]  ok
+  retail_customer    impl  77.77  floor  77.04  baselines [78.34, 77.54, 77.88, 78.62]  ok
+  retail_order       impl  95.82  floor  95.53  baselines [96.36, 97.51, 96.91, 96.03]  ok
+  retail_order_line  impl  93.53  floor  93.20  baselines [93.7, 95.44, 94.88, 94.26]  ok
+  retail_product     impl  94.04  floor  91.92  baselines [92.42, 93.2, 93.08, 93.58]  ok
+  retail_product_category impl  88.55  floor  86.18  baselines [87.71, 88.12, 86.68, 87.98]  ok
+  retail_promotion   impl  94.20  floor  92.12  baselines [92.62, 93.95, 93.99, 93.51]  ok
+  retail_return      impl  93.86  floor  92.31  baselines [92.81, 95.95, 96.69, 95.05]  ok
+  retail_store       impl  85.78  floor  84.41  baselines [85.77, 85.7, 84.91, 85.66]  ok
+
+COLUMNS EQUIVALENT: 196/196
+  NOT EQUIVALENT: (f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8455 < floor 0.8460
+  NOT EQUIVALENT: (h) fidelity financial_branch: 84.79 < floor 84.88
+  NOT EQUIVALENT: (h) fidelity financial_loan_payment: 97.61 < floor 97.69
+  NOT EQUIVALENT: (h) fidelity hr_training: 90.30 < floor 90.52
+VERDICT: FAIL

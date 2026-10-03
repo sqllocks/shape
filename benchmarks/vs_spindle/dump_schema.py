@@ -40,9 +40,14 @@ def domain_names() -> list[str]:
 
 def dump(domain: str, mode: str) -> Path:
     sys.path.insert(0, str(SPINDLE_ROOT))
-    from sqllocks_spindle.cli import _resolve_domain
+    import composites
 
-    dom = _resolve_domain(domain, mode)
+    if composites.is_composite(domain):  # a composite has the one (3nf) layout
+        dom = composites.baseline_domain(composites.spec_of(domain))
+    else:
+        from sqllocks_spindle.cli import _resolve_domain
+
+        dom = _resolve_domain(domain, mode)
     schema = dom._build_schema()
     out = schema_path(domain, mode)
     out.parent.mkdir(parents=True, exist_ok=True)

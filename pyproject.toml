@@ -279,6 +279,7 @@ type = "forbidden"
 source_modules = [
     "shape.__main__",
     "shape._callable",
+    "shape._process",
     "shape.api",
     "shape.artifact",
     "shape.bridge",

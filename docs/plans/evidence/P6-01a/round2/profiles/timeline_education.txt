@@ -1,0 +1,20 @@
+# machine: model name	: Intel(R) Xeon(R) Processor @ 2.80GHz, 4 vCPU
+total 0.119
+LEVEL 0.001-0.001 ['department']
+LEVEL 0.003-0.033 ['course', 'instructor', 'student']
+LEVEL 0.033-0.084 ['course_section', 'academic_standing', 'enrollment', 'financial_aid']
+LEVEL 0.084-0.084 ['grade_appeal']
+0.001-0.002   1.6ms department[0:25] inThread
+0.004-0.011   7.1ms course[0:300] pe-gen_0
+0.005-0.020  15.5ms instructor[0:150] pe-gen_1
+0.007-0.032  25.3ms student[0:20000] pe-gen_2
+0.034-0.041   7.3ms course_section[0:600] pe-gen_0
+0.034-0.056  21.2ms academic_standing[0:32768] pe-gen_1
+0.035-0.044   8.6ms academic_standing[32768:40000] pe-gen_2
+0.041-0.056  15.4ms enrollment[0:32768] pe-gen_0
+0.044-0.070  26.4ms enrollment[32768:65536] pe-gen_2
+0.056-0.072  16.5ms enrollment[65536:98304] pe-gen_1
+0.056-0.072  15.3ms enrollment[98304:131072] pe-gen_0
+0.070-0.081  10.6ms enrollment[131072:160000] pe-gen_2
+0.072-0.078   6.2ms financial_aid[0:14000] pe-gen_0
+0.084-0.086   2.2ms grade_appeal[0:3200] inThread

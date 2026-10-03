@@ -1,0 +1,14 @@
+[large] spindle          warm-up 1: total 62.91s
+[large] shape            warm-up 1: total 4.66s
+[large] spindle          run 1: total 60.99s  gen 55.36s  write 5.63s  rss 2146MB  load 1.45
+[large] shape            run 1: total 3.34s  gen 3.34s  write 0.00s  rss 1426MB  load 1.15
+[large] spindle          run 2: total 62.81s  gen 57.36s  write 5.45s  rss 2148MB  load 1.20
+[large] shape            run 2: total 3.36s  gen 3.36s  write 0.00s  rss 1419MB  load 1.10
+[large] spindle          run 3: total 63.49s  gen 57.89s  write 5.60s  rss 2145MB  load 1.09
+[large] shape            run 3: total 3.38s  gen 3.38s  write 0.00s  rss 1420MB  load 1.03
+
+== financial large: median of 3 fresh-process runs, 4 cores
+tool                     rows  total s   gen s  write s  rows/s total   rows/s gen  peak RSS MB
+spindle            16,780,240    62.81   57.36     5.60       267,166      292,546         2146
+shape              16,780,240     3.36    3.36     0.00     5,001,395    5,001,395         1420
+speedup (shape vs spindle): total 18.72x

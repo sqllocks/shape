@@ -1,0 +1,116 @@
+{
+ "1042": {
+  "exit": 1,
+  "non_equivalent_columns": [
+   "provider.last_name:['distinct_ratio']"
+  ],
+  "summary": {
+   "columns_total": 80,
+   "columns_equivalent": 79,
+   "flagged": [
+    "(b-e) provider.last_name: failed ['distinct_ratio']"
+   ],
+   "passed": false,
+   "seconds": 137.16565132141113
+  }
+ },
+ "1043": {
+  "exit": 1,
+  "non_equivalent_columns": [],
+  "summary": {
+   "columns_total": 80,
+   "columns_equivalent": 80,
+   "flagged": [
+    "(h) fidelity procedure: 95.82 < floor 96.26"
+   ],
+   "passed": false,
+   "seconds": 137.30676865577698
+  }
+ },
+ "1044": {
+  "exit": 1,
+  "non_equivalent_columns": [
+   "provider.last_name:['distinct_ratio']"
+  ],
+  "summary": {
+   "columns_total": 80,
+   "columns_equivalent": 79,
+   "flagged": [
+    "(b-e) provider.last_name: failed ['distinct_ratio']",
+    "(h) fidelity claim: 88.54 < floor 92.38",
+    "(h) fidelity claim_line: 86.15 < floor 90.45"
+   ],
+   "passed": false,
+   "seconds": 135.86392760276794
+  }
+ },
+ "1045": {
+  "exit": 1,
+  "non_equivalent_columns": [],
+  "summary": {
+   "columns_total": 80,
+   "columns_equivalent": 80,
+   "flagged": [
+    "(h) fidelity claim: 91.80 < floor 92.38",
+    "(h) fidelity claim_line: 90.29 < floor 90.45"
+   ],
+   "passed": false,
+   "seconds": 135.3717324733734
+  }
+ },
+ "1046": {
+  "exit": 1,
+  "non_equivalent_columns": [],
+  "summary": {
+   "columns_total": 80,
+   "columns_equivalent": 80,
+   "flagged": [
+    "(h) fidelity diagnosis: 89.87 < floor 89.95",
+    "(h) fidelity procedure: 95.90 < floor 96.26"
+   ],
+   "passed": false,
+   "seconds": 138.80198979377747
+  }
+ },
+ "1047": {
+  "exit": 1,
+  "non_equivalent_columns": [],
+  "summary": {
+   "columns_total": 80,
+   "columns_equivalent": 80,
+   "flagged": [
+    "(h) fidelity facility: 75.21 < floor 76.39",
+    "(h) fidelity procedure: 96.16 < floor 96.26"
+   ],
+   "passed": false,
+   "seconds": 141.50339317321777
+  }
+ },
+ "1048": {
+  "exit": 1,
+  "non_equivalent_columns": [],
+  "summary": {
+   "columns_total": 80,
+   "columns_equivalent": 80,
+   "flagged": [
+    "(h) fidelity procedure: 96.23 < floor 96.26"
+   ],
+   "passed": false,
+   "seconds": 140.3119683265686
+  }
+ },
+ "1049": {
+  "exit": 1,
+  "non_equivalent_columns": [],
+  "summary": {
+   "columns_total": 80,
+   "columns_equivalent": 80,
+   "flagged": [
+    "(h) fidelity facility: 75.98 < floor 76.39",
+    "(h) fidelity procedure: 95.85 < floor 96.26"
+   ],
+   "passed": false,
+   "seconds": 137.7751235961914
+  }
+ }
+}

@@ -35,6 +35,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
+import composites  # noqa: E402
 from paths import BENCH_OUT_DIR, SPINDLE_ROOT  # noqa: E402
 
 IMPLS = ("spindle", "reference_port", "shape")
@@ -79,7 +80,10 @@ def _run_spindle(domain: str, scale: str, seed: int, dest: Path) -> dict:
     import_s = time.perf_counter() - t_imp
     marks: list[tuple[str, float]] = []
     ru0, t0 = _ru(), time.perf_counter()
-    dom = _resolve_domain(domain, "3nf")
+    if composites.is_composite(domain):  # `composite_<preset>` or `composite_a-b-c` (P6-01e)
+        dom = composites.baseline_domain(composites.spec_of(domain))
+    else:
+        dom = _resolve_domain(domain, "3nf")
     sp = Spindle()
     t_setup = time.perf_counter()
     res = sp.generate(
@@ -160,15 +164,23 @@ def _run_shape(domain: str, scale: str, seed: int, dest: Path) -> dict:
     host.load_all("shape.strategies")
     host.load_all("shape.sinks")
     known = domain_names()
+    from shape.kernel.dispatch import get_kernel
+
+    get_kernel()  # the native extension is an import too (12 ms), not part of the run
     import_s = time.perf_counter() - t_imp
-    if domain not in known:
+    if domain not in known and not composites.is_composite(domain):
         raise Unsupported(f"impl 'shape' has no domain {domain!r} (installed: {known})")
     ru0, t0 = _ru(), time.perf_counter()
     try:
-        loaded = load_domain(domain)
+        if composites.is_composite(domain):
+            from shape.generation.composite import resolve
+
+            schema = resolve(composites.spec_of(domain)).schema
+        else:
+            schema = load_domain(domain).schema
     except DomainNotFoundError as e:
         raise Unsupported(str(e)) from e
-    engine = Engine(loaded.schema, scale=scale, seed=seed)
+    engine = Engine(schema, scale=scale, seed=seed)
     t_setup = time.perf_counter()
     # The product path: tables are written (parallel, snappy Parquet, T-17) as soon as they are
     # final, while the others are still being generated, so generate and write overlap.

@@ -1,0 +1,15 @@
+generating shape real_estate/small/seed1043
+generating shape real_estate/small/seed1044
+generating shape real_estate/small/seed1045
+generating shape real_estate/small/seed1046
+generating shape real_estate/small/seed1047
+generating shape real_estate/small/seed1048
+generating shape real_estate/small/seed1049
+1042 below floor: ['neighborhood']
+1043 below floor: none
+1044 below floor: ['showing']
+1045 below floor: none
+1046 below floor: none
+1047 below floor: ['neighborhood', 'offer']
+1048 below floor: ['neighborhood']
+1049 below floor: none
