@@ -1,0 +1,25 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "numeric_shift",
+  "gates_fail": [],
+  "drift": [
+    {
+      "between": [
+        0,
+        10
+      ],
+      "changes": [
+        {
+          "column": "product.unit_price",
+          "kinds": [
+            "mean_shift",
+            "spread_change",
+            "distribution_shift",
+            "range_change"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "null_flood",
+  "gates_fail": [
+    "null_check"
+  ],
+  "defects": {
+    "inject_nulls": {
+      "min": 1
+    }
+  }
+}

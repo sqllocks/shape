@@ -1,0 +1,11 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "out_of_order_events",
+  "gates_fail": [],
+  "defects": {
+    "shuffle_column": {
+      "min": 1
+    }
+  }
+}

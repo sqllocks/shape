@@ -1,0 +1,23 @@
+{
+  "format": "shape-scenario",
+  "version": 1,
+  "id": "concept_drift",
+  "domain": "retail",
+  "scale": "small",
+  "seed": 42,
+  "gates": [
+    "schema_conformance",
+    "referential_integrity",
+    "row_count",
+    "null_check",
+    "uniqueness"
+  ],
+  "defects": [
+    {
+      "kind": "shuffle_column",
+      "table": "address",
+      "column": "city",
+      "fraction": 1.0
+    }
+  ]
+}

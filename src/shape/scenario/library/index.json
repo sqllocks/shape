@@ -51,6 +51,91 @@
       "id": "schema_evolution_schedule",
       "domain": "retail",
       "description": "All four schema changes on one schedule: a column is added on day 5, one renamed on day 10, one dropped on day 15 and one retyped on day 20. Four diffs, each against day 0, must report exactly the changes that have happened by then."
+    },
+    {
+      "id": "null_flood",
+      "domain": "retail",
+      "description": "About 60% of customer last names are null although the column is not nullable: far beyond a stray missing value, as when a source column stops being filled. The null check must fail and nothing else may."
+    },
+    {
+      "id": "unit_change",
+      "domain": "retail",
+      "description": "From the middle of the batch on, order totals are 100 times larger, as when a feed switches from dollars to cents. No gate is meant to catch it: the scenario checks that the changed rows are planted."
+    },
+    {
+      "id": "truncated_strings",
+      "domain": "retail",
+      "description": "About 40% of customer emails are cut to five characters, as when a column is loaded into a narrower one. No gate is meant to catch it."
+    },
+    {
+      "id": "placeholder_values",
+      "domain": "retail",
+      "description": "About 20% of customer first names are the text N/A, as when a form fills a required field with a stand-in. No gate is meant to catch it."
+    },
+    {
+      "id": "encoding_corruption",
+      "domain": "retail",
+      "description": "About 30% of customer emails end in the characters that UTF-8 text turns into when it is read as Latin-1. No gate is meant to catch it."
+    },
+    {
+      "id": "volume_spike",
+      "domain": "retail",
+      "description": "The order table carries ten times as many rows as it should, as when a retry loop re-sends a batch. The batch has repeated keys, so the uniqueness gate fails."
+    },
+    {
+      "id": "empty_load",
+      "domain": "retail",
+      "description": "The order table arrives with no rows, as when an upstream job succeeds without writing. The row count gate fails, and so do the references into the table."
+    },
+    {
+      "id": "partial_load",
+      "domain": "retail",
+      "description": "The order table arrives with a single row, as when a job is cut short. The references into the table fail."
+    },
+    {
+      "id": "out_of_order_events",
+      "domain": "retail",
+      "description": "Every order date is swapped with another order's, so the dates no longer follow the order in which the rows arrived. Each value is still there, so no check that looks at the column alone can see it."
+    },
+    {
+      "id": "timezone_offset",
+      "domain": "retail",
+      "description": "Every order date moves eight hours later, as when a writer starts to emit UTC instead of local time. No gate is meant to catch it."
+    },
+    {
+      "id": "dst_boundary",
+      "domain": "retail",
+      "description": "About 30% of order dates are moved onto the hours around the daylight-saving changes of 2024 and 2025. No gate is meant to catch it."
+    },
+    {
+      "id": "concept_drift",
+      "domain": "retail",
+      "description": "Customer addresses keep their cities and states, but the cities are swapped between rows, so a city no longer implies its state. Each column alone looks as before."
+    },
+    {
+      "id": "class_imbalance_shift",
+      "domain": "retail",
+      "description": "Orders that were mostly completed become mostly cancelled from day 5: the mix of order statuses moves, and no value is new."
+    },
+    {
+      "id": "new_category_values",
+      "domain": "retail",
+      "description": "A status that no order had before, lost, appears on day 5 for 15% of the orders."
+    },
+    {
+      "id": "null_rate_creep",
+      "domain": "retail",
+      "description": "The share of customers without a last name climbs to 40% over ten days, starting on day 5."
+    },
+    {
+      "id": "numeric_shift",
+      "domain": "retail",
+      "description": "Product unit prices are 1.8 times larger from day 5, as when prices are raised or a unit changes. The shape of the distribution is the same."
+    },
+    {
+      "id": "late_backfill",
+      "domain": "retail",
+      "description": "About 20% of orders carry an order date 200 days before the rest of the batch, as when a backfill lands in the live table. No gate is meant to catch it: the scenario checks that the late rows are planted and that the batch is otherwise sound."
     }
   ]
 }

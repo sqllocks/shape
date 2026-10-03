@@ -74,6 +74,15 @@ def _strings(value: Any, what: str) -> list[str]:
     return list(value)
 
 
+def list_text(value: Any) -> bool:
+    """Whether ``value`` is a non-empty list of non-empty text."""
+    return (
+        isinstance(value, list)
+        and bool(value)
+        and all(isinstance(v, str) and v.strip() for v in value)
+    )
+
+
 def parse_scenario(doc: Any, what: str) -> dict[str, Any]:
     out = check_header(doc, SCENARIO_FORMAT, what, _SCENARIO_KEYS)
     for key in ("id", "domain"):

@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from shape.scenario.library import formats
+from shape.scenario.library import catalog, formats
 from shape.scenario.library.formats import LibraryError, parse_suite, read_json
 from shape.scenario.library.run import ScenarioResult, list_scenarios, run_scenario
 
@@ -88,4 +88,6 @@ def run_suite(
     result = SuiteResult(str(doc["name"]), scale)
     for name in doc["scenarios"]:
         result.results.append(run_scenario(name, scale=scale, seed=seed, output=output, root=root))
+    if str(doc["name"]) == catalog.SUITE_NAME:
+        catalog.attach_to_suite(result, root)  # every check a catalog entry names must fire
     return result

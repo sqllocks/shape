@@ -1,0 +1,31 @@
+{
+  "format": "shape-suite",
+  "version": 1,
+  "name": "failure-modes",
+  "description": "Every failure mode of the catalog: runs its scenario against the answer key and checks that every check the catalog names for it fires.",
+  "scenarios": [
+    "late_backfill",
+    "out_of_order_events",
+    "timezone_offset",
+    "dst_boundary",
+    "encoding_corruption",
+    "unit_change",
+    "schema_add_column",
+    "schema_rename_column",
+    "schema_drop_column",
+    "schema_retype_column",
+    "class_imbalance_shift",
+    "concept_drift",
+    "duplicate_rows",
+    "truncated_strings",
+    "null_flood",
+    "orphaned_foreign_keys",
+    "volume_spike",
+    "empty_load",
+    "partial_load",
+    "placeholder_values",
+    "new_category_values",
+    "null_rate_creep",
+    "numeric_shift"
+  ]
+}

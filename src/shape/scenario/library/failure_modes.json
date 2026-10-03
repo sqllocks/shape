@@ -1,0 +1,435 @@
+{
+  "format": "shape-failure-catalog",
+  "version": 1,
+  "modes": [
+    {
+      "id": "late-arriving-records",
+      "title": "Late-arriving records",
+      "severity": "medium",
+      "symptoms": [
+        "Rows carry event times earlier than the rest of the batch.",
+        "Daily totals for a closed period change after the fact.",
+        "The earliest timestamp of a feed moves backwards."
+      ],
+      "common_causes": [
+        "A source system replays or backfills records after the batch window closed.",
+        "A mobile or edge device uploads when it regains a connection.",
+        "A queue consumer fell behind and then caught up."
+      ],
+      "detected_by": [
+        "rule:min"
+      ],
+      "reproduce": "library:late_backfill"
+    },
+    {
+      "id": "out-of-order-events",
+      "title": "Out-of-order events",
+      "severity": "medium",
+      "symptoms": [
+        "Event times do not follow arrival order.",
+        "A window closes before every event that belongs to it has arrived.",
+        "Sequence-dependent logic (sessionisation, running totals) gives different answers per run."
+      ],
+      "common_causes": [
+        "Parallel producers or partitions deliver independently.",
+        "Retries re-send older events behind newer ones.",
+        "Clocks on the producing hosts disagree."
+      ],
+      "detected_by": [],
+      "reproduce": "library:out_of_order_events",
+      "gap": "Every value is still present and in range, so no Shape check that looks at a column's statistics can see a change of order. Compare event time with arrival time in the pipeline itself."
+    },
+    {
+      "id": "timezone-offset-shift",
+      "title": "Timezone offset shift",
+      "severity": "high",
+      "symptoms": [
+        "Every timestamp is a fixed number of hours earlier or later than before.",
+        "Events land on the wrong calendar day near midnight.",
+        "The newest timestamp lies in the future."
+      ],
+      "common_causes": [
+        "A writer switched between local time and UTC.",
+        "A database driver or session setting changed its time zone.",
+        "Naive timestamps were converted twice."
+      ],
+      "detected_by": [
+        "rule:max"
+      ],
+      "reproduce": "library:timezone_offset"
+    },
+    {
+      "id": "dst-boundary-timestamps",
+      "title": "Daylight-saving boundary timestamps",
+      "severity": "low",
+      "symptoms": [
+        "Many rows sit on the hour that does not exist in spring or happens twice in autumn.",
+        "Hour-of-day and day-of-week mixes change on two days a year."
+      ],
+      "common_causes": [
+        "Local times were stored without an offset.",
+        "Jobs scheduled in local time run twice or not at all at the clock change."
+      ],
+      "detected_by": [
+        "drift:day_of_week_change",
+        "drift:hour_of_day_change"
+      ],
+      "reproduce": "library:dst_boundary"
+    },
+    {
+      "id": "encoding-corruption",
+      "title": "Encoding corruption",
+      "severity": "medium",
+      "symptoms": [
+        "Accented characters turn into two-character sequences such as a tilde-A followed by a symbol.",
+        "Text matches by value stop matching.",
+        "Email or name patterns no longer parse."
+      ],
+      "common_causes": [
+        "UTF-8 text was read as Latin-1 (or the reverse).",
+        "A file lost its byte-order mark handling in a new reader.",
+        "A database collation changed."
+      ],
+      "detected_by": [
+        "drift:pattern_change"
+      ],
+      "reproduce": "library:encoding_corruption"
+    },
+    {
+      "id": "unit-change-mid-series",
+      "title": "Unit change in the middle of a series",
+      "severity": "high",
+      "symptoms": [
+        "A numeric column jumps by a constant factor from one point on.",
+        "Means, spreads and maxima move together.",
+        "Totals and averages look sound in each half and wrong across the join."
+      ],
+      "common_causes": [
+        "A feed switched from dollars to cents, kilograms to grams, or seconds to milliseconds.",
+        "Two source systems with different units were merged."
+      ],
+      "detected_by": [
+        "drift:mean_shift",
+        "drift:range_change",
+        "drift:spread_change",
+        "rule:max"
+      ],
+      "reproduce": "library:unit_change"
+    },
+    {
+      "id": "column-added",
+      "title": "Column added",
+      "severity": "medium",
+      "symptoms": [
+        "A column appears that the consumers never saw.",
+        "Positional readers shift by one column.",
+        "Strict loaders reject the file."
+      ],
+      "common_causes": [
+        "A source system released a schema change.",
+        "A transformation started to pass a new field through."
+      ],
+      "detected_by": [
+        "drift:column_added"
+      ],
+      "reproduce": "library:schema_add_column"
+    },
+    {
+      "id": "column-renamed",
+      "title": "Column renamed",
+      "severity": "high",
+      "symptoms": [
+        "One column disappears and a new one appears with the same content.",
+        "Queries and joins on the old name fail or return nulls."
+      ],
+      "common_causes": [
+        "A source column was renamed in a release.",
+        "A transformation changed its aliases."
+      ],
+      "detected_by": [
+        "drift:column_added",
+        "drift:column_removed",
+        "rule:required_column"
+      ],
+      "reproduce": "library:schema_rename_column"
+    },
+    {
+      "id": "column-dropped",
+      "title": "Column dropped",
+      "severity": "high",
+      "symptoms": [
+        "A column that downstream code reads is missing.",
+        "Reports show nulls or fail."
+      ],
+      "common_causes": [
+        "A source system removed a field.",
+        "A projection was narrowed."
+      ],
+      "detected_by": [
+        "drift:column_removed",
+        "rule:required_column"
+      ],
+      "reproduce": "library:schema_drop_column"
+    },
+    {
+      "id": "column-retyped",
+      "title": "Column retyped",
+      "severity": "high",
+      "symptoms": [
+        "A column changes type, for example a true or false text becomes an integer.",
+        "Comparisons and casts behave differently."
+      ],
+      "common_causes": [
+        "A source system changed a column's type.",
+        "A loader inferred a different type from a new sample."
+      ],
+      "detected_by": [
+        "drift:dtype_change",
+        "rule:dtype"
+      ],
+      "reproduce": "library:schema_retype_column"
+    },
+    {
+      "id": "class-imbalance-shift",
+      "title": "Class-imbalance shift",
+      "severity": "medium",
+      "symptoms": [
+        "The mix of a category column moves: a rare value becomes common or the reverse.",
+        "No value is new or missing.",
+        "Models trained on the old mix degrade."
+      ],
+      "common_causes": [
+        "A campaign, outage or policy change altered behaviour.",
+        "A filter upstream began to drop one class."
+      ],
+      "detected_by": [
+        "drift:category_shift"
+      ],
+      "reproduce": "library:class_imbalance_shift"
+    },
+    {
+      "id": "concept-drift",
+      "title": "Concept drift (a changed relationship between columns)",
+      "severity": "high",
+      "symptoms": [
+        "Each column looks as before but pairs of values no longer go together, such as a city with the wrong state.",
+        "Models that rely on the relationship lose accuracy."
+      ],
+      "common_causes": [
+        "A join or lookup started to attach the wrong rows.",
+        "The process that produced the data changed its rules."
+      ],
+      "detected_by": [
+        "drift:dependency_broken"
+      ],
+      "reproduce": "library:concept_drift"
+    },
+    {
+      "id": "duplicate-keys",
+      "title": "Duplicate keys",
+      "severity": "high",
+      "symptoms": [
+        "Primary keys repeat.",
+        "Row counts grow without new business events.",
+        "Joins multiply rows."
+      ],
+      "common_causes": [
+        "A job ran twice without an idempotent write.",
+        "Two sources feed one table with overlapping keys.",
+        "A merge key was chosen wrongly."
+      ],
+      "detected_by": [
+        "gate:uniqueness",
+        "rule:unique"
+      ],
+      "reproduce": "library:duplicate_rows"
+    },
+    {
+      "id": "truncated-strings",
+      "title": "Truncated strings",
+      "severity": "medium",
+      "symptoms": [
+        "Text values stop at a fixed length.",
+        "Emails and names lose their endings.",
+        "Pattern checks fail."
+      ],
+      "common_causes": [
+        "A column was loaded into a narrower one.",
+        "A fixed-width export cut long values."
+      ],
+      "detected_by": [
+        "drift:length_change",
+        "drift:pattern_change"
+      ],
+      "reproduce": "library:truncated_strings"
+    },
+    {
+      "id": "null-flood",
+      "title": "Null flood",
+      "severity": "critical",
+      "symptoms": [
+        "A large share of a column is null where it never was.",
+        "Joins and aggregates silently drop rows."
+      ],
+      "common_causes": [
+        "A source column stopped being filled.",
+        "A mapping pointed at a field that no longer exists.",
+        "A failed lookup returns null."
+      ],
+      "detected_by": [
+        "drift:null_rate_change",
+        "gate:null_check",
+        "rule:nullable"
+      ],
+      "reproduce": "library:null_flood"
+    },
+    {
+      "id": "referential-orphans",
+      "title": "Referential orphans",
+      "severity": "high",
+      "symptoms": [
+        "Child rows point at parents that do not exist.",
+        "Inner joins lose rows; left joins show nulls."
+      ],
+      "common_causes": [
+        "Parents and children load in the wrong order.",
+        "A parent was deleted or filtered out.",
+        "A key was transformed on one side only."
+      ],
+      "detected_by": [
+        "drift:range_change",
+        "gate:referential_integrity",
+        "rule:max"
+      ],
+      "reproduce": "library:orphaned_foreign_keys"
+    },
+    {
+      "id": "volume-spike",
+      "title": "Volume spike",
+      "severity": "high",
+      "symptoms": [
+        "A table holds many times its usual rows.",
+        "Keys repeat because rows were sent again."
+      ],
+      "common_causes": [
+        "A retry loop re-sent a batch.",
+        "A backfill ran against the live table.",
+        "A join fan-out multiplied rows."
+      ],
+      "detected_by": [
+        "drift:row_count_change",
+        "gate:uniqueness",
+        "rule:row_count.max"
+      ],
+      "reproduce": "library:volume_spike"
+    },
+    {
+      "id": "empty-load",
+      "title": "Empty load",
+      "severity": "critical",
+      "symptoms": [
+        "A table arrives with no rows although the job succeeded.",
+        "Everything that references it breaks."
+      ],
+      "common_causes": [
+        "An upstream filter matched nothing.",
+        "A source outage returned an empty result.",
+        "A path or partition was wrong."
+      ],
+      "detected_by": [
+        "drift:row_count_change",
+        "gate:row_count",
+        "rule:row_count.min"
+      ],
+      "reproduce": "library:empty_load"
+    },
+    {
+      "id": "partial-load",
+      "title": "Partial load",
+      "severity": "high",
+      "symptoms": [
+        "A table holds far fewer rows than usual.",
+        "Parents are missing for the children that did load."
+      ],
+      "common_causes": [
+        "A job was cut short by a timeout or a kill.",
+        "A page limit stopped an extract early."
+      ],
+      "detected_by": [
+        "drift:row_count_change",
+        "rule:row_count.min"
+      ],
+      "reproduce": "library:partial_load"
+    },
+    {
+      "id": "placeholder-values",
+      "title": "Placeholder or junk values",
+      "severity": "medium",
+      "symptoms": [
+        "Values such as N/A, TBD, 99999 or 1900-01-01 stand in for real data.",
+        "Distinct counts and top values change."
+      ],
+      "common_causes": [
+        "A form requires a field the user does not have.",
+        "A default fills a failed lookup."
+      ],
+      "detected_by": [
+        "drift:placeholder_surge",
+        "rule:no_placeholder"
+      ],
+      "reproduce": "library:placeholder_values"
+    },
+    {
+      "id": "new-category-values",
+      "title": "New category values",
+      "severity": "medium",
+      "symptoms": [
+        "A code or status appears that no earlier batch had.",
+        "Mappings and dashboards drop or mislabel it."
+      ],
+      "common_causes": [
+        "A source released a new status or product code.",
+        "A typo or a case difference created a variant."
+      ],
+      "detected_by": [
+        "drift:new_categorical_values"
+      ],
+      "reproduce": "library:new_category_values"
+    },
+    {
+      "id": "null-rate-creep",
+      "title": "Gradual rise of nulls",
+      "severity": "medium",
+      "symptoms": [
+        "The share of nulls in a column grows a little each day.",
+        "No single day looks wrong."
+      ],
+      "common_causes": [
+        "A field is being retired or collected less often.",
+        "A partner has started to send less complete data."
+      ],
+      "detected_by": [
+        "drift:null_rate_change",
+        "rule:max_null_rate"
+      ],
+      "reproduce": "library:null_rate_creep"
+    },
+    {
+      "id": "numeric-distribution-shift",
+      "title": "Numeric distribution shift",
+      "severity": "medium",
+      "symptoms": [
+        "A measure keeps its shape but its centre and spread move.",
+        "Thresholds and alerts tuned to the old level misfire."
+      ],
+      "common_causes": [
+        "Prices, volumes or sensor calibrations changed.",
+        "A new customer segment arrived."
+      ],
+      "detected_by": [
+        "drift:distribution_shift"
+      ],
+      "reproduce": "library:numeric_shift"
+    }
+  ]
+}
