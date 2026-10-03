@@ -233,6 +233,26 @@
         "row_count_ratio_min": {
           "type": "number",
           "minimum": 0
+        },
+        "zero_share": {
+          "type": "number",
+          "minimum": 0
+        },
+        "heaping_ratio": {
+          "type": "number",
+          "minimum": 0
+        },
+        "benford_class_steps": {
+          "type": "number",
+          "minimum": 0
+        },
+        "tail_alpha_drop": {
+          "type": "number",
+          "minimum": 0
+        },
+        "tail_alpha_max": {
+          "type": "number",
+          "minimum": 0
         }
       }
     },
@@ -297,6 +317,13 @@
             "cosmetic"
           ]
         },
+        "benford_change": {
+          "enum": [
+            "breaking",
+            "additive",
+            "cosmetic"
+          ]
+        },
         "cardinality_change": {
           "enum": [
             "breaking",
@@ -354,6 +381,13 @@
           ]
         },
         "dtype_change": {
+          "enum": [
+            "breaking",
+            "additive",
+            "cosmetic"
+          ]
+        },
+        "heaping_change": {
           "enum": [
             "breaking",
             "additive",
@@ -465,6 +499,13 @@
             "cosmetic"
           ]
         },
+        "tail_change": {
+          "enum": [
+            "breaking",
+            "additive",
+            "cosmetic"
+          ]
+        },
         "true_rate_change": {
           "enum": [
             "breaking",
@@ -473,6 +514,13 @@
           ]
         },
         "uniqueness_change": {
+          "enum": [
+            "breaking",
+            "additive",
+            "cosmetic"
+          ]
+        },
+        "zero_inflation_change": {
           "enum": [
             "breaking",
             "additive",

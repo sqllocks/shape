@@ -50,6 +50,10 @@ DEFAULT_CLASSES: dict[str, str] = {
     "placeholder_surge": "cosmetic",
     "implausible_rate_change": "cosmetic",
     "association_shift": "cosmetic",
+    "zero_inflation_change": "cosmetic",
+    "heaping_change": "cosmetic",
+    "benford_change": "cosmetic",
+    "tail_change": "cosmetic",
 }
 
 #: names a policy may give a class to that are not drift kinds

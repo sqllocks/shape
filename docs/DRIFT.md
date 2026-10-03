@@ -125,7 +125,7 @@ result summarises them as a version bump (`d.semver`, and `d.to_dict(semver=True
 |---|---|
 | breaking | `table_removed`, `column_removed`, `dtype_change`, `pattern_change`, `dependency_broken`, `reference_match_change`; `null_rate_change` when the baseline null rate is 0 and the current one is above 0; `uniqueness_change` when the baseline column was a primary key or had as many distinct values as non-null rows and the current one does not |
 | additive | `table_added`, `column_added`, `new_categorical_values` |
-| cosmetic | every other kind: `row_count_change`, `cardinality_change`, `mean_shift`, `spread_change`, `distribution_shift`, `distribution_change`, `category_shift`, `true_rate_change`, `range_change`, `length_change`, `outlier_rate_change`, `hour_of_day_change`, `day_of_week_change`, `placeholder_surge`, `implausible_rate_change`, `association_shift`; `null_rate_change` and `uniqueness_change` otherwise |
+| cosmetic | every other kind: `row_count_change`, `cardinality_change`, `mean_shift`, `spread_change`, `distribution_shift`, `distribution_change`, `category_shift`, `true_rate_change`, `range_change`, `length_change`, `outlier_rate_change`, `hour_of_day_change`, `day_of_week_change`, `placeholder_surge`, `implausible_rate_change`, `association_shift`, `zero_inflation_change`, `heaping_change`, `benford_change`, `tail_change`; `null_rate_change` and `uniqueness_change` otherwise |
 
 The table lives in `shape.drift.semver` (`DEFAULT_CLASSES`) and a test fails when a kind of the
 table above has no default class, so a new kind cannot ship without one.
