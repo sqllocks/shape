@@ -1,4 +1,4 @@
-"""The core extras name every first-party plugin distribution, pinned to the core version (T-08, T-09)."""
+"""The core extras name every first-party plugin, pinned to the core version (T-08, T-09)."""
 
 from __future__ import annotations
 
