@@ -34,7 +34,9 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
 
 - `shape profile SRC -o OUT.shape` reads CSV, Parquet, JSONL, a folder or glob of them, or a Delta
   table, and writes a **profile**. A table with 0 rows prints `shape: warning: ... has 0 rows`
-  (the profile is still written); `--fail-on-empty` exits 2 instead and writes nothing.
+  (the profile is still written); `--fail-on-empty` exits 2 instead and writes nothing. A Delta
+  table with deletion vectors or column mapping is read with DuckDB (extra `delta-fallback`) and
+  says so on stderr; see the README.
 - `shape check`, `shape diff`, `shape plan`, `shape generate --from` read profiles.
 - `shape inspect ARTIFACT.shape` prints what an artifact holds, a profile or a model. `shape show`
   is an alias of `shape inspect`.
