@@ -376,3 +376,59 @@ def test_temporal_rows_do_not_depend_on_the_call_split(nat):
         for a in range(0, 100_000, 20_000)
     ]
     assert (np.concatenate(pieces) == whole).all()
+
+
+# ---- sizes one call may not exceed (#548) ------------------------------------------------------
+
+_OVERSIZED = {
+    "philox_uniform": "m.philox_uniform(1, 2, 0, 2**40)",
+    "philox_words": "m.philox_words(1, 2, 0, 2**62, 4)",
+    "philox_normal": "m.philox_normal(1, 2, 0, 2**61)",
+    "alias_sample": "m.alias_sample(pa.array([1.0]), pa.array([0]), 1, 2, 0, 2**61)",
+    "uuid4_strings": "m.uuid4_strings(1, 2, 0, 59_652_324)",
+    "random_strings_len": "m.random_strings(1, 2, 0, 1, 2**40, 'ab')",
+    "random_strings_rows": "m.random_strings(1, 2, 0, 2**62, 4, 'ab')",
+    "template_rows": "m.template_strings(['x'], [], [], 2**40)",
+    "template_width": "m.template_strings(['a', 'b'], [(0, 2**40)], [pa.array([1])], 1)",
+    "day_weights": "m.day_weights(0, 2**40, [1.0] * 12, [1.0] * 7)",
+    "temporal_sample": (
+        "m.temporal_sample(pa.array([1.0]), pa.array([1.0] * 24), 0, 1, 2, 0, 2**40)"
+    ),
+    "cap_per_parent": "m.cap_per_parent(pa.array([0]), 2**40, 1, 1, 2)",
+    "group_sums": "m.group_sums(pa.array([1]), pa.array([1.0]), 0, 2**40)",
+}
+
+
+@pytest.mark.parametrize("kernel", ["shape._kernel", "shape.kernel.reference"])
+def test_oversized_calls_are_value_errors_not_aborts(kernel):
+    # Regression #548: the native kernel aborted the interpreter (allocation failure), panicked
+    # ("capacity overflow", an i32 offset wrap) or hung holding the GIL. Run in a child process
+    # so that a regression cannot take the test session down with it.
+    import json
+    import subprocess
+    import sys
+
+    script = f"""
+import json, resource, pyarrow as pa, importlib
+resource.setrlimit(resource.RLIMIT_AS, (4 * 1024**3, 4 * 1024**3))
+m = importlib.import_module({kernel!r})
+out = {{}}
+for name, call in {json.dumps(_OVERSIZED)}.items():
+    try:
+        eval(call)
+        out[name] = "returned"
+    except ValueError as exc:
+        out[name] = "ValueError: " + str(exc)
+    except BaseException as exc:
+        out[name] = type(exc).__name__ + ": " + str(exc)
+print(json.dumps(out))
+"""
+    proc = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True, timeout=120
+    )
+    assert proc.returncode == 0, proc.stderr[-2000:]
+    got = json.loads(proc.stdout.strip().splitlines()[-1])
+    for name, outcome in got.items():
+        assert outcome.startswith("ValueError: ") and (
+            "use smaller chunks" in outcome or "width" in outcome
+        ), f"{name}: {outcome}"
