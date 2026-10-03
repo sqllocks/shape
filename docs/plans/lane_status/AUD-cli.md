@@ -192,4 +192,10 @@ Fresh container, venvs built per plan section 1: `~/.venvs/shape` (`.[dev,stream
 - `SHAPE_KERNEL=rust pytest -m "not emulator and not live" --ignore=tests/demo/fabric`: 6907
   passed, 2 skipped, 13 deselected (by the marker expression), exit 0.
 - `tests/demo/fabric` in the pyarrow 19 venv: 216 passed. `tests/demo/content`: 38 passed.
-- `SHAPE_KERNEL=python` full suite: IN PROGRESS when this was committed (see the next commit).
+- `SHAPE_KERNEL=python pytest -m "not emulator and not live" --ignore=tests/demo/fabric`: 6907
+  passed, 2 skipped, 13 deselected, exit 0 (1 h 28 min: the 24M/48M-row bounded-profile memory test
+  runs the pure-Python kernel). Run serially, so the order-dependent credential-reference test
+  (#77) passed. No failures in either kernel mode; `tests/demo_cmd` semantic-model tests ran with
+  `shape-fabric` and `shape-eventhubs` installed from their in-repo paths and passed. The fabric
+  tests were run in their own venv (above) because the main venv lacks their requirements.
+- No failure remains; nothing is recorded as pre-existing. No `.github/workflows/*` diff needed.
