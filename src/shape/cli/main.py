@@ -900,9 +900,8 @@ def _cmd_from_ddl(a):
     """``shape from-ddl FILE``: read ``CREATE TABLE`` DDL, write a generation schema."""
     from pathlib import Path
 
-    from shape.generation.ddl import from_ddl
-
     from shape.cli import errors
+    from shape.generation.ddl import from_ddl
 
     src = Path(a.input_file)
     errors.refuse_same_file(a.output, src)
@@ -2069,6 +2068,11 @@ def _dispatch(argv):
     from shape.profile.dependencies import candidate_key, functional_dependency
 
     rows = list(_rows(a.csv))
+    wanted = [a.dependent, *a.determinant] if a.cmd == "fd" else list(a.fields)
+    known = list(dict.fromkeys(name for row in rows for name in row))
+    for name in wanted:
+        if rows and name not in known:
+            raise ValueError(f"{name!r} is not a column of {a.csv} (columns: {', '.join(known)})")
     if a.cmd == "key":
         result = candidate_key(rows, tuple(a.fields))
     elif a.cmd == "fd":
