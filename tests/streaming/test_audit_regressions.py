@@ -102,3 +102,17 @@ def test_156_the_value_anomaly_changes_one_value_per_row():
         assert all(not (isinstance(v, float) and v != v) for v in new.values()), new  # no NaN
         b = new["b"]  # an outlier is -1, 100 or 1000 times the value: never a wrap past int64
         assert b in (None, old["b"], -(2**60)) or b > 2**62, new
+
+
+def test_157_an_expired_key_that_returns_starts_a_new_sketch():
+    from shape.streaming import KeyedSketches
+
+    s = KeyedSketches(100, ttl=16.0)
+    s.update(["a"], [1.0], [0.0])
+    s.update(["b"], [1.0], [15.5])
+    s.update(["c"], [1.0], [16.2])
+    assert "a" not in s  # idle for 16.2 >= ttl, although not swept yet
+    s.update(["a"], [5.0], [16.3])
+    got = s.summary("a")
+    assert got is not None
+    assert (got["count"], got["first_time"], got["mean"]) == (1, 16.3, 5.0)
