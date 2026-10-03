@@ -500,3 +500,31 @@ def test_binary_min_and_max_are_cut_like_text(kernel):
     c = _col(pa.array([b"x" * 10_000, b"y" * 10_000], pa.binary()))
     for key in ("min_value", "max_value"):
         assert len(c[key][1]) == 257 and c[key][1].endswith("…")
+
+
+# ---- #318: nanosecond timestamps keep their nanoseconds ------------------------------------
+
+
+def test_nanosecond_timestamps_keep_their_nanoseconds(kernel):
+    # the pinned baseline's profile of the same Parquet columns
+    c = _col(
+        pa.array(
+            [1, 2, 2, 1_000_000_000_123_456_789] * 1 + [1_000_000_000_123_456_789],
+            pa.timestamp("ns"),
+        )
+    )
+    assert c["min_value"] == ["timestamp", "1970-01-01 00:00:00.000000001"]
+    assert c["max_value"] == ["timestamp", "2001-09-09 01:46:40.123456789"]
+    assert c["value_counts_ext"] == {
+        "1970-01-01 00:00:00.000000002": 0.4,
+        "2001-09-09 01:46:40.123456789": 0.4,
+        "1970-01-01 00:00:00.000000001": 0.2,
+    }
+    z = _col(pa.array([1500, 2500, 2500, 1_000_000_000_123_456_789], pa.timestamp("ns", tz="UTC")))
+    assert z["min_value"] == ["timestamp", "1970-01-01 00:00:00.000001500+00:00"]
+    assert z["max_value"] == ["timestamp", "2001-09-09 01:46:40.123456789+00:00"]
+    assert z["value_counts_ext"] == {
+        "1970-01-01 00:00:00.000002500+00:00": 0.5,
+        "1970-01-01 00:00:00.000001500+00:00": 0.25,
+        "2001-09-09 01:46:40.123456789+00:00": 0.25,
+    }
