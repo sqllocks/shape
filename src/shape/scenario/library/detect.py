@@ -62,12 +62,14 @@ def known_checks() -> dict[str, frozenset[str]]:
     """The names of the checks Shape has, by kind: ``drift``, ``rule`` and ``gate``."""
     from shape.contracts.v1 import _COLUMN_RULES
     from shape.drift.engine import KIND_SEVERITY
+    from shape.scenario.results import VERIFY_GATES
     from shape.scenario.validator import KNOWN_GATES
 
     return {
         "drift": frozenset(KIND_SEVERITY),
         "rule": frozenset(_COLUMN_RULES) | frozenset(_EXTRA_RULES),
-        "gate": frozenset(KNOWN_GATES),
+        # the validation gates of a scenario run, and the gates of `shape verify`
+        "gate": frozenset(KNOWN_GATES) | frozenset(VERIFY_GATES),
     }
 
 
@@ -178,11 +180,66 @@ def gate_detections(gates: Mapping[str, bool], tables: list[str]) -> set[Detecti
 # ---- a whole scenario ----------------------------------------------------------------------------
 
 
+@dataclass
+class Batch:
+    """A data scenario run once: the clean tables, the tables with the defects, the tables the
+    defects touch and the gates of the defective batch (``True`` is a pass)."""
+
+    scenario: str
+    seed: int
+    clean: dict[str, Any]
+    current: dict[str, Any]
+    touched: list[str]
+    gates: dict[str, bool]
+
+
+def data_batch(
+    name: str,
+    *,
+    scale: str | None = None,
+    seed: int | None = None,
+    rows: int | None = None,
+    root: Path | None = None,
+) -> Batch:
+    """Run the data scenario ``name``: generate the domain (``rows`` rows in every table when
+    given, else at ``scale``), plant the defects and run the gates. Raises
+    :class:`~shape.scenario.library.formats.LibraryError` for a drift scenario, which has no
+    single batch."""
+    from dataclasses import replace
+
+    from shape.generation.engine import Engine
+    from shape.scenario.library import run
+    from shape.scenario.library.defects import apply_defects
+    from shape.scenario.runner import _run_gate
+
+    spec = run.load_scenario(name, root)
+    if spec.get("drift"):
+        raise LibraryError(
+            f"scenario {name!r} is a change over time (a drift plan), not a defective batch"
+        )
+    seed = int(spec.get("seed", 42)) if seed is None else int(seed)
+    schema = run._schema(spec["domain"])
+    if rows is not None:
+        if isinstance(rows, bool) or not isinstance(rows, int) or rows < 1:
+            raise LibraryError("rows must be a whole number of at least 1")
+        clean = Engine(
+            schema, seed=seed, row_counts={table: rows for table in schema.tables}
+        ).generate()
+    else:
+        clean = run._generate(schema, scale or str(spec.get("scale", "small")), seed)
+    tables, _ = apply_defects(clean.tables, list(spec.get("defects", [])), schema, seed)
+    touched = sorted({str(d["table"]) for d in spec.get("defects", [])})
+    current = replace(clean, tables=tables, row_counts={n: t.num_rows for n, t in tables.items()})
+    gates = {g: _run_gate(g, current)[0] for g in spec["gates"]}
+    return Batch(name, seed, dict(clean.tables), dict(tables), touched, gates)
+
+
 def scenario_detections(
     name: str,
     *,
     scale: str | None = None,
     seed: int | None = None,
+    rows: int | None = None,
     root: Path | None = None,
 ) -> set[Detection]:
     """Every check that fires for the library scenario ``name``.
@@ -190,39 +247,30 @@ def scenario_detections(
     A data scenario is generated twice, clean and with its defects, and the gates run on the
     defective batch; a drift scenario compares the days of its ``compare`` windows. Only the
     tables the scenario touches are profiled."""
-    from dataclasses import replace
-
     from shape.scenario.library import run
-    from shape.scenario.library.defects import apply_defects
-    from shape.scenario.runner import _run_gate
 
     spec = run.load_scenario(name, root)
     scale = scale or str(spec.get("scale", "small"))
     seed = int(spec.get("seed", 42)) if seed is None else int(seed)
+    if not spec.get("drift"):
+        batch = data_batch(name, scale=scale, seed=seed, rows=rows, root=root)
+        found = observe(batch.clean, batch.current, batch.touched)
+        return found | gate_detections(batch.gates, batch.touched)
+    from shape.generation.drift_plan import DriftPlan
+    from shape.scenario.library.scale import resolve_scale
+
     schema = run._schema(spec["domain"])
-    found: set[Detection] = set()
-    if spec.get("drift"):
-        from shape.generation.drift_plan import DriftPlan
-        from shape.scenario.library.scale import resolve_scale
+    plan = DriftPlan.from_dict(spec["drift"]["plan"])
+    touched = sorted({e.table for e in plan.events})
+    preset, row_counts = resolve_scale(schema, scale)
+    days: dict[int, Any] = {}
 
-        plan = DriftPlan.from_dict(spec["drift"]["plan"])
-        touched = sorted({e.table for e in plan.events})
-        preset, rows = resolve_scale(schema, scale)
-        days: dict[int, Any] = {}
+    def day(n: int) -> Any:
+        if n not in days:
+            days[n] = plan.generate_day(schema, n, scale=preset, row_counts=row_counts, seed=seed)
+        return days[n]
 
-        def day(n: int) -> Any:
-            if n not in days:
-                days[n] = plan.generate_day(schema, n, scale=preset, row_counts=rows, seed=seed)
-            return days[n]
-
-        for a, b in spec["drift"]["compare"]:
-            found |= observe(day(a).tables, day(b).tables, touched)
-        return found
-    clean = run._generate(schema, scale, seed)
-    tables, _ = apply_defects(clean.tables, list(spec.get("defects", [])), schema, seed)
-    touched = sorted({str(d["table"]) for d in spec.get("defects", [])})
-    current = replace(clean, tables=tables, row_counts={n: t.num_rows for n, t in tables.items()})
-    gates = {g: _run_gate(g, current)[0] for g in spec["gates"]}
-    found |= observe(clean.tables, tables, touched)
-    found |= gate_detections(gates, touched)
+    found = set()
+    for a, b in spec["drift"]["compare"]:
+        found |= observe(day(a).tables, day(b).tables, touched)
     return found

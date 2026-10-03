@@ -1320,6 +1320,12 @@ def _build_parser(plugin_commands=()):
     from shape.cli.library import add_arguments as add_library_arguments
 
     add_library_arguments(sub)
+    from shape.cli.canary import add_arguments as add_canary_arguments
+
+    add_canary_arguments(sub)
+    from shape.cli.gameday import add_arguments as add_gameday_arguments
+
+    add_gameday_arguments(sub)
     from shape.cli.transform import add_arguments as add_transform_arguments
 
     add_transform_arguments(sub)
@@ -1715,6 +1721,14 @@ def _route(a):
         from shape.cli.seed import run as run_seed
 
         return _run(run_seed, a)
+    if a.cmd == "gameday":
+        from shape.cli.gameday import run as run_gameday
+
+        return _run(run_gameday, a)
+    if a.cmd == "canary":
+        from shape.cli.canary import run as run_canary
+
+        return _run(run_canary, a)
     if a.cmd == "library":
         from shape.cli.library import run as run_library
 

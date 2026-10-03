@@ -139,6 +139,19 @@ _EXTRA: dict[str, dict[int, str]] = {
         2: "the answer is malformed or names an unknown failure mode, the pack does not "
         "exist, or " + BAD,
     },
+    "canary make": {
+        2: "the target cannot make a canary, a check does not fire at this size, "
+        "the folder is not new or empty, or " + BAD
+    },
+    "canary check": {
+        1: "an expected detection is missing from the results: a blind spot",
+        2: "the canary or a result is malformed, or " + BAD,
+    },
+    "gameday run": {
+        1: "an expected detection was missed",
+        2: "the plan is malformed (an unknown or disallowed command, a data path that is not a "
+        "local folder, a table that cannot be read), or " + BAD,
+    },
     "library list": {},
     "library show": {2: "the dataset is not in the library, or " + BAD},
     "library get": {2: "the dataset is not in the library, the output exists, or " + BAD},

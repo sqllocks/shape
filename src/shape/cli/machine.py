@@ -250,7 +250,9 @@ SPECS: dict[str, Spec] = {
 }
 
 #: commands that print only when asked and otherwise have a ``--dry-run`` of their own.
-NATIVE_DRY_RUN = frozenset({"generate", "demo run", "demo cleanup", "seed"})
+NATIVE_DRY_RUN = frozenset(
+    {"generate", "demo run", "demo cleanup", "seed", "canary make", "gameday run"}
+)
 
 
 # ---- parsers -------------------------------------------------------------------------------------

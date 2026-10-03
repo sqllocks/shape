@@ -350,6 +350,50 @@ parse, and 130 when a scale run is interrupted. See `docs/CLI.md` and `docs/CI.m
 | 1 | a planted finding is missed or a named finding is not planted |
 | 2 | the answer is malformed or names an unknown failure mode, the pack does not exist, or bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
 
+## `shape library list`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
+## `shape library show`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 2 | the dataset is not in the library, or bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
+## `shape library get`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 2 | the dataset is not in the library, the output exists, or bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
+## `shape canary make`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 2 | the target cannot make a canary, a check does not fire at this size, the folder is not new or empty, or bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
+## `shape canary check`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 1 | an expected detection is missing from the results: a blind spot |
+| 2 | the canary or a result is malformed, or bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
+## `shape gameday run`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 1 | an expected detection was missed |
+| 2 | the plan is malformed (an unknown or disallowed command, a data path that is not a local folder, a table that cannot be read), or bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
 ## `shape transform star`
 
 | Code | Meaning |
