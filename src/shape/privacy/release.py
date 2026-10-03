@@ -8,6 +8,7 @@ from typing import Any
 
 from .cells import suppress_column_cells
 from .classification import DEFAULT_TAXONOMY
+from .policy import VALUE_KEYS
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,7 +66,9 @@ def redact_sensitive(
 ) -> dict[str, Any]:
     """Remove value-bearing evidence for classified columns before artifact release.
 
-    A column is redacted when its label ranks at or above the lowest label in ``redact_at``.
+    A column is redacted when its label ranks at or above the lowest label in ``redact_at``:
+    every key that can carry an original value or a tight bound (``policy.VALUE_KEYS``, the set
+    ``release_for`` strips) is removed.
     """
     out: dict[str, Any] = {"rows": shape.get("rows", 0), "columns": {}}
     floor = min(DEFAULT_TAXONOMY.rank(x) for x in redact_at)
@@ -73,8 +76,8 @@ def redact_sensitive(
         x = dict(c)
         label = str(classifications.get(name, "PUBLIC")).upper()
         if DEFAULT_TAXONOMY.rank(label) >= floor:
-            x.pop("topk", None)
-            x.pop("examples", None)
+            for k in VALUE_KEYS:
+                x.pop(k, None)
             x["value_evidence_redacted"] = True
             x["classification"] = label
         out["columns"][name] = x
