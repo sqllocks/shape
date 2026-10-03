@@ -19,7 +19,7 @@ dependencies = [
 
 [project.optional-dependencies]
 # Microsoft Entra sign-in to an Eventhouse instead of a bearer token.
-entra = ["azure-identity>=1.15"]
+entra = ["azure-identity>=1.16.1"]
 # Reading and writing OneLake / ADLS Gen2 paths (abfss://, onelake://): adlfs and azure-identity.
 onelake = ["sqllocks-shape[azure]==0.9.0"]
 

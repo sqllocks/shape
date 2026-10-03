@@ -15,7 +15,7 @@ dependencies = ["sqllocks-shape==0.9.0", "pyodbc>=5.0"]
 
 [project.optional-dependencies]
 # Microsoft Entra authentication (--auth cli | msi | spn).
-entra = ["azure-identity>=1.15"]
+entra = ["azure-identity>=1.16.1"]
 
 [project.entry-points."shape.sources"]
 mssql = "shape_sqlserver:SqlServerSource"

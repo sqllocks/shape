@@ -15,7 +15,7 @@ dependencies = ["sqllocks-shape==0.9.0", "azure-eventhub>=5.12,<6"]
 
 [project.optional-dependencies]
 # Microsoft Entra sign-in instead of a connection string.
-entra = ["azure-identity>=1.15"]
+entra = ["azure-identity>=1.16.1"]
 
 [project.entry-points."shape.stream_sources"]
 eventhubs = "shape_eventhubs:EventHubsStreamSource"

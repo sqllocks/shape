@@ -18,7 +18,7 @@ dependencies = ["sqllocks-shape==0.9.0"]
 
 [project.optional-dependencies]
 postgres = ["psycopg[binary]>=3.1,<4"]
-mysql = ["pymysql>=1.1,<2"]
+mysql = ["pymysql>=1.1.1,<2"]
 
 [project.entry-points."shape.sinks"]
 postgres = "shape_databases:PostgresSink"
