@@ -42,6 +42,40 @@ _KEYS = (
 )
 
 
+def _whole(
+    request: dict[str, Any], key: str, minimum: int | None, *, optional: bool = False
+) -> None:
+    """``request[key]`` as a whole number of at least ``minimum`` (a digit string is read), else
+    a ``ValueError`` naming the setting."""
+    value = request.get(key)
+    if value is None and optional:
+        return
+    if isinstance(value, str) and value.strip().lstrip("-").isdigit():
+        value = int(value)
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"{key} must be a whole number, got {value!r}")
+    if minimum is not None and value < minimum:
+        raise ValueError(f"{key} must be at least {minimum}")
+    request[key] = value
+
+
+def _check_request(request: dict[str, Any]) -> None:
+    """The types of a request, checked before a job exists (a bridge or API caller can send
+    anything JSON holds)."""
+    if not isinstance(request["domain"], str):
+        raise ValueError(f"domain must be a name or a file path, got {request['domain']!r}")
+    sinks = request["sinks"]
+    if not isinstance(sinks, list) or not sinks or not all(isinstance(n, str) for n in sinks):
+        raise ValueError("sinks must be a non-empty list of sink names")
+    config = request["sink_config"]
+    if not isinstance(config, Mapping) or not all(isinstance(v, Mapping) for v in config.values()):
+        raise ValueError("sink_config must map each sink name to its settings")
+    _whole(request, "chunk_size", 1)
+    _whole(request, "processes", 0)
+    _whole(request, "max_workers", 1, optional=True)
+    _whole(request, "seed", None, optional=True)
+
+
 def normalize(params: Mapping[str, Any]) -> dict[str, Any]:
     """The request ``params`` describe, checked. Unknown keys are an error (a typo would otherwise
     be ignored)."""
@@ -63,10 +97,7 @@ def normalize(params: Mapping[str, Any]) -> dict[str, Any]:
     request["sink_config"] = _absolute_paths(request["sink_config"])
     request.setdefault("chunk_size", DEFAULT_CHUNK_SIZE)
     request.setdefault("processes", 0)
-    if not isinstance(request["sinks"], list) or not request["sinks"]:
-        raise ValueError("sinks must be a non-empty list of sink names")
-    if int(request["chunk_size"]) < 1:
-        raise ValueError("chunk_size must be at least 1")
+    _check_request(request)
     if request["scale_mode"] in LOCAL_MODES:
         from shape.scale.sinks import build_sinks
 
