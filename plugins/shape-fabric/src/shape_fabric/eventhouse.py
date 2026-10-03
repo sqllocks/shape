@@ -136,7 +136,7 @@ class EventhouseEmitter:
     def __init__(self, transport: Transport | None = None, *, busy_pause: float = _BUSY_PAUSE):
         self._transport = transport
         self._busy_pause = busy_pause
-        self._clients: dict[tuple[str, str, bool], KustoClient] = {}
+        self._clients: dict[tuple[Any, ...], KustoClient] = {}
 
     def _client(
         self,
@@ -146,7 +146,10 @@ class EventhouseEmitter:
         timeout: float,
         busy: int,
     ) -> KustoClient:
-        key = (target.host, target.database, target.tls)
+        # One client per connection and per sign-in and retry settings: an emit with another
+        # token, credential, busy_retries or timeout gets a client with those.
+        sign_in = token if isinstance(token, str) or token is None else id(token)
+        key = (target.host, target.database, target.tls, sign_in, id(credential), busy, timeout)
         client = self._clients.get(key)
         if client is None:
             client = KustoClient(

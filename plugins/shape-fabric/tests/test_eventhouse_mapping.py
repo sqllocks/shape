@@ -82,7 +82,7 @@ def test_one_table_per_shape_table_needs_one_mapping_each() -> None:
 def test_each_emit_uses_its_own_token_retries_and_timeout() -> None:
     kusto = FakeKusto()
     emitter = EventhouseEmitter(kusto, busy_pause=0.0)
-    uri = "eventhouse://kql.example.test/db1?tls=false"
+    uri = "eventhouse://kql.example.test/db1"  # TLS: the token is sent
     emitter.emit(uri, [_event("A", 0, a_col=1)], token="tok-1")
     before = len(kusto.auth)
     kusto.busy = 1  # one throttled answer: with busy_retries=0 it is not waited out
