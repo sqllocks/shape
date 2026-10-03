@@ -116,3 +116,14 @@ def test_157_an_expired_key_that_returns_starts_a_new_sketch():
     got = s.summary("a")
     assert got is not None
     assert (got["count"], got["first_time"], got["mean"]) == (1, 16.3, 5.0)
+
+
+@pytest.mark.parametrize("first", [[], [None, None]])
+def test_158_a_batch_without_keys_does_not_fix_the_key_kind(first):
+    from shape.streaming import Deduplicator
+
+    d = Deduplicator()
+    assert d.filter(first).tolist() == [True] * len(first)
+    assert d.filter([1, 2, 1]).tolist() == [True, True, False]
+    with pytest.raises(TypeError):
+        d.filter(["x"])  # the kind is now int
