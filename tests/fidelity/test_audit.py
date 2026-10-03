@@ -31,3 +31,13 @@ def test_tiers_read_a_table_with_duplicate_column_names() -> None:
     frame = Frame.from_arrow(t)
     assert frame.names == ["c", "c"]
     assert run_tier2(t, t).cardinality["c"].passed
+
+
+def test_bootstrap_table_names_a_negative_n_rows() -> None:
+    """#427: the error names n_rows."""
+    import pytest
+
+    from shape.fidelity.tier3 import bootstrap_table
+
+    with pytest.raises(ValueError, match=r"n_rows is 0 or more, got -1"):
+        bootstrap_table(pa.table({"x": [1, 2, 3]}), n_rows=-1)
