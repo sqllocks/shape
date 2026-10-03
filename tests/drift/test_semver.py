@@ -338,7 +338,8 @@ def test_every_change_carries_class_and_reason_and_the_result_a_summary():
     r = shape.diff(base, shape.profile(table(drop=True)))
     c = kinds(r)[("status", "column_removed")]
     assert c["class"] == "breaking" and c["class_reason"]
-    assert r.to_dict()["semver"] == r.semver
+    assert r.to_dict(semver=True)["semver"] == r.semver
+    assert "semver" not in r.to_dict()  # the shipped to_dict contract is unchanged
     assert r.semver["bump"] == "major" and r.semver["breaking"] == 1
     assert "planned" not in r.semver
     assert all(x["class"] in CLASSES for x in r.changes)

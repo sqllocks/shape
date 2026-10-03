@@ -429,9 +429,12 @@ class DiffResult:
         """True when an unplanned change of class ``fail_on`` or a stricter one is reported."""
         return semver_fails(self.changes, self.counted, fail_on)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self, *, semver: bool = False) -> dict[str, Any]:
+        """The result as JSON-ready dicts. ``{"drifted", "changes"}`` is the shipped contract
+        (``docs/plans`` section 12.2) and stays as it is; ``semver=True`` adds the summary."""
         out: dict[str, Any] = {"drifted": self.drifted, "changes": [dict(c) for c in self.changes]}
-        out["semver"] = self.semver
+        if semver:
+            out["semver"] = self.semver
         if self.fail_on is not None:
             out["fail_on"] = self.fail_on
             out["failed"] = self.failed

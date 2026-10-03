@@ -101,7 +101,8 @@ section 12.3 and keep their values.
 data: **breaking** (readers that worked yesterday can fail today), **additive** (something new,
 nobody who read the old data is affected) or **cosmetic** (the schema and the constraints are
 unchanged, values moved). Every change carries `class` and a one-line `class_reason`, and the
-result summarises them as a version bump:
+result summarises them as a version bump (`d.semver`, and `d.to_dict(semver=True)`; plain
+`d.to_dict()` keeps its shipped `drifted` and `changes`):
 
 | Class | Kinds |
 |---|---|
