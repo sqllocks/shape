@@ -340,9 +340,8 @@ def test_a_far_future_time_or_huge_window_is_refused_not_simulated():
     with pytest.raises(ValueError, match="duration_hours"):
         FinancialStreamSimulator(tx, accounts, FinancialStreamConfig(duration_hours=1e10)).run()
     with pytest.raises(ValueError, match="settlement_batch_hours"):
-        FinancialStreamSimulator(
-            tx, accounts, FinancialStreamConfig(duration_hours=24 * 365, settlement_batch_hours=1e-4)
-        ).run()
+        config = FinancialStreamConfig(duration_hours=24 * 365, settlement_batch_hours=1e-4)
+        FinancialStreamSimulator(tx, accounts, config).run()
     # a year of data is fine
     ok = FinancialStreamSimulator(
         tx.slice(0, 2), accounts, FinancialStreamConfig(duration_hours=24 * 365)

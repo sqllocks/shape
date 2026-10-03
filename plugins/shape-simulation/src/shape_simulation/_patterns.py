@@ -95,6 +95,56 @@ def table_mapping(tables: Any) -> dict[str, pa.Table]:
     return {str(k): as_table(v) for k, v in inner.items()}
 
 
+def _is_number(value: Any) -> bool:
+    return not isinstance(value, bool) and isinstance(value, int | float | np.integer | np.floating)
+
+
+def check_settings(
+    config: Any,
+    *,
+    positive: tuple[str, ...] = (),
+    non_negative: tuple[str, ...] = (),
+    probabilities: tuple[str, ...] = (),
+    non_empty: tuple[str, ...] = (),
+) -> None:
+    """Refuse settings a simulator cannot use, with a ``ValueError`` that names the setting.
+
+    Every field whose default is a number must be a number (``--set users=abc`` gives text);
+    ``positive`` ones are above 0 (they divide), ``non_negative`` ones 0 or more,
+    ``probabilities`` in [0, 1] and ``non_empty`` lists hold at least one item. ``None`` is
+    accepted where it is the default (an unset optional)."""
+    import dataclasses
+
+    for f in dataclasses.fields(config):
+        default = f.default
+        if isinstance(default, bool) or not isinstance(default, int | float):
+            continue
+        value = getattr(config, f.name)
+        if not _is_number(value):
+            raise ValueError(f"{f.name} must be a number, got {value!r}")
+    for names, strict, high, what in (
+        (positive, True, None, "above 0"),
+        (non_negative, False, None, "0 or more"),
+        (probabilities, False, 1.0, "between 0 and 1"),
+    ):
+        for name in names:
+            value = getattr(config, name)
+            if value is None:
+                continue
+            if not _is_number(value):
+                raise ValueError(f"{name} must be a number, got {value!r}")
+            number = float(value)
+            # written so that NaN fails every rule
+            inside = number > 0 if strict else number >= 0
+            if high is not None:
+                inside = inside and number <= high
+            if not inside:
+                raise ValueError(f"{name} must be {what}, got {value!r}")
+    for name in non_empty:
+        if not getattr(config, name):
+            raise ValueError(f"{name} must hold at least one item")
+
+
 def timestamp_us(col: pa.ChunkedArray | pa.Array) -> tuple[np.ndarray, np.ndarray, str | None]:
     """A date, timestamp or ISO-8601 string column as ``(microseconds, valid, timezone)``.
 

@@ -33,6 +33,7 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 from shape_simulation._patterns import (
     TablesResult,
     as_table,
+    check_settings,
     float_array,
     float_values,
     table_mapping,
@@ -104,6 +105,20 @@ class IoTTelemetryConfig:
     battery_drain_enabled: bool = True
     battery_drain_rate: float = 0.1
     seed: int = 42
+
+    def __post_init__(self) -> None:
+        check_settings(
+            self,
+            positive=("reading_interval_seconds", "alert_storm_rate_multiplier"),
+            non_negative=(
+                "fleet_size",
+                "duration_hours",
+                "drift_rate",
+                "alert_storm_duration_minutes",
+                "battery_drain_rate",
+            ),
+            probabilities=("drift_probability", "missing_probability", "alert_storm_probability"),
+        )
 
 
 @dataclass

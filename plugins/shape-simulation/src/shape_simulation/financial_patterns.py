@@ -34,6 +34,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 from shape_simulation._patterns import (
     TablesResult,
     as_table,
+    check_settings,
     combine,
     float_array,
     float_values,
@@ -112,6 +113,18 @@ class FinancialStreamConfig:
     settlement_batch_hours: float = 4.0
     settlement_success_rate: float = 0.98
     seed: int = 42
+
+    def __post_init__(self) -> None:
+        check_settings(
+            self,
+            positive=("settlement_batch_hours",),
+            non_negative=("duration_hours", "reversal_delay_hours_max", "fraud_burst_count"),
+            probabilities=(
+                "reversal_probability",
+                "fraud_burst_probability",
+                "settlement_success_rate",
+            ),
+        )
 
 
 @dataclass

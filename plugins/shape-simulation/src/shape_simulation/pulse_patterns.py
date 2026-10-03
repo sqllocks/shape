@@ -36,6 +36,7 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 from shape_simulation._patterns import (
     TablesResult,
     as_table,
+    check_settings,
     float_array,
     float_values,
     pick,
@@ -91,6 +92,20 @@ class PulseDemandConfig:
     live_window_minutes: int = 120
     ping_interval_seconds: int = 20
     max_live_trips: int = 400
+
+    def __post_init__(self) -> None:
+        check_settings(
+            self,
+            positive=("surge_bucket_minutes", "ping_interval_seconds"),
+            non_negative=(
+                "surge_events_per_week",
+                "surge_recent_days",
+                "eta_noise_minutes",
+                "gps_jitter_meters",
+                "live_window_minutes",
+                "max_live_trips",
+            ),
+        )
 
 
 @dataclass

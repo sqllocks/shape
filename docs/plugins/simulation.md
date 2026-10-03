@@ -127,7 +127,9 @@ simulation and of the base tables. `financial`, `iot` and `pulse` first generate
 tables with the engine from `--domain` (an installed domain, or a generation schema file; the
 pattern's own domain by default) at `--scale`. `-o DIR` writes `<table>.<format>` and
 `stats.json`; `--events TABLE` prints that table's rows as JSON-lines events on standard output;
-`--json` prints a summary. Exit codes: `0` done, `2` bad input.
+`--json` prints a summary. Exit codes: `0` done, `2` bad input. A setting a simulator cannot use (text for a number, a probability
+outside [0, 1], a zero interval it divides by, an empty page or device list, a `service_count` other
+than 1 to 8) is refused when the configuration is made, with a message that names it.
 
 ## Streams and chaos
 

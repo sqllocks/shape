@@ -20,6 +20,7 @@ joins to ``result.traces``; the other events keep ids of their own.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, ClassVar
@@ -29,6 +30,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape_simulation._patterns import (
     TablesResult,
+    check_settings,
     float_array,
     parse_start,
     pick,
@@ -143,6 +145,36 @@ class OperationalLogConfig:
     error_burst_probability: float = 0.03
     error_burst_count: int = 50
     seed: int = 42
+
+    def __post_init__(self) -> None:
+        check_settings(
+            self,
+            positive=("latency_mean_ms",),
+            non_negative=(
+                "duration_hours",
+                "events_per_hour",
+                "latency_std_ms",
+                "latency_spike_multiplier",
+                "latency_spike_duration_minutes",
+                "outage_duration_minutes",
+                "trace_depth_mean",
+                "error_burst_count",
+            ),
+            probabilities=(
+                "latency_spike_probability",
+                "outage_probability",
+                "outage_error_rate",
+                "error_burst_probability",
+            ),
+        )
+        if not self.services and not 1 <= self.service_count <= len(DEFAULT_SERVICES):
+            raise ValueError(
+                f"service_count must be between 1 and {len(DEFAULT_SERVICES)} (the built-in "
+                f"services), got {self.service_count!r}; pass services= for others"
+            )
+        for service in self.services:
+            if not isinstance(service, Mapping) or not service.get("name"):
+                raise ValueError(f"services: every service needs a 'name', got {service!r}")
 
 
 @dataclass

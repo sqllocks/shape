@@ -25,6 +25,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape_simulation._patterns import (
     TablesResult,
+    check_settings,
     float_array,
     parse_start,
     pick,
@@ -145,6 +146,17 @@ class ClickstreamConfig:
     seed: int = 42
 
     def __post_init__(self) -> None:
+        check_settings(
+            self,
+            non_negative=(
+                "users",
+                "duration_hours",
+                "avg_sessions_per_user",
+                "avg_pages_per_session",
+            ),
+            probabilities=("bounce_rate", "funnel_drop_rate", "bot_fraction"),
+            non_empty=("page_pool", "referrer_sources", "device_types"),
+        )
         # a bot session is the pages it crawls: without one it has no first page or time
         if self.bot_traffic_enabled and not self.bot_pages_per_session >= 1:
             raise ValueError(
