@@ -88,9 +88,11 @@ def _pairs(a: argparse.Namespace, second: str) -> tuple[dict[str, Any], dict[str
     return real, other, missing
 
 
-def _emit(report: dict[str, Any], out: str | None, text: str | None = None) -> None:
+def _emit(report: dict[str, Any], outs: Any, text: str | None = None) -> None:
+    """Write the JSON report to every file in ``outs`` (a path, a list of them or None) and
+    print it (or ``text``)."""
     raw = json.dumps(report, indent=2, sort_keys=True, allow_nan=False) + "\n"
-    if out:
+    for out in [outs] if isinstance(outs, str) else outs or ():
         Path(out).write_text(raw, encoding="utf-8")
     sys.stdout.write(text if text is not None else raw)
 
@@ -99,6 +101,9 @@ def run_fidelity(a: argparse.Namespace) -> int:
     """``shape fidelity REFERENCE SYNTHETIC --tier N``: 0 when the tier's gates hold, 1 when not."""
     if a.format not in ("json", "text"):
         raise ValueError("a tier report is printed as json or text (--format)")
+    for out in a.output:
+        if Path(out).suffix.lower() != ".json":
+            raise ValueError(f"a tier report is written as JSON: name it .json, not {out}")
     real, synth, missing = _pairs(a, "csv")
     report: dict[str, Any] = {"tier": a.tier, "tables": {}, "notes": []}
     passed = not missing
@@ -117,11 +122,7 @@ def run_fidelity(a: argparse.Namespace) -> int:
     report["passed"] = passed
     for note in report["notes"]:
         print(f"shape: note: {note}", file=sys.stderr)
-    _emit(
-        report,
-        a.output[0] if a.output else None,
-        "\n".join(text) + "\n" if a.format == "text" else None,
-    )
+    _emit(report, a.output, "\n".join(text) + "\n" if a.format == "text" else None)
     return 0 if passed else 1
 
 

@@ -83,6 +83,8 @@ def _run(fn, a):
     restore = _notices_to_stderr()
     try:
         return fn(a)
+    except BrokenPipeError:
+        return errors.pipe_closed()
     except errors.EXPECTED as exc:
         if errors.debug_enabled():
             raise
@@ -551,6 +553,13 @@ def _cmd_fidelity(a):
         from shape.cli.tiers import run_fidelity
 
         return run_fidelity(a)
+    from shape.plugins.host import default_host
+
+    formats = sorted(default_host().names("shape.reports"))
+    if a.format not in formats:
+        raise ValueError(
+            f"--format {a.format}: no such report format; use one of {', '.join(formats)}"
+        )
     from shape.generation.report import Thresholds, compare_tables, render_report
     from shape.quality import load_tables
 
@@ -760,6 +769,40 @@ def _cmd_explain(a):
     return 0
 
 
+def _profile_only_diff_flags(a):
+    """The ``shape diff`` options given that only the profile engine reads."""
+    given = [flag for flag, key, _ in _DIFF_THRESHOLD_FLAGS if getattr(a, f"th_{key}") is not None]
+    for flag, value in (
+        ("--threshold", a.threshold),
+        ("--column-threshold", a.column_threshold),
+        ("--ignore", a.ignore),
+        ("--only", a.only),
+        ("--policy", a.policy),
+    ):
+        if value:
+            given.append(flag)
+    return given
+
+
+def _cmd_diff_documents(a):
+    """``shape diff`` of two captures or evidence documents: 0, or 1 under ``--fail-on-drift``
+    when anything changed. Thresholds and column filters are the profile engine's; they are
+    refused here rather than silently ignored."""
+    from shape.drift import compare
+
+    flags = _profile_only_diff_flags(a)
+    if flags:
+        raise ValueError(
+            f"{', '.join(flags)} apply to profiles (`shape profile SRC -o X.shape`); a diff of "
+            "two captures takes --json and --fail-on-drift only"
+        )
+    changes = [asdict(v) for v in compare(_load_json(a.before), _load_json(a.after))]
+    if a.json:
+        _write_json(a.json, changes)
+    _dump(changes)
+    return 1 if (a.fail_on_drift and changes) else 0
+
+
 def _cmd_verify(a):
     """``shape verify``: a ``.shape`` artifact is checked for its signature, anything else is
     data for the validation gates."""
@@ -892,12 +935,11 @@ def _cmd_from_ddl(a):
     """``shape from-ddl FILE``: read ``CREATE TABLE`` DDL, write a generation schema."""
     from pathlib import Path
 
+    from shape.cli.validate import read_text
     from shape.generation.ddl import from_ddl
 
     src = Path(a.input_file)
-    schema, notes = from_ddl(
-        src.read_text(encoding="utf-8"), domain=a.domain, smart=a.smart, scale=a.scale
-    )
+    schema, notes = from_ddl(read_text(src), domain=a.domain, smart=a.smart, scale=a.scale)
     out = Path(a.output) if a.output else src.with_suffix(".gen.json")
     _write_json(out, schema.to_dict())
     print(f"Shape DDL import{' (smart)' if a.smart else ''}")
@@ -1098,8 +1140,11 @@ def _build_parser(plugin_commands=()):
     from shape.cli.doctor import add_arguments as add_doctor_arguments
 
     add_doctor_arguments(dr)
-    sub.add_parser("conformance")
-    sub.add_parser("version")
+    sub.add_parser(
+        "conformance",
+        help="run Shape's built-in conformance suite (exit 1 if a check fails)",
+    )
+    sub.add_parser("version", help="print the versions of Shape, its specification and format")
     pl = sub.add_parser("plugins", help="inspect installed plugins")
     pls = pl.add_subparsers(dest="plugins_cmd", required=True)
     pll = pls.add_parser("list", help="list installed plugins (imports none of them)")
@@ -1455,9 +1500,16 @@ def _build_parser(plugin_commands=()):
     vf.add_argument("--strict", action="store_true", help="exit 1 on warnings too")
     add_project_flags(vf, source=False)
     add_changes_flags(vf)
-    qu = sub.add_parser("quality")
-    qu.add_argument("csv")
-    qu.add_argument("--reference")
+    qu = sub.add_parser(
+        "quality",
+        help="check data against rules inferred from a capture (exit 1 on an error violation)",
+    )
+    qu.add_argument("csv", metavar="DATA", help="a CSV, Parquet or JSONL file")
+    qu.add_argument(
+        "--reference",
+        metavar="CAPTURE.json",
+        help="the capture the rules come from (default: a capture of DATA itself)",
+    )
     from shape.cli.generation import add_arguments as add_generation_arguments
 
     add_generation_arguments(sub)
@@ -1556,28 +1608,39 @@ def _build_parser(plugin_commands=()):
         action="append",
         default=[],
         metavar="REPORT",
-        help="write a report; .json, .md or .html by extension (repeatable)",
+        help="write a report; .json, .md or .html by extension (repeatable; a --tier report "
+        "is .json only)",
     )
     fi.add_argument(
         "--format",
         default="json",
         help="what to print: a shape.reports format such as json, md or html (default json)",
     )
-    k = sub.add_parser("key")
-    k.add_argument("csv")
-    k.add_argument("fields", nargs="+")
-    f = sub.add_parser("fd")
-    f.add_argument("csv")
-    f.add_argument("--determinant", nargs="+", required=True)
-    f.add_argument("--dependent", required=True)
-    q = sub.add_parser("privacy-k")
-    q.add_argument("csv")
-    q.add_argument("fields", nargs="+")
-    cq = sub.add_parser("query")
-    cq.add_argument("shape")
-    cq.add_argument("expression")
+    k = sub.add_parser("key", help="whether FIELDS together identify every row of DATA")
+    k.add_argument("csv", metavar="DATA", help="a CSV, Parquet or JSONL file")
+    k.add_argument("fields", nargs="+", metavar="FIELD")
+    f = sub.add_parser("fd", help="whether --determinant columns decide the --dependent column")
+    f.add_argument("csv", metavar="DATA", help="a CSV, Parquet or JSONL file")
+    f.add_argument("--determinant", nargs="+", required=True, metavar="COLUMN")
+    f.add_argument("--dependent", required=True, metavar="COLUMN")
+    q = sub.add_parser(
+        "privacy-k", help="the k-anonymity of DATA over the quasi-identifiers FIELDS"
+    )
+    q.add_argument("csv", metavar="DATA", help="a CSV, Parquet or JSONL file")
+    q.add_argument("fields", nargs="+", metavar="FIELD")
+    cq = sub.add_parser(
+        "query", help="evaluate an expression against a capture or model (not a profile)"
+    )
+    cq.add_argument("shape", metavar="EVIDENCE", help="a capture or model, JSON or .shape")
+    cq.add_argument("expression", metavar="EXPRESSION")
     cq.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
-    ck = sub.add_parser("check", help="check a profile against a contract")
+    ck = sub.add_parser(
+        "check",
+        help="check a profile against a contract",
+        description="Check a profile (or a captured evidence document) against a contract. "
+        "Exit 0 when it passes, 1 when a profile fails it, 4 when an evidence document fails "
+        "it, 2 for bad input.",
+    )
     ck.add_argument("shape", metavar="PROFILE.shape")
     ck.add_argument(
         "contract",
@@ -1601,7 +1664,8 @@ def _build_parser(plugin_commands=()):
         help="compare two Shape models (not profiles; use `shape diff` for those)",
         description="Check whether AFTER is compatible with BEFORE. Both are Shape model "
         "artifacts (`shape capture ... -o X.shape`) or model JSON; profiles written by "
-        "`shape profile` are compared with `shape diff`.",
+        "`shape profile` are compared with `shape diff`. Exit 0 when compatible, 5 when not, "
+        "2 for bad input.",
     )
     co.add_argument("before", metavar="BEFORE", help="a model .shape or model JSON")
     co.add_argument("after", metavar="AFTER", help="a model .shape or model JSON")
@@ -1628,9 +1692,13 @@ def _build_parser(plugin_commands=()):
         help="apply a decision file (`shape proposals`): accepted relationships are kept",
     )
     gp.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
-    fc = sub.add_parser("certify-shapes")
-    fc.add_argument("target")
-    fc.add_argument("observed")
+    fc = sub.add_parser(
+        "certify-shapes",
+        help="score how closely an observed model matches a target model (exit 3 below "
+        "--threshold)",
+    )
+    fc.add_argument("target", metavar="TARGET", help="a model .shape or model JSON")
+    fc.add_argument("observed", metavar="OBSERVED", help="a model .shape or model JSON")
     fc.add_argument(
         "--threshold",
         type=float,
@@ -1666,6 +1734,7 @@ def _version():
 
 
 _GLOBAL_VALUE_OPTIONS = ("--log-level", "--metrics")
+_LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
 
 
 def _split_global(argv):
@@ -1719,6 +1788,13 @@ def main(argv=None):
         from shape.cli import auth
 
         auth.release()  # a Kerberos credential cache never outlives the command
+    if argv is None:
+        from shape.cli import errors
+
+        try:
+            sys.stdout.flush()  # what is still buffered, while a closed pipe can be handled
+        except BrokenPipeError:
+            code = errors.pipe_closed()
     if lifecycle.exit_on_return:
         lifecycle.exit_now(code)
     return code
@@ -1755,6 +1831,20 @@ def _logged(opts, argv):
     lifecycle.quick_exit_allowed = False  # the log line and metrics file come after the command
     import logging
     import time
+
+    # Checked before the command runs: a bad option must not cost the work, or hide its result.
+    if opts["log_json"] and str(opts["log_level"]).upper() not in _LOG_LEVELS:
+        raise ValueError(
+            f"--log-level {opts['log_level']}: use one of {', '.join(_LOG_LEVELS)} "
+            "(or SHAPE_LOG_LEVEL)"
+        )
+    if opts["metrics"]:
+        folder = os.path.dirname(os.path.abspath(opts["metrics"]))
+        if not os.path.isdir(folder) or os.path.isdir(opts["metrics"]):
+            raise ValueError(
+                f"--metrics {opts['metrics']}: cannot write there (the folder {folder} does not "
+                "exist, or the path is a folder)"
+            )
 
     from shape import runlog
 
@@ -1822,11 +1912,26 @@ def _cmd_evidence(a):
         raise ValueError("shape check needs CONTRACT.json")
     contract = _load_json(a.contract)
     r = evaluate_contract(s, contract)
-    _dump(r.to_dict())
+    out = r.to_dict()
+    if a.json:
+        _write_json(a.json, out)
+    _dump(out)
     return 0 if r.passed else 4
 
 
 def _dispatch(argv):
+    """Run the command; every "artifact not verified" notice it raises is one ``shape: note:``
+    line, whichever command reads the artifact (docs/SIGNING.md)."""
+    restore = _notices_to_stderr()
+    try:
+        return _dispatch_command(argv)
+    finally:
+        import warnings
+
+        warnings.showwarning = restore
+
+
+def _dispatch_command(argv):
     if argv[:1] in (["--version"], ["-V"]):
         print(f"shape {_version()}")
         return 0
@@ -2031,20 +2136,19 @@ def _dispatch(argv):
 
         return run_doctor(a)
     if a.cmd == "conformance":
+        from shape.cli.errors import quiet_notices
         from shape.validation.suite import conformance
 
-        r = conformance()
+        with quiet_notices():
+            r = conformance()
         _dump([asdict(x) for x in r])
         return 0 if all(x.passed for x in r) else 1
     if a.cmd == "capture":
         return _run(_cmd_capture, a)
     if a.cmd == "diff":
-        from shape.drift import compare
-
         if a.after is None:
             raise ValueError("shape diff needs BASE.shape and CURRENT.shape")
-        _dump([asdict(v) for v in compare(_load_json(a.before), _load_json(a.after))])
-        return 0
+        return _cmd_diff_documents(a)
     if a.cmd in ("show", "inspect"):
         return _run(_cmd_inspect, a)
     if a.cmd == "validate":
@@ -2059,7 +2163,7 @@ def _dispatch(argv):
         ref = _load_json(a.reference) if a.reference else capture_rows(rows).to_dict()
         result = validate_rows(rows, infer_rules(ref))
         _dump({"passed": result.passed, "violations": [asdict(v) for v in result.violations]})
-        return 0 if result.passed else 2
+        return 0 if result.passed else 1
     if a.cmd == "drift":
         from shape.cli.tiers import run_drift
 

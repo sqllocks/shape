@@ -12,15 +12,19 @@ failed contract, an incompatible change).
 
 from __future__ import annotations
 
+import contextlib
 import os
 import re
 import sys
 import zipfile
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 
 from shape.errors import ShapeError
 
 EXIT_INPUT_ERROR = 2
+#: The reader of standard output went away (``shape ... | head``): 128 + SIGPIPE, as a shell
+#: reports a Unix tool that stopped on a closed pipe.
+EXIT_PIPE_CLOSED = 141
 
 #: The exception types that mean "the user gave something Shape cannot use". ``JSONDecodeError``
 #: is a ``ValueError`` and ``FileNotFoundError`` an ``OSError``, so both are covered.
@@ -60,6 +64,8 @@ def describe(exc: BaseException) -> str:
         return f"file not found: {found['path']}" if found else str(exc)
     if isinstance(exc, KeyError):
         key = exc.args[0] if exc.args else ""
+        if isinstance(key, str) and " " in key.strip():
+            return " ".join(key.split())  # a message, not the name of a missing key
         return f"missing key {key!r} in the input"
     if isinstance(exc, ValueError) and type(exc).__name__ == "JSONDecodeError":
         return f"not valid JSON: {exc}"
@@ -81,10 +87,37 @@ def fail(exc: BaseException) -> int:
     return code if isinstance(code, int) and not isinstance(code, bool) else EXIT_INPUT_ERROR
 
 
+@contextlib.contextmanager
+def quiet_notices() -> Iterator[None]:
+    """Reads raise no "not verified" notice in this block: for files Shape itself wrote a moment
+    ago (temporary copies, a self-test), whose names mean nothing to the user."""
+    from shape.artifact.io import set_notice_handler
+
+    previous = set_notice_handler(lambda _message: None)
+    try:
+        yield
+    finally:
+        set_notice_handler(previous)
+
+
+def pipe_closed() -> int:
+    """Stop quietly when standard output's reader has gone: point standard output at the null
+    device so the interpreter's last flush cannot fail again, and return 141."""
+    try:
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())
+    except (OSError, ValueError):  # no file descriptor (a test's captured stdout)
+        pass
+    return EXIT_PIPE_CLOSED
+
+
 def guarded(fn: Callable[[], int], *, debug: bool = False) -> int:
-    """Run ``fn`` and turn an expected error into a message and exit code 2."""
+    """Run ``fn`` and turn an expected error into a message and exit code 2 (a closed standard
+    output is not an error: exit 141, nothing printed)."""
     try:
         return fn()
+    except BrokenPipeError:
+        return pipe_closed()
     except EXPECTED as exc:
         if debug_enabled(debug):
             raise

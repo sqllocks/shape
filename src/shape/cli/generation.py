@@ -198,8 +198,11 @@ def add_arguments(sub: Any) -> None:
 # ---- targets ------------------------------------------------------------------------------
 
 
+_SCHEMA_SUFFIXES = (".json", ".yaml", ".yml")
+
+
 def _is_file(target: str) -> bool:
-    return Path(target).is_file() or target.lower().endswith(".json")
+    return Path(target).is_file() or target.lower().endswith(_SCHEMA_SUFFIXES)
 
 
 def load_target(target: str, mode: str | None = None) -> GenSchema:
@@ -207,7 +210,9 @@ def load_target(target: str, mode: str | None = None) -> GenSchema:
     from shape.generation.schema import GenSchema
 
     if _is_file(target):
-        document = json.loads(Path(target).read_text(encoding="utf-8"))
+        from shape.cli.validate import load_document
+
+        document = load_document(Path(target))  # JSON, or YAML for .yaml / .yml
         schema = GenSchema.from_dict(document)
         if schema.generators:
             from shape.generation import versions
@@ -368,7 +373,7 @@ def _generate_schema(
     run = current()
     _check_scale(schema, a.scale)
     kwargs: dict[str, Any] = {}
-    if a.chunk_rows:
+    if a.chunk_rows is not None:
         kwargs["chunk_rows"] = a.chunk_rows
     unknown = sorted(set(per_table) - set(schema.tables))
     if unknown:
@@ -422,7 +427,7 @@ def _generate_from_profile(a: argparse.Namespace, rows: int | None) -> int:
         file=sys.stderr,
     )
     kwargs: dict[str, Any] = {}
-    if a.chunk_rows:
+    if a.chunk_rows is not None:
         kwargs["chunk_rows"] = a.chunk_rows
     engine = Engine(schema, scale=a.scale or PRESET, seed=a.seed, **kwargs)
     run.set(

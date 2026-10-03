@@ -11,6 +11,7 @@ environment that is not activated, a CI step, a notebook). Both start the same p
 | 1 | a check failed, drift was found, a signature or leak scan failed, or constraints did not hold after `--sql-constraints disable` loaded the rows (the error names each one) |
 | 2 | bad input: a missing or unreadable file, the wrong kind of file, a bad argument |
 | 3 and above | a command's own verdict (a certificate below its threshold, a failed contract, an incompatible change); each command's `--help` says which |
+| 141 | standard output was closed before the command finished (`shape ... \| head`); nothing is printed |
 
 The classes, and what is stable about each command, are promised in
 [CLI_STABILITY.md](CLI_STABILITY.md).
@@ -67,6 +68,9 @@ the policy.
 - `shape check`, `shape diff`, `shape plan`, `shape generate --from` read profiles. `shape check
   --data DATA` also checks the contract's `timeseries` and `reconcile` rules against data
   (`docs/VERIFY.md`).
+  `shape diff` also compares two captures (`shape capture ... -o X.json`): it prints the changes,
+  writes them with `--json OUT`, and exits 1 under `--fail-on-drift` when there is any. The
+  thresholds, `--ignore`, `--only` and `--policy` are the profile engine's and are refused there.
 - `shape explain DIFF.json` explains a `shape diff --json` or `shape drift` result in plain
   English, deterministically (`docs/EXPLAIN.md`).
 - `shape rules mutate DATA CONTRACT.json` plants the corruptions of `shape chaos` one at a time and
@@ -128,6 +132,10 @@ the policy.
   JSON, Markdown or HTML (`-o`, by extension). Exit 0 when every section that ran passed, 1 when
   one failed or a `--require`d one did not run, 2 for unusable input. See
   [REPORT_CARD.md](REPORT_CARD.md).
+- A generation schema file (what `shape from-ddl` and `shape learn` write) is JSON, or YAML when
+  it is named `.yaml` or `.yml` (needs PyYAML). Every command that takes one (`generate`,
+  `describe`, `presets`, `emit`, `stream`, `continue`, `time-travel`, `chaos`, `generate-drift`,
+  `validate`) reads both.
 - `shape proposals propose|list|decide` keeps the answers to what a profile cannot settle alone
   (foreign keys, personal data, meaning) in a decision file; `shape generate --from` and
   `shape plan` take it with `--decisions`. See [PROPOSALS.md](PROPOSALS.md).

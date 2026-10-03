@@ -367,7 +367,7 @@ def _reg_save(a: argparse.Namespace) -> int:
 
     reg = _registry(a)
     if not Path(a.source).exists():
-        return _err(f"not found: {a.source}")
+        return _err(f"file not found: {a.source}")
     prof = (
         shape.load(a.source)
         if Path(a.source).is_file() and _is_shape(a.source)
@@ -407,8 +407,9 @@ def _reg_save(a: argparse.Namespace) -> int:
 def _reg_delete(a: argparse.Namespace) -> int:
     reg = _registry(a)
     if not reg.exists(a.identity):
-        print(f"shape: profile {a.identity!r} not found.", file=sys.stderr)
-        return 1
+        from shape.registry.profiles import ProfileRegistryError
+
+        raise ProfileRegistryError(f"profile not found: {a.identity}")
     reg.delete(a.identity)
     print(f"Deleted: {a.identity}")
     return 0

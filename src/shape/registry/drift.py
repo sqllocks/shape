@@ -208,15 +208,24 @@ def _changed(a: Any, b: Any, prefix: str = "") -> dict[str, dict[str, Any]]:
 def _drift_raw(first: bytes, second: bytes) -> dict[str, Any]:
     """``shape diff`` of two raw profile artifacts."""
     import shape
+    from shape.artifact.io import set_notice_handler
 
-    with tempfile.TemporaryDirectory() as tmp:
-        paths = []
-        for i, blob in enumerate((first, second)):
-            path = Path(tmp) / f"{i}.shape"
-            path.write_bytes(blob)
-            paths.append(path)
-        result: dict[str, Any] = shape.diff(shape.load(paths[0]), shape.load(paths[1])).to_dict()
-        return result
+    # The registry checked the bytes against their content id; the temporary copies' names
+    # would only confuse a "not verified" note.
+    previous = set_notice_handler(lambda _message: None)
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            paths = []
+            for i, blob in enumerate((first, second)):
+                path = Path(tmp) / f"{i}.shape"
+                path.write_bytes(blob)
+                paths.append(path)
+            result: dict[str, Any] = shape.diff(
+                shape.load(paths[0]), shape.load(paths[1])
+            ).to_dict()
+            return result
+    finally:
+        set_notice_handler(previous)
 
 
 def diff_versions(registry: Any, name: str, ref1: str, ref2: str) -> dict[str, Any]:

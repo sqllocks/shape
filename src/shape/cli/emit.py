@@ -15,6 +15,7 @@ import argparse
 import json
 import signal
 import sys
+from pathlib import Path
 from typing import Any
 
 SINKS_HELP = (
@@ -509,6 +510,18 @@ def run(a: argparse.Namespace) -> int:
         raise ShapeError("--out-of-order must be between 0 and 1")
     if a.anomaly_fraction < 0 or a.anomaly_fraction > 1:
         raise ShapeError("--anomaly-fraction must be between 0 and 1")
+    for flag, value in (
+        ("--duplicate-fraction", a.duplicate_fraction),
+        ("--poison-fraction", a.poison_fraction),
+    ):
+        if not 0 <= value <= 1:
+            raise ShapeError(f"{flag} must be between 0 and 1")
+    if a.retries < 0:
+        raise ShapeError("--retries must be 0 or more")
+    if a.checkpoint_every < 1:
+        raise ShapeError("--checkpoint-every must be at least 1 event")
+    if a.live_report and Path(a.live_report).suffix.lower() not in _LIVE_REPORT_SUFFIXES:
+        raise ShapeError(f"cannot tell the format of {a.live_report}: use .json, .md or .html")
     if a.burst and not a.realtime:
         raise ShapeError("--burst needs --realtime")
     if a.max_rate is not None and a.max_rate <= 0:
@@ -637,6 +650,9 @@ def run(a: argparse.Namespace) -> int:
                 file=out,
             )
     return code
+
+
+_LIVE_REPORT_SUFFIXES = (".json", ".md", ".html", ".htm")
 
 
 class _NullSink:

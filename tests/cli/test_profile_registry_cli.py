@@ -233,7 +233,7 @@ def test_registry_delete(orders: Path, root: str):
     assert r.returncode == 0 and "Deleted" in r.stdout
     assert not (Path(root) / "crm").exists()  # empty folders go too
     assert json.loads(cli("profile", "registry", "list", "--root", root, "--json").stdout) == []
-    assert cli("profile", "registry", "delete", "crm/orders/v1", "--root", root).returncode == 1
+    assert cli("profile", "registry", "delete", "crm/orders/v1", "--root", root).returncode == 2
     assert cli("profile", "registry", "delete", "../../etc/passwd", "--root", root).returncode == 2
 
 

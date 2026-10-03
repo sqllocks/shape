@@ -300,7 +300,9 @@ def cmd_continue(a: argparse.Namespace) -> int:
     tables = read_tables(a.input)
     transitions: dict[str, dict[str, dict[str, float]]] = {}
     if a.transitions:
-        transitions = json.loads(Path(a.transitions).read_text(encoding="utf-8"))
+        from shape.cli.validate import load_document
+
+        transitions = load_document(Path(a.transitions))
     seed = a.seed if a.seed is not None else schema.model.seed
     config = ContinueConfig(
         insert_count=a.inserts,

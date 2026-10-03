@@ -7,6 +7,7 @@ when it runs.
 from __future__ import annotations
 
 import argparse
+import errno
 import json
 from pathlib import Path
 from typing import Any
@@ -50,10 +51,27 @@ def _sources(path: Path, fmt: str | None) -> dict[str, Path] | Path:
             raise ValueError(f"no {fmt or 'csv'} files found in {path}")
         return {p.stem: p for p in files}
     if not path.is_file():
-        raise ValueError(f"path not found: {path}")
+        raise FileNotFoundError(errno.ENOENT, "file not found", str(path))
     if fmt is not None and path.suffix.lower().lstrip(".") not in (fmt, "ndjson"):
         raise ValueError(f"{path} is not a {fmt} file")
     return path
+
+
+def _non_finite(obj: Any, path: list[str] | None = None) -> tuple[list[str], float] | None:
+    """The path and value of the first infinite or NaN number in ``obj``, or None."""
+    import math
+
+    path = path or []
+    if isinstance(obj, float) and not math.isfinite(obj):
+        return path, obj
+    items = (
+        obj.items() if isinstance(obj, dict) else enumerate(obj) if isinstance(obj, list) else ()
+    )
+    for key, value in items:
+        found = _non_finite(value, [*path, str(key)])
+        if found is not None:
+            return found
+    return None
 
 
 def run(a: argparse.Namespace) -> int:
@@ -71,7 +89,17 @@ def run(a: argparse.Namespace) -> int:
             if path.is_dir()
             else path.with_suffix(".schema.json")
         )
-    out.write_text(json.dumps(schema.to_dict(), indent=2) + "\n", encoding="utf-8")
+    document = schema.to_dict()
+    bad = _non_finite(document)
+    if bad is not None:
+        at, value = bad
+        where = f"column {at[1]}.{at[3]}" if at[:1] == ["tables"] and len(at) > 3 else ""
+        raise ValueError(
+            f"the inferred schema holds {value} at {'.'.join(at)}"
+            + (f" ({where}: its values overflow a float)" if where else "")
+            + f", which JSON cannot hold; {out} was not written"
+        )
+    out.write_text(json.dumps(document, indent=2, allow_nan=False) + "\n", encoding="utf-8")
 
     tables: dict[str, dict[str, Any]] = {
         name: {

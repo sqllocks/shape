@@ -116,7 +116,7 @@ def build_request(a: argparse.Namespace) -> dict[str, Any]:
         raise ValueError(f"--scale-mode writes through sinks: drop --format {a.format}")
     if a.from_profile or a.rows is not None:
         raise ValueError("--scale-mode does not combine with --from or --rows")
-    if a.chunk_rows:
+    if a.chunk_rows is not None:
         raise ValueError("--scale-mode sizes chunks with --chunk-size")
     sinks = list(a.sink or [])
     config = parse_sink_config(a.sink_config)
@@ -224,10 +224,6 @@ def run_scale(a: argparse.Namespace) -> int:
     normalize(request)  # raises ValueError for anything it rejects, before any work
     if a.dry_run:
         return _dry_run(a, request)
-    if request["scale_mode"] != "fabric_spark" and request["sinks"] == ["memory"]:
-        print(
-            "shape: no -o and no --sink: generating into memory (nothing is kept)", file=sys.stderr
-        )
     jobs = Jobs(_store(a))
     if request["scale_mode"] == "fabric_spark":
         result = scale_generate(

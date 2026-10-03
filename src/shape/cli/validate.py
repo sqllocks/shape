@@ -17,8 +17,10 @@ from pathlib import Path
 from typing import Any
 
 
-def _load(path: Path) -> Any:
-    text = path.read_text(encoding="utf-8")
+def load_document(path: Path) -> Any:
+    """A schema or contract file: YAML for ``.yaml``/``.yml``, else JSON. A file that is not
+    text, or not JSON, raises the usual error with the file named in its message."""
+    text = read_text(path)
     if path.suffix.lower() in (".yaml", ".yml"):
         try:
             import yaml  # type: ignore[import-untyped]  # noqa: F401
@@ -27,7 +29,23 @@ def _load(path: Path) -> Any:
         from shape.security.yamlsafe import safe_load_yaml
 
         return safe_load_yaml(text)
-    return json.loads(text)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as exc:  # the same type, so callers (the bridge) still see it
+        raise json.JSONDecodeError(f"{exc.msg} (in {path})", exc.doc, exc.pos) from None
+
+
+def read_text(path: Path) -> str:
+    """The UTF-8 text of ``path``; a binary file is a ``UnicodeDecodeError`` that names it."""
+    try:
+        return path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        raise UnicodeDecodeError(
+            exc.encoding, exc.object, exc.start, exc.end, f"{exc.reason} (in {path})"
+        ) from None
+
+
+_load = load_document  # the name the bridge imports
 
 
 def kind_of(doc: Any) -> str | None:
@@ -80,7 +98,7 @@ def _validate_contract(doc: dict[str, Any]) -> tuple[dict[str, Any], int]:
 
 def cmd_validate(a: argparse.Namespace) -> int:
     path = Path(a.contract)
-    doc = _load(path)
+    doc = load_document(path)
     kind = kind_of(doc)
     if kind is None:
         raise ValueError(
