@@ -659,7 +659,8 @@ def _diff_column(name: str, base: View, cur: View, th: Mapping[str, Any]) -> lis
     if b_null is not None and c_null is not None and abs(c_null - b_null) > th["null_rate"]:
         out.append(_change(name, "null_rate_change", b_null, c_null, abs(c_null - b_null)))
     out.extend(_diff_cardinality(name, base, cur, th))
-    enough = min(base.non_null, cur.non_null) >= th["min_rows"]
+    # a distribution needs values on both sides, whatever ``min_rows`` (0 is allowed) says
+    enough = min(base.non_null, cur.non_null) >= max(th["min_rows"], 1)
     keyed = base.key_like or cur.key_like
     flag = base.flag and cur.flag
     if base.dtype in _NUMERIC and cur.dtype in _NUMERIC and not keyed and not flag:
