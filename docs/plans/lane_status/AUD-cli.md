@@ -159,3 +159,21 @@ and `::test_all_writes_the_page_and_the_model` need the `shape-fabric` plugin, w
 job does not install. With the fabric test requirements installed, pip pulled pyarrow down to
 19.0.1, which failed three more tests (float16 hashing, landing, ...); with pyarrow 25.0.1 (the
 version the plan pins) they pass.
+
+## Commands and results (this session, after merging origin/build/main-plan 5c91ea5)
+
+- `ruff check src tests plugins benchmarks/vs_spindle`: all checks passed. `ruff format --check`
+  (same scope): 1088 files already formatted. `mypy`: no issues in 436 files.
+  `python scripts/check_user_facing.py`: clean.
+- `SHAPE_KERNEL=rust pytest -m "not emulator and not live" -n 4 --cov=shape.cli`: 7078 passed,
+  2 skipped, 3 failed, 8 errors. `SHAPE_KERNEL=python` (same): 7078 passed, 2 skipped, 3 failed,
+  8 errors. In both modes all of them are pre-existing on INT-15 (see above): the 8 errors are
+  `tests/demo/fabric/*udf*` (no `libodbc.so.2`), two failures are `tests/demo_cmd` semantic-model
+  tests (no `shape-fabric` plugin), and
+  `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references`
+  depends on test order under xdist: it also failed on the baseline run, and the file passes alone
+  in both modes (41 passed).
+- Coverage of `shape.cli`: 83% on INT-15 before this lane, 90% after (3954 statements, 415
+  missed).
+- No benchmark or equivalence verifier output was touched (CLI messages, exit codes and option
+  checks only).
