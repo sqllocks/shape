@@ -9,8 +9,8 @@ bytes. Where the target has a place for it, the rules left out are kept as metad
 or all of it with ``use_meta=True``. Persisted format: the result, ``shape-contract-emit``
 version 1.
 
-Nothing here imports pyarrow, pandas, pandera or Great Expectations until it needs to (the
-pandera and Great Expectations targets are generated text and never do).
+The pandera and Great Expectations targets are generated text: emitting never imports pandera or
+Great Expectations (the ``ddl`` target imports pyarrow, for the SQL sink's table emitter).
 """
 
 from __future__ import annotations

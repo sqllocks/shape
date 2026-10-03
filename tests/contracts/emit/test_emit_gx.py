@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -195,16 +200,43 @@ def test_a_suite_written_by_hand_is_read_for_what_it_has() -> None:
 # -- with Great Expectations installed ----------------------------------------------------
 
 
+_VALIDATE = """
+import json, sys
+import great_expectations as gx
+import pandas as pd
+
+suite = gx.ExpectationSuite(**json.load(open(sys.argv[1], encoding="utf-8")))
+df = pd.read_pickle(sys.argv[2])
+ctx = gx.get_context(mode="ephemeral")
+asset = ctx.data_sources.add_pandas("pd").add_dataframe_asset("a")
+batch = asset.add_batch_definition_whole_dataframe("b").get_batch(
+    batch_parameters={"dataframe": df}
+)
+print("RESULT " + json.dumps(bool(batch.validate(suite).success)))
+"""
+
+
 def validate(suite_text: str, df: Any) -> bool:
-    gx = pytest.importorskip("great_expectations", reason="great_expectations is not installed")
+    """Validate ``df`` against the suite in a subprocess: importing Great Expectations puts cloud
+    SDK names in ``sys.modules``, which other tests in the run assert are absent. The script goes
+    in on stdin: with ``-c``, a pyspark check that Great Expectations triggers ends the process."""
+    if importlib.util.find_spec("great_expectations") is None:
+        pytest.skip("great_expectations is not installed")
     pytest.importorskip("pandas", reason="pandas is not installed")
-    suite = gx.ExpectationSuite(**json.loads(suite_text))
-    ctx = gx.get_context(mode="ephemeral")
-    ds = ctx.data_sources.add_pandas("pd")
-    asset = ds.add_dataframe_asset("a")
-    definition = asset.add_batch_definition_whole_dataframe("b")
-    batch = definition.get_batch(batch_parameters={"dataframe": df})
-    return bool(batch.validate(suite).success)
+    with tempfile.TemporaryDirectory() as tmp:
+        suite_path, frame_path = Path(tmp, "suite.json"), Path(tmp, "frame.pkl")
+        suite_path.write_text(suite_text, encoding="utf-8")
+        df.to_pickle(frame_path)
+        run = subprocess.run(
+            [sys.executable, "-", str(suite_path), str(frame_path)],
+            input=_VALIDATE,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    lines = [line for line in run.stdout.splitlines() if line.startswith("RESULT ")]
+    assert lines, run.stderr[-2000:]
+    return bool(json.loads(lines[-1][len("RESULT ") :]))
 
 
 def frame(rows: int = 20, **change: Any) -> Any:
