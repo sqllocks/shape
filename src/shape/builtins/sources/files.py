@@ -23,6 +23,14 @@ def local_path(uri: str) -> Path:
     return Path(uri)
 
 
+def output_path(uri: str) -> Path:
+    """The local path a sink writes to: :func:`local_path`, but an empty location is an error
+    (``Path("")`` is the current directory, which an unset setting never meant)."""
+    if not str(uri).strip():
+        raise ValueError("the output location is empty (name the current directory with '.')")
+    return local_path(uri)
+
+
 def _csv_options(options: dict[str, Any]) -> CsvOptions | None:
     given = options.pop("csv", None)
     if given is None:

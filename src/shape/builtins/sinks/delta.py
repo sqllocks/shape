@@ -27,7 +27,7 @@ from typing import Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
-from shape.builtins.sources.files import local_path
+from shape.builtins.sources.files import output_path
 from shape.plugins.schemes import require_scheme
 
 CLOUD_PREFIX = "delta+"
@@ -59,7 +59,7 @@ def _location(uri: str, table: str, options: dict[str, Any]) -> tuple[str, dict[
         )
     from shape.security.names import contained
 
-    target = contained(local_path(uri), table)
+    target = contained(output_path(uri), table)
     target.mkdir(parents=True, exist_ok=True)
     extra = {str(k): str(v) for k, v in dict(options.get("storage_options") or {}).items()}
     return str(target), extra or None

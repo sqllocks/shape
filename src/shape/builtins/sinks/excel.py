@@ -12,7 +12,7 @@ from typing import Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
-from shape.builtins.sources.files import local_path
+from shape.builtins.sources.files import output_path
 from shape.io.store import replace_atomically
 from shape.plugins.schemes import require_scheme
 
@@ -33,7 +33,7 @@ class ExcelSink:
             raise ImportError(
                 "writing Excel needs openpyxl: pip install 'sqllocks-shape[excel]'"
             ) from exc
-        path = local_path(uri)
+        path = output_path(uri)
         if path.is_dir() or uri.endswith(("/", "\\")):
             path.mkdir(parents=True, exist_ok=True)
             from shape.security.names import contained
@@ -81,7 +81,7 @@ class ExcelSink:
         from .workbook import write_workbook
 
         require_scheme(self, uri)
-        path = local_path(uri)
+        path = output_path(uri)
         sheets = write_workbook(path, tables, **options)
         return list(sheets.values())
 

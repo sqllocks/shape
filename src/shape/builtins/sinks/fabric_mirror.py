@@ -224,9 +224,9 @@ def _store(uri: str, options: dict[str, Any]) -> _Local | _Remote:
                 "pip install 'sqllocks-shape[azure]'"
             ) from exc
         return _Remote(fs, loc.fs_path)
-    from shape.builtins.sources.files import local_path
+    from shape.builtins.sources.files import output_path
 
-    return _Local(local_path(uri))
+    return _Local(output_path(uri))
 
 
 class FabricMirrorSink:

@@ -23,7 +23,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.types as pat  # type: ignore[import-untyped]
 
 import shape
-from shape.builtins.sources.files import local_path
+from shape.builtins.sources.files import output_path
 from shape.io.store import replace_atomically
 from shape.plugins.schemes import require_scheme
 
@@ -224,7 +224,7 @@ class SqlSink:
     extension = "sql"
 
     def _target(self, uri: str, table: str) -> Path:
-        path = local_path(uri)
+        path = output_path(uri)
         if path.is_dir() or uri.endswith(("/", "\\")):
             path.mkdir(parents=True, exist_ok=True)
             from shape.security.names import contained

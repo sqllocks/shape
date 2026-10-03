@@ -30,7 +30,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.csv as pacsv  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
-from shape.builtins.sources.files import local_path
+from shape.builtins.sources.files import output_path
 from shape.io.landing import render_path
 from shape.io.store import replace_atomically
 from shape.plugins.schemes import require_scheme
@@ -44,7 +44,7 @@ class _FileSink:
     extension = ""
 
     def _target(self, uri: str, table: str, options: dict[str, Any] | None = None) -> Path:
-        path = local_path(uri)
+        path = output_path(uri)
         template = (options or {}).get("path_template")
         if template:
             root = path.resolve()
@@ -73,7 +73,7 @@ class _FileSink:
         require_scheme(self, uri)
         template = options.get("path_template") or DEFAULT_ROLL_TEMPLATE
         return RollingTableWriter(
-            LocalStore(local_path(uri)), table, self, options, template=template
+            LocalStore(output_path(uri)), table, self, options, template=template
         )
 
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
