@@ -171,8 +171,22 @@ class ConnectionRegistry:
             raise ConnectionNotFoundError(
                 f"no connection profile {name!r}. Run: shape demo init --name {name}"
             )
+        entry = data[name]
+        if not isinstance(entry, dict):
+            raise DemoError(
+                f"{self.path}: connection profile {name!r} is not a table of settings, "
+                f"got {type(entry).__name__}"
+            )
         known = {f.name for f in fields(ConnectionProfile)}
-        return ConnectionProfile(**{k: v for k, v in data[name].items() if k in known})
+        settings = {k: v for k, v in entry.items() if k in known}
+        settings["name"] = name  # the key it is stored under
+        for key, value in settings.items():
+            if not isinstance(value, str):
+                raise DemoError(
+                    f"{self.path}: connection profile {name!r}: {key} must be text, "
+                    f"got {type(value).__name__}"
+                )
+        return ConnectionProfile(**settings)
 
     def list(self) -> list[str]:
         return list(self._load_all())
