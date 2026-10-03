@@ -79,10 +79,35 @@ class Timedelta(_dt.timedelta):
 
 
 class Timestamp(_dt.datetime):
-    """Stand-in for pandas.Timestamp (same str()/type name) for min/max of datetime64 columns."""
+    """Stand-in for pandas.Timestamp (same str()/type name) for min/max of datetime64 columns.
+    ``nanosecond`` (0 to 999) is the part below the microsecond of a nanosecond column (#318)."""
+
+    nanosecond: int = 0
 
     def __str__(self) -> str:  # pandas prints 'YYYY-MM-DD HH:MM:SS[.ffffff]' -- same as datetime
-        return _dt.datetime.__str__(self)
+        text = _dt.datetime.__str__(self)
+        if not self.nanosecond:
+            return text
+        # pandas prints nine digits when a nanosecond is set: '...:SS.fffffffff[+HH:MM]'
+        whole = _dt.datetime.__str__(self.replace(microsecond=0))
+        return f"{whole[:19]}.{self.microsecond:06d}{self.nanosecond:03d}{whole[19:]}"
+
+    def __reduce_ex__(self, protocol: Any) -> tuple[Any, ...]:
+        # datetime pickles through __reduce_ex__; keep the nanoseconds through the fork pool
+        plain = _dt.datetime(
+            self.year, self.month, self.day, self.hour, self.minute, self.second,
+            self.microsecond, self.tzinfo, fold=self.fold,
+        )  # fmt: skip
+        return _timestamp, (plain, self.nanosecond)
+
+
+def _timestamp(value: _dt.datetime, nanosecond: int) -> Timestamp:
+    ts = Timestamp(
+        value.year, value.month, value.day, value.hour, value.minute, value.second,
+        value.microsecond, value.tzinfo, fold=value.fold,
+    )  # fmt: skip
+    ts.nanosecond = nanosecond
+    return ts
 
 
 # ---------------------------------------------------------------------------

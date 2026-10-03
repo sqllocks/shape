@@ -333,7 +333,10 @@ def _keys_py(values: pa.Array, kind: str) -> list[str]:
         return (
             cast(list[str], _iso_strings(pc.cast(values, pa.timestamp("s")), "s"))
             if _no_subsecond(values)
-            else [str(_to_timestamp(v)) for v in values.to_pylist()]
+            else [
+                str(_to_timestamp(v, ns))
+                for v, ns in zip(values.to_pylist(), _nanoseconds(values), strict=True)
+            ]
         )
     if kind == "objdate":
         return cast(list[str], _iso_strings(values, "D"))
@@ -349,10 +352,21 @@ def _no_subsecond(ts: pa.Array) -> bool:
     return not np.any(ints % mult)
 
 
-def _to_timestamp(v: _dt.datetime) -> Timestamp:
-    return Timestamp(  # fold keeps the second 01:30 of a DST fall-back on its own offset (#225)
+def _to_timestamp(v: _dt.datetime, nanosecond: int = 0) -> Timestamp:
+    ts = Timestamp(  # fold keeps the second 01:30 of a DST fall-back on its own offset (#225)
         v.year, v.month, v.day, v.hour, v.minute, v.second, v.microsecond, v.tzinfo, fold=v.fold
     )
+    ts.nanosecond = nanosecond
+    return ts
+
+
+def _nanoseconds(ts: Any) -> list[int]:
+    """The part below the microsecond of each value of a timestamp array (0 unless it is in
+    nanoseconds): Python datetimes stop at microseconds (#318)."""
+    if ts.type.unit != "ns":
+        return [0] * len(ts)
+    ints = pc.cast(ts, pa.int64()).to_numpy(zero_copy_only=False)
+    return cast(list[int], (ints % 1000).tolist())
 
 
 def _round6(arr: np.ndarray) -> list[float]:
@@ -962,7 +976,11 @@ def _profile_one_column(c: _Col, row_count: int, top_n: int, keep_uniques: bool)
             top_counts = counts[top]
         keys = _keys_py(top_keys, kind)
         if zoned is not None:
-            keys = [str(v) for v in _aware_datetimes(pc.cast(top_keys, zoned), zoned.tz)]
+            aware = _aware_datetimes(pc.cast(top_keys, zoned), zoned.tz)
+            keys = [
+                str(_to_timestamp(cast(_dt.datetime, v), ns))  # top keys are never null
+                for v, ns in zip(aware, _nanoseconds(top_keys), strict=True)
+            ]
         if kind == "float" and "0.0" in keys:
             zeros = np.flatnonzero(raw_nn == 0)
             if len(zeros) and np.signbit(raw_nn[zeros[0]]):
@@ -985,7 +1003,8 @@ def _profile_one_column(c: _Col, row_count: int, top_n: int, keep_uniques: bool)
                 if zoned is not None:
                     instants = pc.cast(pa.array([lo, hi], non_null.type), zoned)
                     lo, hi = _aware_datetimes(instants, zoned.tz)
-                lo, hi = _to_timestamp(lo), _to_timestamp(hi)
+                ns_lo, ns_hi = _nanoseconds(pa.array([mm["min"], mm["max"]], non_null.type))
+                lo, hi = _to_timestamp(lo, ns_lo), _to_timestamp(hi, ns_hi)
             elif kind in ("uint64", "objint"):
                 lo, hi = int(lo), int(hi)
             min_value, max_value = lo, hi

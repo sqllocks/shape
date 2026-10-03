@@ -528,3 +528,16 @@ def test_nanosecond_timestamps_keep_their_nanoseconds(kernel):
         "1970-01-01 00:00:00.000001500+00:00": 0.25,
         "2001-09-09 01:46:40.123456789+00:00": 0.25,
     }
+
+
+@pytest.mark.skipif(
+    "fork" not in __import__("multiprocessing").get_all_start_methods(), reason="no fork pool"
+)
+def test_nanoseconds_survive_the_fork_pool(monkeypatch):
+    monkeypatch.setenv("PROFILE_POOL", "process")
+    monkeypatch.setenv("PROFILE_THREADS", "2")
+    cols = {f"c{i}": [1, 2, 3, 4] for i in range(8)}
+    cols["t"] = pa.array([1, 2, 2, 5], pa.timestamp("ns"))
+    c = shape.profile(pa.table(cols)).to_dict()["columns"]["t"]
+    assert c["min_value"] == ["timestamp", "1970-01-01 00:00:00.000000001"]
+    assert c["max_value"] == ["timestamp", "1970-01-01 00:00:00.000000005"]
