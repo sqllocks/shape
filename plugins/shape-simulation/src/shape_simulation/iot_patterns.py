@@ -314,7 +314,7 @@ class IoTTelemetrySimulator:
                     base = self._start_us + int(hour) * 3_600_000_000
                     times.append((base + np.round(offsets * 1e6).astype(np.int64)).ravel())
                     who.append(np.repeat(chosen, per_device))
-            lam = max(1, int(cfg.duration_hours / 8))
+            lam = cfg.duration_hours / 8  # about one alert per device per eight hours
             counts = rng.poisson(lam, size=n_devices)
             total = int(counts.sum())
             offsets = rng.uniform(0, cfg.duration_hours * 3600, size=total)
