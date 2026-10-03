@@ -156,3 +156,27 @@ def test_513_a_known_format_is_not_warned_about(retail):
     for fmt in ("parquet", "csv", "jsonl", "json"):
         pack = PackLoader().parse({**FILE_DROP, "file_drop": {"formats": [fmt], "entities": []}})
         assert not any("format" in w for w in PackValidator().validate(pack, retail).warnings)
+
+
+# ---- #514: the same-second suffix keeps the whole run id ---------------------------------------
+
+
+def test_514_a_second_run_in_the_same_second_keeps_scale_and_seed(tmp_path, retail, monkeypatch):
+    from datetime import UTC, datetime
+
+    import shape.scenario.manifest as manifest_module
+
+    class Frozen(datetime):
+        @classmethod
+        def now(cls, tz=None):  # type: ignore[override]
+            return datetime(2026, 1, 2, 3, 4, 5, tzinfo=UTC)
+
+    monkeypatch.setattr(manifest_module, "datetime", Frozen)
+    pack = PackLoader().parse(FILE_DROP)
+    schema = no_presets(retail)
+    ids = [
+        PackRunner().run(pack, schema, "xlarge", 7, tmp_path / "out").manifest.run_id
+        for _ in range(3)
+    ]
+    base = "20260102_030405_retail_xlarge_s7"
+    assert ids == [base, f"{base}_x2", f"{base}_x3"]
