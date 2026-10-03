@@ -607,15 +607,16 @@ def fit_schema(
             elif cp.dtype == "float" and kind in ("distribution", "empirical"):
                 column["scale"] = _inferred_scale(cp)
             items.extend(_plan_column(tname, cp, kind, parent_scale[tname] == tp.row_count))
-        if "_row_id" in doc["tables"][tname]["columns"]:
-            items.append(
-                PlanItem(
-                    f"{tname}._row_id",
-                    _A,
-                    "the table has no key: a surrogate `_row_id` column is added, which the "
-                    "source does not have",
+        for surrogate in doc["tables"][tname]["primary_key"]:
+            if surrogate not in tp.columns:
+                items.append(
+                    PlanItem(
+                        f"{tname}.{surrogate}",
+                        _A,
+                        f"the table has no key: a surrogate `{surrogate}` column is added, which "
+                        "the source does not have",
+                    )
                 )
-            )
         items.extend(_table_items(tname, tp, parent_scale[tname]))
 
     # the copula: calibrated correlations between the numeric, non-key columns

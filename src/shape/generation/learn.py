@@ -217,6 +217,15 @@ def _iso_bound(value: Any) -> str | None:
     return str(value)
 
 
+def surrogate_key(columns: Mapping[str, Any]) -> str:
+    """``_row_id``, or ``_row_id_2``, ``_row_id_3``... when the table already has that column."""
+    name, n = "_row_id", 1
+    while name in columns:
+        n += 1
+        name = f"_row_id_{n}"
+    return name
+
+
 def _is_covered_enum(col: ColumnProfile) -> bool:
     """Whether the profile lists every distinct value of the column."""
     values = col.value_counts_ext or col.enum_values
@@ -350,9 +359,11 @@ class SchemaBuilder:
                 }
             pk = list(tp.primary_key)
             if not pk:
-                # No key detected: add a surrogate so the schema validates and generates.
-                columns["_row_id"] = {
-                    "name": "_row_id",
+                # No key detected: add a surrogate so the schema validates and generates, under a
+                # name the data does not use.
+                surrogate = surrogate_key(columns)
+                columns[surrogate] = {
+                    "name": surrogate,
                     "type": "integer",
                     "generator": {"strategy": "sequence", "start": 1},
                     "nullable": False,
@@ -361,7 +372,7 @@ class SchemaBuilder:
                     "precision": None,
                     "scale": None,
                 }
-                pk = ["_row_id"]
+                pk = [surrogate]
             tables[tname] = {
                 "name": tname,
                 "description": f"Inferred from {tp.row_count} rows",
