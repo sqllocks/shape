@@ -29,7 +29,10 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '${{ matrix.python }}', allow-prereleases: true}
       - run: python -m pip install -U pip
-      - run: pip install -e '.[dev,streaming,advanced]' -e plugins/shape-domains
+      # shape-fabric (with the sqlserver and eventhubs plugins it requires): `shape demo`'s
+      # semantic_model output (tests/demo_cmd) needs it; the plan's environment (§1) installs the
+      # first-party plugins.
+      - run: pip install -e '.[dev,streaming,advanced]' -e plugins/shape-domains -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric
       # T-27 scope: src tests plugins benchmarks/vs_spindle rust (only the paths that exist yet).
       - run: ruff check src tests plugins benchmarks/vs_spindle
       - run: ruff format --check src tests plugins benchmarks/vs_spindle
@@ -79,7 +82,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: python -m pip install -U pip
-      - run: pip install -e '.[dev,streaming,advanced]' -e plugins/shape-domains
+      - run: pip install -e '.[dev,streaming,advanced]' -e plugins/shape-domains -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric
       - name: Prove the namespace has no route out
         run: |
           sudo env "PATH=$PATH" unshare --net -- sh -c 'ip link set lo up
