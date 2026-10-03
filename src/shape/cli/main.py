@@ -941,6 +941,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.jobs import add_arguments as add_jobs_arguments
 
     add_jobs_arguments(sub)
+    from shape.cli.bridge import add_arguments as add_bridge_arguments
+
+    add_bridge_arguments(sub)
     fi = sub.add_parser(
         "fidelity",
         aliases=["compare"],
@@ -1232,6 +1235,10 @@ def _dispatch(argv):
         from shape.cli.jobs import run as run_jobs
 
         return _run(run_jobs, a)
+    if a.cmd == "bridge":
+        from shape.cli.bridge import run as run_bridge
+
+        return _run(run_bridge, a)
     if a.cmd == "transform":
         from shape.cli.transform import run as run_transform
 

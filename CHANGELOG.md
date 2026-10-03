@@ -5,6 +5,19 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `shape bridge` (`docs/BRIDGE.md`): a versioned JSON request/response protocol on standard input
+  and output (`api_version` `1.0`, request id, `result` and `warnings`, or an `error` with a stable
+  code in the groups usage, input, policy, privacy, io, auth and internal). It serves the 17
+  commands of the original JSON bridge (the four `demo_*` commands are specified and answer
+  `policy.capability_unavailable` until `shape demo` exists) plus `profile`, `diff`, `check`,
+  `verify` and `job_status`, `job_cancel`, `job_list`. Long-running commands return a job id
+  (`options.async`); job state is a versioned file per job under `--jobs-dir`, so jobs survive a
+  restart (a job whose process died reads as `interrupted`); large results come back as a file
+  reference with a content id; results never include the raw values of a classified column unless
+  `options.include_raw_values` is set. JSON Schemas for every request and result are published in
+  `docs/bridge/schema/` (`shape bridge schema --out|--check`) with test vectors in
+  `docs/bridge/vectors/`; a compatibility test per command keeps them from changing silently.
+  Harness: `benchmarks/vs_spindle/bridge_1to1/`.
 - `shape generate --scale-mode local_single|local_mp|fabric_spark` and `shape jobs list|status|cancel|resume`
   (`docs/SCALE.md`): the scale router with sinks (memory, Parquet part files, Lakehouse, Warehouse,
   SQL Database, KQL), a durable job store (submit, status, cancel, resume), the `fabric_spark` router
