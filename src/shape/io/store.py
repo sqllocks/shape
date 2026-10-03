@@ -109,7 +109,18 @@ def _clean(rel: str) -> str:
     path = PurePosixPath(rel.replace("\\", "/"))
     if path.is_absolute() or ".." in path.parts:
         raise ValueError(f"{rel!r} leaves the output location")
+    if not path.parts:
+        raise ValueError(f"{rel!r} names no file below the output location")
     return str(path)
+
+
+_TEMP_NAME_KEEP = 200  # bytes of the final name kept in a temporary name (NAME_MAX is 255)
+
+
+def _temp_stem(name: str) -> str:
+    """The start of ``name`` that a temporary name repeats, short enough that the temporary
+    name stays a valid file name whenever ``name`` is one."""
+    return name.encode("utf-8")[:_TEMP_NAME_KEEP].decode("utf-8", errors="ignore")
 
 
 class LocalStore(Store):
@@ -122,7 +133,7 @@ class LocalStore(Store):
     def create(self, rel: str) -> PendingFile:
         target = self._path(rel)
         target.parent.mkdir(parents=True, exist_ok=True)
-        temp = target.parent / f".{target.name}.{uuid.uuid4().hex[:8]}.tmp"
+        temp = target.parent / f".{_temp_stem(target.name)}.{uuid.uuid4().hex[:8]}.tmp"
         return PendingFile(self, rel, str(temp), open(temp, "wb"), str(target))  # noqa: SIM115
 
     def exists(self, rel: str) -> bool:
@@ -196,7 +207,7 @@ class FsspecStore(Store):
     def create(self, rel: str) -> PendingFile:
         final = self._path(rel)
         name = PurePosixPath(final).name
-        temp = f"{self.root}/{TEMP_DIR}/{uuid.uuid4().hex[:12]}-{name}"
+        temp = f"{self.root}/{TEMP_DIR}/{uuid.uuid4().hex[:12]}-{_temp_stem(name)}"
         spool = tempfile.SpooledTemporaryFile(max_size=self._spool_bytes)  # noqa: SIM115
         return PendingFile(self, rel, temp, spool, final)  # type: ignore[arg-type]
 
