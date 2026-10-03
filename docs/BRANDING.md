@@ -18,4 +18,4 @@ The distribution namespace MUST NOT be confused with the Python import namespace
 
 ## What this repository covers
 
-This open-source repository, `sqllocks/shape` (MIT), covers Shape itself: the `sqllocks-shape` distribution, its first-party plugins (`sqllocks-shape-*` built from `plugins/`), the `shape` CLI and the `.shape` format. Shape Hub, Shape Studio and Shape Packs are product names in the Shape family; they are not built from this repository, and this repository does not depend on them. Packs built by anyone through the public plugin entry points are welcome under their own names.
+This open-source repository, `sqllocks/shape` (MIT), covers Shape itself: the `sqllocks-shape` distribution, its first-party plugins (`sqllocks-shape-*` built from `plugins/`), the `shape` CLI and the `.shape` format. Shape Hub and Shape Studio are product names in the Shape family that are not built from this repository, and this repository does not depend on them. Shape Packs is the package and domain ecosystem: it includes the open first-party plugins in this repository and packs published separately through the public plugin entry points.
