@@ -102,6 +102,7 @@ def _files(root: Path) -> list[Path]:
     )
 
 
+@pytest.mark.heavy  # ~960k text values through the date parser: 37 s, 133 s under coverage
 def test_dtype_of_every_column_matches_the_spindle_profiler(t22_data):
     """The reference profiler equals Spindle's DataProfiler field by field (verify.py, 30/30),
     so its dtype is Spindle's dtype; infer_column_type must give the same for each column."""
