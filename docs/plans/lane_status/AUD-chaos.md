@@ -57,7 +57,7 @@ failing, with its output in the commit message.
 | 6 | #404 | fadbb42 | 336b9af | fixed |
 | 7, 8 | #406 | 5812bcd | c11efa6 | fixed (chaos parity `--quick` exit 0 after it) |
 | 9, 10 | #408 | 4ee2219 | 90d61cf | fixed |
-| 11 | #408 | 4ee2219 | reverted in the follow-up commit | **open, for the lead** (below) |
+| 11 | #408 | d8b2f9e | d8b2f9e | fixed (lead decision, below) |
 | 12 | #410 | 7485362 | 1afac7f | fixed |
 | 13 | #414 | 7845c93 | 3d4906c | fixed |
 | 14 | #418 | db4ec57 | 30a6198 | fixed |
@@ -68,24 +68,33 @@ failing, with its output in the commit message.
 | 19 | (none) | | 3d4906c | docstring: `ChaosOverride.params` is not read |
 | 20 | #555 | 58f5340 | 7855de7 | fixed |
 
-### Left open, for the lead
+### Lead decisions (applied in session 2)
 
-* **Finding 11 (`duplicates` with a column).** `tests/diff/test_drift_sweep.py:222` (outside this
-  lane) builds `Corruption("duplicates", 0.6, "orders", "order_id")` and relies on the column being
-  accepted. Refusing it broke that test's collection, so the refusal was reverted and the existing
-  test left unchanged; the column is still silently ignored. Decide whether `duplicates` should
-  refuse a column (and that test drop it) or document that it is ignored.
-* **Outside this lane, not changed:** `src/shape/cli/chaos.py` passes `--seed` and the derived
-  batch straight through; with #408 a negative `--seed` now gets the message "the seed is an
-  integer 0 or more" from `corrupt_tables` instead of numpy's.
+* **Finding 11 (`duplicates` with a column): an error.** `Corruption` and `Corruption.parse` raise
+  `ValueError: duplicates applies to whole rows of a table, not the column 'status': name only the
+  table (duplicates=RATE@TABLE)`. Regression test
+  `tests/chaos/test_groundtruth_audit.py::test_duplicates_refuses_a_column` failed without the
+  refusal and passes with it (in commit d8b2f9e with the fix). `tests/diff/test_drift_sweep.py:222`
+  is now `Corruption("duplicates", 0.6, "orders")`. The sweep's answer key took its column from the
+  corruption, so the duplicates case now reads the table's key column (`order_id`, from the `keys`
+  the sweep already passes), as before. A snapshot of the sweep (SHA-256 of every planted table's
+  Arrow IPC bytes, the `applied` logs and change records, the answer key with every reported kind,
+  and the quiet pairs) is byte-identical before and after, with `SHAPE_KERNEL=rust` and
+  `SHAPE_KERNEL=python`. The false-positive figures are unchanged: 50 quiet pairs, 0 with a change,
+  column false-positive rate 0.0, in both kernels. No other `duplicates`-with-column use in src,
+  tests, plugins, docs, demo or benchmarks (Python, YAML, JSON, notebooks, Markdown);
+  `docs/CHAOS.md` and the CHANGELOG say a column is refused.
+* **CLI seed pass-through: left as is** (lead: the message is now clear and the CLI is outside
+  this lane).
 
 ### Behaviour changes to note
 
 * `corrupt_tables` now raises where it silently did nothing (#403) or wrote wrong values (#401,
   #399 for non-key types). Ground-truth logs are not compared by any equivalence verifier; the
   six categories' output on finite inputs is unchanged (#406 only caps a baseline that overflowed).
-* No gate, tolerance, D-xx or T-xx decision changed; no existing test's expectation changed; no
-  workflow edited.
+* No gate, tolerance, D-xx or T-xx decision changed; no workflow edited. One test outside the
+  lane changed, as the lead decided: `tests/diff/test_drift_sweep.py` drops the ignored column
+  (results identical, above).
 
 ## Commands and results (this session, final tree)
 
