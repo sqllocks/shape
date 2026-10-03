@@ -137,7 +137,7 @@ Without one the command exits 2:
 shape: error: refusing to write to non-local target postgresql://db.example/shape without confirmation; pass --yes or set SHAPE_CONFIRM_REMOTE=1
 ```
 
-Local is a path, `file://`, `jsonl://`, `console`, and a URI whose host is `localhost`,
+Local is a path, `file://`, `jsonl://`, `duckdb://` (a DuckDB file), `console`, and a URI whose host is `localhost`,
 `127.0.0.1` or `::1` (emulators). It applies to each `--to URI`, to `emit --sink URI` other than
 `console`, `file` and `file://`/`jsonl://`, and to a `--scale-mode` `--sink` that is not `memory`,
 `parquet` or a `lakehouse` with a local `base_path` (`warehouse`, `sql_database` and `kql` always

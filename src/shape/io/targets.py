@@ -20,7 +20,8 @@ LOCAL_SCHEMES = frozenset({"file"})
 #: Destinations that never leave the machine: ``console``, the ``file`` emit sink, ``memory`` and
 #: the folder sinks. A URI on one of these hosts is an emulator or a local service.
 LOCAL_NAMES = frozenset({"console", "file", "memory", "parquet"})
-LOCAL_URI_SCHEMES = frozenset({"file", "jsonl"})
+#: ``duckdb://`` is a DuckDB file on this machine: its sink refuses a host (W2-10).
+LOCAL_URI_SCHEMES = frozenset({"file", "jsonl", "duckdb"})
 LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 CONFIRM_ENV = "SHAPE_CONFIRM_REMOTE"
 
@@ -64,7 +65,8 @@ def sink_for_target(target: str) -> tuple[str, Any]:
 
 def is_local_destination(target: str) -> bool:
     """True for a destination that stays on this machine: a path, ``file://``, ``jsonl://``,
-    ``console`` and a URI whose host is ``localhost``, ``127.0.0.1`` or ``::1`` (emulators)."""
+    ``duckdb://`` (a local DuckDB file), ``console`` and a URI whose host is ``localhost``,
+    ``127.0.0.1`` or ``::1`` (emulators)."""
     text = str(target).strip()
     if text.lower() in LOCAL_NAMES:
         return True

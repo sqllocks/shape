@@ -89,6 +89,8 @@ class FakeTerminal(io.StringIO):
         "C:\\data\\out",
         "file:///tmp/out",
         "jsonl:///tmp/out",
+        "duckdb:///out/retail.duckdb",
+        "duckdb:////tmp/out/retail.duckdb?schema=raw",
         "console",
         "file",
         "http://localhost:10000/devstore",

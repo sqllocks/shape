@@ -19,6 +19,12 @@ URI = "mssql://db.example.test/appdb?user=sa"
 PASSWORD = "Sup3r-secret-pw"
 
 
+@pytest.fixture(autouse=True)
+def _confirm_remote(monkeypatch):
+    # About the SQL Server write path, not the confirmation (tests/cli/test_remote_confirmation.py).
+    monkeypatch.setenv("SHAPE_CONFIRM_REMOTE", "1")
+
+
 def _col(name, strategy, type_="integer", **gen):
     return {
         "name": name,

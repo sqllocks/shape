@@ -59,6 +59,12 @@ KINIT = textwrap.dedent(
 )
 
 
+@pytest.fixture(autouse=True)
+def _confirm_remote(monkeypatch):
+    # About the SQL Server write path, not the confirmation (tests/cli/test_remote_confirmation.py).
+    monkeypatch.setenv("SHAPE_CONFIRM_REMOTE", "1")
+
+
 @pytest.fixture
 def kinit(tmp_path, monkeypatch):
     """A fake ``kinit`` first on PATH; ``calls()`` reads what it was run with."""

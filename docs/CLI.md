@@ -175,7 +175,7 @@ the policy.
   `generate --scale-mode --sink`) need `--yes`, or `SHAPE_CONFIRM_REMOTE=1` (exactly `1`), or `y` at
   the prompt on a terminal; otherwise they exit 2 with
   `shape: error: refusing to write to non-local target URI without confirmation; pass --yes or set
-  SHAPE_CONFIRM_REMOTE=1`. Paths, `file://`, `console` and `localhost`/`127.0.0.1`/`::1` are local,
+  SHAPE_CONFIRM_REMOTE=1`. Paths, `file://`, `duckdb://`, `console` and `localhost`/`127.0.0.1`/`::1` are local,
   and `--dry-run` needs no confirmation. See `docs/SINKS.md`.
 - `shape chaos --input DIR` corrupts only tables listed in `DIR/_shape_provenance.json` (matching
   sha256) or Parquet files with the `shape_synthetic` marker; `--allow-real-input` overrides, and
