@@ -43,11 +43,19 @@ def _is_first_party(req: Requirement) -> bool:
     return canonical(req.name).startswith(FIRST_PARTY_PREFIX)
 
 
-def _plugin_dependencies(root: Path, dist: str) -> list[Requirement]:
+def _plugin_dependencies(root: Path, dist: str, extra: str | None = None) -> list[Requirement]:
+    """A plugin's dependencies, or (with ``extra``) the dependencies of that one extra."""
     for path in sorted((root / "plugins").glob("*/pyproject.toml")):
         project = tomllib.loads(path.read_text("utf-8"))["project"]
         if canonical(project["name"]) == canonical(dist):
-            return [Requirement(d) for d in project.get("dependencies", [])]
+            if extra is None:
+                deps = project.get("dependencies", [])
+            else:
+                optional = project.get("optional-dependencies", {})
+                deps = next((v for k, v in optional.items() if canonical(k) == extra), None)
+                if deps is None:
+                    raise SystemExit(f"{project['name']} has no extra {extra!r}")
+            return [Requirement(d) for d in deps]
     return []
 
 
@@ -60,10 +68,15 @@ def _expand(root: Path, reqs: list[Requirement], seen: set[str] | None = None) -
             out.append(req)
             continue
         key = canonical(req.name)
-        if key in seen or key == FIRST_PARTY_PREFIX:
+        if key == FIRST_PARTY_PREFIX:
             continue
-        seen.add(key)
-        out += _expand(root, _plugin_dependencies(root, req.name), seen)
+        # a plugin's extras (``sqllocks-shape-databases[postgres]``) carry their own drivers
+        for extra in [None, *sorted(canonical(e) for e in req.extras)]:
+            part = key if extra is None else f"{key}[{extra}]"
+            if part in seen:
+                continue
+            seen.add(part)
+            out += _expand(root, _plugin_dependencies(root, req.name, extra), seen)
     return out
 
 
