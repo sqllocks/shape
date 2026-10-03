@@ -582,6 +582,12 @@ fn temporal_counts<'py>(py: Python<'py>, ts: PyArray) -> PyResult<Bound<'py, PyD
     use arrow_schema::TimeUnit;
     let (arr, _) = ts.into_inner();
     no_nulls(&arr, "temporal_counts")?;
+    if matches!(arr.data_type(), DataType::Timestamp(_, Some(_))) {
+        // The bins are wall-clock hours, which need the zone's rules: the twin has them.
+        return Err(PyValueError::new_err(
+            "temporal_counts needs a timestamp without a time zone (use the reference kernel)",
+        ));
+    }
     let (per_sec, vals): (i64, Vec<i64>) = match arr.data_type() {
         DataType::Timestamp(TimeUnit::Second, _) => (
             1,

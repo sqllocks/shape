@@ -295,11 +295,12 @@ impl<K: Clone + Eq + std::hash::Hash + Ord> SpaceSavingCore<K> {
         self.entries.is_empty()
     }
 
+    /// Counts saturate at `u64::MAX` (the twin caps its Python ints at the same value).
     pub fn update(&mut self, key: K, n: u64) {
-        self.n += n;
+        self.n = self.n.saturating_add(n);
         self.clock += 1;
         if let Some(&i) = self.index.get(&key) {
-            self.entries[i].count += n;
+            self.entries[i].count = self.entries[i].count.saturating_add(n);
             self.entries[i].seq = self.clock;
             return;
         }
@@ -321,7 +322,7 @@ impl<K: Clone + Eq + std::hash::Hash + Ord> SpaceSavingCore<K> {
         self.index.insert(key.clone(), victim);
         self.entries[victim] = Entry {
             key,
-            count: old.count + n,
+            count: old.count.saturating_add(n),
             err: old.count,
             seq: self.clock,
         };
@@ -343,11 +344,17 @@ impl<K: Clone + Eq + std::hash::Hash + Ord> SpaceSavingCore<K> {
                 .index
                 .get(&e.key)
                 .map_or((m2, m2), |&i| (o.entries[i].count, o.entries[i].err));
-            merged.insert(e.key.clone(), (e.count + c2, e.err + e2));
+            merged.insert(
+                e.key.clone(),
+                (e.count.saturating_add(c2), e.err.saturating_add(e2)),
+            );
         }
         for e in &o.entries {
             if !self.index.contains_key(&e.key) {
-                merged.insert(e.key.clone(), (e.count + m1, e.err + m1));
+                merged.insert(
+                    e.key.clone(),
+                    (e.count.saturating_add(m1), e.err.saturating_add(m1)),
+                );
             }
         }
         let mut keys: Vec<K> = merged.keys().cloned().collect();
@@ -371,7 +378,7 @@ impl<K: Clone + Eq + std::hash::Hash + Ord> SpaceSavingCore<K> {
             .map(|(i, e)| (e.key.clone(), i))
             .collect();
         self.clock = self.entries.len() as u64;
-        self.n += o.n;
+        self.n = self.n.saturating_add(o.n);
     }
 
     /// The serialized state: (clock, n, entries as (key, count, error, seq)), sorted by key so
@@ -478,11 +485,16 @@ impl PyHll {
         Ok(())
     }
 
-    fn merge(&mut self, other: PyRef<'_, PyHll>) -> PyResult<()> {
-        if self.core.p != other.core.p {
+    fn merge(slf: &Bound<'_, Self>, other: &Bound<'_, Self>) -> PyResult<()> {
+        if slf.is(other) {
+            return Err(PyValueError::new_err("cannot merge a sketch into itself"));
+        }
+        let mut me = slf.borrow_mut();
+        let other = other.borrow();
+        if me.core.p != other.core.p {
             return Err(PyValueError::new_err("incompatible HLL precision"));
         }
-        self.core.merge(&other.core);
+        me.core.merge(&other.core);
         Ok(())
     }
 
@@ -552,11 +564,16 @@ impl PyKll {
         Ok(())
     }
 
-    fn merge(&mut self, other: PyRef<'_, PyKll>) -> PyResult<()> {
-        if self.core.k != other.core.k {
+    fn merge(slf: &Bound<'_, Self>, other: &Bound<'_, Self>) -> PyResult<()> {
+        if slf.is(other) {
+            return Err(PyValueError::new_err("cannot merge a sketch into itself"));
+        }
+        let mut me = slf.borrow_mut();
+        let other = other.borrow();
+        if me.core.k != other.core.k {
             return Err(PyValueError::new_err("incompatible KLL k"));
         }
-        self.core.merge(&other.core);
+        me.core.merge(&other.core);
         Ok(())
     }
 
@@ -631,11 +648,16 @@ impl PySpaceSaving {
         Ok(())
     }
 
-    fn merge(&mut self, other: PyRef<'_, PySpaceSaving>) -> PyResult<()> {
-        if self.core.capacity != other.core.capacity {
+    fn merge(slf: &Bound<'_, Self>, other: &Bound<'_, Self>) -> PyResult<()> {
+        if slf.is(other) {
+            return Err(PyValueError::new_err("cannot merge a sketch into itself"));
+        }
+        let mut me = slf.borrow_mut();
+        let other = other.borrow();
+        if me.core.capacity != other.core.capacity {
             return Err(PyValueError::new_err("incompatible SpaceSaving capacity"));
         }
-        self.core.merge(&other.core);
+        me.core.merge(&other.core);
         Ok(())
     }
 

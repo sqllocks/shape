@@ -72,6 +72,8 @@ def top_by_first_seen(
     scanning rows in order (chunked, vectorised) until enough first appearances are seen."""
     k = len(uniq)
     need = min(need, k)
+    if need <= 0:
+        return np.empty(0, dtype=np.int64)
     c_thr = np.partition(counts, k - need)[k - need]
     n_above = int((counts > c_thr).sum())
     want_ties = need - n_above
@@ -125,7 +127,8 @@ def count_numeric(
     ``value_counts`` order (every key for an enum column, else the first ``top_n``)."""
     row = np.asarray(values.to_numpy(zero_copy_only=False))
     xs = np.sort(row)
-    starts = np.flatnonzero(np.concatenate(([True], xs[1:] != xs[:-1])))
+    first = [True] if len(xs) else []  # an empty array has no first key
+    starts = np.flatnonzero(np.concatenate((first, xs[1:] != xs[:-1])).astype(bool))
     uniq = xs[starts]
     counts = np.diff(np.append(starts, len(xs)))
     top = top_by_first_seen(row, uniq, counts, _need_for(len(uniq), top_n, row_count, len(row)))
@@ -135,7 +138,8 @@ def count_numeric(
         "counts": pa.array(counts[top].astype(np.int64)),
         "sorted": pa.array(xs.astype(np.float64, copy=False)) if want_sorted else None,
         "uniq": pa.array(uniq) if want_uniq else None,
-        "all_whole": all_whole(uniq),
+        # An integer column is whole (casting int64 extremes to float64 would round them up).
+        "all_whole": True if np.issubdtype(row.dtype, np.integer) else all_whole(uniq),
     }
 
 
@@ -188,6 +192,8 @@ def value_counts_str(values: Any) -> tuple[Any, Any]:
 
 def top_indices(counts: Any, need: int) -> Any:
     """``np.argsort(-counts, kind="stable")[:need]`` as an int64 array."""
+    if need < 0:
+        raise OverflowError("can't convert negative int to unsigned")
     c = counts.to_numpy(zero_copy_only=False)
     return pa.array(np.argsort(-c, kind="stable")[:need].astype(np.int64))
 

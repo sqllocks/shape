@@ -134,11 +134,11 @@ class SpaceSaving:
     def update(self, v: Any, n: int = 1) -> None:
         if _excluded(v):
             return
-        self.n += n
+        self.n = _sat(self.n + n)
         self._clock += 1
         cur = self.counts.get(v)
         if cur is not None:
-            self.counts[v] = (cur[0] + n, cur[1])
+            self.counts[v] = (_sat(cur[0] + n), cur[1])
             self._seq[v] = self._clock
             return
         if len(self.counts) < self.capacity:
@@ -148,7 +148,7 @@ class SpaceSaving:
         victim = min(self.counts, key=lambda k: (self.counts[k][0], self._seq[k]))
         c = self.counts.pop(victim)[0]
         del self._seq[victim]
-        self.counts[v] = (c + n, c)
+        self.counts[v] = (_sat(c + n), c)
         self._seq[v] = self._clock
 
     def _min_count(self) -> int:
@@ -163,10 +163,10 @@ class SpaceSaving:
         for k in self.counts.keys() | o.counts.keys():
             c1, e1 = self.counts.get(k, (m1, m1))
             c2, e2 = o.counts.get(k, (m2, m2))
-            merged[k] = (c1 + c2, e1 + e2)
+            merged[k] = (_sat(c1 + c2), _sat(e1 + e2))
         keep = sorted(merged, key=lambda k: (-merged[k][0], _key_order(k)))[: self.capacity]
         self.counts = {k: merged[k] for k in keep}
-        self.n += o.n
+        self.n = _sat(self.n + o.n)
         # recency only matters for tie-breaking later: order the survivors deterministically
         self._seq = {k: i for i, k in enumerate(sorted(keep, key=_key_order))}
         self._clock = len(self._seq)
@@ -185,6 +185,11 @@ class SpaceSaving:
             "n": self.n,
             "entries": [[k, c, e] for k, c, e in self.top(self.capacity)],
         }
+
+
+def _sat(x: int) -> int:
+    """SpaceSaving counts saturate at 2**64 - 1, as the native kernel's u64 counts do."""
+    return min(x, 2**64 - 1)
 
 
 def kll_capacity(k: int, level: int, levels: int) -> int:

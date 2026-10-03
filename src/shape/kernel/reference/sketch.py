@@ -27,6 +27,18 @@ def _valid_hashes(array: Any) -> list[int]:
     return [int(h) for h in hash_array(array, 0).to_pylist() if h is not None]
 
 
+def _unsigned(value: int) -> int:
+    """As the native kernel converts an argument to an unsigned integer."""
+    if value < 0:
+        raise OverflowError("can't convert negative int to unsigned")
+    return value
+
+
+def _not_itself(a: object, b: object) -> None:
+    if a is b:
+        raise ValueError("cannot merge a sketch into itself")
+
+
 def _check_registers(p: int, registers: bytes | list[int]) -> None:
     """Restored registers must be ranks ``update_hash`` can produce: at most ``64 - p + 1``."""
     top = 65 - p
@@ -53,7 +65,7 @@ class Hll:
         return int(self._s.p)
 
     def update_hash(self, h: int) -> None:
-        self._s.update_hashed(h)
+        self._s.update_hashed(_unsigned(h))
 
     def update_array(self, array: Any) -> None:
         for h in _valid_hashes(array):
@@ -65,6 +77,7 @@ class Hll:
                 self._s.update_hashed(h)
 
     def merge(self, other: Hll) -> None:
+        _not_itself(self, other)
         self._s.merge(other._s)
 
     def estimate(self) -> float:
@@ -109,6 +122,7 @@ class Kll:
                 self._s.update(x)
 
     def merge(self, other: Kll) -> None:
+        _not_itself(self, other)
         self._s.merge(other._s)
 
     def quantile(self, q: float) -> float | None:
@@ -120,7 +134,7 @@ class Kll:
 
 class SpaceSaving:
     def __init__(self, capacity: int = 64) -> None:
-        if capacity == 0:
+        if _unsigned(capacity) == 0:
             raise ValueError("capacity must be >= 1")
         self._s = _sk().SpaceSaving(capacity)
 
@@ -136,7 +150,7 @@ class SpaceSaving:
         return len(self._s.counts)
 
     def update(self, key: int, n: int = 1) -> None:
-        self._s.update(key, n)
+        self._s.update(key, _unsigned(n))
 
     def update_array(self, array: Any) -> None:
         for h in _valid_hashes(array):
@@ -148,6 +162,7 @@ class SpaceSaving:
                 self._s.update(k)
 
     def merge(self, other: SpaceSaving) -> None:
+        _not_itself(self, other)
         self._s.merge(other._s)
 
     def top(self) -> list[tuple[int, int, int]]:

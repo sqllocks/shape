@@ -195,7 +195,9 @@ class _Column:
     def update(self, arr: Any, row0: int) -> None:
         n = len(arr)
         self.count += n
-        self.nulls += arr.null_count
+        # A dictionary slot whose value is null is null too (the native kernel's logical count).
+        logical = arr.dictionary_decode() if pa.types.is_dictionary(arr.type) else arr
+        self.nulls += logical.null_count
         k = self.kind
         if k == "other":
             return
@@ -687,6 +689,8 @@ class ProfileState:
         self._rows += batch.num_rows
 
     def merge(self, other: ProfileState) -> None:
+        if other is self:
+            raise ValueError("cannot merge a state into itself")
         if self._mode != other._mode or self.schema != other.schema:
             raise ValueError("cannot merge profiles with different schemas or modes")
         for a, b in zip(self._cols, other._cols, strict=True):
@@ -694,6 +698,8 @@ class ProfileState:
         self._rows += other._rows
 
     def finalize(self, top_n: int = 500) -> dict[str, Any]:
+        if top_n < 0:
+            raise OverflowError("can't convert negative int to unsigned")
         return {
             "rows": self._rows,
             "mode": self._mode,

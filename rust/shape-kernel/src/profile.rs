@@ -1350,8 +1350,15 @@ impl PyProfileState {
             .map_err(PyValueError::new_err)
     }
 
-    fn merge(&mut self, other: PyRef<'_, PyProfileState>) -> PyResult<()> {
-        self.core.merge(&other.core).map_err(PyValueError::new_err)
+    fn merge(slf: &Bound<'_, Self>, other: &Bound<'_, Self>) -> PyResult<()> {
+        if slf.is(other) {
+            return Err(PyValueError::new_err("cannot merge a state into itself"));
+        }
+        let other = other.borrow();
+        slf.borrow_mut()
+            .core
+            .merge(&other.core)
+            .map_err(PyValueError::new_err)
     }
 
     #[pyo3(signature = (top_n = 500))]
