@@ -103,7 +103,11 @@ def test_rust_equals_reference_on_a_million_values(native, name):
     mask = pa.array(rng.random(N) < 0.03)
     view = pa.types.is_string_view(arr.type)  # if_else has no string_view kernel
     base = arr.cast(pa.string()) if view else arr
-    base = pa.compute.if_else(mask, pa.scalar(None, base.type), base)
+    if pa.types.is_float16(base.type):  # pyarrow 19 has no halffloat if_else (#333)
+        idx = pa.compute.if_else(mask, pa.scalar(N, pa.int64()), pa.array(np.arange(N)))
+        base = pa.concat_arrays([base, pa.nulls(1, base.type)]).take(idx)
+    else:
+        base = pa.compute.if_else(mask, pa.scalar(None, base.type), base)
     arr = base.cast(pa.string_view()) if view else base
     assert arr.null_count > 0
     for seed in (0, 0x5EED):
@@ -143,7 +147,8 @@ def test_nan_is_excluded_but_infinities_are_not(native):
 
 def test_one_and_one_point_zero_hash_equal(native):
     ints = [pa.array([1], type=t) for t in (pa.int8(), pa.int64(), pa.uint16(), pa.uint64())]
-    floats = [pa.array([1.0], type=t) for t in (pa.float32(), pa.float64(), pa.float16())]
+    floats = [pa.array([1.0], type=t) for t in (pa.float32(), pa.float64())]
+    floats.append(pa.array(np.array([1.0], np.float16)))  # portable float16 construction (#333)
     dec = [pa.array([decimal.Decimal("1.000")], type=pa.decimal128(10, 3))]
     hashes = {pa.array(native.hash_array(a, 9)).to_pylist()[0] for a in ints + floats + dec}
     assert len(hashes) == 1
