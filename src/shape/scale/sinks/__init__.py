@@ -28,6 +28,27 @@ def _check(name: str, cfg: Mapping[str, Any], allowed: Sequence[str]) -> None:
         )
 
 
+def _number(name: str, cfg: dict[str, Any], key: str, kind: type, minimum: float) -> None:
+    """``cfg[key]`` as a ``kind`` of at least ``minimum``, when it is set. The command line keeps
+    a value that is not an integer as text, so ``"0.5"`` arrives as a string."""
+    if cfg.get(key) is None:
+        return
+    raw = cfg[key]
+    try:
+        if isinstance(raw, bool):
+            raise ValueError
+        value = kind(raw)
+        if kind is int and isinstance(raw, float) and raw != value:
+            raise ValueError
+    except (TypeError, ValueError):
+        noun = "an integer" if kind is int else "a number"
+        raise ValueError(f"sink {name!r}: {key} must be {noun}, got {raw!r}") from None
+    if not (value > minimum if kind is float else value >= minimum):  # also refuses NaN
+        bound = f"more than {minimum:g}" if kind is float else f"at least {minimum:g}"
+        raise ValueError(f"sink {name!r}: {key} must be {bound}, got {raw!r}")
+    cfg[key] = value
+
+
 def build_sink(
     name: str,
     cfg: Mapping[str, Any] | None = None,
@@ -48,11 +69,14 @@ def build_sink(
         from shape.scale.sinks.memory import MemorySink
 
         _check(name, settings, ("max_memory_gb",))
+        _number(name, settings, "max_memory_gb", float, 0)
         return MemorySink(**settings)
     if name == "parquet":
         from shape.scale.sinks.parquet import ParquetSink
 
         _check(name, settings, ("output_dir", "chunk_rows", "writer_threads"))
+        _number(name, settings, "chunk_rows", int, 1)
+        _number(name, settings, "writer_threads", int, 1)
         out = settings.pop("output_dir", None)
         if not out:
             raise ValueError("sink 'parquet' needs output_dir")
