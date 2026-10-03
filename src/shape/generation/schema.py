@@ -81,6 +81,14 @@ def _plain_json(value: Any) -> Any:
     return json.loads(json.dumps(value, default=default))
 
 
+def _is_number(text: str) -> bool:
+    try:
+        float(text)
+    except ValueError:
+        return False
+    return True
+
+
 class GenSchemaError(ShapeSchemaError):
     """A generation schema document does not follow ``generation-schema-v1.json``."""
 
@@ -407,6 +415,8 @@ class GenSchema:
         out += self._rule_issues()
         out += self._generation_issues()
         out += self._strategy_issues()
+        out += self._reference_issues()
+        out += self._correlation_issues()
         return out
 
     def validate_or_raise(self) -> None:
@@ -455,6 +465,15 @@ class GenSchema:
         out: list[Issue] = []
         for r in self.relationships:
             where = f"relationships.{r.name}"
+            if len(r.parent_columns) != len(r.child_columns):
+                out.append(
+                    Issue(
+                        "error",
+                        f"{len(r.parent_columns)} parent columns but {len(r.child_columns)} "
+                        "child columns: they are matched in pairs",
+                        where,
+                    )
+                )
             if r.parent not in self.tables:
                 out.append(Issue("error", f"Parent table '{r.parent}' not found", where))
             else:
@@ -500,7 +519,7 @@ class GenSchema:
         return out
 
     def _rule_issues(self) -> list[Issue]:
-        return [
+        out = [
             Issue(
                 "error",
                 f"Rule references non-existent table '{b.table}'",
@@ -509,14 +528,161 @@ class GenSchema:
             for b in self.business_rules
             if b.table and b.table not in self.tables
         ]
+        for b in self.business_rules:
+            if b.type in ("cross_column", "constraint") and b.table in self.tables:
+                problem = self._comparison_problem(b, cross_table=False)
+            elif b.type == "cross_table":
+                problem = self._comparison_problem(b, cross_table=True)
+            else:
+                continue
+            if problem:
+                out.append(
+                    Issue(
+                        "warning",
+                        f"Rule {b.rule!r} is never checked or repaired: {problem}",
+                        f"business_rules.{b.name}",
+                    )
+                )
+        return out
+
+    def _comparison_problem(self, b: BusinessRule, *, cross_table: bool) -> str | None:
+        """Why the rules engine cannot evaluate ``b`` (it then skips it), or ``None``."""
+        from shape.generation.rules import parse_comparison
+
+        left, op, right = parse_comparison(b.rule)
+        if not op:
+            return "it is not a comparison 'A OP B' with OP one of >=, <=, >, <, =="
+        if not cross_table:
+            table = self.tables[str(b.table)]
+            for side in (left, right):
+                if side not in table.columns and not _is_number(side):
+                    return f"'{side}' is not a column of '{b.table}' nor a number"
+            return None
+        for side in (left, right):
+            tname, dot, cname = side.partition(".")
+            if not dot or tname not in self.tables or cname not in self.tables[tname].columns:
+                return f"'{side}' is not a table.column of the schema"
+        for tname in (left.partition(".")[0], right.partition(".")[0]):
+            if not b.via or b.via not in self.tables[tname].columns:
+                return f"its 'via' key {b.via!r} is not a column of '{tname}'"
+        return None
 
     def _generation_issues(self) -> list[Issue]:
         g = self.generation
+        out: list[Issue] = []
         if g.scale and g.scales and g.scale not in g.scales:
-            return [
+            out.append(
                 Issue("warning", f"Scale '{g.scale}' not defined in scales", "generation.scale")
+            )
+        for preset, counts in g.scales.items():
+            for tname in counts:
+                if tname not in self.tables:
+                    out.append(
+                        Issue(
+                            "warning",
+                            f"Scale '{preset}' counts rows of '{tname}', which is not a table",
+                            f"generation.scales.{preset}",
+                        )
+                    )
+        for tname, rule in g.derived_counts.items():
+            where = f"generation.derived_counts.{tname}"
+            if tname not in self.tables:
+                out.append(Issue("warning", f"'{tname}' is not a table", where))
+            parent = rule.get("per_parent")
+            if parent is not None and parent not in self.tables:
+                out.append(Issue("warning", f"per_parent '{parent}' is not a table", where))
+        return out
+
+    def _reference_issues(self) -> list[Issue]:
+        """Generators that name another table or column: it must exist (a computed column on an
+        unknown child is left empty, a foreign key without a column cannot draw keys)."""
+        from shape.generation.compute import AGGREGATES
+
+        out: list[Issue] = []
+        for tname, t in self.tables.items():
+            if len(set(t.primary_key)) != len(t.primary_key):
+                out.append(Issue("error", "Primary key lists a column twice", f"tables.{tname}"))
+            for cname, c in t.columns.items():
+                where = f"tables.{tname}.columns.{cname}"
+                if not is_safe_name(cname):
+                    out.append(
+                        Issue("error", "A column name must be a plain name, not a path", where)
+                    )
+                g = c.generator
+                strategy = c.strategy
+                if strategy == "foreign_key" and isinstance(g.get("ref"), str):
+                    if g["ref"].count(".") != 1:
+                        out.append(
+                            Issue(
+                                "error",
+                                f"FK ref {g['ref']!r} must be 'table.column'",
+                                where,
+                            )
+                        )
+                elif strategy == "composite_foreign_key":
+                    ref = g.get("ref_table")
+                    if ref not in self.tables:
+                        out.append(Issue("error", f"ref_table {ref!r} is not a table", where))
+                elif strategy == "derived" and isinstance(g.get("source"), str):
+                    # a column of this table, or ``table.column`` of another
+                    other, dot, name = g["source"].rpartition(".")
+                    owner = self.tables.get(other) if dot else t
+                    if owner is None or name not in owner.columns:
+                        out.append(
+                            Issue(
+                                "error",
+                                f"derived source {g['source']!r} is neither a column of "
+                                f"'{tname}' nor a table.column of the schema",
+                                where,
+                            )
+                        )
+                elif strategy == "computed":
+                    out += self._computed_issues(tname, c, where, AGGREGATES)
+        return out
+
+    def _computed_issues(self, tname: str, c: Column, where: str, aggregates: Any) -> list[Issue]:
+        g = c.generator
+        rule = g.get("rule", "sum_children")
+        child, column = g.get("child_table"), g.get("child_column")
+        if rule != "lookup_parent" and rule not in aggregates:
+            known = ", ".join([*aggregates, "lookup_parent"])
+            return [Issue("warning", f"Unknown computed rule {rule!r} (known: {known})", where)]
+        if child not in self.tables:
+            return [Issue("warning", f"child_table {child!r} is not a table: left empty", where)]
+        if column not in self.tables[str(child)].columns:
+            return [
+                Issue(
+                    "warning",
+                    f"child_column {column!r} is not a column of '{child}': left empty",
+                    where,
+                )
             ]
         return []
+
+    def _correlation_issues(self) -> list[Issue]:
+        out: list[Issue] = []
+        for tname, pairs in self.correlated_columns.items():
+            where = f"correlated_columns.{tname}"
+            if tname not in self.tables:
+                out.append(Issue("warning", f"'{tname}' is not a table: ignored", where))
+                continue
+            cols = self.tables[tname].columns
+            for pair in pairs:
+                if len(pair) != 3:
+                    out.append(Issue("warning", f"{pair!r} is not [column, column, r]", where))
+                    continue
+                a, b, r = pair
+                if a not in cols or b not in cols:
+                    out.append(
+                        Issue("warning", f"{pair!r} names a column '{tname}' does not have", where)
+                    )
+                elif a == b:
+                    out.append(Issue("warning", f"{pair!r} pairs a column with itself", where))
+                elif isinstance(r, bool) or not isinstance(r, int | float) or not -1 <= r <= 1:
+                    out.append(
+                        Issue("warning", f"{pair!r}: r must be a number from -1 to 1", where)
+                    )
+        return out
 
     def _strategy_issues(self) -> list[Issue]:
         out: list[Issue] = []
