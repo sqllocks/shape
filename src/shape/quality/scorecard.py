@@ -345,8 +345,18 @@ def _owner_of(
     return None
 
 
+#: The highest score a check, dimension or overall mean can show while something fails.
+_NOT_PERFECT = 99.99
+
+
+def _score(value: float, failing: bool) -> float:
+    """``value`` rounded to two decimals, but never 100 while something fails."""
+    out = round(value, 2)
+    return min(out, _NOT_PERFECT) if failing and out >= 100.0 else out
+
+
 def _mean(values: Sequence[float]) -> float | None:
-    return round(sum(values) / len(values), 2) if values else None
+    return _score(sum(values) / len(values), min(values) < 100.0) if values else None
 
 
 def _trend(
@@ -430,13 +440,23 @@ def build_scorecard(
                 CheckScore(g.gate_name, None, None, "gate", 100.0 if g.passed else 0.0, None, None)
             )
             continue
+        if not g.passed and not any(o.failing for o in outcomes):
+            # the gate failed for a reason no row-level check shows (a missing column or table):
+            # the failure is its own check, beside the row-level ones, not a score of 100
+            s = hidden(g.gate_name, None, ())
+            if s is not None:
+                note(s, g.gate_name, None, (), None)
+            else:
+                by_dim[dim].append(CheckScore(g.gate_name, None, None, "gate", 0.0, None, None))
         for o in outcomes:
             s = hidden(o.gate, o.table, o.columns) if o.failing else None
             if s is not None:
                 note(s, o.gate, o.table, o.columns, o.failing)
                 continue
             counted.append(o)
-            score = 100.0 if o.rows == 0 else round(100.0 * (1 - o.failing / o.rows), 2)
+            score = (
+                100.0 if o.rows == 0 else _score(100.0 * (1 - o.failing / o.rows), o.failing > 0)
+            )
             by_dim[dim].append(
                 CheckScore(
                     o.gate,
