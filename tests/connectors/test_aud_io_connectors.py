@@ -46,3 +46,55 @@ def test_495_decode_keeps_later_keys_and_every_value(adapter):
     # one kind of value keeps its numpy type
     assert decode([{"a": 1.5}, {"a": 2}])["a"].dtype.kind == "f"
     assert decode([{"a": "x"}, {"a": "y"}])["a"].dtype.kind == "U"
+
+
+def _down(start):
+    raise ConnectionError("down")
+    yield  # pragma: no cover
+
+
+def test_562_reconnects_back_off_doubling_and_capped():
+    from shape.connectors.qualification import reconnecting_batches
+
+    slept: list[float] = []
+    with pytest.raises(ConnectionError):
+        list(reconnecting_batches(_down, 10, sleep=slept.append))
+    # a pause after every failure but the last, 0.5 s doubling, capped at 30 s
+    assert slept == [0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 30.0, 30.0, 30.0]
+
+    slept.clear()
+    with pytest.raises(ConnectionError):
+        list(reconnecting_batches(_down, 4, backoff=0.1, sleep=slept.append))
+    assert slept == pytest.approx([0.1, 0.2, 0.4])
+
+    slept.clear()
+    with pytest.raises(ConnectionError):
+        list(reconnecting_batches(_down, 1, sleep=slept.append))
+    assert slept == []  # one attempt: nothing to wait for
+
+
+def test_562_backoff_zero_keeps_immediate_retries_and_progress_resets_the_pause():
+    from shape.connectors.qualification import reconnecting_batches
+
+    slept: list[float] = []
+    with pytest.raises(ConnectionError):
+        list(reconnecting_batches(_down, 5, backoff=0, sleep=slept.append))
+    assert slept == []
+
+    def flaky(start):
+        first = 0 if start is None else start + 1
+        if first >= 3:
+            raise ConnectionError("down for good")
+        yield first, first
+        raise ConnectionError("drop")
+
+    slept.clear()
+    with pytest.raises(ConnectionError, match="for good"):
+        list(reconnecting_batches(flaky, 3, sleep=slept.append))
+    # each drop after progress waits the first pause again; then 3 failures in a row
+    assert slept == [0.5, 0.5, 0.5, 0.5, 1.0]
+
+    with pytest.raises(ValueError, match="backoff"):
+        list(reconnecting_batches(_down, 3, backoff=-1, sleep=slept.append))
+    with pytest.raises(TypeError):
+        reconnecting_batches(_down, 3, 0.5)  # type: ignore[misc]
