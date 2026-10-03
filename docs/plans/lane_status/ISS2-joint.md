@@ -161,3 +161,67 @@ Notes: a stray empty file `/x` exists at the container root from a mistyped redi
 blocked by the safety check, and it is outside the repository. A first draft of `hierarchy` strategies
 overwrote `builtins/strategies/hierarchy.py` (`self_referencing`); it was restored from the integration tree
 and the new strategies live in `reference_hierarchy.py` (caught by `tests/generation`).
+
+## Round 2 (issue #47)
+
+Merged `origin/build/main-plan` (`ce8fe11`) into `lane/ISS2-joint` with a merge commit (no rebase, no
+force-push). Conflicts resolved by keeping both sides: `CHANGELOG.md`; `cli/main.py` (the new `--auth`
+and workbook options beside `--reference-pair`, plus `--joint`); `profile/reference/profile.py` and
+`sources.py` (workbook profiling beside `reference_pairs`). `docs/plans/COMPLETION_PLAN.md` took the
+incoming file unchanged (lanes do not edit it). Merge side effect fixed: the spec-key check from ISS-gen
+(`generation/spec_keys.py`) did not list my strategies' keys, so `conditional_table`, `hierarchy` and
+`hierarchy_field` are now listed there.
+
+### Decision (1): joint analysis by default
+
+| Profile | Default | On | Off |
+|---|---|---|---|
+| One table | on | `joint=True`, `--joint` | `joint=False`, `--no-joint` |
+| Dataset (dict of tables, `--dataset`, workbook) | off | `joint=True`, `--joint` | `joint=False`, `--no-joint` |
+
+Precedence: the argument, then `SHAPE_PROFILE_JOINT` (`0`/`false`/`no` off, any other non-empty value on,
+so `1` also turns it on for a dataset), then the default above. `SHAPE_PROFILE_JOINT=0` works as before
+for single tables. A one-entry dict is a dataset. Documented in `docs/JOINT.md`,
+`docs/PROFILING_NOTES.md`, `CHANGELOG.md` and the `--joint` help. Tests: `tests/joint/test_joint_default.py`
+(Python API single/dataset x default/True/False, environment values, argument over environment, empty
+variable, dataset entry differs only by `joint`, CLI single and dataset with and without the flags and
+the variable). Two existing tests that profile a dataset and read its `joint` entry now pass
+`joint=True` (`test_the_rules_work_per_table_in_a_dataset`,
+`test_every_input_kind_gets_the_same_joint_analysis`); no assertion changed. A contract rule that needs
+the entry reports "not measured" on a dataset profiled without it, never a pass.
+
+### Decision (6)
+
+Accepted as built: new optional contract rules are additive keys in v1 and an older reader refuses an
+unknown rule. No change.
+
+### Performance re-measurement (G1 PROF-IN workloads; a record, not a gate run)
+
+Script `scratchpad/ab.py` (same method as round 1: fresh process per run, median of 5, interleaved).
+"before" = `SHAPE_PROFILE_JOINT=0` (no joint analysis, the pre-joint cost); "after" = the default. Data
+from `profile_1to1/datasets.py`, 4-vCPU container, load about 1.5, under `flock`. The numbers include
+first-call import cost, so they are higher than round 1's and compare only within a row.
+
+| Workload | before | after | after/before |
+|---|---|---|---|
+| D1 csv (200k x 6) | 0.520 s | 0.525 s | 1.01 |
+| D2 csv (1M x 20) | 1.860 s | 2.120 s | 1.14 (noise is about 15%) |
+| D3 parquet (5M x 10) | 4.335 s | 4.099 s | 0.95 |
+| D4 csv (100k x 200) | 2.842 s | 2.845 s | 1.00 |
+| MT (3 tables) | 0.558 s | 0.552 s | 0.99 |
+
+The multi-table workload is back within noise of its pre-joint time (it no longer runs the analysis by
+default; round 1 saw +22% to +36%). Single tables keep the analysis and stay within noise. Gates, timing
+method and tolerances are unchanged; the official `bench.py` table was not re-run.
+
+### Checks (this session, on the merged tree)
+
+| Check | Result |
+|---|---|
+| `ruff check` / `ruff format --check` (src tests plugins benchmarks/vs_spindle) | pass |
+| `mypy` | pass (365 files) |
+| `scripts/check_user_facing.py` | clean |
+| `pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`, `SHAPE_KERNEL=python` | 5,611 passed |
+| same, `SHAPE_KERNEL=rust` | 5,611 passed |
+| `profile_1to1/verify.py --impl shape` (T-22), `SHAPE_KERNEL=python` / `rust` | 49/49 PASS, exit 0 each (pinned Spindle baseline cloned read-only in `$SPINDLE_ROOT`, not edited) |
+| Not run | heavy tests, cargo (no Rust change), the other parity harnesses, `bench.py` |
