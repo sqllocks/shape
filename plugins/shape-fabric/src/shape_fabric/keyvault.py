@@ -26,9 +26,9 @@ from .kusto import Transport, urllib_transport
 
 SCOPE_VAULT = "https://vault.azure.net/.default"
 API_VERSION = "7.4"
-_VAULT = re.compile(r"^[A-Za-z][A-Za-z0-9-]{1,22}[A-Za-z0-9]$")
-_NAME = re.compile(r"^[A-Za-z0-9-]{1,127}$")
-_VERSION = re.compile(r"^[A-Za-z0-9]{1,64}$")
+_VAULT = re.compile(r"[A-Za-z][A-Za-z0-9-]{1,22}[A-Za-z0-9]\Z")
+_NAME = re.compile(r"[A-Za-z0-9-]{1,127}\Z")
+_VERSION = re.compile(r"[A-Za-z0-9]{1,64}\Z")
 _SUFFIX = ".vault.azure.net"
 
 
