@@ -1,0 +1,8 @@
+table Tagging
+
+	column TagId
+		dataType: int64
+
+	column TagDate
+		dataType: dateTime
+		formatString: Short Date

@@ -237,7 +237,7 @@ def finish_model(
         col = owner.column(fk.column)
         key = target.column(fk.ref_column)
         if col is not None and key is not None:
-            col.type = key.type if key.type in ("integer", "uuid", "string") else "integer"
+            col.type = key.type
             if key.type == "string":
                 col.max_length = key.max_length
     return model
@@ -442,7 +442,7 @@ def choose_generator(
         else:
             lo, hi = _bounds(col, False)
             gen = {"strategy": "distribution", "distribution": "uniform", "min": lo, "max": hi}
-        if t == "decimal":
+        if t == "decimal" and col.precision is not None:
             gen["output_type"] = "decimal"
         return gen
     if t == "boolean":

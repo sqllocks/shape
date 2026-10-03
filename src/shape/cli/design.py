@@ -34,6 +34,12 @@ def add_parsers(sub: Any) -> None:
     d.add_argument("--drop", action="store_true", help="drop each table before creating it")
     d.add_argument("-o", "--output", metavar="OUT", help="write the DDL (or the design input) here")
     d.add_argument("--json", metavar="RESULT.json", help="also write the derived tables as JSON")
+    d.add_argument(
+        "--tmdl",
+        metavar="DIR",
+        help="also write a TMDL semantic model (DIR/definition/...) for a star or snowflake "
+        "design; without -o the DDL is then not printed",
+    )
     d.add_argument("--lint", action="store_true", help="print the lint report as JSON, no DDL")
     d.add_argument("--strict", action="store_true", help="warnings fail too (exit 1)")
     d.add_argument(
@@ -74,14 +80,26 @@ def run(a: Any) -> int:
     from shape.design.engine import derive
 
     result = derive(design, a.mode)
+    if a.tmdl:
+        from shape.design.tmdl import write_tmdl
+
+        write_tmdl(result, a.tmdl, source=design)
+        print(f"TMDL written to {Path(a.tmdl) / 'definition'}", file=sys.stderr)
+        if not a.output:
+            return _write_json_result(a, result)
     sql = emit_ddl(result, a.dialect, schema_name=a.schema_name, drop=a.drop)
+    _write_json_result(a, result)
+    _write(a.output, sql)
+    return 0
+
+
+def _write_json_result(a: Any, result: Any) -> int:
     if a.json:
         Path(a.json).write_text(
             json.dumps(result.to_dict(), indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
             newline="\n",
         )
-    _write(a.output, sql)
     return 0
 
 

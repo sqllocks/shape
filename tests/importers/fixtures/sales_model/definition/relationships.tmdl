@@ -1,0 +1,21 @@
+relationship r_sales_customer
+	fromColumn: Sales.CustomerKey
+	toColumn: 'Customer Master'.CustomerKey
+
+relationship r_sales_order_date
+	fromColumn: Sales.OrderDate
+	toColumn: Calendar.Date
+	isActive: false
+
+relationship r_passport
+	fromColumn: Passport.SaleId
+	toColumn: Sales.SaleId
+	fromCardinality: one
+	toCardinality: one
+
+relationship r_reversed
+	fromColumn: Calendar.Date
+	toColumn: Tagging.TagDate
+	fromCardinality: one
+	toCardinality: many
+	crossFilteringBehavior: bothDirections

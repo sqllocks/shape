@@ -1,0 +1,20 @@
+table 'Customer Master'
+
+	column CustomerKey
+		dataType: int64
+		isKey
+
+	column 'Customer Name'
+		dataType: string
+
+	column Region
+		dataType: string
+
+	column 'It''s]odd'
+		dataType: string
+
+	hierarchy Geography
+		level Region
+			column: Region
+		level 'Customer Name'
+			column: 'Customer Name'
