@@ -343,14 +343,13 @@ def test_roles_and_row_counts_do_not_depend_on_the_statement_order(statements):
     assert roles == {(n.table, n.rule_id) for n in ref_notes if n.rule_id.startswith("TC-")}
 
 
-@pytest.mark.parametrize(
-    ("scale", "message"),
-    [("small:customer=-5", "customer=-5"), ("small:custmer=5", "custmer")],
-)
-def test_a_bad_scale_override_is_an_error(scale, message):
-    # 217: a negative count was accepted (the schema could not be reloaded:
-    # "-5 < minimum 0") and an unknown table was ignored silently.
+def test_a_negative_scale_override_is_an_error():
+    # 217: a negative count was accepted, and the schema could not be reloaded
+    # ("-5 < minimum 0"). (A table the file does not define stays allowed: one override is
+    # applied to many files, as ddl_1to1 does; validate() warns about it.)
     from shape.generation.ddl import DdlError
 
-    with pytest.raises(DdlError, match=message):
-        from_ddl("CREATE TABLE customer (id INT PRIMARY KEY)", scale=scale)
+    with pytest.raises(DdlError, match="customer=-5"):
+        from_ddl("CREATE TABLE customer (id INT PRIMARY KEY)", scale="small:customer=-5")
+    schema, _ = from_ddl("CREATE TABLE customer (id INT PRIMARY KEY)", scale="small:custmer=5")
+    assert any("custmer" in i.message for i in schema.validate())

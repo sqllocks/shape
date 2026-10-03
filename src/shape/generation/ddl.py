@@ -1018,9 +1018,12 @@ def apply_scale(schema: GenSchema, spec: str) -> None:
         if "=" in pair:
             table, count = pair.split("=", 1)
             try:
-                preset[table.strip()] = int(count.strip())
+                rows = int(count.strip())
             except ValueError:
                 raise DdlError(f"bad row count in scale override {pair!r}") from None
+            if rows < 0:
+                raise DdlError(f"a row count cannot be negative: scale override {pair!r}")
+            preset[table.strip()] = rows
             schema.generation.derived_counts.pop(table.strip(), None)
     schema.generation.scales[name] = preset
     fit_string_lengths(schema)
