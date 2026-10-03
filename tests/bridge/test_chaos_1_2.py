@@ -58,7 +58,8 @@ def test_chaos_on_a_generated_folder_gives_what_the_cli_prints(api12, generated,
     )
     code, cli = cli_json(
         capsys, "chaos", "--input", str(generated), "-o", str(out_c), "--seed", "7",
-        "--corrupt", "duplicates=0.05", "--corrupt", "negative_amounts=0.1@order_line.amount", "--json",
+        "--corrupt", "duplicates=0.05", "--corrupt", "negative_amounts=0.1@order_line.amount",
+        "--json",
     )  # fmt: skip
     assert code == 0
     normal = lambda d, root: json.loads(json.dumps(d).replace(str(root), "OUT"))  # noqa: E731

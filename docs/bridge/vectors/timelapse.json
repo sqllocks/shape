@@ -1,0 +1,289 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "note-over-six-days",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "column": "note",
+          "name": "orders",
+          "registry": "${DIR}/feed_safe"
+        },
+        "command": "timelapse",
+        "id": "note-over-six-days"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "timelapse",
+        "id": "note-over-six-days",
+        "ok": true,
+        "result": {
+          "change_points": [],
+          "column": "note",
+          "format": "shape-timelapse",
+          "frames": [
+            {
+              "cardinality": 3,
+              "change_point": false,
+              "changes": [],
+              "content_ids": [
+                "828f07c958fc361fb5c346b8b284ad934723bdd9ddec5d135b132d5e4a1dc206"
+              ],
+              "date": "2026-03-01",
+              "end": "2026-03-01",
+              "form": "safe",
+              "gap": false,
+              "mean": null,
+              "null_rate": 0.005,
+              "quantiles": null,
+              "row_count": 200,
+              "std": null,
+              "top_values": [
+                {
+                  "share": 0.361809,
+                  "value": "c"
+                },
+                {
+                  "share": 0.321608,
+                  "value": "a"
+                },
+                {
+                  "share": 0.316583,
+                  "value": "b"
+                }
+              ],
+              "versions": 1
+            },
+            {
+              "cardinality": 3,
+              "change_point": null,
+              "changes": [],
+              "content_ids": [
+                "07346306bd7f160ba38d8297b4ca53fc7165f806f4a6ab0e87a3cc1dccc9d671"
+              ],
+              "date": "2026-03-02",
+              "end": "2026-03-02",
+              "form": "safe",
+              "gap": false,
+              "mean": null,
+              "null_rate": 0.01,
+              "quantiles": null,
+              "row_count": 200,
+              "std": null,
+              "top_values": [
+                {
+                  "share": 0.363636,
+                  "value": "a"
+                },
+                {
+                  "share": 0.343434,
+                  "value": "c"
+                },
+                {
+                  "share": 0.292929,
+                  "value": "b"
+                }
+              ],
+              "versions": 1
+            },
+            {
+              "cardinality": 3,
+              "change_point": null,
+              "changes": [],
+              "content_ids": [
+                "b5ad07c8668e46bf1bef17989f8098a03b5de9696814b73ca4e7e956e29b3c3a"
+              ],
+              "date": "2026-03-03",
+              "end": "2026-03-03",
+              "form": "safe",
+              "gap": false,
+              "mean": null,
+              "null_rate": 0.01,
+              "quantiles": null,
+              "row_count": 200,
+              "std": null,
+              "top_values": [
+                {
+                  "share": 0.363636,
+                  "value": "a"
+                },
+                {
+                  "share": 0.348485,
+                  "value": "c"
+                },
+                {
+                  "share": 0.287879,
+                  "value": "b"
+                }
+              ],
+              "versions": 1
+            },
+            {
+              "cardinality": 3,
+              "change_point": null,
+              "changes": [],
+              "content_ids": [
+                "f1335cd0f6d8c147172ef1d91e3c933561b7e2831c404c449324e02f12a39870"
+              ],
+              "date": "2026-03-04",
+              "end": "2026-03-04",
+              "form": "safe",
+              "gap": false,
+              "mean": null,
+              "null_rate": 0.375,
+              "quantiles": null,
+              "row_count": 200,
+              "std": null,
+              "top_values": [
+                {
+                  "share": 0.352,
+                  "value": "b"
+                },
+                {
+                  "share": 0.352,
+                  "value": "c"
+                },
+                {
+                  "share": 0.296,
+                  "value": "a"
+                }
+              ],
+              "versions": 1
+            },
+            {
+              "cardinality": 3,
+              "change_point": null,
+              "changes": [],
+              "content_ids": [
+                "0a356ce2993297a3755fc78bb3a279d97faea7ba29d5684306acfd5d679ea766"
+              ],
+              "date": "2026-03-05",
+              "end": "2026-03-05",
+              "form": "safe",
+              "gap": false,
+              "mean": null,
+              "null_rate": 0.45,
+              "quantiles": null,
+              "row_count": 200,
+              "std": null,
+              "top_values": [
+                {
+                  "share": 0.4,
+                  "value": "c"
+                },
+                {
+                  "share": 0.327273,
+                  "value": "a"
+                },
+                {
+                  "share": 0.272727,
+                  "value": "b"
+                }
+              ],
+              "versions": 1
+            },
+            {
+              "cardinality": 3,
+              "change_point": null,
+              "changes": [],
+              "content_ids": [
+                "13adcc218bb05558bc4fabed8ffa2f40f3f19cf1fc0ff5d622e12cf5f73bb312"
+              ],
+              "date": "2026-03-06",
+              "end": "2026-03-06",
+              "form": "safe",
+              "gap": false,
+              "mean": null,
+              "null_rate": 0.49,
+              "quantiles": null,
+              "row_count": 200,
+              "std": null,
+              "top_values": [
+                {
+                  "share": 0.343137,
+                  "value": "b"
+                },
+                {
+                  "share": 0.333333,
+                  "value": "a"
+                },
+                {
+                  "share": 0.323529,
+                  "value": "c"
+                }
+              ],
+              "versions": 1
+            }
+          ],
+          "name": "orders",
+          "notes": [
+            "6 frame(s) come from share-safe profiles: they show what the safe form holds, and 5 frame(s) next to them are not compared, so no change point is decided for them"
+          ],
+          "since": null,
+          "source": null,
+          "table": "orders",
+          "until": null,
+          "version": 1,
+          "window": null
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-column",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "column": "ghost",
+          "name": "orders",
+          "registry": "${DIR}/feed_safe"
+        },
+        "command": "timelapse",
+        "id": "unknown-column"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "timelapse",
+        "error": {
+          "code": "input.invalid_value",
+          "group": "input",
+          "hint": null,
+          "message": "column 'ghost' is in none of the 6 versions of 'orders'"
+        },
+        "id": "unknown-column",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "needs-a-column",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "name": "orders",
+          "registry": "${DIR}/feed_safe"
+        },
+        "command": "timelapse",
+        "id": "needs-a-column"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "timelapse",
+        "error": {
+          "code": "usage.missing_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "timelapse needs the argument 'column'"
+        },
+        "id": "needs-a-column",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "timelapse",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

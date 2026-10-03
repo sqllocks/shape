@@ -1,6 +1,6 @@
 {
   "tables": {
-    "orders": {
+    "customers": {
       "row_count": {
         "min": 1
       }

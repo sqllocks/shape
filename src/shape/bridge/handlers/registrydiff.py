@@ -58,11 +58,20 @@ def _options(args: dict[str, Any]) -> dict[str, Any]:
     return {"thresholds": args.get("thresholds") or None, "policy": policy}
 
 
-def _raw_profile(blob: bytes, ctx: Context) -> Any:
+def _raw_profile(blob: bytes) -> Any:
+    """The profile in a registry version. The registry addresses its content by sha256, so a
+    missing signature is not worth a warning that would name a scratch file."""
+    import warnings
+
+    import shape
+    from shape.artifact.io import ArtifactNotVerifiedWarning
+
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "version.shape"
         path.write_bytes(blob)
-        return flow._load_profile(str(path), ctx)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", ArtifactNotVerifiedWarning)
+            return shape.load(str(path))
 
 
 def cmd_registry_diff(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
@@ -86,7 +95,7 @@ def cmd_registry_diff(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
         }
     first, second = registry.checkout(name, id1), registry.checkout(name, id2)
     if is_raw_profile(first) and is_raw_profile(second) and first[:2] == b"PK":
-        before, after = _raw_profile(first, ctx), _raw_profile(second, ctx)
+        before, after = _raw_profile(first), _raw_profile(second)
         result = shape.diff(before, after, **options)
         changes = jsonable(result.to_dict())["changes"]
         if not ctx.include_raw:

@@ -39,14 +39,12 @@
       "response": {
         "api_version": "1.2",
         "command": "proposals_contract",
-        "error": {
-          "code": "input.contract_conflict",
-          "group": "input",
-          "hint": null,
-          "message": "rule:orders.row_count conflicts with orders.row_count.min in ${DIR}/contract_base.json"
-        },
         "id": "merge",
-        "ok": false,
+        "ok": true,
+        "result": {
+          "rules": 3,
+          "written": "${DIR}/contract_merged.json"
+        },
         "warnings": []
       }
     },

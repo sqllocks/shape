@@ -5,6 +5,28 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Bridge API 1.2 (`docs/BRIDGE.md`, W7-05): the analysis commands of the open engine reach the JSON
+  bridge, and the registry gives drift with severity between two share-safe versions. New commands:
+  `report_card` and `report_card_read` (`shape report-card`; the card holds no value of the real
+  data), `rules_mutate` (cancellable between mutants), `rules_backtest`, `proposals_contract` and the
+  kind `rule` of `proposals_propose` (with `rule` and `stale` in `proposals_list`), `bisect`,
+  `bisect_layers` and `timelapse` (the values of a classified column are withheld unless
+  `options.include_raw_values`), `registry_diff` and `chaos` (the input check of `shape chaos`
+  unchanged: an input not marked as Shape-generated is `policy.unverified_input` before anything is
+  written, `allow_real_input` adds the warning `real_input_corrupted`; local output only). New error
+  codes `input.contract_conflict` and `policy.unverified_input`. `format_schema` names the formats of
+  the new reports (`mutation-plan`, `mutation-report`, `incidents`, `backtest-report`). A request that
+  declares `api_version` `1.0` or `1.1` is answered exactly as that version answers it (a 1.2
+  command is `usage.unknown_command`, and the 1.2 values of an enumeration are refused as before);
+  the 1.1 schemas and vectors are frozen in `docs/bridge/schema/1.1/` and
+  `docs/bridge/vectors/1.1/`, and `tests/bridge/test_compat_1_1.py` replays them against the 1.2
+  bridge. The job file `shape-bridge-job` stays at version 1.
+- `shape registry ROOT diff NAME REF1 REF2` and `shape.registry.drift` (`docs/REGISTRY.md`): for two
+  share-safe profiles the result has `drift` with the changes of `shape diff` (`kind`, `severity`,
+  `score`) for every metric both safe forms hold, and `not_measured` for the metrics a safe form
+  withholds (the range of a column, the outlier rate, ...). Two raw profiles give the result of
+  before. `shape.rules.mutation_test` takes the optional `should_stop` and `on_mutant` (what a
+  cancellable bridge job needs); a finished run is unchanged.
 - Bridge API 1.1 (`docs/BRIDGE.md`, W7-04): the JSON bridge now reaches the workflows the command
   line has. New commands: `proposals_propose`, `proposals_list`, `proposals_decide` (proposals and
   decision files), `project_validate`, `project_show` and the arguments `project` and `source` on
