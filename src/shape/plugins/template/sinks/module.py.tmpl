@@ -1,0 +1,23 @@
+"""Sink `{{name}}`: writes record batches to `{{name}}://...` destinations."""
+
+from __future__ import annotations
+
+from collections.abc import Iterable
+from typing import Any
+
+import pyarrow as pa
+
+SHAPE_API = "1.0"
+
+class {{class}}:
+    """Counts the rows it is given. Replace the loop body with a write to the destination."""
+
+    name = "{{name}}"
+    schemes = ("{{name}}",)
+
+    def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
+        rows = 0
+        for batch in batches:
+            # Write `batch` to `uri` here.
+            rows += batch.num_rows
+        return rows

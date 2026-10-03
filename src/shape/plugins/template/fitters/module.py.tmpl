@@ -1,0 +1,31 @@
+"""Distribution fitter `{{name}}`: fits a normal distribution and reports its KS statistic."""
+
+from __future__ import annotations
+
+import math
+
+import pyarrow as pa
+from shape.plugins.api.v1 import FitResult
+
+SHAPE_API = "1.0"
+
+class {{class}}:
+    """Fits a normal distribution. Replace it with the family you fit."""
+
+    name = "{{name}}"
+    families = ("normal",)
+
+    def fit(self, sample: pa.Array) -> FitResult | None:
+        values = sorted(float(v) for v in sample.to_pylist() if v is not None)
+        if len(values) < 2:
+            return None
+        mean = sum(values) / len(values)
+        std = math.sqrt(sum((v - mean) ** 2 for v in values) / (len(values) - 1))
+        if std == 0.0:
+            return FitResult("normal", {"mean": mean, "std": 0.0}, 0.0)
+        n = len(values)
+        ks = 0.0
+        for i, v in enumerate(values):
+            cdf = 0.5 * (1.0 + math.erf((v - mean) / (std * math.sqrt(2.0))))
+            ks = max(ks, abs(cdf - i / n), abs((i + 1) / n - cdf))
+        return FitResult("normal", {"mean": mean, "std": std}, min(ks, 1.0))

@@ -1,0 +1,19 @@
+"""Generation strategy `{{name}}`: a column of consecutive integers."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any
+
+import pyarrow as pa
+from shape.plugins.api.v1 import GenerationContext
+
+SHAPE_API = "1.0"
+
+class {{class}}:
+    """Row numbers. Values depend on the row, not on the chunk layout: keep it that way."""
+
+    name = "{{name}}"
+
+    def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
+        return pa.array(range(ctx.row_start, ctx.row_start + ctx.n_rows), type=pa.int64())

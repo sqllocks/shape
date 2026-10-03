@@ -1,0 +1,175 @@
+name: Shape data check
+description: >-
+  Profile the sources of a Shape project, compare each with its baseline, post the result as one
+  pull request comment and gate the merge on it.
+author: sqllocks
+branding:
+  icon: check-circle
+  color: blue
+
+inputs:
+  shape-version:
+    description: >-
+      The Shape release to install. Default: the version this action was used at (the tag after
+      the @ in `uses: sqllocks/shape@<tag>`); the latest release when that is not a version.
+      `installed` uses the Shape that is already installed and installs nothing.
+    required: false
+    default: ""
+  project:
+    description: The directory that holds shape.yml.
+    required: false
+    default: "."
+  sources:
+    description: >-
+      Source names of the project to check, separated by commas or spaces. Default: all of them.
+    required: false
+    default: ""
+  fail-on:
+    description: >-
+      When the job fails: `fail` (a command failed), `drift` (also when findings are reported) or
+      `never`. Make the job a required status check to gate the merge.
+    required: false
+    default: "fail"
+  comment:
+    description: Post the result as a pull request comment (`true` or `false`).
+    required: false
+    default: "true"
+  token:
+    description: The token that writes the comment (it needs the pull-requests write permission).
+    required: false
+    default: ${{ github.token }}
+  python-version:
+    description: The Python version to run Shape with.
+    required: false
+    default: "3.12"
+
+outputs:
+  verdict:
+    description: The worst verdict of the checked sources (pass, drift or fail).
+    value: ${{ steps.check.outputs.verdict }}
+  findings:
+    description: The number of findings over all sources.
+    value: ${{ steps.check.outputs.findings }}
+  comment-path:
+    description: The path of the Markdown comment on the runner.
+    value: ${{ steps.check.outputs.comment-path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install Shape
+      shell: bash
+      env:
+        SHAPE_VERSION: ${{ inputs.shape-version }}
+        ACTION_REF: ${{ github.action_ref }}
+      run: |
+        set -euo pipefail
+        if [ "$SHAPE_VERSION" = "installed" ]; then
+          shape --version
+          exit 0
+        fi
+        version="${SHAPE_VERSION:-$ACTION_REF}"
+        version="${version#v}"
+        if [ -z "$version" ]; then
+          python -m pip install --quiet "sqllocks-shape[yaml]"
+        elif [[ "$version" =~ ^[0-9]+(\.[0-9]+)*((a|b|rc)[0-9]+)?(\.post[0-9]+)?(\.dev[0-9]+)?$ ]]; then
+          python -m pip install --quiet "sqllocks-shape[yaml]==$version"
+        elif [ -n "$SHAPE_VERSION" ]; then
+          echo "::error::shape-version must be a release number such as 1.0.0, or 'installed'"
+          exit 2
+        else
+          echo "::notice::the action ref is not a release number: installing the latest Shape"
+          python -m pip install --quiet "sqllocks-shape[yaml]"
+        fi
+        shape --version
+
+    - name: Check the project
+      id: check
+      shell: bash
+      env:
+        PROJECT: ${{ inputs.project }}
+        SOURCES: ${{ inputs.sources }}
+        FAIL_ON: ${{ inputs.fail-on }}
+        POST_COMMENT: ${{ inputs.comment }}
+        EVENT_NAME: ${{ github.event_name }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        REPOSITORY: ${{ github.repository }}
+        GITHUB_TOKEN: ${{ inputs.token }}
+      run: |
+        set -uo pipefail
+        case "$FAIL_ON" in fail|drift|never) ;; *)
+          echo "::error::fail-on must be fail, drift or never"; exit 2 ;;
+        esac
+        case "$POST_COMMENT" in true|false) ;; *)
+          echo "::error::comment must be true or false"; exit 2 ;;
+        esac
+        cd "$PROJECT" || { echo "::error::project directory not found"; exit 2; }
+        out="$RUNNER_TEMP/shape-action"
+        mkdir -p "$out/current"
+        if [ -n "$SOURCES" ]; then
+          names="$(printf '%s' "$SOURCES" | tr ',' ' ')"
+        else
+          names="$(shape project validate --json | python -c 'import json,sys; print(" ".join(json.load(sys.stdin)["sources"]))')" \
+            || { echo "::error::shape.yml could not be read: run shape project validate"; exit 2; }
+        fi
+        if [ -z "${names// /}" ]; then
+          echo "::error::the project has no sources to check"; exit 2
+        fi
+        results=()
+        for name in $names; do
+          if ! [[ "$name" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+            echo "::error::invalid source name in the sources input"; exit 2
+          fi
+          result="$out/$name.result.json"
+          code=0
+          shape profile "$name" -o "$out/current/$name.shape" >/dev/null || code=$?
+          if [ "$code" -eq 0 ]; then
+            diff_flags=()
+            if [ "$FAIL_ON" = drift ]; then diff_flags+=(--fail-on-drift); fi
+            shape diff --source "$name" "$out/current/$name.shape" ${diff_flags[@]+"${diff_flags[@]}"} \
+              --json - --junit "$out/$name.junit.xml" --sarif "$out/$name.sarif" \
+              > "$result" || true
+          else
+            printf '{"format":"shape-result","version":1,"command":"profile","exit_code":%s,"project":{"source":"%s"}}\n' \
+              "$code" "$name" > "$result"
+          fi
+          results+=("$result")
+        done
+        if shape ci comment "${results[@]}" -o "$out/comment.md" --json > "$out/comment.json"; then
+          verdict="$(python -c 'import json,sys; print(json.load(open(sys.argv[1]))["verdict"])' "$out/comment.json")"
+          findings="$(python -c 'import json,sys; print(json.load(open(sys.argv[1]))["findings"])' "$out/comment.json")"
+          cat "$out/comment.md" >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "::error::the result documents could not be read"
+          verdict=fail
+          findings=0
+          : > "$out/comment.md"
+        fi
+        {
+          echo "verdict=$verdict"
+          echo "findings=$findings"
+          echo "comment-path=$out/comment.md"
+        } >> "$GITHUB_OUTPUT"
+        if [ "$POST_COMMENT" = true ] && [ "$EVENT_NAME" = pull_request ]; then
+          shape ci post-comment --body-file "$out/comment.md" --repo "$REPOSITORY" --pr "$PR_NUMBER" \
+            || echo "::warning::the pull request comment was not posted"
+        fi
+
+    - name: Gate on the result
+      shell: bash
+      env:
+        VERDICT: ${{ steps.check.outputs.verdict }}
+        FAIL_ON: ${{ inputs.fail-on }}
+      run: |
+        set -eu
+        echo "Shape verdict: $VERDICT (fail-on: $FAIL_ON)"
+        case "$FAIL_ON" in
+          fail) [ "$VERDICT" = pass ] || [ "$VERDICT" = drift ] || exit 1 ;;
+          drift) [ "$VERDICT" = pass ] || exit 1 ;;
+          never) ;;
+        esac

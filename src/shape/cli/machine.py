@@ -186,6 +186,19 @@ def _plan_bridge(a: argparse.Namespace, out: list[dict[str, str]]) -> None:
         out.clear()  # `--check` only reads
 
 
+def _plan_post_comment(a: argparse.Namespace, out: list[dict[str, str]]) -> None:
+    from shape.cli.prbot import check_target
+
+    check_target(a.repo, a.pr)
+    out.append({"action": "send", "target": f"github {a.repo}#{a.pr}"})
+
+
+def _plan_plugin_new(a: argparse.Namespace, out: list[dict[str, str]]) -> None:
+    from shape.plugins.scaffold import plan_files
+
+    out.extend({"action": "create", "target": str(p)} for p in plan_files(a))
+
+
 #: command -> what it touches. ``--json`` and ``--dry-run`` flags that name a path are outputs too
 #: (found from the arguments, see :func:`_flag_outputs`).
 SPECS: dict[str, Spec] = {
@@ -244,6 +257,10 @@ SPECS: dict[str, Spec] = {
     "profile registry delete": Spec(plan=_plan_profile_registry),
     "profile registry tag": Spec(plan=_plan_profile_registry),
     "profile registry reindex": Spec(plan=_plan_profile_registry),
+    "ci comment": Spec(inputs=("results",), outputs=("output",)),
+    "ci post-comment": Spec(inputs=("body_file",), plan=_plan_post_comment),
+    "badge": Spec(inputs=("results",), outputs=("output",)),
+    "plugins new": Spec(plan=_plan_plugin_new),
 }
 
 #: commands that print only when asked and otherwise have a ``--dry-run`` of their own.
@@ -312,12 +329,34 @@ def run(path: str, a: argparse.Namespace, fn: Callable[[], int]) -> int:
         a.json = None  # the command prints its result as usual; the envelope goes to stdout
     if getattr(a, "dry_run", False) and not getattr(a, "native_dry_run", False):
         return _dry_run(path, a, json_mode)
+    observer = _notifier(path, a)
     if not json_mode:
         default = _ci_json_default(path, a)
         if default is not None:
-            return _enveloped(path, fn, errors, to_file=default)
+            return _enveloped(path, fn, errors, to_file=default, observer=observer)
+        if observer is not None:
+            return _observed(fn, observer)
         return fn()
-    return _enveloped(path, fn, errors)
+    return _enveloped(path, fn, errors, observer=observer)
+
+
+def _notifier(path: str, a: argparse.Namespace) -> Callable[[int, Any], None] | None:
+    """The webhook notifier of a checking command's run, or None when it has no target."""
+    from shape.cli import notify
+
+    if path not in notify.COMMANDS:
+        return None
+    return notify.observer(path, a)
+
+
+def _observed(fn: Callable[[], int], observer: Callable[[int, Any], None]) -> int:
+    """Run ``fn`` with its output passed on as usual, then tell ``observer`` what it decided."""
+    buf = _Echo(sys.stdout)
+    with redirect_stdout(buf):
+        code = int(fn() or 0)
+    payload, _ = parse_output(buf.getvalue())
+    observer(code, payload)
+    return code
 
 
 #: the commands that write CI reports and so read the ``ci:`` block of shape.yml
@@ -410,7 +449,13 @@ class _Echo(_Capture):
         return super().write(text)
 
 
-def _enveloped(path: str, fn: Callable[[], int], errors: Any, to_file: Path | None = None) -> int:
+def _enveloped(
+    path: str,
+    fn: Callable[[], int],
+    errors: Any,
+    to_file: Path | None = None,
+    observer: Callable[[int, Any], None] | None = None,
+) -> int:
     from shape.cli import lifecycle
     from shape.security.redact import redact_text
 
@@ -438,6 +483,8 @@ def _enveloped(path: str, fn: Callable[[], int], errors: Any, to_file: Path | No
         if lines:
             error = " ".join(ln.split("shape: error:", 1)[1].strip() for ln in lines)
     doc = json.dumps(envelope(path, int(code or 0), payload, error), default=str)
+    if observer is not None:
+        observer(int(code or 0), payload)
     if to_file is None:
         print(doc)
     else:
@@ -571,6 +618,10 @@ def plan_actions(path: str, a: argparse.Namespace) -> list[dict[str, str]]:
         actions.extend(_target_actions(_values(getattr(a, dest, None))))
     if spec.plan is not None:
         spec.plan(a, actions)
+    from shape.cli import notify
+
+    if path in notify.COMMANDS:
+        actions.extend(notify.plan(path, a))
     seen: set[tuple[str, str]] = set()
     unique = []
     for act in actions:

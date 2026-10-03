@@ -1,0 +1,22 @@
+"""Chaos mutator `{{name}}`: blanks one value of the first column."""
+
+from __future__ import annotations
+
+import pyarrow as pa
+from shape.plugins.api.v1 import ChaosReport
+
+SHAPE_API = "1.0"
+
+class {{class}}:
+    """Sets one value of the first column to null, chosen by the seed. Replace the mutation."""
+
+    name = "{{name}}"
+
+    def mutate(self, batch: pa.RecordBatch, seed: int) -> tuple[pa.RecordBatch, ChaosReport]:
+        if batch.num_rows == 0 or batch.num_columns == 0:
+            return batch, ChaosReport("{{name}}", 0)
+        values = batch.column(0).to_pylist()
+        values[seed % batch.num_rows] = None
+        columns = [pa.array(values, type=batch.schema.field(0).type), *batch.columns[1:]]
+        mutated = pa.RecordBatch.from_arrays(columns, schema=batch.schema)
+        return mutated, ChaosReport("{{name}}", 1)

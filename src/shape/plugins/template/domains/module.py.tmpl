@@ -1,0 +1,20 @@
+"""Domain `{{name}}`: a schema with reference data and scale presets."""
+
+from __future__ import annotations
+
+import pyarrow as pa
+from shape.plugins.api.v1 import DomainDefinition
+
+SHAPE_API = "1.0"
+
+class {{class}}:
+    """A one-table domain. Replace the schema, the reference data and the presets."""
+
+    name = "{{name}}"
+
+    def definition(self) -> DomainDefinition:
+        return DomainDefinition(
+            schema={"tables": {"items": {"columns": {"id": "int64", "label": "string"}}}},
+            reference_data={"labels": pa.table({"label": ["a", "b", "c"]})},
+            scale_presets={"small": {"items": 100}, "medium": {"items": 10_000}},
+        )

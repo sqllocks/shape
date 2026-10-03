@@ -867,6 +867,10 @@ def _cmd_plugins(a):
         return plugin_cli.cmd_list(host, a)
     if a.plugins_cmd == "info":
         return plugin_cli.cmd_info(host, a)
+    if a.plugins_cmd == "new":
+        from shape.plugins import scaffold
+
+        return scaffold.run(a)
     report = diagnose(host)
     if a.json:
         _dump(report)
@@ -980,7 +984,7 @@ def _stream_profile_arguments(parser):
 
 
 def _build_parser(plugin_commands=()):
-    from shape.cli import ci, gitcmds
+    from shape.cli import ci, gitcmds, notify
     from shape.cli.project import add_arguments as add_project_arguments
     from shape.cli.project import add_project_flags
 
@@ -1008,6 +1012,9 @@ def _build_parser(plugin_commands=()):
     pli = pls.add_parser("info", help="load one plugin and describe it")
     pli.add_argument("plugin", metavar="[GROUP:]NAME")
     pli.add_argument("--json", action="store_true", help="print the description as JSON")
+    from shape.plugins import scaffold
+
+    scaffold.add_arguments(pls)
     pld = pls.add_parser("doctor", help="load every plugin and report failures")
     pld.add_argument("--json", action="store_true", help="print the report as JSON")
     c = sub.add_parser(
@@ -1157,6 +1164,7 @@ def _build_parser(plugin_commands=()):
     add_project_flags(d)
     d.add_argument("--json", metavar="RESULT.json")
     ci.add_flags(d)
+    notify.add_flag(d)
     d.add_argument("--fail-on-drift", action="store_true")
     d.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     _diff_policy_arguments(d)
@@ -1252,6 +1260,7 @@ def _build_parser(plugin_commands=()):
     vf.add_argument("-o", "--output", metavar="REPORT", help="write a .json or .md report")
     vf.add_argument("--strict", action="store_true", help="exit 1 on warnings too")
     ci.add_flags(vf)
+    notify.add_flag(vf)
     add_project_flags(vf, source=False)
     qu = sub.add_parser("quality")
     qu.add_argument("csv")
@@ -1334,6 +1343,7 @@ def _build_parser(plugin_commands=()):
         help="what to print: a shape.reports format such as json, md or html (default json)",
     )
     ci.add_flags(fi)
+    notify.add_flag(fi)
     add_project_flags(fi, source=False)
     k = sub.add_parser("key")
     k.add_argument("csv")
@@ -1359,6 +1369,7 @@ def _build_parser(plugin_commands=()):
     )
     ck.add_argument("--json", metavar="RESULT.json")
     ci.add_flags(ck)
+    notify.add_flag(ck)
     add_project_flags(ck)
     ck.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     co = sub.add_parser(
@@ -1410,6 +1421,12 @@ def _build_parser(plugin_commands=()):
 
     add_registry_arguments(sub)
     add_project_arguments(sub)
+    from shape.cli import badge, prbot
+    from shape.cli import notify as notify_cli
+
+    prbot.add_arguments(sub)
+    badge.add_arguments(sub)
+    notify_cli.add_arguments(sub)
     for rec in plugin_commands:  # listed in --help only; the plugin loads when it is run
         sub.add_parser(rec.name, help=f"(plugin {rec.source})", add_help=False)
     from shape.cli import exitcodes, machine
@@ -1632,6 +1649,18 @@ def _route(a):
         rc = _run(_verify_inputs, a)
         if rc:
             return rc
+    if a.cmd == "ci":
+        from shape.cli.prbot import run as run_prbot
+
+        return run_prbot(a)
+    if a.cmd == "badge":
+        from shape.cli.badge import run as run_badge
+
+        return run_badge(a)
+    if a.cmd == "notify":
+        from shape.cli.notify import run as run_notify
+
+        return run_notify(a)
     if a.cmd in ("init", "project"):
         from shape.cli.project import run as run_project
 

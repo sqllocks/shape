@@ -53,6 +53,10 @@ def world(tmp_path_factory):
     )
     (root / "drift.plan.json").write_text(json.dumps({"start": "2026-03-01", "days": 2}))
     (root / "pack.yaml").write_text("id: x\nkind: stream\ndomain: hr\n")
+    (root / "r.json").write_text(
+        json.dumps({"format": "shape-result", "version": 1, "command": "diff", "exit_code": 0})
+    )
+    (root / "comment.md").write_text("<!-- shape-pr-comment -->\nbody\n")
     (root / "gitrepo").mkdir()
     subprocess.run(["git", "init", "-q", str(root / "gitrepo")], check=True)
     real = [
@@ -142,6 +146,19 @@ CASES = {
     "profile registry delete": ["profile", "registry", "delete", "crm/a/v1"],
     "profile registry tag": ["profile", "registry", "tag", "crm/a/v1", "extra"],
     "profile registry reindex": ["profile", "registry", "reindex"],
+    "ci comment": ["ci", "comment", "r.json", "-o", "new/comment.md"],
+    "ci post-comment": [
+        "ci",
+        "post-comment",
+        "--body-file",
+        "comment.md",
+        "--repo",
+        "o/r",
+        "--pr",
+        "7",
+    ],  # fmt: skip
+    "badge": ["badge", "r.json", "-o", "new/badge.svg"],
+    "plugins new": ["plugins", "new", "acme-src", "--group", "shape.sources", "-o", "new/plug"],
 }
 
 

@@ -1,0 +1,22 @@
+"""Distribution `{{name}}`: a deterministic number for every row."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+
+import pyarrow as pa
+from shape.plugins.api.v1 import GenerationContext
+
+SHAPE_API = "1.0"
+
+class {{class}}:
+    """A number in [0, scale) that depends only on the seed and the row (so on no chunk layout).
+    Replace it with your distribution, drawing from a generator keyed by (seed, row)."""
+
+    name = "{{name}}"
+
+    def sample(self, params: Mapping[str, float], ctx: GenerationContext) -> pa.Array:
+        scale = float(params.get("scale", 1.0))
+        rows = range(ctx.row_start, ctx.row_start + ctx.n_rows)
+        values = [((ctx.seed * 1103515245 + i * 12345) % 1000) / 1000.0 * scale for i in rows]
+        return pa.array(values, type=pa.float64())

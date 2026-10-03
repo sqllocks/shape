@@ -1,0 +1,23 @@
+"""Emitter `{{name}}`: sends event batches to `{{name}}://...` streams."""
+
+from __future__ import annotations
+
+from collections.abc import Iterable
+from typing import Any
+
+import pyarrow as pa
+
+SHAPE_API = "1.0"
+
+class {{class}}:
+    """Counts the events it is given. Replace the loop body with a send to the stream."""
+
+    name = "{{name}}"
+    schemes = ("{{name}}",)
+
+    def emit(self, uri: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
+        sent = 0
+        for batch in batches:
+            # Send `batch` to `uri` here.
+            sent += batch.num_rows
+        return sent

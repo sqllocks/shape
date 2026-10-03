@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "{{dist}}"
+version = "0.1.0"
+description = "A Shape plugin for the {{group}} group"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["sqllocks-shape"]
+{{authors}}
+[project.entry-points."{{group}}"]
+{{name}} = "{{package}}:{{class}}"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

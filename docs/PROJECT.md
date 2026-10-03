@@ -59,6 +59,7 @@ gates:
 | `…ignore` | Columns left out of the comparison: a name, `table.column` or a glob. |
 | `…columns.COLUMN` | A column name, `table.column` or glob. `thresholds`, `ignore: true`, `owner`, `annotations` (strings, numbers, booleans). |
 | `ci.junit`, `ci.sarif`, `ci.json` | Optional default paths of the reports of `shape diff`, `check`, `verify`, `fidelity` and `profile validate --safe` (`--junit`, `--sarif`; the `shape-result` document). Each may contain `{command}`; no other braces. A flag overrides it; relative paths are relative to the folder holding `shape.yml`. See `docs/CI.md`. |
+| `notifications` | Optional list of webhook targets, each `{url, on, secret, commands}`: `url` and `secret` are `env://` or `file://` references (never the address itself), `on` is a list of `fail`, `drift` and `always`, `commands` an optional subset of `diff`, `check`, `verify` and `fidelity`. A file without the key behaves as before (an additive key of version 1). See `docs/NOTIFICATIONS.md`. |
 | `gates.NAME.mode` | `observe` or `enforce`. NAME is a gate of `shape verify` (`schema_conformance`, `referential_integrity`, …). A gate that is not listed is enforced. |
 
 The JSON Schema is `src/shape/schemas/shape-project-v1.schema.json` (also `shape.project.schema()`).

@@ -1,0 +1,43 @@
+{
+  "changes": [
+    {
+      "baseline": 123456,
+      "column": "email",
+      "current": 654321,
+      "kind": "null_rate_change",
+      "score": 0.5,
+      "severity": "high",
+      "table": "customers"
+    },
+    {
+      "baseline": 123456,
+      "column": "tier",
+      "current": 654321,
+      "kind": "new_category",
+      "score": 0.5,
+      "severity": "medium",
+      "table": "customers"
+    },
+    {
+      "baseline": 123456,
+      "column": "signup",
+      "current": 654321,
+      "kind": "range_change",
+      "planned": "chg-12",
+      "score": 0.5,
+      "severity": "low",
+      "table": "customers"
+    }
+  ],
+  "command": "diff",
+  "drifted": true,
+  "exit_code": 1,
+  "format": "shape-result",
+  "project": {
+    "file": "shape.yml",
+    "format": "shape-project",
+    "source": "customers",
+    "version": 1
+  },
+  "version": 1
+}

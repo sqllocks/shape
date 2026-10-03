@@ -128,6 +128,14 @@ _EXTRA: dict[str, dict[int, str]] = {
     "registry diff": {},
     "init": {},
     "project validate": {},
+    "ci comment": {},
+    "ci post-comment": {
+        1: "GitHub answered with an error other than 403 or 404 (those print a notice and exit "
+        "0), or could not be reached"
+    },
+    "badge": {},
+    "plugins new": {},
+    "notify test": {1: "a notification was not delivered"},
 }
 
 #: ``quality`` is the one command whose "failed" verdict has always been 2.

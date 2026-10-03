@@ -133,6 +133,22 @@ remove something or a preflight check failed, 2 bad input.
 (`--project FILE`, `--no-project`, `--source NAME`, `diff --baseline-date`). See
 `docs/PROJECT.md`.
 
+## The pull request check, the badge, notifications and plugin templates
+
+- `shape ci comment RESULT.json... [-o FILE] [--max-findings 50] [--title TEXT]` renders the Markdown
+  comment of a pull request from `shape-result` documents; `shape ci post-comment --body-file FILE
+  --repo OWNER/REPO --pr N` creates or updates the one Shape comment (the token comes from
+  `GITHUB_TOKEN`). Exit 0, 2 for a missing file or a document that is not a `shape-result`; for
+  `post-comment` also 1 for an HTTP error other than 403 and 404 (those print a notice and exit 0).
+  See `docs/PR_BOT.md`, the action `uses: sqllocks/shape@<tag>`.
+- `shape badge RESULT.json... -o badge.svg [--label shape]` writes the status badge: passing, drift,
+  failing or unknown. See `docs/CI.md`.
+- `shape notify test [--project DIR]` sends a test notification to every target of `notifications:` in
+  `shape.yml`; `--notify REF` on `diff`, `check`, `verify` and `fidelity` adds a target for one run.
+  Exit 1 when a delivery failed, 2 without a project or notifications. See `docs/NOTIFICATIONS.md`.
+- `shape plugins new NAME --group GROUP [-o DIR] [--author TEXT]` creates a plugin package from a
+  template. See `docs/plugins/authoring.md`.
+
 ## Registries
 
 `shape registry` (content-addressed artifacts) and `shape profile registry` (named profiles) are

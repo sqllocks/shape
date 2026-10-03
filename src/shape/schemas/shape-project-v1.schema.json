@@ -58,6 +58,53 @@
           "description": "shape-result JSON document path."
         }
       }
+    },
+    "notifications": {
+      "type": "array",
+      "description": "Webhook notifications of the checking commands (W6-01). Each entry names a target by credential reference (env:// or file://), so no address or secret is written in this file. After diff, check, verify or fidelity has decided its result, a shape-notification document (names and counts, no data values) is POSTed to every target whose `on` matches.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "url",
+          "on"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Reference to the webhook address: env://NAME or file://PATH."
+          },
+          "on": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "fail",
+                "drift",
+                "always"
+              ]
+            },
+            "description": "fail: the command exited non-zero; drift: the result lists findings; always: every run."
+          },
+          "secret": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Reference to the signing secret (env:// or file://); with it the request carries X-Shape-Signature-256: sha256=HEX."
+          },
+          "commands": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "diff",
+                "check",
+                "verify",
+                "fidelity"
+              ]
+            },
+            "description": "Only these commands notify (default: all four)."
+          }
+        }
+      }
     }
   },
   "$defs": {

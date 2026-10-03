@@ -36,6 +36,49 @@ GATE_MODES = ("observe", "enforce")
 DEFAULT_REGISTRY = "shapes/registry"
 
 
+NOTIFY_COMMANDS = ("diff", "check", "verify", "fidelity")
+NOTIFY_ON = ("fail", "drift", "always")
+NOTIFY_REF_SCHEMES = ("env", "file")
+
+
+def reference_problem(where: str, value: Any) -> str | None:
+    """Why ``value`` is not an ``env://`` or ``file://`` reference, or None."""
+    if not isinstance(value, str) or not value.strip():
+        return f"{where}: must be a credential reference (env://NAME or file://PATH)"
+    scheme, sep, rest = value.partition("://")
+    if not sep or scheme not in NOTIFY_REF_SCHEMES or not rest:
+        return (
+            f"{where}: {value!r} is not a credential reference: use env://NAME or file://PATH "
+            "(the address itself is never written in shape.yml)"
+        )
+    return None
+
+
+def notification_problems(where: str, entry: Any) -> list[str]:
+    """Problems of one ``notifications:`` entry, beyond what the JSON Schema says."""
+    if not isinstance(entry, dict):
+        return []
+    out: list[str] = []
+    for key in ("url", "secret"):
+        if key in entry:
+            found = reference_problem(f"{where}.{key}", entry[key])
+            if found:
+                out.append(found)
+    on = entry.get("on")
+    if isinstance(on, list):
+        if not on:
+            out.append(f"{where}.on: list at least one of {', '.join(NOTIFY_ON)}")
+        if len(set(map(str, on))) != len(on):
+            out.append(f"{where}.on: each value may appear once")
+    commands = entry.get("commands")
+    if isinstance(commands, list):
+        if not commands:
+            out.append(f"{where}.commands: list at least one of {', '.join(NOTIFY_COMMANDS)}")
+        if len(set(map(str, commands))) != len(commands):
+            out.append(f"{where}.commands: each value may appear once")
+    return out
+
+
 class ProjectError(ShapeError, ValueError):
     """``shape.yml`` cannot be read, is not valid, or names something that does not exist.
     ``problems`` holds every problem found (without the file name)."""
@@ -142,6 +185,12 @@ class Project:
         return dict(found) if isinstance(found, dict) else {}
 
     @property
+    def notifications(self) -> list[dict[str, Any]]:
+        """The ``notifications:`` list (webhook targets, W6-01); empty when absent."""
+        found = self.document.get("notifications")
+        return [dict(n) for n in found] if isinstance(found, list) else []
+
+    @property
     def root(self) -> Path:
         return self.path.parent
 
@@ -203,6 +252,16 @@ def _refuse_duplicate_keys(text: str) -> None:
                 stack.append(value_node)
 
 
+def _on_keys(doc: Any) -> Any:
+    """YAML 1.1 reads an unquoted ``on`` as the boolean ``True``: the ``on:`` of a notification
+    entry means the word, so it is put back."""
+    entries = doc.get("notifications") if isinstance(doc, dict) else None
+    for entry in entries if isinstance(entries, list) else []:
+        if isinstance(entry, dict) and True in entry and "on" not in entry:
+            entry["on"] = entry.pop(True)
+    return doc
+
+
 def _read_yaml(text: str) -> Any:
     try:
         import yaml
@@ -215,7 +274,7 @@ def _read_yaml(text: str) -> Any:
     try:
         doc = safe_load_yaml(text)  # bounded and safe: no Python objects, no alias bombs
         _refuse_duplicate_keys(text)
-        return doc
+        return _on_keys(doc)
     except yaml.MarkedYAMLError as exc:
         mark = exc.problem_mark
         where = f"line {mark.line + 1}, column {mark.column + 1}: " if mark else ""
@@ -302,6 +361,10 @@ def _semantic_problems(doc: dict[str, Any]) -> list[str]:
         _text_problems(f"ci.{key}", value, out)
         if isinstance(value, str) and set(_PLACEHOLDER.sub("", value)) & {"{", "}"}:
             out.append(f"ci.{key}: only {{command}} may appear in braces")
+    for i, entry in enumerate(
+        doc["notifications"] if isinstance(doc.get("notifications"), list) else []
+    ):
+        out += notification_problems(f"notifications[{i}]", entry)
     if isinstance(doc.get("gates"), dict) and doc["gates"]:
         from shape.quality.gates import GateRunner
 

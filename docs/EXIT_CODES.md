@@ -53,6 +53,13 @@ parse, and 130 when a scale run is interrupted. See `docs/CLI.md` and `docs/CI.m
 | 1 | the plugin loads with a problem (its status is not ok) |
 | 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
 
+## `shape plugins new`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
 ## `shape plugins doctor`
 
 | Code | Meaning |
@@ -575,6 +582,36 @@ parse, and 130 when a scale run is interrupted. See `docs/CLI.md` and `docs/CI.m
 |---|---|
 | 0 | ok |
 | 2 | shape.yml is not valid, or bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
+## `shape ci comment`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
+## `shape ci post-comment`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 1 | GitHub answered with an error other than 403 or 404 (those print a notice and exit 0), or could not be reached |
+| 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
+## `shape badge`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+
+## `shape notify test`
+
+| Code | Meaning |
+|---|---|
+| 0 | ok |
+| 1 | a notification was not delivered |
+| 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
 
 ## `shape profile export`
 

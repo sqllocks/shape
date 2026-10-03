@@ -1,0 +1,31 @@
+# {{dist}}
+
+A [Shape](https://github.com/sqllocks/shape) plugin for the `{{group}}` group (it implements the
+`{{protocol}}` protocol of plugin API v1). Written by `shape plugins new {{dist}} --group {{group}}`.
+
+## Layout
+
+- `src/{{package}}/__init__.py`: the plugin (`{{class}}`) and `SHAPE_API`, the plugin API version it
+  was written for.
+- `tests/test_conformance.py`: runs the Shape plugin conformance kit on it.
+- `pyproject.toml`: the entry point that makes Shape find the plugin.
+- `.github/workflows/ci.yml`: runs the tests and the kit on every push and pull request.
+
+## Try it
+
+```bash
+pip install -e . pytest
+pytest
+python -m shape.plugins.kit {{dist}}
+shape plugins info {{group}}:{{name}}
+```
+
+The generated plugin is a working skeleton that does the least that conforms. Replace the body of
+`{{class}}`, keep the tests passing, and add tests for what it really does: the kit checks that a
+plugin follows the rules of the API, not that it is correct.
+
+## Reference
+
+- Plugin API v1: <https://github.com/sqllocks/shape/blob/main/docs/plugins/api-v1.md>
+- Writing a plugin: <https://github.com/sqllocks/shape/blob/main/docs/plugins/authoring.md>
+- What stays stable: <https://github.com/sqllocks/shape/blob/main/docs/plugins/stability.md>

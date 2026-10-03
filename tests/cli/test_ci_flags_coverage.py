@@ -23,6 +23,8 @@ STATE_WRITERS = {
     "demo cleanup", "demo init", "jobs cancel", "jobs resume", "registry commit",
     "registry tag", "registry promote", "profile registry save", "profile registry delete",
     "profile registry tag", "profile registry reindex",
+    # it changes a pull request (W6-01): a `send` action, no file
+    "ci post-comment",
 }  # fmt: skip
 
 

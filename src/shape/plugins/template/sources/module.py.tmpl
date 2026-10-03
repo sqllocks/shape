@@ -1,0 +1,26 @@
+"""Source `{{name}}`: reads `{{name}}://...` URIs. Replace the sample rows with real data."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from typing import Any
+
+import pyarrow as pa
+
+SHAPE_API = "1.0"
+
+class {{class}}:
+    """Reads `{{name}}://...` as a one-column table named `value`."""
+
+    name = "{{name}}"
+    schemes = ("{{name}}",)
+
+    def can_open(self, uri: str) -> bool:
+        return uri.startswith("{{name}}://")
+
+    def schema(self, uri: str, **options: Any) -> pa.Schema:
+        return pa.schema([("value", pa.int64())])
+
+    def read(self, uri: str, **options: Any) -> Iterator[pa.RecordBatch]:
+        # Replace this with a read of whatever `uri` names. Reading twice must give the same data.
+        yield pa.RecordBatch.from_pydict({"value": [1, 2, 3]}, schema=self.schema(uri))

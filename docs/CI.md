@@ -200,6 +200,75 @@ jobs:
 With the `ci:` block in `shape.yml` the two flags are not needed. `shape init` writes a smaller
 workflow to start from (`docs/PROJECT.md`).
 
+## The pull request check
+
+[PR_BOT.md](PR_BOT.md): `uses: sqllocks/shape@<tag>` profiles and diffs every source of the project,
+posts the result as one comment on the pull request (`shape ci comment` and `shape ci post-comment`),
+and fails the job as `fail-on` says, so a required status check gates the merge. Scheduled checks can
+tell people about drift with a webhook ([NOTIFICATIONS.md](NOTIFICATIONS.md)).
+
+## Status badge
+
+`shape badge RESULT.json... -o badge.svg [--label shape]` writes a self-contained SVG: no external
+reference, no font and no script, so it renders in a README, a wiki or an email. The width comes from a
+fixed table of character widths, so the same inputs give the same bytes. There are four states, taken
+from the `shape-result` documents (the worst one wins):
+
+| State | Colour | When |
+|---|---|---|
+| `passing` | green | every command exited 0 and reported nothing |
+| `drift` | amber | every command ran and drift was reported; no enforced gate failed (exit code 0 with findings) |
+| `failing` | red | a result whose exit code is not 0 or 2: a check failed |
+| `unknown` | grey | no result, or a result whose exit code is 2 (the command could not run) |
+
+`--label TEXT` changes the left-hand text (1 to 40 characters, escaped as XML). A missing file, or one
+that is not a `shape-result`, is an error (exit 2) and nothing is written.
+
+Publish it from the job that checks the project, as a workflow artifact or on a dedicated branch.
+This job keeps the badge in a branch named `badges`, which a README can link to with a stable URL
+(the job needs `contents: write`, and it runs on `push` to the default branch and on a schedule, not
+on pull requests):
+
+```yaml
+name: shape-badge
+on:
+  push: {branches: [main]}
+  schedule: [{cron: "17 5 * * *"}]
+permissions:
+  contents: write
+jobs:
+  badge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install "sqllocks-shape[yaml]"
+      - run: |
+          shape profile orders -o current.shape
+          shape diff --source orders current.shape --fail-on-drift --json - > result.json || true
+          shape badge result.json -o "$RUNNER_TEMP/badge.svg"
+      - name: Publish the badge on the badges branch
+        run: |
+          git config user.name "shape-badge"
+          git config user.email "shape-badge@users.noreply.github.com"
+          if git fetch origin badges; then git switch badges; else git switch --orphan badges; fi
+          cp "$RUNNER_TEMP/badge.svg" badge.svg
+          git add badge.svg
+          git diff --cached --quiet || git commit -m "Update the data check badge"
+          git push origin HEAD:badges
+```
+
+(A `diff` that fails or cannot run still gives a document, so the badge is `failing` or `unknown`
+instead of keeping an old picture.) To keep it as a workflow artifact instead, end the job with
+`actions/upload-artifact` for `badge.svg`.
+
+The README shows it with
+
+```markdown
+[![Shape data check](https://raw.githubusercontent.com/OWNER/REPO/badges/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/shape-badge.yml)
+```
+
 ## Exit codes
 
 Every command's codes are in [`EXIT_CODES.md`](EXIT_CODES.md), generated from

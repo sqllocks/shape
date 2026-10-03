@@ -5,6 +5,23 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Pull request check, badge, plugin templates and notifications (W6-01, `docs/PR_BOT.md`,
+  `docs/NOTIFICATIONS.md`). `uses: sqllocks/shape@<tag>` (`action.yml`) profiles and diffs every
+  source of a project, posts the result as one pull request comment, writes it to the step summary
+  and fails the job as `fail-on` says; its steps are hardened (actions pinned to a commit SHA,
+  inputs only through `env:`, the token never echoed) and a self-test runs it on fixture projects.
+  `shape ci comment RESULT.json...` renders the Markdown (escaped names, `--max-findings`, no data
+  value) and `shape ci post-comment` creates or updates the one comment through the GitHub API
+  (token from `GITHUB_TOKEN`, HTTPS only, no redirects, a 403 or 404 prints a notice and exits 0).
+  `shape badge RESULT.json... -o badge.svg` writes a deterministic, self-contained SVG with the
+  states passing, drift, failing and unknown (`docs/CI.md`). `shape plugins new NAME --group GROUP`
+  creates a plugin package from a template for any of the 14 groups, each passing the conformance
+  kit (`docs/plugins/authoring.md`). `shape.yml` gets an optional `notifications:` list (an additive
+  key of `shape-project` version 1) and `diff`, `check`, `verify` and `fidelity` take `--notify REF`:
+  after the result is decided they POST a `shape-notification` document (names and counts, no data
+  value; HMAC-SHA256 in `X-Shape-Signature-256` with a `secret`; HTTPS only, three attempts on a
+  connection error or 5xx); a failed delivery is a warning and never changes the exit code.
+  `shape notify test` sends a test notification to every target.
 - CI outputs (W1-14, `docs/CI.md`, `docs/EXIT_CODES.md`). `--junit FILE` and `--sarif FILE` on
   `shape diff`, `check`, `verify`, `fidelity` and `profile validate --safe` write JUnit XML (one
   test case per evaluated check; an observe-mode gate is skipped; a planned change passes) and

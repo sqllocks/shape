@@ -11,6 +11,32 @@ Read first: [api-v1.md](api-v1.md) (every Protocol) and [host.md](host.md) (how 
 plugins). A complete small plugin, with a source, a detector and a command, is in
 [`examples/plugin/`](../../examples/plugin/).
 
+## Start from a template
+
+```bash
+shape plugins new acme-iban --group shape.detectors      # a folder ./acme-iban
+cd acme-iban
+pip install -e . pytest
+pytest
+python -m shape.plugins.kit acme-iban
+```
+
+`shape plugins new NAME --group GROUP [-o DIR] [--author TEXT] [--dry-run]` writes a package that
+works and conforms from the first minute: `pyproject.toml` with the entry point in `GROUP`, a module
+that implements the group's Protocol from `shape.plugins.api.v1` and declares `SHAPE_API`, a test that
+runs the conformance kit (`tests/test_conformance.py`, which also runs before the plugin is
+installed), a README and a `.github/workflows/ci.yml` that runs the tests and
+`python -m shape.plugins.kit NAME`. There is a template for every group (`shape.sources`,
+`shape.sinks`, `shape.detectors`, and the rest of the table in section 2); the sample code does the
+least that passes, and you replace its body.
+
+`NAME` is lowercase letters, digits and single hyphens, starting with a letter, at most 48
+characters; it is the distribution name and the entry-point name, and with hyphens as underscores the
+Python package. An invalid name, an unknown group or a folder that is not empty exits with code 2 and
+writes nothing. `--dry-run` lists the files without writing them. The sections below explain what
+the generated files do; [`examples/plugin/`](../../examples/plugin/) stays as the worked example
+with three plugins in one package.
+
 ## 1. The shape of a plugin
 
 ```

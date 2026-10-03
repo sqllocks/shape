@@ -1,0 +1,26 @@
+"""Stream source `{{name}}`: reads batches with resumable offsets."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from typing import Any
+
+import pyarrow as pa
+from shape.plugins.api.v1 import StreamOffset
+
+SHAPE_API = "1.0"
+
+class {{class}}:
+    """Three batches. The offset after batch k is `{"next": k}`: reading from it gives the
+    batches after k. Replace the batches with reads from the stream."""
+
+    name = "{{name}}"
+    schemes = ("{{name}}",)
+
+    def read(
+        self, uri: str, start: StreamOffset | None = None, **options: Any
+    ) -> Iterator[tuple[StreamOffset, pa.RecordBatch]]:
+        first = int(start.value["next"]) if start is not None else 0
+        for i in range(first, 3):
+            batch = pa.RecordBatch.from_pydict({"value": [i * 10, i * 10 + 1]})
+            yield StreamOffset({"next": i + 1}), batch
