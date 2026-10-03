@@ -152,6 +152,13 @@ def _finding(
     }
 
 
+_NAN = float("nan")  # one object, so a NaN key finds the NaN key of the other side in a dict
+
+
+def _canon(v: Any) -> Any:
+    return _NAN if isinstance(v, float) and v != v else v
+
+
 def _number(v: Any) -> bool:
     return isinstance(v, (int, float, Decimal)) and not isinstance(v, bool)
 
@@ -168,6 +175,8 @@ def _compare(s: Any, t: Any, tol: Mapping[str, Any]) -> tuple[bool, Any, float]:
         allowed = float(tol.get("abs", 0)) + float(tol.get("rel", 0)) * float(big)
         return abs(float(diff)) <= allowed, diff, allowed
     sf, tf = float(s), float(t)
+    if sf != sf and tf != tf:
+        return True, 0, 0.0  # NaN reconciles with NaN, as null does with null
     allowed = float(tol.get("abs", 0)) + float(tol.get("rel", 0)) * max(abs(sf), abs(tf))
     diff = tf - sf
     if isinstance(s, int) and isinstance(t, int):
@@ -210,7 +219,7 @@ def _group(
     value_cols = {(c, a): out.column(f"{c}_{a}").to_pylist() for c, a in dict.fromkeys(aggs)}
     counts = out.column(f"{_COUNT}_sum").to_pylist()
     result: dict[tuple[Any, ...], dict[Any, Any]] = {}
-    for i, key in enumerate(zip(*key_cols, strict=True)):
+    for i, key in enumerate(zip(*([_canon(v) for v in col] for col in key_cols), strict=True)):
         row: dict[Any, Any] = {_COUNT: counts[i]}
         for pair, values in value_cols.items():
             row[pair] = values[i]
