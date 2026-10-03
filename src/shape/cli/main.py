@@ -907,8 +907,11 @@ def _build_parser(plugin_commands=()):
     sub = p.add_subparsers(dest="cmd", required=True)
     dr = sub.add_parser("doctor", help="check this installation: version, kernel, packages")
     dr.add_argument("--json", action="store_true", help="print the report as JSON")
-    sub.add_parser("conformance")
-    sub.add_parser("version")
+    sub.add_parser(
+        "conformance",
+        help="run Shape's built-in conformance suite (exit 1 if a check fails)",
+    )
+    sub.add_parser("version", help="print the versions of Shape, its specification and format")
     pl = sub.add_parser("plugins", help="inspect installed plugins")
     pls = pl.add_subparsers(dest="plugins_cmd", required=True)
     pll = pls.add_parser("list", help="list installed plugins (imports none of them)")
@@ -1145,9 +1148,16 @@ def _build_parser(plugin_commands=()):
     vf.add_argument("--statistical", action="store_true", help="add KS and chi-squared tests")
     vf.add_argument("-o", "--output", metavar="REPORT", help="write a .json or .md report")
     vf.add_argument("--strict", action="store_true", help="exit 1 on warnings too")
-    qu = sub.add_parser("quality")
-    qu.add_argument("csv")
-    qu.add_argument("--reference")
+    qu = sub.add_parser(
+        "quality",
+        help="check data against rules inferred from a capture (exit 1 on an error violation)",
+    )
+    qu.add_argument("csv", metavar="DATA", help="a CSV, Parquet or JSONL file")
+    qu.add_argument(
+        "--reference",
+        metavar="CAPTURE.json",
+        help="the capture the rules come from (default: a capture of DATA itself)",
+    )
     from shape.cli.generation import add_arguments as add_generation_arguments
 
     add_generation_arguments(sub)
@@ -1226,21 +1236,31 @@ def _build_parser(plugin_commands=()):
         default="json",
         help="what to print: a shape.reports format such as json, md or html (default json)",
     )
-    k = sub.add_parser("key")
-    k.add_argument("csv")
-    k.add_argument("fields", nargs="+")
-    f = sub.add_parser("fd")
-    f.add_argument("csv")
-    f.add_argument("--determinant", nargs="+", required=True)
-    f.add_argument("--dependent", required=True)
-    q = sub.add_parser("privacy-k")
-    q.add_argument("csv")
-    q.add_argument("fields", nargs="+")
-    cq = sub.add_parser("query")
-    cq.add_argument("shape")
-    cq.add_argument("expression")
+    k = sub.add_parser("key", help="whether FIELDS together identify every row of DATA")
+    k.add_argument("csv", metavar="DATA", help="a CSV, Parquet or JSONL file")
+    k.add_argument("fields", nargs="+", metavar="FIELD")
+    f = sub.add_parser("fd", help="whether --determinant columns decide the --dependent column")
+    f.add_argument("csv", metavar="DATA", help="a CSV, Parquet or JSONL file")
+    f.add_argument("--determinant", nargs="+", required=True, metavar="COLUMN")
+    f.add_argument("--dependent", required=True, metavar="COLUMN")
+    q = sub.add_parser(
+        "privacy-k", help="the k-anonymity of DATA over the quasi-identifiers FIELDS"
+    )
+    q.add_argument("csv", metavar="DATA", help="a CSV, Parquet or JSONL file")
+    q.add_argument("fields", nargs="+", metavar="FIELD")
+    cq = sub.add_parser(
+        "query", help="evaluate an expression against a capture or model (not a profile)"
+    )
+    cq.add_argument("shape", metavar="EVIDENCE", help="a capture or model, JSON or .shape")
+    cq.add_argument("expression", metavar="EXPRESSION")
     cq.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
-    ck = sub.add_parser("check", help="check a profile against a contract")
+    ck = sub.add_parser(
+        "check",
+        help="check a profile against a contract",
+        description="Check a profile (or a captured evidence document) against a contract. "
+        "Exit 0 when it passes, 1 when a profile fails it, 4 when an evidence document fails "
+        "it, 2 for bad input.",
+    )
     ck.add_argument("shape", metavar="PROFILE.shape")
     ck.add_argument("contract", metavar="CONTRACT.json")
     ck.add_argument("--json", metavar="RESULT.json")
@@ -1250,7 +1270,8 @@ def _build_parser(plugin_commands=()):
         help="compare two Shape models (not profiles; use `shape diff` for those)",
         description="Check whether AFTER is compatible with BEFORE. Both are Shape model "
         "artifacts (`shape capture ... -o X.shape`) or model JSON; profiles written by "
-        "`shape profile` are compared with `shape diff`.",
+        "`shape profile` are compared with `shape diff`. Exit 0 when compatible, 5 when not, "
+        "2 for bad input.",
     )
     co.add_argument("before", metavar="BEFORE", help="a model .shape or model JSON")
     co.add_argument("after", metavar="AFTER", help="a model .shape or model JSON")
@@ -1277,9 +1298,13 @@ def _build_parser(plugin_commands=()):
         help="apply a decision file (`shape proposals`): accepted relationships are kept",
     )
     gp.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
-    fc = sub.add_parser("certify-shapes")
-    fc.add_argument("target")
-    fc.add_argument("observed")
+    fc = sub.add_parser(
+        "certify-shapes",
+        help="score how closely an observed model matches a target model (exit 3 below "
+        "--threshold)",
+    )
+    fc.add_argument("target", metavar="TARGET", help="a model .shape or model JSON")
+    fc.add_argument("observed", metavar="OBSERVED", help="a model .shape or model JSON")
     fc.add_argument(
         "--threshold",
         type=float,
