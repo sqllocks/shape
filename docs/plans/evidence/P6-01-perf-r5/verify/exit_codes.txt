@@ -26,3 +26,17 @@ telecom small verify exit 1
 telecom medium verify exit 1
 retail small verify exit 0
 retail medium verify exit 0
+hr medium timed-output verify exit 1
+real_estate medium timed-output verify exit 1
+pulse medium timed-output verify exit 1
+supply_chain medium timed-output verify exit 1
+insurance medium timed-output verify exit 1
+capital_markets medium timed-output verify exit 1
+education medium timed-output verify exit 1
+financial medium timed-output verify exit 1
+healthcare medium timed-output verify exit 1
+iot medium timed-output verify exit 1
+manufacturing medium timed-output verify exit 1
+marketing medium timed-output verify exit 1
+telecom medium timed-output verify exit 1
+retail medium timed-output verify exit 0

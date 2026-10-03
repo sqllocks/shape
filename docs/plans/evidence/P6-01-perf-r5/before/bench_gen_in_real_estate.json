@@ -1,0 +1,477 @@
+{
+ "meta": {
+  "cores": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+  "platform": "Linux-6.18.44-fc-v64-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-10-03 20:17:41",
+  "impl": "shape",
+  "domain": "real_estate",
+  "runs": 5,
+  "warmup": 1,
+  "ref_seed": 42,
+  "impl_seed": 1042,
+  "loadavg_start": 1.05615234375
+ },
+ "scales": {
+  "medium": {
+   "summary": {
+    "spindle": {
+     "total_s": 0.6018533569986175,
+     "gen_s": 0.3515136159985559,
+     "write_s": 0.2503397410000616,
+     "cpu_s": 0.5969840000000002,
+     "user_s": 0.3786400000000001,
+     "sys_s": 0.25167799999999996,
+     "minor_faults": 10334,
+     "import_s": 1.4022673859999486,
+     "peak_rss_mb": 325.328125,
+     "parquet_bytes": 4397775,
+     "rows": 140650,
+     "rows_per_s_total": 233694.8001775839,
+     "rows_per_s_generate": 400126.74786565825,
+     "runs_total_s": [
+      0.488,
+      0.575,
+      0.665,
+      0.602,
+      0.663
+     ],
+     "loadavg_before": [
+      1.05615234375,
+      1.05126953125,
+      1.28759765625,
+      1.28759765625,
+      1.26416015625
+     ],
+     "per_table_s_median": {
+      "agent": 0.01270935200045642,
+      "neighborhood": 0.1254423289992701,
+      "property": 0.015757846000269637,
+      "listing": 0.045189466000010725,
+      "offer": 0.022468858000138425,
+      "showing": 0.12517744000069797,
+      "transaction": 0.00780944599864597,
+      "appraisal": 0.006754982998245396,
+      "inspection": 0.006969051000851323,
+      "_compute_phase+business_rules": 0.0008474609985569259,
+      "_construct_domain+Spindle()": 0.009426044000065303
+     },
+     "row_counts": {
+      "agent": 100,
+      "neighborhood": 50,
+      "property": 10000,
+      "listing": 15000,
+      "offer": 22500,
+      "showing": 75000,
+      "transaction": 6000,
+      "appraisal": 6000,
+      "inspection": 6000
+     }
+    },
+    "shape": {
+     "total_s": 0.11040339099963603,
+     "gen_s": 0.11040339099963603,
+     "write_s": 0.0,
+     "cpu_s": 0.21324500000000002,
+     "user_s": 0.15538700000000005,
+     "sys_s": 0.05785799999999999,
+     "minor_faults": 15525,
+     "import_s": 0.5374730019993876,
+     "peak_rss_mb": 208.88671875,
+     "parquet_bytes": 4942224,
+     "rows": 140650,
+     "rows_per_s_total": 1273964.4926346843,
+     "rows_per_s_generate": 1273964.4926346843,
+     "runs_total_s": [
+      0.115,
+      0.11,
+      0.109,
+      0.118,
+      0.108
+     ],
+     "loadavg_before": [
+      1.05126953125,
+      1.05126953125,
+      1.28759765625,
+      1.26416015625,
+      1.26416015625
+     ],
+     "per_table_s_median": {
+      "_construct_domain+Engine": 0.01355812199835782,
+      "_generate+write": 0.09634179899876472
+     },
+     "row_counts": {
+      "agent": 100,
+      "neighborhood": 50,
+      "property": 10000,
+      "listing": 15000,
+      "offer": 22500,
+      "showing": 75000,
+      "transaction": 6000,
+      "appraisal": 6000,
+      "inspection": 6000
+     },
+     "numpy": "2.4.6",
+     "pyarrow": "25.0.1"
+    }
+   },
+   "raw": {
+    "spindle": [
+     {
+      "import_s": 1.3361532519993489,
+      "gen_s": 0.3069881110004644,
+      "write_s": 0.18117115199856926,
+      "total_s": 0.48815926299903367,
+      "rows": {
+       "agent": 100,
+       "neighborhood": 50,
+       "property": 10000,
+       "listing": 15000,
+       "offer": 22500,
+       "showing": 75000,
+       "transaction": 6000,
+       "appraisal": 6000,
+       "inspection": 6000
+      },
+      "per_table_s": {
+       "agent": 0.01310969199948886,
+       "neighborhood": 0.12080057800085342,
+       "property": 0.015406014999825857,
+       "listing": 0.03524453699901642,
+       "offer": 0.012426258001141832,
+       "showing": 0.07415666099950613,
+       "transaction": 0.009219855000992538,
+       "appraisal": 0.006754982998245396,
+       "inspection": 0.006969051000851323,
+       "_compute_phase+business_rules": 0.000862074000906432,
+       "_construct_domain+Spindle()": 0.012038406999636209
+      },
+      "user_s": 0.38199000000000005,
+      "sys_s": 0.10439199999999998,
+      "minor_faults": 10342,
+      "major_faults": 0,
+      "cpu_s": 0.48638199999999987,
+      "peak_rss_mb": 325.00390625,
+      "parquet_bytes": 4397775,
+      "loadavg_before": 1.05615234375
+     },
+     {
+      "import_s": 1.4098007520005922,
+      "gen_s": 0.32087442800002464,
+      "write_s": 0.25375582599917834,
+      "total_s": 0.574630253999203,
+      "rows": {
+       "agent": 100,
+       "neighborhood": 50,
+       "property": 10000,
+       "listing": 15000,
+       "offer": 22500,
+       "showing": 75000,
+       "transaction": 6000,
+       "appraisal": 6000,
+       "inspection": 6000
+      },
+      "per_table_s": {
+       "agent": 0.01270935200045642,
+       "neighborhood": 0.13024473899895384,
+       "property": 0.015757846000269637,
+       "listing": 0.045189466000010725,
+       "offer": 0.01283228899956157,
+       "showing": 0.0711427830010507,
+       "transaction": 0.00780944599864597,
+       "appraisal": 0.0072649339999770746,
+       "inspection": 0.007293141999980435,
+       "_compute_phase+business_rules": 0.0012043870010529645,
+       "_construct_domain+Spindle()": 0.009426044000065303
+      },
+      "user_s": 0.39253399999999994,
+      "sys_s": 0.17818499999999998,
+      "minor_faults": 10331,
+      "major_faults": 0,
+      "cpu_s": 0.5707189999999998,
+      "peak_rss_mb": 325.328125,
+      "parquet_bytes": 4397775,
+      "loadavg_before": 1.05126953125
+     },
+     {
+      "import_s": 1.4700040799998533,
+      "gen_s": 0.4267117199997301,
+      "write_s": 0.23786428499988688,
+      "total_s": 0.664576004999617,
+      "rows": {
+       "agent": 100,
+       "neighborhood": 50,
+       "property": 10000,
+       "listing": 15000,
+       "offer": 22500,
+       "showing": 75000,
+       "transaction": 6000,
+       "appraisal": 6000,
+       "inspection": 6000
+      },
+      "per_table_s": {
+       "agent": 0.028241840000191587,
+       "neighborhood": 0.1312936100002844,
+       "property": 0.03899883299891371,
+       "listing": 0.04918185800124775,
+       "offer": 0.02301425199948426,
+       "showing": 0.12517744000069797,
+       "transaction": 0.007601839999551885,
+       "appraisal": 0.006457208999563591,
+       "inspection": 0.00644781899973168,
+       "_compute_phase+business_rules": 0.0008400850001635263,
+       "_construct_domain+Spindle()": 0.009456933999899775
+      },
+      "user_s": 0.33983700000000017,
+      "sys_s": 0.32779,
+      "minor_faults": 10334,
+      "major_faults": 0,
+      "cpu_s": 0.6676270000000004,
+      "peak_rss_mb": 325.328125,
+      "parquet_bytes": 4397775,
+      "loadavg_before": 1.28759765625
+     },
+     {
+      "import_s": 1.3030644039990875,
+      "gen_s": 0.3515136159985559,
+      "write_s": 0.2503397410000616,
+      "total_s": 0.6018533569986175,
+      "rows": {
+       "agent": 100,
+       "neighborhood": 50,
+       "property": 10000,
+       "listing": 15000,
+       "offer": 22500,
+       "showing": 75000,
+       "transaction": 6000,
+       "appraisal": 6000,
+       "inspection": 6000
+      },
+      "per_table_s": {
+       "agent": 0.010053128000436118,
+       "neighborhood": 0.10690275100023428,
+       "property": 0.014358491998791578,
+       "listing": 0.033282890000918997,
+       "offer": 0.022468858000138425,
+       "showing": 0.13233641399892804,
+       "transaction": 0.008260968999820761,
+       "appraisal": 0.007075060000715894,
+       "inspection": 0.007165176000853535,
+       "_compute_phase+business_rules": 0.0008474609985569259,
+       "_construct_domain+Spindle()": 0.00876241699916136
+      },
+      "user_s": 0.3453060000000001,
+      "sys_s": 0.25167799999999996,
+      "minor_faults": 10338,
+      "major_faults": 0,
+      "cpu_s": 0.5969840000000002,
+      "peak_rss_mb": 325.0234375,
+      "parquet_bytes": 4397775,
+      "loadavg_before": 1.28759765625
+     },
+     {
+      "import_s": 1.4022673859999486,
+      "gen_s": 0.41289323000091827,
+      "write_s": 0.25036578299841494,
+      "total_s": 0.6632590129993332,
+      "rows": {
+       "agent": 100,
+       "neighborhood": 50,
+       "property": 10000,
+       "listing": 15000,
+       "offer": 22500,
+       "showing": 75000,
+       "transaction": 6000,
+       "appraisal": 6000,
+       "inspection": 6000
+      },
+      "per_table_s": {
+       "agent": 0.012009747999400133,
+       "neighborhood": 0.1254423289992701,
+       "property": 0.0263807840001391,
+       "listing": 0.05771330300012778,
+       "offer": 0.024842587999955867,
+       "showing": 0.13575860600030865,
+       "transaction": 0.007469703999959165,
+       "appraisal": 0.006273502000112785,
+       "inspection": 0.006822650000685826,
+       "_compute_phase+business_rules": 0.0008163570000760956,
+       "_construct_domain+Spindle()": 0.009363659000882762
+      },
+      "user_s": 0.3786400000000001,
+      "sys_s": 0.277319,
+      "minor_faults": 10329,
+      "major_faults": 0,
+      "cpu_s": 0.6559590000000002,
+      "peak_rss_mb": 325.33984375,
+      "parquet_bytes": 4397775,
+      "loadavg_before": 1.26416015625
+     }
+    ],
+    "shape": [
+     {
+      "import_s": 0.5374730019993876,
+      "gen_s": 0.11548326799857023,
+      "write_s": 0.0,
+      "total_s": 0.11548326799857023,
+      "overlapped": true,
+      "rows": {
+       "agent": 100,
+       "neighborhood": 50,
+       "property": 10000,
+       "listing": 15000,
+       "offer": 22500,
+       "showing": 75000,
+       "transaction": 6000,
+       "appraisal": 6000,
+       "inspection": 6000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.01355812199835782,
+       "_generate+write": 0.10192514600021241
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.14327499999999993,
+      "sys_s": 0.06032799999999999,
+      "minor_faults": 16560,
+      "major_faults": 0,
+      "cpu_s": 0.20360299999999998,
+      "peak_rss_mb": 210.81640625,
+      "parquet_bytes": 4942224,
+      "loadavg_before": 1.05126953125
+     },
+     {
+      "import_s": 0.5467305410002155,
+      "gen_s": 0.11040339099963603,
+      "write_s": 0.0,
+      "total_s": 0.11040339099963603,
+      "overlapped": true,
+      "rows": {
+       "agent": 100,
+       "neighborhood": 50,
+       "property": 10000,
+       "listing": 15000,
+       "offer": 22500,
+       "showing": 75000,
+       "transaction": 6000,
+       "appraisal": 6000,
+       "inspection": 6000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.014199686000210932,
+       "_generate+write": 0.0962037049994251
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.15903100000000003,
+      "sys_s": 0.05064400000000001,
+      "minor_faults": 15780,
+      "major_faults": 0,
+      "cpu_s": 0.20967500000000006,
+      "peak_rss_mb": 209.046875,
+      "parquet_bytes": 4942224,
+      "loadavg_before": 1.05126953125
+     },
+     {
+      "import_s": 0.5081821230014612,
+      "gen_s": 0.10935387999961677,
+      "write_s": 0.0,
+      "total_s": 0.10935387999961677,
+      "overlapped": true,
+      "rows": {
+       "agent": 100,
+       "neighborhood": 50,
+       "property": 10000,
+       "listing": 15000,
+       "offer": 22500,
+       "showing": 75000,
+       "transaction": 6000,
+       "appraisal": 6000,
+       "inspection": 6000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.01301208100085205,
+       "_generate+write": 0.09634179899876472
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.15538700000000005,
+      "sys_s": 0.05785799999999999,
+      "minor_faults": 14467,
+      "major_faults": 0,
+      "cpu_s": 0.21324500000000002,
+      "peak_rss_mb": 208.88671875,
+      "parquet_bytes": 4942224,
+      "loadavg_before": 1.28759765625
+     },
+     {
+      "import_s": 0.5020399160002853,
+      "gen_s": 0.11817164599960961,
+      "write_s": 0.0,
+      "total_s": 0.11817164599960961,
+      "overlapped": true,
+      "rows": {
+       "agent": 100,
+       "neighborhood": 50,
+       "property": 10000,
+       "listing": 15000,
+       "offer": 22500,
+       "showing": 75000,
+       "transaction": 6000,
+       "appraisal": 6000,
+       "inspection": 6000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.013667479999639909,
+       "_generate+write": 0.1045041659999697
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.14146499999999995,
+      "sys_s": 0.085007,
+      "minor_faults": 15525,
+      "major_faults": 0,
+      "cpu_s": 0.226472,
+      "peak_rss_mb": 206.81640625,
+      "parquet_bytes": 4942224,
+      "loadavg_before": 1.26416015625
+     },
+     {
+      "import_s": 0.5441818500003137,
+      "gen_s": 0.10809652999887476,
+      "write_s": 0.0,
+      "total_s": 0.10809652999887476,
+      "overlapped": true,
+      "rows": {
+       "agent": 100,
+       "neighborhood": 50,
+       "property": 10000,
+       "listing": 15000,
+       "offer": 22500,
+       "showing": 75000,
+       "transaction": 6000,
+       "appraisal": 6000,
+       "inspection": 6000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.012396860000080778,
+       "_generate+write": 0.09569966999879398
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.16099700000000006,
+      "sys_s": 0.054750999999999994,
+      "minor_faults": 14609,
+      "major_faults": 0,
+      "cpu_s": 0.21574799999999994,
+      "peak_rss_mb": 205.41015625,
+      "parquet_bytes": 4942224,
+      "loadavg_before": 1.26416015625
+     }
+    ]
+   }
+  }
+ }
+}

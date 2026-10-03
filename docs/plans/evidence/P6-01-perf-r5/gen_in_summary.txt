@@ -1,0 +1,14 @@
+hr | INT-16 0.30/0.09 (total 3.45x) | final 0.40/0.05 (total 8.65x) | verify exit 1
+real_estate | INT-16 0.60/0.11 (total 5.45x) | final 0.61/0.06 (total 9.40x) | verify exit 1
+pulse | INT-16 1.77/0.39 (total 4.56x) | final 1.79/0.20 (total 9.19x) | verify exit 1
+supply_chain | INT-16 0.56/0.16 (total 3.62x) | final 0.72/0.08 (total 8.83x) | verify exit 1
+insurance | INT-16 0.66/0.11 (total 5.86x) | final 0.80/0.06 (total 13.14x) | verify exit 1
+capital_markets | INT-16 1.03/0.21 (total 4.91x) | final 1.23/0.13 (total 9.30x) | verify exit 1
+education | INT-16 0.67/0.12 (total 5.43x) | final 0.75/0.07 (total 11.57x) | verify exit 1
+financial | INT-16 3.18/0.45 (total 7.04x) | final 2.92/0.30 (total 9.80x) | verify exit 1
+healthcare | INT-16 2.79/0.40 (total 6.97x) | final 2.95/0.29 (total 10.31x) | verify exit 1
+iot | INT-16 0.72/0.12 (total 6.13x) | final 0.59/0.06 (total 9.43x) | verify exit 1
+manufacturing | INT-16 0.21/0.07 (total 3.22x) | final 0.32/0.03 (total 9.19x) | verify exit 1
+marketing | INT-16 1.12/0.21 (total 5.31x) | final 0.91/0.10 (total 8.87x) | verify exit 1
+telecom | INT-16 3.48/0.45 (total 7.67x) | final 3.52/0.26 (total 13.72x) | verify exit 1
+retail | INT-16 6.48/0.54 (total 11.95x) | final 6.58/0.38 (total 17.51x) | verify exit 0

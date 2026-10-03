@@ -1,0 +1,18 @@
+[medium] spindle          warm-up 1: total 3.30s
+[medium] shape            warm-up 1: total 0.43s
+[medium] spindle          run 1: total 3.21s  gen 2.62s  write 0.60s  rss 558MB  load 1.39
+[medium] shape            run 1: total 0.46s  gen 0.46s  write 0.00s  rss 329MB  load 1.25
+[medium] spindle          run 2: total 3.68s  gen 2.94s  write 0.74s  rss 557MB  load 1.23
+[medium] shape            run 2: total 0.47s  gen 0.47s  write 0.00s  rss 320MB  load 1.21
+[medium] spindle          run 3: total 3.40s  gen 2.71s  write 0.68s  rss 555MB  load 1.21
+[medium] shape            run 3: total 0.41s  gen 0.41s  write 0.00s  rss 327MB  load 1.19
+[medium] spindle          run 4: total 3.53s  gen 2.65s  write 0.88s  rss 557MB  load 1.19
+[medium] shape            run 4: total 0.45s  gen 0.45s  write 0.00s  rss 326MB  load 1.17
+[medium] spindle          run 5: total 3.48s  gen 2.68s  write 0.80s  rss 557MB  load 1.16
+[medium] shape            run 5: total 0.44s  gen 0.44s  write 0.00s  rss 318MB  load 1.15
+
+== telecom medium: median of 5 fresh-process runs, 4 cores
+tool                     rows  total s   gen s  write s  rows/s total   rows/s gen  peak RSS MB
+spindle             1,468,060     3.48    2.68     0.74       422,348      547,797          557
+shape               1,468,060     0.45    0.45     0.00     3,238,013    3,238,013          326
+speedup (shape vs spindle): total 7.67x

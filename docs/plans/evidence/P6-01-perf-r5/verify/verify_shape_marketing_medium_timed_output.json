@@ -1,0 +1,4213 @@
+{
+ "domain": "marketing",
+ "scale": "medium",
+ "impl": "shape",
+ "seed": 42,
+ "impl_seed": 1042,
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "tables": {
+  "campaign_type": {
+   "rows": {
+    "spindle": 15,
+    "impl": 15
+   },
+   "columns_spindle": [
+    "type_id",
+    "type_name",
+    "channel",
+    "avg_conversion_rate"
+   ],
+   "columns_impl": [
+    "type_id",
+    "type_name",
+    "channel",
+    "avg_conversion_rate"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "type_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "type_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "channel": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "avg_conversion_rate": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "type_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.45542003404264886
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.7118474770877107,
+     "stats": {
+      "mean": {
+       "spindle": 8.0,
+       "impl": 8.0
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 15.0,
+       "impl": 15.0
+      },
+      "std": {
+       "spindle": 4.320493798938574,
+       "impl": 4.320493798938574,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 15,
+      "impl": 15
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "type_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.45542003404264886
+     },
+     "distinct": {
+      "spindle": 9,
+      "impl": 7,
+      "ratio": 0.7777777777777778,
+      "baseline_max_ratio_dev": 0.2222222222222222
+     },
+     "top10": [
+      {
+       "value": "Social Media Blitz",
+       "spindle": 0.2,
+       "impl": 0.13333333333333333
+      },
+      {
+       "value": "PPC Campaign",
+       "spindle": 0.2,
+       "impl": 0.26666666666666666
+      },
+      {
+       "value": "Lead Generation",
+       "spindle": 0.13333333333333333,
+       "impl": 0.13333333333333333
+      },
+      {
+       "value": "Drip Campaign",
+       "spindle": 0.13333333333333333,
+       "impl": 0.2
+      },
+      {
+       "value": "Email Blast",
+       "spindle": 0.06666666666666667,
+       "impl": 0.13333333333333333
+      },
+      {
+       "value": "ABM Campaign",
+       "spindle": 0.06666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Webinar Series",
+       "spindle": 0.06666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Brand Awareness",
+       "spindle": 0.06666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Referral Program",
+       "spindle": 0.06666666666666667,
+       "impl": 0.06666666666666667
+      },
+      {
+       "value": "Customer Reactivation",
+       "spindle": 0.0,
+       "impl": 0.06666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.26666666666666666,
+     "tvd_baseline": 0.6,
+     "tvd_tol": 1.8541161697113095,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "channel": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.45542003404264886
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 6,
+      "ratio": 1.5,
+      "baseline_max_ratio_dev": 0.5
+     },
+     "top10": [
+      {
+       "value": "Social",
+       "spindle": 0.3333333333333333,
+       "impl": 0.2
+      },
+      {
+       "value": "PPC",
+       "spindle": 0.26666666666666666,
+       "impl": 0.13333333333333333
+      },
+      {
+       "value": "Email",
+       "spindle": 0.2,
+       "impl": 0.2
+      },
+      {
+       "value": "Content",
+       "spindle": 0.2,
+       "impl": 0.13333333333333333
+      },
+      {
+       "value": "Event",
+       "spindle": 0.0,
+       "impl": 0.2
+      },
+      {
+       "value": "Direct Mail",
+       "spindle": 0.0,
+       "impl": 0.13333333333333333
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.3333333333333333,
+     "tvd_baseline": 0.4666666666666667,
+     "tvd_tol": 1.2360774464742066,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "avg_conversion_rate": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.45542003404264886
+     },
+     "ks": 0.4,
+     "ks_baseline": 0.4666666666666667,
+     "ks_tol": 0.7118474770877107,
+     "stats": {
+      "mean": {
+       "spindle": 0.05404088449318896,
+       "impl": 0.08183811227911024
+      },
+      "min": {
+       "spindle": 0.014797444941349065,
+       "impl": 0.011618185644843204
+      },
+      "max": {
+       "spindle": 0.14042446333519634,
+       "impl": 0.14542227495999055
+      },
+      "std": {
+       "spindle": 0.036805669248358645,
+       "impl": 0.04175343994036057,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 15,
+      "impl": 15
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "industry": {
+   "rows": {
+    "spindle": 25,
+    "impl": 25
+   },
+   "columns_spindle": [
+    "industry_id",
+    "industry_name",
+    "sector"
+   ],
+   "columns_impl": [
+    "industry_id",
+    "industry_name",
+    "sector"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "industry_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "industry_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "sector": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "industry_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.27712812921102037
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.5513946847600938,
+     "stats": {
+      "mean": {
+       "spindle": 13.0,
+       "impl": 13.0
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 25.0,
+       "impl": 25.0
+      },
+      "std": {
+       "spindle": 7.211102550927978,
+       "impl": 7.211102550927978,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 25,
+      "impl": 25
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "industry_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.27712812921102037
+     },
+     "distinct": {
+      "spindle": 17,
+      "impl": 16,
+      "ratio": 0.9411764705882353,
+      "baseline_max_ratio_dev": 0.23529411764705888
+     },
+     "top10": [
+      {
+       "value": "Education",
+       "spindle": 0.12,
+       "impl": 0.04
+      },
+      {
+       "value": "Manufacturing",
+       "spindle": 0.08,
+       "impl": 0.04
+      },
+      {
+       "value": "Technology",
+       "spindle": 0.08,
+       "impl": 0.04
+      },
+      {
+       "value": "Transportation & Logistics",
+       "spindle": 0.08,
+       "impl": 0.08
+      },
+      {
+       "value": "Hospitality & Tourism",
+       "spindle": 0.08,
+       "impl": 0.04
+      },
+      {
+       "value": "Pharmaceuticals",
+       "spindle": 0.08,
+       "impl": 0.08
+      },
+      {
+       "value": "Healthcare",
+       "spindle": 0.08,
+       "impl": 0.08
+      },
+      {
+       "value": "Retail",
+       "spindle": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "Aerospace & Defense",
+       "spindle": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "Energy & Utilities",
+       "spindle": 0.04,
+       "impl": 0.04
+      },
+      {
+       "value": "Professional Services",
+       "spindle": 0.04,
+       "impl": 0.16
+      },
+      {
+       "value": "Automotive",
+       "spindle": 0.04,
+       "impl": 0.12
+      },
+      {
+       "value": "Financial Services",
+       "spindle": 0.0,
+       "impl": 0.08
+      },
+      {
+       "value": "Real Estate",
+       "spindle": 0.04,
+       "impl": 0.04
+      },
+      {
+       "value": "Nonprofit",
+       "spindle": 0.0,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.4,
+     "tvd_baseline": 0.48000000000000004,
+     "tvd_tol": 1.9738573927438625,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "sector": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.27712812921102037
+     },
+     "distinct": {
+      "spindle": 6,
+      "impl": 6,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Technology",
+       "spindle": 0.32,
+       "impl": 0.32
+      },
+      {
+       "value": "Healthcare",
+       "spindle": 0.24,
+       "impl": 0.08
+      },
+      {
+       "value": "Finance",
+       "spindle": 0.2,
+       "impl": 0.12
+      },
+      {
+       "value": "Manufacturing",
+       "spindle": 0.12,
+       "impl": 0.08
+      },
+      {
+       "value": "Services",
+       "spindle": 0.08,
+       "impl": 0.16
+      },
+      {
+       "value": "Retail",
+       "spindle": 0.04,
+       "impl": 0.24
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.27999999999999997,
+     "tvd_baseline": 0.28,
+     "tvd_tol": 1.172646028567008,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "campaign": {
+   "rows": {
+    "spindle": 2000,
+    "impl": 2000
+   },
+   "columns_spindle": [
+    "campaign_id",
+    "campaign_type_id",
+    "campaign_name",
+    "start_date",
+    "budget",
+    "status",
+    "end_date"
+   ],
+   "columns_impl": [
+    "campaign_id",
+    "campaign_type_id",
+    "campaign_name",
+    "start_date",
+    "budget",
+    "status",
+    "end_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "campaign_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "campaign_type_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "campaign_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "start_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "budget": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "status": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "end_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "campaign_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "spindle": 1000.5,
+       "impl": 1000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 2000.0,
+       "impl": 2000.0
+      },
+      "std": {
+       "spindle": 577.3501970208376,
+       "impl": 577.3501970208376,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 2000,
+      "impl": 2000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "campaign_type_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.021499999999999964,
+     "ks_baseline": 0.022999999999999965,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "spindle": 7.99,
+       "impl": 7.95
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 15.0,
+       "impl": 15.0
+      },
+      "std": {
+       "spindle": 4.334155050295271,
+       "impl": 4.274751454763189,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 15,
+      "impl": 15
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "campaign_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "distinct": {
+      "spindle": 2000,
+      "impl": 2000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "CMP-0001",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      },
+      {
+       "value": "CMP-0002",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      },
+      {
+       "value": "CMP-0003",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      },
+      {
+       "value": "CMP-0004",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      },
+      {
+       "value": "CMP-0005",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      },
+      {
+       "value": "CMP-0006",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      },
+      {
+       "value": "CMP-0007",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      },
+      {
+       "value": "CMP-0008",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      },
+      {
+       "value": "CMP-0009",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      },
+      {
+       "value": "CMP-0010",
+       "spindle": 0.0005,
+       "impl": 0.0005
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "CMP-{seq:4}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "start_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.02849999999999997,
+     "ks_baseline": 0.02300000000000002,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "spindle": "2024-01-03 00:17:30.632497152",
+       "impl": "2024-01-16 00:51:29.233602816"
+      },
+      "min": {
+       "spindle": "2022-01-02 07:37:03.050152192",
+       "impl": "2022-01-04 14:15:30.834334976"
+      },
+      "max": {
+       "spindle": "2025-12-30 22:39:53.758299392",
+       "impl": "2025-12-31 18:04:42.363490048"
+      },
+      "std": {
+       "spindle": 426.1127967871018,
+       "impl": 418.2187960000625,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 2000,
+      "impl": 2000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "budget": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.024500000000000077,
+     "ks_baseline": 0.03750000000000003,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "spindle": 23573.39331372449,
+       "impl": 23155.427880619132
+      },
+      "min": {
+       "spindle": 1000.0,
+       "impl": 1000.0
+      },
+      "max": {
+       "spindle": 386084.54406310414,
+       "impl": 500000.0
+      },
+      "std": {
+       "spindle": 31183.07365897587,
+       "impl": 31209.76421963098,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 1991,
+      "impl": 1984
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Completed",
+       "spindle": 0.4555,
+       "impl": 0.457
+      },
+      {
+       "value": "Active",
+       "spindle": 0.244,
+       "impl": 0.2575
+      },
+      {
+       "value": "Draft",
+       "spindle": 0.152,
+       "impl": 0.149
+      },
+      {
+       "value": "Paused",
+       "spindle": 0.1485,
+       "impl": 0.1365
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.015,
+     "tvd_baseline": 0.029000000000000012,
+     "tvd_tol": 0.10704744696916627,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "end_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.02849999999999997,
+     "ks_baseline": 0.02300000000000002,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "spindle": "2024-02-02 00:17:30.632497152",
+       "impl": "2024-02-15 00:51:29.233602816"
+      },
+      "min": {
+       "spindle": "2022-02-01 07:37:03.050152192",
+       "impl": "2022-02-03 14:15:30.834334976"
+      },
+      "max": {
+       "spindle": "2026-01-29 22:39:53.758299392",
+       "impl": "2026-01-30 18:04:42.363490048"
+      },
+      "std": {
+       "spindle": 426.1127967871018,
+       "impl": 418.2187960000625,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 2000,
+      "impl": 2000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "lead_source": {
+   "rows": {
+    "spindle": 20,
+    "impl": 20
+   },
+   "columns_spindle": [
+    "source_id",
+    "source_name",
+    "source_type",
+    "cost_per_lead"
+   ],
+   "columns_impl": [
+    "source_id",
+    "source_name",
+    "source_type",
+    "cost_per_lead"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "source_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "source_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "source_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "cost_per_lead": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "source_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.6164779987778186,
+     "stats": {
+      "mean": {
+       "spindle": 10.5,
+       "impl": 10.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 20.0,
+       "impl": 20.0
+      },
+      "std": {
+       "spindle": 5.766281297335398,
+       "impl": 5.766281297335398,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 20,
+      "impl": 20
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "source_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "distinct": {
+      "spindle": 10,
+      "impl": 13,
+      "ratio": 1.3,
+      "baseline_max_ratio_dev": 0.5
+     },
+     "top10": [
+      {
+       "value": "LinkedIn",
+       "spindle": 0.2,
+       "impl": 0.05
+      },
+      {
+       "value": "Paid Search",
+       "spindle": 0.2,
+       "impl": 0.1
+      },
+      {
+       "value": "Website",
+       "spindle": 0.15,
+       "impl": 0.15
+      },
+      {
+       "value": "Organic Search",
+       "spindle": 0.1,
+       "impl": 0.05
+      },
+      {
+       "value": "Referral",
+       "spindle": 0.1,
+       "impl": 0.1
+      },
+      {
+       "value": "Cold Call",
+       "spindle": 0.05,
+       "impl": 0.05
+      },
+      {
+       "value": "Social Media",
+       "spindle": 0.05,
+       "impl": 0.1
+      },
+      {
+       "value": "Industry Event",
+       "spindle": 0.05,
+       "impl": 0.1
+      },
+      {
+       "value": "Webinar",
+       "spindle": 0.05,
+       "impl": 0.05
+      },
+      {
+       "value": "Email Campaign",
+       "spindle": 0.05,
+       "impl": 0.05
+      },
+      {
+       "value": "Customer Referral",
+       "spindle": 0.0,
+       "impl": 0.1
+      },
+      {
+       "value": "Content Download",
+       "spindle": 0.0,
+       "impl": 0.05
+      },
+      {
+       "value": "Facebook Ads",
+       "spindle": 0.0,
+       "impl": 0.05
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.30000000000000004,
+     "tvd_baseline": 0.55,
+     "tvd_tol": 1.6925687506432692,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "source_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.25
+     },
+     "top10": [
+      {
+       "value": "Inbound",
+       "spindle": 0.6,
+       "impl": 0.35
+      },
+      {
+       "value": "Referral",
+       "spindle": 0.2,
+       "impl": 0.35
+      },
+      {
+       "value": "Partner",
+       "spindle": 0.1,
+       "impl": 0.2
+      },
+      {
+       "value": "Outbound",
+       "spindle": 0.1,
+       "impl": 0.1
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.24999999999999997,
+     "tvd_baseline": 0.35,
+     "tvd_tol": 1.0704744696916628,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "cost_per_lead": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "ks": 0.20000000000000007,
+     "ks_baseline": 0.35,
+     "ks_tol": 0.6164779987778186,
+     "stats": {
+      "mean": {
+       "spindle": 39.95830854214662,
+       "impl": 56.66490443941816
+      },
+      "min": {
+       "spindle": 11.065881913095497,
+       "impl": 10.936125522769261
+      },
+      "max": {
+       "spindle": 80.90161289689614,
+       "impl": 373.4919298884978
+      },
+      "std": {
+       "spindle": 19.329371599523494,
+       "impl": 79.05914072786217,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 20,
+      "impl": 20
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "contact": {
+   "rows": {
+    "spindle": 50000,
+    "impl": 50000
+   },
+   "columns_spindle": [
+    "contact_id",
+    "industry_id",
+    "lead_source_id",
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "company",
+    "created_date"
+   ],
+   "columns_impl": [
+    "contact_id",
+    "industry_id",
+    "lead_source_id",
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "company",
+    "created_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "contact_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "industry_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "lead_source_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "first_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "last_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "email": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "phone": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "company": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "created_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "contact_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.012329559975556372,
+     "stats": {
+      "mean": {
+       "spindle": 25000.5,
+       "impl": 25000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 50000.0,
+       "impl": 50000.0
+      },
+      "std": {
+       "spindle": 14433.756726853893,
+       "impl": 14433.756726853893,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 50000,
+      "impl": 50000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "industry_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "ks": 0.005220000000000002,
+     "ks_baseline": 0.007199999999999984,
+     "ks_tol": 0.012799999999999976,
+     "stats": {
+      "mean": {
+       "spindle": 12.98126,
+       "impl": 13.01384
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 25.0,
+       "impl": 25.0
+      },
+      "std": {
+       "spindle": 7.217613789362797,
+       "impl": 7.207418987016087,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 25,
+      "impl": 25
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lead_source_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "ks": 0.0043200000000001015,
+     "ks_baseline": 0.006699999999999928,
+     "ks_tol": 0.012329559975556372,
+     "stats": {
+      "mean": {
+       "spindle": 10.50744,
+       "impl": 10.51102
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 20.0,
+       "impl": 20.0
+      },
+      "std": {
+       "spindle": 5.757515492501953,
+       "impl": 5.792270587567539,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 20,
+      "impl": 20
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "first_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "distinct": {
+      "spindle": 5000,
+      "impl": 5000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.00019999999999997797
+     },
+     "top10": [
+      {
+       "value": "Maona",
+       "spindle": 0.00046,
+       "impl": 0.0002
+      },
+      {
+       "value": "Andre",
+       "spindle": 0.00044,
+       "impl": 0.00016
+      },
+      {
+       "value": "Conna",
+       "spindle": 0.00044,
+       "impl": 0.00018
+      },
+      {
+       "value": "Brden",
+       "spindle": 0.00044,
+       "impl": 0.00022
+      },
+      {
+       "value": "Clis",
+       "spindle": 0.00044,
+       "impl": 0.00028
+      },
+      {
+       "value": "Toan",
+       "spindle": 0.00042,
+       "impl": 0.00018
+      },
+      {
+       "value": "Heix",
+       "spindle": 0.00042,
+       "impl": 0.00018
+      },
+      {
+       "value": "Reix",
+       "spindle": 0.0004,
+       "impl": 8e-05
+      },
+      {
+       "value": "Chelsea",
+       "spindle": 0.0004,
+       "impl": 0.00012
+      },
+      {
+       "value": "Noel",
+       "spindle": 0.0004,
+       "impl": 0.0002
+      },
+      {
+       "value": "Thron",
+       "spindle": 0.00026,
+       "impl": 0.00046
+      },
+      {
+       "value": "Loie",
+       "spindle": 0.0003,
+       "impl": 0.00046
+      },
+      {
+       "value": "Loira",
+       "spindle": 0.00012,
+       "impl": 0.00046
+      },
+      {
+       "value": "Zeer",
+       "spindle": 0.0002,
+       "impl": 0.00044
+      },
+      {
+       "value": "Layn",
+       "spindle": 0.00014,
+       "impl": 0.00044
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "last_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "distinct": {
+      "spindle": 4999,
+      "impl": 5000,
+      "ratio": 1.0002000400080016,
+      "baseline_max_ratio_dev": 0.0002000400080015563
+     },
+     "top10": [
+      {
+       "value": "Domworth",
+       "spindle": 0.00046,
+       "impl": 0.0003
+      },
+      {
+       "value": "Graveton",
+       "spindle": 0.00042,
+       "impl": 6e-05
+      },
+      {
+       "value": "Crawffield",
+       "spindle": 0.00042,
+       "impl": 0.00016
+      },
+      {
+       "value": "Velsen",
+       "spindle": 0.00042,
+       "impl": 0.00026
+      },
+      {
+       "value": "Nelsman",
+       "spindle": 0.00042,
+       "impl": 0.00018
+      },
+      {
+       "value": "Hestworth",
+       "spindle": 0.0004,
+       "impl": 0.00022
+      },
+      {
+       "value": "SanPherson",
+       "spindle": 0.0004,
+       "impl": 0.00012
+      },
+      {
+       "value": "Carney",
+       "spindle": 0.0004,
+       "impl": 0.0002
+      },
+      {
+       "value": "Cervantes",
+       "spindle": 0.0004,
+       "impl": 0.00022
+      },
+      {
+       "value": "Glowell",
+       "spindle": 0.0004,
+       "impl": 0.00014
+      },
+      {
+       "value": "Pottway",
+       "spindle": 0.00016,
+       "impl": 0.00046
+      },
+      {
+       "value": "Simowell",
+       "spindle": 0.00016,
+       "impl": 0.00042
+      },
+      {
+       "value": "Hull",
+       "spindle": 0.00026,
+       "impl": 0.00042
+      },
+      {
+       "value": "Pottestein",
+       "spindle": 0.00022,
+       "impl": 0.00042
+      },
+      {
+       "value": "Aguibrook",
+       "spindle": 0.00016,
+       "impl": 0.00042
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "email": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "distinct": {
+      "spindle": 50000,
+      "impl": 50000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "evar.cherrton27@verizon.net",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "hien.rosales857@live.com",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "evdra.lowe335@frontier.com",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "tiika.fisher793@seznam.cz",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "weiah.lloyd950@post.com",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "iletta.birwick405@doctor.com",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "joia.holdeshire808@att.net",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "collins.garridge321@rocketmail.com",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "juth.mcneil478@virginmedia.com",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "hoion.sellway815@charter.net",
+       "spindle": 2e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "bianca.holdeham750@example.net",
+       "spindle": 0.0,
+       "impl": 2e-05
+      },
+      {
+       "value": "naard.thombrook769@example.net",
+       "spindle": 0.0,
+       "impl": 2e-05
+      },
+      {
+       "value": "true.reese982@example.net",
+       "spindle": 0.0,
+       "impl": 2e-05
+      },
+      {
+       "value": "oslyn.jaccroft289@example.com",
+       "spindle": 0.0,
+       "impl": 2e-05
+      },
+      {
+       "value": "dresa.hamiwood401@example.com",
+       "spindle": 0.0,
+       "impl": 2e-05
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 0.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": false,
+      "distinct_ratio": true
+     },
+     "equivalent": false,
+     "arrow_type_match": true
+    },
+    "phone": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.1508,
+      "impl": 0.1511,
+      "baseline_max_abs_diff": 0.002019999999999994,
+      "tol": 0.011316331561066952
+     },
+     "distinct": {
+      "spindle": 42460,
+      "impl": 32894,
+      "ratio": 0.7747056052755534,
+      "baseline_max_ratio_dev": 0.0023787093735281317
+     },
+     "top10": [
+      {
+       "value": "(888) 591-2596",
+       "spindle": 2.3551577955723033e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(389) 359-1522",
+       "spindle": 2.3551577955723033e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(730) 928-7063",
+       "spindle": 2.3551577955723033e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(294) 264-9623",
+       "spindle": 2.3551577955723033e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(545) 937-5969",
+       "spindle": 2.3551577955723033e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(820) 576-5544",
+       "spindle": 2.3551577955723033e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(876) 705-3560",
+       "spindle": 2.3551577955723033e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(334) 434-7308",
+       "spindle": 2.3551577955723033e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(730) 941-4654",
+       "spindle": 2.3551577955723033e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(527) 261-1173",
+       "spindle": 2.3551577955723033e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "(344) 555-0149",
+       "spindle": 0.0,
+       "impl": 0.00011779950524207798
+      },
+      {
+       "value": "(273) 555-0137",
+       "spindle": 0.0,
+       "impl": 0.00011779950524207798
+      },
+      {
+       "value": "(927) 555-0116",
+       "spindle": 0.0,
+       "impl": 0.00011779950524207798
+      },
+      {
+       "value": "(323) 555-0189",
+       "spindle": 0.0,
+       "impl": 0.00011779950524207798
+      },
+      {
+       "value": "(275) 555-0100",
+       "spindle": 0.0,
+       "impl": 0.00011779950524207798
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 0.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "(AAA) EEE-SSSS, AAA/EEE 200..998, SSSS 1000..9998",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": false,
+      "distinct_ratio": false
+     },
+     "equivalent": false,
+     "arrow_type_match": true
+    },
+    "company": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "distinct": {
+      "spindle": 2000,
+      "impl": 2000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Sierra Grid Capital",
+       "spindle": 0.00084,
+       "impl": 0.00048
+      },
+      {
+       "value": "Crystal Cedar",
+       "spindle": 0.00084,
+       "impl": 0.0005
+      },
+      {
+       "value": "Rapid Spark Associates",
+       "spindle": 0.00082,
+       "impl": 0.00036
+      },
+      {
+       "value": "Holbrook Corp",
+       "spindle": 0.00082,
+       "impl": 0.00034
+      },
+      {
+       "value": "Guerwood Dynamics",
+       "spindle": 0.0008,
+       "impl": 0.00058
+      },
+      {
+       "value": "Frontier Storm Services",
+       "spindle": 0.0008,
+       "impl": 0.00068
+      },
+      {
+       "value": "Horizon Ventures",
+       "spindle": 0.0008,
+       "impl": 0.0005
+      },
+      {
+       "value": "Iron Grid Ventures",
+       "spindle": 0.00078,
+       "impl": 0.00038
+      },
+      {
+       "value": "Prism Mind Global",
+       "spindle": 0.00078,
+       "impl": 0.0006
+      },
+      {
+       "value": "Red Fire",
+       "spindle": 0.00078,
+       "impl": 0.00034
+      },
+      {
+       "value": "Prism Scope Networks",
+       "spindle": 0.0005,
+       "impl": 0.00084
+      },
+      {
+       "value": "Fraton Enterprises",
+       "spindle": 0.00044,
+       "impl": 0.00084
+      },
+      {
+       "value": "Moonley Corp",
+       "spindle": 0.00048,
+       "impl": 0.00082
+      },
+      {
+       "value": "Atlas Grid Group",
+       "spindle": 0.00066,
+       "impl": 0.00082
+      },
+      {
+       "value": "Pinnacle Holdings",
+       "spindle": 0.00048,
+       "impl": 0.0008
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "created_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.000141419942016676
+     },
+     "ks": 0.007039999999999991,
+     "ks_baseline": 0.007759999999999989,
+     "ks_tol": 0.013639999999999984,
+     "stats": {
+      "mean": {
+       "spindle": "2024-01-02 22:13:46.831629824",
+       "impl": "2023-12-30 17:43:15.888631808"
+      },
+      "min": {
+       "spindle": "2022-01-01 00:47:23.810726400",
+       "impl": "2022-01-01 00:20:18.422856960"
+      },
+      "max": {
+       "spindle": "2025-12-30 22:34:37.788368640",
+       "impl": "2025-12-31 23:37:51.294589952"
+      },
+      "std": {
+       "spindle": 420.184325279332,
+       "impl": 421.91718619916054,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 50000,
+      "impl": 50000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "lead": {
+   "rows": {
+    "spindle": 20000,
+    "impl": 20000
+   },
+   "columns_spindle": [
+    "lead_id",
+    "contact_id",
+    "campaign_id",
+    "lead_score",
+    "status",
+    "created_date"
+   ],
+   "columns_impl": [
+    "lead_id",
+    "contact_id",
+    "campaign_id",
+    "lead_score",
+    "status",
+    "created_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "lead_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "contact_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "campaign_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "lead_score": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "status": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "created_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "lead_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 10000.5,
+       "impl": 10000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 20000.0,
+       "impl": 20000.0
+      },
+      "std": {
+       "spindle": 5773.502684679379,
+       "impl": 5773.502684679379,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 20000,
+      "impl": 20000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "contact_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.008900000000000019,
+     "ks_baseline": 0.008050000000000002,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 25076.3118,
+       "impl": 25030.2596
+      },
+      "min": {
+       "spindle": 4.0,
+       "impl": 6.0
+      },
+      "max": {
+       "spindle": 49999.0,
+       "impl": 50000.0
+      },
+      "std": {
+       "spindle": 14468.387640655774,
+       "impl": 14412.097953806304,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 16427,
+      "impl": 16498
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "campaign_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.008050000000000002,
+     "ks_baseline": 0.010500000000000065,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": 78.90915,
+       "impl": 79.2865
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 2000.0,
+       "impl": 1995.0
+      },
+      "std": {
+       "spindle": 240.66751524931132,
+       "impl": 241.1719413981444,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 1137,
+      "impl": 1142
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lead_score": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.008150000000000018,
+     "ks_baseline": 0.011900000000000022,
+     "ks_tol": 0.019850000000000034,
+     "stats": {
+      "mean": {
+       "spindle": 49.973525990693716,
+       "impl": 50.206724307652024
+      },
+      "min": {
+       "spindle": 0.005596624379267112,
+       "impl": 0.0043040043770758984
+      },
+      "max": {
+       "spindle": 99.99185235941523,
+       "impl": 99.99853596585342
+      },
+      "std": {
+       "spindle": 28.94531615357571,
+       "impl": 28.85838215766192,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 20000,
+      "impl": 20000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Contacted",
+       "spindle": 0.24355,
+       "impl": 0.24825
+      },
+      {
+       "value": "Qualified",
+       "spindle": 0.20415,
+       "impl": 0.19885
+      },
+      {
+       "value": "Converted",
+       "spindle": 0.20355,
+       "impl": 0.20155
+      },
+      {
+       "value": "New",
+       "spindle": 0.19815,
+       "impl": 0.19905
+      },
+      {
+       "value": "Unqualified",
+       "spindle": 0.1506,
+       "impl": 0.1523
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.007300000000000001,
+     "tvd_baseline": 0.010550000000000032,
+     "tvd_tol": 0.0378469878303024,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "created_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.006800000000000028,
+     "ks_baseline": 0.008400000000000019,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "spindle": "2024-01-03 21:00:22.605584640",
+       "impl": "2024-01-03 19:53:49.052952576"
+      },
+      "min": {
+       "spindle": "2022-01-01 00:27:19.933213696",
+       "impl": "2022-01-01 01:29:20.088568064"
+      },
+      "max": {
+       "spindle": "2025-12-30 23:17:50.705158400",
+       "impl": "2025-12-31 23:48:48.981089024"
+      },
+      "std": {
+       "spindle": 422.1519599542077,
+       "impl": 424.69020680550074,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 20000,
+      "impl": 20000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "opportunity": {
+   "rows": {
+    "spindle": 10000,
+    "impl": 10000
+   },
+   "columns_spindle": [
+    "opp_id",
+    "lead_id",
+    "opp_name",
+    "stage",
+    "amount",
+    "close_date",
+    "probability"
+   ],
+   "columns_impl": [
+    "opp_id",
+    "lead_id",
+    "opp_name",
+    "stage",
+    "amount",
+    "close_date",
+    "probability"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "opp_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "lead_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "opp_name": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "stage": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "amount": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "close_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "probability": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "opp_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.02756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 5000.5,
+       "impl": 5000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 10000.0,
+       "impl": 10000.0
+      },
+      "std": {
+       "spindle": 2886.751331514372,
+       "impl": 2886.751331514372,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 10000,
+      "impl": 10000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lead_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "ks": 0.01040000000000002,
+     "ks_baseline": 0.010000000000000009,
+     "ks_tol": 0.02756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 10026.4185,
+       "impl": 10033.4477
+      },
+      "min": {
+       "spindle": 2.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 19999.0,
+       "impl": 19996.0
+      },
+      "std": {
+       "spindle": 5789.442227707065,
+       "impl": 5773.560882234179,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 7822,
+      "impl": 7897
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "opp_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "distinct": {
+      "spindle": 10000,
+      "impl": 10000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "OPP-000001",
+       "spindle": 0.0001,
+       "impl": 0.0001
+      },
+      {
+       "value": "OPP-000002",
+       "spindle": 0.0001,
+       "impl": 0.0001
+      },
+      {
+       "value": "OPP-000003",
+       "spindle": 0.0001,
+       "impl": 0.0001
+      },
+      {
+       "value": "OPP-000004",
+       "spindle": 0.0001,
+       "impl": 0.0001
+      },
+      {
+       "value": "OPP-000005",
+       "spindle": 0.0001,
+       "impl": 0.0001
+      },
+      {
+       "value": "OPP-000006",
+       "spindle": 0.0001,
+       "impl": 0.0001
+      },
+      {
+       "value": "OPP-000007",
+       "spindle": 0.0001,
+       "impl": 0.0001
+      },
+      {
+       "value": "OPP-000008",
+       "spindle": 0.0001,
+       "impl": 0.0001
+      },
+      {
+       "value": "OPP-000009",
+       "spindle": 0.0001,
+       "impl": 0.0001
+      },
+      {
+       "value": "OPP-000010",
+       "spindle": 0.0001,
+       "impl": 0.0001
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output",
+     "component_overlap": 1.0,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "OPP-{seq:6}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "stage": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "distinct": {
+      "spindle": 6,
+      "impl": 6,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Proposal",
+       "spindle": 0.2044,
+       "impl": 0.1967
+      },
+      {
+       "value": "Closed Won",
+       "spindle": 0.179,
+       "impl": 0.1808
+      },
+      {
+       "value": "Qualification",
+       "spindle": 0.1775,
+       "impl": 0.1875
+      },
+      {
+       "value": "Negotiation",
+       "spindle": 0.1709,
+       "impl": 0.1698
+      },
+      {
+       "value": "Prospecting",
+       "spindle": 0.1492,
+       "impl": 0.1475
+      },
+      {
+       "value": "Closed Lost",
+       "spindle": 0.119,
+       "impl": 0.1177
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.011799999999999991,
+     "tvd_baseline": 0.010700000000000008,
+     "tvd_tol": 0.058632301428350395,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "amount": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "ks": 0.014400000000000024,
+     "ks_baseline": 0.015700000000000047,
+     "ks_tol": 0.02756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": 16379.43862402387,
+       "impl": 16775.605534897088
+      },
+      "min": {
+       "spindle": 500.0,
+       "impl": 500.0
+      },
+      "max": {
+       "spindle": 500000.0,
+       "impl": 500000.0
+      },
+      "std": {
+       "spindle": 25732.74505575369,
+       "impl": 28659.715158466002,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 9921,
+      "impl": 9883
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "close_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "ks": 0.01860000000000006,
+     "ks_baseline": 0.013500000000000012,
+     "ks_tol": 0.02756973423800469,
+     "stats": {
+      "mean": {
+       "spindle": "2024-03-18 22:17:26.815381504",
+       "impl": "2024-03-09 08:31:16.203677952"
+      },
+      "min": {
+       "spindle": "2022-06-01 00:09:58.898099456",
+       "impl": "2022-06-01 04:37:00.739770112"
+      },
+      "max": {
+       "spindle": "2025-12-30 14:50:31.897603072",
+       "impl": "2025-12-31 20:20:27.170573056"
+      },
+      "std": {
+       "spindle": 377.3873072761031,
+       "impl": 376.82800886502264,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 10000,
+      "impl": 10000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "probability": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0007070714249635605
+     },
+     "ks": 0.012800000000000034,
+     "ks_baseline": 0.018799999999999928,
+     "ks_tol": 0.030199999999999894,
+     "stats": {
+      "mean": {
+       "spindle": 0.5028258341842967,
+       "impl": 0.5007413791402794
+      },
+      "min": {
+       "spindle": 0.05020399995339562,
+       "impl": 0.050079833454062486
+      },
+      "max": {
+       "spindle": 0.9499439442054063,
+       "impl": 0.9499735223095712
+      },
+      "std": {
+       "spindle": 0.2610944961547763,
+       "impl": 0.26035704073183435,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 10000,
+      "impl": 10000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "email_send": {
+   "rows": {
+    "spindle": 100000,
+    "impl": 100000
+   },
+   "columns_spindle": [
+    "send_id",
+    "campaign_id",
+    "contact_id",
+    "sent_date",
+    "opened",
+    "clicked",
+    "bounced"
+   ],
+   "columns_impl": [
+    "send_id",
+    "campaign_id",
+    "contact_id",
+    "sent_date",
+    "opened",
+    "clicked",
+    "bounced"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "send_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "campaign_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "contact_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "sent_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "opened": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "clicked": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "bounced": {
+     "spindle": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "send_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.008718315467762154,
+     "stats": {
+      "mean": {
+       "spindle": 50000.5,
+       "impl": 50000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 100000.0,
+       "impl": 100000.0
+      },
+      "std": {
+       "spindle": 28867.513458037913,
+       "impl": 28867.513458037913,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 100000,
+      "impl": 100000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "campaign_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "ks": 0.0027000000000000357,
+     "ks_baseline": 0.004049999999999998,
+     "ks_tol": 0.008718315467762154,
+     "stats": {
+      "mean": {
+       "spindle": 1003.4473,
+       "impl": 1001.94836
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 2000.0,
+       "impl": 2000.0
+      },
+      "std": {
+       "spindle": 577.0381173741557,
+       "impl": 576.7902736986039,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 2000,
+      "impl": 2000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "contact_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "ks": 0.004090000000000038,
+     "ks_baseline": 0.004109999999999947,
+     "ks_tol": 0.008718315467762154,
+     "stats": {
+      "mean": {
+       "spindle": 24951.48714,
+       "impl": 25019.81741
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 49998.0,
+       "impl": 50000.0
+      },
+      "std": {
+       "spindle": 14418.881726508287,
+       "impl": 14435.834127260914,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 43249,
+      "impl": 43310
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "sent_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "ks": 0.004190000000000027,
+     "ks_baseline": 0.00497000000000003,
+     "ks_tol": 0.009455000000000045,
+     "stats": {
+      "mean": {
+       "spindle": "2023-12-31 12:18:23.616442112",
+       "impl": "2024-01-03 00:18:09.868624896"
+      },
+      "min": {
+       "spindle": "2022-01-01 00:08:49.912325376",
+       "impl": "2022-01-01 00:08:17.620696064"
+      },
+      "max": {
+       "spindle": "2025-12-30 23:58:47.103795712",
+       "impl": "2025-12-31 23:52:08.823244032"
+      },
+      "std": {
+       "spindle": 421.3215133469311,
+       "impl": 421.75087879943845,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 100000,
+      "impl": 100000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "opened": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "false",
+       "spindle": 0.75042,
+       "impl": 0.74953
+      },
+      {
+       "value": "true",
+       "spindle": 0.24958,
+       "impl": 0.25047
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.000889999999999988,
+     "tvd_baseline": 0.001940000000000025,
+     "tvd_tol": 0.010704744696916624,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "clicked": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "false",
+       "spindle": 0.91976,
+       "impl": 0.92099
+      },
+      {
+       "value": "true",
+       "spindle": 0.08024,
+       "impl": 0.07901
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0012299999999999811,
+     "tvd_baseline": 0.00032999999999997615,
+     "tvd_tol": 0.010704744696916624,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "bounced": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 7.071032456438027e-05
+     },
+     "distinct": {
+      "spindle": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "false",
+       "spindle": 0.96954,
+       "impl": 0.96965
+      },
+      {
+       "value": "true",
+       "spindle": 0.03046,
+       "impl": 0.03035
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.00011000000000002848,
+     "tvd_baseline": 0.0008900000000000297,
+     "tvd_tol": 0.010704744696916624,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "web_visit": {
+   "rows": {
+    "spindle": 250000,
+    "impl": 250000
+   },
+   "columns_spindle": [
+    "visit_id",
+    "contact_id",
+    "visit_date",
+    "page_url",
+    "referrer",
+    "duration_seconds",
+    "pages_viewed"
+   ],
+   "columns_impl": [
+    "visit_id",
+    "contact_id",
+    "visit_date",
+    "page_url",
+    "referrer",
+    "duration_seconds",
+    "pages_viewed"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "visit_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "contact_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "visit_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "page_url": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "referrer": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "duration_seconds": {
+     "spindle": "double",
+     "impl": "double"
+    },
+    "pages_viewed": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "visit_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.828421467886284e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.005513946847600939,
+     "stats": {
+      "mean": {
+       "spindle": 125000.5,
+       "impl": 125000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 250000.0,
+       "impl": 250000.0
+      },
+      "std": {
+       "spindle": 72168.78364812587,
+       "impl": 72168.78364812587,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 250000,
+      "impl": 250000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "contact_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.828421467886284e-05
+     },
+     "ks": 0.0019080000000000208,
+     "ks_baseline": 0.0031200000000000117,
+     "ks_tol": 0.0066800000000000175,
+     "stats": {
+      "mean": {
+       "spindle": 25001.212312,
+       "impl": 25006.60734
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 50000.0,
+       "impl": 50000.0
+      },
+      "std": {
+       "spindle": 14411.584426561974,
+       "impl": 14430.980014922,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 49630,
+      "impl": 49660
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "visit_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.828421467886284e-05
+     },
+     "ks": 0.0018239999999999923,
+     "ks_baseline": 0.0024480000000000057,
+     "ks_tol": 0.005672000000000009,
+     "stats": {
+      "mean": {
+       "spindle": "2023-12-31 17:47:49.723292672",
+       "impl": "2023-12-31 15:24:12.888123392"
+      },
+      "min": {
+       "spindle": "2022-01-01 00:03:36.019748096",
+       "impl": "2022-01-01 00:41:54.920855040"
+      },
+      "max": {
+       "spindle": "2025-12-30 23:49:39.940081664",
+       "impl": "2025-12-31 23:51:09.349533952"
+      },
+      "std": {
+       "spindle": 421.5355079288889,
+       "impl": 422.0826315100035,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 250000,
+      "impl": 250000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "page_url": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.828421467886284e-05
+     },
+     "distinct": {
+      "spindle": 18900,
+      "impl": 567,
+      "ratio": 0.03,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "https://dataworks.com/admin",
+       "spindle": 0.000116,
+       "impl": 0.0
+      },
+      {
+       "value": "https://dataworks.com/careers/marketing",
+       "spindle": 0.000116,
+       "impl": 0.0
+      },
+      {
+       "value": "https://treyresearch.com/portal/register",
+       "spindle": 0.000112,
+       "impl": 0.0
+      },
+      {
+       "value": "https://cloudnet.com/about/team",
+       "spindle": 0.000112,
+       "impl": 0.0
+      },
+      {
+       "value": "https://software.co/resources/guides",
+       "spindle": 0.000108,
+       "impl": 0.0
+      },
+      {
+       "value": "https://greenfield.com/data",
+       "spindle": 0.000108,
+       "impl": 0.0
+      },
+      {
+       "value": "https://core-logic.com/pricing",
+       "spindle": 0.000108,
+       "impl": 0.0
+      },
+      {
+       "value": "https://partners.net/events/upcoming",
+       "spindle": 0.000104,
+       "impl": 0.0
+      },
+      {
+       "value": "https://deepwell.com/metrics",
+       "spindle": 0.000104,
+       "impl": 0.0
+      },
+      {
+       "value": "https://grid.dev/contact/sales",
+       "spindle": 0.000104,
+       "impl": 0.0
+      },
+      {
+       "value": "https://example.org/docs/api",
+       "spindle": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "https://example.org/exports/pdf",
+       "spindle": 0.0,
+       "impl": 0.001988
+      },
+      {
+       "value": "https://example.com/api/v1/auth/login",
+       "spindle": 4.4e-05,
+       "impl": 0.001988
+      },
+      {
+       "value": "https://example.com/academy/courses",
+       "spindle": 4.8e-05,
+       "impl": 0.001984
+      },
+      {
+       "value": "https://example.org/academy/certifications",
+       "spindle": 0.0,
+       "impl": 0.001976
+      }
+     ],
+     "vocab_overlap": 0.333544,
+     "vocab_source": "spindle_output",
+     "component_overlap": 0.333544,
+     "component_overlap_spindle": 1.0,
+     "component_rule": "'https://'+URI_DOMAINS+'/'+URI_PATHS",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": false,
+      "distinct_ratio": false
+     },
+     "equivalent": false,
+     "arrow_type_match": true
+    },
+    "referrer": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.828421467886284e-05
+     },
+     "distinct": {
+      "spindle": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Organic",
+       "spindle": 0.299012,
+       "impl": 0.299924
+      },
+      {
+       "value": "Paid",
+       "spindle": 0.219236,
+       "impl": 0.220408
+      },
+      {
+       "value": "Direct",
+       "spindle": 0.181368,
+       "impl": 0.181028
+      },
+      {
+       "value": "Social",
+       "spindle": 0.180048,
+       "impl": 0.179416
+      },
+      {
+       "value": "Email",
+       "spindle": 0.120336,
+       "impl": 0.119224
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.0020840000000000303,
+     "tvd_baseline": 0.0030799999999999925,
+     "tvd_tol": 0.010704744696916627,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "duration_seconds": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.828421467886284e-05
+     },
+     "ks": 0.0030959999999999877,
+     "ks_baseline": 0.004703999999999986,
+     "ks_tol": 0.009055999999999979,
+     "stats": {
+      "mean": {
+       "spindle": 183.0321253490867,
+       "impl": 182.71933312719298
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 3600.0,
+       "impl": 3600.0
+      },
+      "std": {
+       "spindle": 297.13465736988235,
+       "impl": 297.0119937314851,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 249712,
+      "impl": 249712
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "pages_viewed": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.828421467886284e-05
+     },
+     "ks": 0.0025160000000000737,
+     "ks_baseline": 0.0032200000000000006,
+     "ks_tol": 0.006830000000000001,
+     "stats": {
+      "mean": {
+       "spindle": 10.512175355726752,
+       "impl": 10.49397925300934
+      },
+      "min": {
+       "spindle": 1.0000472261905013,
+       "impl": 1.0000013007107253
+      },
+      "max": {
+       "spindle": 19.999898920265633,
+       "impl": 19.999995388085324
+      },
+      "std": {
+       "spindle": 5.496678666950587,
+       "impl": 5.491586983882575,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 250000,
+      "impl": 250000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "conversion": {
+   "rows": {
+    "spindle": 6000,
+    "impl": 6000
+   },
+   "columns_spindle": [
+    "conversion_id",
+    "lead_id",
+    "campaign_id",
+    "conversion_date",
+    "conversion_type",
+    "revenue"
+   ],
+   "columns_impl": [
+    "conversion_id",
+    "lead_id",
+    "campaign_id",
+    "conversion_date",
+    "conversion_type",
+    "revenue"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "conversion_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "lead_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "campaign_id": {
+     "spindle": "int64",
+     "impl": "int64"
+    },
+    "conversion_date": {
+     "spindle": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "conversion_type": {
+     "spindle": "string",
+     "impl": "string"
+    },
+    "revenue": {
+     "spindle": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "conversion_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": 3000.5,
+       "impl": 3000.5
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 6000.0,
+       "impl": 6000.0
+      },
+      "std": {
+       "spindle": 1732.050783512616,
+       "impl": 1732.050783512616,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 6000,
+      "impl": 6000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lead_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.01633333333333331,
+     "ks_baseline": 0.022333333333333316,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": 9913.813,
+       "impl": 9954.322666666667
+      },
+      "min": {
+       "spindle": 12.0,
+       "impl": 6.0
+      },
+      "max": {
+       "spindle": 19998.0,
+       "impl": 19998.0
+      },
+      "std": {
+       "spindle": 5703.057803175796,
+       "impl": 5776.99296389447,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 5184,
+      "impl": 5205
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "campaign_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.011166666666666658,
+     "ks_baseline": 0.02266666666666667,
+     "ks_tol": 0.036000000000000004,
+     "stats": {
+      "mean": {
+       "spindle": 995.7991666666667,
+       "impl": 994.1676666666667
+      },
+      "min": {
+       "spindle": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "spindle": 2000.0,
+       "impl": 2000.0
+      },
+      "std": {
+       "spindle": 577.435066911688,
+       "impl": 580.341412349566,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 1898,
+      "impl": 1899
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "conversion_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.01366666666666666,
+     "ks_baseline": 0.01733333333333334,
+     "ks_tol": 0.03559237385438553,
+     "stats": {
+      "mean": {
+       "spindle": "2024-01-04 20:39:50.219649536",
+       "impl": "2023-12-27 19:44:53.508209152"
+      },
+      "min": {
+       "spindle": "2022-01-01 02:48:54.382898432",
+       "impl": "2022-01-01 03:24:18.191872"
+      },
+      "max": {
+       "spindle": "2025-12-30 21:58:16.721808640",
+       "impl": "2025-12-31 18:29:16.149998080"
+      },
+      "std": {
+       "spindle": 421.66368944864035,
+       "impl": 421.7047754066299,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "spindle": 6000,
+      "impl": 6000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "conversion_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "distinct": {
+      "spindle": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Purchase",
+       "spindle": 0.2906666666666667,
+       "impl": 0.29633333333333334
+      },
+      {
+       "value": "Trial",
+       "spindle": 0.2535,
+       "impl": 0.2475
+      },
+      {
+       "value": "Demo",
+       "spindle": 0.2455,
+       "impl": 0.2575
+      },
+      {
+       "value": "Signup",
+       "spindle": 0.21033333333333334,
+       "impl": 0.19866666666666666
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "spindle_output+pool",
+     "tvd": 0.017666666666666678,
+     "tvd_baseline": 0.01883333333333334,
+     "tvd_tol": 0.06180387232371033,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "revenue": {
+     "kind": "numeric",
+     "null_rate": {
+      "spindle": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011784130886100203
+     },
+     "ks": 0.01650000000000007,
+     "ks_baseline": 0.029666666666666675,
+     "ks_tol": 0.046500000000000014,
+     "stats": {
+      "mean": {
+       "spindle": 3575.864773590828,
+       "impl": 3742.1358765667815
+      },
+      "min": {
+       "spindle": 30.008052265108837,
+       "impl": 22.1240815706704
+      },
+      "max": {
+       "spindle": 100000.0,
+       "impl": 100000.0
+      },
+      "std": {
+       "spindle": 5893.901501488844,
+       "impl": 6441.936362896762,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "spindle": 6000,
+      "impl": 5997
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  }
+ },
+ "table_order": {
+  "spindle": [
+   "campaign_type",
+   "industry",
+   "lead_source",
+   "campaign",
+   "contact",
+   "email_send",
+   "lead",
+   "web_visit",
+   "conversion",
+   "opportunity"
+  ],
+  "impl": [
+   "campaign_type",
+   "industry",
+   "lead_source",
+   "campaign",
+   "contact",
+   "email_send",
+   "lead",
+   "web_visit",
+   "conversion",
+   "opportunity"
+  ]
+ },
+ "fk_integrity": {
+  "spindle": {
+   "campaign.campaign_type_id->campaign_type.type_id": {
+    "integrity": 1.0,
+    "n": 2000
+   },
+   "contact.industry_id->industry.industry_id": {
+    "integrity": 1.0,
+    "n": 50000
+   },
+   "contact.lead_source_id->lead_source.source_id": {
+    "integrity": 1.0,
+    "n": 50000
+   },
+   "lead.contact_id->contact.contact_id": {
+    "integrity": 1.0,
+    "n": 20000
+   },
+   "lead.campaign_id->campaign.campaign_id": {
+    "integrity": 1.0,
+    "n": 20000
+   },
+   "opportunity.lead_id->lead.lead_id": {
+    "integrity": 1.0,
+    "n": 10000
+   },
+   "email_send.campaign_id->campaign.campaign_id": {
+    "integrity": 1.0,
+    "n": 100000
+   },
+   "email_send.contact_id->contact.contact_id": {
+    "integrity": 1.0,
+    "n": 100000
+   },
+   "web_visit.contact_id->contact.contact_id": {
+    "integrity": 1.0,
+    "n": 250000
+   },
+   "conversion.lead_id->lead.lead_id": {
+    "integrity": 1.0,
+    "n": 6000
+   },
+   "conversion.campaign_id->campaign.campaign_id": {
+    "integrity": 1.0,
+    "n": 6000
+   }
+  },
+  "impl": {
+   "campaign.campaign_type_id->campaign_type.type_id": {
+    "integrity": 1.0,
+    "n": 2000
+   },
+   "contact.industry_id->industry.industry_id": {
+    "integrity": 1.0,
+    "n": 50000
+   },
+   "contact.lead_source_id->lead_source.source_id": {
+    "integrity": 1.0,
+    "n": 50000
+   },
+   "lead.contact_id->contact.contact_id": {
+    "integrity": 1.0,
+    "n": 20000
+   },
+   "lead.campaign_id->campaign.campaign_id": {
+    "integrity": 1.0,
+    "n": 20000
+   },
+   "opportunity.lead_id->lead.lead_id": {
+    "integrity": 1.0,
+    "n": 10000
+   },
+   "email_send.campaign_id->campaign.campaign_id": {
+    "integrity": 1.0,
+    "n": 100000
+   },
+   "email_send.contact_id->contact.contact_id": {
+    "integrity": 1.0,
+    "n": 100000
+   },
+   "web_visit.contact_id->contact.contact_id": {
+    "integrity": 1.0,
+    "n": 250000
+   },
+   "conversion.lead_id->lead.lead_id": {
+    "integrity": 1.0,
+    "n": 6000
+   },
+   "conversion.campaign_id->campaign.campaign_id": {
+    "integrity": 1.0,
+    "n": 6000
+   }
+  }
+ },
+ "fanout": {
+  "campaign_type->campaign.campaign_type_id": {
+   "spindle": {
+    "p50": 134.0,
+    "p90": 147.2,
+    "p99": 150.57999999999998,
+    "max": 151,
+    "mean": 133.33333333333334,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 131.0,
+    "p90": 144.6,
+    "p99": 147.57999999999998,
+    "max": 148,
+    "mean": 133.33333333333334,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.13333333333333336,
+   "ks_baseline_max": 0.2666666666666667,
+   "ks_tol": 0.7118474770877107,
+   "equivalent": true
+  },
+  "industry->contact.industry_id": {
+   "spindle": {
+    "p50": 2000.0,
+    "p90": 2055.2,
+    "p99": 2059.52,
+    "max": 2060,
+    "mean": 2000.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 1989.0,
+    "p90": 2068.0,
+    "p99": 2109.6,
+    "max": 2118,
+    "mean": 2000.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.2,
+   "ks_baseline_max": 0.24,
+   "ks_tol": 0.5513946847600938,
+   "equivalent": true
+  },
+  "lead_source->contact.lead_source_id": {
+   "spindle": {
+    "p50": 2495.5,
+    "p90": 2551.1,
+    "p99": 2570.81,
+    "max": 2571,
+    "mean": 2500.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 2509.0,
+    "p90": 2538.1,
+    "p99": 2591.2,
+    "max": 2595,
+    "mean": 2500.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.15000000000000002,
+   "ks_baseline_max": 0.35000000000000003,
+   "ks_tol": 0.6164779987778186,
+   "equivalent": true
+  },
+  "contact->lead.contact_id": {
+   "spindle": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 5,
+    "mean": 0.4,
+    "zero_frac": 0.67146
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 6,
+    "mean": 0.4,
+    "zero_frac": 0.67004
+   },
+   "ks_counts": 0.0014199999999999768,
+   "ks_baseline_max": 0.0025999999999999357,
+   "ks_tol": 0.012329559975556372,
+   "equivalent": true
+  },
+  "campaign->lead.campaign_id": {
+   "spindle": {
+    "p50": 1.0,
+    "p90": 6.0,
+    "p99": 96.05999999999995,
+    "max": 5594,
+    "mean": 10.0,
+    "zero_frac": 0.4315
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 6.0,
+    "p99": 106.07999999999993,
+    "max": 5591,
+    "mean": 10.0,
+    "zero_frac": 0.429
+   },
+   "ks_counts": 0.007500000000000062,
+   "ks_baseline_max": 0.024500000000000022,
+   "ks_tol": 0.06164779987778185,
+   "equivalent": true
+  },
+  "lead->opportunity.lead_id": {
+   "spindle": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 3.0,
+    "max": 8,
+    "mean": 0.5,
+    "zero_frac": 0.6089
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 3.0,
+    "max": 5,
+    "mean": 0.5,
+    "zero_frac": 0.60515
+   },
+   "ks_counts": 0.003750000000000031,
+   "ks_baseline_max": 0.005199999999999982,
+   "ks_tol": 0.019494746035204052,
+   "equivalent": true
+  },
+  "campaign->email_send.campaign_id": {
+   "spindle": {
+    "p50": 50.0,
+    "p90": 59.0,
+    "p99": 67.0,
+    "max": 75,
+    "mean": 50.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 50.0,
+    "p90": 59.0,
+    "p99": 67.0,
+    "max": 74,
+    "mean": 50.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.009000000000000008,
+   "ks_baseline_max": 0.02300000000000002,
+   "ks_tol": 0.06164779987778185,
+   "equivalent": true
+  },
+  "contact->email_send.contact_id": {
+   "spindle": {
+    "p50": 2.0,
+    "p90": 4.0,
+    "p99": 6.0,
+    "max": 11,
+    "mean": 2.0,
+    "zero_frac": 0.13502
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 4.0,
+    "p99": 6.0,
+    "max": 11,
+    "mean": 2.0,
+    "zero_frac": 0.1338
+   },
+   "ks_counts": 0.0020999999999999908,
+   "ks_baseline_max": 0.0040400000000000436,
+   "ks_tol": 0.012329559975556372,
+   "equivalent": true
+  },
+  "contact->web_visit.contact_id": {
+   "spindle": {
+    "p50": 5.0,
+    "p90": 8.0,
+    "p99": 11.0,
+    "max": 18,
+    "mean": 5.0,
+    "zero_frac": 0.0074
+   },
+   "impl": {
+    "p50": 5.0,
+    "p90": 8.0,
+    "p99": 11.0,
+    "max": 17,
+    "mean": 5.0,
+    "zero_frac": 0.0068
+   },
+   "ks_counts": 0.0025200000000000222,
+   "ks_baseline_max": 0.003280000000000005,
+   "ks_tol": 0.012329559975556372,
+   "equivalent": true
+  },
+  "lead->conversion.lead_id": {
+   "spindle": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 4,
+    "mean": 0.3,
+    "zero_frac": 0.7408
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 4,
+    "mean": 0.3,
+    "zero_frac": 0.73975
+   },
+   "ks_counts": 0.0010499999999999954,
+   "ks_baseline_max": 0.0015500000000000513,
+   "ks_tol": 0.019494746035204052,
+   "equivalent": true
+  },
+  "campaign->conversion.campaign_id": {
+   "spindle": {
+    "p50": 3.0,
+    "p90": 5.0,
+    "p99": 8.0,
+    "max": 11,
+    "mean": 3.0,
+    "zero_frac": 0.051
+   },
+   "impl": {
+    "p50": 3.0,
+    "p90": 5.0,
+    "p99": 8.0,
+    "max": 9,
+    "mean": 3.0,
+    "zero_frac": 0.0505
+   },
+   "ks_counts": 0.008499999999999952,
+   "ks_baseline_max": 0.018000000000000016,
+   "ks_tol": 0.06164779987778185,
+   "equivalent": true
+  }
+ },
+ "record_coherence": {},
+ "strategy_semantics": {},
+ "business_rules": {
+  "spindle_BusinessRulesEngine_violations": {},
+  "spindle_on_spindle": {}
+ },
+ "spindle_fidelity_comparator": {
+  "overall_impl": 89.83273782207036,
+  "overall_baseline_spindle_vs_spindle": [
+   90.53721580079244,
+   92.13482827126151,
+   90.70922662386027,
+   90.12573997522165
+  ],
+  "tables": {
+   "campaign": {
+    "impl": 99.33549559383722,
+    "baseline": [
+     98.84849602336429,
+     99.20130098673349,
+     99.14964286102371,
+     99.41183676952235
+    ],
+    "floor": 98.34849602336429,
+    "ok": true
+   },
+   "campaign_type": {
+    "impl": 70.77647579127594,
+    "baseline": [
+     72.66811779808391,
+     82.96066997452246,
+     68.79768192035083,
+     70.86753812236827
+    ],
+    "floor": 68.29768192035083,
+    "ok": true
+   },
+   "contact": {
+    "impl": 77.33366298813222,
+    "baseline": [
+     77.61391864080532,
+     77.73251867601721,
+     77.68126006536265,
+     77.72793706431736
+    ],
+    "floor": 77.11391864080532,
+    "ok": true
+   },
+   "conversion": {
+    "impl": 98.889149245066,
+    "baseline": [
+     99.31041596722322,
+     98.70641635912212,
+     98.84274401017092,
+     98.58029287758937
+    ],
+    "floor": 98.08029287758937,
+    "ok": true
+   },
+   "email_send": {
+    "impl": 99.91519498297693,
+    "baseline": [
+     99.93664930238356,
+     99.91937243201711,
+     99.94338577324592,
+     99.95707308340187
+    ],
+    "floor": 99.41937243201711,
+    "ok": true
+   },
+   "industry": {
+    "impl": 83.18111244497798,
+    "baseline": [
+     82.04372415632919,
+     84.43105590062112,
+     84.14925303454714,
+     86.14718614718613
+    ],
+    "floor": 81.54372415632919,
+    "ok": true
+   },
+   "lead": {
+    "impl": 99.80605876224497,
+    "baseline": [
+     99.65363624297557,
+     99.35352923011055,
+     99.10321116071731,
+     99.70590930104026
+    ],
+    "floor": 98.60321116071731,
+    "ok": true
+   },
+   "lead_source": {
+    "impl": 79.83431599539742,
+    "baseline": [
+     79.95987066171958,
+     83.54365362347596,
+     84.08795748112101,
+     74.38654780754148
+    ],
+    "floor": 73.88654780754148,
+    "ok": true
+   },
+   "opportunity": {
+    "impl": 99.4074870269056,
+    "baseline": [
+     99.50390893375183,
+     99.67503213433689,
+     99.4927483622959,
+     99.32405945801166
+    ],
+    "floor": 98.82405945801166,
+    "ok": true
+   },
+   "web_visit": {
+    "impl": 89.84842538988921,
+    "baseline": [
+     95.83342028128797,
+     95.8247333956582,
+     95.84438156976736,
+     95.14901912123774
+    ],
+    "floor": 94.64901912123774,
+    "ok": false
+   }
+  }
+ },
+ "summary": {
+  "columns_total": 60,
+  "columns_equivalent": 57,
+  "flagged": [
+   "(b-e) contact.email: failed ['vocab']",
+   "(b-e) contact.phone: failed ['vocab', 'distinct_ratio']",
+   "(b-e) web_visit.page_url: failed ['vocab', 'distinct_ratio']",
+   "(h) fidelity web_visit: 89.85 < floor 94.65"
+  ],
+  "passed": false,
+  "seconds": 169.07015919685364
+ }
+}
