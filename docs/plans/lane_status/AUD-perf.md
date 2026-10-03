@@ -88,5 +88,29 @@ relies on).
 ## Commands and results
 
 - `pytest tests/benchmarks` before any change: 179 passed, 5 skipped (sklearn missing at the time).
-- Coverage of the harness from its tests (`--cov=benchmarks`): 62% of the imported files;
+- Coverage of the harness from its tests (`--cov=benchmarks`), before: 62% of the imported files;
   `run.py` 49%, `common.py` 54%, `stream_prof/bench.py` 62%, `measure_product.py` 0%.
+- After the fixes: `pytest tests/benchmarks`: 196 passed.
+- `ruff check` and `ruff format --check` on `src tests plugins benchmarks/vs_spindle` (plus
+  `benchmarks/measure_product.py` and `benchmarks/live_fidelity`): clean. `mypy`: no issues in 436
+  files. `python scripts/check_user_facing.py`: clean.
+- Full `pytest -m "not emulator and not live"` with `tests/demo/fabric/requirements.txt` and
+  unixODBC installed, pyarrow 25.0.1:
+  - `SHAPE_KERNEL=rust`: 7099 passed, 1 failed (28 min).
+  - `SHAPE_KERNEL=python`: 7099 passed, 1 failed (95 min).
+  - The one failure in both is
+    `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references`,
+    which passes alone; it fails after the Fabric demo tests import a cloud SDK. Already filed:
+    #77, #554. No file outside `benchmarks/`, `tests/benchmarks/`, the lane status and CHANGELOG
+    is changed by this lane.
+  - Note for the lead: `tests/demo/fabric/requirements.txt` (via `fabric-user-data-functions`)
+    downgrades pyarrow to 19.0.1. A first full run on that pyarrow had 3 more failures, the ones
+    filed as #333; they pass after `pip install pyarrow==25.0.1`.
+- Real runs of the changed scripts: `stream_prof/bench.py --reps 1` (verify, then 93.9%, PASS);
+  `kernel_bench.py` (1M rows, into a copy of `results.json`, schema-valid); `live_fidelity/run.py
+  --quick --workloads retail:small` (PASS); `measure_product.py` on D1 with the output redirected;
+  `generate.py` small in both venvs, both stream workers, `profile_1to1/bench.py --reps 1 d1.csv`;
+  `datasets.py D1 D3 --rows 1000` (d1.csv bytes unchanged); `run.py --full --dry-run`.
+- No equivalence verifier's compared outputs are changed by any fix, so no verifier re-run was
+  required; none of `results.json` or the committed baselines was regenerated.
+- `origin/build/main-plan` checked at the end: no new commits since 5c91ea5, so no merge.
