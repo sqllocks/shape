@@ -330,3 +330,17 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Repository cleaned up for public release: removed internal milestone and
   qualification records.
 - README and changelog rewritten to describe the current state.
+
+### Fixed
+
+- Profiling: a Parquet file of a few kilobytes that declares millions of rows no longer has to be
+  read whole to be refused. The optional `SHAPE_MAX_INPUT_ROWS` and `SHAPE_MAX_INPUT_BYTES` budgets
+  are checked against the footer before any data is read (`docs/PROFILING_NOTES.md`; #286).
+- Profiling: the DuckDB Delta fallback refuses an `abfss://` location whose account name is not a
+  valid storage account name, instead of splicing it into an Azure connection string (#296).
+- Profiling: `distribution_params` are the same in every process. The first fits of a process,
+  run on several threads, could use libm's `exp`/`log` instead of numpy's and differ in the last
+  digits (#323).
+- `shape.profile.infer.infer_column_type` rules out dates in a text column after one failed parse,
+  as the profiler does, instead of parsing every distinct value: 26x faster on the profiling
+  benchmark files, with the same answers (#336).
