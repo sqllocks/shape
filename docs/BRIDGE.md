@@ -226,6 +226,10 @@ A column is classified by the same rule the safe profile uses: a detected person
 - a `diff` change has `baseline` and `current` set to `null` and `"redacted": true`;
 - a `check` violation has `observed` set to `null` and `"redacted": true`.
 
+An entry about several columns (the joint analysis: a broken dependency `a -> b`, an association
+`a ~ b`, a placeholder surge, a reference pair) is withheld when any of its columns is classified,
+and then its `message` and `detail`, which quote values, are `null` too.
+
 What stays is the column's shape (type, null rate, cardinality, pattern), which is not a value.
 `verify` messages come from the gate schema and counts, never from data values.
 

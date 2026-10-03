@@ -39,9 +39,8 @@ def profiles(api, tmp_path):
 
 def _fd_contract(tmp_path: Path) -> str:
     path = tmp_path / "fd.json"
-    path.write_text(
-        json.dumps({"fd": [{"determinant": "email", "dependent": "region", "min_confidence": 0.99}]})
-    )
+    rule = {"determinant": "email", "dependent": "region", "min_confidence": 0.99}
+    path.write_text(json.dumps({"fd": [rule]}))
     return str(path)
 
 

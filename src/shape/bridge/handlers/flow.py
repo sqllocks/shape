@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -33,7 +34,10 @@ from shape.bridge.protocol import BridgeError
 from shape.bridge.spec import Arg, Command
 
 _RAW_SUMMARY_FIELDS = ("min", "max")
-_RAW_ENTRY_FIELDS = ("baseline", "current", "observed")
+_RAW_ENTRY_FIELDS = ("baseline", "current", "observed", "message", "detail")
+#: What separates the columns in the label of an entry about several (the joint analysis):
+#: ``a -> b``, ``a, b -> c``, ``a ~ b``, ``(a, b) in ref``, ``a='x' => b='y'``.
+_LABEL_SPLIT = re.compile(r"\s*(?:->|=>|~|,|\bin\b|[()])\s*")
 
 
 def classified_columns(profile: Any) -> set[str]:
@@ -67,13 +71,36 @@ def redact_summary(summary: dict[str, Any], classified: set[str]) -> dict[str, A
     return table(summary, str(summary.get("name")))
 
 
+def entry_columns(entry: dict[str, Any]) -> set[str]:
+    """The column names a diff change or check violation is about: its ``column``, every name in
+    the label of a joint entry (``"t.a -> b"`` gives ``t.a`` and ``b``), and the ``determinant``,
+    ``dependent`` and ``columns`` of its ``detail``. Over-reading a label only redacts more."""
+    names: set[str] = set()
+    column = entry.get("column")
+    if isinstance(column, str):
+        names.add(column)
+        for part in _LABEL_SPLIT.split(column):
+            part = part.split("=", 1)[0].strip()
+            if part:
+                names.add(part)
+    detail = entry.get("detail")
+    if isinstance(detail, dict):
+        for key in ("determinant", "columns"):
+            if isinstance(detail.get(key), list):
+                names.update(str(c) for c in detail[key])
+        if isinstance(detail.get("dependent"), str):
+            names.add(detail["dependent"])
+    return names
+
+
 def redact_entries(entries: list[dict[str, Any]], classified: set[str]) -> list[dict[str, Any]]:
     """Diff changes or check violations about a classified column, with the observed values
-    (``baseline`` and ``current`` of a change, ``observed`` of a violation) withheld."""
+    (``baseline`` and ``current`` of a change, ``observed`` of a violation, and the ``message``
+    and ``detail`` of a joint change, which quote values) withheld. An entry about several
+    columns is withheld when any of them is classified."""
     out = []
     for entry in entries:
-        column = entry.get("column")
-        if column is not None and column in classified:
+        if entry_columns(entry) & classified:
             entry = {
                 **entry,
                 **{f: None for f in _RAW_ENTRY_FIELDS if f in entry},
