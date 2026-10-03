@@ -162,3 +162,49 @@ in `src/shape/builtins/` or elsewhere. Issue numbers and fix commits are filled 
   verifier compares.
 * `ddl_1to1/verify.py`: exit 0, 28/28 (F12 to F17 listed).
 * `learn_1to1/verify.py d2 mt d1`: exit 0, 0 unexplained differences.
+
+## Final verification (resumed session, 2026-10-03, head 69a55c3)
+
+The previous session ended at its usage limit after the merge commit 69a55c3; no code was lost
+(the tree was clean and `origin/build/main-plan` (5c91ea5) is already an ancestor, so no new merge).
+This session rebuilt the §1 environment and ran every check. No code changed.
+
+Environment: `$SHAPE_VENV` (Python 3.11.15, Rust 1.97, kernel built by `pip install -e`), with
+`.[dev,streaming,advanced]`, every first-party plugin (`plugins/shape-*`, including
+`shape-fabric`) and `tests/demo/fabric/requirements.txt` installed, as the full suite needs all of
+them to collect (`nbformat`, `fabric.functions`). The container also needed the system package
+`unixodbc` (`libodbc.so.2`, imported by `pyodbc` under `fabric.functions`); GitHub runners have it.
+
+| Command | Result |
+|---|---|
+| `python scripts/check_user_facing.py` | `check_user_facing: clean`, exit 0 |
+| `make check` (every step: ruff check/format, mypy, compileall, vulture, lint-imports, the six `scripts/check_*.py`, pytest with coverage, heavy, kernel under `SHAPE_KERNEL=python`, cargo fmt/clippy/test) | exit 0. 6905 passed, 17 skipped (existing environment skips), coverage 92.26% (gate 86); heavy 42 passed; python kernel 265 passed; cargo 34 passed |
+| `SHAPE_KERNEL=rust pytest -m "not emulator and not live"` (one process) | 7245 passed, 4 failed (below), exit 1 |
+| `SHAPE_KERNEL=python pytest -m "not emulator and not live"` | one process was stopped by the session's 2-hour background limit at 81% (1 failure so far, in the pyarrow set below); rerun as one process per top-level entry of `tests/` (50 shards, same marker expression): 7245 passed, 4 failed; the 4th was an artefact of this session (below) and passes on rerun |
+
+### The failures, and why they are not this lane's
+
+All four are caused by the combined environment, and fail identically on `origin/build/main-plan`
+(5c91ea5, worktree, same venv) for both kernels:
+
+1. `tests/iss_gaps/test_landing_and_batches.py::test_file_sinks_take_path_template_and_batch_date`,
+   `tests/kernel/test_hashing.py::test_rust_equals_reference_on_a_million_values[float16]` and
+   `::test_one_and_one_point_zero_hash_equal`: `fabric-user-data-functions` (from
+   `tests/demo/fabric/requirements.txt`) requires `pyarrow>=19.0.1,<20`, so installing it downgrades
+   pyarrow to 19.0.1 (`if_else` has no halffloat kernel; `ingest_date` read back as a hive
+   partition column). On `origin/build/main-plan`: `3 failed` for `SHAPE_KERNEL=rust` and `python`.
+   In a CI-shaped venv (`.[dev,streaming,advanced]` + every plugin, pyarrow 25.0.1, no fabric demo
+   requirements) the lane branch passes those files: `138 passed` (rust, with
+   `test_credential_refs.py`), `97 passed` (python).
+2. `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references`
+   (rust run only, one process): it asserts no `azure*` module is in `sys.modules`, and
+   `tests/demo/fabric/test_udf.py`, earlier in the same process, imports `fabric.functions` →
+   `azure.functions`. Alone it passes on the lane (`41 passed`); with `test_udf.py` first it fails
+   on `origin/build/main-plan` too (`1 failed, 34 passed`). CI runs the fabric demo tests in their
+   own job, so neither collision happens there.
+3. `tests/plugins/...::test_every_skeleton_builds_a_pure_wheel` (python shards only): `build/`
+   directories this session's non-editable plugin install (the CI-shaped venv) left under
+   `plugins/`. After `rm -rf plugins/*/build`: `tests/plugins` 100 passed under each kernel.
+
+No test was skipped, deselected or xfailed; the only deselections are the marker expression's.
+No workflow change is needed. `.github/workflows`, §11, §2.3 and `$SPINDLE_ROOT` untouched.
