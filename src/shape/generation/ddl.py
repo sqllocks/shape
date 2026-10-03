@@ -623,6 +623,7 @@ class DdlParser:
                     max_length=pc.max_length,
                     precision=precision,
                     scale=pc.scale,
+                    identity=pc.is_identity or pc.is_serial or pc.is_auto_increment,
                 )
             tables[pt.name] = Table(name=pt.name, columns=columns, primary_key=pt.primary_key)
 

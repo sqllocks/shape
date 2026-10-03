@@ -106,6 +106,9 @@ class Column:
     max_length: int | None = None
     precision: int | None = None
     scale: int | None = None
+    #: A database identity column (``IDENTITY``, ``SERIAL``, ``AUTO_INCREMENT``): an ``integer``
+    #: column of the ``sequence`` strategy, whose values a SQL writer keeps or lets the server number.
+    identity: bool = False
 
     @property
     def strategy(self) -> str:
@@ -264,19 +267,7 @@ class GenSchema:
                     "description": t.description,
                     "cdm_mapping": t.cdm_mapping,
                     "primary_key": list(t.primary_key),
-                    "columns": {
-                        c.name: {
-                            "name": c.name,
-                            "type": c.type,
-                            "generator": json.loads(json.dumps(c.generator)),
-                            "nullable": c.nullable,
-                            "null_rate": c.null_rate,
-                            "max_length": c.max_length,
-                            "precision": c.precision,
-                            "scale": c.scale,
-                        }
-                        for c in t.columns.values()
-                    },
+                    "columns": {c.name: _column_doc(c) for c in t.columns.values()},
                 }
                 for t in self.tables.values()
             },
@@ -347,6 +338,7 @@ class GenSchema:
                     max_length=c.get("max_length"),
                     precision=c.get("precision"),
                     scale=c.get("scale"),
+                    identity=bool(c.get("identity", False)),
                 )
                 for cname, c in t["columns"].items()
             }
@@ -449,6 +441,24 @@ class GenSchema:
                             "error", f"null_rate must be between 0 and 1, got {c.null_rate}", where
                         )
                     )
+                if c.identity and c.type != "integer":
+                    out.append(
+                        Issue(
+                            "error",
+                            f"Column '{cname}' is an identity column and must have type "
+                            f"'integer', not '{c.type}'",
+                            where,
+                        )
+                    )
+                if c.identity and c.strategy != "sequence":
+                    out.append(
+                        Issue(
+                            "error",
+                            f"Column '{cname}' is an identity column and must use the "
+                            f"'sequence' strategy, not '{c.strategy or 'none'}'",
+                            where,
+                        )
+                    )
         return out
 
     def _relationship_issues(self) -> list[Issue]:
@@ -537,6 +547,22 @@ class GenSchema:
                 for _, message in unknown_keys(c.strategy, c.generator):
                     out.append(Issue("warning", message, where))
         return out
+
+
+def _column_doc(c: Column) -> dict[str, Any]:
+    doc: dict[str, Any] = {
+        "name": c.name,
+        "type": c.type,
+        "generator": json.loads(json.dumps(c.generator)),
+        "nullable": c.nullable,
+        "null_rate": c.null_rate,
+        "max_length": c.max_length,
+        "precision": c.precision,
+        "scale": c.scale,
+    }
+    if c.identity:  # absent otherwise, so a schema without identity serializes as it always did
+        doc["identity"] = True
+    return doc
 
 
 @cache

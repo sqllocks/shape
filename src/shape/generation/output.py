@@ -56,19 +56,22 @@ def format_summary(result: GenerationResult) -> str:
 def sql_options(schema: GenSchema, table: str) -> dict[str, Any]:
     """The per-table options the ``sql`` sink takes from the generation schema."""
     tdef = schema.tables[table]
-    return {
-        "primary_key": list(tdef.primary_key),
-        "columns": {
-            c.name: {
-                "type": c.type,
-                "nullable": c.nullable or c.null_rate > 0,
-                "max_length": c.max_length,
-                "precision": c.precision,
-                "scale": c.scale,
+    columns: dict[str, dict[str, Any]] = {}
+    for c in tdef.columns.values():
+        meta: dict[str, Any] = {
+            "type": c.type,
+            "nullable": c.nullable or c.null_rate > 0,
+            "max_length": c.max_length,
+            "precision": c.precision,
+            "scale": c.scale,
+        }
+        if c.identity:  # only identity columns carry the key: a plain schema's options are as before
+            meta["identity"] = {
+                "start": int(c.generator.get("start", 1)),
+                "step": int(c.generator.get("step", 1)),
             }
-            for c in tdef.columns.values()
-        },
-    }
+        columns[c.name] = meta
+    return {"primary_key": list(tdef.primary_key), "columns": columns}
 
 
 def available_formats() -> tuple[str, ...]:

@@ -58,7 +58,8 @@
         "null_rate": {"type": "number", "minimum": 0, "maximum": 1},
         "max_length": {"type": ["integer", "null"]},
         "precision": {"type": ["integer", "null"]},
-        "scale": {"type": ["integer", "null"]}
+        "scale": {"type": ["integer", "null"]},
+        "identity": {"type": "boolean"}
       }
     },
     "relationship": {
