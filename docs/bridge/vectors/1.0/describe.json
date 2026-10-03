@@ -857,7 +857,7 @@
           "code": "input.unknown_domain",
           "group": "input",
           "hint": "run the `list` command",
-          "message": "no domain named 'nope' (installed: retail); domains come from the 'sqllocks-shape-domains' package"
+          "message": "no domain named 'nope' (installed: capital_markets, education, financial, healthcare, hr, insurance, iot, manufacturing, marketing, pulse, real_estate, retail, supply_chain, telecom); domains come from the 'sqllocks-shape-domains' package"
         },
         "id": "unknown-domain",
         "ok": false,

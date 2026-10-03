@@ -36,7 +36,10 @@ class Format:
 FORMATS: dict[str, Format] = {
     "design-input": Format("design-input-v1.json", "shape-design", 1, "shape.design.load_design"),
     "generation-schema": Format(
-        "generation-schema-v1.json", None, 1, "shape.generation.schema.GenSchema"
+        "generation-schema-v1.json",
+        "shape-generation-schema",
+        1,
+        "shape.generation.schema.GenSchema",
     ),
     "decisions": Format(
         "decisions-v2.schema.json",
@@ -77,6 +80,40 @@ FORMATS: dict[str, Format] = {
         "shape-backtest-report",
         1,
         "shape.rules.backtest",
+        since="1.2",
+    ),
+    "generation-spec": Format(
+        "generation-spec-v1.schema.json",
+        "shape-generation-schema",
+        1,
+        "shape.generation.spec_edit.SpecDocument",
+        since="1.2",
+    ),
+    "plugin-allowlist": Format(
+        "plugin-allowlist-v1.schema.json",
+        "shape-plugin-allowlist",
+        1,
+        "shape.plugins.trust",
+        since="1.2",
+    ),
+    "scorecard": Format(
+        "scorecard-v2.schema.json", "shape-scorecard", 2, "shape.quality.scorecard", since="1.2"
+    ),
+    "scorecard-v1": Format(
+        "scorecard-v1.schema.json", "shape-scorecard", 1, "shape.quality.scorecard", since="1.2"
+    ),
+    "planned-changes": Format(
+        "shape-planned-changes-v1.schema.json",
+        "shape-planned-changes",
+        1,
+        "shape.project.changes",
+        since="1.2",
+    ),
+    "skew-report": Format(
+        "skew-report-v1.schema.json",
+        "shape-skew-report",
+        1,
+        "shape.quality.training_skew",
         since="1.2",
     ),
 }

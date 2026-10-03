@@ -84,10 +84,10 @@ def _verify_source_is_data(monkeypatch):
 
     real = project_cli.context
 
-    def context(a, hint=None):
+    def context(a, hint=None, **options):  # INT-17's lookup takes source_flag=
         if getattr(a, "cmd", None) == "verify" and not getattr(a, "project", None):
             return None
-        return real(a, hint)
+        return real(a, hint, **options)
 
     monkeypatch.setattr(project_cli, "context", context)
 
