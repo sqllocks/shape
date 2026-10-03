@@ -5,6 +5,10 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `fabric-mirror` sink (`docs/FABRIC_MIRROR.md`): tables as Parquet or CSV files in a Fabric open
+  mirroring landing zone, local or `abfss://` OneLake: `__rowMarker__` last (insert, update, delete,
+  upsert; `shape continue` delta types map to them), 20-digit sequential file names, publish by
+  rename, `_metadata.json` with `keyColumns`. Format rules cited to Microsoft Learn.
 - `shape generate --scale-mode local_single|local_mp|fabric_spark` and `shape jobs list|status|cancel|resume`
   (`docs/SCALE.md`): the scale router with sinks (memory, Parquet part files, Lakehouse, Warehouse,
   SQL Database, KQL), a durable job store (submit, status, cancel, resume), the `fabric_spark` router
