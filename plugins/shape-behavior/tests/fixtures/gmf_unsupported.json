@@ -1,0 +1,27 @@
+{
+  "name": "Example With Unsupported Parts",
+  "remarks": ["Hand-written for Shape's tests: uses states and conditions outside the supported subset."],
+  "states": {
+    "Initial": {"type": "Initial", "direct_transition": "Wear_Device"},
+    "Wear_Device": {
+      "type": "Device",
+      "code": {"system": "LOCAL", "code": "DEV-1", "display": "Example device"},
+      "direct_transition": "Sub"
+    },
+    "Sub": {"type": "CallSubmodule", "submodule": "other/module", "direct_transition": "Check"},
+    "Check": {
+      "type": "Simple",
+      "conditional_transition": [
+        {"condition": {"condition_type": "Socioeconomic Status", "category": "High"}, "transition": "Visit"},
+        {"transition": "Terminal"}
+      ]
+    },
+    "Visit": {
+      "type": "Encounter",
+      "encounter_class": "ambulatory",
+      "codes": [{"system": "LOCAL", "code": "ENC-1", "display": "Visit"}],
+      "direct_transition": "Terminal"
+    },
+    "Terminal": {"type": "Terminal"}
+  }
+}

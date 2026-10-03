@@ -37,6 +37,7 @@ GROUPS: dict[str, str] = {
     "shape.transforms": "Transform",
     "shape.commands": "Command",
     "shape.reports": "ReportFormat",
+    "shape.behaviors": "Behavior",
 }
 
 
@@ -254,6 +255,28 @@ class ReportFormat(Protocol):
     def render(self, report: Mapping[str, Any]) -> bytes: ...
 
 
+@runtime_checkable
+class Behavior(Protocol):
+    """A behavior (state-machine) module: what happens to simulated entities over time.
+
+    ``states`` are the state names the module uses; ``attributes`` the entity attributes it reads
+    or writes; ``events`` the event kinds it emits. ``simulate`` runs ``population`` entities for
+    ``years`` virtual years from a fixed origin and returns the timestamped events as one Arrow
+    table, deterministically for a ``seed``. The table has at least the columns ``entity_id``
+    (integer), ``time`` (timestamp), ``state`` and ``kind`` (strings): ``kind`` is one of
+    ``events`` and ``state`` one of ``states``; engine rows that belong to no state (an entity
+    reaching the end of its lifetime) carry an empty ``state`` and the kind ``entity_end``.
+    """
+
+    name: str
+    version: str
+    states: Sequence[str]
+    attributes: Sequence[str]
+    events: Sequence[str]
+
+    def simulate(self, population: int, seed: int, years: float) -> pa.Table: ...
+
+
 PROTOCOLS: dict[str, type] = {
     "Source": Source,
     "Sink": Sink,
@@ -269,12 +292,14 @@ PROTOCOLS: dict[str, type] = {
     "Transform": Transform,
     "Command": Command,
     "ReportFormat": ReportFormat,
+    "Behavior": Behavior,
 }
 
 __all__ = [
     "GROUPS",
     "PROTOCOLS",
     "SHAPE_API",
+    "Behavior",
     "Calendar",
     "ChaosMutator",
     "ChaosReport",

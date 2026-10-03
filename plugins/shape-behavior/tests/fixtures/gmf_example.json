@@ -1,0 +1,102 @@
+{
+  "name": "Example Wellness Follow-up",
+  "remarks": [
+    "A hand-written module in Generic Module Framework format, made for Shape's tests.",
+    "The codes are invented placeholders in a local system, not terminology from any real code set."
+  ],
+  "states": {
+    "Initial": {
+      "type": "Initial",
+      "direct_transition": "Adults_Only"
+    },
+    "Adults_Only": {
+      "type": "Guard",
+      "allow": {
+        "condition_type": "Age",
+        "operator": ">=",
+        "quantity": 18,
+        "unit": "years",
+        "value": 0
+      },
+      "direct_transition": "Set_Risk"
+    },
+    "Set_Risk": {
+      "type": "SetAttribute",
+      "attribute": "risk_level",
+      "value": "high",
+      "direct_transition": "Wait_For_Visit"
+    },
+    "Wait_For_Visit": {
+      "type": "Delay",
+      "range": {"low": 1, "high": 3, "unit": "months"},
+      "direct_transition": "Visit"
+    },
+    "Visit": {
+      "type": "Encounter",
+      "encounter_class": "ambulatory",
+      "codes": [{"system": "LOCAL", "code": "ENC-1", "display": "Follow-up visit"}],
+      "direct_transition": "Screen_Result"
+    },
+    "Screen_Result": {
+      "type": "Observation",
+      "category": "laboratory",
+      "unit": "mg/dL",
+      "codes": [{"system": "LOCAL", "code": "OBS-1", "display": "Example marker"}],
+      "range": {"low": 80, "high": 200},
+      "direct_transition": "By_Sex"
+    },
+    "By_Sex": {
+      "type": "Simple",
+      "conditional_transition": [
+        {
+          "condition": {"condition_type": "Gender", "gender": "F"},
+          "transition": "Diagnose_Mix"
+        },
+        {
+          "transition": "Diagnose_Mix"
+        }
+      ]
+    },
+    "Diagnose_Mix": {
+      "type": "Simple",
+      "distributed_transition": [
+        {"distribution": 0.25, "transition": "Condition_Onset"},
+        {"distribution": 0.75, "transition": "No_Finding"}
+      ]
+    },
+    "Condition_Onset": {
+      "type": "ConditionOnset",
+      "assign_to_attribute": "finding",
+      "codes": [{"system": "LOCAL", "code": "COND-1", "display": "Example condition"}],
+      "direct_transition": "Start_Treatment"
+    },
+    "Start_Treatment": {
+      "type": "MedicationOrder",
+      "codes": [{"system": "LOCAL", "code": "MED-1", "display": "Example medicine"}],
+      "reason": "Condition_Onset",
+      "direct_transition": "Treatment_Course"
+    },
+    "Treatment_Course": {
+      "type": "Delay",
+      "exact": {"quantity": 6, "unit": "months"},
+      "direct_transition": "Stop_Treatment"
+    },
+    "Stop_Treatment": {
+      "type": "MedicationEnd",
+      "medication_order": "Start_Treatment",
+      "direct_transition": "Resolve"
+    },
+    "Resolve": {
+      "type": "ConditionEnd",
+      "condition_onset": "Condition_Onset",
+      "direct_transition": "Terminal"
+    },
+    "No_Finding": {
+      "type": "Simple",
+      "direct_transition": "Terminal"
+    },
+    "Terminal": {
+      "type": "Terminal"
+    }
+  }
+}
