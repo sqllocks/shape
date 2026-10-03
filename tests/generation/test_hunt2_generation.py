@@ -257,3 +257,54 @@ def test_a_negative_max_length_is_an_error(value: int) -> None:
 )
 def test_valid_column_properties_have_no_error(props: dict[str, object]) -> None:
     assert _column_issues(**props) == []
+
+
+# ---- #682: generate --from a merged profile keeps the value sets the merge lists exactly ------
+
+
+def _merged_profiles(tmp_path: Path, states: list[str], codes: list[str]) -> tuple[object, object]:
+    import shape
+    from shape.profile.merge import merge_profiles
+
+    parts = []
+    for half in (0, 1):
+        path = tmp_path / f"p{half}.csv"
+        lines = ["id,state,code,note"]
+        for i in range(half * 200, half * 200 + 200):
+            lines.append(f"{i},{states[i % len(states)]},{codes[i % len(codes)]},n{i}")
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        parts.append(shape.profile(str(path), name="p", sketches=True))
+    whole = tmp_path / "whole.csv"
+    rows = [ln for half in (0, 1) for ln in (tmp_path / f"p{half}.csv").read_text().splitlines()[1:]]
+    whole.write_text("id,state,code,note\n" + "\n".join(rows) + "\n", encoding="utf-8")
+    return merge_profiles(parts), shape.profile(str(whole), name="p")
+
+
+def _generated(profile: object, column: str) -> dict[object, int]:
+    from collections import Counter
+
+    from shape.generation.engine import Engine
+    from shape.generation.fit import fit_schema
+
+    fit = fit_schema(profile)
+    table = Engine(fit.schema, seed=4).generate().tables["p"]
+    return dict(Counter(table.column(column).to_pylist()))
+
+
+def test_a_merged_profile_generates_its_exact_value_sets(tmp_path: Path) -> None:
+    merged, whole = _merged_profiles(tmp_path, ["WA", "OR", "CA", "WA"], ["02134", "10001"])
+    for column, expected in (("state", {"WA", "OR", "CA"}), ("code", {"02134", "10001"})):
+        got = _generated(merged, column)
+        assert set(got) == expected, (column, got)
+        assert set(_generated(whole, column)) == expected  # as the unmerged profile does
+    got = _generated(merged, "state")
+    assert got["WA"] > got["OR"] and got["WA"] > got["CA"]  # weights: WA is half the rows
+
+
+def test_a_merged_column_with_too_many_values_is_not_an_enum(tmp_path: Path) -> None:
+    from shape.generation.fit import fit_schema
+
+    merged, _ = _merged_profiles(tmp_path, ["WA", "OR"], ["x"])
+    # `note` is unique (n0..n399): more distinct values than the top list holds, never an enum
+    gen = fit_schema(merged).schema.tables["p"].columns["note"].generator
+    assert gen["strategy"] != "weighted_enum"
