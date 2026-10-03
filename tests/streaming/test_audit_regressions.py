@@ -252,3 +252,17 @@ def test_163_checkpoint_counters_cannot_overwrite_other_attributes(tmp_path):
     snap["counters"]["max_keys"] = 1
     with pytest.raises(ValueError, match="max_keys"):
         KeyedSketches.restore(snap)
+
+
+def test_164_a_csv_column_that_changes_type_later_is_read_to_the_end(tmp_path, capsys):
+    path = tmp_path / "ev.csv"
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("v,w,_shape_event_time\n")
+        for i in range(200_000):
+            f.write(f"{i},{i * 0.5},2026-01-01T00:00:00\n")
+        f.write("abc,1.5,2026-01-01T00:00:00\n")  # past the first block: no longer a number
+        f.write("7,,2026-01-01T00:00:00\n")
+    out = tmp_path / "g.json"
+    assert main(["stream-profile", str(path), "--window", "global", "-o", str(out)]) == 0
+    summary = json.loads(capsys.readouterr().out.strip().splitlines()[-1])
+    assert summary["events"] == 200_001 and summary["rejected"] == 1
