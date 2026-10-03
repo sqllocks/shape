@@ -16,6 +16,7 @@ dependencies=["numpy>=2.0,<3","pyarrow>=14.0.1","tzdata; sys_platform == 'win32'
 yaml=["pyyaml>=6"]
 sign=["cryptography>=50,<51"]
 delta=["deltalake>=0.17"]
+delta-fallback=["deltalake>=0.17","duckdb>=1.2"]
 excel=["openpyxl>=3.1"]
 azure=["adlfs>=2024.4.1","azure-identity>=1.15","deltalake>=0.17"]
 pandas=["pandas>=2"]
@@ -28,7 +29,7 @@ sqlserver=["sqllocks-shape-sqlserver==0.9.0"]
 domains=["sqllocks-shape-domains==0.9.0"]
 simulation=["sqllocks-shape-simulation==0.9.0"]
 streaming=["confluent-kafka>=2.5,<4","azure-eventhub>=5.12,<6"]
-dev=["pytest>=8.3","pytest-cov>=6","hypothesis>=6.115","ruff>=0.8","mypy>=1.13","pip-audit>=2.7","build>=1.2","pyyaml>=6","pandas>=2","deltalake>=0.17","twine>=5","cryptography>=50,<51","xxhash>=3.5","maturin>=1.15,<2","import-linter>=2","vulture>=2.11","bandit>=1.8","py-spy>=0.4","sqlglot>=25","openpyxl>=3.1","scipy>=1.11","pyspark>=4.0,<5","faker>=24"]
+dev=["pytest>=8.3","pytest-cov>=6","hypothesis>=6.115","ruff>=0.8","mypy>=1.13","pip-audit>=2.7","build>=1.2","pyyaml>=6","pandas>=2","deltalake>=0.17","twine>=5","cryptography>=50,<51","xxhash>=3.5","maturin>=1.15,<2","import-linter>=2","vulture>=2.11","bandit>=1.8","py-spy>=0.4","sqlglot>=25","openpyxl>=3.1","scipy>=1.11","pyspark>=4.0,<5","faker>=24","duckdb>=1.2"]
 
 [tool.maturin]
 # T-05: mixed Python/Rust layout. The kernel is `shape._kernel`, built from rust/shape-kernel.
