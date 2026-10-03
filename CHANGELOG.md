@@ -5,6 +5,18 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+### Fixed
+
+- Command line and demo fixes (lane BUGS-cli-1). The crash line of an unexpected error is redacted like
+  the expected ones (#278). `shape quality` reports a text value in a numeric column as a violation
+  instead of crashing with `TypeError` (#152). `shape registry ROOT commit` runs the leak scan and the
+  raw-profile check on a JSON document with a UTF-8 byte-order mark or in UTF-16, as `json.loads`
+  reads it (#530). Fabric's `Deduped` job status maps to `cancelled`, so the job is final and
+  resumable (#543). `shape conformance` no longer prints the signature notices of its own temporary
+  artifacts (#311). `shape cat` takes `--verify PUBKEY`, which the note it printed already named, so a
+  git textconv can check each file (#126). Two `shape demo init` at once no longer lose a connection
+  profile: `connections.json` is written under a cross-platform file lock (#528).
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
