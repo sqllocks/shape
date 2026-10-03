@@ -108,8 +108,6 @@ def validate_spec(spec: GenerationSpec) -> PackValidationResult:
             result.errors.append(
                 f"outputs.lakehouse.mode {lake.mode!r} must be one of: {', '.join(LAKEHOUSE_MODES)}"
             )
-        elif lake.mode != "files_only" or lake.tables:
-            pass
         root = lake.landing_zone.root if lake.landing_zone else ""
         if root and unsafe_path(root):
             result.errors.append(
