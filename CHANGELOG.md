@@ -5,6 +5,16 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Fabric platform inventory (`docs/FABRIC_PLATFORM.md`, W7-01): one table of every Fabric and OneLake
+  REST path, item type, Spark runtime and storage endpoint that Shape calls, with its release stage,
+  Microsoft Learn source and check date. `tests/docs/test_fabric_platform.py` (guard in
+  `scripts/fabric_platform.py`, also runnable by hand) fails when the code builds an unlisted Fabric
+  path or item type, or one listed preview or retired, and when a doc or plugin README names an
+  unlisted Fabric runtime or one past its end of support. New live check
+  `plugins/shape-fabric/tests/test_live_git_sync.py` (Fabric Git sync with a `shape/` folder of
+  `.shape` files; needs the O-02 secrets, not yet run) and the `shape-live-check` result format
+  (`shape_fabric.livecheck`, format version 1).
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
