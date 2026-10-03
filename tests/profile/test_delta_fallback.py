@@ -457,3 +457,45 @@ def test_a_local_path_with_a_quote_is_escaped(monkeypatch, tmp_path):
     shutil.copytree(_table("dv"), odd)
     fb.read_via_duckdb(str(odd))
     assert "it''s" in [s for s in rec.sql if "delta_scan" in s][0]
+
+
+# #296: the account name comes from the URI host and is spliced into an Azure connection string,
+# so anything but a storage account name is refused before a secret is built.
+_SAS = {"azure_storage_sas_key": "?sv=2024&sig=SECRET"}
+_KEY = {"azure_storage_account_key": "a2V5"}
+_TOKEN = {"azure_storage_token": "tok"}
+
+
+@pytest.mark.parametrize("opts", [_SAS, _KEY, _TOKEN], ids=["sas", "key", "token"])
+@pytest.mark.parametrize(
+    "target",
+    [
+        "abfss://c@acct;EndpointSuffix=attacker-host.dfs.core.windows.net/t",
+        "abfss://c@acct;AccountKey=x.dfs.core.windows.net/t",
+        "abfss://c@ac.dfs.core.windows.net/t",  # shorter than 3
+        "abfss://c@" + "a" * 25 + ".dfs.core.windows.net/t",  # longer than 24
+        "abfss://c@acc-t.dfs.core.windows.net/t",
+        "abfss://c@acct'.dfs.core.windows.net/t",
+        "abfss://c@.dfs.core.windows.net/t",  # empty
+    ],
+)
+def test_an_account_name_that_is_not_a_storage_account_is_refused(target, opts):
+    with pytest.raises(ValueError, match="storage account name"):
+        fb._azure_secret(target, opts)
+
+
+@pytest.mark.parametrize("account", ["abc", "a" * 24, "acct01"])
+def test_a_valid_account_name_is_used(account):
+    secret = fb._azure_secret(f"abfss://c@{account}.dfs.core.windows.net/t", _SAS)
+    assert secret is not None
+    assert f"'AccountName={account};SharedAccessSignature=sv=2024&sig=SECRET;'" in secret
+    assert "EndpointSuffix" not in secret
+
+
+def test_the_account_name_is_case_insensitive_like_the_host():
+    secret = fb._azure_secret("abfss://c@MyAcct.dfs.core.windows.net/t", _SAS)
+    assert secret is not None and "AccountName=myacct;" in secret
+
+
+def test_without_credentials_no_secret_is_built_whatever_the_host():
+    assert fb._azure_secret("abfss://c@acct;x=y.dfs.core.windows.net/t", {}) is None
