@@ -138,4 +138,51 @@ run: there is no baseline checkout in this session.
 
 ## Commands and results
 
-(filled in at the end)
+All in this session, on `f09bde7` (which already contains `origin/build/main-plan` at
+`5c91ea5`: nothing to merge). Python 3.11.15, cargo 1.97.0, 4 cores.
+
+Environment: `pip install -e ".[dev]"` and every first-party plugin (`plugins/shape-*`, including
+`shape-fabric`) into `$SHAPE_VENV`; for the full suites also `tests/demo/fabric/requirements.txt`,
+`scikit-learn`, `adlfs` (so no test skips for a missing module) and the system `unixodbc` package
+(`test_udf.py` needs `libodbc.so.2`).
+
+- `make check PYTHON=python`: **exit 0**. ruff check: all passed; ruff format: 1087 files already
+  formatted; mypy: no issues in 435 files; compileall, vulture: clean; lint-imports: 1 kept;
+  check_requirements (89), check_secrets, check_user_facing, check_shipped_data, plugin skeletons
+  (7), conformance coverage (32/32): OK; coverage run: 6763 passed, 17 skipped, coverage 92.20%
+  (gate 86%); heavy: 42 passed; `SHAPE_KERNEL=python pytest tests/kernel`: 265 passed; cargo fmt,
+  clippy `-D warnings`, cargo test (34 passed): OK. The 17 skips were missing optional modules
+  (`sklearn`, `adlfs`) at that point; both full runs below ran with them installed.
+- The first `make check` attempt failed 2 tests: `test_every_skeleton_builds_a_pure_wheel` (my
+  non-editable plugin install had left `plugins/*/build`; removed, plugins reinstalled with `-e`
+  as `make bootstrap` does: passes) and `test_to_postgresql_routes_to_the_database_sink` (see
+  below). The rerun passed every step.
+- `python scripts/check_user_facing.py`: clean.
+- `SHAPE_KERNEL=rust pytest -m "not emulator and not live"`: 7102 passed, 5 failed, 0 skipped
+  (35 min).
+- `SHAPE_KERNEL=python pytest -m "not emulator and not live"`: 7103 passed, 4 failed, 0 skipped
+  (1 h 52 min).
+
+No test was deselected beyond the markers, skipped or xfailed. Every failure also fails on
+`origin/build/main-plan` (`5c91ea5`, a worktree run with the same venv, the same Rust kernel
+build (no `rust/` diff) and `PYTHONPATH` on its `src` and plugin `src` trees), or passes on this
+branch when run alone:
+
+| Test | Kernels | Cause | Evidence |
+|---|---|---|---|
+| `iss_gaps/test_landing_and_batches.py::test_file_sinks_take_path_template_and_batch_date` | both | `fabric-user-data-functions` (from `tests/demo/fabric/requirements.txt`) pins `pyarrow<20` and downgraded pyarrow to 19.0.1; that reader adds the hive `ingest_date` column | fails on base with 19.0.1; passes on both kernels here with pyarrow 25.0.1 (what `[dev]` installs) |
+| `kernel/test_hashing.py::test_rust_equals_reference_on_a_million_values[float16]` | both | same pyarrow 19.0.1: `if_else` has no halffloat kernel | as above |
+| `kernel/test_hashing.py::test_one_and_one_point_zero_hash_equal` | both | same pyarrow 19.0.1: `Expected np.float16 instance` | as above |
+| `security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references` | both | order-dependent: it checks the whole `sys.modules`, and `tests/demo/fabric/test_udf.py` (which `make check` ignores) imports `azure.functions` earlier in the same process | `pytest tests/demo/fabric/test_udf.py <this test>` fails on base; passes alone here |
+| `profile/test_engine.py::test_bounded_mode_memory_does_not_grow_with_rows` | rust run only | RSS measurement under load: my base-branch stress loops ran at the same time (load average above 4) | passes alone here and on base; passed in the python-kernel full run |
+
+`cli/test_generate_to.py::test_to_postgresql_routes_to_the_database_sink` (first `make check`
+attempt only) is a race in the `shape_databases.testing.FakeServer` test fake, which this lane does
+not touch (no `plugins/` diff): the engine writes tables from several threads to one server and
+`begin()` deep-copies the shared `tables` dict while another connection adds to it (`RuntimeError:
+dictionary changed size during iteration` in `testing.py:139`). A loop of the test body in one
+process (300 runs): 5 failures on this branch, 3 on `origin/build/main-plan`. Not fixed here
+(outside the audited area); the fake needs a lock or per-connection snapshots.
+
+Not run: the equivalence verifiers against the pinned baseline (`benchmarks/vs_spindle`), as
+recorded above (no baseline checkout in this session).
