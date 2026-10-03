@@ -142,3 +142,41 @@ def test_domains_distribution_carries_the_geonames_attribution(plugin_wheels: di
     assert notices[0] == (ROOT / "THIRD_PARTY_NOTICES.md").read_bytes()
     pyproject = tomllib.loads((ROOT / "plugins/shape-domains/pyproject.toml").read_text("utf-8"))
     assert "THIRD_PARTY_NOTICES.md" in pyproject["project"]["license-files"]  # so the sdist has it
+
+
+# -- licences of the Rust crates in the platform wheels ------------------------------------------
+
+_rn_spec = importlib.util.spec_from_file_location(
+    "rust_notices", ROOT / "scripts" / "rust_notices.py"
+)
+assert _rn_spec and _rn_spec.loader
+rust_notices = importlib.util.module_from_spec(_rn_spec)
+sys.modules["rust_notices"] = rust_notices
+_rn_spec.loader.exec_module(rust_notices)
+
+
+def test_every_locked_rust_crate_has_its_licence_in_the_notices() -> None:
+    assert rust_notices.check() == []
+    text = rust_notices.OUT.read_text("utf-8")
+    for needle in ("`arrow-buffer`", "`numpy`", "`xxhash-rust`", "`unicode-ident`", "NOTICE"):
+        assert needle in text
+
+
+def test_core_distributions_carry_the_rust_notices() -> None:
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text("utf-8"))["project"]
+    assert rust_notices.OUT.name in project["license-files"]
+
+
+def test_rust_notices_check_reports_a_crate_missing_from_the_file(tmp_path: Path) -> None:
+    lock = tmp_path / "Cargo.lock"
+    lock.write_text(
+        'version = 4\n[[package]]\nname = "shape-kernel"\nversion = "0.9.0"\n'
+        '[[package]]\nname = "zlib-rs"\nversion = "0.1.0"\n',
+        "utf-8",
+    )
+    out = tmp_path / "NOTICES.md"
+    out.write_text("| `zlib-rs` | 0.0.9 | MIT | x |\n", "utf-8")
+    assert [p.split(" is in")[0] for p in rust_notices.check(out, lock)] == ["zlib-rs 0.1.0"]
+    out.write_text("| `zlib-rs` | 0.1.0 | MIT | x |\n", "utf-8")
+    assert rust_notices.check(out, lock) == []
+    assert "missing" in rust_notices.check(tmp_path / "absent.md", lock)[0]
