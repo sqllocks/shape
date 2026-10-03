@@ -5,6 +5,8 @@ import sys
 import zipfile
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 _spec = importlib.util.spec_from_file_location(
     "check_shipped_data", ROOT / "scripts" / "check_shipped_data.py"
@@ -112,3 +114,25 @@ def test_git_ignored_data_file_is_reported(tmp_path):
 
     subprocess.run(["git", "init", "-q"], cwd=root, check=True)
     assert any("ignored" in p for p in csd.check_tree(root))
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        "from urllib import request\n",
+        "from http import client\n",
+        "from urllib import parse, request as r\n",
+        "import urllib3\n",
+        "from urllib3 import PoolManager\n",
+        "import socket\n",
+    ],
+)
+def test_every_import_form_of_a_network_client_is_reported(tmp_path, code):
+    """#261: the `from PACKAGE import MODULE` form names the same network client."""
+    root = _tree(tmp_path, {"m.py": code})
+    assert any("m.py" in p and "network" in p for p in csd.check_tree(root)), code
+
+
+def test_from_urllib_import_parse_is_not_a_download(tmp_path):
+    root = _tree(tmp_path, {"m.py": "from urllib import parse\nfrom http import HTTPStatus\n"})
+    assert csd.check_tree(root) == []
