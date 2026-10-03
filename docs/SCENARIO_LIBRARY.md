@@ -41,9 +41,12 @@ The library index, `library/index.json` in the package, holds a one-paragraph de
 | `schema-evolution` | the five `schema_*` scenarios |
 
 `smoke` is held to under 60 seconds at the `small` scale (a test enforces it), so it can run on
-every CI run; run the
-full library on a schedule (`shape suite run smoke` and `shape suite run schema-evolution`, or
-`pytest` with the plugin's marker, `docs/TESTING_WITH_SHAPE.md`).
+every CI run. The two built-in suites together do not cover `late_arriving_data`, so the full
+library is run from a suite file that lists every scenario of `library/index.json`. From a checkout,
+`python scripts/build_library_suite.py library-suite.json` writes it and
+`python -m shape suite run library-suite.json --scale small` runs it (the nightly workflow does
+this in both kernel modes, and a test checks that every index entry is covered). The plugin's marker
+runs one scenario inside pytest, `docs/TESTING_WITH_SHAPE.md`.
 
 `shape suite run NAME|FILE [--scale small] [--seed N] [-o DIR] [--json]` runs every scenario of the
 suite, compares each outcome with its key and prints one line per scenario; a scenario that missed

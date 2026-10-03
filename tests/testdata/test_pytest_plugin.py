@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import importlib.metadata as md
+import subprocess
+import sys
 import tomllib
 from pathlib import Path
 
@@ -36,6 +38,34 @@ def test_the_plugin_is_registered_as_a_pytest11_entry_point_behind_the_pytest_ex
     assert project["project"]["optional-dependencies"]["pytest"] == ["pytest>=8.3"]
     installed = {e.name: e.value for e in md.entry_points(group="pytest11")}
     assert installed.get("shape") == PLUGIN
+
+
+HEAVY = ("pyarrow", "numpy", "pandas", "shape.generation", "shape.scenario")
+
+
+def test_loading_the_plugin_imports_nothing_heavy():
+    """A session that never uses Shape pays only for importing the plugin: the heavy imports
+    (Arrow, NumPy, the generation engine) wait for the first fixture or marker use."""
+    code = (
+        "import sys, shape.testdata.pytest_plugin\n"
+        f"print([m for m in {HEAVY!r} if m in sys.modules or any(k.startswith(m + '.') "
+        "for k in sys.modules)])"
+    )
+    done = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True)
+    assert done.stdout.strip() == "[]"
+
+
+def test_a_whole_session_that_does_not_use_the_plugin_imports_nothing_heavy(pytester):
+    pytester.makepyfile(
+        f"""
+        import sys
+
+        def test_it():
+            loaded = [m for m in {HEAVY!r} if any(k == m or k.startswith(m + ".") for k in sys.modules)]
+            assert loaded == []
+        """
+    )
+    pytester.runpytest_subprocess("-p", "no:cacheprovider").assert_outcomes(passed=1)
 
 
 def test_the_installed_plugin_loads_on_its_own(pytester):

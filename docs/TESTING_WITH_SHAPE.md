@@ -11,6 +11,10 @@ The `pytest` extra installs pytest. The plugin itself is registered by the packa
 in every pytest run in that environment. Turn it off with `-p no:shape`: then its fixtures, marker
 and option do not exist. It writes nothing outside `tmp_path_factory`.
 
+Loading the plugin is cheap for a session that never uses it: importing the plugin module takes
+about 10 ms beyond pytest itself and imports no Arrow, NumPy, pandas or Shape generation code; those
+load on the first use of a fixture or the marker (a test holds this).
+
 ### `shape_dataset`
 
 A fixture that returns a function. The tables are generated once per session for each
