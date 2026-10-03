@@ -5,9 +5,6 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
-<<<<<<< HEAD
-- Basic locale packs (`{"strategy": "locale"}`, `docs/LOCALES.md`): places and postcodes for the US, Canada, the UK, Germany, France, India and Australia (GeoNames, CC BY 4.0), phone numbers only in ranges reserved for fiction (US, CA, FR), French first names (INSEE, Licence Ouverte 2.0), and no national identifiers. Names, phone ranges and streets for the other countries are not shipped yet; each provider says so. Sources and licences: `THIRD_PARTY_NOTICES.md`.
-=======
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
@@ -33,7 +30,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   named for its format. Harness: `benchmarks/vs_spindle/fabric_commands_1to1/` (the `.bim`, the
   notebook, the requests and the landing zone against the baseline, an allow-list with probes,
   negative controls).
->>>>>>> origin/build/main-plan
+- Basic locale packs (`{"strategy": "locale"}`, `docs/LOCALES.md`): places and postcodes for the US, Canada, the UK, Germany, France, India and Australia (GeoNames, CC BY 4.0), phone numbers only in ranges reserved for fiction (US, CA, FR), French first names (INSEE, Licence Ouverte 2.0), and no national identifiers. Names, phone ranges and streets for the other countries are not shipped yet; each provider says so. Sources and licences: `THIRD_PARTY_NOTICES.md`.
 - `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
   the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
   clearing cover every month of a multi-month table. `duration_hours` still overrides it
