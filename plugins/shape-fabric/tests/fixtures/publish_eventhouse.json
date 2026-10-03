@@ -1,0 +1,185 @@
+{
+  "channel": "http",
+  "format": 1,
+  "result": {
+    "exit": 0,
+    "tables": [
+      "customer: 3 rows",
+      "order: 6 rows"
+    ]
+  },
+  "scenario": "publish_eventhouse",
+  "source": "in-repo fake service",
+  "steps": [
+    {
+      "request": {
+        "body": "{\"db\": \"db1\", \"csl\": \".show tables | where TableName == 'customer' | count\"}",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/mgmt"
+      },
+      "response": {
+        "body": "{\"Tables\": [{\"TableName\": \"Table_0\", \"Columns\": [], \"Rows\": [[0]]}]}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"db\": \"db1\", \"csl\": \".create table ['customer'] (['customer_id']:long)\"}",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/mgmt"
+      },
+      "response": {
+        "body": "{}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"db\": \"db1\", \"csl\": \".create-or-alter table ['customer'] ingestion json mapping 'shape_json' '[{\\\"column\\\": \\\"customer_id\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"customer_id\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"long\\\"}]'\"}",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/mgmt"
+      },
+      "response": {
+        "body": "{}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"db\": \"db1\", \"csl\": \".alter table ['customer'] policy streamingingestion enable\"}",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/mgmt"
+      },
+      "response": {
+        "body": "{}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"customer_id\":1}\n{\"customer_id\":2}\n{\"customer_id\":3}\n",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/ingest/db1/customer?streamFormat=JSON&mappingName=shape_json"
+      },
+      "response": {
+        "body": "{}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"db\": \"db1\", \"csl\": \".show tables | where TableName == 'order' | count\"}",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/mgmt"
+      },
+      "response": {
+        "body": "{\"Tables\": [{\"TableName\": \"Table_0\", \"Columns\": [], \"Rows\": [[0]]}]}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"db\": \"db1\", \"csl\": \".create table ['order'] (['order_id']:long, ['customer_id']:long)\"}",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/mgmt"
+      },
+      "response": {
+        "body": "{}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"db\": \"db1\", \"csl\": \".create-or-alter table ['order'] ingestion json mapping 'shape_json' '[{\\\"column\\\": \\\"order_id\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"order_id\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"long\\\"}, {\\\"column\\\": \\\"customer_id\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"customer_id\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"long\\\"}]'\"}",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/mgmt"
+      },
+      "response": {
+        "body": "{}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"db\": \"db1\", \"csl\": \".alter table ['order'] policy streamingingestion enable\"}",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/mgmt"
+      },
+      "response": {
+        "body": "{}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"order_id\":1,\"customer_id\":3}\n{\"order_id\":2,\"customer_id\":2}\n{\"order_id\":3,\"customer_id\":2}\n{\"order_id\":4,\"customer_id\":3}\n{\"order_id\":5,\"customer_id\":2}\n{\"order_id\":6,\"customer_id\":2}\n",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/ingest/db1/order?streamFormat=JSON&mappingName=shape_json"
+      },
+      "response": {
+        "body": "{}",
+        "headers": {},
+        "status": 200
+      }
+    }
+  ]
+}

@@ -205,6 +205,13 @@ jobs:
         run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k kql
       - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_WORKSPACE_ID != '' && env.FABRIC_LAKEHOUSE_ID != ''
         run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k fabric_spark
+      # P6-07c: the Fabric commands (deploy-notebook, setup-fabric, publish) against a real workspace.
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_WORKSPACE_ID != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_commands.py -q -k "deploy_notebook or setup"
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_STAGING_PATH != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_commands.py -q -k lakehouse
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_SQL_CONNECTION_STRING != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_commands.py -q -k sql_database
       - if: always() && env.HAVE_ANY == 'true'
         uses: actions/upload-artifact@v4
         with:
