@@ -7,3 +7,5 @@ Stable interfaces follow semantic-versioning compatibility through the 1.x line.
 Artifact readers fail closed on unknown mandatory capabilities and tolerate unknown optional extensions only when they can be ignored safely.
 
 Plugin API v1 has its own promise, with the per-group rules and the deprecation process: `docs/plugins/stability.md`.
+
+The command line has its own promise, with the stable and experimental commands, what counts as a breaking change and the deprecation process: `docs/CLI_STABILITY.md`. The definition of done for 1.0 is `docs/V1_DONE.md`.
