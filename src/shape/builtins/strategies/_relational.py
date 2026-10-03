@@ -7,6 +7,7 @@ finds the same values. Whole-table results are kept with ``Engine.cached``.
 
 from __future__ import annotations
 
+import threading
 from functools import lru_cache
 from typing import Any
 
@@ -26,6 +27,17 @@ ZIPF_HEAD = 1 << 20  # ranks with an exact table; the tail of a larger pool is i
 
 Ints = npt.NDArray[np.int64]
 Floats = npt.NDArray[np.float64]
+
+
+_LOCAL = threading.local()
+
+
+def _building() -> set[tuple[int, str, str]]:
+    """The whole columns this thread is building now: (engine id, table, column)."""
+    busy: set[tuple[int, str, str]] | None = getattr(_LOCAL, "busy", None)
+    if busy is None:
+        busy = _LOCAL.busy = set()
+    return busy
 
 
 def engine_of(ctx: GenerationContext, strategy: str) -> Engine:
@@ -49,11 +61,23 @@ def whole_column(
         )
 
     def build() -> pa.Array:
-        total = engine.row_counts.get(table, 0)
-        parts = [
-            engine.generate_column(table, column, start, min(BLOCK_ROWS, total - start))
-            for start in range(0, total, BLOCK_ROWS)
-        ] or [engine.generate_column(table, column, 0, 0)]
+        busy = _building()
+        token = (id(engine), table, column)
+        if token in busy:  # building the column needs this column first (#201)
+            raise StrategyError(
+                f"{strategy} strategy for {where(ctx)}: circular reference: '{table}.{column}' "
+                f"is built after {where(ctx)}, which needs it; declare '{column}' the primary "
+                f"key of '{table}' (a sequence key is known without generating the table)"
+            )
+        busy.add(token)
+        try:
+            total = engine.row_counts.get(table, 0)
+            parts = [
+                engine.generate_column(table, column, start, min(BLOCK_ROWS, total - start))
+                for start in range(0, total, BLOCK_ROWS)
+            ] or [engine.generate_column(table, column, 0, 0)]
+        finally:
+            busy.discard(token)
         return parts[0] if len(parts) == 1 else pa.concat_arrays(parts)
 
     return build() if not keep else engine.cached(("column", table, column), build)
