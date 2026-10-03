@@ -203,3 +203,46 @@ EXCEL (#50, #51), FIN-CAP (`load_table`), P6-07b (`--auth`, credential reference
 * `benchmarks/vs_spindle/stream_1to1/verify.py --scale small`: **VERDICT PASS**, exit 0.
 * `benchmarks/vs_spindle/profile_1to1/verify.py --impl shape` (after `datasets.py` generated the data): exit 0 under `SHAPE_KERNEL=rust` and under `SHAPE_KERNEL=python`; the identifier allow-list applied to 12 of 12 columns.
 * Not run: `tests/demo/fabric` (excluded as in earlier rounds), the emulator tests (Docker), cargo checks (no Rust file changed by this lane or this merge), `stream_prof/verify.py`, `pytest -m heavy` under the Python kernel (above).
+
+## Round 4 — merge of `origin/int/INT-15` (ec42441)
+
+Merge commit `5399071` plus `7104bcb` (a duplicated `_paths`/`_check_destination` left by the merge); no rebase, no force-push. No gate,
+tolerance, D-xx or T-xx decision, §11 or §2.3 was touched; `$SPINDLE_ROOT` was not modified (the baseline was built into this fresh
+container with `benchmarks/vs_spindle/setup_spindle.sh`). Note: this container's checkout of the branch was behind `origin/lane/ISS2-bugs`
+and was fast-forwarded (`git merge --ff-only`) before the merge.
+
+### What conflicted and how it was resolved (both sides kept)
+
+| File | Resolution |
+|---|---|
+| `CHANGELOG.md` | Both lists of entries kept. |
+| `benchmarks/vs_spindle/profile_1to1/README.md` | The "Identifier columns stay text" entry kept; the "New fields" paragraph is INT-15's (it adds #47's `placeholders` and `joint`). |
+| `src/shape/builtins/sinks/delta.py` | INT-15's file: `delta+abfss`/`delta+abfs` schemes, `DeltaTableWriter` (`commit_rows`/`commit_seconds`), `require_scheme`, `extension = ""`. W2-04's `_utc_timestamps` is applied in the writer constructor and in `write()`, so every Delta path (single commit and micro-batch) writes naive timestamps as UTC (reader 1 / writer 2). |
+| `src/shape/builtins/sinks/files.py` | Both: `render_path`/`require_scheme` imports with `DEFAULT_ROLL_TEMPLATE`; `write()` calls `require_scheme` first, then the rolling path, then the plain path. |
+| `src/shape/plugins/schemes.py` (add/add) | INT-15's file (it built on the #42 routing: `file` listed first, "provided by the abfss sink" messages). Message text still satisfies this lane's tests. |
+| `src/shape/generation/output.py` | Both: this lane's `file_extension`, `_check_destination` (scheme checked before any local folder is created, also for `-f excel`) and INT-15's `TargetOptions`/`write_targets`. |
+| `src/shape/generation/landing.py` | This lane's `landing_formats()` (formats come from the installed sinks); INT-15 had only the old static tables. |
+| `src/shape/cli/main.py`, `src/shape/profile/reference/profile.py` | Both option sets (`--string-columns`, `--types`, `--infer-types`, `--reference-pair`, `--joint`); the CSV options are declared once. |
+| `src/shape/io/readers.py`, `src/shape/profile/reference/sources.py` | Imports of both sides (`identifiers`, `read_selection`, `delta_fallback`, `read_csv_detect`). |
+| `tests/generation/test_sink_formats_and_schemes.py` (add/add) | INT-15's two relaxed message assertions (they accept both wordings) plus this lane's `test_a_table_with_correlated_columns_is_written`. |
+
+`mypy` found the one semantic leftover (the duplicated helpers in `output.py`); fixed.
+
+### Commands and results (final tree; venv with `.[dev,advanced]`, domains, kafka, eventhubs, sqlserver, fabric and databases plugins editable)
+
+* `ruff check` and `ruff format --check` on `src tests plugins benchmarks/vs_spindle`: clean (1,090 files). `mypy`: no issues (437 files).
+* `pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`, `SHAPE_KERNEL=rust`: 6,882 passed, 7 failed (first run, fabric/databases plugins not installed). With the plugins installed `tests/demo_cmd` passes (2 of the 7 were this), leaving **5 failures + 1 on INT-15 itself** below.
+* Same, `SHAPE_KERNEL=python`: 6,886 passed, **5 failed** (the same 5).
+* `SHAPE_KERNEL=rust pytest -m heavy tests/kernel tests/profile tests/streaming`: 42 passed (885 s). Not run under the Python kernel (as in earlier rounds, its bounded-memory test runs for over 30 minutes).
+* `plugins/shape-fabric plugins/shape-sqlserver plugins/shape-databases tests/demo_cmd tests/cli/test_generate_to.py tests/streaming/emit/test_table_sink.py` (rust): 893 passed, 1 failed (below).
+* Profile parity `verify.py --impl shape`: exit 0 under `SHAPE_KERNEL=rust` and `=python`; identifier allow-list applied to 12 of 12 columns. `stream_1to1/verify.py --scale small`: VERDICT PASS, exit 0. `stream_prof/verify.py`: exit 0 (stream == batch; identical across processes; 12 of 12).
+* Not run: `tests/demo/fabric`, emulator and live tests, cargo (no Rust file changed).
+
+### Open failures
+
+1. **Reproduces on `origin/int/INT-15` without this lane** (worktree of `origin/int/INT-15`, own venv):
+   `SHAPE_KERNEL=rust pytest plugins/shape-fabric/tests/test_publish.py::test_lakehouse_writes_the_landing_zone_and_the_manifest` fails (the manifest has the W1-03 keys `version`, `reproducibility`, `format`, `dataset_id` that the P6-07c test does not expect). Not fixed here.
+2. **Caused by this merge: #46 (this lane) against ISS2-joint's tests. Not fixed; needs the lead/owner.** Five tests fail under both kernels:
+   `tests/joint/test_diff_contract_joint.py::{test_the_example_is_drift_that_names_the_dependency_and_the_value, test_contract_rules_pass_the_good_data_and_fail_the_bad, test_no_placeholder_object_form_allows_values_and_shares}`,
+   `tests/joint/test_profile_joint.py::{test_the_example_reports_the_dependency_that_broke, test_every_input_kind_gets_the_same_joint_analysis}`.
+   Cause: the `city_zip` fixture writes a CSV whose `zip` column holds `00000` placeholders and real ZIPs such as `02134`. #46 reads that column as text, so the placeholder is `'00000'`; the ISS2-joint tests assert `'0'` ("the placeholder, read as 0"), the integer reading that #46 reports as the bug, and one number moves (`confidence` 0.88225 against 0.87575, `violating_groups` 174 against 178, because `02134` and `2134` are no longer one value). Both sets of tests cannot pass unchanged. I did not edit those tests or weaken the identifier rule. Options: (a) update the five expectations to the text values (they would then also pin ZIP-as-text, which the owner asked for in #46); (b) give the fixture a `--types`/`string_columns` override and keep the numbers (still changes the test); (c) narrow the rule. Recommendation: (a).
