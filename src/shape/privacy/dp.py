@@ -7,7 +7,8 @@ table, with a scale set by the column's range (its sensitivity) and ``epsilon``:
 * Gaussian: sigma = range * sqrt(2 ln(1.25 / delta)) / epsilon.
 
 Noised values are clipped back to the column's original minimum and maximum (``clip_to_range``),
-and missing values stay missing.
+and missing values stay missing. The range is that of the finite values; infinite and NaN values
+are returned unchanged.
 
 **Randomness.** The noise comes from the operating system's entropy unless a ``seed`` (or an
 ``rng``) is passed explicitly, so two calls without one never repeat; the same ``seed`` gives the
@@ -92,7 +93,10 @@ class DifferentialPrivacy:
             is_null = np.asarray(pc.is_null(arr).to_numpy(zero_copy_only=False), dtype=bool)
             values = arr.cast(pa.float64()).fill_null(np.nan).to_numpy(zero_copy_only=False)
             values = np.asarray(values, dtype=np.float64)
-            present = values[~np.isnan(values)]
+            # the range is taken over the finite values; inf and NaN pass through unchanged, or
+            # one infinite value would make every noised value infinite (#416)
+            finite = np.isfinite(values)
+            present = values[finite]
             if present.size == 0:
                 continue
             lo, hi = float(present.min()), float(present.max())
@@ -106,9 +110,9 @@ class DifferentialPrivacy:
             else:
                 sigma = span * np.sqrt(2 * np.log(1.25 / self.delta)) / self.epsilon
                 noise = gen.normal(0, sigma, size=n)
-            result = values + noise
+            result = values + np.where(finite, noise, 0.0)
             if self.clip_to_range:
-                result = np.clip(result, lo, hi)
+                result = np.where(finite, np.clip(result, lo, hi), values)
             out = out.set_column(pos, name, pa.array(result, mask=is_null))
             noised.append(name)
         return out, DPResult(self.epsilon, self.mechanism, noised, sensitivity)
