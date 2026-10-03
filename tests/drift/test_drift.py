@@ -68,3 +68,40 @@ def test_drift_across_several_tables_prefixes_the_paths():
     found = {d.path: d.reason for d in compare(a, b)}
     assert found["tables.u"] == "table removed" and found["tables.v"] == "table added"
     assert "tables.t.columns.x.mean" in found
+
+
+def test_table_level_changes_of_one_table_have_a_real_path():
+    # #461: a single table's row-count change was addressed as "tables.None"
+    a = _model([{"name": "x"}], 100)
+    b = _model([{"name": "x"}], 1000)
+    assert [d.path for d in compare(a, b)] == ["rows"]
+    a["tables"]["u"] = {"name": "u", "rows": 1, "columns": []}
+    b["tables"]["u"] = {"name": "u", "rows": 1, "columns": []}
+    assert [d.path for d in compare(a, b)] == ["tables.t.rows"]
+
+
+def _joint_profiles():
+    import numpy as np
+    import pyarrow as pa
+
+    import shape
+
+    zips = np.random.default_rng(1).integers(0, 50, 2000)
+    city = [f"c{z}" for z in zips]
+    broken = [f"c{z}" if i % 3 else f"x{i % 7}" for i, z in enumerate(zips)]
+    text = [str(z) for z in zips]
+    return (
+        shape.profile(pa.table({"zip": text, "city": city})),
+        shape.profile(pa.table({"zip": text, "city": broken})),
+    )
+
+
+def test_joint_changes_are_addressed_one_by_one():
+    # #461: every joint change shared one path ("tables.None" for one table)
+    base, cur = _joint_profiles()
+    joint = [d for d in compare(base, cur) if d.kind in ("dependency_broken", "association_shift")]
+    assert joint
+    paths = [d.path for d in joint]
+    assert all("None" not in p and p.startswith("joint.") for p in paths)
+    assert len(set(paths)) == len(paths)
+    assert "joint.zip -> city" in paths
