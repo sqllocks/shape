@@ -235,3 +235,50 @@ def test_formula_misuse_is_a_strategy_error_naming_the_column() -> None:
         formula = {"type": "float", "generator": {"strategy": "formula", "expression": expression}}
         with pytest.raises(StrategyError, match=f"t\\.y.*{message}|{message}.*t\\.y"):
             _table({**base, "y": formula}, rows=3)
+
+
+# ---- #138: spec mistakes are StrategyErrors that name the column ------------------------------
+
+_BAD_SPECS: tuple[tuple[str, dict[str, Any]], ...] = (
+    ("float", {"strategy": "constant"}),
+    ("float", {"strategy": "uniform", "high": 1}),
+    ("float", {"strategy": "normal", "mean": 1}),
+    ("float", {"strategy": "distribution", "distribution": "histogram"}),
+    ("float", {"strategy": "distribution", "distribution": "histogram", "edges": [0, 1, 2]}),
+    ("float", {"strategy": "distribution", "distribution": "mixture"}),
+    ("string", {"strategy": "weighted_enum", "values": {"a": float("inf"), "b": 1}}),
+    ("string", {"strategy": "weighted_enum", "values": {"a": "x", "b": 1}}),
+    ("string", {"strategy": "choice", "values": ["a", "b"], "weights": [float("inf"), 1]}),
+    ("string", {"strategy": "choice", "values": [1, "a"]}),
+    ("string", {"strategy": "lifecycle", "phases": {"a": "x"}}),
+    ("string", {"strategy": "lifecycle", "phases": {"a": float("inf"), "b": 1}}),
+    ("string", {"strategy": "native", "provider": "digits", "width": "x"}),
+    ("string", {"strategy": "native", "provider": "digit_ids", "width": "x"}),
+    ("string", {"strategy": "pattern", "format": "{random:5000}"}),
+    ("string", {"strategy": "address", "field": "nope", "reference": [{"city": "A"}]}),
+)
+
+
+def test_spec_mistakes_are_strategy_errors_naming_the_column() -> None:
+    import pytest
+
+    from shape.generation.strategy_kit import StrategyError
+
+    for kind, generator in _BAD_SPECS:
+        with pytest.raises(StrategyError, match=r"t\.y"):
+            _table({"y": {"type": kind, "generator": generator}}, rows=3)
+
+
+def test_derived_and_foreign_key_spec_mistakes_name_the_column() -> None:
+    import pytest
+
+    from shape.generation.strategy_kit import StrategyError
+
+    when = {"type": "datetime", "generator": {"strategy": "temporal"}}
+    derived = {"strategy": "derived", "source": "a", "days": "x"}
+    with pytest.raises(StrategyError, match=r"t\.y"):
+        _table({"a": when, "y": {"type": "datetime", "generator": derived}}, rows=3)
+    key = {"type": "integer", "generator": {"strategy": "sequence"}}
+    fan = {"strategy": "foreign_key", "ref": "t.k", "fan_out": {"top_share": [1]}}
+    with pytest.raises(StrategyError, match=r"t\.y"):
+        _table({"k": key, "y": {"type": "integer", "generator": fan}}, rows=3)
