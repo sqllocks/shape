@@ -119,14 +119,36 @@ def test_without_a_package_kv_says_what_to_install(no_providers):
         credrefs.resolve_reference("kv://v/n")
 
 
+_RESOLVE_IN_A_CLEAN_PROCESS = """
+import json, sys
+from shape.security import credrefs
+credrefs._PROVIDERS, credrefs._LOADED = {}, {}  # as no_providers
+credrefs.resolve_reference("file://" + sys.argv[1])
+credrefs.resolve_reference("env://SHAPE_T_ENV")
+print(json.dumps(sorted(sys.modules)))
+"""
+
+
 def test_core_imports_no_cloud_sdk_to_resolve_references(tmp_path, monkeypatch, no_providers):
+    """Checked in a fresh interpreter: other tests of this process may import a cloud SDK (#77)."""
+    import json
+    import subprocess
+
     f = tmp_path / "s"
     f.write_text("x")
     f.chmod(0o600)
     monkeypatch.setenv("SHAPE_T_ENV", "y")
-    credrefs.resolve_reference(f"file://{f}")
-    credrefs.resolve_reference("env://SHAPE_T_ENV")
-    assert not [m for m in sys.modules if m.startswith(("azure", "boto", "google.cloud"))]
+    run = subprocess.run(
+        [sys.executable, "-c", _RESOLVE_IN_A_CLEAN_PROCESS, str(f)],
+        capture_output=True,
+        text=True,
+        env=dict(os.environ),
+        timeout=120,
+    )
+    assert run.returncode == 0, run.stderr
+    modules = json.loads(run.stdout)
+    assert "shape.security.credrefs" in modules
+    assert not [m for m in modules if m.startswith(("azure", "boto", "google.cloud"))]
 
 
 def test_the_cloud_sdk_check_holds_after_other_tests_imported_an_sdk(
