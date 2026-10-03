@@ -353,3 +353,5 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   notebook|report` take `-o` (#121); an unknown `--log-level` and an unwritable `--metrics` path
   are refused before the command runs (#123); `learn`, `mask` and `profile registry save` say
   `file not found: PATH` (#125).
+- `shape profile registry delete NAME` of a profile that is not in the registry is bad input: exit
+  2 and `shape: error: profile not found: NAME`, as for `tag` and `diff` (it exited 1) (#122).
