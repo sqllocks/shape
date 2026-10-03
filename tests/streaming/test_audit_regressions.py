@@ -78,3 +78,27 @@ def test_155_tumbling_window_start_contains_the_event(cls, size_ms):
         t = base + timedelta(milliseconds=ms)
         start = w._start(t)
         assert start <= t < start + w.size, (ms, start)
+
+
+def test_156_the_value_anomaly_changes_one_value_per_row():
+    import pyarrow as pa
+
+    from shape.streaming.emit.anomaly import ValueAnomalyMutator
+
+    n = 64
+    batch = pa.record_batch(
+        {
+            "a": pa.array([None, 3] * (n // 2), pa.int64()),
+            "b": pa.array([2**60 + 1] * n, pa.int64()),
+            "c": pa.array([None, 1.5] * (n // 2), pa.float64()),
+            "d": pa.array(["x", None] * (n // 2), pa.string()),
+        }
+    )
+    out, _ = ValueAnomalyMutator().mutate(batch, 7)
+    before, after = batch.to_pylist(), out.to_pylist()
+    for old, new in zip(before, after, strict=True):
+        changed = [k for k in old if old[k] != new[k] and not (old[k] is None and new[k] is None)]
+        assert len(changed) <= 1, (old, new)
+        assert all(not (isinstance(v, float) and v != v) for v in new.values()), new  # no NaN
+        b = new["b"]
+        assert b is None or b > 0, new  # an outlier of a positive value keeps its sign
