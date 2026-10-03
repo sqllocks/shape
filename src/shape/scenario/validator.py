@@ -8,6 +8,7 @@ simulation features that this runner does not perform are reported.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from pathlib import PurePosixPath, PureWindowsPath
 from typing import Any
@@ -172,7 +173,7 @@ class PackValidator:
             return
         if not pack.streaming.topics:
             result.warnings.append("streaming section has no topics defined")
-        if pack.streaming.cadence and pack.streaming.cadence.rate_per_sec <= 0:
+        if pack.streaming.cadence and not _positive(pack.streaming.cadence.rate_per_sec):
             result.errors.append("Streaming rate_per_sec must be positive")
 
     @staticmethod
@@ -182,6 +183,8 @@ class PackValidator:
             return
         if pack.hybrid.micro_batch is None and pack.hybrid.stream is None:
             result.errors.append("Hybrid pack must define at least micro_batch or stream")
+        if pack.hybrid.stream is not None and not _positive(pack.hybrid.stream.rate_per_sec):
+            result.errors.append("hybrid.stream.rate_per_sec must be positive")
         if pack.hybrid.micro_batch is not None:
             _format(pack.hybrid.micro_batch.formats, "hybrid.micro_batch.formats", result)
 
@@ -232,6 +235,11 @@ class PackValidator:
             result.warnings.append(
                 "failure_injection is enabled but a pack run does not apply it; use `chaos`"
             )
+
+
+def _positive(rate: float) -> bool:
+    """A usable event rate: a finite number above zero (NaN compares false with everything)."""
+    return math.isfinite(rate) and rate > 0
 
 
 def _format(formats: list[str], where: str, result: PackValidationResult) -> None:
