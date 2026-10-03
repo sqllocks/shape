@@ -1,7 +1,7 @@
 """Joint (multi-column) analysis of one table, bounded (#47).
 
 ``analyze_table`` reads a deterministic row sample (a :class:`Budget`: at most 20,000 rows for a
-table that small, 8,000 for a larger one) and a bounded number of columns of each role, so its cost
+table that small, 5,000 for a larger one) and a bounded number of columns of each role, so its cost
 does not grow with the table: approximate
 functional dependencies and candidate keys, association measures for every type pair, conditional
 probability tables for strongly associated categorical pairs, and the share of rows that break a
@@ -58,7 +58,7 @@ SMALL = Budget(
     sample_rows=20_000, max_columns=16, max_fd_pairs=240, max_key_pairs=120, assoc_columns=12
 )
 LARGE = Budget(
-    sample_rows=8_000, max_columns=12, max_fd_pairs=60, max_key_pairs=30, assoc_columns=8
+    sample_rows=5_000, max_columns=10, max_fd_pairs=40, max_key_pairs=20, assoc_columns=6
 )
 MAX_LEVELS = SMALL.sample_rows  # distinct values up to this many make a categorical view
 

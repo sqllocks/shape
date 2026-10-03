@@ -73,7 +73,7 @@ Beside the per-column statistics, `shape profile` records what holds across colu
 values (`00000`, `-1`, `N/A`, `1900-01-01`, ...), approximate functional dependencies, two-column
 keys, association measures, conditional tables and the share of implausible rows (`docs/JOINT.md`).
 The cross-column analysis reads a deterministic sample (at most 20,000 rows for a table that
-small, 8,000 for a larger one) and a bounded number of columns and pairs, so its cost does not grow
+small, 5,000 for a larger one) and a bounded number of columns and pairs, so its cost does not grow
 with the table; `SHAPE_PROFILE_JOINT=0` switches it off. `--reference-pair COLS=REFERENCE` checks
 that columns hold real combinations against a reference file.
 

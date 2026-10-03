@@ -108,6 +108,56 @@ it; nothing here depends on the choice except the key names.** Not a D-xx/T-xx c
 - `joint.py` (numeric copula) is untouched (it is in the mypy ratchet); the new model is `joint_model.py`
   (strict).
 
-## Checks
+## Performance: profiling speed (G1 workloads) — **needs the owner's decision**
 
-(Filled in at the end of the session; see below.)
+The joint analysis is bounded (a table of at most 20,000 rows is analysed whole; a larger one on a
+5,000-row sample, 10 columns per role, 40 dependency pairs) and runs on its own thread beside the column
+work (a dataset's tables: after the column pools, for fork safety). Measured on this 4-vCPU container
+(load about 1.4, so noisier than the baseline machine), `shape.profile` wall time, fresh process, median of 5,
+interleaved, `SHAPE_PROFILE_JOINT=0` (before) against the default (after); script
+`scratchpad/ab.py`, outputs in `scratchpad/checks/ab.txt`:
+
+| Workload | before | after | after/before |
+|---|---|---|---|
+| D1 csv (200k x 6) | 0.180 s | 0.208 s (first run, 8,000-row budget) / 0.150 s (final budget) | 1.15 / 0.82 (noise is about 15%) |
+| D2 csv (1M x 20) | 2.665 s | 2.856 s / 2.242 s | 1.07 / 0.97 |
+| D3 parquet (5M x 10) | 6.283 s | 6.151 s | 0.98 |
+| D4 csv (100k x 200) | 4.581 s | 4.511 s | 0.99 |
+| MT (3 tables) | 0.232 s | 0.315 s / 0.269 s | 1.36 / 1.22 |
+
+The single-table workloads are within the measurement noise. **The multi-table workload (MT) costs about
++50 ms (+22% to +36%)**, and a small table such as D1 costs 20 to 30 ms of CPU, which on a 180 ms profile is
+at the edge of the noise. PROF-IN MT was already below the 10x gate before this lane (5.4x, G1 escalation of
+2026-10-01), D1 csv was 10.3x (so any real cost on it can move it under 10x). I did not change any gate or
+tolerance and did not make the analysis opt-in, because the issue asks for it inside `profile`. Options for the
+owner: (a) accept it (the joint entry is the issue's deliverable); (b) make the joint analysis off by default
+for dataset (multi-table) profiles, or lazy (computed when a profile is saved or diffed, not in the timed
+call); (c) set `SHAPE_PROFILE_JOINT=0` in the G1 timing runs. T-22 parity (below) is unaffected. The bench
+harness itself (`bench.py`) was started twice but killed by two container restarts, so the official
+`bench.py` table was **not** re-run; the numbers above are from the shorter script and are not a PROF-IN
+gate measurement.
+
+## Checks (run in this session, on the final tree unless noted)
+
+| Check | Result |
+|---|---|
+| `ruff check` and `ruff format --check` (src tests plugins benchmarks/vs_spindle) | pass |
+| `mypy` (strict, 358 files) | pass |
+| vulture (`src/shape scripts/vulture_whitelist.py --min-confidence 80`) | clean |
+| `lint-imports` | 1 contract kept, 0 broken |
+| `scripts/check_user_facing.py` | clean |
+| `bandit -q -r src -ll` | no findings (only the existing `nosec` warnings) |
+| cargo fmt/clippy/test | not run: no Rust change |
+| START (`shape --version`, median of 10) | 74 ms (gate 300 ms) |
+| Parity T-22, `profile_1to1/verify.py --impl shape`, both kernels | 49/49 PASS, exit 0 for `SHAPE_KERNEL=python` and `rust` (run on the merged tree before the final budget change, which touches only the additive `joint` entry; `test_the_new_fields_are_the_only_difference_they_make` pins that) |
+| Suite, `SHAPE_KERNEL=python` (`-m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`, with `.[advanced]` and `-e plugins/shape-domains`) | 5,375 passed (before the last budget change) |
+| Suite, `SHAPE_KERNEL=rust` | 5,376 passed (before the last budget change) |
+| After the last budget change: `tests/profile diff contracts generation privacy plugins joint` | 2,169 + 76 passed |
+| `pytest -m heavy --ignore=tests/demo/fabric` | 42 passed (`tests/demo/fabric` needs `nbformat`, which this environment lacks, so it is ignored as in the suite command) |
+| Strategy baselines / `domain_1to1/verify.py --domain retail` | not run separately: no existing strategy, the engine's column draw or the retail domain was changed (new strategies only; the generation suite, which holds the strategy tests, passed) |
+| New tests | `tests/joint/` (76 tests): placeholders, joint analysis, bounds, diff, contracts, reference pairs, hierarchy, `conditional_table`, Chow-Liu model, fidelity, privacy |
+
+Notes: a stray empty file `/x` exists at the container root from a mistyped redirect of mine; removing it was
+blocked by the safety check, and it is outside the repository. A first draft of `hierarchy` strategies
+overwrote `builtins/strategies/hierarchy.py` (`self_referencing`); it was restored from the integration tree
+and the new strategies live in `reference_hierarchy.py` (caught by `tests/generation`).

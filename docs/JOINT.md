@@ -25,7 +25,7 @@ placeholder. Detection reads the profile's own value counts, so it costs nothing
 
 ### Joint analysis (table `joint`)
 
-Computed on a deterministic sample of at most 20,000 rows and at most 16 columns of each role
+Computed on a deterministic sample of at most 20,000 rows and at most 16 columns of each role (a larger table: 5,000 rows, 10 columns, 40 dependency pairs)
 (categorical, numeric), so the cost does not grow with the table.
 
 | Field | Contents |
