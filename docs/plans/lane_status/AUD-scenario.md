@@ -1,6 +1,8 @@
 # AUD-scenario: audit and fix of scenario packs, GSL and `shape demo` (lane/AUD-scenario)
 
-Status: **phase 1 (hunt) done; filing and fixing in progress.**
+Status: **done; awaiting lead review.** 18 defects filed (plus #281, filed earlier by another lane),
+16 fixed with a failing regression test first; two left for the lead (#522, #528) and one fixed
+only as a warning because an existing test pins the defect (#513).
 
 Area: `src/shape/scenario/**`, `src/shape/demo/**`, `demo/**`, `tests/scenario/**`, `tests/demo/**`,
 `tests/demo_cmd/**`, `docs/DEMO.md`. Branch started from `origin/build/main-plan` 5c91ea5.
@@ -142,9 +144,71 @@ Severity: critical / high / medium / low. Line numbers are those of 5c91ea5.
     lock; two processes saving at once keep only one of the new profiles. A fix needs a cross-platform
     file lock; recorded for the lead.
 
+## Issues and fixes
+
+| # | Finding | Issue | Failing test | Fix | State |
+|---|---|---|---|---|---|
+| 1 | run id path traversal | #281 | 9e848ac | e0c1f87 | fixed |
+| 2 | chaos section not validated | #510 | 37255a0 | 109c05b | fixed |
+| 3 | interrupted demo run saves no session | #511 | 16d3dc5 | a168637 | fixed (the session is saved; no rollback on Ctrl+C, the error names the cleanup command) |
+| 4 | unknown file format silently CSV | #513 | 1103620 | 3423377 | **partly**: a validation warning. An error is blocked by `tests/scenario/test_runner.py::test_formats`, which asserts `avro` is a successful CSV run; lead to decide |
+| 5 | same-second suffix cuts the run id | #514 | c92c709 | f6fd2c8 | fixed |
+| 6 | topic listed twice | #515 | 3ed9b9a | 31a3046 | fixed (validation error) |
+| 7 | NaN / hybrid stream rate | #516 | 0b7d1cb | 891637a | fixed |
+| 8 | `check_name` accepts a final line break | #517 | 50f7864 | 3e6a7c0 | fixed (now raises `DemoError`, still a `ValueError`) |
+| 9 | session record not an object | #518 | a897404 | 1a24b4b | fixed |
+| 10 | run manifest version / JSON error | #519 | fd058cf | d19bda2 | fixed |
+| 11 | `params_from` flags and lists | #520 | 533a25f | fbb47af | fixed |
+| 12 | page / model overwrite a file | #521 | 3f55a94 | c3685d3 | fixed (the run fails instead of overwriting; docs/DEMO.md says so) |
+| 13 | zero compared columns score 100% | #522 | - | - | **open, for the lead**: `tests/demo_cmd/test_inference_streaming.py:145` pins 1.0 |
+| 14 | streaming ignores extra domains | #523 | e870445 | 3d1db26 | fixed; docs/DEMO.md |
+| 15 | session id collision | #524 | 2514bcf | 16a40e1 | fixed |
+| 16 | landing created before the check | #525 (also in #281) | 19a76cc | 54147aa | fixed |
+| 17 | bools in a list of names | #526 | 9fb4f79 | 0630e7d | fixed |
+| 18 | benchmark sheet `assert`, encoding | #527 | 221b3c2 | 4bac9d5 | fixed; `demo/BENCHMARKS.md` unchanged (`--check` exits 0) |
+| 19 | dead branch in `validate_spec` | - | - | d9627a7 | removed |
+| 20 | concurrent profile saves | #528 | - | - | **open, for the lead**: needs a cross-platform file lock |
+
+Also: 7952470 adds tests for untested scenario paths (validation summary, spec schema errors, every
+pack section, the gates failing on altered tables).
+
+## For the lead
+
+- #513: to make an unknown format an error, `tests/scenario/test_runner.py::test_formats`
+  (`("avro", "csv")`) must change. Not done (an existing test's expectation).
+- #522: `FidelityReport.overall_score()` returns 1.0 with nothing compared; the same file pins it.
+- #528: profile saves need a lock (`fcntl`/`msvcrt` or a lock file); not a local fix.
+- `docs/SCENARIO_PACKS.md` is outside this lane's paths. It would gain: the run id's domain and scale
+  keep only letters, digits, `.`, `_`, `-`; chaos keys are typed and unknown ones warned about; a topic
+  listed twice is an error; an unknown format is warned about.
+- No `.github/workflows` change is needed.
+
 Checked and found sound: YAML size, alias and depth limits (`shape.security.yamlsafe`), pack names in
 `load_from_root`, topic and event-type names, `lakehouse_files_root` and the spec landing root
 (`unsafe_path`), atomic session and profile writes, owner-only profile file, secret refusal in
 profiles, quoted table names and plain-name checks before a drop, the session-folder marker, report
 escaping (Markdown cells and HTML), the Spark table prefix (checked by `shape.scale.spark` before
 anything is recorded), deterministic notebook cell ids.
+
+## Commands and results (this session, after the last fix)
+
+- `ruff check src tests plugins benchmarks/vs_spindle`: all checks passed. `ruff format --check`
+  (same paths): 1091 files already formatted. `mypy`: no issues in 436 source files.
+  `compileall`, `vulture --min-confidence 80`, `lint-imports` (1 kept, 0 broken),
+  `check_requirements`, `check_secrets`, `check_user_facing` (D-13), `check_shipped_data`,
+  `check_plugin_skeletons`, `check_conformance_coverage`: all exit 0.
+- Equivalence verifiers (§1, Spindle venv): `benchmarks/vs_spindle/pack_1to1/verify.py`: "5
+  inputs, T-21 columns 64/64, 0 problems", PASS, exit 0. `benchmarks/vs_spindle/demo_1to1/verify.py`:
+  VERDICT: PASS, exit 0.
+- `SHAPE_KERNEL=rust pytest -m "not emulator and not live"`: 7174 passed, 4 failed. All four fail
+  the same way on the base commit 5c91ea5 and are already filed, so they are not this lane's:
+  - `tests/iss_gaps/test_landing_and_batches.py::test_file_sinks_take_path_template_and_batch_date`,
+    `tests/kernel/test_hashing.py::test_rust_equals_reference_on_a_million_values[float16]`,
+    `tests/kernel/test_hashing.py::test_one_and_one_point_zero_hash_equal`: pyarrow 19.0.1, which
+    `tests/demo/fabric/requirements.txt` installs (#76).
+  - `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references`:
+    passes alone; fails after `tests/demo/fabric/test_udf.py` has imported `azure.functions` in the
+    same process (reproduced on 5c91ea5 with those two files) (#77, #554).
+- `pytest tests/scenario tests/demo tests/demo_cmd`: see the python-kernel line below for the final
+  run; during the work every fix ran its package's tests (scenario 143 passed, demo_cmd 165 passed
+  with the bridge demo tests, demo content 39 passed).
