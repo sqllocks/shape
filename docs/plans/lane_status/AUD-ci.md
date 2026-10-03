@@ -1126,4 +1126,55 @@ take no exemption (tested).
 
 ## Commands and results (this session)
 
-(Filled in when the full runs finish.)
+Run on `lane/AUD-ci` @ `6ca5989` (code identical to `dadbd87`; later commits change only this file).
+`origin/build/main-plan` had not moved (`5c91ea5` is an ancestor of the branch), so there was no merge.
+Python 3.11.15, rustc 1.97.0, Linux.
+
+Two venvs, so that each check runs in the environment its CI job uses:
+
+- **full** (`$SHAPE_VENV`, §1): `pip install -e '.[dev,streaming,advanced]' -r tests/demo/fabric/requirements.txt`
+  plus `-e` for all seven `plugins/*`, plus system `unixodbc` (`libodbc.so.2`, needed by
+  `fabric-user-data-functions`) and Java 21. The fabric requirements resolve to pyarrow 19.0.1,
+  pandas 3.0.6, numpy 2.4.6, pyspark 4.2.0, azure-functions 1.25.0.
+- **ci-test** (`~/.venvs/shape-ci`): exactly the `ci.yml` `test` job install,
+  `pip install -e '.[dev,streaming,advanced]' -e plugins/shape-domains`. That gives pyarrow 25.0.1.
+
+| Command | Venv | Result |
+|---|---|---|
+| `make check`: ruff check, ruff format --check, mypy, compileall, vulture, lint-imports, check_requirements, check_secrets, check_user_facing, check_shipped_data, check_plugin_skeletons, check_conformance_coverage | ci-test | all pass (ruff: all checks passed, 1090 files formatted; mypy: no issues in 436 files; contracts 1 kept 0 broken; 89 requirements; secrets OK; user-facing clean; 21 data files; 7 skeletons) |
+| `make check` pytest step (`-m "not emulator and not live and not heavy"`, coverage ≥ 86) | ci-test | 2 failed, 6813 passed, 2 skipped (`shape_databases` not in this job's install); coverage 92.52 %. The 2 failures are finding 27 and fail identically on base (below). |
+| same pytest step | full | 3 failed, 6814 passed, 0 skipped; coverage reached. The 3 failures are environment ones (E1–E3 below), all on base too. |
+| `pytest -q -m heavy tests/kernel tests/profile tests/streaming` | ci-test | 42 passed |
+| `SHAPE_KERNEL=python pytest -q tests/kernel` | ci-test | 265 passed |
+| the same two steps | full | fail only on E2 (float16), pyarrow 19 |
+| `cargo fmt --check`, `cargo clippy --all-targets -D warnings`, `cargo test` (`rust/shape-kernel`) | full | pass; cargo test 34 passed |
+| `python scripts/check_user_facing.py` | full | `check_user_facing: clean` |
+| `SHAPE_KERNEL=rust pytest -m "not emulator and not live"` | full | 4 failed, 7109 passed, 0 skipped, 13 deselected (32 min) |
+| `SHAPE_KERNEL=python pytest -m "not emulator and not live"` | full | 4 failed, 7109 passed, 0 skipped, 13 deselected (1 h 42 min; `test_bounded_mode_memory_does_not_grow_with_rows` alone takes 65 min on the Python kernel) |
+
+Nothing was deselected, skipped or xfailed by hand. The "deselected" counts come from the markers in
+the commands above. Every failure was rerun on `origin/build/main-plan` @ `5c91ea5` in the same
+venv, and every one fails there too:
+
+- **E1** `tests/iss_gaps/test_landing_and_batches.py::test_file_sinks_take_path_template_and_batch_date`:
+  with pyarrow 19, `pq.read_table` of a hive path adds the `ingest_date` partition column. Passes in
+  ci-test (pyarrow 25).
+- **E2** `tests/kernel/test_hashing.py::test_rust_equals_reference_on_a_million_values[float16]` and
+  `::test_one_and_one_point_zero_hash_equal`: pyarrow 19 has no float16 `if_else` kernel and rejects a
+  Python float for float16 (`Expected np.float16 instance`). Passes in ci-test.
+- **E3** `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references`:
+  depends on test order. `tests/demo/fabric/test_udf.py` imports `fabric.functions`, which loads
+  `azure.functions`, so the "no cloud SDK in `sys.modules`" assertion sees it. Run alone it passes.
+  `pytest tests/demo/fabric/test_udf.py tests/security/test_credential_refs.py` fails on both
+  `dadbd87` and `5c91ea5` (1 failed, 74 passed each). In CI the fabric tests run in their own job,
+  so the two never share a process.
+- **Finding 27** (`tests/demo_cmd/test_notebook_and_outputs.py`, 2 tests): base in ci-test, 2 failed,
+  12 passed. Diff D9.
+
+None of these touch a file this lane changed (`scripts/`, `tests/release/`, this file,
+`CHANGELOG.md`). E1–E3 come from the test environment (the fabric requirements pull in pyarrow 19 and
+`azure-functions`), not from a code defect on this branch. They are recorded, not fixed (out of scope).
+
+Setup note: the first `make check` also failed `tests/plugins/test_plugin_kit_install.py::test_every_skeleton_builds_a_pure_wheel`
+because a non-editable `pip install plugins/*` had left `plugins/*/build/` behind (timestamps before the
+test run). After `rm -rf plugins/*/build` and editable installs, it passes in both venvs.
