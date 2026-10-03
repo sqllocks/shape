@@ -32,7 +32,10 @@ from shape.plugins.api.v1 import GenerationContext
 
 SHAPE_API = "1.0"
 
-_CACHE: dict[tuple[Any, ...], HierarchicalSampler] = {}
+# (dataset, sampler) by the dataset's id and the spec. The entry keeps its dataset alive, so the
+# id cannot be given to another dataset while the entry exists, and a hit is used only when it is
+# the same dataset object (#131).
+_CACHE: dict[tuple[Any, ...], tuple[Dataset, HierarchicalSampler]] = {}
 _CACHE_LOCK = threading.Lock()
 _CACHE_MAX = 16
 
@@ -76,8 +79,8 @@ def _sampler(ds: Dataset, spec: Mapping[str, Any], ctx: GenerationContext) -> Hi
     )
     with _CACHE_LOCK:
         found = _CACHE.get(key)
-    if found is not None:
-        return found
+    if found is not None and found[0] is ds:
+        return found[1]
     try:
         sampler = HierarchicalSampler(ds.columns, levels, weighting=weighting, top_weights=top)
     except ValueError as exc:
@@ -85,7 +88,7 @@ def _sampler(ds: Dataset, spec: Mapping[str, Any], ctx: GenerationContext) -> Hi
     with _CACHE_LOCK:
         if len(_CACHE) >= _CACHE_MAX:
             _CACHE.clear()
-        _CACHE[key] = sampler
+        _CACHE[key] = (ds, sampler)
     return sampler
 
 
