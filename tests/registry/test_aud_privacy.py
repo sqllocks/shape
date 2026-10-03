@@ -83,3 +83,58 @@ def test_the_manifest_sniff_does_not_inflate_a_bomb():
         tracemalloc.stop()
     assert result is False
     assert peak < 16 * 1024 * 1024
+
+
+# --- #409: damaged registry state is a RegistryError that names it ------------------------------
+
+from shape.registry.local import RegistryError  # noqa: E402
+
+
+def test_a_torn_log_line_is_a_registry_error(tmp_path):
+    r = LocalRegistry(tmp_path)
+    r.commit("n", b"hello")
+    with (tmp_path / "logs" / "n.jsonl").open("a") as fh:
+        fh.write("{truncated\n")
+    for call in (lambda: r.log("n"), lambda: r.entry("n"), lambda: r.resolve("n", "nope")):
+        with pytest.raises(RegistryError, match=r"n\.jsonl.*line 2"):
+            call()
+
+
+def test_a_missing_object_is_a_registry_error(tmp_path):
+    r = LocalRegistry(tmp_path)
+    h = r.commit("n", b"hello")
+    (tmp_path / "objects" / h).unlink()
+    with pytest.raises(RegistryError, match="missing"):
+        r.checkout("n")
+
+
+def test_a_ref_that_is_not_a_content_id_is_a_registry_error(tmp_path):
+    r = LocalRegistry(tmp_path)
+    r.commit("n", b"hello")
+    (tmp_path / "refs" / "n" / "latest").write_text("not-a-hash")
+    with pytest.raises(RegistryError, match="corrupt"):
+        r.checkout("n")
+
+
+def test_leftover_temp_files_are_not_refs(tmp_path):
+    r = LocalRegistry(tmp_path)
+    r.commit("n", b"hello")
+    (tmp_path / "refs" / "n" / ".tmp-abc").write_text("x")
+    assert set(r.refs("n")) == {"latest"}
+
+
+# --- #420: a damaged profile-registry index asks for reindex ------------------------------------
+
+
+@pytest.mark.parametrize(
+    "index",
+    ['{"x": {"foo": 1}}', '{"x": 5}', '{"x": {"system": "s", "table": "t"}}'],
+    ids=["no-keys", "not-object", "no-name"],
+)
+def test_a_damaged_index_entry_asks_for_reindex(tmp_path, index):
+    from shape.registry.profiles import ProfileRegistry, ProfileRegistryError
+
+    r = ProfileRegistry(tmp_path)
+    (tmp_path / "_index.json").write_text(index)
+    with pytest.raises(ProfileRegistryError, match="reindex"):
+        r.entries(system="s")

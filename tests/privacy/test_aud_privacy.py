@@ -127,3 +127,93 @@ def test_a_date_column_is_not_detected_as_phone():
     from shape.privacy import detect_column
 
     assert detect_column([f"2024-01-{d:02d}" for d in range(1, 29)]) == ()
+
+
+# --- #412: non-finite numeric enum keys do not crash the safe profile ---------------------------
+
+
+@pytest.mark.parametrize("bad", ["inf", "-inf", "nan", "1e400"])
+def test_a_non_finite_numeric_key_falls_back_to_hashed_keys(bad):
+    prof = {
+        "name": "t",
+        "row_count": 100,
+        "columns": {
+            "x": {
+                "name": "x",
+                "dtype": "float",
+                "is_enum": True,
+                "cardinality": 2,
+                "null_count": 0,
+                "enum_values": {"1.0": 0.5, bad: 0.5},
+            }
+        },
+    }
+    col = to_safe_profile(prof).to_dict()["tables"]["t"]["columns"]["x"]
+    assert col["categorical_histogram"] is None
+    assert len(col["categorical_weights"]) == 2 and bad not in col["categorical_weights"]
+
+
+# --- #416: differential privacy over a column with a non-finite value --------------------------
+
+
+def test_dp_noises_the_finite_values_and_keeps_the_non_finite_ones():
+    import math
+    import warnings
+
+    from shape.privacy.dp import DifferentialPrivacy
+
+    t = pa.table({"a": pa.array([1.0, 2.0, 3.0, float("inf"), float("-inf"), None])})
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        out, res = DifferentialPrivacy().apply(t, seed=1)
+    a = out.column("a").to_pylist()
+    assert all(1.0 <= v <= 3.0 for v in a[:3])
+    assert a[3] == math.inf and a[4] == -math.inf and a[5] is None
+    assert res.actual_sensitivity == {"a": 2.0}
+
+
+def test_dp_finite_columns_are_unchanged_by_the_fix():
+    from shape.privacy.dp import DifferentialPrivacy
+
+    t = pa.table({"a": pa.array([1.0, 2.0, 3.0, None]), "b": pa.array([1, 5, 9, 2])})
+    out, _ = DifferentialPrivacy().apply(t, seed=7)
+    import numpy as np
+
+    gen = np.random.default_rng(7)
+    na = gen.laplace(0, 2.0, size=4)
+    nb = gen.laplace(0, 8.0, size=4)
+    assert out.column("a").to_pylist()[:3] == list(np.clip(np.array([1.0, 2, 3]) + na[:3], 1, 3))
+    assert out.column("b").to_pylist() == list(np.clip(np.array([1.0, 5, 9, 2]) + nb, 1, 9))
+
+
+# --- #424: suppress_shape and redact_sensitive argument edges -----------------------------------
+
+
+def test_suppress_shape_withholds_a_column_with_an_unknown_count():
+    from shape.privacy import suppress_shape
+
+    out = suppress_shape({"rows": 10, "columns": {"a": {"kind": "x", "count": None}}})
+    assert out["columns"]["a"]["suppressed"] is True
+
+
+def test_redact_sensitive_needs_a_classification():
+    with pytest.raises(ValueError, match="redact_at"):
+        redact_sensitive({"rows": 1, "columns": {}}, {}, redact_at=())
+
+
+# --- #109: privacy commands print the not-signed notice as a note -------------------------------
+
+
+def test_profile_safe_prints_the_notice_as_a_note(tmp_path, capsys):
+    import pyarrow.parquet as pq
+
+    from shape.cli.main import main
+
+    pq.write_table(pa.table({"a": list(range(20))}), tmp_path / "t.parquet")
+    assert main(["profile", str(tmp_path / "t.parquet"), "-o", str(tmp_path / "p.shape")]) == 0
+    capsys.readouterr()
+    rc = main(["profile", "safe", str(tmp_path / "p.shape"), "-o", str(tmp_path / "s.json")])
+    err = capsys.readouterr().err
+    assert rc == 0
+    assert "shape: note:" in err and "not signed" in err
+    assert "Warning" not in err and ".py:" not in err
