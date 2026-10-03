@@ -2,13 +2,16 @@
 enforced without adding a dependency.
 
 Supported: ``type`` (also a list), ``enum``, ``const``, ``required``, ``properties``,
-``additionalProperties`` (false or a schema), ``items``, ``minimum``, ``anyOf`` and local
-``$ref`` (``#/$defs/...``). Anything else in a schema is ignored, so schemas that use other
-keywords are only checked for the ones listed here.
+``patternProperties``, ``additionalProperties`` (false or a schema), ``items``, ``minItems``,
+``minimum``, ``maximum``, ``anyOf``, ``allOf``, ``not``, ``if``/``then`` and local ``$ref``
+(``#/$defs/...``). Anything else in a schema is ignored, so schemas that use other keywords are
+only checked for the ones listed here.
 """
 
 from __future__ import annotations
 
+import re
+from dataclasses import dataclass
 from typing import Any
 
 _TYPES: dict[str, Any] = {
@@ -28,49 +31,93 @@ def _is_type(v: Any, t: str) -> bool:
     return isinstance(v, _TYPES[t])
 
 
-def validate(
-    value: Any, schema: dict[str, Any], path: str = "$", root: dict[str, Any] | None = None
-) -> list[str]:
+@dataclass(frozen=True, slots=True)
+class Problem:
+    """One violation: ``path`` is the keys and indexes from the document root, ``message`` what
+    is wrong at that place; ``key`` is the offending key of the object at ``path`` for an
+    unexpected key."""
+
+    path: tuple[str | int, ...]
+    message: str
+    key: str | None = None
+
+
+def format_path(path: tuple[str | int, ...]) -> str:
+    """``$.a.b[2]`` for ``("a", "b", 2)``."""
+    return "$" + "".join(f"[{p}]" if isinstance(p, int) else f".{p}" for p in path)
+
+
+def validate(value: Any, schema: dict[str, Any]) -> list[str]:
     """The list of violations of ``schema`` by ``value`` (empty when valid)."""
+    return [f"{format_path(p.path)}: {p.message}" for p in problems(value, schema)]
+
+
+def problems(
+    value: Any,
+    schema: dict[str, Any],
+    path: tuple[str | int, ...] = (),
+    root: dict[str, Any] | None = None,
+) -> list[Problem]:
+    """The violations of ``schema`` by ``value`` with their locations (empty when valid)."""
     root = root or schema
     if "$ref" in schema:
         node: Any = root
         for part in schema["$ref"].lstrip("#/").split("/"):
             node = node[part]
-        return validate(value, node, path, root)
+        return problems(value, node, path, root)
     if "anyOf" in schema:
-        errs = [validate(value, s, path, root) for s in schema["anyOf"]]
-        return (
-            []
-            if any(not e for e in errs)
-            else [f"{path}: matches none of anyOf ({errs[0][:1]}...)"]
-        )
-    out: list[str] = []
+        errs = [problems(value, s, path, root) for s in schema["anyOf"]]
+        if any(not e for e in errs):
+            return []
+        first = [f"{format_path(p.path)}: {p.message}" for p in errs[0][:1]]
+        return [Problem(path, f"matches none of anyOf ({first}...)")]
+    out: list[Problem] = []
+
+    def add(message: str, key: str | None = None) -> None:
+        out.append(Problem(path, message, key))
+
     if "const" in schema and value != schema["const"]:
-        out.append(f"{path}: expected {schema['const']!r}, got {value!r}")
+        add(f"expected {schema['const']!r}, got {value!r}")
     if "enum" in schema and value not in schema["enum"]:
-        out.append(f"{path}: {value!r} not in {schema['enum']}")
+        add(f"{value!r} not in {schema['enum']}")
     t = schema.get("type")
     if t is not None:
         types = t if isinstance(t, list) else [t]
         if not any(_is_type(value, x) for x in types):
-            return [*out, f"{path}: expected {types}, got {type(value).__name__}"]
+            return [*out, Problem(path, f"expected {types}, got {type(value).__name__}")]
     if "minimum" in schema and _is_type(value, "number") and value < schema["minimum"]:
-        out.append(f"{path}: {value} < minimum {schema['minimum']}")
+        add(f"{value} < minimum {schema['minimum']}")
+    if "maximum" in schema and _is_type(value, "number") and value > schema["maximum"]:
+        add(f"{value} > maximum {schema['maximum']}")
+    if "not" in schema and not problems(value, schema["not"], path, root):
+        add("matches a schema it must not match")
+    for sub in schema.get("allOf", []):
+        out += problems(value, sub, path, root)
+    if "if" in schema and "then" in schema and not problems(value, schema["if"], path, root):
+        out += problems(value, schema["then"], path, root)
     if isinstance(value, dict):
         for k in schema.get("required", []):
             if k not in value:
-                out.append(f"{path}: missing required key {k!r}")
+                add(f"missing required key {k!r}")
         props = schema.get("properties", {})
+        patterns = schema.get("patternProperties", {})
         extra = schema.get("additionalProperties")
         for k, v in value.items():
+            matched = [sub for pat, sub in patterns.items() if re.search(pat, k)]
             if k in props:
-                out += validate(v, props[k], f"{path}.{k}", root)
-            elif extra is False:
-                out.append(f"{path}: unexpected key {k!r}")
+                out += problems(v, props[k], (*path, k), root)
+            for sub in matched:
+                out += problems(v, sub, (*path, k), root)
+            if k in props or matched:
+                continue
+            if extra is False:
+                add(f"unexpected key {k!r}", k)
             elif isinstance(extra, dict):
-                out += validate(v, extra, f"{path}.{k}", root)
-    if isinstance(value, list) and "items" in schema:
-        for i, v in enumerate(value):
-            out += validate(v, schema["items"], f"{path}[{i}]", root)
+                out += problems(v, extra, (*path, k), root)
+    if isinstance(value, (list, tuple)):
+        if "minItems" in schema and len(value) < schema["minItems"]:
+            add(f"{len(value)} items, fewer than minItems {schema['minItems']}")
+        if "items" in schema:
+            for i, v in enumerate(value):
+                out += problems(v, schema["items"], (*path, i), root)
     return out

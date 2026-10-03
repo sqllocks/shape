@@ -318,7 +318,7 @@ class GenSchema:
         if problems:
             more = f" (+{len(problems) - 5} more)" if len(problems) > 5 else ""
             raise GenSchemaError("; ".join(problems[:5]) + more)
-        m, g = doc["model"], doc["generation"]
+        m, g = doc["model"], doc.get("generation", {})
         model = Model(
             name=m["name"],
             description=m.get("description", ""),

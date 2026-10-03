@@ -58,6 +58,8 @@ property: `scale`, `null_rate`, `precision`, `max_length` and `nullable` belong 
 a `scale` in a `distribution` generator was ignored and the numbers kept 14 decimal places. The keys
 of every built-in strategy are in `shape.generation.spec_keys` (a test checks that no strategy reads
 a key that is missing there); a strategy or distribution family from a plugin is not checked.
+The same tables build the published JSON Schema, which reports these keys as errors at their place
+(`docs/GENERATION_SPEC.md`).
 
 ### Helpers
 
