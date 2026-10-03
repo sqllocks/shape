@@ -239,11 +239,18 @@ def load_domain(path):
     return d
 
 
+def _has_field(row: Any, name: str) -> bool:
+    """A mapping row has the key; any other row (a dataclass, slotted or not) the attribute."""
+    if isinstance(row, Mapping):
+        return name in row
+    return hasattr(row, name)
+
+
 def test_domain(domain: DomainDefinition, rows):
     issues = list(validate_domain(domain))
     required = {f.name for f in domain.fields if f.required}
     for i, row in enumerate(rows):
-        missing = required - set(row if isinstance(row, dict) else vars(row))
+        missing = {name for name in required if not _has_field(row, name)}
         if missing:
             issues.append(DomainIssue(f"rows.{i}", f"missing required fields: {sorted(missing)}"))
     return tuple(issues)
