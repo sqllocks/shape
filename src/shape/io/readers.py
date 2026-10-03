@@ -28,7 +28,7 @@ import pyarrow.csv as pacsv  # type: ignore[import-untyped]
 import pyarrow.json as pajson  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
-from shape.security.jsondepth import check_json_file
+from shape.security.jsondepth import check_json_depth, check_json_file
 
 from .excel import (
     is_workbook_spec,
@@ -297,10 +297,33 @@ def _read_csv_table(
         raise ReaderError(f"cannot parse {path} as CSV: {exc}") from exc
 
 
+def _check_json_lines(path: Path) -> None:
+    """The depth check over what pyarrow will parse: the decompressed lines of a compressed file
+    (pyarrow decompresses by extension, so checking the bytes on disk proves nothing)."""
+    if path.suffix.lower() not in _COMPRESSION:
+        check_json_file(path)
+        return
+    chunk = 8 * 1024 * 1024
+    with pa.input_stream(str(path), compression="detect") as stream:
+        carry = b""
+        while True:
+            block = stream.read(chunk)
+            data = carry + block
+            if not block:
+                check_json_depth(data)
+                return
+            cut = data.rfind(b"\n")
+            if cut < 0:  # one long line: keep reading until it ends
+                carry = data
+                continue
+            check_json_depth(data[: cut + 1])
+            carry = data[cut + 1 :]
+
+
 def _read_jsonl_table(path: Path, schema: pa.Schema | None) -> pa.Table:
     parse = pajson.ParseOptions(explicit_schema=schema) if schema is not None else None
     try:
-        check_json_file(path)
+        _check_json_lines(path)
     except ValueError as exc:
         raise ReaderError(f"cannot parse {path} as JSON lines: {exc}") from exc
     try:
