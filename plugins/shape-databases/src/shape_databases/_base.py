@@ -14,8 +14,10 @@ what a failed write leaves behind).
 
 from __future__ import annotations
 
+import ipaddress
 import itertools
 import logging
+import re
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
@@ -89,6 +91,18 @@ def parse_uri(
         database=database,
         params=params,
     )
+
+
+def is_loopback(host: str | None) -> bool:
+    """True for no host (a Unix socket), a socket directory, ``localhost`` or a loopback address."""
+    if not host or host.startswith("/"):
+        return True
+    if host.lower().rstrip(".") == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host.strip("[]")).is_loopback
+    except ValueError:
+        return False
 
 
 def one_of(*choices: str) -> Callable[[str], str]:
@@ -167,6 +181,10 @@ class DatabaseSink:
     ) -> int:
         """Stream the rows in; ``progress[0]`` is kept at the number of rows committed."""
         raise NotImplementedError
+
+    def tls_opt_out(self, plan: Plan) -> str | None:
+        """How to opt out of the secure TLS default, or None when it was not applied to ``plan``."""
+        return None
 
     def ddl_is_transactional(self) -> bool:
         raise NotImplementedError
@@ -270,8 +288,19 @@ class DatabaseSink:
         except ShapeError:
             raise
         except Exception as exc:
+            detail = scrub(str(exc), secrets)
+            opt_out = self.tls_opt_out(plan)
+            hint = ""
+            if opt_out and re.search(
+                r"ssl|tls|certificate", f"{type(exc).__name__} {detail}", re.I
+            ):
+                hint = (
+                    f"; {plan.target.host} is not a loopback host, so TLS with certificate "
+                    f"verification is the default. Fix the certificate or trust store, or opt out "
+                    f"explicitly with {opt_out} in the URI"
+                )
             failure = WriteError(
-                f"could not connect to {label} ({type(exc).__name__}): {scrub(str(exc), secrets)}"
+                f"could not connect to {label} ({type(exc).__name__}): {detail}{hint}"
             )
         raise failure  # outside the handler: the driver's exception is not kept as context
 

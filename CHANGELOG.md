@@ -5,6 +5,12 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Security (#294): the PostgreSQL and MySQL sinks verify TLS by default for a host that is not
+  loopback (`sslmode=verify-full`; MySQL with the system CA store or `ssl_ca`), matching the SQL
+  Server sink. `localhost`, `127.0.0.0/8`, `::1` and Unix sockets are unchanged. Opt out only in the
+  URI: `sslmode=disable`/`prefer`, or `ssl=false`/`ssl-mode=DISABLED`. A TLS failure names the host
+  and the opt-out.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

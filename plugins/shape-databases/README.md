@@ -19,6 +19,20 @@ The client libraries are extras of this distribution and are imported only when 
 is opened, so core and the rest of Shape never carry them. A sink without its driver fails with
 the `pip install` line above.
 
+## TLS by default
+
+Like the SQL Server sink (`Encrypt=yes`), these sinks verify TLS for a host that is not loopback:
+
+- PostgreSQL uses `sslmode=verify-full`. Point `sslrootcert` at your CA file when the system store
+  does not hold it.
+- MySQL uses TLS with certificate and host name verification: the system CA store, or `ssl_ca`.
+
+`localhost`, `127.0.0.0/8`, `::1` and Unix sockets keep the driver's defaults, so local and emulator
+use is unchanged. Opt out only in the URI: `sslmode=disable` (or `prefer`) for PostgreSQL;
+`ssl=false` or `ssl-mode=DISABLED` for MySQL. Setting `sslmode` yourself, or MySQL's
+`ssl_verify_cert` / `ssl_verify_identity`, is taken as given. A TLS failure raises an error that
+names the host and the opt-out.
+
 ## Writing
 
 ```python

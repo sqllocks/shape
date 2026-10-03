@@ -12,6 +12,10 @@ a failure leaves the database as it was. With ``commit_rows=N`` the write commit
 the first rows. A failure then rolls back only the uncommitted rows; the committed ones stay and
 :class:`WriteError` says how many (``rows_committed``).
 
+TLS. A host that is not loopback (``localhost``, ``127.0.0.0/8``, ``::1``, a Unix socket) is
+reached with ``sslmode=verify-full`` unless the URI sets ``sslmode``; ``sslmode=disable`` or
+``prefer`` is the explicit opt-out. A TLS failure names the host and the opt-out.
+
 Options: ``write_mode``, ``schema_name``, ``table_prefix``, ``batch_size`` (rows converted per
 step), ``commit_rows``, ``columns`` / ``primary_key`` / ``schema`` (for the created table, as the
 ``sql`` sink), and the password sources of :mod:`shape_databases._auth`. ``connect`` takes a
@@ -30,7 +34,16 @@ import pyarrow as pa  # type: ignore[import-untyped]
 from shape.errors import ShapeError
 
 from . import _sql
-from ._base import DatabaseSink, Plan, as_int, as_text, chain_batches, chunks, one_of
+from ._base import (
+    DatabaseSink,
+    Plan,
+    as_int,
+    as_text,
+    chain_batches,
+    chunks,
+    is_loopback,
+    one_of,
+)
 from .errors import WriteError
 
 SSL_MODES = ("disable", "allow", "prefer", "require", "verify-ca", "verify-full")
@@ -65,9 +78,17 @@ class PostgresSink(DatabaseSink):
         if t.database:
             params["dbname"] = t.database
         params.setdefault("application_name", "shape")
+        if self.tls_opt_out(plan):
+            params["sslmode"] = "verify-full"
         if plan.secret is not None:
             params["password"] = plan.secret.reveal()
         return params
+
+    def tls_opt_out(self, plan: Plan) -> str | None:
+        t = plan.target
+        if "sslmode" in t.params or is_loopback(t.host):
+            return None
+        return "sslmode=disable (or sslmode=prefer)"
 
     def default_connect(self, **params: Any) -> Any:
         try:

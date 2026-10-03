@@ -18,6 +18,10 @@ once.
 | `mysql://host/db` | `mysql` | `sqllocks-shape-databases[mysql]` | batched multi-row `INSERT` |
 | `kafka://`, `eventhubs://`, `eventstream://`, `eventhouse://` | emitters | their plugins | streaming sinks (`shape.emitters`), `shape emit` only |
 
+The `postgres` and `mysql` sinks verify TLS for any host that is not loopback (`sslmode=verify-full`;
+MySQL with the system CA store or `ssl_ca`). Opt out in the URI with `sslmode=disable`/`prefer`
+(PostgreSQL) or `ssl=false`/`ssl-mode=DISABLED` (MySQL); see `plugins/shape-databases/README.md`.
+
 An unknown scheme is an error that lists the schemes installed.
 
 ## OneLake and ADLS Gen2 (`abfss://`, `delta+abfss://`)
