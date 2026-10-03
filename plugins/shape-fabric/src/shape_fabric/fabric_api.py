@@ -53,6 +53,19 @@ def tuple_transport(call: Callable[..., Any]) -> Transport:
     return transport
 
 
+_RUNNING = ("NotStarted", "Running")
+
+
+def _retry_after(value: str | None) -> float:
+    """The seconds to wait before the next poll: the service's ``Retry-After`` when it asks for
+    longer than :data:`POLL_SECONDS` (at most 60), else :data:`POLL_SECONDS`."""
+    try:
+        seconds = float(value) if value else 0.0
+    except ValueError:
+        seconds = 0.0
+    return min(max(POLL_SECONDS, seconds), 60.0)
+
+
 def is_guid(value: str) -> bool:
     return bool(_GUID.match(value))
 
@@ -141,13 +154,18 @@ class FabricApi:
             if item.get("id"):
                 return dict(item)
         else:
-            self._await(response.headers.get("location", ""), kind, name)
+            self._await(
+                response.headers.get("location", ""),
+                kind,
+                name,
+                _retry_after(response.headers.get("retry-after")),
+            )
         found = self.find_item(workspace_id, kind, name)
         if found is None:
             raise FabricApiError(f"the {kind} {name!r} was accepted but is not in the workspace")
         return found
 
-    def _await(self, location: str, kind: str, name: str) -> None:
+    def _await(self, location: str, kind: str, name: str, wait: float = POLL_SECONDS) -> None:
         if not location:
             raise FabricApiError(f"creating the {kind} {name!r}: no operation URL to follow")
         if not location.startswith(FABRIC_API + "/"):
@@ -156,8 +174,9 @@ class FabricApi:
                 f"creating the {kind} {name!r}: the operation URL is not on {FABRIC_API}"
             )
         for _ in range(POLL_LIMIT):
-            self._sleep(POLL_SECONDS)
-            state = self._http.request("GET", location).json()
+            self._sleep(wait)
+            answer = self._http.request("GET", location)
+            state = answer.json()
             status = state.get("status", "")
             if status == "Succeeded":
                 return
@@ -167,6 +186,10 @@ class FabricApi:
                     f"creating the {kind} {name!r} failed: "
                     f"{error.get('message') or error.get('errorCode') or 'unknown error'}"
                 )
+            if status not in _RUNNING:
+                # Cancelled, or a final state this client does not know: waiting cannot help.
+                raise FabricApiError(f"creating the {kind} {name!r} ended with status {status!r}")
+            wait = _retry_after(answer.headers.get("retry-after"))
         raise FabricApiError(f"creating the {kind} {name!r} timed out")
 
     def delete_item(self, workspace_id: str, item_id: str) -> None:
