@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from datetime import datetime, timedelta
 
 import numpy as np
@@ -419,3 +420,34 @@ def test_custom_gate_registration():
 
         del gates._GATE_REGISTRY["mine"]
     assert repr(GateResult("g", True)) == "GateResult(g: PASS, 0 errors, 0 warnings)"
+
+
+# -- HUNT2-quality ----------------------------------------------------------------------------
+
+
+@pytest.mark.skipif(not hasattr(time, "tzset"), reason="needs time.tzset")
+@pytest.mark.parametrize("zone", ["UTC", "America/Los_Angeles", "Pacific/Auckland"])
+def test_no_future_on_naive_timestamps_does_not_depend_on_the_machine_zone(zone, monkeypatch):
+    """#589: naive timestamps were compared with the local clock."""
+    import datetime as dt
+
+    import pyarrow as pa
+
+    from shape.quality.gates import TemporalConsistencyGate, ValidationContext
+    from shape.quality.rowlevel import row_outcomes
+
+    monkeypatch.setenv("TZ", zone)
+    time.tzset()
+    try:
+        now = dt.datetime.now(dt.UTC).replace(tzinfo=None)
+        past = now - dt.timedelta(hours=1)
+        future = now + dt.timedelta(hours=1)
+        t = pa.table({"ts": pa.array([past, future], pa.timestamp("us"))})
+        ctx = ValidationContext(tables={"t": t}, config={"no_future": ["t.ts"]})
+        result = TemporalConsistencyGate().check(ctx)
+        assert result.details["t.ts"]["future_dates"] == 1, zone
+        [o] = row_outcomes("temporal_consistency", ctx)
+        assert o.failing_rows.tolist() == [1], zone
+    finally:
+        monkeypatch.undo()
+        time.tzset()
