@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import html
+import math
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -58,14 +59,16 @@ def _bars(labels: list[str], values: list[float], width: int = 300, height: int 
     """Inline SVG bar chart of proportions."""
     if not values:
         return ""
-    top = max(values) or 1.0
+    # a share that is not a finite number 0 or more draws an empty bar (the title keeps it)
+    heights = [v if math.isfinite(v) and v > 0 else 0.0 for v in values]
+    top = max(heights) or 1.0
     n = len(values)
     gap = 2
     bw = max((width - gap * (n - 1)) / n, 1.0)
     parts = [f'<svg viewBox="0 0 {width} {height + 14}" role="img">']
     parts.append(f'<line class="axis" x1="0" y1="{height}" x2="{width}" y2="{height}"/>')
     for i, v in enumerate(values):
-        h = max(v / top * (height - 4), 0.0)
+        h = max(heights[i] / top * (height - 4), 0.0)
         x = i * (bw + gap)
         parts.append(
             f'<rect class="bar" x="{x:.1f}" y="{height - h:.1f}" width="{bw:.1f}" '
