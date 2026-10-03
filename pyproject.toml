@@ -295,6 +295,7 @@ source_modules = [
     "shape.registry",
     "shape.relations",
     "shape.report",
+    "shape.resolve",
     "shape.schemacheck",
     "shape.security",
     "shape.spec",
