@@ -446,3 +446,48 @@ def test_an_all_infinite_column_profiles_without_a_warning(kernel):
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         shape.profile(t)
+
+
+# ---- #315: the row evidence functions skip NaN and read numpy numbers ---------------------
+
+
+def test_pearson_skips_nan_and_reads_numpy_numbers():
+    from shape.profile import pearson
+
+    line = [{"a": float(i), "b": 2.0 * i + 1} for i in range(10)]
+    assert pearson(
+        [*line, {"a": float("nan"), "b": 1.0}, {"a": 1.0, "b": float("inf")}], "a", "b"
+    ) == pytest.approx(1.0)
+    numpy_rows = [{"a": np.int64(i), "b": np.float32(2 * i)} for i in range(10)]
+    assert pearson(numpy_rows, "a", "b") == pytest.approx(1.0)
+
+
+def test_conditional_means_and_mutual_information_skip_nan():
+    from shape.profile import conditional_numeric_means, normalized_mutual_information
+
+    rows = [{"c": "x", "v": float("nan")}] * 30 + [{"c": "x", "v": 1.0}] * 20
+    assert conditional_numeric_means(rows, "c", "v") == {"x": 1.0}
+    clean = [{"a": float(i), "b": float(i % 3)} for i in range(50)]
+    with_nan = [*clean, {"a": float("nan"), "b": 1.0}]
+    assert normalized_mutual_information(with_nan, "a", "b") == normalized_mutual_information(
+        clean, "a", "b"
+    )
+    numpy_rows = [{"a": np.float64(r["a"]), "b": r["b"]} for r in clean]
+    assert normalized_mutual_information(numpy_rows, "a", "b") == normalized_mutual_information(
+        clean, "a", "b"
+    )
+
+
+# ---- #316: temporal profiles of nanosecond and empty columns -------------------------------
+
+
+def test_temporal_profile_reads_nanoseconds_and_refuses_an_empty_column_clearly():
+    from shape.profile.temporal import holiday_lifts, temporal_profile
+
+    ns = temporal_profile(
+        pa.array([1_000_000_001_500, 1_000_003_600_000_000_999], pa.timestamp("ns"))
+    )
+    us = temporal_profile(pa.array([1_000_000_001, 1_000_003_600_000_000], pa.timestamp("us")))
+    assert ns == us
+    with pytest.raises(ValueError, match="at least one non-null value"):
+        holiday_lifts(pa.array([], pa.date32()), {})
