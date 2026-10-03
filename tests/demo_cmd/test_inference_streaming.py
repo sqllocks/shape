@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import json
 
 import pyarrow as pa
@@ -142,7 +143,25 @@ def test_the_fidelity_score_is_the_share_of_columns_that_pass():
     report = FidelityReport(real, skewed)  # c has 40% nulls against none
     assert {c["column"]: c["pass"] for c in report.comparisons()} == {"c": False, "k": True}
     assert report.overall_score() == 0.5
-    assert FidelityReport(real, profile_from_dict({"tables": {}})).overall_score() == 1.0
+    # no column was compared: a 100% claim needs at least one compared column (#522), so the
+    # score is 0.0 here (it was 1.0)
+    assert FidelityReport(real, profile_from_dict({"tables": {}})).overall_score() == 0.0
+
+
+def test_a_report_that_compared_no_column_says_so_instead_of_a_percentage():
+    real = profile_from_dict(profile({"t": pa.table({"k": [1, 2, 3]})}).to_dict())
+    out = io.StringIO()
+    FidelityReport(real, profile_from_dict({"tables": {}}), out=out).render()
+    text = out.getvalue()
+    assert "Fidelity score: n/a (no columns compared)" in text
+    assert "100.0%" not in text and "0.0%" not in text
+
+
+def test_a_report_that_compared_columns_still_prints_the_percentage():
+    real = profile_from_dict(profile({"t": pa.table({"k": [1, 2, 3]})}).to_dict())
+    out = io.StringIO()
+    FidelityReport(real, real, out=out).render()
+    assert "Fidelity score: 100.0%" in out.getvalue()
 
 
 def test_an_unknown_null_rate_does_not_crash_the_report():
@@ -153,6 +172,19 @@ def test_an_unknown_null_rate_does_not_crash_the_report():
     rows = FidelityReport(unknown, other).comparisons()
     assert rows[0]["real_nulls"] == "n/a" and rows[0]["syn_nulls"] == "0.0%"
     assert rows[0]["pass"] is True  # nothing to compare: the null-rate check is not made
+
+
+def test_inference_reports_no_score_when_no_column_was_compared(
+    run, home, schema_file, monkeypatch
+):
+    monkeypatch.setattr(FidelityReport, "comparisons", lambda self: [])
+    code, out, _ = run("demo", "run", "retail", "--domain", schema_file, "--seed", "2")
+    assert code == 0, out
+    assert "Fidelity score: n/a (no columns compared)" in out
+    assert "100.0%" not in out
+    # nothing to report: no score (the CLI and the result show none) rather than 0.0 or 100%
+    assert record(home, session_of(out))["metrics"]["fidelity_score"] is None
+    assert "Fidelity:" not in out
 
 
 # ---- streaming ---------------------------------------------------------------------------------

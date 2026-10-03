@@ -84,12 +84,12 @@ class InferenceDemoMode:
 
             dashboard.step(DemoStep.COMPARING)
             report = FidelityReport(real_profile, synthetic, out=self._rt.out)
-            score = report.overall_score()
-            dashboard.info(f"Fidelity score: {score:.1%}")
+            score = report.score_or_none()
+            dashboard.info(f"Fidelity score: {report.score_text()}")
 
             self._render_output(report, real_profile, synthetic, score, schema)
 
-            self._manifest.metrics["fidelity_score"] = round(score, 4)
+            self._manifest.metrics["fidelity_score"] = None if score is None else round(score, 4)
             self._manifest.metrics["tables_profiled"] = len(real_profile.tables)
             for tname, table in tables.items():
                 self._manifest.add_artifact("synthetic", tname, row_count=table.num_rows)
@@ -207,7 +207,7 @@ class InferenceDemoMode:
     # ---- output -----------------------------------------------------------------------------
 
     def _render_output(
-        self, report: FidelityReport, real: Any, synthetic: Any, score: float, schema: Any
+        self, report: FidelityReport, real: Any, synthetic: Any, score: float | None, schema: Any
     ) -> None:
         formats = self._params.output_formats or ["terminal"]
         explicit = "all" not in formats

@@ -37,13 +37,14 @@ def _shares(column: Any) -> dict[str, float]:
     return dict(values) if values else {}
 
 
-def render_html(real: Any, synthetic: Any, score: float, scenario: str) -> str:
+def render_html(real: Any, synthetic: Any, score: float | None, scenario: str) -> str:
     e = html.escape
     report = FidelityReport(real, synthetic)
     verdict = {(c["table"], c["column"]): c["pass"] for c in report.comparisons()}
+    shown = "n/a" if score is None else f"{score:.1%}"
     parts = [
         f"<h1>Shape demo — {e(scenario)}</h1>",
-        f'<p class="score">{score:.1%}</p><p>of compared columns are close to the real data</p>',
+        f'<p class="score">{shown}</p><p>of compared columns are close to the real data</p>',
     ]
     real_tables = getattr(real, "tables", {})
     syn_tables = getattr(synthetic, "tables", {})
@@ -90,7 +91,7 @@ def render_html(real: Any, synthetic: Any, score: float, scenario: str) -> str:
 def render_charts(
     real: Any,
     synthetic: Any,
-    score: float,
+    score: float | None,
     out_dir: Path,
     scenario: str,
     manifest: DemoManifest,

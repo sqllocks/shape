@@ -96,10 +96,20 @@ class FidelityReport:
         return True
 
     def overall_score(self) -> float:
+        """The share of compared columns that pass; ``0.0`` when none was compared (a 100% claim
+        needs at least one compared column)."""
         comparisons = self.comparisons()
         if not comparisons:
-            return 1.0
+            return 0.0
         return sum(1 for c in comparisons if c["pass"]) / len(comparisons)
+
+    def score_or_none(self) -> float | None:
+        """:meth:`overall_score`, or ``None`` when no column was compared (shown as n/a)."""
+        return self.overall_score() if self.comparisons() else None
+
+    def score_text(self) -> str:
+        score = self.score_or_none()
+        return "n/a (no columns compared)" if score is None else f"{score:.1%}"
 
     def render(self) -> None:
         out = self._out or sys.stdout
@@ -114,4 +124,4 @@ class FidelityReport:
                 f"{'OK' if c['pass'] else 'FAIL':>5}",
                 file=out,
             )
-        print(f"\nFidelity score: {self.overall_score():.1%}", file=out)
+        print(f"\nFidelity score: {self.score_text()}", file=out)
