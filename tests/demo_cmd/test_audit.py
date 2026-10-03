@@ -162,3 +162,23 @@ def test_521_cleanup_of_an_older_session_keeps_the_newer_page(tmp_path, schema_f
     page = out_dir / "retail_charts.html"
     assert page.is_file()
     assert demo_cleanup(first["session_id"])["ok"] and not page.exists()
+
+
+# ---- #523: streaming streams one domain, and says so for more ----------------------------------
+
+
+def test_523_streaming_with_several_domains_is_refused(tmp_path):
+    a = write_schema(tmp_path / "a.json")
+    b = write_schema(tmp_path / "b.json")
+    result = demo_run(
+        {"scenario": "retail", "mode": "streaming", "domains": f"{a},{b}", "max_events": 5}
+    )
+    assert result["success"] is False and "streams one domain" in result["error"]
+
+
+def test_523_streaming_with_one_domain_still_streams(tmp_path, capsys):
+    a = write_schema(tmp_path / "a.json")
+    result = demo_run(
+        {"scenario": "retail", "mode": "streaming", "domain": str(a), "max_events": 3}
+    )
+    assert result["success"] is True
