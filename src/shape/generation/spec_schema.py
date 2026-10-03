@@ -32,6 +32,8 @@ from shape.generation.schema import STRATEGY_REQUIRED_KEYS, json_schema
 from shape.plugins.host import default_host
 from shape.plugins.registry import SOURCE
 
+__all__ = ["build_schema", "published_schema", "render", "strategy_names"]
+
 SPEC_FORMAT = "generation-spec"
 SPEC_VERSION = 1
 SCHEMA_FILE = "schemas/generation-spec-v1.schema.json"

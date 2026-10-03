@@ -5,6 +5,10 @@ carry a generator (a strategy name plus its keys), relationships, business rules
 and correlated columns. Editors, form builders and other programs can build and change specs
 through the interfaces on this page.
 
+The Python modules on this page (`shape.generation.spec_edit` and `shape.generation.spec_schema`) are
+Stable interfaces: the names they export, their signatures and the behaviours tools rely on are
+listed in [`docs/API_STABILITY.md`](API_STABILITY.md#stable-python-modules).
+
 ## The JSON Schema
 
 `shape/schemas/generation-spec-v1.schema.json` (JSON Schema Draft 2020-12; `$id`

@@ -221,6 +221,17 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `--allowed-lateness` that would have kept them.
 - `generate --from PROFILE` (and any schema with correlated columns) wrote no files while reporting
   success; the table is now handed to the writer after the correlation pass.
+- Stable Python modules (`docs/API_STABILITY.md`, "Stable Python modules", W7-07). `shape.generation.spec_edit`
+  (`SpecDocument`, `SpecProblem`, `SpecError`, `validate_text`, `Position`) and
+  `shape.generation.spec_schema` (`build_schema`, `published_schema`, `render`, `strategy_names`) are promoted
+  to Stable: each has an explicit `__all__`, nothing in them is removed or changed incompatibly in 1.x, and a
+  deprecated member keeps working with a `DeprecationWarning` until the next major version. The promise
+  covers signatures, dataclass fields, exception bases and four documented behaviours (unchanged specs are
+  written back byte for byte, edits keep unknown keys and key order, every `SpecProblem` has a JSON Pointer and
+  a line and column for text, `published_schema()` is the shipped file). `python scripts/stable_api_compat.py
+  --check` compares the modules with `tests/api/stable_api_baseline.json` (`--write` refreshes it after an
+  additive change) and runs in `make check`.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
