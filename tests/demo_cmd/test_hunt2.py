@@ -248,3 +248,41 @@ def test_727_cleanup_never_removes_a_file_it_did_not_make(run, home, tmp_path):
     keep.write_text("mine")
     assert run("demo", "cleanup", session)[0] == 0
     assert keep.read_text() == "mine"
+
+
+# ---- #728: a session record with a field of a later release is read --------------------------
+
+
+def test_728_a_record_with_unknown_fields_is_read_and_cleaned_up(run, home, tmp_path, schema_file):
+    from test_run_local import session_of
+
+    land = tmp_path / "land"
+    assert run("demo", "init", "--name", "loc", "--local-path", land)[0] == 0
+    code, out, _ = run(
+        "demo", "run", "retail", "--mode", "seeding", "--connection", "loc",
+        "--domain", schema_file, "--rows", "1000", "--seed", "3",
+    )  # fmt: skip
+    session = session_of(out)
+    path = home / "sessions" / f"demo-{session}.json"
+    doc = json.loads(path.read_text())
+    doc["field_of_a_later_release"] = {"a": 1}
+    doc["artifacts"][0]["extra"] = "x"
+    path.write_text(json.dumps(doc))
+
+    code, out, err = run("demo", "status", session, "--json")
+    assert code == 0, err
+    assert json.loads(out)["manifest"]["session_id"] == session
+    assert run("demo", "report", session)[0] == 0
+    code, out, _ = run("demo", "cleanup", session)
+    assert code == 0 and not (land / session).exists()
+
+
+def test_728_a_record_that_misses_a_field_or_holds_the_wrong_type_is_still_refused(
+    run, home, tmp_path
+):
+    (home / "sessions").mkdir(parents=True)
+    (home / "sessions" / "demo-bad00001.json").write_text(
+        json.dumps({"scenario": 5, "artifacts": 3})
+    )
+    code, _, err = run("demo", "status", "bad00001")
+    assert code == 2 and "is not a demo session record" in err
