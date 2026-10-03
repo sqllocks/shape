@@ -64,7 +64,18 @@ class DemoOrchestrator:
         dashboard = ProgressDashboard(params.scenario, params.mode, params.rows, self._rt.out)
         try:
             data = self._execute(params, manifest, dashboard, profile, meta)
-        except (ConnectionNotFoundError, KeyboardInterrupt):
+        except KeyboardInterrupt:
+            # What was written before the interrupt is in the manifest: save it, so a cleanup
+            # can find it, then let the interrupt through.
+            if manifest.artifacts:
+                manifest.finish(
+                    False,
+                    "interrupted: run `shape demo cleanup "
+                    f"{manifest.session_id}` to remove what it wrote",
+                )
+                manifest.save(self._rt.manifest_dir)
+            raise
+        except ConnectionNotFoundError:
             raise
         except Exception as exc:
             from shape.security.redact import redact_text

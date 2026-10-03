@@ -33,6 +33,7 @@ def test_511_an_interrupted_seeding_run_is_recorded_and_can_be_cleaned_up(
 
     landing = tmp_path / "landing"
     demo_init("local", local_path=str(landing))
+    real = router.ScaleRouter.run
     monkeypatch.setattr(router.ScaleRouter, "run", interrupted)
     params = {
         "scenario": "retail",
@@ -43,7 +44,7 @@ def test_511_an_interrupted_seeding_run_is_recorded_and_can_be_cleaned_up(
     }
     with pytest.raises(KeyboardInterrupt):
         demo_run(params)
-    monkeypatch.undo()
+    monkeypatch.setattr(router.ScaleRouter, "run", real)
     (record,) = sessions(home)
     assert record["success"] is False and "interrupted" in record["error"]
     assert record["artifacts"], "what the run wrote is in the record"
