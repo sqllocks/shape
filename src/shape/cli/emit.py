@@ -460,7 +460,12 @@ def run(a: argparse.Namespace) -> int:
     def stop(_signum: int, _frame: Any) -> None:
         runner.request_stop()
 
-    previous = {s: signal.signal(s, stop) for s in (signal.SIGINT, signal.SIGTERM)}
+    # Windows has no catchable SIGTERM (terminate() is TerminateProcess); its graceful stop is
+    # Ctrl-Break, delivered as SIGBREAK to a process started in its own process group.
+    stop_signals = [signal.SIGINT, signal.SIGTERM]
+    if hasattr(signal, "SIGBREAK"):
+        stop_signals.append(signal.SIGBREAK)
+    previous = {s: signal.signal(s, stop) for s in stop_signals}
     try:
         report = runner.run()
     finally:

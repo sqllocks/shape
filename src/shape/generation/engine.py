@@ -259,21 +259,68 @@ _OUTPUT_TYPES: dict[str, pa.DataType] = {
 }
 
 
-def cast_output(value: Any, name: str, where: str) -> pa.Array:
+DECLARED_TYPES = ("decimal", "timestamp")
+
+
+def cast_output(value: Any, name: str, where: str, column: Column | None = None) -> pa.Array:
     """A strategy's output as the Arrow type its generator's ``output_type`` names (``int64``,
-    ``float64``, ``bool`` or ``string``); floats are rounded before they become
-    integers."""
-    target = _OUTPUT_TYPES.get(name)
-    if target is None:
-        raise ValueError(
-            f"{where}: output_type must be one of {', '.join(_OUTPUT_TYPES)}, not {name!r}"
-        )
+    ``float64``, ``bool`` or ``string``); floats are rounded before they become integers.
+
+    Two more names read the declared type of ``column`` and are applied to the finished table
+    (:meth:`Engine.finalize`), so the generation passes still see numbers: ``decimal`` is
+    ``decimal128(precision, scale)`` (values rounded to ``scale``; one that does not fit
+    ``precision`` is an error) and ``timestamp`` is ``timestamp[us]`` cut to ``precision``
+    fractional digits (0 to 6)."""
     arr = value.combine_chunks() if isinstance(value, pa.ChunkedArray) else value
     if not isinstance(arr, pa.Array):
         arr = pa.array(arr)
+    if name == "decimal":
+        return _cast_decimal(arr, where, column)
+    if name == "timestamp":
+        return _cut_timestamp(arr, where, column)
+    target = _OUTPUT_TYPES.get(name)
+    if target is None:
+        raise ValueError(
+            f"{where}: output_type must be one of {', '.join(_OUTPUT_TYPES)}, decimal or "
+            f"timestamp, not {name!r}"
+        )
     if pa.types.is_floating(arr.type) and pa.types.is_integer(target):
         arr = pc.round(arr)
     return arr.cast(target, safe=False)
+
+
+def _cast_decimal(arr: pa.Array, where: str, column: Column | None) -> pa.Array:
+    precision = column.precision if column is not None else None
+    if not precision or not 1 <= precision <= 38:
+        raise ValueError(f"{where}: output_type decimal needs the column's precision (1 to 38)")
+    scale = (column.scale if column is not None else None) or 0
+    if not 0 <= scale <= precision:
+        raise ValueError(f"{where}: decimal scale {scale} must be between 0 and precision")
+    if pa.types.is_floating(arr.type):
+        arr = pc.round(arr, scale)
+    limit = 10.0 ** (precision - scale)
+    bound = pc.max(pc.abs(arr.cast(pa.float64(), safe=False))).as_py()
+    nan = pa.types.is_floating(arr.type) and pc.any(pc.is_nan(arr)).as_py()
+    if nan or (bound is not None and not bound < limit):  # inf is not below the limit
+        raise ValueError(
+            f"{where}: a generated value does not fit DECIMAL({precision},{scale}) "
+            f"(|value| must be below {limit:g}); give the generator a min and max inside it"
+        )
+    return arr.cast(pa.decimal128(precision, scale), safe=False)
+
+
+def _cut_timestamp(arr: pa.Array, where: str, column: Column | None) -> pa.Array:
+    digits = column.precision if column is not None and column.precision is not None else 6
+    if not 0 <= digits <= 6:
+        raise ValueError(f"{where}: timestamp precision must be 0 to 6, not {digits}")
+    if not pa.types.is_timestamp(arr.type):
+        raise ValueError(f"{where}: output_type timestamp needs a timestamp strategy")
+    arr = arr.cast(pa.timestamp("us"))
+    if digits < 6:
+        unit = 10 ** (6 - digits)
+        micros = arr.cast(pa.int64())
+        arr = pc.multiply(pc.divide(micros, unit), unit).cast(pa.timestamp("us"))
+    return arr
 
 
 def arrow_type(col: Column) -> pa.DataType:
@@ -513,6 +560,7 @@ class Engine:
         self.reserved_cores = 0
         self.row_counts = calculate_row_counts(self.schema, self._overrides)
         self._order: list[str] | None = None
+        self._declared: dict[str, tuple[str, ...]] = {}
 
     # ---- plan ---------------------------------------------------------------------------
 
@@ -681,7 +729,7 @@ class Engine:
         )
         produced = impl.generate(col.generator, ctx)
         output_type = col.generator.get("output_type")
-        if output_type is None or isinstance(produced, Mapping):
+        if output_type is None or isinstance(produced, Mapping) or output_type in DECLARED_TYPES:
             return produced
         return cast_output(produced, str(output_type), f"{table}.{col.name}")
 
@@ -700,9 +748,47 @@ class Engine:
         u = RowStream(self.seed, table, col.name, "null").uniform(row_start, n_rows)
         return pc.if_else(arrow_array(u < col.null_rate), arrow_scalar(None, type=arr.type), arr)
 
+    def finalize(self, table: str, data: pa.Table | pa.RecordBatch) -> Any:
+        """``data`` (rows of ``table``) with the columns whose generator has an ``output_type`` of
+        ``decimal`` or ``timestamp`` in their declared Arrow type. Applied where data leaves the
+        engine (``generate``, ``iter_chunks``); the passes in between work on numbers."""
+        names = self._declared.get(table)
+        if names is None:
+            tdef = self.schema.tables[table]
+            names = self._declared[table] = tuple(
+                c.name
+                for c in tdef.columns.values()
+                if c.generator.get("output_type") in DECLARED_TYPES
+            )
+        if not names:
+            return data
+        out = data
+        for name in names:
+            i = out.schema.get_field_index(name)
+            if i < 0:
+                continue
+            col = self.schema.tables[table].columns[name]
+            arr = out.column(i)
+            if isinstance(arr, pa.ChunkedArray):
+                arr = arr.combine_chunks()
+            typed = cast_output(arr, str(col.generator["output_type"]), f"{table}.{name}", col)
+            if isinstance(out, pa.Table):
+                out = out.set_column(i, name, typed)
+            else:
+                out = pa.RecordBatch.from_arrays(
+                    [typed if j == i else out.column(j) for j in range(out.num_columns)],
+                    names=out.schema.names,
+                )
+        return out
+
     def iter_chunks(self, table: str, chunk_rows: int | None = None) -> Iterator[pa.RecordBatch]:
         """``table`` as consecutive record batches of ``chunk_rows`` (default: the engine's),
-        before the post-passes. An empty table yields one empty batch, so the schema is known."""
+        before the post-passes; declared types (``output_type`` ``decimal`` or ``timestamp``) are
+        applied. An empty table yields one empty batch, so the schema is known."""
+        for batch in self._raw_chunks(table, chunk_rows):
+            yield self.finalize(table, batch)
+
+    def _raw_chunks(self, table: str, chunk_rows: int | None = None) -> Iterator[pa.RecordBatch]:
         size = chunk_rows or self.chunk_rows
         if size < 1:
             raise ValueError("chunk_rows must be at least 1")
@@ -725,7 +811,7 @@ class Engine:
                 cached = self._tables.get(table)
             if cached is not None:
                 return cached
-        batches = list(self.iter_chunks(table, chunk_rows))
+        batches = list(self._raw_chunks(table, chunk_rows))
         built = pa.Table.from_batches(batches, schema=batches[0].schema)
         if chunk_rows is None:
             with self._lock:
@@ -848,6 +934,12 @@ class Engine:
     ) -> GenerationResult:
         self.schema.validate_or_raise()
         started = time.perf_counter()
+        if any(
+            c.generator.get("output_type") in DECLARED_TYPES
+            for t in self.schema.tables.values()
+            for c in t.columns.values()
+        ):
+            on_table, on_batch = self._declared_callbacks(on_table, on_batch)
         order = self.order
         levels = dependency_levels(self.schema, order)
         flat = [n for level in levels for n in level]
@@ -931,6 +1023,7 @@ class Engine:
                     nulls=str(self.schema.generation.output.get("copula_nulls", "skip")),
                 )
         release(len(rules))
+        tables = {name: self.finalize(name, t) for name, t in tables.items()}
         lineage = [
             ColumnLineage(name, cname, col.strategy, dict(col.generator))
             for name in flat
@@ -945,6 +1038,30 @@ class Engine:
             lineage=lineage,
             remaining_violations=remaining,
         )
+
+    def _declared_callbacks(
+        self,
+        on_table: Callable[[str, pa.Table], None] | None,
+        on_batch: Callable[[str, pa.RecordBatch | None], None] | None,
+    ) -> tuple[
+        Callable[[str, pa.Table], None] | None,
+        Callable[[str, pa.RecordBatch | None], None] | None,
+    ]:
+        """``on_table`` and ``on_batch`` that receive data with its declared types."""
+        typed_table = typed_batch = None
+        if on_table is not None:
+            table_cb = on_table
+
+            def typed_table(name: str, table: pa.Table) -> None:
+                table_cb(name, self.finalize(name, table))
+
+        if on_batch is not None:
+            batch_cb = on_batch
+
+            def typed_batch(name: str, batch: pa.RecordBatch | None) -> None:
+                batch_cb(name, None if batch is None else self.finalize(name, batch))
+
+        return typed_table, typed_batch
 
     def validate(self, tables: Mapping[str, pa.Table]) -> list[RuleViolation]:
         """The business rules ``tables`` break."""
