@@ -21,11 +21,13 @@ from __future__ import annotations
 import base64
 import binascii
 import csv
+import errno
 import hashlib
 import io
 import json
 import os
 import re
+import stat
 import tempfile
 import zipfile
 from collections.abc import Mapping
@@ -303,7 +305,11 @@ def parse_record(data: bytes) -> list[RecordEntry]:
     except UnicodeDecodeError:
         raise PluginTrustError("RECORD is not UTF-8 text") from None
     out: list[RecordEntry] = []
-    for row in csv.reader(io.StringIO(text, newline="")):
+    try:
+        rows = list(csv.reader(io.StringIO(text, newline="")))
+    except csv.Error as exc:
+        raise PluginTrustError(f"RECORD is not valid CSV ({exc})") from None
+    for row in rows:
         if not row:
             continue
         if len(row) != 3:
@@ -348,10 +354,14 @@ class DistFiles:
 class _InstalledFiles(DistFiles):
     def __init__(self, dist: metadata.Distribution) -> None:
         self._dist = dist
+        try:
+            listed = dist.files or ()  # importlib.metadata parses RECORD here
+        except csv.Error as exc:
+            raise PluginTrustError(f"RECORD is not valid CSV ({exc})") from None
         record = next(
             (
                 p
-                for p in (dist.files or ())
+                for p in listed
                 if p.name == "RECORD" and len(p.parts) == 2 and p.parts[0].endswith(".dist-info")
             ),
             None,
@@ -402,7 +412,7 @@ def verify_files(files: DistFiles) -> None:
     for e in entries:
         if e.digest is None or e.algorithm is None:
             continue
-        if e.algorithm not in hashlib.algorithms_guaranteed:
+        if e.algorithm not in hashlib.algorithms_guaranteed or e.algorithm.startswith("shake_"):
             raise PluginTrustError(f"{e.path}: RECORD uses the unsupported hash {e.algorithm!r}")
         try:
             data = files.read(e.path)
@@ -431,6 +441,12 @@ def _signed_list(files: DistFiles) -> bytes:
             raise PluginTrustError(
                 f"{e.path}: RECORD uses {e.algorithm!r}; a signature needs sha256 hashes"
             )
+        if "\n" in e.path or "\r" in e.path:
+            # One line per file: a line break in a path could make another file list produce the
+            # same bytes (and so accept an edited file under the same signature).
+            raise PluginTrustError(
+                f"RECORD path {e.path!r} contains a line break, which a signature cannot cover"
+            )
         lines.append(f"{e.path} {e.digest.hex()}")
     return ("".join(f"{line}\n" for line in sorted(lines))).encode("utf-8")
 
@@ -453,6 +469,8 @@ def _parse_signature(blob: bytes, where: str) -> tuple[str, bytes]:
             raise PluginTrustError(
                 f"{where} is version {ver}, newer than this Shape reads; upgrade sqllocks-shape"
             )
+        if ver < 1:
+            raise ValueError(f"unsupported version {ver}")
         if doc.get("algorithm") != ALGORITHM:
             raise ValueError(f"unsupported algorithm {doc.get('algorithm')!r}")
         sig = base64.b64decode(str(doc["signature"]), validate=True)
@@ -500,9 +518,9 @@ def verify_signature(files: DistFiles, trusted: Mapping[str, bytes]) -> str:
 # -- signing a wheel ----------------------------------------------------------------------
 
 
-def _record_line(path: str, data: bytes) -> str:
+def _record_row(path: str, data: bytes) -> list[str]:
     digest = base64.urlsafe_b64encode(hashlib.sha256(data).digest()).rstrip(b"=").decode()
-    return f"{path},sha256={digest},{len(data)}"
+    return [path, f"sha256={digest}", str(len(data))]
 
 
 def sign_wheel(
@@ -541,15 +559,20 @@ def sign_wheel(
         sig_bytes = (json.dumps(sig_doc, sort_keys=True, separators=(",", ":")) + "\n").encode()
         info = files.info_dir
         sig_path, record_path = f"{info}/{SIGNATURE_FILE}", f"{info}/RECORD"
-        rows = [
-            e for e in csv.reader(io.StringIO(files.record_bytes().decode("utf-8"), newline=""))
-        ]
-        kept = [",".join(r) for r in rows if r and r[0] not in (record_path, sig_path)]
-        record = "\n".join([*kept, _record_line(sig_path, sig_bytes), f"{record_path},,"]) + "\n"
+        rows = list(csv.reader(io.StringIO(files.record_bytes().decode("utf-8"), newline="")))
+        buf = io.StringIO()
+        writer = csv.writer(buf, lineterminator="\n")  # quotes a path that holds a comma or quote
+        writer.writerows(r for r in rows if r and r[0] not in (record_path, sig_path))
+        writer.writerow(_record_row(sig_path, sig_bytes))
+        writer.writerow([record_path, "", ""])
+        record = buf.getvalue()
         target = Path(out) if out is not None else src
+        if not target.resolve().parent.is_dir():
+            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(target))
         fd, tmp_name = tempfile.mkstemp(dir=str(target.resolve().parent), suffix=".tmp")
         os.close(fd)
         try:
+            os.chmod(tmp_name, stat.S_IMODE(src.stat().st_mode))  # mkstemp makes it 0600
             with zipfile.ZipFile(tmp_name, "w", zipfile.ZIP_DEFLATED) as zout:
                 for item in zin.infolist():
                     if item.filename in (record_path, sig_path):
