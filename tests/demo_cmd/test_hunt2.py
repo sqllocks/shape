@@ -289,3 +289,37 @@ def test_728_a_record_that_misses_a_field_or_holds_the_wrong_type_is_still_refus
     (home / "sessions" / "demo-bad00002.json").write_text(json.dumps({"artifacts": [5]}))
     code, _, err = run("demo", "status", "bad00002")
     assert code == 2 and "is not a demo session record" in err
+
+
+# ---- #730: a damaged connection profile entry is a message that names it ---------------------
+
+
+def write_connections(home: Path, doc: object) -> None:
+    home.mkdir(parents=True, exist_ok=True)
+    (home / "connections.json").write_text(json.dumps(doc))
+
+
+def test_730_an_entry_that_is_not_a_table_names_the_profile(run, home):
+    write_connections(home, {"a": 5})
+    code, _, err = run("demo", "preflight", "--connection", "a")
+    assert code == 2 and "connection profile 'a'" in err and "AttributeError" not in err
+
+
+def test_730_an_entry_without_a_name_takes_the_key_as_its_name(run, home, tmp_path):
+    write_connections(home, {"a": {"local_path": str(tmp_path), "auth_method": "cli"}})
+    code, out, err = run("demo", "preflight", "--connection", "a", "--json")
+    assert code == 0, err
+    assert json.loads(out)["profiles"][0]["name"] == "a"
+
+
+def test_730_a_field_of_the_wrong_type_names_the_field(run, home):
+    write_connections(home, {"a": {"name": "a", "local_path": 7}})
+    code, _, err = run("demo", "preflight", "--connection", "a")
+    assert code == 2 and "local_path" in err and "connection profile 'a'" in err
+    assert "TypeError" not in err
+
+
+def test_730_a_well_formed_file_is_unchanged(run, home, tmp_path):
+    assert run("demo", "init", "--name", "ok", "--local-path", tmp_path / "x")[0] == 0
+    code, out, _ = run("demo", "preflight", "--connection", "ok", "--json")
+    assert code == 0 and json.loads(out)["ok"] is True
