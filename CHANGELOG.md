@@ -5,6 +5,20 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- CLI stability promise, v1.0 definition of done and what is not built (W1-10, #88).
+  `docs/CLI_STABILITY.md`: which commands are stable and which experimental (an experimental
+  command's `--help` now starts with `(experimental)`), what is stable for a stable command, what
+  counts as a breaking change and the deprecation process (a deprecated flag keeps working for at
+  least one minor release, prints `shape: warning: --OLD is deprecated and will be removed in X.Y;
+  use --NEW` and is listed here). Nothing is deprecated in 1.0. `scripts/cli_surface.py --check`
+  (in `make check`) compares the parser with `tests/cli/cli_surface_v1.json`
+  (`format: "shape-cli-surface"`, `version: 1`) and fails, naming it, when a stable command, flag
+  or choice is removed or renamed; `docs/V1_DONE.md` lists what 1.0 requires for capture or
+  profile, diff, gate and replay, each with the tests that prove it, and
+  `scripts/check_v1_done.py` confirms those tests exist; `docs/NOT_BUILDING.md` lists decisions
+  not to build things. `docs/specs/ONE_ZERO_CONTRACT.md` now states the exit codes the CLI uses
+  (`docs/CLI.md`). No command, flag or exit code changed.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
