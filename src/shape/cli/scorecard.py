@@ -6,6 +6,7 @@ Nothing heavy loads at import time (T-18); the command imports Arrow and the gat
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -135,6 +136,8 @@ def run(a: argparse.Namespace) -> int:
         raise ValueError("--record needs --history DIR and --name NAME")
     if a.name and not a.history:
         raise ValueError("--name needs --history DIR")
+    if a.history and not a.name:
+        raise ValueError("--history needs --name NAME (the scorecard series to compare with)")
     classified = _classified(a.classified)
     tables = load_tables(a.data, a.format)
     if not tables:
@@ -163,6 +166,12 @@ def run(a: argparse.Namespace) -> int:
         _write_flagged(a, card, tables)
     if registry is not None and a.record:
         record_scorecard(registry, a.name, card)
+    if not a.schema and not a.config:
+        print(
+            "shape: nothing to score: give --schema (gate schema) and/or --config "
+            "(verify configuration)",
+            file=sys.stderr,
+        )
     text = card.to_json() if a.json else card.to_markdown()
     if a.output:
         Path(a.output).write_text(text, encoding="utf-8")

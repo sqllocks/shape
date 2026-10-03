@@ -419,7 +419,17 @@ def _stuck(
     try:
         eq = pc.fill_null(pc.equal(vals.slice(1), vals.slice(0, n - 1)), False)
     except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
-        return []
+        return [
+            _finding(
+                "timeseries.column_type",
+                "error",
+                rule["table"],
+                column,
+                f"values of type {vals.type} cannot be compared, so the stuck check did not run",
+                "comparable",
+                str(vals.type),
+            )
+        ]
     link = np.asarray(eq.to_numpy(zero_copy_only=False), dtype=bool) & same
     edges = np.diff(np.concatenate(([0], link.astype(np.int8), [0])))
     starts = np.flatnonzero(edges == 1)
