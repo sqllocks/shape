@@ -34,6 +34,7 @@ Editable area: `scripts/` and their tests. Workflows, `pyproject.toml`, `CODEOWN
 | 24 | low | `scripts/check_requirements.py:4` | `read_text()` without `encoding` (locale-dependent on Windows). The YAML is ASCII today. | — | open: no live defect |
 | 25 | info | `scripts/env.sh` | `SHAPE_ROOT="$PWD"` is wrong when sourced outside the repo root. Kept: it is the plan's §1 block verbatim. | — | not changed |
 | 26 | info | `nightly.yml` `emit-live`, `fabric-live`, `abfss-live` | Green with "nothing to run" when secrets are absent: by design (documented, never a skipif). | — | not changed |
+| 27 | medium | `ci.yml:32` (`test` job) | The job installs `.[dev,streaming,advanced]` and `plugins/shape-domains` only, but `tests/demo_cmd/test_notebook_and_outputs.py::test_the_semantic_model_is_a_bim_of_the_learned_schema` and `::test_all_writes_the_page_and_the_model` need `shape-fabric` ("the semantic model needs the shape-fabric plugin"). Reproduced here on `origin/build/main-plan` @ `5c91ea5` in a venv built exactly like the job: 2 failed. Both pass with the plugin installed. | — | diff D9 |
 
 Checked and clean: no `pull_request_target`; no `${{ github.event.* }}` interpolated into `run:`
 (only `inputs.repository` in `if:`/`environment:` expressions); top-level `permissions:
@@ -46,7 +47,9 @@ not a project dependency).
 
 **Base branch is red (not this lane's area):** CI run 37121550573 on `build/main-plan` @ `5c91ea5`
 fails in every `test` leg (pytest step; mypy on windows 3.11), `zero-network`, `bench-quick` and
-`stream-plugins (windows-latest)`. Not investigated here.
+`stream-plugins (windows-latest)`. One cause of the `test`-leg pytest failures is finding 27
+(reproduced locally on base; the job logs could not be fetched from this session). The other
+jobs were not investigated here.
 
 ## Diffs for the lead (`.github/workflows/*` and files outside this lane)
 
@@ -1076,6 +1079,27 @@ index 98b0703..6e88ef0 100644
 +not sandbox them. See `docs/THREAT_MODEL.md`.
 ```
 
+### D9: the `test` job installs `shape-fabric`, which the `demo_cmd` tests need (finding 27)
+
+```diff
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -29,7 +29,8 @@
+       - uses: actions/setup-python@v5
+         with: {python-version: '${{ matrix.python }}', allow-prereleases: true}
+       - run: python -m pip install -U pip
+-      - run: pip install -e '.[dev,streaming,advanced]' -e plugins/shape-domains
++      # tests/demo_cmd writes the semantic model through shape-fabric
++      - run: pip install -e '.[dev,streaming,advanced]' -e plugins/shape-domains -e plugins/shape-fabric
+       # T-27 scope: src tests plugins benchmarks/vs_spindle rust (only the paths that exist yet).
+       - run: ruff check src tests plugins benchmarks/vs_spindle
+       - run: ruff format --check src tests plugins benchmarks/vs_spindle
+```
+
+The `zero-network` job (`ci.yml:81`) has the same install line, but its `-m "zero_network and not
+heavy"` selection does not include these tests, so it is left as is. D1 changes the `uses:` lines
+above this hunk, not this one: the two diffs apply in either order.
+
 ## Fix commits (this lane)
 
 | Issue | Regression test (fails before) | Fix |
@@ -1095,7 +1119,7 @@ take no exemption (tested).
 
 ## Left open
 
-- #265, #266 (except the sdist question), #267 (audit coverage), #268: diffs D1–D8 above,
+- #265, #266 (except the sdist question), #267 (audit coverage), #268: diffs D1–D9 above,
   for the lead to apply.
 - #267 dependency floors and #266 item 6 (sdist contents): owner/lead decisions.
 - Findings 22–26: low, no live defect; recorded only.
