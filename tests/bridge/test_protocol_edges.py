@@ -71,16 +71,20 @@ def test_numpy_values_stay_json_numbers():
     }
 
 
+class _Unprintable:
+    def __str__(self) -> str:
+        raise RuntimeError("cannot be shown")
+
+
 def test_handle_never_raises_on_a_result_it_cannot_convert(tmp_path, monkeypatch):
-    loop: dict = {}
-    loop["self"] = loop
-    broken = dataclasses.replace(COMMANDS["list"], handler=lambda args, ctx: loop)
+    broken = dataclasses.replace(COMMANDS["list"], handler=lambda args, ctx: {"x": _Unprintable()})
     monkeypatch.setitem(COMMANDS, "list", broken)
     response = Bridge(tmp_path / "jobs").handle(
         '{"api_version": "1.0", "id": 7, "command": "list"}'
     )
     assert response["ok"] is False and response["id"] == 7
     assert response["error"]["code"] == "internal.error"
+    assert "RuntimeError" in response["error"]["message"]
 
 
 def test_finished_job_threads_are_let_go(tmp_path):
