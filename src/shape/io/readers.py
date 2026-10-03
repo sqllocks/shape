@@ -403,6 +403,21 @@ def _single_batch_source(name: str, kind: str, table: pa.Table, size: int) -> So
     return Source(name, kind, table.schema, lambda: _table_batches(table, size), table.num_rows)
 
 
+def _fill_null_types(
+    schema: pa.Schema, later: list[Path], peek: Callable[[Path], pa.Schema]
+) -> pa.Schema:
+    """``schema`` with each null-typed field given the type it has in the first of ``later``
+    whose schema types it (files are only peeked while a null field is left)."""
+    types = {f.name: f.type for f in schema}
+    for p in later:
+        if not any(pa.types.is_null(t) for t in types.values()):
+            break
+        for f in peek(p):
+            if f.name in types and pa.types.is_null(types[f.name]) and not pa.types.is_null(f.type):
+                types[f.name] = f.type
+    return pa.schema([schema.field(n).with_type(t) for n, t in types.items()])
+
+
 def _files_source(
     paths: list[Path],
     name: str | None,
@@ -440,6 +455,25 @@ def _files_source(
     else:
         first_table.append(whole(paths[0]))
         out_schema = first_table[0].schema
+    first_schema = out_schema
+
+    def _peek_schema(p: Path) -> pa.Schema:
+        if kind == "parquet":
+            return pq.read_schema(p)
+        if kind == "ipc":
+            return _ipc_schema(p)
+        if kind == "csv":
+            reader = _open_csv_stream(p, csv, columns, schema)  # its first block
+            try:
+                return reader.schema
+            finally:
+                reader.close()
+        return whole(p).schema
+
+    # a column with no values in the first file (type null) takes its type from the first later
+    # file that has values in it
+    out_schema = _fill_null_types(out_schema, paths[1:], _peek_schema)
+    refined = not out_schema.equals(first_schema)
 
     def open_batches() -> Iterator[pa.RecordBatch]:
         for i, p in enumerate(paths):
@@ -459,7 +493,7 @@ def _files_source(
                 table = first_table[0] if i == 0 and first_table else whole(p)
                 stream = _table_batches(table, size)
             for batch in stream:
-                yield _conform(batch, out_schema, str(p)) if i else batch
+                yield _conform(batch, out_schema, str(p)) if i or refined else batch
 
     stem = paths[0].name.split(".")[0] if len(paths) == 1 else paths[0].parent.name or "table"
     rows = None
