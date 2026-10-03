@@ -514,11 +514,6 @@ def run(a: argparse.Namespace) -> int:
         )
     elif a.anomaly_mutator:
         raise ShapeError("--anomaly-mutator needs --anomaly-fraction above 0")
-    answer_key = None
-    if a.answer_key:
-        from shape.streaming.emit.faults import AnswerKey
-
-        answer_key = AnswerKey(a.answer_key, append=False)
     plan = EventPlan(
         engine,
         tables=a.table,
@@ -527,7 +522,6 @@ def run(a: argparse.Namespace) -> int:
         anomaly=injector,
         envelope=a.envelope,
         by_event_time=getattr(a, "by_event_time", False),
-        answer_key=answer_key,
     )
     checkpoint = a.checkpoint or (
         f"{a.output}.checkpoint" if "file" in targets and a.output else None
@@ -551,9 +545,14 @@ def run(a: argparse.Namespace) -> int:
     # The sink is opened for appending exactly when a checkpoint says a run is to be continued.
     probe = EmitRunner(plan, _NullSink(), config)
     offset, complete = probe.load_offset()
-    if answer_key is not None and offset > 0:
-        answer_key.close()  # a resumed run adds to the file (read_answer_key drops repeats)
-        answer_key = AnswerKey(a.answer_key, append=True)
+    answer_key = None
+    if a.answer_key:
+        from shape.streaming.emit.faults import AnswerKey
+
+        # A resumed run adds to the key of the run before it (read_answer_key drops repeats);
+        # only a run that starts the stream over starts the file over. The file is opened here,
+        # after the checkpoint was read: opening it for writing any earlier truncates it.
+        answer_key = AnswerKey(a.answer_key, append=offset > 0)
         plan.answer_key = answer_key
         if injector is not None:
             injector.answer_key = answer_key
