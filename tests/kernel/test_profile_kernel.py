@@ -289,3 +289,24 @@ def test_text_patterns_follow_python_re_in_both_kernels(native, text):
     # Regression #534: Python's `$` also matches before a final newline and its `\s` includes
     # \x1c-\x1f; the native regexes did neither.
     assert _patterns(native, [text]) == _patterns(reference, [text])
+
+
+@pytest.mark.parametrize("mode", ["exact", "bounded"])
+@pytest.mark.parametrize(
+    "array",
+    [
+        pa.array([-1_000_000, 0, None], pa.date32()),
+        pa.array([3_000_000], pa.date32()),
+        pa.array([-(10**17), 10**17], pa.timestamp("us")),
+    ],
+    ids=["date32-ancient", "date32-far", "timestamp-us"],
+)
+def test_temporal_values_outside_years_1_to_9999_profile_in_both_kernels(native, mode, array):
+    # Regression #536: the twin built datetime.date objects and raised OverflowError.
+    batch = pa.record_batch({"a": array})
+    out = []
+    for mod in (native, reference):
+        state = mod.ProfileState(batch.schema, mode)
+        state.update(batch)
+        out.append(state.finalize()["columns"][0])
+    assert out[1] == out[0]
