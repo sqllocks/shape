@@ -77,3 +77,38 @@ def test_an_impossible_time_is_refused(when):
     doc["decisions"][0]["at"] = when
     with pytest.raises(DecisionError, match="at must be UTC"):
         DecisionFile.from_dict(doc)
+
+
+# ---- untested paths of the data loader -------------------------------------------------------
+
+
+def test_load_data_reads_a_directory_of_csv_and_parquet(tmp_path, tables, profile):
+    import pyarrow.csv as pcsv
+    import pyarrow.parquet as pq
+
+    from shape.proposals._data import dataset_of, load_data
+
+    pq.write_table(tables["orders"], tmp_path / "orders.parquet")
+    pcsv.write_csv(tables["customers"], tmp_path / "customers.csv")
+    (tmp_path / "unrelated.csv").write_text("a\n1\n")
+    got = load_data(tmp_path, dataset_of(profile))
+    assert sorted(got) == ["customers", "orders"]
+    assert got["orders"].num_rows == 200
+
+
+def test_load_data_errors_say_what_to_give(tmp_path, tables, profile):
+    from shape.proposals._data import dataset_of, load_data
+
+    ds = dataset_of(profile)
+    with pytest.raises(ValueError, match="is not a directory"):
+        load_data(tmp_path / "absent", ds)
+    with pytest.raises(ValueError, match="must be a mapping"):
+        load_data(3, ds)
+    with pytest.raises(ValueError, match="which the profile does not have"):
+        load_data({"nope": tables["orders"]}, ds)
+    with pytest.raises(ValueError, match="expected .csv or .parquet"):
+        load_data({"orders": tmp_path / "orders.txt"}, ds)
+    with pytest.raises(ValueError, match="pyarrow Table or a file path"):
+        load_data({"orders": 3}, ds)
+    with pytest.raises(ValueError, match="has no column"):
+        load_data({"orders": tables["customers"]}, ds)
