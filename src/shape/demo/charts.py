@@ -3,7 +3,8 @@ model (``semantic_model``).
 
 The page is one self-contained HTML file (no script, no external asset): the fidelity score, then
 for each table its columns with the real and the synthetic null rate and distinct count, and the
-value shares of small categorical columns side by side.
+value shares of small categorical columns side by side (not for a column that holds
+personal data: its values are withheld, as in the safe profile).
 """
 
 from __future__ import annotations
@@ -30,6 +31,24 @@ _CSS = (
 def _bar(share: float, css: str) -> str:
     width = max(0, min(100, round(share * 100)))
     return f'<span class="bar {css}" style="width:{width}px"></span> {share:.1%}'
+
+
+def _classified(column: Any, rows: int | None) -> bool:
+    """True when the column's values must not be shown: the rule of the safe profile (a detected
+    personal-data pattern, or nearly every value distinct)."""
+    from shape.privacy.safe_profile import SafeConfig, pii_gate_fires
+
+    rates = {
+        **(getattr(column, "pattern_rates", None) or {}),
+        **(getattr(column, "pattern_contains_rates", None) or {}),
+    }
+    return pii_gate_fires(
+        getattr(column, "pattern", None),
+        int(getattr(column, "cardinality", 0) or 0),
+        rows,
+        SafeConfig(),
+        rates,
+    )
 
 
 def _shares(column: Any) -> dict[str, float]:
@@ -64,7 +83,12 @@ def render_html(real: Any, synthetic: Any, score: float, scenario: str) -> str:
                 f'<td class="{"ok" if ok else "bad"}">{"OK" if ok else "FAIL"}</td></tr>'
             )
             rs, ss = _shares(rc), _shares(sc)
-            if rs and len(rs) <= 12:
+            if rs and _classified(rc, getattr(rt, "row_count", None)):
+                details.append(
+                    f"<h3>{e(cname)}</h3><p>values withheld: the column holds personal data "
+                    "(or nearly every value is different)</p>"
+                )
+            elif rs and len(rs) <= 12:
                 cats = sorted(set(rs) | set(ss), key=lambda k: -rs.get(k, 0.0))
                 body = "".join(
                     f"<tr><td>{e(str(k))}</td><td>{_bar(rs.get(k, 0.0), 'real')}</td>"
