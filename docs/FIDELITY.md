@@ -18,7 +18,9 @@ score, formats, dependency trees); see `docs/FIDELITY_TIERS.md`.
 
 `shape fidelity PROFILE.json DATA.csv` (a first argument ending in `.json`) certifies a CSV file
 against a captured profile instead, with `--tolerance`, and exits 3 on failure. A column the data
-lacks scores 0 there too, and a profile that describes no columns fails.
+lacks scores 0 there too, and a profile that describes no columns fails. The reference must be a
+capture document (`shape capture`, every column with a `kind`); any other JSON, a profile included,
+is an error.
 
 ## Pass marks
 

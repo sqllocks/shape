@@ -44,7 +44,26 @@ def _relative(a, b):
         return 0.0 if a == b else 1.0
 
 
+_CAPTURE_KINDS = ("numeric", "text")
+
+
+def _check_capture(reference_shape):
+    """``certify`` reads capture documents (``shape capture``): every column has a ``kind``. A
+    profile shares only a few keys with a capture, so it would be compared on almost nothing."""
+    columns = reference_shape.get("columns", {})
+    if not isinstance(columns, dict):
+        raise ValueError("the reference is not a capture document: its columns must be a mapping")
+    for name, col in columns.items():
+        if not isinstance(col, dict) or col.get("kind") not in _CAPTURE_KINDS:
+            raise ValueError(
+                f"the reference is not a capture document (column {name!r} has no kind "
+                f"{' or '.join(_CAPTURE_KINDS)}): certify reads `shape capture` output; compare "
+                "a profile with data through `shape fidelity` on the data, or with `shape diff`"
+            )
+
+
 def certify(reference_shape, generated_rows, level="gold", tolerance=0.10, correlations=()):
+    _check_capture(reference_shape)
     if correlations:
         rows = list(generated_rows)
         observed = capture_rows(rows).to_dict()
