@@ -94,6 +94,23 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   resolver in core, `shape.security.credrefs`; Azure Key Vault comes from the Fabric plugin), never
   command-line values; `file://` refuses a secret file that group or others can read; connection-string
   passwords, keys and tokens are redacted in errors, job records and logs.
+- `sqllocks-shape-dbt` (`docs/DBT.md`, issue #44): `shape from-dbt` (a dbt project's `manifest.json`,
+  `schema.yml` or `sources.yml` as a generation schema: keys, foreign keys, enums, types with decimal
+  precision and scale), `shape to-dbt-tests` (a contract or a profile as `schema.yml` tests for
+  `dbt_utils` and `dbt_expectations`, with `--merge` and a documented round trip), `shape dbt-seeds`
+  and the `dbt-seeds` sink (CSV seeds with a `seeds:` block of column types, size guidance),
+  `shape dbt-report` (one report for a dbt run and a Shape check and drift comparison), a jaffle-shop
+  sample project (`examples/dbt_jaffle_shop`) built against DuckDB in CI, and the Fabric pipeline
+  `shape_dbt_gate` with the notebook `shape_profile_dbt` (the dbt job activity is `[VERIFY]`).
+  Fix: `shape check` reported every `min` and `max` rule of a decimal column as violated.
+- `sqllocks-shape-behavior` and the plugin group `shape.behaviors` (`docs/plugins/behavior.md`):
+  declarative state-machine modules run by a simulator on a virtual clock (deterministic per seed,
+  resumable, vectorized across entities), an event stream as Arrow tables, an extension point for
+  domain events, an importer for Generic Module Framework JSON modules that you download, three
+  example modules (subscription lifecycle, equipment maintenance, a small healthcare example) and
+  `shape behave run|check|import-gmf|examples`. Plugin API v1 gains the `Behavior` protocol,
+  `shape.plugins.kit.check_behavior` and `examples/behavior-plugin`.
+
 - `shape generate --scale-mode local_single|local_mp|fabric_spark` and `shape jobs list|status|cancel|resume`
   (`docs/SCALE.md`): the scale router with sinks (memory, Parquet part files, Lakehouse, Warehouse,
   SQL Database, KQL), a durable job store (submit, status, cancel, resume), the `fabric_spark` router

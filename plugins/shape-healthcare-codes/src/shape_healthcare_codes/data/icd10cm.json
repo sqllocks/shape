@@ -1,0 +1,43 @@
+{
+  "asset": "icd10cm",
+  "bytes": 626986,
+  "release": "FY2027 (effective 2026-10-01)",
+  "releases": [
+    "FY2016",
+    "FY2017",
+    "FY2018",
+    "FY2019",
+    "FY2020",
+    "FY2021",
+    "2021-01",
+    "FY2022",
+    "2022-04",
+    "FY2023",
+    "2023-04",
+    "FY2024",
+    "FY2025",
+    "FY2026",
+    "FY2027"
+  ],
+  "rows": 16582,
+  "source": "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Publications/ICD10CM",
+  "sources": {
+    "2021-01": "479be4d5773fb2e8357c5edb8a56bbd48da4d2bca443a7c42527ad102e3b388c",
+    "2022-04": "6fd40ef6ab4860d3299578bf15fa7e2dba17d271efc3929c56b3353a45f22cc7",
+    "2023-04": "cc7158228f6de01aa08650cc3afe446973a879dd78d44f1fec7150d45cfe1e06",
+    "FY2016": "89a04f5c03754ae72a76e5a751a712f570ae38ba592c032c146dc96ff9f49c89",
+    "FY2017": "f3540a91e0186a4f963875f755e6b7b3b0e9251bf647a3c515102df8f541b47f",
+    "FY2018": "9be0496f74887b563029569579ca345d091c31547cc81973e3725a212d0cce78",
+    "FY2019": "c3d6a88945ba1416848f6f7bea738d382484a8c469dff585e58172b9a573aeb4",
+    "FY2020": "80991e20ffb60086ba0340572dd0e3e2248c6647c31a06fadcb30b419dac02bc",
+    "FY2021": "4f13fe608a039d01eab8ae417d69b351160fb1eb2256d4586f8d9f56a197899b",
+    "FY2022": "bab2b3b041cf4b999f8380f3198c1dd6ca404ba7d5513ec60efc813a97f7c214",
+    "FY2023": "a7bfd4511dc154bff96fe0ced5fcd633bd26f997ccd6ae386f5c24595e1789b5",
+    "FY2024": "a3f3d21bfced02ce422699dbc10b952594783b12674bd2c133e8221ba3b5c260",
+    "FY2025": "5a9ff9e18d90a9979a144559a93e377624795369123cebf76817c44f565f0c60",
+    "FY2026": "a852eb91b3344ae38476e63816976ee1eeb94dcced7151118324f060e8499f88",
+    "FY2027": "93e3ad6004badf470c55bfe679b748ae88fd9b2b421851e409eec382c7713b9a",
+    "tabular": "99b5c2be16ff53eab861cc0be4b1dacba27f687b8ff4bc700679944355037ee0"
+  },
+  "subset": true
+}

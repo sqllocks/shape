@@ -576,3 +576,79 @@ def test_author_guide_covers_every_group_and_check():
         assert f"`{group}`" in guide and f"`{check}`" in guide, (group, check)
     for name in ("check_module_api", "check_installed", "check_plugin", "ConformanceError"):
         assert name in guide
+
+
+# -- behaviors ------------------------------------------------------------------------------
+
+
+class _Behavior:
+    """A minimal conforming behavior: one 'ping' per entity, at a time that depends on the seed."""
+
+    name = "pinger"
+    version = "1.0"
+    states = ["start", "ping"]
+    attributes: list[str] = []
+    events = ["ping"]
+
+    def simulate(self, population: int, seed: int, years: float) -> pa.Table:
+        base = 1_577_836_800_000_000  # 2020-01-01 in microseconds
+        return pa.table(
+            {
+                "entity_id": pa.array(range(population), pa.int64()),
+                "time": pa.array(
+                    [base + (i * 7 + seed) * 1_000_000 for i in range(population)],
+                    pa.timestamp("us"),
+                ),
+                "state": pa.array(["ping"] * population, pa.string()),
+                "kind": pa.array(["ping"] * population, pa.string()),
+            }
+        )
+
+
+def _with(**changes):
+    cls = type("Broken", (_Behavior,), changes)
+    return cls()
+
+
+def test_behavior_passes_and_runs_through_check_plugin():
+    kit.check_behavior(_Behavior())
+    kit.check_plugin("shape.behaviors", _Behavior())
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"version": ""}, "`version`"),
+        ({"states": []}, "`states` must not be empty"),
+        ({"events": "ping"}, "`events` must be a sequence"),
+        ({"events": ["ping", "ping"]}, "lists a name twice"),
+        ({"attributes": [3]}, "non-empty strings"),
+        ({"events": ["other"]}, "undeclared event kinds"),
+        ({"states": ["start"]}, "undeclared states"),
+        ({"simulate": lambda self, p, s, y: [1, 2]}, "must return a pyarrow Table"),
+        ({"simulate": lambda self, p, s, y: pa.table({"entity_id": [1]})}, "`time` column"),
+        ({"simulate": lambda self, p, s, y: _Behavior().simulate(0, s, y)}, "emitted no events"),
+    ],
+)
+def test_behavior_rules_each_fail_with_their_message(changes, message):
+    with pytest.raises(kit.ConformanceError, match=message):
+        kit.check_behavior(_with(**changes))
+
+
+def test_behavior_that_is_not_deterministic_fails():
+    calls = []
+
+    def simulate(self, population, seed, years):
+        calls.append(1)
+        return _Behavior().simulate(population, seed + len(calls), years)
+
+    with pytest.raises(kit.ConformanceError, match="not deterministic"):
+        kit.check_behavior(_with(simulate=simulate))
+
+
+def test_behavior_must_satisfy_the_protocol():
+    class NotOne:
+        name = "x"
+
+    with pytest.raises(kit.ConformanceError, match="does not implement Behavior"):
+        kit.check_behavior(NotOne())
