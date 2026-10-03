@@ -133,7 +133,12 @@ def run_command(host: PluginHost, name: str, argv: list[str]) -> int:
         ns = parser.parse_args(argv)
         return int(cmd.run(ns) or 0)
     except SystemExit as exc:
-        return exc.code if isinstance(exc.code, int) else (0 if exc.code is None else 1)
+        if isinstance(exc.code, int):
+            return exc.code
+        if exc.code is None:
+            return 0
+        print(f"shape {name}: {exc.code}", file=sys.stderr)  # what Python prints for it
+        return 1
     except Exception as exc:  # a plugin is third-party code: report it, never a traceback
         print(
             f"shape: plugin command {name!r} failed: {type(exc).__name__}: {exc}", file=sys.stderr
