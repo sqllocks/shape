@@ -110,6 +110,17 @@ def _safe(a: argparse.Namespace) -> int:
 def main(argv: Sequence[str]) -> int:
     """Run a ``profile safe|validate`` command: 0 ok, 1 leak found, 2 input error."""
     a = _parser().parse_args(list(argv))
+    from shape.artifact.io import set_notice_handler
+
+    seen: set[str] = set()
+
+    def note(message: str) -> None:
+        # the other commands' form of the notice: one stderr line, not a Python warning (#109)
+        if message not in seen:
+            seen.add(message)
+            print(f"shape: note: {message}", file=sys.stderr)
+
+    previous = set_notice_handler(note)
     try:
         return _validate(a) if a.cmd == "validate" else _safe(a)
     except (OSError, ValueError, KeyError, ImportError, zipfile.BadZipFile) as exc:
@@ -118,3 +129,5 @@ def main(argv: Sequence[str]) -> int:
         if errors.debug_enabled():
             raise
         return errors.fail(exc)
+    finally:
+        set_notice_handler(previous)
