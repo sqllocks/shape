@@ -282,6 +282,7 @@ source_modules = [
     "shape.contracts",
     "shape.demo",
     "shape.design",
+    "shape.dictionary",
     "shape.diff",
     "shape.dimensional",
     "shape.drift",
