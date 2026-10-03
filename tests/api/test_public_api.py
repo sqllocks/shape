@@ -146,8 +146,11 @@ def test_return_annotations_name_the_returned_class():
         "certify": FidelityCertificate,
         "plan": ReconstructionPlan,
     }
+    # The classes are imported under TYPE_CHECKING (api.py stays cheap to import), so resolve
+    # the annotations against them; mypy (below) checks that the imports are right.
+    names = {cls.__name__: cls for cls in expected.values()}
     for name, cls in expected.items():
-        assert typing.get_type_hints(getattr(api, name))["return"] is cls, name
+        assert typing.get_type_hints(getattr(api, name), localns=names)["return"] is cls, name
 
 
 # --- documented behaviour --------------------------------------------------------

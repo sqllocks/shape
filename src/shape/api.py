@@ -1,14 +1,23 @@
-"""Small stable public API for Shape."""
+"""The functions behind ``import shape`` (reference: ``docs/API.md``).
+
+``profile``, ``save``, ``load``, ``check`` and ``diff`` are the early-access surface; the
+generation and query functions read the documents their docstrings name.
+"""
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from shape.contracts.v1 import check as check
 from shape.contracts.v1 import diff as diff
 from shape.profile.reference import load as load
 from shape.profile.reference import profile as profile
 from shape.profile.reference import save as save
+
+if TYPE_CHECKING:
+    from shape.generation.fidelity import FidelityCertificate, ReconstructionPlan
+    from shape.generation.timeline import ShapeTimeline
+    from shape.query import ShapeView
 
 
 def _is_profile(obj: Any) -> bool:
@@ -33,16 +42,27 @@ def generate(
     scale: str | None = None,
     mode: str | None = None,
 ) -> Any:
-    """Generate data.
+    """Generate data from a domain, a generation schema, a profile or an evidence document.
 
-    ``generate("retail", scale="medium", seed=42, mode="star")`` runs a domain (or a
-    ``GenSchema``, or a generation schema ``dict``) through the engine and returns the
-    ``GenerationResult``: ``result.tables`` maps each table name to a ``pyarrow.Table`` (so does
-    ``result["order"]``). ``scale`` is a preset name, ``seed`` defaults to the schema's and ``mode``
-    (``3nf`` or ``star``) picks a domain's schema.
+    What ``shape`` is decides the form, the arguments used and the result:
 
-    The earlier form, ``generate(shape_model, n, seed, relationships)``, still generates rows from
-    a Shape model.
+    - a **domain name** (``str``), a ``GenSchema`` or a generation schema ``dict`` (one with a
+      ``"tables"`` key): ``generate("retail", scale="medium", seed=42, mode="star")`` runs the
+      schema through the engine and returns a ``GenerationResult``; ``result.tables`` maps each
+      table name to a ``pyarrow.Table`` (so does ``result["order"]``). ``scale`` is a preset
+      name, ``seed`` defaults to the schema's and ``mode`` (``3nf`` or ``star``) picks a
+      domain's schema. Row counts come from the scale preset: ``n`` and ``relationships`` are
+      not used (issue #251).
+    - a **profile** (``shape.profile``'s result or its ``to_dict()``): fits a schema to it and
+      returns a ``GenerationResult``. The default scale keeps the profile's row counts; ``n``
+      replaces the row count of a one-table profile (a dataset raises ``ValueError``).
+    - anything else is read as an **evidence document**, a mapping such as
+      ``{"rows": 100, "columns": {"x": {"kind": "numeric", "mean": 0, ...}}}``:
+      ``generate(evidence, n, seed, relationships)`` returns a ``(columns, GenerationReport)``
+      tuple, where ``columns`` maps each name to a NumPy array; ``seed`` defaults to 0 and
+      ``scale`` and ``mode`` are not used. The ``shape.Shape`` model is not accepted.
+
+    Raises ``DomainNotFoundError`` (a ``ShapeError``) for an unknown domain name.
     """
     from shape.generation.schema import GenSchema
 
@@ -68,31 +88,64 @@ def generate(
     return generate_from_shape(shape, n, 0 if seed is None else seed, relationships)
 
 
-def timeline(versions: Any) -> Any:
+def timeline(versions: Any) -> ShapeTimeline:
+    """Build a ``ShapeTimeline`` from ``versions``, objects with ``version``, ``at`` and ``shape``
+    (``shape.generation.timeline.VersionedShape``), sorted by ``at``.
+
+    ``shape_at(t)`` interpolates the evidence document at time ``t``, ``generate_at`` and
+    ``generate_range`` generate from it and ``changes()`` reports drift between versions.
+    Raises ``ValueError`` when ``versions`` is empty or two share a time.
+    """
     from shape.generation import ShapeTimeline
 
     return ShapeTimeline(versions)  # type: ignore[no-untyped-call]
 
 
-def view(shape: Any) -> Any:
+def view(shape: Any) -> ShapeView:
+    """Wrap a Shape model document (v2, or a v1 capture migrated on read) in a ``ShapeView``,
+    whose ``query``, ``column``, ``relationship`` and ``classification`` methods run Shape Queries.
+
+    The document is read when a method is first called: a profile or a ``shape.Shape`` object
+    fails there with ``ModelError``.
+    """
     from shape.query import ShapeView
 
     return ShapeView(shape)
 
 
 def query(shape: Any, expression: Any) -> Any:
+    """Evaluate the Shape Query ``expression`` over a Shape model document and return the value.
+
+    Roots: ``rows`` (or ``rows("table")``), ``column("name")``, ``classification("name")`` and
+    ``relationship("a", "b")``, each followed by an optional ``.field.field`` path; a missing
+    column or relationship gives ``None``. An unsupported or unsafe expression raises
+    ``ShapeQueryError`` (SH2-028), and a document that is not a Shape model (a profile, for one)
+    raises ``ModelError``. No code is evaluated (SH2-029).
+    """
     from shape.query import query as _query
 
     return _query(shape, expression)
 
 
-def certify(target: Any, observed: Any, **kwargs: Any) -> Any:
+def certify(target: Any, observed: Any, **kwargs: Any) -> FidelityCertificate:
+    """Score how well the evidence document ``observed`` matches ``target`` and return a
+    ``FidelityCertificate`` (per-dimension scores: schema, null behaviour, ...).
+
+    Both are evidence documents (mappings with a ``"columns"`` object), not profiles.
+    ``kwargs`` are ``degraded`` and ``unavailable``, tuples of evidence names recorded on the
+    certificate.
+    """
     from shape.generation.fidelity import certify_shapes
 
     return certify_shapes(target, observed, **kwargs)
 
 
-def plan(shape: Any) -> Any:
+def plan(shape: Any) -> ReconstructionPlan:
+    """List what data generated from ``shape`` keeps and what it does not, as a
+    ``ReconstructionPlan`` of ``PlanItem(evidence, status, reason)``.
+
+    ``shape`` is a profile, its ``to_dict()``, or an evidence document (as for ``generate``).
+    """
     from shape.generation.fidelity import plan_reconstruction
 
     return plan_reconstruction(shape)

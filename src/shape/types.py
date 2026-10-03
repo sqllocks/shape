@@ -8,11 +8,26 @@ from typing import TYPE_CHECKING
 from .errors import ShapeTypeError
 
 if TYPE_CHECKING:
-    import pyarrow as pa
+    import pyarrow as pa  # type: ignore[import-untyped]
 
 
 @dataclass(frozen=True, slots=True)
 class LogicalType:
+    """A logical column type, independent of its physical encoding.
+
+    ``kind`` names the type family; :func:`from_arrow_type` produces ``boolean``, ``int``,
+    ``uint``, ``float``, ``decimal``, ``string``, ``large_string``, ``binary``,
+    ``large_binary``, ``date``, ``time``, ``timestamp``, ``duration``, ``list``,
+    ``large_list``, ``struct``, ``map`` and ``fixed_binary``. The other fields apply per kind:
+    ``bit_width`` (integers, floats, ``fixed_binary``), ``precision`` and ``scale``
+    (``decimal``), ``unit`` and ``timezone`` (temporal kinds), ``value_type`` (lists and maps),
+    ``key_type`` (maps) and ``fields`` (structs).
+
+    Raises ``ValueError`` when ``decimal`` lacks ``precision`` or ``scale``, a list lacks
+    ``value_type`` or a map lacks ``key_type`` or ``value_type``. Other kinds and values are
+    not validated (issue #260).
+    """
+
     kind: str
     bit_width: int | None = None
     precision: int | None = None
@@ -34,13 +49,20 @@ class LogicalType:
 
 @dataclass(frozen=True, slots=True)
 class FieldType:
+    """A named, typed field: a column of a schema or a member of a ``struct``."""
+
     name: str
     logical_type: LogicalType
     nullable: bool = True
 
 
 def from_arrow_type(data_type: pa.DataType) -> LogicalType:
-    """Convert an Arrow physical type without silent narrowing."""
+    """Convert an Arrow physical type to a :class:`LogicalType` without silent narrowing.
+
+    Nested types (lists, structs, maps) convert recursively. A 16-byte fixed-size binary becomes
+    ``fixed_binary`` (128 bits). Any other type, such as ``null``, ``float16``, a dictionary,
+    a union or another fixed-size binary, raises :class:`shape.errors.ShapeTypeError`.
+    """
     import pyarrow as pa
 
     if pa.types.is_boolean(data_type):
@@ -107,4 +129,7 @@ def from_arrow_type(data_type: pa.DataType) -> LogicalType:
 
 
 def schema_from_arrow(schema: pa.Schema) -> tuple[FieldType, ...]:
+    """Convert an Arrow schema to one :class:`FieldType` per field, in order, keeping each
+    field's name and nullability; raises :class:`shape.errors.ShapeTypeError` as
+    :func:`from_arrow_type` does."""
     return tuple(FieldType(f.name, from_arrow_type(f.type), f.nullable) for f in schema)
