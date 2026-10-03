@@ -916,7 +916,9 @@ def fit_string_lengths(schema: GenSchema) -> None:
 
 def apply_scale(schema: GenSchema, spec: str) -> None:
     """Apply a scale override such as ``small:customer=5000,order=25000``: select that preset
-    and set the listed tables' row counts in it."""
+    and set the listed tables' row counts in it. A listed table's count is the one given: a
+    derived count (smart inference's ``fixed`` or ``per_parent``) for it is dropped, since it
+    would take precedence over the preset."""
     name, _, overrides = spec.partition(":")
     schema.generation.scale = name
     if not overrides:
@@ -929,6 +931,7 @@ def apply_scale(schema: GenSchema, spec: str) -> None:
                 preset[table.strip()] = int(count.strip())
             except ValueError:
                 raise DdlError(f"bad row count in scale override {pair!r}") from None
+            schema.generation.derived_counts.pop(table.strip(), None)
     schema.generation.scales[name] = preset
     fit_string_lengths(schema)
 

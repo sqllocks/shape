@@ -93,6 +93,12 @@ FIXES: dict[str, str] = {
         "it as an unknown type and generates free text: [varchar](10) lost its length and "
         "[bit] its value set."
     ),
+    "F13": (
+        "A table named in the scale override (-s medium:customer=7,orders=21) gets that row "
+        "count (AUD-gen, issue #176): smart inference's derived count for it is dropped. The "
+        "baseline keeps the derived count, which takes precedence over the preset, so the "
+        "override has no effect on any table inference gave a count."
+    ),
 }
 
 
@@ -470,6 +476,22 @@ ALLOWED: list[Field | Note] = [
             ("smart_retail", "orders", "shipping_address_id"),
         )
         for where in ("generator.null_rate", "null_rate")
+    ),
+    # F13 entries: a scale override drops the table's derived count
+    *(
+        Field("F13", case, f"generation.derived_counts.{table}", SMART)
+        for case, table in (
+            ("ddl_parser__mysql_ddl", "order"),
+            ("ddl_parser__postgres_ddl", "order"),
+            ("ddl_parser__sql_server_ddl", "order"),
+            ("e2e_cli__inline", "customer"),
+            ("e2e_cli__inline", "orders"),
+            ("e2e_ddl_pipeline__postgres_ddl", "order"),
+            ("e2e_ddl_pipeline__sql_server_ddl", "order"),
+            ("fix_cases", "customer"),
+            ("smart_inference__ddl_plural", "orders"),
+            ("smart_retail", "orders"),
+        )
     ),
     # F12 entries: bracket-quoted types
     *(
