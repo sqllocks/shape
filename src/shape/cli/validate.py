@@ -17,7 +17,8 @@ from pathlib import Path
 from typing import Any
 
 
-def _load(path: Path) -> Any:
+def load_document(path: Path) -> Any:
+    """A schema or contract file: YAML for ``.yaml``/``.yml``, else JSON."""
     text = path.read_text(encoding="utf-8")
     if path.suffix.lower() in (".yaml", ".yml"):
         try:
@@ -28,6 +29,9 @@ def _load(path: Path) -> Any:
 
         return safe_load_yaml(text)
     return json.loads(text)
+
+
+_load = load_document  # the name the bridge imports
 
 
 def kind_of(doc: Any) -> str | None:
@@ -80,7 +84,7 @@ def _validate_contract(doc: dict[str, Any]) -> tuple[dict[str, Any], int]:
 
 def cmd_validate(a: argparse.Namespace) -> int:
     path = Path(a.contract)
-    doc = _load(path)
+    doc = load_document(path)
     kind = kind_of(doc)
     if kind is None:
         raise ValueError(

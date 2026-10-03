@@ -165,8 +165,11 @@ def add_arguments(sub: Any) -> None:
 # ---- targets ------------------------------------------------------------------------------
 
 
+_SCHEMA_SUFFIXES = (".json", ".yaml", ".yml")
+
+
 def _is_file(target: str) -> bool:
-    return Path(target).is_file() or target.lower().endswith(".json")
+    return Path(target).is_file() or target.lower().endswith(_SCHEMA_SUFFIXES)
 
 
 def load_target(target: str, mode: str | None = None) -> GenSchema:
@@ -174,7 +177,9 @@ def load_target(target: str, mode: str | None = None) -> GenSchema:
     from shape.generation.schema import GenSchema
 
     if _is_file(target):
-        document = json.loads(Path(target).read_text(encoding="utf-8"))
+        from shape.cli.validate import load_document
+
+        document = load_document(Path(target))  # JSON, or YAML for .yaml / .yml
         schema = GenSchema.from_dict(document)
         if mode is not None and mode != schema.model.schema_mode:
             raise ValueError(

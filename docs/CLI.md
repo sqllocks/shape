@@ -68,6 +68,10 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
   of one file per table. Given a captured evidence document (`REFERENCE.json`) it certifies the
   CSV against it instead. A profile is not a fidelity reference; profile the synthetic data and
   run `shape diff`.
+- A generation schema file (what `shape from-ddl` and `shape learn` write) is JSON, or YAML when
+  it is named `.yaml` or `.yml` (needs PyYAML). Every command that takes one (`generate`,
+  `describe`, `presets`, `emit`, `stream`, `continue`, `time-travel`, `chaos`, `generate-drift`,
+  `validate`) reads both.
 - `shape proposals propose|list|decide` keeps the answers to what a profile cannot settle alone
   (foreign keys, personal data, meaning) in a decision file; `shape generate --from` and
   `shape plan` take it with `--decisions`. See [PROPOSALS.md](PROPOSALS.md).
