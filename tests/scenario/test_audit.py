@@ -232,3 +232,25 @@ def test_516_a_hybrid_stream_rate_is_checked(retail, rate):
     pack = PackLoader().parse({**FILE_DROP, "kind": "hybrid", "hybrid": hybrid})
     errors = PackValidator().validate(pack, retail).errors
     assert "hybrid.stream.rate_per_sec must be positive" in errors, errors
+
+
+# ---- #519: the run manifest reader checks the version and names the file -----------------------
+
+
+@pytest.mark.parametrize("version", ["true", "false", "0", "-1", "1.0"])
+def test_519_a_version_that_is_not_an_integer_from_one_is_refused(tmp_path, version):
+    from shape.scenario import ManifestBuilder
+
+    path = tmp_path / "m.json"
+    path.write_text(f'{{"format": "shape-run-manifest", "version": {version}}}', encoding="utf-8")
+    with pytest.raises(ValueError, match="m.json"):
+        ManifestBuilder.from_file(path)
+
+
+def test_519_a_manifest_that_is_not_json_names_the_file(tmp_path):
+    from shape.scenario import ManifestBuilder
+
+    path = tmp_path / "broken_manifest.json"
+    path.write_text("{bad", encoding="utf-8")
+    with pytest.raises(ValueError, match="broken_manifest.json"):
+        ManifestBuilder.from_file(path)
