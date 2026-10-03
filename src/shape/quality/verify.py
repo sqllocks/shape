@@ -12,6 +12,7 @@ import warnings
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
@@ -140,7 +141,9 @@ class VerifyRunner:
         *,
         source: dict[str, pa.Table] | None = None,
         source_path: str | None = None,
+        planned: Any = None,
     ) -> None:
+        self._planned = planned
         self._source = source or {}
         self._source_path = source_path
         self._config = config
@@ -161,6 +164,7 @@ class VerifyRunner:
             file_paths=[Path(f) for f in cfg.file_paths] if cfg else [],
             config=dict(cfg.rules) if cfg else {},
             source_tables=self._source,
+            planned=self._planned,
         )
         if cfg and cfg.check_data_files:
             ctx.file_paths.extend(self._files)

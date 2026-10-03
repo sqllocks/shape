@@ -8,13 +8,21 @@ from __future__ import annotations
 
 import json
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
 from shape import compat
 from shape.drift.engine import DEFAULT_THRESHOLDS as DRIFT_DEFAULTS
-from shape.drift.engine import diff_tables, resolve_policy, view_of_profile_column
+from shape.drift.engine import (
+    SEVERITY_RANK,
+    Policy,
+    diff_records,
+    diff_tables,
+    resolve_policy,
+    tables_of,
+    view_of_profile_column,
+)
 from shape.profile.reference.profile import Profile
 
 from .joint import check_joint_rules, check_no_placeholder
@@ -484,13 +492,25 @@ DEFAULT_THRESHOLDS: dict[str, Any] = DRIFT_DEFAULTS
 
 @dataclass
 class DiffResult:
-    """Outcome of :func:`diff`."""
+    """Outcome of :func:`diff`. With ``planned=`` the result also lists the planned entries that
+    matched (``planned``), the active ``expect`` entries that matched nothing
+    (``planned_not_observed``) and the entries past their ``until`` that would have matched
+    (``expired``); ``drifted`` then counts only unplanned changes (``counted`` says which)."""
 
     drifted: bool
     changes: list[dict[str, Any]] = field(default_factory=list)
+    planned: list[dict[str, Any]] | None = None
+    planned_not_observed: list[dict[str, Any]] | None = None
+    expired: list[dict[str, Any]] | None = None
+    counted: list[bool] | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {"drifted": self.drifted, "changes": [dict(c) for c in self.changes]}
+        out: dict[str, Any] = {"drifted": self.drifted, "changes": [dict(c) for c in self.changes]}
+        if self.planned is not None:
+            out["planned"] = [dict(e) for e in self.planned]
+            out["planned_not_observed"] = [dict(e) for e in self.planned_not_observed or []]
+            out["expired"] = [dict(e) for e in self.expired or []]
+        return out
 
     def _repr_html_(self) -> str:
         """Notebook display: the narrative's rows, with no extremes or category values."""
@@ -513,6 +533,9 @@ def diff(
     column_thresholds: dict[str, dict[str, Any]] | None = None,
     only_columns: list[str] | None = None,
     policy: dict[str, Any] | str | Path | None = None,
+    planned: Any = None,
+    on: Any = None,
+    source: str | None = None,
 ) -> DiffResult:
     """Compare two profiles with the documented defaults (``docs/DRIFT.md``).
 
@@ -522,7 +545,15 @@ def diff(
     ``ignore_columns`` drops columns (a name, ``table.column`` or a glob) and ``only_columns``
     keeps only those. ``policy`` is a dict or JSON file holding the same four settings (a
     contract's ``"drift"`` object works), so a team keeps one policy file.
+
+    ``planned`` is a planned-change file (a path, a list of entries or a loaded
+    ``shape.project.changes.PlannedChanges``; ``docs/PLANNED_CHANGES.md``): a change that matches
+    an entry active on ``on`` (a date or ``YYYY-MM-DD``; default today, UTC) carries
+    ``planned: {"id", "action"}`` and does not count as drift; ``source`` is the source name the
+    entries' ``source`` key is matched against.
     """
+    from shape.project.changes import coerce
+
     resolved = resolve_policy(
         thresholds,
         ignore_columns=ignore_columns,
@@ -530,5 +561,50 @@ def diff(
         only_columns=only_columns,
         policy=policy,
     )
-    changes = diff_tables(baseline, current, resolved)
-    return DiffResult(drifted=bool(changes), changes=changes)
+    plan = coerce(planned)
+    if plan is None:
+        changes = diff_tables(baseline, current, resolved)
+        return DiffResult(drifted=bool(changes), changes=changes)
+    return _diff_planned(baseline, current, resolved, plan.applier(on, source))
+
+
+def _diff_planned(baseline: Any, current: Any, resolved: Policy, applier: Any) -> DiffResult:
+    """The engine's changes with the planned ones marked, suppressed or re-rated. The engine is
+    asked for every severity, so that an entry can raise a change over ``min_severity``."""
+    relaxed = replace(
+        resolved,
+        thresholds={**resolved.thresholds, "min_severity": "low"},
+        columns={k: {**v, "min_severity": "low"} for k, v in resolved.columns.items()},
+    )
+    tables, dataset = tables_of(current)
+    only_table = None if dataset else next(iter(tables), None)
+    changes: list[dict[str, Any]] = []
+    counted: list[bool] = []
+    for scope, column, record in diff_records(baseline, current, relaxed):
+        floor = SEVERITY_RANK[resolved.for_column(scope, column)["min_severity"]]
+        was = SEVERITY_RANK[record["severity"]]
+        hit = applier.match(scope or only_table, column, record["kind"])
+        if hit is None:
+            if was >= floor:
+                changes.append(record)
+                counted.append(True)
+        elif hit.action == "suppress":
+            continue
+        elif hit.action == "severity":
+            now = SEVERITY_RANK[hit.severity]
+            if max(was, now) >= floor:
+                rated = {**record, "severity": hit.severity, "severity_was": record["severity"]}
+                changes.append({**rated, "planned": {"id": hit.id, "action": "severity"}})
+                counted.append(now >= floor)
+        elif was >= floor:
+            changes.append({**record, "planned": {"id": hit.id, "action": "expect"}})
+            counted.append(False)
+    report = applier.report()
+    return DiffResult(
+        drifted=any(counted),
+        changes=changes,
+        planned=report["planned"],
+        planned_not_observed=report["planned_not_observed"],
+        expired=report["expired"],
+        counted=counted,
+    )

@@ -265,6 +265,13 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   batches into a DuckDB file with `create`, `append`, `truncate`, `replace` and `upsert`. A run no
   longer waits forever when a sink fails after its last batch.
 
+- Planned-change registry (`docs/PLANNED_CHANGES.md`, #90). `shape-changes.yml` (format
+  `shape-planned-changes`, version 1, JSON Schema included) lists changes you expect, with a
+  window and a reason. `shape diff`, `shape check` and `shape verify` read it (`shape.yml` key
+  `changes`, `--changes FILE`, `--no-changes`, `--on DATE`): a planned change inside its window is
+  reported as planned and does not fail, a suppressed one is not reported, an expired entry stops
+  matching and prints a warning. `shape.diff(..., planned=...)` and the `--json` result add
+  `planned`, `planned_not_observed` and `expired`. New `shape changes validate|list|add|ack`.
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
@@ -359,6 +366,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   upsert; `shape continue` delta types map to them), 20-digit sequential file names, publish by
   rename, `_metadata.json` with `keyColumns`. Format rules cited to Microsoft Learn.
 - Basic locale packs (`{"strategy": "locale"}`, `docs/LOCALES.md`): places and postcodes for the US, Canada, the UK, Germany, France, India and Australia (GeoNames, CC BY 4.0), phone numbers only in ranges reserved for fiction (US, CA, FR), French first names (INSEE, Licence Ouverte 2.0), and no national identifiers. Names, phone ranges and streets for the other countries are not shipped yet; each provider says so. Sources and licences: `THIRD_PARTY_NOTICES.md`.
+
 - `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
   the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
   clearing cover every month of a multi-month table. `duration_hours` still overrides it

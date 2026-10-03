@@ -133,10 +133,19 @@ class Project:
     name: str | None
     sources: Mapping[str, Source]
     gates: Mapping[str, str]
+    changes: str | None = None
 
     @property
     def root(self) -> Path:
         return self.path.parent
+
+    def changes_file(self) -> Path | None:
+        """The planned-change file: the ``changes`` key (relative to this file's folder), else
+        ``shape-changes.yml`` next to it when that exists, else None."""
+        if self.changes is not None:
+            return Path(_resolve(self.root, self.changes))
+        default = self.root / "shape-changes.yml"
+        return default if default.is_file() else None
 
     @property
     def version(self) -> int:
@@ -269,6 +278,7 @@ def _baseline_problems(where: str, b: dict[str, Any], out: list[str]) -> None:
 def _semantic_problems(doc: dict[str, Any]) -> list[str]:
     out: list[str] = []
     _text_problems("name", doc.get("name"), out)
+    _text_problems("changes", doc.get("changes"), out)
     for sname, src in _dict(doc.get("sources")).items():
         where = f"sources.{sname}"
         if not _NAME.fullmatch(str(sname)):
@@ -384,7 +394,7 @@ def parse_project(text: str, path: str | os.PathLike[str]) -> Project:
         raise ProjectError(f"{where}: " + "; ".join(found), tuple(found))
     sources = {str(n): _source(where.parent, str(n), s) for n, s in doc["sources"].items()}
     gates = {str(g): v["mode"] for g, v in doc.get("gates", {}).items()}
-    return Project(where, doc, doc.get("name"), sources, gates)
+    return Project(where, doc, doc.get("name"), sources, gates, doc.get("changes"))
 
 
 def load_project(path: str | os.PathLike[str]) -> Project:

@@ -50,6 +50,7 @@ gates:
 | `format` | `shape-project`. |
 | `version` | An integer, now `1`. A file with a newer version than the installed Shape reads is refused with an error that says so (upgrade Shape). |
 | `name` | Optional label. |
+| `changes` | Optional path of the planned-change file, relative to the folder holding `shape.yml`; default `shape-changes.yml` next to it when that file exists. See `docs/PLANNED_CHANGES.md`. |
 | `sources.NAME` | Letters, digits, `.` `_` `-`, starting with a letter or digit. Also the default registry name of the source's baselines. `safe`, `validate`, `export`, `import`, `list` and `registry` are `shape profile` subcommands and cannot be source names. |
 | `…path` | Required. Relative paths are relative to the folder holding `shape.yml`; a URI (`abfss://…`) or an absolute path is used as written. |
 | `…dataset` | `true` when `path` is a folder of table files (one table per file), as `--dataset`. |

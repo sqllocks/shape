@@ -259,6 +259,12 @@ and shows a `.shape` file as the text `shape cat FILE` prints (read-only), with 
 with Git HEAD** for a diff. It needs `shape` 0.9.0 or newer (the `shape.path` setting, else `PATH`).
 See `editors/vscode/README.md`.
 
+## Planned changes
+
+`shape changes validate|list|add|ack` manages `shape-changes.yml`, the reviewable list of planned
+changes that `diff`, `check` and `verify` read (`--changes FILE`, `--no-changes`, `--on DATE`). Exit
+0 done, 1 `validate` found problems, 2 bad input. See `docs/PLANNED_CHANGES.md`.
+
 ## Registries
 
 `shape registry` (content-addressed artifacts) and `shape profile registry` (named profiles) are

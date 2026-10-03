@@ -520,13 +520,27 @@ def _cmd_check(a):
         data = load_tables(a.data, a.format)
     result = shape.check(profile, contract, data=data)
     out = result.to_dict()
+    planned = project_cli.planned_for(a, ctx)
+    if planned:
+        from shape.project.changes import apply_to_violations
+
+        applier = planned.applier()
+        table = next(iter(profile.tables), None)
+        out["violations"], counted = apply_to_violations(applier, out["violations"], table)
+        out["passed"] = not any(counted)
+        out.update(applier.report())
+        out.pop("planned_not_observed")
+        project_cli.expiry_notices(out)
+        project_cli.planned_summary(out["violations"])
     if ctx:
         out["violations"] = [project_cli.annotate(source, v) for v in out["violations"]]
         out["project"] = ctx.block()
+        if planned:
+            out["project"]["changes"] = planned.block()
     if a.json:
         _write_json(a.json, out)
     _dump(out)
-    return 0 if result.passed else 1
+    return 0 if out["passed"] else 1
 
 
 def _cmd_fidelity(a):
@@ -641,43 +655,57 @@ def _cmd_diff(a):
     source = ctx.source if ctx else None
     options = project_cli.merge_diff_options(source, _diff_options(a), a.ignore is not None)
     as_of = project_cli.baseline_date(a)
+    planned = project_cli.planned_for(a, ctx)
     baseline = None
+    plan_args = (
+        {"planned": planned.plan, "on": planned.on, "source": planned.source} if planned else {}
+    )
     if a.after is not None:  # BASE and CURRENT given: no baseline is looked up
-        changes = shape.diff(shape.load(a.before), current, **options).changes
+        result = shape.diff(shape.load(a.before), current, **options, **plan_args)
     else:
         if source is None:
             raise ValueError(
                 "shape diff needs BASE.shape and CURRENT.shape (or one CURRENT.shape when "
                 "shape.yml declares the source's baseline)"
             )
-        changes, baseline = _diff_against_baseline(ctx, source, current, options, as_of)
-    out = {"drifted": bool(changes), "changes": changes}
+        result, baseline = _diff_against_baseline(ctx, source, current, options, as_of, plan_args)
+    out = {"drifted": result.drifted, "changes": result.changes}
+    if planned:
+        out.update(result.to_dict())
+        project_cli.expiry_notices(out)
+        project_cli.planned_summary(out["changes"])
     if ctx:
-        out["changes"] = [project_cli.annotate(source, c) for c in changes]
+        out["changes"] = [project_cli.annotate(source, c) for c in out["changes"]]
         out["project"] = ctx.block()
         if baseline is not None:
             out["project"]["baseline"] = baseline.to_dict()
+        if planned:
+            out["project"]["changes"] = planned.block()
     if a.json:
         _write_json(a.json, out)
     _dump(out)
     return 1 if (a.fail_on_drift and out["drifted"]) else 0
 
 
-def _diff_against_baseline(ctx, source, current, options, as_of):
+def _diff_against_baseline(ctx, source, current, options, as_of, plan_args=None):
     """Compare ``current`` with the source's declared baseline. A rolling window reports only
     the changes that show up against every run in the window: data inside the range of the
-    recent runs is not drift."""
+    recent runs is not drift. With planned changes the first run's report is the report, kept
+    to the entries that still match a change after the window's intersection."""
     import tempfile
 
     import shape
+    from shape.contracts.v1 import DiffResult
     from shape.project import resolve_baseline
+
+    plan_args = plan_args or {}
 
     def key(change):
         return (change.get("table"), change.get("column"), change["kind"])
 
     with tempfile.TemporaryDirectory(prefix="shape-baseline-") as work:
         resolved = resolve_baseline(ctx.project, source.name, as_of=as_of, workdir=work)
-        kept, found = [], None
+        first, found = None, None
         for entry in resolved.entries:
             if _artifact_kind(entry.path) != "profile":
                 raise ValueError(
@@ -685,13 +713,30 @@ def _diff_against_baseline(ctx, source, current, options, as_of):
                     "(a share-safe profile cannot be diffed: commit the full profile with "
                     "`shape registry ROOT commit NAME FILE.shape --allow-raw`)"
                 )
-            changes = shape.diff(shape.load(entry.path), current, **options).changes
-            if found is None:
-                kept, found = changes, {key(c) for c in changes}
+            result = shape.diff(shape.load(entry.path), current, **options, **plan_args)
+            if first is None:
+                first, found = result, {key(c) for c in result.changes}
             else:
-                found &= {key(c) for c in changes}
-        kept = [c for c in kept if key(c) in (found or set())]
-    return kept, resolved
+                found &= {key(c) for c in result.changes}
+    if first is None:
+        return DiffResult(drifted=False, changes=[]), resolved
+    keep = [key(c) in found for c in first.changes]
+    changes = [c for c, k in zip(first.changes, keep, strict=True) if k]
+    if first.planned is None:
+        return DiffResult(drifted=bool(changes), changes=changes), resolved
+    counted = [n for n, k in zip(first.counted or [], keep, strict=True) if k]
+    seen = {c["planned"]["id"] for c in changes if "planned" in c}
+    planned = [e for e in first.planned if e["id"] in seen]
+    dropped = [e for e in first.planned if e["id"] not in seen and e["action"] == "expect"]
+    result = DiffResult(
+        drifted=any(counted),
+        changes=changes,
+        planned=planned,
+        planned_not_observed=[*(first.planned_not_observed or []), *dropped],
+        expired=first.expired,
+        counted=counted,
+    )
+    return result, resolved
 
 
 def _cmd_explain(a):
@@ -740,6 +785,9 @@ def _cmd_verify_gates(a):
     named = project_cli.use_source_path(a, "shape", ctx)
     if named is not None:  # `shape verify orders`: the source of shape.yml, not a path
         a.shape = named.path
+        ctx.source = named
+    planned = project_cli.planned_for(a, ctx)
+    applier = planned.applier() if planned else None
     modes = ctx.project.gates if ctx else {}
     tables = load_tables(a.shape, a.format)
     if not tables:
@@ -764,6 +812,7 @@ def _cmd_verify_gates(a):
         data_files(a.shape, a.format),
         source=source,
         source_path=a.source,
+        planned=applier,
     ).run(tables)
     print(f"Shape {_version()} - Verify\n")
     print(f"Data path:   {a.shape}")
@@ -800,6 +849,11 @@ def _cmd_verify_gates(a):
     enforced_passed = all(g.passed for g in result.gate_results if enforced(g))
     note = f" (observed failures: {', '.join(observed)})" if observed and enforced_passed else ""
     print(f"\nResult: {'PASS' if enforced_passed else 'FAIL'}{note}")
+    planned_report = {}
+    if applier is not None:
+        planned_report = applier.report()
+        planned_report.pop("planned_not_observed")
+        project_cli.expiry_notices(planned_report)
     if a.output:
         report = VerifyReport(result)
         if str(a.output).endswith(".json"):
@@ -809,6 +863,9 @@ def _cmd_verify_gates(a):
                     g["mode"] = ctx.project.gate_mode(g["gate"])
                 doc["enforced_passed"] = enforced_passed
                 doc["project"] = ctx.block()
+                if planned:
+                    doc["project"]["changes"] = planned.block()
+            doc.update(planned_report)
             text = json.dumps(doc, indent=2, default=str)
         else:
             text = report.to_markdown()
@@ -1019,7 +1076,7 @@ def _stream_profile_arguments(parser):
 def _build_parser(plugin_commands=()):
     from shape.cli import gitcmds
     from shape.cli.project import add_arguments as add_project_arguments
-    from shape.cli.project import add_project_flags
+    from shape.cli.project import add_changes_flags, add_project_flags
 
     p = argparse.ArgumentParser(prog="shape", description="Shape as Code")
     p.add_argument("--version", "-V", action="store_true", help="print the version and exit")
@@ -1269,6 +1326,7 @@ def _build_parser(plugin_commands=()):
         "default: today (UTC)",
     )
     add_project_flags(d)
+    add_changes_flags(d)
     d.add_argument("--json", metavar="RESULT.json")
     d.add_argument("--fail-on-drift", action="store_true")
     d.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
@@ -1393,6 +1451,7 @@ def _build_parser(plugin_commands=()):
     vf.add_argument("-o", "--output", metavar="REPORT", help="write a .json or .md report")
     vf.add_argument("--strict", action="store_true", help="exit 1 on warnings too")
     add_project_flags(vf, source=False)
+    add_changes_flags(vf)
     qu = sub.add_parser("quality")
     qu.add_argument("csv")
     qu.add_argument("--reference")
@@ -1526,6 +1585,7 @@ def _build_parser(plugin_commands=()):
     ck.add_argument("--format", choices=("auto", "csv", "parquet", "jsonl"), default="auto")
     ck.add_argument("--json", metavar="RESULT.json")
     add_project_flags(ck)
+    add_changes_flags(ck)
     ck.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     co = sub.add_parser(
         "compatibility",
@@ -1579,6 +1639,9 @@ def _build_parser(plugin_commands=()):
 
     add_history_arguments(sub, _diff_policy_arguments)
     add_project_arguments(sub)
+    from shape.cli.changes import add_arguments as add_changes_arguments
+
+    add_changes_arguments(sub)
     for rec in plugin_commands:  # listed in --help only; the plugin loads when it is run
         sub.add_parser(rec.name, help=f"(plugin {rec.source})", add_help=False)
     return p
@@ -1814,6 +1877,10 @@ def _dispatch(argv):
         from shape.cli.project import run as run_project
 
         return _run(run_project, a)
+    if a.cmd == "changes":
+        from shape.cli.changes import run as run_changes
+
+        return _run(run_changes, a)
     if a.cmd in ("generate", "describe", "list", "presets", "composite"):
         from shape.cli.generation import run as run_generation
 

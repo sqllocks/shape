@@ -94,6 +94,12 @@ section 12.3 and keep their values.
   move that counts). Without quantiles to compare, only samples of `min_rows` or more name a
   family. The size of a real distribution change is `distribution_shift`.
 
+## Planned changes
+
+A change you expect (a release adds a column, a migration changes a type) is listed in a
+planned-change file with a window and a reason; inside the window `shape diff --fail-on-drift` and
+the gates report it as planned instead of failing. See `docs/PLANNED_CHANGES.md`.
+
 ## The sweep: planted drift as a regression test
 
 `tests/diff/test_drift_sweep.py` generates pairs of datasets with Shape's own generators, records
