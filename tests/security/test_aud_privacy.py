@@ -45,3 +45,42 @@ def test_the_bypass_file_from_the_issue_is_refused(tmp_path):
     p.write_text('{"pad":"' + "]" * n + '","a":' + "[" * n + "]" * n + "}\n")
     with pytest.raises(ValueError, match="nested deeper"):
         check_json_file(p)
+
+
+# --- #243: names that are unsafe on Windows ---------------------------------------------------
+
+from shape.security.names import is_safe_name, safe_name  # noqa: E402
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "orders:evil",
+        "CON",
+        "con.parquet",
+        "Nul",
+        "COM1",
+        "lpt9.csv",
+        "orders.",
+        "orders ",
+        "a<b",
+        "a>b",
+        'a"b',
+        "a|b",
+        "a?b",
+        "a*b",
+        "a\tb",
+        "a\nb",
+    ],
+)
+def test_names_unsafe_on_windows_are_refused(name):
+    assert is_safe_name(name) is False
+    with pytest.raises(ValueError, match="plain name"):
+        safe_name(name)
+
+
+@pytest.mark.parametrize(
+    "name", ["orders", "order items", "con_orders", "console", "COM10", "lpt", ".hidden", "é_ü"]
+)
+def test_ordinary_names_are_still_accepted(name):
+    assert is_safe_name(name) is True
