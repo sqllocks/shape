@@ -355,3 +355,18 @@ def test_fit_family_refuses_degenerate_samples_with_a_family_error() -> None:
     with pytest.raises(FamilyError):
         fit_family("triangular", [0.5])
     assert fit_family("normal", [1.0, 2.0, 3.0])["mu"] == 2.0
+
+
+# ---- #146: the faker docs do not promise distinct values ---------------------------------------
+
+
+def test_faker_docs_do_not_promise_distinct_values() -> None:
+    from pathlib import Path
+
+    from shape.builtins.strategies import providers
+
+    root = Path(__file__).resolve().parents[2]
+    doc = (root / "docs" / "GENERATION_STRATEGIES.md").read_text("utf-8")
+    for text in (doc, providers.Faker.__doc__ or ""):
+        assert "every value distinct" not in text and "all values distinct" not in text
+        assert "pool entry" in " ".join(text.split())
