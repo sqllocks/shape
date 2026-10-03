@@ -169,6 +169,26 @@ def jsonable(value: Any) -> Any:
     return {"$repr": scrub(repr(value))}
 
 
+_DECODERS: dict[str, Callable[[str], Any]] = {
+    "$float": float,
+    "$bytes": base64.b64decode,
+    "$decimal": Decimal,
+    "$datetime": dt.datetime.fromisoformat,
+    "$date": dt.date.fromisoformat,
+    "$time": dt.time.fromisoformat,
+}
+
+
+def plain(value: Any) -> Any:
+    """A value :func:`jsonable` encoded, back as itself (``{"$decimal": "1.5"}`` → ``Decimal``)."""
+    if isinstance(value, dict) and len(value) == 1:
+        ((key, text),) = value.items()
+        decode = _DECODERS.get(key)
+        if decode is not None and isinstance(text, str):
+            return decode(text)
+    return value
+
+
 # --- the tape ----------------------------------------------------------------------------
 
 
@@ -235,7 +255,13 @@ def save(path: Path, document: Mapping[str, Any]) -> None:
 
 
 def load(path: Path) -> dict[str, Any]:
-    doc: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+    """The tape document at ``path``; :class:`RecordingError` when it cannot be read as one."""
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except (ValueError, UnicodeDecodeError) as exc:
+        raise RecordingError(f"{path.name}: not a JSON tape ({exc})") from None
+    if not isinstance(doc, dict):
+        raise RecordingError(f"{path.name}: not a tape (a tape is a JSON object)")
     if doc.get("format") != FORMAT:
         raise RecordingError(f"{path.name}: unknown tape format {doc.get('format')!r}")
     return doc
@@ -369,7 +395,7 @@ class _TapeCursor:
 
     def fetchone(self) -> Any:
         value = self._do({"op": "fetchone"}, lambda: _row(self._inner.fetchone()))
-        return tuple(value) if value is not None else None
+        return tuple(plain(v) for v in value) if value is not None else None
 
     @property
     def rowcount(self) -> int:
