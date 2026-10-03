@@ -1,16 +1,19 @@
 """Item 1: the vault file format, envelope encryption, tampering and interoperability."""
 
+# ruff: noqa: I001, E402
 from __future__ import annotations
 
-import base64
-import json
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parent))
+from _data import COLUMNS, PLANTED
+
+import base64
+import json
+
 import pytest
 
-sys.path.insert(0, str(Path(__file__).parent))
-from _data import COLUMNS, PLANTED  # noqa: E402
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from shape import compat
