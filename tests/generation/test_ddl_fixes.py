@@ -434,6 +434,7 @@ def test_a_parent_total_is_the_sum_over_its_children() -> None:
         "rule": "sum_children",
         "child_table": "order_lines",
         "child_column": "line_total",
+        "output_type": "decimal",  # ISS-gen: the declared DECIMAL(p,s) is kept
     }
     (note,) = [n for n in notes if n.rule_id == "CR-08"]
     assert (note.table, note.column) == ("orders", "total_amount")

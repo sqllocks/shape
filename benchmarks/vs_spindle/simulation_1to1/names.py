@@ -66,6 +66,12 @@ ALLOWED = {
     "reversal columns); Shape's follow the configuration, so a stream's schema does not change "
     "between runs. The harness conforms the baseline's table to Shape's column set (columns the "
     "baseline run lacked are null) before comparing.",
+    "SIM-9": "Financial: the default window is 24 hours from the first transaction in the "
+    "baseline, so a table that covers months settles only its first day; Shape's default is the "
+    "whole span of the transactions (first to last, plus one settlement batch so the last "
+    "transactions settle), so settlements, fraud-burst chances and clearing cover the whole "
+    "period. `duration_hours` overrides it in both; the parity cases pin it to 24 hours to "
+    "compare everything else.",
     "SIM-6": "IoT and financial inputs from the shipped domains: the baseline does not know the "
     "domains' column names (`reading_timestamp`, `transaction_date`) or that readings are per "
     "sensor, so fleet status and settlements ignore time and per-device readings; Shape does.",

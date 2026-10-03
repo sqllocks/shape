@@ -622,8 +622,9 @@ def test_temporal_bounds_types_and_profiles(generated):
     for cid in (c for c in CASES if c.startswith("temporal/")):
         assert generated[cid].type == pa.timestamp("us"), cid
     uni = np.asarray(generated["temporal/uniform_range"].to_pylist(), dtype="datetime64[us]")
-    assert uni.min() >= np.datetime64("2023-03-01") and uni.max() < np.datetime64("2024-02-29")
-    # the seasonal range includes its end date; the uniform one stops before it
+    assert uni.min() >= np.datetime64("2023-03-01") and uni.max() < np.datetime64("2024-03-01")
+    # the end date is a possible day for the uniform range and the seasonal one alike (ISS-gen #10)
+    assert uni.max() >= np.datetime64("2024-02-29")
     seasonal = np.asarray(generated["temporal/seasonal_dow"].to_pylist(), dtype="datetime64[us]")
     assert seasonal.max() >= np.datetime64("2025-12-31")
     assert seasonal.max() < np.datetime64("2026-01-01")
@@ -635,7 +636,7 @@ def test_temporal_bounds_types_and_profiles(generated):
     fine = np.asarray(generated["temporal/seasonal_month"].to_pylist(), dtype="datetime64[us]")
     assert (fine.astype("datetime64[s]") == fine).mean() < 0.01
     ref = np.asarray(generated["temporal/range_ref"].to_pylist(), dtype="datetime64[us]")
-    assert ref.min() >= np.datetime64("2021-05-01") and ref.max() < np.datetime64("2022-04-30")
+    assert ref.min() >= np.datetime64("2021-05-01") and ref.max() < np.datetime64("2022-05-01")
     short = np.asarray(
         generated["temporal/seasonal_short_range"].to_pylist(), dtype="datetime64[us]"
     )
@@ -668,10 +669,11 @@ def test_temporal_empty_bucket_probability_is_spread_over_the_range():
     ("spec", "message"),
     [
         ({"start": "not a date"}, "start 'not a date' is not an ISO date"),
-        ({"start": "2023-05-01", "end": "2023-05-01"}, "end after it starts"),
+        ({"start": "2023-05-02", "end": "2023-05-01"}, "is before the start"),
+        ({"start": "2023-05-01T08:00", "end": "2023-05-01T08:00"}, "end equals the start"),
         (
             {"pattern": "seasonal", "start": "2023-05-02", "end": "2023-05-01"},
-            "end after it starts",
+            "is before the start",
         ),
         ({"pattern": "seasonal", "profiles": {"month": {"Jan": -1}}}, "non-negative"),
         (

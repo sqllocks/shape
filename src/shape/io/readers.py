@@ -14,7 +14,9 @@ overrides and null/boolean tokens; ``PANDAS_CSV`` reproduces ``pandas.read_csv``
 
 from __future__ import annotations
 
+import csv as _csv
 import glob as _glob
+import io
 import itertools
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass, field
@@ -28,6 +30,8 @@ import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from shape.security.jsondepth import check_json_file
 
+from .excel import is_workbook_spec, read_sheet, read_workbook, split_spec, workbook_sheet_names
+
 DEFAULT_BATCH_ROWS = 65_536
 _COMPRESSION = {".gz", ".bz2", ".zst", ".lz4", ".xz"}
 _SUFFIX_KIND = {
@@ -40,6 +44,8 @@ _SUFFIX_KIND = {
     ".arrow": "ipc",
     ".ipc": "ipc",
     ".feather": "ipc",
+    ".xlsx": "xlsx",
+    ".xlsm": "xlsx",
 }
 # pandas' default NA tokens (pandas._libs.parsers.STR_NA_VALUES)
 _PANDAS_NA = (
@@ -74,7 +80,9 @@ class CsvOptions:
     """CSV parsing options. ``column_types`` overrides inference per column (Arrow types or
     their names, e.g. ``{"zip": "string"}``); ``None`` tokens keep pyarrow's defaults."""
 
-    delimiter: str | None = None  # None: "," ("\t" for .tsv)
+    delimiter: str | None = None  # None: "\t" for .tsv, else sniffed (comma, semicolon, tab, pipe)
+    encoding: str | None = None  # None: utf-8
+    quotechar: str | None = None  # None: '"'
     column_types: Mapping[str, Any] = field(default_factory=dict)
     null_values: tuple[str, ...] | None = None
     true_values: tuple[str, ...] | None = None
@@ -108,6 +116,10 @@ def _strip_compression(path: Path) -> str:
 
 def _kind_of(path: Path) -> str:
     suffix = _strip_compression(path)
+    if suffix in (".xls", ".xlsb"):
+        from .excel import check_workbook_file
+
+        check_workbook_file(path)  # raises the clear legacy-format error
     kind = _SUFFIX_KIND.get(suffix)
     if kind is None:
         raise ReaderError(
@@ -168,17 +180,71 @@ def _resolve_type(t: Any) -> Any:
     raise ReaderError(f"cannot use {t!r} as a column type")
 
 
+_DELIMITERS = (",", ";", "\t", "|")
+_SNIFF_BYTES = 1 << 16
+_SNIFF_ROWS = 100
+
+
+def sniff_delimiter(
+    path: str | Path, encoding: str | None = None, quotechar: str | None = None
+) -> str | None:
+    """The delimiter (comma, semicolon, tab or pipe) that splits the head of a file into the same
+    number (two or more) of fields on every row, or ``None`` when no candidate does. A comma wins
+    when it qualifies, then the candidate with the most fields."""
+    try:
+        with open(path, "rb") as fh:
+            head = fh.read(_SNIFF_BYTES)
+        text = head.decode(encoding or "utf-8", errors="ignore")
+    except (OSError, LookupError):
+        return None
+    lines = text.splitlines()
+    if len(head) == _SNIFF_BYTES:
+        lines = lines[:-1]  # the last line was cut
+    lines = [line for line in lines if line.strip()][:_SNIFF_ROWS]
+    if len(lines) < 2:
+        return None
+    best: tuple[int, str] | None = None
+    for cand in _DELIMITERS:
+        try:
+            rows = list(
+                _csv.reader(
+                    io.StringIO("\n".join(lines)), delimiter=cand, quotechar=quotechar or '"'
+                )
+            )
+        except _csv.Error:
+            continue
+        widths = {len(r) for r in rows}
+        if len(widths) != 1 or (width := widths.pop()) < 2:
+            continue
+        if cand == ",":
+            return ","
+        if best is None or width > best[0]:
+            best = (width, cand)
+    return best[1] if best else None
+
+
 def _csv_options(
     path: Path, opts: CsvOptions, columns: list[str] | None, schema: pa.Schema | None
 ) -> tuple[Any, Any, Any]:
-    delimiter = opts.delimiter or ("\t" if _strip_compression(path) == ".tsv" else ",")
+    delimiter = opts.delimiter
+    if delimiter is None:
+        if _strip_compression(path) == ".tsv":
+            delimiter = "\t"
+        else:  # a compressed file is not sniffed (its head is not text)
+            sniffed = (
+                None
+                if path.suffix.lower() in _COMPRESSION
+                else sniff_delimiter(path, opts.encoding, opts.quotechar)
+            )
+            delimiter = sniffed or ","
     ro = pacsv.ReadOptions(
+        encoding=opts.encoding or "utf8",
         use_threads=opts.use_threads,
         block_size=opts.block_size,
         autogenerate_column_names=not opts.has_header and opts.column_names is None,
         column_names=list(opts.column_names) if opts.column_names else None,
     )
-    po = pacsv.ParseOptions(delimiter=delimiter)
+    po = pacsv.ParseOptions(delimiter=delimiter, quote_char=opts.quotechar or '"')
     types = {k: _resolve_type(v) for k, v in opts.column_types.items()}
     if schema is not None:
         types = {**{f.name: f.type for f in schema}, **types}
@@ -336,6 +402,10 @@ def _files_source(
     if len(kinds) != 1:
         raise ReaderError(f"files of mixed types cannot be read as one table: {sorted(kinds)}")
     kind = kinds.pop()
+    if kind == "xlsx":
+        if len(paths) != 1:
+            raise ReaderError("several workbooks cannot be read as one table; open each one")
+        return _workbook_source(str(paths[0]), name, size, columns)
     first_table: list[pa.Table] = []  # csv/jsonl: the first file is read once and reused
 
     def whole(p: Path) -> pa.Table:
@@ -385,6 +455,31 @@ def _files_source(
     elif first_table and len(paths) == 1:
         rows = first_table[0].num_rows
     return Source(name or stem, kind, out_schema, open_batches, rows)
+
+
+def _workbook_source(spec: str, name: str | None, size: int, columns: list[str] | None) -> Source:
+    """One sheet of a workbook: ``book.xlsx#Sheet``, or ``book.xlsx`` when it has one visible
+    sheet. A workbook with several sheets is a dataset: read it with :func:`open_workbook`."""
+    path, sheet = split_spec(spec)
+    if sheet is None:
+        visible = workbook_sheet_names(path)
+        if len(visible) != 1:
+            raise ReaderError(
+                f"{Path(path).name} has {len(visible)} visible sheets {visible}: name one as "
+                f"'{Path(path).name}#SHEET', or read all of them with open_workbook()"
+            )
+        sheet = visible[0]
+    table = _project(read_sheet(path, sheet).table, columns)
+    return _single_batch_source(name or sheet, "xlsx", table, size)
+
+
+def open_workbook(
+    path: str | Path, *, include_hidden: bool = False, batch_size: int = DEFAULT_BATCH_ROWS
+) -> dict[str, Source]:
+    """Every visible sheet of a workbook (and the hidden ones with ``include_hidden``) as a
+    table, by sheet name."""
+    wb = read_workbook(split_spec(path)[0], include_hidden=include_hidden)
+    return {n: _single_batch_source(n, "xlsx", s.table, batch_size) for n, s in wb.sheets.items()}
 
 
 def _column_from_values(values: list[Any]) -> Any:
@@ -464,6 +559,8 @@ def open_source(
     if batch_size < 1:
         raise ValueError("batch_size must be positive")
     csv = csv or CsvOptions()
+    if is_workbook_spec(source):
+        return _workbook_source(str(source), name, batch_size, columns)
     if isinstance(source, (str, Path)) or (
         isinstance(source, (list, tuple))
         and source

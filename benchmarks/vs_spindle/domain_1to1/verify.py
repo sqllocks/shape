@@ -47,6 +47,7 @@ sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
 import dump_schema  # noqa: E402
 import generate  # noqa: E402
+from domain_differences import DELIBERATE  # noqa: E402
 from paths import BENCH_OUT_DIR, SHAPE_PY, SPINDLE_PY, SPINDLE_ROOT  # noqa: E402
 
 REF_SEED = 42
@@ -707,6 +708,14 @@ def main(argv: list[str] | None = None) -> int:
                 sp[c], im[c], B[(tn, c)], pools.pool_for(gen), pools.component_fn(gen)
             )
             cr["arrow_type_match"] = ts.get(c) == ti.get(c)
+            allowed = DELIBERATE.get((domain, tn, c)) if impl == "shape" else None
+            if allowed is not None:
+                failing = tuple(k for k, v in cr["checks"].items() if not v)
+                if not failing:
+                    flagged.append(f"(b-e) {tn}.{c}: stale entry in domain_differences.py")
+                elif failing == allowed.fails and allowed.accepts(im[c]):
+                    cr["equivalent"] = True
+                    cr["deliberate"] = allowed.reason
             cr["equivalent"] = cr["equivalent"] and cr["arrow_type_match"]
             tr["columns"][c] = cr
             n_cols += 1
@@ -840,6 +849,7 @@ def summary_text(R) -> str:
                 f"{cr['null_rate']['spindle']:.4f}/{cr['null_rate']['impl']:.4f} "
                 f"{tag:>3s} {d:7.4f} {b:9.4f} {t:7.4f} {'' if vo is None else f'{vo:6.4f}':>6s}  "
                 f"{'EQUIVALENT' if cr['equivalent'] else 'NOT EQUIVALENT'}"
+                f"{' (deliberate, domain_differences.py)' if cr.get('deliberate') else ''}"
             )
     L += ["", "FK integrity (spindle / impl):"]
     for k in R["fk_integrity"]["spindle"]:

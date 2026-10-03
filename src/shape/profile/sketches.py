@@ -27,14 +27,29 @@ class SketchStateError(ValueError):
     """The sketch state is missing, malformed, or written by a newer Shape."""
 
 
-def build_table(source: Any, name: str) -> dict[str, Any]:
-    """Read ``source`` once more, in bounded mode, and return its table state entry."""
+def _csv_options(csv: Any) -> Any:
+    """The reader options for the profile's CSV format (``None``: the reader's defaults)."""
+    if csv is None:
+        return None
+    from shape.io import CsvOptions
+
+    return CsvOptions(
+        delimiter=csv.delimiter,
+        encoding=csv.encoding,
+        quotechar=csv.quotechar,
+        has_header=csv.header,
+    )
+
+
+def build_table(source: Any, name: str, csv: Any = None) -> dict[str, Any]:
+    """Read ``source`` once more, in bounded mode, and return its table state entry. ``csv`` is
+    the profile's CSV format, so the same file is read the same way."""
     import pyarrow as pa  # type: ignore[import-untyped]
 
     from shape.io import open_source
     from shape.kernel.dispatch import get_kernel
 
-    src = open_source(source, name=name)
+    src = open_source(source, name=name, csv=_csv_options(csv))
     # names and types only: the state is merged across files whose metadata differs
     schema = pa.schema([pa.field(f.name, f.type) for f in src.schema])
     state = get_kernel().ProfileState(schema, "bounded")
@@ -49,12 +64,12 @@ def build_table(source: Any, name: str) -> dict[str, Any]:
     }
 
 
-def build_document(sources: Mapping[str, Any]) -> dict[str, Any]:
+def build_document(sources: Mapping[str, Any], csv: Any = None) -> dict[str, Any]:
     return {
         "format": FORMAT,
         "version": VERSION,
         "snapshot_version": SNAPSHOT_VERSION,
-        "tables": {name: build_table(src, name) for name, src in sources.items()},
+        "tables": {name: build_table(src, name, csv) for name, src in sources.items()},
     }
 
 

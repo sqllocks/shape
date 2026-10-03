@@ -43,11 +43,24 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
 - `shape check`, `shape diff`, `shape plan`, `shape generate --from` read profiles.
 - `shape inspect ARTIFACT.shape` prints what an artifact holds, a profile or a model. `shape show`
   is an alias of `shape inspect`.
-- `shape capture DATA.csv` is the older command: it reads CSV only and writes a **model**
-  (JSON, or a model `.shape` with `-o OUT.shape`), which `shape query`, `shape compatibility` and
-  `shape plan` read. It is not a second way to profile; use `shape profile` for that.
+- `shape capture SRC` reads everything `shape profile` reads (CSV, Parquet, JSONL, a folder or
+  glob, a Delta table with `--version N` or `--as-of TIMESTAMP`, an `abfss://` source) and writes a
+  **model** (JSON, or a model `.shape` with `-o OUT.shape`), which `shape query`,
+  `shape compatibility` and `shape plan` read. `--dataset` captures a folder of one file per table
+  as a model with one table each. The model has the same content whatever the file format; the
+  one difference is what the format itself carries: a CSV holds text and numbers only, so a date
+  column is text there and a timestamp in Parquet (both are captured as text values). It is not a
+  second way to profile; use `shape profile` for that.
 - `shape compatibility BEFORE AFTER` compares two Shape **models** (made by `shape capture` or
-  written as model JSON), not profiles. Compare two profiles with `shape diff`.
+  written as model JSON), not profiles. Compare two profiles with `shape diff`. To check a feed
+  for schema changes, capture it each day and compare with the baseline; a renamed or dropped
+  column is reported as `removed` and a changed type as `type_changed` (exit 5):
+
+  ```bash
+  shape capture orders.parquet -o orders-base.shape
+  shape capture orders-today.parquet -o orders-today.shape
+  shape compatibility orders-base.shape orders-today.shape --mode backward
+  ```
 - `shape fidelity REFERENCE SYNTHETIC` compares data with data: CSV, Parquet, JSONL or a folder
   of one file per table. Given a captured evidence document (`REFERENCE.json`) it certifies the
   CSV against it instead. A profile is not a fidelity reference; profile the synthetic data and

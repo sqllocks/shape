@@ -136,10 +136,12 @@ def location_from_spec(spec) -> Location:
         s = spec.strip()
         if s.isdigit() and len(s) in (5, 9):
             return Location.zip(s[:5])
+        if len(s) == 2 and s.isalpha():
+            return Location.state_scope(s.upper())
         parts = [x.strip() for x in s.split(",")]
         if len(parts) == 2:
             return Location.city_scope(parts[0], parts[1])
-        raise ValueError("string location must be ZIP or 'City, ST'")
+        raise ValueError("string location must be a ZIP, a state code ('WA') or 'City, ST'")
     if not isinstance(spec, dict):
         raise TypeError("location spec")
     if "zip" in spec or "postal_code" in spec:
@@ -147,18 +149,26 @@ def location_from_spec(spec) -> Location:
             str(spec.get("zip", spec.get("postal_code"))), spec.get("country", "US")
         )
     if "city" in spec:
-        return Location.city_scope(spec["city"], spec["state"], spec.get("country", "US"))
+        return Location(
+            country=spec.get("country", "US"), state=spec.get("state"), city=spec["city"]
+        )
     if "county" in spec:
-        return Location.county_scope(spec["county"], spec["state"], spec.get("country", "US"))
+        return Location(
+            country=spec.get("country", "US"), state=spec.get("state"), county=spec["county"]
+        )
     if "state" in spec:
         return Location.state_scope(spec["state"], spec.get("country", "US"))
-    raise ValueError("location spec requires zip, city/state, county/state, or state")
+    if "country" in spec:
+        return Location(country=spec["country"])
+    raise ValueError("location spec requires zip, city, county, state or country")
 
 
 def scope_from_specs(specs, weights=None, exclude=()):
     locs = tuple(location_from_spec(x) for x in specs)
     if weights is None:
-        return LocationScope.any(*locs)
+        return LocationScope(
+            tuple(WeightedLocation(x) for x in locs), tuple(location_from_spec(x) for x in exclude)
+        )
     if len(weights) != len(locs):
         raise ValueError("weights")
     return LocationScope.weighted(zip(locs, weights, strict=False)).__class__(
