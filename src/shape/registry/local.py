@@ -18,6 +18,7 @@ from shape.registry.layout import open_layout
 
 LAYOUT = "layout.json"
 _NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
+_CONTENT_ID = re.compile(r"^[0-9a-f]{64}$")
 
 
 class RegistryError(ShapeError):
@@ -94,6 +95,17 @@ class LocalRegistry:
                 "column). Commit the safe form (`shape profile safe`), or pass allow_raw=True"
             )
         h = hashlib.sha256(raw).hexdigest()
+        e = {
+            "name": name,
+            "content_id": h,
+            "created_at": time.time(),
+            "created": compat.utc_iso(),
+            "metadata": metadata or {},
+        }
+        try:  # before anything is written, so a bad value leaves no orphan object
+            line = json.dumps(e, sort_keys=True, allow_nan=False)
+        except (TypeError, ValueError) as exc:
+            raise RegistryError(f"{name}: the metadata is not JSON-serializable ({exc})") from exc
         p = self._path("objects", h)
         if not p.exists():
             p.parent.mkdir(parents=True, exist_ok=True)
@@ -106,31 +118,37 @@ class LocalRegistry:
                 with contextlib.suppress(OSError):
                     os.unlink(tmp)
                 raise
-        e = {
-            "name": name,
-            "content_id": h,
-            "created_at": time.time(),
-            "created": compat.utc_iso(),
-            "metadata": metadata or {},
-        }
         with log.open("a") as f:
-            f.write(json.dumps(e, sort_keys=True) + "\n")
+            f.write(line + "\n")
         self._write_ref(name, "latest", h)
         return h
 
-    def _write_ref(self, name: str, ref: str, h: str) -> None:
-        _check("ref", ref)
-        p = self._path("refs", name)
-        p.mkdir(parents=True, exist_ok=True)
-        fd, tmp = tempfile.mkstemp(dir=p, prefix=".tmp-")
+    @staticmethod
+    def _replace_text(directory: Path, filename: str, text: str) -> None:
+        """Write ``directory/filename`` via a temporary file: a reader never sees it empty."""
+        directory.mkdir(parents=True, exist_ok=True)
+        fd, tmp = tempfile.mkstemp(dir=directory, prefix=".tmp-")
         try:
             with os.fdopen(fd, "w") as fh:
-                fh.write(h)
-            os.replace(tmp, p / ref)
+                fh.write(text)
+            os.replace(tmp, directory / filename)
         except BaseException:
             with contextlib.suppress(OSError):
                 os.unlink(tmp)
             raise
+
+    def _write_ref(self, name: str, ref: str, h: str) -> None:
+        _check("ref", ref)
+        self._replace_text(self._path("refs", name), ref, h)
+
+    def _read_id(self, path: Path, name: str, ref: str) -> str:
+        text = path.read_text().strip()
+        if not _CONTENT_ID.fullmatch(text):
+            raise RegistryError(
+                f"{name}@{ref} is damaged: {path.name!r} does not hold a content id "
+                f"(point it at a version again with promote or tag)"
+            )
+        return text
 
     def resolve(self, name: str, ref: str = "latest") -> str:
         """Resolve a ref, tag or content hash that is recorded for ``name`` (SEC4)."""
@@ -138,10 +156,10 @@ class LocalRegistry:
         _check("ref", ref)
         p = self._path("refs", name, ref)
         if p.is_file():
-            return p.read_text().strip()
+            return self._read_id(p, name, ref)
         t = self._path("tags", name, ref)
         if t.is_file():
-            return t.read_text().strip()
+            return self._read_id(t, name, ref)
         if any(e.get("content_id") == ref for e in self.log(name)):
             return ref
         raise RegistryError(f"{name}@{ref} is not recorded in the registry")
@@ -156,10 +174,8 @@ class LocalRegistry:
     def tag(self, name: str, tag: str, ref: str = "latest") -> str:
         h = self.resolve(name, ref)
         _check("tag", tag)
-        p = self._path("tags", name)
-        p.mkdir(parents=True, exist_ok=True)
         self._path("tags", name, tag)
-        (p / tag).write_text(h)
+        self._replace_text(self._path("tags", name), tag, h)
         return h
 
     def promote(self, name: str, source: str, target: str) -> str:
