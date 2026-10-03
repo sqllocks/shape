@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "t",
+    "seed": 1
+  },
+  "tables": {
+    "parent": {
+      "name": "parent",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "amount": {
+          "name": "amount",
+          "type": "decimal",
+          "precision": 12,
+          "scale": 2,
+          "generator": {
+            "strategy": "computed",
+            "rule": "sum_children",
+            "child_table": "child",
+            "child_column": "line",
+            "output_type": "decimal"
+          }
+        }
+      }
+    },
+    "child": {
+      "name": "child",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "pid": {
+          "name": "pid",
+          "type": "integer",
+          "generator": {
+            "strategy": "foreign_key",
+            "ref": "parent.id"
+          }
+        },
+        "line": {
+          "name": "line",
+          "type": "decimal",
+          "precision": 10,
+          "scale": 2,
+          "generator": {
+            "strategy": "distribution",
+            "distribution": "uniform",
+            "min": 1,
+            "max": 50,
+            "output_type": "decimal"
+          }
+        }
+      }
+    }
+  },
+  "relationships": [
+    {
+      "name": "r",
+      "parent": "parent",
+      "child": "child",
+      "parent_columns": [
+        "id"
+      ],
+      "child_columns": [
+        "pid"
+      ]
+    }
+  ],
+  "generation": {
+    "scale": "s",
+    "scales": {
+      "s": {
+        "parent": 5,
+        "child": 40
+      }
+    }
+  }
+}

@@ -6,7 +6,7 @@
   "type": "object",
   "required": ["schema_version", "model", "tables"],
   "additionalProperties": false,
-  "patternProperties": {"^x_": {}},
+  "patternProperties": {"^(x_|x-|\\$comment$)": {}},
   "properties": {
     "format": {"const": "shape-generation-schema"},
     "version": {"const": 1},
@@ -29,6 +29,7 @@
       "type": "object",
       "required": ["name"],
       "additionalProperties": false,
+      "patternProperties": {"^(x-|\\$comment$)": {}},
       "properties": {
         "name": {"type": "string"},
         "description": {"type": "string"},
@@ -43,6 +44,7 @@
       "type": "object",
       "required": ["name", "columns"],
       "additionalProperties": false,
+      "patternProperties": {"^(x-|\\$comment$)": {}},
       "properties": {
         "name": {"type": "string"},
         "description": {"type": "string"},
@@ -55,6 +57,7 @@
       "type": "object",
       "required": ["name", "type", "generator"],
       "additionalProperties": false,
+      "patternProperties": {"^(x-|\\$comment$)": {}},
       "properties": {
         "name": {"type": "string"},
         "type": {"type": "string"},
@@ -70,6 +73,7 @@
       "type": "object",
       "required": ["name", "parent", "child"],
       "additionalProperties": false,
+      "patternProperties": {"^(x-|\\$comment$)": {}},
       "properties": {
         "name": {"type": "string"},
         "parent": {"type": "string"},
@@ -85,6 +89,7 @@
       "type": "object",
       "required": ["name", "type", "rule"],
       "additionalProperties": false,
+      "patternProperties": {"^(x-|\\$comment$)": {}},
       "properties": {
         "name": {"type": "string"},
         "type": {"type": "string"},
@@ -97,6 +102,7 @@
     "generation": {
       "type": "object",
       "additionalProperties": false,
+      "patternProperties": {"^(x-|\\$comment$)": {}},
       "properties": {
         "scale": {"type": "string"},
         "scales": {

@@ -9,3 +9,5 @@ Artifact readers fail closed on unknown mandatory capabilities and tolerate unkn
 Persisted files follow [the state and compatibility policy](specs/STATE_AND_COMPATIBILITY.md): every file declares `format` and an integer `version`, every 1.x and later release reads every format version ever released, and a file from a newer release fails naming the minimum Shape release that reads it.
 
 Plugin API v1 has its own promise, with the per-group rules and the deprecation process: `docs/plugins/stability.md`.
+
+The generation spec format (its JSON Schema, the stability promise within 1.x and the edit API) is described in `docs/GENERATION_SPEC.md`.
