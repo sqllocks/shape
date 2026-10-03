@@ -491,3 +491,12 @@ def test_temporal_profile_reads_nanoseconds_and_refuses_an_empty_column_clearly(
     assert ns == us
     with pytest.raises(ValueError, match="at least one non-null value"):
         holiday_lifts(pa.array([], pa.date32()), {})
+
+
+# ---- #317: every stored minimum and maximum is cut to 256 characters ----------------------
+
+
+def test_binary_min_and_max_are_cut_like_text(kernel):
+    c = _col(pa.array([b"x" * 10_000, b"y" * 10_000], pa.binary()))
+    for key in ("min_value", "max_value"):
+        assert len(c[key][1]) == 257 and c[key][1].endswith("…")
