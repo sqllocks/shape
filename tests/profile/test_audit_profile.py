@@ -210,3 +210,43 @@ def test_text_infinity_in_a_file_still_fails_as_the_baseline_does(kernel, tmp_pa
     pq.write_table(pa.table({"c": pa.array(["1.5", "inf", "2.5"] * 10)}), path)
     with pytest.raises(ValueError, match="non-finite"):
         shape.profile(str(path))
+
+
+# ---- #225: zoned instants that share a wall-clock time stay apart -------------------------
+
+
+def _fold(n: int) -> pa.Array:
+    utc = dt.timezone.utc
+    v = [
+        dt.datetime(2021, 11, 7, 5, 30, tzinfo=utc),  # 01:30 EDT
+        dt.datetime(2021, 11, 7, 6, 30, tzinfo=utc),  # 01:30 EST, an hour later
+        dt.datetime(2021, 11, 7, 6, 10, tzinfo=utc),  # 01:10 EST
+        dt.datetime(2021, 11, 7, 4, 50, tzinfo=utc),  # 00:50 EDT
+    ][:n]
+    return pa.array(v * (5 if n == 4 else 1), pa.timestamp("us", tz="America/New_York"))
+
+
+def test_two_instants_in_the_repeated_hour_are_two_values(kernel):
+    # the pinned baseline's profile of the same Parquet column
+    c = _col(_fold(2))
+    assert c["cardinality"] == 2 and c["is_unique"] is True
+    assert c["min_value"] == ["timestamp", "2021-11-07 01:30:00-04:00"]
+    assert c["max_value"] == ["timestamp", "2021-11-07 01:30:00-05:00"]
+    assert c["value_counts_ext"] == {
+        "2021-11-07 01:30:00-04:00": 0.5,
+        "2021-11-07 01:30:00-05:00": 0.5,
+    }
+
+
+def test_the_repeated_hour_keeps_first_seen_order_and_wall_clock_hours(kernel):
+    c = _col(_fold(4))
+    assert c["cardinality"] == 4
+    assert c["value_counts_ext_order"] == [
+        "2021-11-07 01:30:00-04:00",
+        "2021-11-07 01:30:00-05:00",
+        "2021-11-07 01:10:00-05:00",
+        "2021-11-07 00:50:00-04:00",
+    ]
+    assert c["min_value"] == ["timestamp", "2021-11-07 00:50:00-04:00"]
+    assert c["max_value"] == ["timestamp", "2021-11-07 01:30:00-05:00"]
+    assert c["hour_histogram"][0] == 0.25 and c["hour_histogram"][1] == 0.75  # wall clock
