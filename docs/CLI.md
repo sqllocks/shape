@@ -77,9 +77,13 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
   of one file per table. Given a captured evidence document (`REFERENCE.json`) it certifies the
   CSV against it instead. A profile is not a fidelity reference; profile the synthetic data and
   run `shape diff`.
-- `shape proposals propose|list|decide` keeps the answers to what a profile cannot settle alone
-  (foreign keys, personal data, meaning) in a decision file; `shape generate --from` and
-  `shape plan` take it with `--decisions`. See [PROPOSALS.md](PROPOSALS.md).
+- `shape proposals propose|list|decide|contract` keeps the answers to what a profile cannot settle
+  alone (foreign keys, personal data, meaning) in a decision file; `shape generate --from` and
+  `shape plan` take it with `--decisions`. `propose --kinds rule` (one or several profiles) proposes
+  contract rules with evidence and a confidence, `list --status stale` shows accepted rules whose
+  evidence no longer holds after a re-profile, and `contract -d DECISIONS.json -o CONTRACT.json
+  [--merge EXISTING.json]` writes the accepted rules as a contract `shape check` reads (exit 2 on a
+  conflict with a rule in the file merged into). See [PROPOSALS.md](PROPOSALS.md#rules).
 
 - `shape bridge` serves Shape's commands as a versioned JSON protocol on standard input and output
   (one request and one response per line; `--once` for a single request; `--jobs-dir DIR` for the
