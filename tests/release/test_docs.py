@@ -221,3 +221,11 @@ def test_shape_diff_in_the_docs_compares_profiles(doc):
         if operand.endswith(".json")
     ]
     assert bad == []
+
+
+def test_readme_points_to_the_shipped_safe_profile():
+    """#346: the README's privacy note names `shape profile safe`, not a "planned" feature."""
+    readme = (ROOT / "README.md").read_text("utf-8")
+    section = readme.split("## What a `.shape` file contains", 1)[1].split("\n## ", 1)[0]
+    assert "is planned" not in section
+    assert "shape profile safe" in section
