@@ -308,3 +308,6 @@ No gate, tolerance or decision changed; no test skipped or weakened; `$SPINDLE_R
 
 Checks (Python 3.11): `ruff check`, `ruff format --check`, `mypy` clean; `pytest tests/cli tests/profile`
 470 passed; the kill_9 tests and the generation CLI tests pass.
+
+Green run (round 5): CI run 37108639014 on b540138 — all 19 jobs succeeded, including bench-quick,
+test (macos-latest, 3.14) and test (ubuntu-latest, 3.11).
