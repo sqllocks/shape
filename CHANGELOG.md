@@ -5,6 +5,22 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+### Fixed
+
+- Contracts (`ShapeContract.from_dict`, `shape validate`) are checked against
+  `shape-v1.schema.json` and refuse an unknown mandatory capability, as `docs/specs/SHAPE_1_0.md`
+  requires (#383); capability lists must be lists of strings (#393).
+- Schema design: a star or snowflake whose tables would share a name (an entity called `date`,
+  names that differ only in case) is an error instead of one table replacing another (#384); 3NF
+  keeps a self-referencing foreign key (#385); a decimal scale above its precision, a repeated
+  attribute in a key, dependency or hierarchy, empty names and unknown `not_additive_over` names
+  are refused (#386, #387, #390); `--from-data` gives decimals a precision that holds their scale,
+  types integers mixed with decimals as decimal and names a row that is not a mapping (#386, #392).
+- Decision files: `update` and `decide` refuse what the reader would refuse, so a written file
+  always reads back (#388); impossible times such as `2026-02-30T12:00:00Z` are refused (#391);
+  `apply_decisions` accepts a `.shape` path (#389).
+- Migrating a v1 capture refuses two columns with one name (#393).
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

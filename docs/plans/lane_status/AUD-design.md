@@ -96,4 +96,59 @@ Severity: critical / high / medium / low. "Repro" is Python run from the repo ro
 
 ## Issues, fixes and commits
 
-Filled in as the fixes land (below).
+Each fix landed as a failing regression test first (its failing output is in that commit's
+message), then the fix.
+
+| finding | issue | test commit | fix commit | status |
+|---|---|---|---|---|
+| 1, 13 | #383 | `eb4af55` | `7246745` | fixed |
+| 2 | #384 | `babd127` | `15ef038` | fixed |
+| 3 | #385 | `8147385` | `56bb379` | fixed |
+| 4 | #386 | `9bc76af` | `c50c3b5` | fixed |
+| 5 | #387 | `9bc76af` | `78d51f5` | fixed |
+| 6 | #388 | `0512f7a` | `d2d1fe0` | fixed |
+| 7 | #389 | `0512f7a` | `f23b5e2` | fixed |
+| 8, 9 | #390 | `b7e157a` | `79b6181` | fixed |
+| 10 | #391 | `b7e157a` | `8109bbe` | fixed |
+| 11 | #392 | `b7e157a` | `48e2ecb` | fixed |
+| 12, 14 | #393 | `b7e157a` | `77e9197` | fixed |
+| 17 | — | — | `c1125e7`, `b5dd7be` | tests added |
+| 15 | not filed | — | — | open (for the lead) |
+| 16 | not filed | — | — | open (for the lead) |
+
+Notes on the fixes:
+
+- #383: `from_dict` fills the defaults (`version` 1, `fidelity` gold, no fields), then checks the
+  document against `shape-v1.schema.json` with `shape.schemacheck`, then the mandatory
+  capabilities. A newer `version` says to upgrade Shape. `validate()` names the path of an
+  empty name, a bad version or a duplicate field. `check_capabilities` stays untyped, because
+  typing it would turn the `type: ignore` lines in `src/shape/validation/requirements.py`
+  (outside this area) into unused ignores under strict mypy.
+- #390: `not_additive_over` accepts a dimension's entity or role, `date` (the date dimension)
+  when the fact has dates, or an attribute of the source. The existing lint test uses `date`.
+- #386: `--from-data` keeps precision 38 for ordinary values and widens it only when the digits
+  need more.
+
+Left open, and why:
+
+- **15 (proposal ids with dots).** A subject is `TABLE.COLUMN`, so it is ambiguous when a name
+  holds a dot. Fixing it changes the persisted id format of decision files (`format`
+  `shape-decisions`, `version` 1), which is a format decision for the lead, not an audit fix.
+- **16 (foreign-key constraint name length).** Lint N002 could also check `FK_<table>_<cols>`.
+  The DDL is byte-stable by design, so shortening names changes output. Left for the lead to
+  choose a naming rule.
+- `null_count` greater than `rows` in a migrated v1 capture is kept as it is: the v2 schema
+  allows it and the consumers read it as written. Not a defect in the migration.
+
+No `.github/workflows` change was needed.
+
+## Checks run (this session)
+
+- `ruff check src tests plugins benchmarks/vs_spindle`: all checks passed.
+- `ruff format --check src tests plugins benchmarks/vs_spindle`: 1091 files already formatted.
+- `mypy`: no issues in 436 source files.
+- `python scripts/check_user_facing.py`: clean.
+- `pytest tests/design tests/proposals tests/spec tests/model --cov=...`: 294 passed, 96% total
+  (was 230 passed, 92%).
+- Full `pytest -m "not emulator and not live"` with `SHAPE_KERNEL=rust` and `python`: running;
+  results recorded below when they finish.
