@@ -506,3 +506,53 @@ def test_700_the_library_default_is_unchanged_and_the_command_backs_off():
     c = _consumer(_Down(), max_attempts=3)
     assert c.backoff == 0.0
     assert cli.RECONNECT_BACKOFF > 0
+
+
+def _live_emit(tmp_path, *extra):
+    out = tmp_path / "e.jsonl"
+    args = ["emit", "retail", "--scale", "tiny", "--max-events", "30", "--sink", "file"]
+    args += ["-o", str(out), "--live-target", "retail", "--fresh", *extra]
+    return main(args), out
+
+
+def test_702_an_unusable_live_report_is_refused_before_any_event(tmp_path, capsys):
+    code, out = _live_emit(tmp_path, "--live-report", str(tmp_path / "r.txt"))
+    assert code == 2
+    assert "cannot tell the format" in capsys.readouterr().err
+    assert not out.exists() and not Path(f"{out}.checkpoint").exists()
+
+
+def test_702_a_live_output_that_is_a_directory_is_refused_before_any_event(tmp_path, capsys):
+    (tmp_path / "dir.json").mkdir()
+    for flag in ("--live-report", "--live-profile"):
+        code, out = _live_emit(tmp_path, flag, str(tmp_path / "dir.json"))
+        assert code == 2 and not out.exists()
+        assert "is a directory" in capsys.readouterr().err
+
+
+def test_702_live_outputs_in_a_new_folder_are_written(tmp_path):
+    report = tmp_path / "new" / "live" / "r.json"
+    profile = tmp_path / "new" / "p.json"
+    code, _ = _live_emit(tmp_path, "--live-report", str(report), "--live-profile", str(profile))
+    assert code == 0 and report.exists() and profile.exists()
+
+
+def test_741_live_options_without_a_live_target_are_refused(tmp_path, capsys):
+    base = ["emit", "retail", "--scale", "tiny", "--max-events", "10", "--sink", "file", "--fresh"]
+    for extra in (
+        ["--live-report", str(tmp_path / "r.json")],
+        ["--live-profile", str(tmp_path / "p.json")],
+        ["--live-alerts", str(tmp_path / "a.jsonl")],
+        ["--live-fail"],
+        ["--live-min-column-score", "50"],
+        ["--no-live-profile"],
+    ):
+        out = tmp_path / "e.jsonl"
+        assert main([*base, "-o", str(out), *extra]) == 2, extra
+        err = capsys.readouterr().err
+        assert "--live-target" in err and extra[0] in err
+        assert not out.exists()
+    # with a target the same options are accepted
+    assert main(
+        [*base, "-o", str(tmp_path / "ok.jsonl"), "--live-target", "retail", "--live-fail"]
+    ) in (0, 1)
