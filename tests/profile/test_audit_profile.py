@@ -359,3 +359,39 @@ def test_a_long_text_value_is_tokenized_in_linear_time():
     start = time.perf_counter()
     assert dtparse.parse_mixed("1." * 200_000) is None  # 400 KB: 25 s when quadratic
     assert time.perf_counter() - start < 5.0
+
+
+# ---- #271: a folder skips hidden and underscore folders, and refuses a nested Delta table ---
+
+
+def test_a_folder_skips_hidden_and_underscore_folders(tmp_path):
+    (tmp_path / "data.csv").write_text("a\n1\n2\n")
+    (tmp_path / ".ipynb_checkpoints").mkdir()
+    (tmp_path / ".ipynb_checkpoints" / "data-checkpoint.csv").write_text("a\n7\n")
+    (tmp_path / "_temporary" / "0").mkdir(parents=True)
+    (tmp_path / "_temporary" / "0" / "part-0.csv").write_text("a\n9\n")
+    (tmp_path / "part" / "day=1").mkdir(parents=True)
+    (tmp_path / "part" / "day=1" / "x.csv").write_text("a\n3\n")
+    d = shape.profile(str(tmp_path)).to_dict()
+    assert d["row_count"] == 3 and d["columns"]["a"]["max_value"] == ["int", 3]
+
+
+def test_a_folder_holding_a_nested_delta_table_is_refused(tmp_path):
+    deltalake = pytest.importorskip("deltalake")
+    lake = tmp_path / "lake"
+    deltalake.write_deltalake(str(lake / "sales"), pa.table({"v": [1, 2, 3]}))
+    deltalake.write_deltalake(str(lake / "sales"), pa.table({"v": [100]}), mode="overwrite")
+    with pytest.raises(ValueError, match=r"Delta table.*sales"):
+        shape.profile(str(lake))
+    assert shape.profile(str(lake / "sales")).to_dict()["row_count"] == 1
+
+
+# ---- #272: an existing path with glob characters in its name is read as itself -------------
+
+
+def test_an_existing_file_with_glob_characters_in_its_name_is_read(tmp_path):
+    path = tmp_path / "x[1].csv"
+    path.write_text("a\n1\n2\n")
+    assert shape.profile(str(path)).to_dict()["row_count"] == 2
+    (tmp_path / "y1.csv").write_text("a\n5\n")
+    assert shape.profile(str(tmp_path / "y[0-9].csv")).to_dict()["row_count"] == 1  # still a glob
