@@ -70,6 +70,9 @@ DEFAULT_THRESHOLDS: dict[str, Any] = {
     "benford_class_steps": 2,  # conformity classes (close .. nonconformity) the data got worse by
     "tail_alpha_drop": 0.3,  # relative fall of the Hill tail index alpha
     "tail_alpha_max": 3.0,  # ... and it must end below this
+    "multivariate_outlier_rate": 0.02,  # absolute rise of the share of multivariate outliers
+    "structure_angle": 30.0,  # degrees between the leading PCA subspaces of two profiles
+    "cohort_tvd": 0.10,  # total variation distance of the cohort shares (matched by centroid)
 }
 
 KIND_SEVERITY: dict[str, str] = {
@@ -104,6 +107,9 @@ KIND_SEVERITY: dict[str, str] = {
     "heaping_change": "low",
     "benford_change": "medium",
     "tail_change": "low",
+    "multivariate_outlier_rate_change": "low",
+    "structure_change": "low",
+    "cohort_shift": "low",
 }
 
 _NUMERIC = ("integer", "float")

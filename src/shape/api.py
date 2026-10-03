@@ -32,6 +32,7 @@ def generate(
     *,
     scale: str | None = None,
     mode: str | None = None,
+    mixed_copula: bool = False,
 ) -> Any:
     """Generate data.
 
@@ -42,7 +43,9 @@ def generate(
     (``3nf`` or ``star``) picks a domain's schema.
 
     The earlier form, ``generate(shape_model, n, seed, relationships)``, still generates rows from
-    a Shape model.
+    a Shape model. From a profile, ``mixed_copula=True`` links the numeric and categorical columns
+    by the profile's mixed-type Gaussian copula (``joint.copula``, ``docs/JOINT.md``); off by
+    default.
     """
     from shape.generation.schema import GenSchema
 
@@ -51,7 +54,7 @@ def generate(
         from shape.generation.fit import PRESET, fit_schema
 
         rows = None if n is None else int(n)
-        fitted = fit_schema(shape, rows=rows)
+        fitted = fit_schema(shape, rows=rows, mixed_copula=mixed_copula)
         return Engine(fitted.schema, scale=scale or PRESET, seed=seed).generate()
     if isinstance(shape, str):
         from shape.generation.domains import load_domain

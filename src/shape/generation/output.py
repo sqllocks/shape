@@ -258,6 +258,8 @@ def needs_post_pass(schema: GenSchema) -> bool:
     repair, correlation), so it cannot be streamed chunk by chunk."""
     if schema.business_rules or any(schema.correlated_columns.values()):
         return True
+    if schema.generation.output.get("copula_mixed"):
+        return True
     return any(
         c.strategy in _POST_PASS_STRATEGIES
         for t in schema.tables.values()

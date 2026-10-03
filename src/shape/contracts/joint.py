@@ -63,13 +63,15 @@ def check_fd(rule: dict[str, Any], table: dict[str, Any]) -> list[dict[str, Any]
     missing = [c for c in (*det, dep) if c not in columns]
     if missing:
         return [_violation(label, "fd", expected, {"missing_columns": missing})]
-    if len(det) == 1 and columns[det[0]].get("is_unique") is True:
-        return []  # a unique determinant fixes every other column
+    if any(columns[c].get("is_unique") is True for c in det):
+        return []  # a unique determinant (or one unique column of several) fixes every column
     j = _joint(table)
     if j is None:
         return [
             _violation(label, "fd", expected, "not measured: the profile has no joint analysis")
         ]
+    if len(det) > 1:
+        return _check_multi_fd(label, det, dep, minimum, expected, columns, j)
     for entry in j.get("dependencies", ()):
         if entry["determinant"] == det and entry["dependent"] == dep:
             if entry["confidence"] >= minimum:
@@ -114,6 +116,90 @@ def check_fd(rule: dict[str, Any], table: dict[str, Any]) -> list[dict[str, Any]
             expected,
             "not measured: the dependency was not analysed (single-column determinants "
             "among the profile's analysed columns only)",
+        )
+    ]
+
+
+def _check_multi_fd(
+    label: str,
+    det: list[str],
+    dep: str,
+    minimum: float,
+    expected: dict[str, Any],
+    columns: dict[str, Any],
+    j: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """A determinant of two or more columns. The profile lists two-column determinants whose
+    confidence is at least 0.8, neither column alone within 0.01 of it, and that are not a candidate
+    key: the rule reads that entry, a single column that holds the rule on its own, or the key."""
+    wanted = sorted(det)
+    for entry in j.get("dependencies", ()):
+        if sorted(entry["determinant"]) == wanted and entry["dependent"] == dep:
+            if entry["confidence"] >= minimum:
+                return []
+            return [
+                _violation(
+                    label,
+                    "fd",
+                    expected,
+                    {
+                        "confidence": entry["confidence"],
+                        "violating_groups": entry["violating_groups"],
+                        "groups": entry["groups"],
+                        "violations": entry.get("violations", []),
+                    },
+                )
+            ]
+    if len(det) != 2:
+        return [
+            _violation(
+                label,
+                "fd",
+                expected,
+                "not measured: the profile holds determinants of one or two columns",
+            )
+        ]
+    singles = {
+        e["determinant"][0]: e["confidence"]
+        for e in j.get("dependencies", ())
+        if len(e["determinant"]) == 1 and e["dependent"] == dep and e["determinant"][0] in det
+    }
+    if any(c >= minimum for c in singles.values()):
+        return []  # a finer determinant never does worse than one of its columns
+    if wanted in [sorted(k["fields"]) for k in j.get("keys", ())]:
+        return []  # unique together: determines every column
+    analysed = set(j.get("categorical_columns", ()))
+    tried = "multi_determinant_pairs_evaluated" in j  # a profile made before pairs: none tried
+    if (
+        not tried
+        or j.get("multi_determinant_capped")
+        or any(c not in analysed for c in (*det, dep))
+    ):
+        return [
+            _violation(
+                label,
+                "fd",
+                expected,
+                "not measured: the dependency was not analysed (determinants of two categorical "
+                "columns among the profile's analysed columns, within its budget)",
+            )
+        ]
+    if minimum > MIN_REPORTED_CONFIDENCE:
+        return [
+            _violation(
+                label,
+                "fd",
+                expected,
+                {"confidence_below": MIN_REPORTED_CONFIDENCE, "violations": []},
+            )
+        ]
+    return [
+        _violation(
+            label,
+            "fd",
+            expected,
+            f"not measured: the profile lists dependencies of confidence "
+            f"{MIN_REPORTED_CONFIDENCE} or more",
         )
     ]
 

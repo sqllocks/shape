@@ -5,6 +5,25 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Multivariate depth (`docs/JOINT.md`, #232). The `joint` entry of a table profile gains, where it
+  applies: two-column determinants in `dependencies` (`"determinant": ["a", "b"]`, the fields of a
+  single-column one, capped per budget by `max_fd_multi`; `shape diff` reports `dependency_broken`
+  for them and the `fd` contract rule reads them), `multivariate_outliers` (robust Mahalanobis
+  distances from a fixed-seed FAST-MCD, chi-square 0.999 cut), `pca` (loadings to 95% of the
+  variance, effective dimension at 90%), `cohorts` (k-means++ with `k` from 2 to 8 by silhouette,
+  stored from 0.25) and `copula` (the latent correlation matrix of a Gaussian copula over the
+  numeric and categorical columns, a persisted block with `format` and `version`). `shape diff`
+  reports `multivariate_outlier_rate_change`, `structure_change` and `cohort_shift` (thresholds
+  `multivariate_outlier_rate`, `structure_angle`, `cohort_tvd`; each held to sampling noise).
+  `shape generate --from PROFILE --mixed-copula` (and `shape plan`, `shape.generate(...,
+  mixed_copula=True)`) links numeric and categorical columns by the copula, reordering each
+  column's own generated values so every marginal stays exact; it is off by default and
+  generation without it is unchanged. The entries are bounded by the joint analysis's sample and
+  column limits, identical in both kernels, left out of the share-safe profile, and shown by
+  `shape show` and in the `--html` report. A profile written before this change loads, displays,
+  diffs and generates as before. Also fixed: `shape generate --from` wrote no file for a table the
+  numeric copula reorders.
+
 - Univariate depth (`docs/PROFILING_NOTES.md`, #103). Each numeric column of a profile gains, where
   it applies: `distribution_candidates` and `distribution_by_bic` (maximum-likelihood fits of the
   normal, lognormal, exponential, uniform, gamma and Weibull with log-likelihood, AIC, BIC and KS;

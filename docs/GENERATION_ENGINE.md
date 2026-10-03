@@ -114,6 +114,12 @@ They need whole tables, so `generate()` runs them and `iter_chunks()` does not. 
    Pairs with `|r|` below 0.5 are ignored, unless `generation.output.copula_threshold` lowers
    that (`shape generate --from` writes 0 and lists only the pairs it wants).
 
+   **Mixed-type copula** (`copula_mixed.py`, opt in with `shape generate --from PROFILE
+   --mixed-copula`): the schema's `generation.output.copula_mixed` block (`format`
+   `shape.copula-mixed`, `version` 1, one entry per table: the stored column order, the categories
+   in their stored order, the latent correlation matrix) reorders numeric and categorical columns
+   after the numeric copula. See `docs/JOINT.md`.
+
 ## From data: `learn`, `generate --from` and `plan`
 
 Two commands turn data into a generation schema, for different jobs.

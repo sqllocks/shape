@@ -43,7 +43,14 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
   A numeric column of a profile carries the univariate depth fields (best family by BIC and the
   fitted candidates, zero share and zero inflation, heaping, Benford conformity, tail index), so
   `shape show` prints them; `shape profile --json` and `--html` show them too
-  (`docs/PROFILING_NOTES.md`).
+  (`docs/PROFILING_NOTES.md`). The table's `joint` entry carries the multivariate depth entries
+  (two-column determinants, multivariate outliers, PCA, cohorts and the mixed-type copula;
+  `docs/JOINT.md`), which `shape show` prints and the `--html` report lists under the table.
+- `shape generate --from PROFILE.shape --mixed-copula` links the numeric and categorical columns
+  by the profile's mixed-type Gaussian copula (`joint.copula`): each column keeps exactly its
+  generated values, only their order across rows changes. Without the flag the output is what it
+  was. `shape plan PROFILE.shape --mixed-copula` lists the columns the copula orders (the flag is
+  also `mixed_copula=True` of `shape.generate`). See [JOINT.md](JOINT.md).
 - `shape capture SRC` reads everything `shape profile` reads (CSV, Parquet, JSONL, a folder or
   glob, a Delta table with `--version N` or `--as-of TIMESTAMP`, an `abfss://` source) and writes a
   **model** (JSON, or a model `.shape` with `-o OUT.shape`), which `shape query`,

@@ -438,7 +438,12 @@ def _cmd_plan_profile(a):
     from shape.cli.proposals import load_decisions
     from shape.generation.fit import fit_schema
 
-    plan = fit_schema(shape.load(a.shape), rows=a.rows, decisions=load_decisions(a.decisions)).plan
+    plan = fit_schema(
+        shape.load(a.shape),
+        rows=a.rows,
+        decisions=load_decisions(a.decisions),
+        mixed_copula=a.mixed_copula,
+    ).plan
     out = plan.to_dict()
     if a.status:
         out["items"] = [x for x in out["items"] if x["status"] in a.status]
@@ -1233,6 +1238,11 @@ def _build_parser(plugin_commands=()):
         "--decisions",
         metavar="DECISIONS.json",
         help="apply a decision file (`shape proposals`): accepted relationships are kept",
+    )
+    gp.add_argument(
+        "--mixed-copula",
+        action="store_true",
+        help="plan with the mixed-type copula of the profile's `joint.copula` (docs/JOINT.md)",
     )
     gp.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     fc = sub.add_parser("certify-shapes")

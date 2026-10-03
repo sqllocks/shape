@@ -59,6 +59,14 @@ from shape.generation.compute import (
     apply_compute_phase,
     plan_streamed_aggregates,
 )
+from shape.generation.copula_mixed import (
+    OUTPUT_KEY as MIXED_COPULA_KEY,
+)
+from shape.generation.copula_mixed import (
+    apply_mixed_copula,
+    ordered_columns,
+    without_pairs,
+)
 from shape.generation.correlation import THRESHOLD, apply_copula
 from shape.generation.early_rules import EarlyRules
 from shape.generation.rng import RowStream
@@ -909,7 +917,18 @@ class Engine:
         }
         touched |= repaired_tables(self.schema)
         touched |= {name for name, pairs in self.schema.correlated_columns.items() if pairs}
+        touched |= {
+            name for name in self._mixed_copula_tables() if ordered_columns(self.schema, name)
+        }
         return touched
+
+    def _mixed_copula_tables(self) -> list[str]:
+        """The tables the schema's mixed-type copula block (``generation.output.copula_mixed``,
+        written by ``shape generate --from --mixed-copula``) names, in schema order."""
+        block = self.schema.generation.output.get(MIXED_COPULA_KEY)
+        if not block:
+            return []
+        return [t for t in self.schema.tables if t in block.get("tables", {})]
 
     def generate(
         self,
@@ -994,13 +1013,18 @@ class Engine:
         tables = apply_compute_phase(tables, self.schema, precomputed)
         rules = self.schema.business_rules
         copula = {t for t, pairs in self.schema.correlated_columns.items() if t in tables and pairs}
+        mixed = [t for t in self._mixed_copula_tables() if t in tables]
+        mixed = [t for t in mixed if ordered_columns(self.schema, t)]
+        copula |= set(mixed)
         emitted: set[str] = set()
 
         def release(after_rule: int) -> None:
             """Hand over the touched tables that no later rule repair or copula changes."""
             if on_table is None:
                 return
-            later = {repair_target(r) for r in rules[after_rule + 1 :]} | copula
+            later = {repair_target(r) for r in rules[after_rule + 1 :]}
+            if after_rule < len(rules):  # the copula runs after the last rule repair
+                later |= copula
             for name in flat:
                 if name in touched and name not in later and name not in emitted:
                     emitted.add(name)
@@ -1016,7 +1040,10 @@ class Engine:
             if tname in copula:
                 tables[tname] = apply_copula(
                     tables[tname],
-                    self.schema.correlated_columns[tname],
+                    without_pairs(
+                        self.schema.correlated_columns[tname],
+                        ordered_columns(self.schema, tname) if tname in mixed else (),
+                    ),
                     self.seed,
                     tname,
                     threshold=float(
@@ -1024,6 +1051,8 @@ class Engine:
                     ),
                     nulls=str(self.schema.generation.output.get("copula_nulls", "skip")),
                 )
+        for tname in mixed:
+            tables[tname] = apply_mixed_copula(tables[tname], self.schema, self.seed, tname)
         release(len(rules))
         tables = {name: self.finalize(name, t) for name, t in tables.items()}
         lineage = [

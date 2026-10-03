@@ -574,6 +574,7 @@ def fit_schema(
     copula_threshold: float = COPULA_THRESHOLD,
     rows: int | None = None,
     decisions: Any = None,
+    mixed_copula: bool = False,
 ) -> Fit:
     """The generation schema that reproduces ``profile``, and what it preserves.
 
@@ -643,7 +644,61 @@ def fit_schema(
     doc["generation"]["scales"][PRESET] = dict(parent_scale)
     doc["generation"]["scale"] = PRESET
     items.extend(_dataset_items(dataset))
-    return Fit(GenSchema.from_dict(doc), ReconstructionPlan(tuple(items)))
+    schema = GenSchema.from_dict(doc)
+    items.extend(_mixed_copula(schema, dataset, mixed_copula))
+    return Fit(schema, ReconstructionPlan(tuple(items)))
+
+
+def _mixed_copula(schema: GenSchema, dataset: DatasetProfile, enabled: bool) -> list[PlanItem]:
+    """The mixed-type copula (W3-08): with ``enabled`` the profile's ``joint.copula`` blocks go into
+    the schema and the plan lists the columns each one orders; without it the plan says it is not
+    modelled and the schema is untouched."""
+    from shape.generation.copula_mixed import OUTPUT_KEY, block_from_profile, ordered_groups
+
+    held = {n: tp.joint for n, tp in dataset.tables.items() if (tp.joint or {}).get("copula")}
+    if not held:
+        return []
+    if not enabled:
+        return [
+            PlanItem(
+                f"{name}.joint.copula",
+                _N,
+                "not modelled unless asked for: `--mixed-copula` links the numeric and "
+                "categorical columns by a Gaussian copula",
+            )
+            for name in held
+        ]
+    block = block_from_profile(held)
+    if block is None:
+        return []
+    schema.generation.output[OUTPUT_KEY] = block
+    items: list[PlanItem] = []
+    for name in held:
+        groups = ordered_groups(schema, name)
+        columns = [c + (f" (with {', '.join(m)})" if m else "") for c, m in groups.items()]
+        evidence = f"{name}.joint.copula"
+        if columns:
+            items.append(
+                PlanItem(
+                    evidence,
+                    _A,
+                    f"the columns {', '.join(columns)} are reordered by a Gaussian copula over "
+                    "the numeric and categorical columns (a category sits at its mid-rank by "
+                    "frequency); every column keeps its generated values, so the marginals are "
+                    "exact and the links are approximate. Keys and columns held by a hierarchy "
+                    "or read by another column are left alone",
+                )
+            )
+        else:
+            items.append(
+                PlanItem(
+                    evidence,
+                    _N,
+                    "no two columns are free to reorder (keys and columns held by a conditional "
+                    "table or a hierarchy are left alone)",
+                )
+            )
+    return items
 
 
 def _joint_tables(
@@ -710,7 +765,14 @@ def _joint_tables(
                 "hierarchy (the `hierarchy` strategy) for state, city and ZIP",
             )
         )
-    for field in ("keys", "associations", "implausible_rate"):
+    for field in (
+        "keys",
+        "associations",
+        "implausible_rate",
+        "multivariate_outliers",
+        "pca",
+        "cohorts",
+    ):
         if joint.get(field):
             items.append(
                 PlanItem(

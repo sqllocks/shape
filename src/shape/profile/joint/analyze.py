@@ -19,6 +19,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from . import measures as M
+from . import multivariate as MV
 from .placeholders import detect_placeholders
 
 JOINT_VERSION = 1
@@ -30,6 +31,9 @@ IMPLAUSIBLE_FD_CONFIDENCE = (
     0.95  # a dependency this strong (and not exact) makes its exceptions implausible
 )
 MAX_DEPENDENCIES = 40
+MAX_PAIR_DEPENDENCIES = 20  # two-column determinants listed after the single-column ones
+MIN_PAIR_SUPPORT = 0.5  # a pair whose combinations mostly occur once determines anything trivially
+PAIR_ALONE_MARGIN = 0.01  # a column alone within this of the pair's confidence makes the pair moot
 MAX_ASSOCIATIONS = 60
 KENDALL_PAIRS = 8  # Kendall's tau (quadratic) for this many of the strongest numeric pairs
 KENDALL_MIN_SPEARMAN = 0.3
@@ -49,16 +53,27 @@ class Budget:
 
     sample_rows: int
     max_columns: int  # columns analysed per role (categorical, numeric)
-    max_fd_pairs: int
+    max_fd_pairs: int  # (determinant, dependent) pairs tried for single-column dependencies
+    max_fd_multi: int  # (determinant pair, dependent) triples tried for two-column determinants
     max_key_pairs: int
     assoc_columns: int  # columns per role in the association pairs
 
 
 SMALL = Budget(
-    sample_rows=20_000, max_columns=16, max_fd_pairs=240, max_key_pairs=120, assoc_columns=12
+    sample_rows=20_000,
+    max_columns=16,
+    max_fd_pairs=240,
+    max_fd_multi=400,
+    max_key_pairs=120,
+    assoc_columns=12,
 )
 LARGE = Budget(
-    sample_rows=5_000, max_columns=10, max_fd_pairs=40, max_key_pairs=20, assoc_columns=6
+    sample_rows=5_000,
+    max_columns=10,
+    max_fd_pairs=40,
+    max_fd_multi=80,
+    max_key_pairs=20,
+    assoc_columns=6,
 )
 MAX_LEVELS = SMALL.sample_rows  # distinct values up to this many make a categorical view
 
@@ -280,6 +295,166 @@ def _dependencies(
     return found[:MAX_DEPENDENCIES], flagged, evaluated
 
 
+def _pair_violations(
+    keys: np.ndarray,
+    bb: np.ndarray,
+    va: _View,
+    vb: _View,
+    vc: _View,
+    st: M.FdStats,
+    combo: np.ndarray,
+) -> list[dict[str, Any]]:
+    """The worst groups of a two-column determinant: ``combo`` holds the packed (a, b) code of each
+    compact group and ``keys`` the group of each row."""
+    ix, tot, mx, distinct = st.group_ix, st.total, st.most, st.distinct
+    out: list[dict[str, Any]] = []
+    for pos in np.argsort(-(tot - mx), kind="stable")[:MAX_VIOLATIONS]:
+        if distinct[pos] < 2:
+            break
+        g = int(ix[pos])
+        vals, counts = np.unique(bb[keys == g], return_counts=True)
+        top = np.argsort(-counts, kind="stable")[:3]
+        out.append(
+            {
+                "determinant_value": [
+                    va.label(int(combo[g] // vb.k)),
+                    vb.label(int(combo[g] % vb.k)),
+                ],
+                "rows": int(tot[pos]),
+                "distinct_dependents": int(distinct[pos]),
+                "dependent_values": {vc.label(int(vals[i])): int(counts[i]) for i in top},
+            }
+        )
+    return out
+
+
+def _finish_pairs(found: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    found.sort(key=lambda e: (-e["confidence"], -e["support"], e["determinant"], e["dependent"]))
+    return found[:MAX_PAIR_DEPENDENCIES]
+
+
+def _pair_dependencies(
+    cats: list[_View], n_rows: int, budget: Budget
+) -> tuple[list[dict[str, Any]], int, bool]:
+    """Two-column determinants ``(a, b) -> c`` among the categorical views: confidence at least
+    ``MIN_FD_CONFIDENCE``, neither column alone within ``PAIR_ALONE_MARGIN`` of it, and the pair
+    is not a candidate key. Each entry has the fields of a single-column dependency, with a
+    two-name ``determinant`` in column-name order. At most ``budget.max_fd_multi`` (pair,
+    dependent) triples are tried; the third result says whether the budget ran out."""
+    usable = sorted((v for v in cats if v.k < v.nn), key=lambda v: v.name)
+    alone: dict[tuple[str, str], float] = {}
+
+    def single(det: _View, dep: _View) -> float:
+        key = (det.name, dep.name)
+        if key not in alone:
+            assert det.codes is not None and dep.codes is not None
+            st = M.fd_stats(det.codes, dep.codes, det.k, dep.k)
+            alone[key] = -1.0 if st is None else st.confidence
+        return alone[key]
+
+    found: list[dict[str, Any]] = []
+    tried = 0
+    for i, va in enumerate(usable):
+        for vb in usable[i + 1 :]:
+            assert va.codes is not None and vb.codes is not None
+            valid = (va.codes >= 0) & (vb.codes >= 0)
+            rows = int(valid.sum())
+            if rows < 2:
+                continue
+            raw = va.codes[valid] * vb.k + vb.codes[valid]
+            combo, inverse = np.unique(raw, return_inverse=True)
+            if len(combo) >= rows:  # unique together: a candidate key, not a determinant
+                continue
+            keys = np.full(n_rows, -1, dtype=np.int64)
+            keys[valid] = inverse
+            for vc in usable:
+                if vc is va or vc is vb:
+                    continue
+                if tried >= budget.max_fd_multi:
+                    return _finish_pairs(found), tried, True
+                tried += 1
+                assert vc.codes is not None
+                st = M.fd_stats(keys, vc.codes, len(combo), vc.k)
+                if st is None or st.confidence < MIN_FD_CONFIDENCE:
+                    continue
+                conf, base = st.confidence, st.baseline
+                lift = (conf - base) / (1.0 - base) if base < 1.0 else 0.0
+                if lift < MIN_FD_LIFT or st.repeat_groups < MIN_REPEAT_GROUPS:
+                    continue
+                if st.support < MIN_PAIR_SUPPORT:
+                    continue
+                if max(single(va, vc), single(vb, vc)) >= conf - PAIR_ALONE_MARGIN:
+                    continue
+                m = (keys >= 0) & (vc.codes >= 0)
+                violations = (
+                    _pair_violations(keys[m], vc.codes[m], va, vb, vc, st, combo)
+                    if st.violating_groups
+                    else []
+                )
+                found.append(
+                    {
+                        "determinant": [va.name, vb.name],
+                        "dependent": vc.name,
+                        "confidence": _round(conf, 6),
+                        "baseline": _round(base, 6),
+                        "support": _round(st.support, 6),
+                        "rows": st.rows,
+                        "groups": st.groups,
+                        "repeat_groups": st.repeat_groups,
+                        "violating_groups": st.violating_groups,
+                        "violations": violations,
+                    }
+                )
+    return _finish_pairs(found), tried, False
+
+
+def _looks_like_key(name: str) -> bool:
+    """The generation copula never reorders key-like columns, so the profile does not spend its
+    column budget on them (the same names as ``shape.generation.correlation``)."""
+    n = name.lower()
+    return n in ("id", "pk") or n.endswith(("_id", "_pk", "_fk"))
+
+
+def _multivariate(cats: list[_View], nums: list[_View], n_rows: int) -> dict[str, Any]:
+    """The entries that read the numeric (and categorical) columns together: multivariate
+    outliers, PCA, cohorts and the mixed-type copula (``multivariate.py``)."""
+    out: dict[str, Any] = {}
+    numeric = [(v.name, v.values) for v in nums if v.values is not None]
+    if len(numeric) >= 2:
+        names = [n for n, _ in numeric]
+        values = [x for _, x in numeric]
+        mo = MV.multivariate_outliers(values, names)
+        if mo is not None:
+            out["multivariate_outliers"] = mo
+        p = MV.pca(values, names)
+        if p is not None:
+            out["pca"] = p
+    numeric_names = {n for n, _ in numeric}
+    levels = {v.name: [v.label(i) for i in range(v.k)] for v in cats if v.name not in numeric_names}
+    onehot = [
+        (v.name, v.codes, levels[v.name])
+        for v in cats
+        if v.name in levels and v.codes is not None and 2 <= v.k <= MV.COHORT_MAX_LEVELS
+    ]
+    c = MV.cohorts(numeric, onehot, n_rows)
+    if c is not None:
+        out["cohorts"] = c
+    cop_cats = [
+        (v.name, v.codes, levels[v.name], np.bincount(v.codes[v.codes >= 0], minlength=v.k))
+        for v in cats
+        if v.name in levels
+        and v.codes is not None
+        and v.k < v.nn
+        and v.k <= MV.COPULA_MAX_LEVELS
+        and not _looks_like_key(v.name)
+    ]
+    cop_nums = [(n, x) for n, x in numeric if not _looks_like_key(n)]
+    cp = MV.copula(cop_nums, cop_cats, n_rows)
+    if cp is not None:
+        out["copula"] = cp
+    return out
+
+
 def _keys(cats: list[_View], n_rows: int, sampled: bool, budget: Budget) -> list[dict[str, Any]]:
     """Two-column candidate keys: unique together, neither unique alone."""
     out: list[dict[str, Any]] = []
@@ -488,6 +663,8 @@ def analyze_table(cols: list[Any], row_count: int) -> dict[str, Any] | None:
         return None
     sampled = idx is not None
     deps, by_dependency, evaluated = _dependencies(cats, n_rows, budget)
+    pair_deps, pairs_tried, pairs_capped = _pair_dependencies(cats, n_rows, budget)
+    deps = deps + pair_deps
     by_placeholder = _placeholder_rows(cats, n_rows)
     flagged = by_dependency | by_placeholder
     keys = _keys(cats, n_rows, sampled, budget)
@@ -497,17 +674,22 @@ def analyze_table(cols: list[Any], row_count: int) -> dict[str, Any] | None:
     conds = _conditionals(assoc, tables, views)
     for e in assoc:
         e.pop("_strength", None)
+    multi = _multivariate(cats, assoc_nums, n_rows)
     return {
         "version": JOINT_VERSION,
         "rows_analyzed": n_rows,
         "sampled": sampled,
         "columns": sorted({v.name for v in cats} | {v.name for v in nums}),
+        "categorical_columns": sorted(v.name for v in cats),
         "dependencies": deps,
         "dependency_pairs_evaluated": evaluated,
+        "multi_determinant_pairs_evaluated": pairs_tried,
+        "multi_determinant_capped": pairs_capped,
         "keys": keys,
         "associations": assoc,
         "conditionals": conds,
         "implausible_rate": _round(float(flagged.sum()) / n_rows, 6),
         "implausible_by_dependency": _round(float(by_dependency.sum()) / n_rows, 6),
         "implausible_by_placeholder": _round(float(by_placeholder.sum()) / n_rows, 6),
+        **multi,
     }

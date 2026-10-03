@@ -52,6 +52,9 @@ A change is reported only when it passes its threshold, so a stable column produ
 | `heaping_change` | the current column is heaped (`heaping.heaped`) and the baseline was not, or both are and the ratio rose to `heaping_ratio` = 2.0 times the baseline's; in both cases the ratio rose by more than four standard errors | low | `1 - 1/ratio` when it appeared, else `1 - baseline ratio / current ratio` |
 | `benford_change` | Benford conformity (`close`, `acceptable`, `marginal`, `nonconformity`) got worse by `benford_class_steps` = 2 classes or more, and the MAD rose by more than three standard errors of the difference; both sides must be applicable | medium | steps / 3 |
 | `tail_change` | the Hill tail index alpha fell by more than `tail_alpha_drop` = 0.3 of the baseline's, to below `tail_alpha_max` = 3, and by more than three standard errors of the difference | low | `1 - current / baseline` |
+| `multivariate_outlier_rate_change` | the share of multivariate outliers (`joint.multivariate_outliers`, `docs/JOINT.md`) rose by more than `multivariate_outlier_rate` = 0.02, and by more than six binomial standard errors of the two rates; both profiles must analyse the same columns | low | the rise |
+| `structure_change` | the effective dimension of the numeric columns (`joint.pca`) changed by two or more, or the largest principal angle between the two profiles' leading subspaces (of the baseline's effective dimension, over the shared columns) exceeded `structure_angle` = 30 degrees and the sampling noise of that subspace | low | `steps / columns`, or the angle / 90 |
+| `cohort_shift` | the baseline's cohorts (`joint.cohorts`), each matched to the nearest current cohort by its summary, moved their shares by a total variation distance above `cohort_tvd` = 0.10, and above three standard errors summed over the cohorts; both profiles must have found cohorts | low | the distance |
 | `hour_of_day_change`, `day_of_week_change` | total variation distance of the mix > `temporal_tvd` = 0.20 (day of week: both columns span 14 days or more) | low | the distance |
 
 The first five thresholds (`null_rate`, `cardinality_ratio_max`, `cardinality_ratio_min`,
@@ -77,6 +80,19 @@ section 12.3 and keep their values.
   standard errors of the difference. A Hill estimate on a few hundred values is noisy, so a 30%
   fall on its own would flag two samples of one distribution. A fall in heaping, an improvement in Benford conformity and a lighter tail are not
   changes.
+- **Multivariate depth.** `multivariate_outlier_rate_change`, `structure_change` and `cohort_shift`
+  read the table's `joint.multivariate_outliers`, `joint.pca` and `joint.cohorts` (`docs/JOINT.md`);
+  a profile written before them, a profile profiled with `--no-joint`, a table too small for the
+  entry and a stream window have none, and report none of the three. The thresholds are table-level
+  (settable globally or by policy, not per column), and each is held to sampling noise: the outlier
+  rate by six binomial standard errors (the robust fit moves with the sample, so a skewed table's
+  rate varies up to 1.6 times its binomial spread), the subspace angle by three times the
+  asymptotic sampling angle of the baseline's spectrum (a flat spectrum at the cut makes the
+  subspace arbitrary, so it is never compared), the cohort shares by three standard errors summed
+  over the cohorts. `dependency_broken` also covers the two-column determinants
+  (`(a, b) -> c`) of `joint.dependencies`: a pair that leaves the list because one column alone now
+  explains the dependent, because the pair became a key, or because the budget ran out is not a
+  break.
 - **Small samples.** With fewer than `min_rows` = 30 non-null values a column gets no distribution
   comparison (category mix, spread, KS, range, outliers, true rate, hour of day).
 - **Keys.** A primary key, or a dense unique integer column (a counter), has no `mean_shift`,

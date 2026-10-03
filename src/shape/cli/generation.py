@@ -90,6 +90,13 @@ def add_arguments(sub: Any) -> None:
         help="with --from: apply a decision file (`shape proposals`)",
     )
     ge.add_argument(
+        "--mixed-copula",
+        action="store_true",
+        help="with --from: link the numeric and categorical columns by the profile's mixed-type "
+        "Gaussian copula (`joint.copula`); every column keeps its generated values (off: the "
+        "output is unchanged)",
+    )
+    ge.add_argument(
         "--rows",
         action="append",
         metavar="N|TABLE=N",
@@ -267,6 +274,8 @@ def cmd_generate(a: argparse.Namespace) -> int:
         raise ValueError("--scale-mode does not combine with --from")
     if a.decisions and not a.from_profile:
         raise ValueError("--decisions goes with --from PROFILE.shape")
+    if a.mixed_copula and not a.from_profile:
+        raise ValueError("--mixed-copula goes with --from PROFILE.shape")
     if a.to and a.scale_mode:
         raise ValueError("--to does not combine with --scale-mode (use --sink there)")
     if a.from_profile:
@@ -341,7 +350,10 @@ def _generate_from_profile(a: argparse.Namespace, rows: int | None) -> int:
     from shape.cli.proposals import load_decisions
 
     fitted = fit_schema(
-        shape.load(a.from_profile), rows=rows, decisions=load_decisions(a.decisions)
+        shape.load(a.from_profile),
+        rows=rows,
+        decisions=load_decisions(a.decisions),
+        mixed_copula=a.mixed_copula,
     )
     schema = fitted.schema
     _check_scale(schema, a.scale)

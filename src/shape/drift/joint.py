@@ -95,7 +95,11 @@ def _dependencies(
     cur = {_fd_key(e): e for e in cj.get("dependencies", ())}
     out: list[dict[str, Any]] = []
 
-    def emit(det: str, dep: str, b_conf: float, basis: str, c: Mapping[str, Any] | None) -> None:
+    def emit(
+        dets: tuple[str, ...], dep: str, b_conf: float, basis: str, c: Mapping[str, Any] | None
+    ) -> None:
+        det = ", ".join(dets)
+        subject = det if len(dets) == 1 else f"({det})"
         c_conf = None if c is None else float(c["confidence"])
         effective = c_conf if c_conf is not None else MIN_REPORTED_CONFIDENCE
         drop = b_conf - effective
@@ -105,7 +109,16 @@ def _dependencies(
         violations = [] if c is None else list(c.get("violations", ()))
         causes = []
         for v in violations:
-            ph = _placeholder_in(ct.columns.get(det), str(v["determinant_value"]))
+            values = v["determinant_value"]
+            at = zip(dets, [values] if len(dets) == 1 else values, strict=True)
+            ph = next(
+                (
+                    p
+                    for col, val in at
+                    if (p := _placeholder_in(ct.columns.get(col), str(val))) is not None
+                ),
+                None,
+            )
             if ph is not None:
                 causes.append(
                     {
@@ -116,7 +129,7 @@ def _dependencies(
                     }
                 )
         detail: dict[str, Any] = {
-            "determinant": [det],
+            "determinant": list(dets),
             "dependent": dep,
             "baseline_confidence": round(b_conf, 6),
             "baseline_basis": basis,
@@ -128,13 +141,19 @@ def _dependencies(
             "placeholders": causes,
         }
         shown = "<" + format(MIN_REPORTED_CONFIDENCE, ".3f") if c_conf is None else f"{c_conf:.3f}"
-        msg = f"{det} no longer determines {dep}: confidence {b_conf:.3f} -> {shown}"
+        verb = "determines" if len(dets) == 1 else "determine"
+        msg = f"{subject} no longer {verb} {dep}: confidence {b_conf:.3f} -> {shown}"
         if c is not None:
             msg += f" ({c['violating_groups']} violating groups"
             if violations:
                 v0 = violations[0]
+                at_value = (
+                    repr(v0["determinant_value"])
+                    if len(dets) == 1
+                    else "(" + ", ".join(repr(x) for x in v0["determinant_value"]) + ")"
+                )
                 msg += (
-                    f"; worst: {det}={v0['determinant_value']!r} maps to "
+                    f"; worst: {subject}={at_value} maps to "
                     f"{v0['distinct_dependents']} {dep} values"
                 )
             msg += ")"
@@ -157,18 +176,33 @@ def _dependencies(
             )
         )
 
+    cur_single = {(k[0][0], k[1]) for k in cur if len(k[0]) == 1}
+    cur_keys = {tuple(k["fields"]) for k in cj.get("keys", ())}
     for key, b in base.items():
-        det, dep = key[0][0], key[1]
-        if len(key[0]) != 1 or _skipped(policy, table, [det, dep]):
+        dets, dep = key[0], key[1]
+        if _skipped(policy, table, [*dets, dep]):
             continue
-        if det not in ct.columns or dep not in ct.columns:
+        if any(c not in ct.columns for c in (*dets, dep)):
             continue  # a removed column is a column change already
         found = cur.get(key)
         if found is None:
             analysed = set(cj.get("columns", ()))
-            if det not in analysed or dep not in analysed or ct.columns[det].unique_like:
-                continue  # not measured now, or the determinant became a key (holds trivially)
-        emit(det, dep, float(b["confidence"]), "dependency", found)
+            if len(dets) > 1:
+                analysed = set(cj.get("categorical_columns", ()))
+            if any(c not in analysed for c in (*dets, dep)):
+                continue  # not measured now
+            if any(ct.columns[c].unique_like for c in dets):
+                continue  # the determinant became a key (holds trivially)
+            if len(dets) > 1:
+                # a pair is left out of the list when a column alone explains the dependent as well,
+                # when the pair became a key, or when the triple budget ran out: none is a break
+                if "multi_determinant_pairs_evaluated" not in cj:
+                    continue  # a profile made before pairs were analysed
+                if cj.get("multi_determinant_capped") or tuple(dets) in cur_keys:
+                    continue
+                if any((c, dep) in cur_single for c in dets):
+                    continue
+        emit(dets, dep, float(b["confidence"]), "dependency", found)
     for key, c in cur.items():
         det, dep = key[0][0], key[1]
         if key in base or len(key[0]) != 1 or _skipped(policy, table, [det, dep]):
@@ -177,7 +211,7 @@ def _dependencies(
         if bv is None or dep not in bt.columns:
             continue
         if bv.unique_like:  # a unique determinant determined every column, trivially
-            emit(det, dep, 1.0, "key", c)
+            emit((det,), dep, 1.0, "key", c)
     return out
 
 
@@ -321,6 +355,7 @@ def diff_joint(
 ) -> list[tuple[str | None, str | None, dict[str, Any]]]:
     """Joint changes between two tables as ``(table, column, record)`` (the engine's shape)."""
     from .engine import SEVERITY_RANK
+    from .multivariate import diff_multivariate
 
     th = policy.for_column(table, None)
     records = (
@@ -329,6 +364,7 @@ def diff_joint(
         + _implausible(table, bt, ct, th)
         + _associations(table, bt, ct, th, policy)
         + _reference_pairs(table, bt, ct, th, policy)
+        + diff_multivariate(table, bt, ct, th, policy)
     )
     floor = SEVERITY_RANK[th["min_severity"]]
     return [(table, None, r) for r in records if SEVERITY_RANK[r["severity"]] >= floor]

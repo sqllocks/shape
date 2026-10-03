@@ -5,6 +5,7 @@ from __future__ import annotations
 import html
 from typing import TYPE_CHECKING, Any
 
+from shape.profile.joint.display import describe_joint
 from shape.profile.univariate import describe
 
 if TYPE_CHECKING:
@@ -198,6 +199,13 @@ def _table_section(table: dict[str, Any], heading: str) -> str:
         "</tr></thead><tbody>",
         "".join(_row(n, c) for n, c in cols.items()),
         "</tbody></table></div>",
+    ]
+    lines = describe_joint(table.get("joint"))
+    if lines:
+        out.append('<div class="card"><h3>Joint structure</h3>')
+        out.extend(f"<p>{_e(line)}</p>" for line in lines)
+        out.append("</div>")
+    out += [
         '<div class="cards">',
         "".join(_card(n, c) for n, c in cols.items()),
         "</div>",
