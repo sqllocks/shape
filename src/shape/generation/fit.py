@@ -25,6 +25,7 @@ Stable interface: :func:`fit_schema`, :class:`Fit`, :func:`calibrate_correlation
 from __future__ import annotations
 
 import copy
+import math
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
@@ -225,6 +226,8 @@ def _inferred_scale(col: ColumnProfile) -> int | None:
     """Decimal places of a float column, read off its minimum and maximum: ``None`` unless both
     are written with at most 6 places and one of them has a fraction (an integer-valued range
     says nothing)."""
+    if col.precision is not None and isinstance(col.scale, int) and col.scale > 0:
+        return min(col.scale, 6)  # a DECIMAL(p, s) column: its declared scale
     lo, hi = _decimals(col.min_value), _decimals(col.max_value)
     if lo is None or hi is None or max(lo, hi) == 0:
         return None
@@ -756,6 +759,16 @@ def _correlations(
                 continue
             seen.add(key)
             evidence = f"{tname}.correlation_matrix[{a},{b}]"
+            if not isinstance(r, int | float) or not math.isfinite(r):
+                items.append(
+                    PlanItem(
+                        evidence,
+                        _N,
+                        "the correlation is undefined (a constant column or too few values): "
+                        "the columns are generated independently",
+                    )
+                )
+                continue
             if abs(r) < threshold:
                 items.append(
                     PlanItem(

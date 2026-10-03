@@ -572,7 +572,7 @@ class SchemaBuilder:
                     if a == b or key in seen:
                         continue
                     seen.add(key)
-                    if abs(r) >= threshold:
+                    if isinstance(r, int | float) and abs(r) >= threshold:  # NaN, None: undefined
                         pairs.append([a, b, r])
             if pairs:
                 out[tname] = pairs
