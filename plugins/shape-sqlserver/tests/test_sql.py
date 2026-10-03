@@ -100,3 +100,12 @@ def test_register_converters_only_touches_connections_that_support_it():
     sql.register_converters(Conn())
     assert seen == [(-155, sql.datetimeoffset_from_bytes)]
     sql.register_converters(object())  # a double without the method: no error
+
+
+def test_spread_query_refuses_a_bad_row_limit_or_no_columns():
+    with pytest.raises(sql.SqlServerError, match="positive integer"):
+        sql.spread_query("dbo", "t", 0, ["id"])
+    with pytest.raises(sql.SqlServerError, match="positive integer"):
+        sql.spread_query("dbo", "t", True, ["id"])
+    with pytest.raises(sql.SqlServerError, match="at least one column"):
+        sql.spread_query("dbo", "t", 10, [])

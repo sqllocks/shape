@@ -144,3 +144,50 @@ def test_connect_registers_the_datetimeoffset_converter(monkeypatch):
     monkeypatch.setitem(sys.modules, "pyodbc", mod)
     auth.connect("Server=s", Credentials("sql"))
     assert registered == [-155]
+
+
+def test_managed_identity_uses_the_default_credential_chain(monkeypatch):
+    got = {}
+
+    class Default:
+        def __init__(self, **kw):
+            got.update(kw)
+
+        def get_token(self, scope):
+            got["scope"] = scope
+            return types.SimpleNamespace(token="msi-token")
+
+    ident = types.ModuleType("azure.identity")
+    ident.DefaultAzureCredential = Default
+    monkeypatch.setitem(sys.modules, "azure", types.ModuleType("azure"))
+    monkeypatch.setitem(sys.modules, "azure.identity", ident)
+    sys.modules["azure"].identity = ident
+    assert auth.access_token(Credentials("msi")) == "msi-token".encode("utf-16-le")
+    assert got == {
+        "exclude_managed_identity_credential": False,
+        "scope": "https://database.windows.net/.default",
+    }
+
+
+@pytest.mark.parametrize("module", ["notebookutils", "mssparkutils"])
+def test_fabric_auth_takes_the_notebook_token(monkeypatch, module):
+    asked = []
+    utils = types.SimpleNamespace(
+        credentials=types.SimpleNamespace(getToken=lambda aud: asked.append(aud) or "nb-token")
+    )
+    if module == "notebookutils":
+        notebook = types.ModuleType("notebookutils")
+        notebook.mssparkutils = utils
+        monkeypatch.setitem(sys.modules, "notebookutils", notebook)
+    else:  # an older runtime: only the top-level mssparkutils module
+        monkeypatch.setitem(sys.modules, "notebookutils", None)
+        spark = types.ModuleType("mssparkutils")
+        spark.credentials = utils.credentials
+        monkeypatch.setitem(sys.modules, "mssparkutils", spark)
+    assert auth.access_token(Credentials("fabric")) == "nb-token".encode("utf-16-le")
+    assert asked == ["https://database.windows.net/"]
+
+
+def test_sql_auth_has_no_token():
+    with pytest.raises(SqlServerError, match="login in the connection string"):
+        auth.access_token(Credentials("sql"))
