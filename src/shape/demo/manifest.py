@@ -93,6 +93,8 @@ class DemoManifest:
             raise SessionNotFoundError(f"no session {session_id!r} found in {dir_}")
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
+            if not isinstance(data, dict):
+                raise TypeError(f"it holds {type(data).__name__}, not an object")
             artifacts = [ArtifactRecord(**a) for a in data.pop("artifacts", [])]
             data.pop("_path", None)
             manifest = cls(**data)
