@@ -183,3 +183,15 @@ def test_keywords_inside_a_default_literal_are_text(default, nullable, key, type
     note = schema.tables["t"].columns["note"]
     assert (note.nullable, schema.tables["t"].primary_key, note.type) == (nullable, key, type_)
     assert note.generator["strategy"] != "sequence"
+
+
+def test_unclosed_headers_are_read_in_linear_time():
+    # 204: each unclosed "CREATE TABLE t (" scanned to the end of the input: 64 KB took 10 s,
+    # about 40 minutes at the 1 MB limit.
+    import time
+
+    from shape.generation.ddl import DdlParser
+
+    started = time.perf_counter()
+    DdlParser().parse_string("CREATE TABLE t (" * 4000)
+    assert time.perf_counter() - started < 2.0
