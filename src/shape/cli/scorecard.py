@@ -29,11 +29,9 @@ def add_arguments(sub: Any) -> None:
         metavar="FILE.json",
         help="known issues to snooze or suppress (format shape-scorecard-suppressions)",
     )
-    sc.add_argument(
-        "--project",
-        metavar="DIR",
-        help="directory of the project file shape.yml, for column owners (default: here)",
-    )
+    from shape.cli import project as project_cli
+
+    project_cli.add_project_flags(sc)
     sc.add_argument(
         "--history", metavar="DIR", help="registry directory holding earlier scorecards"
     )
@@ -71,6 +69,46 @@ def add_arguments(sub: Any) -> None:
     )
     sc.add_argument("--json", action="store_true", help="print the scorecard as JSON")
     sc.add_argument("-o", "--output", metavar="FILE", help="write the scorecard to FILE")
+
+
+def _owners(a: argparse.Namespace, tables: dict[str, Any]) -> dict[str, str] | None:
+    """``table.column`` owners from the project file: ``sources.NAME.columns.COLUMN.owner``,
+    with the source chosen as the other commands do (``--source``, the only source, or the one
+    named like the table). A file that is not a valid project but has the older top-level
+    ``owners`` mapping is still read."""
+    from shape.project import ProjectError, find_project, load_project
+    from shape.quality.scorecard import PROJECT_FILE, column_owners
+
+    if a.no_project:
+        if a.project or a.source:
+            raise ValueError("--no-project cannot be combined with --project or --source")
+        return None
+    given = Path(a.project) if a.project else None
+    if given is not None and given.is_dir():
+        given = given / PROJECT_FILE
+    path = given if given is not None else find_project()
+    if path is None:
+        if a.source:
+            raise ProjectError(f"no shape.yml found from {Path.cwd()} upwards: --source needs one")
+        return column_owners(None)
+    try:
+        project = load_project(path)
+    except ProjectError:
+        legacy = column_owners(path.parent) if path.name == PROJECT_FILE else None
+        if legacy:
+            return legacy
+        raise
+    chosen = project.source(a.source) if a.source else None
+    if chosen is None and len(project.sources) == 1:
+        chosen = next(iter(project.sources.values()))
+    owners: dict[str, str] = {}
+    for table, data in tables.items():
+        source = chosen or project.sources.get(table)
+        for column in data.column_names:
+            owner = source.owner_of(column, table) if source else None
+            if owner:
+                owners[f"{table}.{column}"] = owner
+    return owners
 
 
 def _classified(pairs: list[str]) -> dict[str, set[str]]:
@@ -123,7 +161,6 @@ def run(a: argparse.Namespace) -> int:
     )
     from shape.quality.scorecard import (
         build_scorecard,
-        column_owners,
         load_suppressions,
         record_scorecard,
         scorecard_trend,
@@ -153,7 +190,7 @@ def run(a: argparse.Namespace) -> int:
         schema=schema,
         config=config,
         suppressions=suppressions,
-        owners=column_owners(a.project),
+        owners=_owners(a, tables),
         samples=a.samples,
         classified=classified,
         show_classified=a.show_classified,
