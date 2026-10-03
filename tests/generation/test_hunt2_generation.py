@@ -44,7 +44,12 @@ def test_a_migrated_generation_schema_loads_and_validates(tmp_path: Path) -> Non
 
 @pytest.mark.parametrize(
     ("key", "value"),
-    [("migrated_from", 0), ("migrated_from", "1"), ("migrated_from", True), ("source_content_id", 5)],
+    [
+        ("migrated_from", 0),
+        ("migrated_from", "1"),
+        ("migrated_from", True),
+        ("source_content_id", 5),
+    ],
 )
 def test_migration_keys_of_the_wrong_type_are_refused(key: str, value: object) -> None:
     with pytest.raises(GenSchemaError, match=key):
@@ -99,7 +104,11 @@ def _conditional(true_value: object, false_value: object) -> list[object]:
     from shape.generation.engine import Engine
 
     cols = {
-        "a": {"name": "a", "type": "string", "generator": {"strategy": "choice", "values": ["x", "y"]}},
+        "a": {
+            "name": "a",
+            "type": "string",
+            "generator": {"strategy": "choice", "values": ["x", "y"]},
+        },
         "c": {
             "name": "c",
             "type": "string",
@@ -190,7 +199,12 @@ def test_deep_nesting_is_a_spec_error(depth: int) -> None:
 
 
 def test_moderate_nesting_still_loads() -> None:
-    text = '{"schema_version":1,"model":{"name":"m"},"tables":{},"x-deep":' + "[" * 200 + "]" * 200 + "}"
+    text = (
+        '{"schema_version":1,"model":{"name":"m"},"tables":{},"x-deep":'
+        + "[" * 200
+        + "]" * 200
+        + "}"
+    )
     doc = SpecDocument.loads(text)
     assert doc.dumps() == text
 
@@ -253,7 +267,12 @@ def test_a_negative_max_length_is_an_error(value: int) -> None:
 
 @pytest.mark.parametrize(
     "props",
-    [{"max_length": 0}, {"max_length": 3}, {"null_rate": 0.0}, {"null_rate": 1.0, "nullable": True}],
+    [
+        {"max_length": 0},
+        {"max_length": 3},
+        {"null_rate": 0.0},
+        {"null_rate": 1.0, "nullable": True},
+    ],
 )
 def test_valid_column_properties_have_no_error(props: dict[str, object]) -> None:
     assert _column_issues(**props) == []
@@ -275,7 +294,9 @@ def _merged_profiles(tmp_path: Path, states: list[str], codes: list[str]) -> tup
         path.write_text("\n".join(lines) + "\n", encoding="utf-8")
         parts.append(shape.profile(str(path), name="p", sketches=True))
     whole = tmp_path / "whole.csv"
-    rows = [ln for half in (0, 1) for ln in (tmp_path / f"p{half}.csv").read_text().splitlines()[1:]]
+    rows = [
+        ln for half in (0, 1) for ln in (tmp_path / f"p{half}.csv").read_text().splitlines()[1:]
+    ]
     whole.write_text("id,state,code,note\n" + "\n".join(rows) + "\n", encoding="utf-8")
     return merge_profiles(parts), shape.profile(str(whole), name="p")
 
@@ -370,8 +391,13 @@ def test_a_drift_plan_may_declare_its_format_and_version() -> None:
     from shape.generation.drift_plan import DriftPlan
 
     plan = DriftPlan.from_dict(
-        {"format": "shape-drift-plan", "version": 1, "start": "2026-03-01", "days": 3,
-         "events": [_EVENT]}  # fmt: skip
+        {
+            "format": "shape-drift-plan",
+            "version": 1,
+            "start": "2026-03-01",
+            "days": 3,
+            "events": [_EVENT],
+        }  # fmt: skip
     )
     assert plan.days == 3
     truth = plan.ground_truth()
@@ -403,3 +429,38 @@ def test_a_plan_without_declaration_still_loads() -> None:
     from shape.generation.drift_plan import DriftPlan
 
     assert DriftPlan.from_dict({"start": "2026-03-01", "days": 2, "events": [_EVENT]}).days == 2
+
+
+def test_a_merged_dataset_profile_generates_its_exact_value_sets(tmp_path: Path) -> None:
+    import shape
+    from shape.profile.merge import merge_profiles
+
+    parts = []
+    for half in (0, 1):
+        customer = tmp_path / f"customer{half}.csv"
+        customer.write_text(
+            "customer_id,segment\n"
+            + "".join(f"{i},{'AB'[i % 2]}\n" for i in range(half * 100, half * 100 + 100)),
+            encoding="utf-8",
+        )
+        orders = tmp_path / f"orders{half}.csv"
+        orders.write_text(
+            "order_id,status\n"
+            + "".join(
+                f"{i},{('new', 'paid', 'void')[i % 3]}\n"
+                for i in range(half * 300, half * 300 + 300)
+            ),
+            encoding="utf-8",
+        )
+        parts.append(
+            shape.profile({"customer": str(customer), "orders": str(orders)}, sketches=True)
+        )
+    merged = merge_profiles(parts)
+    from collections import Counter
+
+    from shape.generation.engine import Engine
+    from shape.generation.fit import fit_schema
+
+    tables = Engine(fit_schema(merged).schema, seed=4).generate().tables
+    assert set(Counter(tables["customer"].column("segment").to_pylist())) == {"A", "B"}
+    assert set(Counter(tables["orders"].column("status").to_pylist())) == {"new", "paid", "void"}
