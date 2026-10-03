@@ -71,6 +71,17 @@ def _starts_like_an_object(data: bytes) -> bool:
     return head.lstrip("\ufeff \t\r\n")[:1] == "{"
 
 
+_CONTENT_ID = re.compile(r"^[0-9a-f]{64}$")
+
+
+def _content_id(path: Path) -> str:
+    """The content id a ref or tag file holds; anything else is a corrupt ref."""
+    h = path.read_text().strip()
+    if not _CONTENT_ID.fullmatch(h):
+        raise RegistryError(f"{path} is corrupt: it does not hold a content id")
+    return h
+
+
 def _check(kind: str, value: object) -> str:
     if not isinstance(value, str) or not _NAME.fullmatch(value):
         raise RegistryError(f"invalid registry {kind}: {value!r}")
@@ -151,17 +162,23 @@ class LocalRegistry:
         _check("ref", ref)
         p = self._path("refs", name, ref)
         if p.is_file():
-            return p.read_text().strip()
+            return _content_id(p)
         t = self._path("tags", name, ref)
         if t.is_file():
-            return t.read_text().strip()
+            return _content_id(t)
         if any(e.get("content_id") == ref for e in self.log(name)):
             return ref
         raise RegistryError(f"{name}@{ref} is not recorded in the registry")
 
     def checkout(self, name: str, ref: str = "latest") -> bytes:
         h = self.resolve(name, ref)
-        raw = self._path("objects", h).read_bytes()
+        try:
+            raw = self._path("objects", h).read_bytes()
+        except FileNotFoundError:
+            raise RegistryError(
+                f"object {h} of {name}@{ref} is missing from {self.root / 'objects'}: restore it "
+                "from a backup, or commit the content again"
+            ) from None
         if hashlib.sha256(raw).hexdigest() != h:
             raise RegistryError(f"object {h} is corrupt: its content does not match its id")
         return raw
@@ -183,12 +200,31 @@ class LocalRegistry:
     def log(self, name: str) -> list[dict[str, Any]]:
         _check("name", name)
         p = self._path("logs", f"{name}.jsonl")
-        return [json.loads(x) for x in p.read_text().splitlines()] if p.exists() else []
+        if not p.exists():
+            return []
+        out: list[dict[str, Any]] = []
+        for i, line in enumerate(p.read_text().splitlines(), 1):
+            if not line.strip():
+                continue
+            try:
+                entry = json.loads(line)
+            except ValueError:
+                entry = None
+            if not isinstance(entry, dict):
+                raise RegistryError(
+                    f"{p}: line {i} is not a log entry (an interrupted write?); "
+                    "remove or repair that line"
+                )
+            out.append(entry)
+        return out
 
     def refs(self, name: str) -> dict[str, str]:
         _check("name", name)
         p = self._path("refs", name)
-        return {x.name: x.read_text().strip() for x in p.iterdir()} if p.exists() else {}
+        if not p.exists():
+            return {}
+        # a .tmp- file is a write that was interrupted, never a ref (refs start alphanumeric)
+        return {x.name: x.read_text().strip() for x in p.iterdir() if _NAME.fullmatch(x.name)}
 
     def names(self) -> list[str]:
         """The names with at least one commit, sorted."""
@@ -198,7 +234,11 @@ class LocalRegistry:
         """The tags of ``name`` and the content id each points at."""
         _check("name", name)
         p = self._path("tags", name)
-        return {x.name: x.read_text().strip() for x in sorted(p.iterdir())} if p.exists() else {}
+        if not p.exists():
+            return {}
+        return {
+            x.name: x.read_text().strip() for x in sorted(p.iterdir()) if _NAME.fullmatch(x.name)
+        }
 
     def entry(self, name: str, ref: str = "latest") -> dict[str, Any]:
         """The newest log entry whose content is ``ref`` (a ref, tag or content id) of ``name``."""
