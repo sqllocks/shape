@@ -62,8 +62,8 @@ take a *key source*:
 | `PATH` | a key file |
 | `-` | standard input |
 | `env://NAME` | the environment variable `NAME` (the key text itself) |
-| `file://PATH` | a file, read like a credential |
-| `kv://...` | a secret store, through a resolver the host registers |
+| `file://PATH` | a file, read like a credential: refused on POSIX when group or others can access it (`chmod 600`); a **public** key may be world-readable |
+| `kv://...` | a secret store, through a resolver the host registers (the Fabric plugin provides Azure Key Vault) |
 
 So a pipeline never has to write the key to disk:
 
@@ -76,7 +76,9 @@ The `env://`, `file://` and `kv://` references are the same credential reference
 credentials use. `kv://` is pluggable because core ships no cloud SDK: register a resolver with
 `shape.security.credrefs.register_resolver("kv", fn)` (`fn` takes the text after `kv://` and
 returns the secret). Without one, `kv://` fails with a message saying so. Reference errors name
-the variable or path, never a value.
+the variable or path, never a value. The full description of the references, the `file://`
+permission rule and the sign-in modes of the Fabric destinations is in
+[`docs/plugins/fabric-auth.md`](plugins/fabric-auth.md).
 
 ## Encrypted private keys
 

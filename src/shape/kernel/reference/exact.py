@@ -17,6 +17,19 @@ PCTS = [1, 5, 10, 25, 50, 75, 90, 95, 99]
 _ALL_PCTS = [*PCTS, 0.5, 99.5]
 
 
+def all_whole(values: Any) -> bool:
+    """``np.all(x == x.astype(np.int64))`` with the x86 conversion, on every platform.
+
+    A float outside the int64 range (or inf, NaN) has no defined ``astype(np.int64)``: x86 gives
+    INT64_MIN, arm64 saturates, so on arm64 ``2**63 == int(2**63 - 1)`` compared equal. Whole means
+    finite, in ``[-2**63, 2**63)`` and without a fraction, as in the native kernel's ``is_whole``.
+    """
+    x = np.asarray(values, dtype=np.float64)
+    with np.errstate(invalid="ignore"):
+        ok = (x == -(2.0**63)) | (np.isfinite(x) & (np.abs(x) < 2.0**63) & (x == np.trunc(x)))
+    return bool(np.all(ok))
+
+
 def linear_index(n: int, qs: Any) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """numpy 'linear' method: virtual index (n-1)*q, _get_indexes bounds handling."""
     q = np.true_divide(np.asarray(qs, dtype=np.float64), 100)
@@ -122,7 +135,7 @@ def count_numeric(
         "counts": pa.array(counts[top].astype(np.int64)),
         "sorted": pa.array(xs.astype(np.float64, copy=False)) if want_sorted else None,
         "uniq": pa.array(uniq) if want_uniq else None,
-        "all_whole": bool(np.all(uniq == uniq.astype(np.int64))),
+        "all_whole": all_whole(uniq),
     }
 
 

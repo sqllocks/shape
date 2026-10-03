@@ -194,3 +194,18 @@ def test_date_iso_matches_arrow_cast(native, seed):
 
 def test_date_iso_declines_years_outside_four_digits(native):
     assert native.date_iso(pa.array([3_000_000, 0], pa.date32())) is None
+
+
+def test_all_whole_does_not_depend_on_the_platform_int64_conversion():
+    """``astype(np.int64)`` of an out-of-range float is x86 INT64_MIN but arm64 saturation, so
+    ``2**63`` once counted as whole on arm64 only. The twin states the rule instead."""
+    from shape.kernel.reference.exact import all_whole as whole
+
+    assert whole(np.array([1.0, -9.223372036854775808e18, 0.0, -0.0]))
+    assert not whole(np.array([2.0**63]))
+    assert not whole(np.array([1e300]))
+    assert not whole(np.array([np.inf]))
+    assert not whole(np.array([-np.inf]))
+    assert not whole(np.array([np.nan]))
+    assert not whole(np.array([0.5, 1.0]))
+    assert whole(np.array([]))

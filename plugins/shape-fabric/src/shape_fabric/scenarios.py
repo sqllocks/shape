@@ -23,11 +23,22 @@ from typing import Any
 
 import pyarrow as pa  # type: ignore[import-untyped,unused-ignore]
 
+from ._auth import SCOPE_SQL, token_for
+from .auth import AuthSettings, build_credential
 from .eventhouse import EventhouseEmitter
 from .eventhouse_writer import EventhouseWriter
+from .keyvault import KeyVaultResolver
 from .recording import Tape, TapeConnection, TapeTransport, jsonable, replay_tape, save
 from .sqldb import SqlDatabaseWriter
-from .testing import FakeKusto, FakeSqlServer, MemoryFS, sample_batch, sample_batches
+from .testing import (
+    FakeIdentity,
+    FakeKeyVault,
+    FakeKusto,
+    FakeSqlServer,
+    MemoryFS,
+    sample_batch,
+    sample_batches,
+)
 from .warehouse import WarehouseWriter
 
 KQL_URI = "eventhouse://kql.example.test/db1"
@@ -57,8 +68,8 @@ class OdbcService:
 @dataclass(frozen=True)
 class Scenario:
     name: str
-    channel: str  # "http" or "odbc"
-    run: Callable[[Any], Any]  # (service) -> result; a Kusto transport, or an OdbcService
+    channel: str  # "http", "odbc" or "identity"
+    run: Callable[[Any], Any]  # (service) -> result; a transport, an OdbcService or a FakeIdentity
     fake: Callable[[], Any]  # () -> the in-repo fake service, for recording
 
 
@@ -213,6 +224,75 @@ def _warehouse_no_rowcount() -> FakeSqlServer:
     return server
 
 
+# --- HTTP: Key Vault (credential references) -------------------------------------------
+
+
+def _vault(transport: Any) -> KeyVaultResolver:
+    return KeyVaultResolver(credential=lambda scope: FAKE_TOKEN, transport=transport)
+
+
+def keyvault_secret(transport: Any) -> Any:
+    resolver = _vault(transport)
+    return _outcome(lambda: {"resolved": bool(resolver("vault-one/sql-password"))})
+
+
+def keyvault_secret_version(transport: Any) -> Any:
+    resolver = _vault(transport)
+    return _outcome(lambda: {"resolved": bool(resolver("vault-one/sql-password/0123abcd"))})
+
+
+def keyvault_secret_not_found(transport: Any) -> Any:
+    return _outcome(lambda: _vault(transport)("vault-one/no-such-secret"))
+
+
+def keyvault_not_authorised(transport: Any) -> Any:
+    return _outcome(lambda: _vault(transport)("vault-one/sql-password"))
+
+
+def _keyvault() -> FakeKeyVault:
+    return FakeKeyVault()
+
+
+def _keyvault_forbidden() -> Any:
+    def forbidden(
+        method: str, url: str, headers: dict[str, str], body: bytes, timeout: float
+    ) -> Any:
+        return 403, {}, b'{"error":{"code":"Forbidden","message":"caller lacks get permission"}}'
+
+    return forbidden
+
+
+# --- identity: the token requests of each --auth mode -----------------------------------
+
+
+def _sign_in(settings: AuthSettings) -> Callable[[FakeIdentity], Any]:
+    def run(identity: FakeIdentity) -> Any:
+        with identity.installed():
+            credential = build_credential(settings)
+            return _outcome(lambda: {"token_issued": bool(token_for(credential, SCOPE_SQL))})
+
+    return run
+
+
+_SPN = AuthSettings(
+    mode="spn",
+    tenant_id="11111111-2222-3333-4444-555555555555",
+    client_id="66666666-7777-8888-9999-000000000000",
+    client_secret="fake-client-secret-for-the-contract-scenarios",  # nosec B106
+)
+_AUTH_SCENARIOS = {
+    "auth_cli": AuthSettings(mode="cli"),
+    "auth_spn": _SPN,
+    "auth_msi": AuthSettings(mode="msi"),
+    "auth_msi_user_assigned": AuthSettings(mode="msi", client_id=_SPN.client_id),
+    "auth_device_code": AuthSettings(mode="device-code", tenant_id=_SPN.tenant_id),
+}
+
+
+def _no_fake() -> None:
+    return None
+
+
 SCENARIOS: dict[str, Scenario] = {
     s.name: s
     for s in (
@@ -231,6 +311,14 @@ SCENARIOS: dict[str, Scenario] = {
         ),
         Scenario("eventhouse_not_authorised", "http", eventhouse_not_authorised, _kusto_forbidden),
         Scenario("eventhouse_emit_events", "http", eventhouse_emit_events, _kusto),
+        Scenario("keyvault_secret", "http", keyvault_secret, _keyvault),
+        Scenario("keyvault_secret_version", "http", keyvault_secret_version, _keyvault),
+        Scenario("keyvault_secret_not_found", "http", keyvault_secret_not_found, _keyvault),
+        Scenario("keyvault_not_authorised", "http", keyvault_not_authorised, _keyvault_forbidden),
+        *(
+            Scenario(name, "identity", _sign_in(settings), _no_fake)
+            for name, settings in _AUTH_SCENARIOS.items()
+        ),
         Scenario("sql_create_and_insert", "odbc", sql_create_and_insert, _sql_server),
         Scenario("sql_replace_with_key", "odbc", sql_replace_with_key, _sql_server),
         Scenario(
@@ -259,6 +347,8 @@ def _service(scenario: Scenario, tape: Tape, inner: Any) -> Any:
     """What the scenario is given: a transport or connect function that goes through ``tape``."""
     if scenario.channel == "http":
         return TapeTransport(tape, inner)
+    if scenario.channel == "identity":
+        return FakeIdentity(tape)
     if inner is None:
         return OdbcService(lambda cs, credential=None, **kw: TapeConnection(tape), MemoryFS())
     return OdbcService(
