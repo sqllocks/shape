@@ -214,3 +214,21 @@ def test_515_the_same_topic_with_another_event_type_is_fine(retail):
         {"name": "order", "event_type": "paid", "payload_fields": ["order_id"]},
     ]
     assert PackValidator().validate(stream_pack(topics), retail).is_valid
+
+
+# ---- #516: a stream rate must be a positive, finite number -------------------------------------
+
+
+@pytest.mark.parametrize("rate", [float("nan"), float("inf"), 0.0, -1.0])
+def test_516_a_stream_rate_that_is_not_positive_and_finite_is_an_error(retail, rate):
+    topic = {"name": "order", "event_type": "e", "payload_fields": ["order_id"]}
+    errors = PackValidator().validate(stream_pack([topic], rate), retail).errors
+    assert "Streaming rate_per_sec must be positive" in errors, errors
+
+
+@pytest.mark.parametrize("rate", [float("nan"), -1.0])
+def test_516_a_hybrid_stream_rate_is_checked(retail, rate):
+    hybrid = {"stream": {"rate_per_sec": rate, "topics": []}}
+    pack = PackLoader().parse({**FILE_DROP, "kind": "hybrid", "hybrid": hybrid})
+    errors = PackValidator().validate(pack, retail).errors
+    assert "hybrid.stream.rate_per_sec must be positive" in errors, errors
