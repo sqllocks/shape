@@ -73,4 +73,41 @@ test' lane/AUD-profile`); the last one is 1fc0841 (#319-#326, 59 failures before
 
 ## Commands and results
 
-In progress: the parity verifier, `make check` and the full suite in both kernels are running; results follow in the next commit.
+Environment: `$SHAPE_VENV` built per §1.1 (`pip install -e ".[dev]"`, Rust extension built by maturin), every
+first-party plugin installed editable (`plugins/shape-{domains,simulation,kafka,eventhubs,sqlserver,databases,fabric}`),
+`tests/demo/fabric/requirements.txt` installed, unixODBC from apt (the Fabric UDF tests import `pyodbc`), pinned Spindle
+per §1.2 (`benchmarks/vs_spindle/setup_spindle.sh`). Python 3.11.15, numpy 2.4.6, pyarrow 19.0.1. All on the merge of
+`origin/build/main-plan` (5c91ea5) into this branch (526564c; clean merge).
+
+| Command | Result |
+|---|---|
+| `pytest tests/profile/test_audit_profile.py` | 163 passed (both kernels via the `kernel` fixture); 59 of them failed on the tree before the fixes (1fc0841's message) |
+| `pytest -m "not emulator and not live and not heavy" tests/profile tests/cli tests/excel tests/joint` | 839 passed |
+| `datasets.py` then `verify.py --impl shape --refresh` (T-22 parity, Rust kernel) | exit 0, 49/49 PASS |
+| `SHAPE_KERNEL=python verify.py --impl shape` | exit 0, 49/49 PASS |
+| `make check`: ruff check, ruff format --check, mypy, compileall, vulture, lint-imports, check_requirements, check_secrets, check_user_facing, check_shipped_data, check_plugin_skeletons, check_conformance_coverage | all pass (mypy: no issues in 436 files) |
+| `make check`: coverage step (`not heavy`, `--cov-fail-under=86`) | 3 failed, 6902 passed, 17 skipped; coverage 92.25% (gate 86% reached). The 3 failures are pre-existing, see below |
+| `make check`: `pytest -m heavy tests/kernel tests/profile tests/streaming` | 1 failed (`test_hashing ... [float16]`, pre-existing), 41 passed |
+| `make check`: `SHAPE_KERNEL=python pytest tests/kernel` | 2 failed (the two `test_hashing` ones, pre-existing), 263 passed |
+| `make check`: `cargo fmt --check`, `cargo clippy --all-targets -D warnings`, `cargo test` | all pass (34 tests) |
+| `python scripts/check_user_facing.py` | exit 0 |
+| `SHAPE_KERNEL=rust pytest -m "not emulator and not live"` | 4 failed, 7197 passed, 17 skipped (32 min) |
+| `SHAPE_KERNEL=python pytest -m "not emulator and not live"` | 4 failed, 7197 passed, 17 skipped (1 h 52 min; `test_bounded_mode_memory_does_not_grow_with_rows` alone takes about 45 min on the Python kernel) |
+
+### The failures are pre-existing (same environment, `origin/build/main-plan` 5c91ea5)
+
+Run from a worktree of `origin/build/main-plan` with the same venv (`PYTHONPATH=<worktree>/src`), the `make check` test
+step gives **the same 3 failures** (3 failed, 6739 passed), and the float16 test fails there too:
+
+- `tests/iss_gaps/test_landing_and_batches.py::test_file_sinks_take_path_template_and_batch_date` and
+  `tests/kernel/test_hashing.py::test_one_and_one_point_zero_hash_equal`,
+  `::test_rust_equals_reference_on_a_million_values[float16]` (`ArrowTypeError: Expected np.float16 instance`): this
+  environment resolves pyarrow 19.0.1, the case filed as #333.
+- `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references`: with
+  `fabric-user-data-functions` and unixODBC installed, an earlier test's import of `shape.integrations.fabric.udf` loads
+  `azure.functions` into the test process, and this test asserts that no `azure*` module is loaded at all. It passes
+  alone (on both trees). Not in this lane's area; recorded here for the lead (the test-suite issues #330-#335 cover
+  similar order and environment dependencies).
+
+No test was skipped, deselected or xfailed; the 13/55 deselected are the `emulator`/`live` (and, in the coverage step,
+`heavy`) markers the commands select out.
