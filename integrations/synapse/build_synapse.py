@@ -302,8 +302,6 @@ linkedServiceName = ""  # optional: Synapse linked service that grants access to
 """
 
 GEN_HELPERS = """import json
-import tempfile
-from pathlib import Path
 
 import shape
 from shape.integrations.fabric import generation
