@@ -392,3 +392,87 @@ def test_nan_against_a_number_still_differs():
     a2 = pa.table({"k": [NAN]})
     b2 = pa.table({"k": [1.0]})
     assert not reconcile(a2, b2, key=["k"]).passed
+
+
+def test_a_key_column_can_also_be_an_aggregate_column():
+    """#573: selecting the column twice raised ArrowInvalid."""
+    t = pa.table({"id": [1, 2, 2], "v": [1, 2, 3]})
+    r = reconcile(t, t, key=["id"], aggregates=[{"column": "id", "agg": "count"}])
+    assert r.passed, r.findings
+    r = reconcile(
+        t,
+        pa.table({"id": [1, 2, 2], "v": [1, 2, 3]}),
+        partition_by=["id"],
+        key=["id"],
+        aggregates=[{"column": "id", "agg": "max"}, {"column": "v", "agg": "sum"}],
+    )
+    assert r.passed, r.findings
+    other = pa.table({"id": [1, 2, 3], "v": [1, 2, 3]})
+    bad = reconcile(t, other, key=["id"], aggregates=[{"column": "id", "agg": "count"}])
+    assert not bad.passed
+
+
+@pytest.mark.parametrize(
+    ("agg", "col"),
+    [("sum", "s"), ("mean", "s"), ("sum", "d"), ("mean", "d")],
+)
+def test_an_aggregate_of_the_wrong_type_is_a_finding_not_a_crash(agg, col):
+    """#574: the Arrow kernel error aborted the whole verify run."""
+    import datetime as dt
+
+    t = pa.table({"s": ["a", "b"], "d": [dt.date(2020, 1, 1)] * 2, "n": [1, 2]})
+    r = reconcile(
+        t,
+        t,
+        aggregates=[{"column": col, "agg": agg}, {"column": "n", "agg": "sum"}],
+        name="rule1",
+    )
+    assert not r.passed
+    [f] = r.findings
+    assert f["rule"] == "reconcile.column_type"
+    assert f["column"] == col
+    assert "rule1" in f["message"] and agg in f["message"]
+
+
+def test_min_max_count_work_on_text_and_the_good_aggregates_still_run():
+    t = pa.table({"s": ["a", "b"], "n": [1, 2]})
+    for agg in ("min", "max", "count", "count_distinct"):
+        assert reconcile(t, t, aggregates=[{"column": "s", "agg": agg}]).passed
+    u = pa.table({"s": ["a", "b"], "n": [1, 3]})
+    r = reconcile(t, u, aggregates=[{"column": "s", "agg": "sum"}, {"column": "n", "agg": "sum"}])
+    assert sorted(f["rule"] for f in r.findings) == ["reconcile.aggregate", "reconcile.column_type"]
+
+
+def test_the_target_column_type_is_checked_too():
+    a = pa.table({"x": [1, 2]})
+    b = pa.table({"x": ["1", "2"]})
+    r = reconcile(a, b, aggregates=[{"column": "x", "agg": "sum"}])
+    assert [f["rule"] for f in r.findings] == ["reconcile.column_type"]
+    assert r.findings[0]["observed"]["side"] == "target"
+
+
+def test_integer_sums_do_not_wrap_around():
+    """#575: the sum of three 2**62 wrapped to a negative number."""
+    big = pa.table({"x": pa.array([2**62] * 3, pa.int64())})
+    r = reconcile(big, big, aggregates=[{"column": "x", "agg": "sum"}])
+    assert r.passed
+    other = pa.table({"x": pa.array([2**62, 2**62, 2**62], pa.int64())})
+    assert reconcile(big, other, aggregates=[{"column": "x", "agg": "sum"}]).passed
+    # two sums that differ by exactly 2**64 are different, not equal after wrapping
+    a = pa.table({"x": pa.array([2**62] * 4 + [5], pa.int64())})
+    b = pa.table({"x": pa.array([5], pa.int64())})
+    r = reconcile(a, b, aggregates=[{"column": "x", "agg": "sum"}])
+    assert not r.passed
+    assert r.findings[0]["expected"] == 2**64 + 5
+    assert r.findings[0]["observed"]["target"] == 5
+
+
+def test_grouped_integer_sums_do_not_wrap_around():
+    a = pa.table({"k": [1] * 4 + [2], "x": pa.array([2**62] * 4 + [5], pa.int64())})
+    b = pa.table({"k": [1, 2], "x": pa.array([0, 5], pa.int64())})
+    r = reconcile(a, b, key=["k"], aggregates=[{"column": "x", "agg": "sum"}])
+    agg = [f for f in r.findings if f["rule"] == "reconcile.aggregate"]
+    assert len(agg) == 1
+    assert agg[0]["observed"]["samples"][0]["source"] == 2**64
+    ok = reconcile(a, a, key=["k"], aggregates=[{"column": "x", "agg": "sum"}])
+    assert ok.passed
