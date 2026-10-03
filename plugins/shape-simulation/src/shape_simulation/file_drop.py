@@ -288,8 +288,8 @@ class FileDropSimulator:
         if ts_col is not None:
             stamps = tb.to_timestamps(table.column(ts_col))
             return tb.take_mask(table, tb.window_mask(stamps, slot_dt, slot_dt + self._delta))
-        chunk = max(1, table.num_rows // len(slots))
-        return table.slice(index * chunk, chunk)
+        # the rows the round robin of _slice_by_slots dealt to this slot
+        return table.take(pa.array(np.arange(index, table.num_rows, len(slots), dtype=np.int64)))
 
     # ---- writing ------------------------------------------------------------------------
 

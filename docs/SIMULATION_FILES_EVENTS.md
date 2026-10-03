@@ -57,7 +57,8 @@ files, `file_count`, `created_utc`, `correlation_id`) and a `_done` flag are wri
 * **Duplicates** repeat rows of a slot. **Backfill** re-drops one of the first `max_days_back`
   partitions (`..._00990`). **Restatements** re-drop partitions (`..._00980`) with every number
   except `*_id` columns and the first column moved by up to `restatement_max_correction_pct`, marked
-  by `_restatement` and `_restated_at`.
+  by `_restatement` and `_restated_at`. A backfill or restatement of a slot holds the rows the slot was given, also for a
+  table dealt out round robin.
 * **Multi-file** (`multi_file_enabled`) splits a partition into `multi_file_chunks` files of nearly
   equal size; the manifest lists each file's SHA-256 and size.
 * A setting that cannot work is refused when the configuration is made: an unknown cadence or format,
