@@ -90,7 +90,7 @@ def redact_evidence(evidence: Any) -> tuple[Any, bool]:
     def walk(node: Any, key: str | None = None) -> Any:
         nonlocal withheld
         if isinstance(node, dict):
-            out = {}
+            out: dict[str, Any] = {}
             for k, v in node.items():
                 if key == "range" and k in ("child", "parent") and v is not None:
                     withheld = True
