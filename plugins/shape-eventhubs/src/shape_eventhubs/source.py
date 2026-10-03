@@ -350,6 +350,9 @@ class EventHubsStreamSource:
                 pid, messages = item
                 # Events already read (a retry inside the client) are dropped by position.
                 messages = [m for m in messages if m.offset >= positions[pid]]
+                if stop_at_end:
+                    # Enqueued after the read began: past this read's end.
+                    messages = [m for m in messages if m.offset < ends[pid]]
                 if budget is not None:
                     messages = messages[: budget - received]
                 if not messages:
