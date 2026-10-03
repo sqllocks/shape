@@ -23,3 +23,6 @@ manufacturing medium verify exit 1
 marketing small verify exit 1
 marketing medium verify exit 1
 telecom small verify exit 1
+telecom medium verify exit 1
+retail small verify exit 0
+retail medium verify exit 0

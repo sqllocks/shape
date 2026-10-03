@@ -1,0 +1,4 @@
+hr small int16 verify exit 1
+hr medium int16 verify exit 1
+insurance medium int16 verify exit 1
+marketing medium int16 verify exit 1

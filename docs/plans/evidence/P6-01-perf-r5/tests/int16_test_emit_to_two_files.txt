@@ -1,0 +1,2 @@
+shape: error: table 'member' lacks required column(s) ['member_id', 'subscriber_id', 'relationship_code', 'birth_date', 'sex']
+1 failed in 0.63s
