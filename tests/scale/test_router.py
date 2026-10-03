@@ -285,3 +285,15 @@ def test_a_cancelled_run_stays_cancelled_when_close_fails():
     cancel.set()
     with pytest.raises(ScaleCancelled):
         ScaleRouter(Engine(plain_schema(), seed=1), [CloseFails()], cancel=cancel).run()
+
+
+@pytest.mark.parametrize(
+    ("overrides", "text"),
+    [({"order": -5}, "'order'.*negative"), ({"nope": 3}, "'nope' is not in the schema")],
+)
+def test_bad_row_overrides_are_value_errors_naming_the_table(overrides, text):
+    # Regression #491: a negative count failed with IndexError, an unknown table was ignored.
+    with pytest.raises(ValueError, match=text):
+        ChunkedGenerator(plain_schema()).generate_chunked(scale_overrides=overrides, chunk_rows=100)
+    with pytest.raises(ValueError, match=text):
+        derive_counts(plain_schema(), "order", 10, overrides)
