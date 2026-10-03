@@ -96,8 +96,10 @@ def load_census_gazetteer(path, kind, version):
                 kw["postal_code"] = geoid
             elif kind == "county":
                 kw["county"] = name
+                kw["state"] = row.get("USPS") or None
             elif kind == "place":
                 kw["city"] = name
+                kw["state"] = row.get("USPS") or None
             elif kind == "state":
                 kw["state"] = name
             out.append(Location(**kw))
