@@ -131,6 +131,15 @@ def main(argv: list[str] | None = None) -> int:
                         f"{label:13s} rep{rep} {side:6s} {r['seconds']:7.3f}s load={load:.2f}",
                         flush=True,
                     )
+            seen = {x["rows"] for v in runs.values() for x in v}
+            if len(seen) != 1:
+                counts = {s: sorted({x["rows"] for x in v}) for s, v in runs.items()}
+                print(
+                    f"STREAM-PROF {label}: the two sides profiled different row counts {counts}; "
+                    "a throughput ratio needs the same rows on both (no timing is reported)",
+                    file=sys.stderr,
+                )
+                return 1
             med = {s: statistics.median(x["seconds"] for x in v) for s, v in runs.items()}
             rows = runs["batch"][0]["rows"]
             ratio = (rows / med["stream"]) / (rows / med["batch"])
