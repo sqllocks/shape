@@ -364,10 +364,11 @@ class KeyedSketches:
                 )
             return
         self._tick += 1
+        before = self._now  # a key idle for the TTL by then is gone, even if not swept yet
         newest = float(t.max())
         self._now = newest if self._now is None else max(self._now, newest)
         counts = np.bincount(inverse, minlength=len(uniq))
-        slots = self._slots_for(uniq)
+        slots = self._slots_for(uniq, before)
         self._count[slots] += counts
         order = np.argsort(inverse, kind="stable")
         starts = np.cumsum(counts) - counts
@@ -429,9 +430,16 @@ class KeyedSketches:
         np.maximum.at(flat, slot * (1 << p) + idx, rank)
 
     # ----------------------------------------------------------------- slots
-    def _slots_for(self, uniq: np.ndarray) -> np.ndarray:
+    def _slots_for(self, uniq: np.ndarray, now: float | None = None) -> np.ndarray:
         get = self._index.get
         slots = np.fromiter((get(k, -1) for k in uniq.tolist()), dtype=np.int64, count=len(uniq))
+        if self.ttl is not None and now is not None:
+            found = np.flatnonzero(slots >= 0)
+            stale = found[self._last_time[slots[found]] + self.ttl <= now]
+            if stale.size:  # expired keys that the sweep has not reached: they start afresh
+                self._drop(slots[stale])
+                self.expired += int(stale.size)
+                slots[stale] = -1
         missing = np.flatnonzero(slots < 0)
         self._touch[slots[slots >= 0]] = self._tick  # keys in this batch are not evicted
         if missing.size == 0:
