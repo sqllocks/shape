@@ -217,3 +217,22 @@ def test_profile_safe_prints_the_notice_as_a_note(tmp_path, capsys):
     assert rc == 0
     assert "shape: note:" in err and "not signed" in err
     assert "Warning" not in err and ".py:" not in err
+
+
+# --- coverage: assess_summary (privacy.core) ----------------------------------------------------
+
+
+def test_assess_summary_flags_rare_values_and_near_unique_fields():
+    from shape.privacy import assess_summary
+
+    report = assess_summary({"topk": [["a", 3], ["b", 50]], "count": 100, "distinct_estimate": 99})
+    assert [f.kind for f in report.findings] == ["rare_value", "near_unique"]
+    assert report.releasable is False
+
+
+def test_assess_summary_releases_a_common_low_cardinality_field():
+    from shape.privacy import assess_summary
+
+    report = assess_summary({"topk": [["a", 60], ["b", 40]], "count": 100, "distinct_estimate": 2})
+    assert report.findings == () and report.releasable is True
+    assert assess_summary({}).releasable is True
