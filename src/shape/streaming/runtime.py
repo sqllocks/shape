@@ -101,10 +101,15 @@ def _stored(us: int) -> timedelta:
     return timedelta(microseconds=int(us))
 
 
+_EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
+_MIN_US = (datetime.min.replace(tzinfo=UTC) - _EPOCH) // _US
+_MAX_US = (datetime.max.replace(tzinfo=UTC) - _EPOCH) // _US
+
+
 def _to_iso(us: int | None) -> str | None:
     if us is None:
         return None
-    return (datetime(1970, 1, 1, tzinfo=UTC) + timedelta(microseconds=us)).isoformat()
+    return _datetime(us).isoformat()
 
 
 @dataclass(frozen=True)
@@ -143,7 +148,10 @@ class WindowProfile:
 
 
 def _datetime(us: int) -> datetime:
-    return datetime(1970, 1, 1, tzinfo=UTC) + timedelta(microseconds=us)
+    """``us`` microseconds since the epoch as a datetime; an instant outside the calendar
+    (years 1 to 9999: a window around ``9999-12-31`` ends after it) is clamped to its edge. The
+    integer bounds of a window stay exact."""
+    return _EPOCH + timedelta(microseconds=min(max(us, _MIN_US), _MAX_US))
 
 
 def event_times(array: pa.Array) -> tuple[np.ndarray, np.ndarray]:
