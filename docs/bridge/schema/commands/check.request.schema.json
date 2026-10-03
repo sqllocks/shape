@@ -20,6 +20,17 @@
           "type": "string",
           "x-path": "read",
           "x-since": "1.0"
+        },
+        "project": {
+          "description": "a shape.yml project file; its settings apply as for `--project FILE` (the bridge never looks for one on its own)",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.1"
+        },
+        "source": {
+          "description": "the name of a source of `project`: its path, contract, baseline, thresholds, ignore lists and owners apply (needs project)",
+          "type": "string",
+          "x-since": "1.1"
         }
       },
       "required": [

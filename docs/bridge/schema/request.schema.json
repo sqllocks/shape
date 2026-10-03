@@ -27,6 +27,8 @@
         "preview",
         "profile",
         "profile_info",
+        "project_show",
+        "project_validate",
         "proposals_decide",
         "proposals_list",
         "proposals_propose",

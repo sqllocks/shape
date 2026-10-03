@@ -32,11 +32,23 @@
           "x-path": "read",
           "x-since": "1.0"
         },
+        "project": {
+          "description": "a shape.yml project file; its settings apply as for `--project FILE` (the bridge never looks for one on its own)",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.1"
+        },
         "schema": {
           "description": "a gate schema (or a Shape model v2) file",
           "type": "string",
           "x-path": "read",
           "x-since": "1.0"
+        },
+        "source": {
+          "description": "the real data the data was made from (a file or directory, read with the same `format` as `path`): runs the memorization gate, and the utility gate when the configuration has a utility section",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.1"
         },
         "statistical": {
           "description": "add the KS and chi-squared tests",

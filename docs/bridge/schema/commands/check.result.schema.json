@@ -5,6 +5,33 @@
     "passed": {
       "type": "boolean"
     },
+    "project": {
+      "additionalProperties": true,
+      "properties": {
+        "baseline": {
+          "additionalProperties": {},
+          "type": "object"
+        },
+        "file": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "file",
+        "format",
+        "version"
+      ],
+      "type": "object"
+    },
     "violation_count": {
       "type": "integer"
     },

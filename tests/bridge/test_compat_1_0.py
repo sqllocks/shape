@@ -103,7 +103,7 @@ def test_the_frozen_1_0_files_are_there_and_say_1_0():
 def test_the_frozen_schemas_name_no_1_1_command():
     index = json.loads((FROZEN_SCHEMAS / "index.json").read_text())
     current = json.loads((DOCS / "schema" / "index.json").read_text())
-    assert set(index["commands"]) <= set(current["commands"])
+    assert set(index["commands"]) < set(current["commands"])
     assert not [n for n in index["commands"] if current["commands"][n]["since"] != "1.0"]
 
 
@@ -263,6 +263,24 @@ def test_the_1_0_commands_and_arguments_are_published_as_since_1_0():
         assert index["commands"][name]["since"] == "1.0"
         request = frozen(entry["request"])["properties"]["args"]["properties"]
         assert all(index["commands"][name]["args"][a] == "1.0" for a in request)
+
+
+def test_the_new_commands_and_arguments_are_published_as_since_1_1():
+    index = all_schemas()["index.json"]
+    old = frozen_index()
+    new = set(index["commands"]) - set(old["commands"])
+    assert new and all(index["commands"][n]["since"] == "1.1" for n in new)
+    for name in new:
+        assert set(index["commands"][name]["args"].values()) <= {"1.1"}
+    added = [
+        (n, a)
+        for n in old["commands"]
+        for a, since in index["commands"][n]["args"].items()
+        if since == "1.1"
+    ]
+    assert {n for n, _ in added} >= {"profile", "diff", "check", "verify"}
+    for n, a in added:  # 1.1 adds arguments to 1.0 commands, and says so; none was in 1.0
+        assert a not in frozen(old["commands"][n]["request"])["properties"]["args"]["properties"]
 
 
 # ---- deliberate negative tests: the check fails when 1.0 is broken ---------------------------

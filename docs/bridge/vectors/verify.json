@@ -50,6 +50,81 @@
         "ok": false,
         "warnings": []
       }
+    },
+    {
+      "name": "observed-gate",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "config": "${DIR}/ranges.json",
+          "path": "orders",
+          "project": "${DIR}/shape.yml"
+        },
+        "command": "verify",
+        "id": "observed-gate"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "verify",
+        "id": "observed-gate",
+        "ok": true,
+        "result": {
+          "enforced_passed": true,
+          "gates": [
+            {
+              "details": {
+                "a.amount": {
+                  "above_max": 40
+                }
+              },
+              "errors": [
+                "a.amount: 40 values above maximum 50 (actual max: 144.0)"
+              ],
+              "mode": "observe",
+              "name": "range_constraint",
+              "passed": false,
+              "warnings": []
+            }
+          ],
+          "passed": true,
+          "project": {
+            "file": "${DIR}/shape.yml",
+            "format": "shape-project",
+            "source": "orders",
+            "version": 1
+          },
+          "row_counts": {
+            "a": 40
+          },
+          "statistical": false
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "bad-project",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "path": "${DIR}/a.csv",
+          "project": "${DIR}/none.yml"
+        },
+        "command": "verify",
+        "id": "bad-project"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "verify",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "file not found: ${DIR}/none.yml"
+        },
+        "id": "bad-project",
+        "ok": false,
+        "warnings": []
+      }
     }
   ],
   "command": "verify",

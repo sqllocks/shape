@@ -84,6 +84,7 @@ WARNING_CODES: dict[str, str] = {
     "domain_load_failed": "an installed domain did not load and is left out of the list",
     "output_dir_ignored": "output_dir was given but nothing is written for this format",
     "result_in_file": "a result part was larger than max_inline_bytes and is in a file",
+    "project_source_not_selected": "the project file has several sources and none was selected",
 }
 
 _ID_TYPES = (str, int)

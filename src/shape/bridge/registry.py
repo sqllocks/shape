@@ -7,15 +7,24 @@ from shape.bridge.spec import Command
 
 
 def _build() -> dict[str, Command]:
-    from shape.bridge.handlers import catalog, demo, flow, generate, proposals, scale
+    from shape.bridge.handlers import (
+        catalog,
+        demo,
+        flow,
+        generate,
+        project,
+        proposals,
+        scale,
+        workflow11,
+    )
 
     table: dict[str, Command] = {}
-    for module in (catalog, generate, flow, scale, demo, proposals):
+    for module in (catalog, generate, flow, scale, demo, proposals, project):
         for command in module.COMMANDS:
             if command.name in table:
                 raise AssertionError(f"duplicate bridge command {command.name!r}")
             table[command.name] = command
-    return annotate(table)
+    return annotate(workflow11.extend(table))
 
 
 COMMANDS: dict[str, Command] = _build()

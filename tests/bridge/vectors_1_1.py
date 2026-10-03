@@ -6,6 +6,7 @@ per new command) and ``EXTENDS`` adds setup and cases to the vector files of 1.0
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -128,9 +129,125 @@ FILES: dict[str, dict[str, Any]] = {
     },
 }
 
+PROJECT = f"{D}/shape.yml"
+PROJECT_YML = """\
+format: shape-project
+version: 1
+name: vectors
+sources:
+  orders:
+    path: a.csv
+    contract: contract.json
+    ignore: [status]
+    columns:
+      amount: {owner: finance@example.com}
+gates:
+  range_constraint: {mode: observe}
+"""
+
+FILES["project_validate"] = {
+    "cases": [
+        case("good-file", "project_validate", {"path": PROJECT}),
+        case(
+            "problems",
+            "project_validate",
+            {"text": "format: shape-project\nversion: 1\nsources:\n  validate: {path: ''}\n"},
+        ),
+        case("newer-version", "project_validate", {"text": PROJECT_YML.replace("1", "2", 1)}),
+        case("missing-file", "project_validate", {"path": f"{D}/none.yml"}),
+        case(
+            "text-and-path",
+            "project_validate",
+            {"text": PROJECT_YML, "path": PROJECT},
+        ),
+    ]
+}
+FILES["project_show"] = {
+    "cases": [
+        case("sources", "project_show", {"path": PROJECT}),
+        case("missing-file", "project_show", {"path": f"{D}/none.yml"}),
+        case("needs-a-path", "project_show", {}, valid_request=False),
+    ]
+}
+
 #: Setup and cases added to the vector files of 1.0 commands.
-EXTENDS: dict[str, dict[str, Any]] = {}
+EXTENDS: dict[str, dict[str, Any]] = {
+    "profile": {
+        "cases": [
+            case(
+                "source-name",
+                "profile",
+                {"source": "orders", "project": PROJECT, "output": f"{D}/orders.shape"},
+            ),
+            case(
+                "bad-project",
+                "profile",
+                {"source": "orders", "project": f"{D}/none.yml", "output": f"{D}/o.shape"},
+            ),
+        ]
+    },
+    "diff": {
+        "cases": [
+            case(
+                "project-policy",
+                "diff",
+                {"before": f"{D}/a.shape", "after": f"{D}/b.shape", "project": PROJECT},
+            ),
+            case(
+                "unknown-source",
+                "diff",
+                {
+                    "before": f"{D}/a.shape",
+                    "after": f"{D}/b.shape",
+                    "project": PROJECT,
+                    "source": "ghost",
+                },
+            ),
+        ]
+    },
+    "check": {
+        "cases": [
+            case(
+                "project-owner",
+                "check",
+                {
+                    "profile": f"{D}/a.shape",
+                    "contract": f"{D}/contract_bad.json",
+                    "project": PROJECT,
+                    "source": "orders",
+                },
+            ),
+            case(
+                "source-needs-a-project",
+                "check",
+                {"profile": f"{D}/a.shape", "contract": f"{D}/contract.json", "source": "orders"},
+            ),
+        ]
+    },
+    "verify": {
+        "cases": [
+            case(
+                "observed-gate",
+                "verify",
+                {"path": "orders", "project": PROJECT, "config": f"{D}/ranges.json"},
+            ),
+            case(
+                "bad-project",
+                "verify",
+                {"path": f"{D}/a.csv", "project": f"{D}/none.yml"},
+            ),
+        ]
+    },
+}
 
 
 def write_fixtures(folder: Path) -> None:
     write_dataset(folder / "shop", shop_tables())
+    (folder / "shape.yml").write_text(PROJECT_YML)
+    (folder / "ranges.json").write_text(
+        json.dumps(
+            {"format": "shape-verify-config", "version": 1, "ranges": {"a.amount": {"max": 50}}},
+            indent=2,
+        )
+        + "\n"
+    )

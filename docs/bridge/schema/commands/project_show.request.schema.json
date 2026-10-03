@@ -9,58 +9,20 @@
     "args": {
       "additionalProperties": false,
       "properties": {
-        "as_of": {
-          "description": "a Delta table: the newest version at or before this ISO-8601 time",
-          "type": "string",
-          "x-since": "1.0"
-        },
-        "dataset": {
-          "description": "a folder of table files: one table per file",
-          "type": "boolean",
-          "x-since": "1.0"
-        },
-        "fail_on_empty": {
-          "description": "fail instead of warning when a table has 0 rows",
-          "type": "boolean",
-          "x-since": "1.0"
-        },
-        "name": {
-          "description": "the profile's name",
-          "type": "string",
-          "x-since": "1.0"
-        },
-        "output": {
-          "description": "where to write the .shape profile (default: the jobs directory)",
-          "type": "string",
-          "x-path": "write",
-          "x-since": "1.0"
-        },
-        "project": {
-          "description": "a shape.yml project file; its settings apply as for `--project FILE` (the bridge never looks for one on its own)",
+        "path": {
+          "description": "the project file",
           "type": "string",
           "x-path": "read",
           "x-since": "1.1"
-        },
-        "source": {
-          "description": "a file, folder, glob or Delta table",
-          "type": "string",
-          "x-path": "read",
-          "x-since": "1.0"
-        },
-        "version": {
-          "description": "a Delta table: profile this version",
-          "minimum": 0,
-          "type": "integer",
-          "x-since": "1.0"
         }
       },
       "required": [
-        "source"
+        "path"
       ],
       "type": "object"
     },
     "command": {
-      "const": "profile"
+      "const": "project_show"
     },
     "id": {
       "maxLength": 128,
@@ -100,8 +62,8 @@
     "command",
     "args"
   ],
-  "title": "profile request",
+  "title": "project_show request",
   "type": "object",
   "x-api-version": "1.1",
-  "x-since": "1.0"
+  "x-since": "1.1"
 }

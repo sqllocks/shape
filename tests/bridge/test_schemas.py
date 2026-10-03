@@ -37,7 +37,13 @@ PLAN_COMMANDS = {
 ADDED = {"profile", "diff", "check", "verify"}
 JOBS = {"job_status", "job_cancel", "job_list"}
 #: The commands bridge 1.1 adds (their vectors, schemas and tests are in the 1.1 test files).
-ADDED_1_1 = {"proposals_propose", "proposals_list", "proposals_decide"}
+ADDED_1_1 = {
+    "proposals_propose",
+    "proposals_list",
+    "proposals_decide",
+    "project_validate",
+    "project_show",
+}
 
 
 def test_the_command_set_is_the_plans_plus_the_core_workflow_and_the_job_commands():

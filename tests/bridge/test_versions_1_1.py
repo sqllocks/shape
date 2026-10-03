@@ -18,7 +18,7 @@ from shape.bridge.protocol import (
     warning,
 )
 from shape.bridge.registry import COMMANDS
-from shape.bridge.spec import Arg, Command
+from shape.bridge.spec import Arg, Command, check_args
 
 
 def handle(bridge: Bridge, command: str, args=None, version="1.1", **extra):
@@ -82,3 +82,73 @@ def test_every_warning_and_error_code_is_registered():
         warning("made_up", "x")
     assert all(isinstance(m, str) and m for m in ERROR_CODES.values())
     assert all(isinstance(m, str) and m for m in WARNING_CODES.values())
+
+
+def test_a_1_0_request_cannot_use_a_1_1_command(bridge):
+    new = [n for n, c in COMMANDS.items() if c.since == "1.1"]
+    assert new
+    for name in new:
+        r = handle(bridge, name, version="1.0")
+        assert r["error"]["code"] == "usage.unknown_command", name
+        assert "api_version 1.1" in r["error"]["hint"], name
+        listed = r["error"]["hint"].split("the commands are: ")[1].split(";")[0].split(", ")
+        assert all(COMMANDS[c].since == "1.0" for c in listed)
+        assert set(listed) == {n for n, c in COMMANDS.items() if c.since == "1.0"}
+
+
+def test_a_1_1_request_can_use_a_1_1_command_and_the_same_unknown_name_is_still_unknown(bridge):
+    r = handle(bridge, "no_such_command", version="1.1")
+    assert r["error"]["code"] == "usage.unknown_command" and "api_version" not in r["error"]["hint"]
+    assert "proposals_propose" in r["error"]["hint"]
+    r = handle(bridge, "no_such_command", version="1.0")
+    assert "proposals_propose" not in r["error"]["hint"]
+
+
+def test_a_1_0_request_cannot_use_a_1_1_argument(bridge):
+    added = [
+        (n, a)
+        for n, c in COMMANDS.items()
+        if c.since == "1.0"
+        for a, v in c.args.items()
+        if v.since == "1.1"
+    ]
+    assert added
+    for name, arg in added:
+        r = handle(bridge, name, {arg: "x"}, version="1.0")
+        assert r["error"]["code"] == "usage.unknown_argument", (name, arg)
+        assert "api_version 1.1" in r["error"]["hint"], (name, arg)
+        takes = r["error"]["hint"].split("it takes: ")[1].split(";")[0].split(", ")
+        assert arg not in takes and all(COMMANDS[name].args[t].since == "1.0" for t in takes if t)
+
+
+def test_a_1_1_argument_of_a_1_1_request_is_checked_not_refused():
+    command = COMMANDS["profile"]
+    args = {"source": "x.csv", "project": "shape.yml"}
+    assert check_args(command, args, 1) == args
+    with pytest.raises(Exception) as caught:
+        check_args(command, args, 0)
+    assert getattr(caught.value, "code", None) == "usage.unknown_argument"
+
+
+def test_a_1_0_request_gets_no_1_1_field_and_no_new_warning(bridge, tmp_path, csv_pair):
+    verify = handle(bridge, "verify", {"path": str(csv_pair[0])}, version="1.0")["result"]
+    assert all(set(g) == {"name", "passed", "errors", "warnings"} for g in verify["gates"])
+    assert set(verify) == {"passed", "gates", "row_counts", "statistical"}
+    new = handle(bridge, "verify", {"path": str(csv_pair[0])}, version="1.1")["result"]
+    assert all("details" in g for g in new["gates"])
+    out = tmp_path / "a.shape"
+    profile = handle(
+        bridge, "profile", {"source": str(csv_pair[0]), "output": str(out)}, version="1.0"
+    )
+    assert profile["ok"] and [w["code"] for w in profile["warnings"]] == [
+        "profile_file_holds_values"
+    ]
+    diff = handle(bridge, "diff", {"before": str(out), "after": str(out)}, version="1.0")
+    assert set(diff["result"]) == {"drifted", "change_count", "changes"}
+    assert "project" not in diff["result"]
+
+
+def test_a_1_0_request_with_a_1_1_value_only_is_the_1_0_error(bridge, csv_pair):
+    r = handle(bridge, "verify", {"path": str(csv_pair[0]), "colour": "red"}, version="1.0")
+    assert r["error"]["code"] == "usage.unknown_argument"
+    assert r["error"]["hint"] == "it takes: config, format, path, schema, statistical, strict"
