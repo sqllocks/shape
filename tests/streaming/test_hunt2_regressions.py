@@ -208,3 +208,149 @@ def test_707_window_bounds_outside_the_calendar_do_not_raise():
     assert doc["start_us"] == -big and doc["end_us"] == big
     assert doc["start"].startswith("0001-01-01") and doc["end"].startswith("9999-12-31")
     assert w.start_time.year == 1 and w.end_time.year == 9999
+
+
+# ---- persisted formats declare an integer version (#678, #708) ------------------------------
+
+
+def _checkpoint_run(tmp_path, *extra):
+    src = tmp_path / "ev.jsonl"
+    if not src.exists():
+        src.write_text(
+            "".join(
+                json.dumps({"_shape_event_time": f"2024-01-01T00:{i:02d}:00Z", "v": i}) + "\n"
+                for i in range(40)
+            )
+        )
+    ck = tmp_path / "ck.json"
+    args = ["stream-profile", str(src), "--window", "tumbling", "--size", "10m"]
+    args += ["--windows", str(tmp_path / f"w{len(list(tmp_path.glob('w*')))}.jsonl")]
+    return main([*args, "--checkpoint", str(ck), *extra]), ck
+
+
+def test_678_the_stream_checkpoint_and_its_window_snapshot_declare_a_version(tmp_path):
+    code, ck = _checkpoint_run(tmp_path)
+    assert code == 0
+    doc = json.loads(ck.read_text())
+    assert doc["format"] == "shape-stream-checkpoint-v1" and doc["version"] == 1
+    assert doc["profiler"]["format"] == "shape-stream-window-v1" and doc["profiler"]["version"] == 1
+    assert doc["shape_version"] and doc["min_shape_version"]
+
+
+def test_678_a_checkpoint_of_a_newer_version_is_refused_as_newer(tmp_path, capsys):
+    _, ck = _checkpoint_run(tmp_path)
+    doc = json.loads(ck.read_text())
+    doc["finished"] = False
+    doc["profiler"]["finished"] = False
+    doc["version"] = 2
+    ck.write_text(json.dumps(doc))
+    capsys.readouterr()
+    assert _checkpoint_run(tmp_path)[0] == 2
+    err = capsys.readouterr().err
+    assert "version 2" in err and "upgrade" in err.lower() and "not a stream" not in err
+
+
+def test_678_a_newer_window_snapshot_is_refused_as_newer():
+    import pyarrow as pa
+
+    from shape.compat import UnsupportedVersionError
+    from shape.streaming.runtime import GlobalProfiler, restore_profiler
+
+    snap = GlobalProfiler(pa.schema([("x", pa.int64())])).snapshot()
+    assert snap["version"] == 1
+    restore_profiler(snap)
+    snap["version"] = 2
+    with pytest.raises(UnsupportedVersionError, match="version 2"):
+        restore_profiler(snap)
+    with pytest.raises(ValueError, match="version 2"):  # still the ValueError callers catch
+        restore_profiler(snap)
+
+
+def test_678_a_checkpoint_written_before_versions_still_resumes(tmp_path, capsys):
+    _, ck = _checkpoint_run(tmp_path)
+    doc = json.loads(ck.read_text())
+    for d in (doc, doc["profiler"]):
+        for key in ("version", "shape_version", "min_shape_version"):
+            d.pop(key, None)
+    doc["finished"] = doc["profiler"]["finished"] = False
+    ck.write_text(json.dumps(doc))
+    capsys.readouterr()
+    assert _checkpoint_run(tmp_path)[0] == 0
+
+
+def test_678_a_damaged_checkpoint_names_the_file_and_says_what_to_do(tmp_path, capsys):
+    src = tmp_path / "ev.jsonl"
+    src.write_text("".join(json.dumps({"v": i}) + "\n" for i in range(10)))
+    ck = tmp_path / "ck.json"
+    args = ["stream-profile", str(src), "-o", str(tmp_path / "o.json"), "--checkpoint", str(ck)]
+    assert main(args) == 0
+    doc = json.loads(ck.read_text())
+    doc["profiler"]["finished"] = False
+    doc["profiler"]["state"]["state"] = "AAAA"
+    ck.write_text(json.dumps(doc))
+    capsys.readouterr()
+    assert main(args) == 2
+    err = capsys.readouterr().err
+    assert str(ck) in err and "cannot read" in err and "error: error" not in err
+    assert "--checkpoint" in err
+
+
+def test_708_dedupe_and_sketch_snapshots_declare_a_version():
+    import numpy as np
+
+    from shape.compat import UnsupportedVersionError
+    from shape.streaming.dedupe import Deduplicator
+    from shape.streaming.keyed import KeyedSketches
+
+    d = Deduplicator()
+    d.filter(np.array([1, 2, 2]))
+    s = KeyedSketches(10)
+    for snap, cls in ((d.snapshot(), Deduplicator), (s.snapshot(), KeyedSketches)):
+        assert snap["version"] == 1
+        cls.restore(snap)
+        old = {k: v for k, v in snap.items() if k not in ("version", "shape_version")}
+        cls.restore(old)  # a snapshot from before the declaration
+        with pytest.raises(UnsupportedVersionError):
+            cls.restore({**snap, "version": 2})
+
+
+def test_708_keyed_state_snapshots_declare_format_and_version_and_survive_json():
+    from shape.compat import UnsupportedVersionError
+    from shape.streaming.keyed import KeyedState, PartitionedKeyedState
+
+    s = KeyedState(60, 10)
+    s.put(("customer", 1), {"n": 1}, 5.0)
+    s.put("plain", 2, 5.0)
+    s.put(7, 3, 5.0)
+    snap = json.loads(json.dumps(s.snapshot()))
+    assert snap["format"] == "shape-keyed-state-v1" and snap["version"] == 1
+    r = KeyedState.restore(snap)
+    assert (
+        r.get(("customer", 1), 6.0) == {"n": 1} and r.get("plain", 6.0) == 2 and r.get(7, 6.0) == 3
+    )
+    with pytest.raises(UnsupportedVersionError):
+        KeyedState.restore({**snap, "version": 2})
+    # a snapshot from before the declaration (no format, no version) restores
+    legacy = {k: v for k, v in s.snapshot().items() if k in ("ttl_seconds", "max_keys", "items")}
+    assert KeyedState.restore(legacy).get("plain", 6.0) == 2
+
+    p = PartitionedKeyedState(4, 60)
+    p.put(("x", 2), 1, 1.0)
+    psnap = json.loads(json.dumps(p.snapshot()))
+    assert psnap["format"] == "shape-keyed-state-partitioned-v1" and psnap["version"] == 1
+    assert PartitionedKeyedState.restore(psnap).get(("x", 2), 2.0) == 1
+
+
+def test_678_the_emit_checkpoint_declares_a_version(tmp_path, capsys):
+    out = tmp_path / "e.jsonl"
+    args = ["emit", "retail", "--scale", "tiny", "--max-events", "20", "--sink", "file"]
+    assert main([*args, "-o", str(out)]) == 0
+    ck = Path(f"{out}.checkpoint")
+    doc = json.loads(ck.read_text())
+    assert doc["format"] == "shape-emit-v1" and doc["version"] == 1
+    doc["version"] = 2
+    ck.write_text(json.dumps(doc))
+    capsys.readouterr()
+    assert main([*args, "-o", str(out), "--max-events", "40"]) == 2
+    err = capsys.readouterr().err
+    assert "version 2" in err and "upgrade" in err.lower()
