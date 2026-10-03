@@ -1,0 +1,13 @@
+tests/cli/test_generate_to.py::test_to_postgresql_routes_to_the_database_sink fails intermittently
+(make check on the final tree: 1 failed; 3 of 40 single runs of the test failed).
+
+Cause (tools/fakeserver_race.py, write_targets 400 times against shape_databases.testing.FakeServer):
+  shape_databases/testing.py:139 begin(): copy.deepcopy(self.tables) -> RuntimeError: dictionary changed
+  size during iteration. write_targets writes the tables on parallel threads, each with its own
+  connection to the one FakeServer, whose table dict is copied by one thread while another's DDL adds
+  a table. The test double is not thread-safe; the product code is not involved.
+
+final tree (this branch):  failed at iteration 33
+int/INT-16 tree (PYTHONPATH on the 69df49a8 worktree, its own shape and shape_databases;
+                            plugins/shape-databases and output.py are the same in 0fdbde55):
+                           failed at iteration 75
