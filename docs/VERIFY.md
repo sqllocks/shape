@@ -60,6 +60,8 @@ the gate schema and the contract format, with its own `format` and `version`:
 | `ranges` | `range_constraint` | `"table.column"` stays within `min` / `max` |
 | `date_range`, `no_future`, `ordering` | `temporal_consistency` | timestamp columns lie in `start`..`end` (ISO 8601); `table.column` has no future dates; `end >= start` per rule |
 | `baseline` | `schema_drift` | removed tables or columns and changed types fail; new ones warn (dtype names: `int64`, `float64`, `str`, `bool`, `datetime64[us]`, `object`) |
+| `timeseries` | `timeseries_quality` | gaps, stuck values and daylight-saving transitions of a time series (below) |
+| `reconcile` | `reconciliation` | a source and a target compared on counts, partitions and aggregates (below) |
 | `file_paths`, `check_data_files` | `file_format` | the listed files (and, with `check_data_files`, every data file that was loaded) exist, are non-empty and read in full |
 | `distribution_alpha` | `distribution` (`--statistical`) | the p-value below which it warns (default 0.05) |
 
@@ -68,6 +70,120 @@ the gates that ran. Every key is checked when the file is read: an unknown key, 
 or a bad date is refused with exit `2` and a message naming the key, so a misspelt rule cannot
 be skipped silently. `date_range` and `no_future` apply to columns whose type is a timestamp
 (Parquet timestamps; CSV and JSONL text columns are strings, so convert them first).
+
+## Time-series quality: gaps, stuck values, daylight saving
+
+`"timeseries"` is a list of rules. Each names a table and its time column (a timestamp, or ISO 8601
+text) and any of three checks:
+
+```json
+{
+  "format": "shape-verify-config",
+  "version": 1,
+  "timeseries": [
+    {"table": "readings", "time": "ts", "by": ["sensor"], "every": "1h",
+     "gaps":  {"max_missing": 0},
+     "stuck": {"column": "value", "max_run": 5},
+     "dst":   {"time_zone": "Europe/Berlin", "fall_back": "repeat"}}
+  ]
+}
+```
+
+| Key | Meaning |
+|---|---|
+| `table`, `time` | the table and its time column (required) |
+| `by` | columns that identify one series (a sensor, a meter); every check runs per series, in time order, whatever the row order |
+| `every` | the regular step: a whole number and a unit, `us`, `ms`, `s`, `min`, `h`, `d` or `w` (`"15min"`). A calendar month has no fixed length and is not accepted |
+| `gaps` | fails when more than `max_missing` (default `0`) steps are missing: between two consecutive times, a distance that is a whole number of steps larger than one counts the steps in between. Repeated times and distances that are not a multiple of `every` are warnings, not gaps |
+| `stuck` | fails when a series repeats the same value in more than `max_run` consecutive rows (`column`, `max_run`); a null or NaN breaks a run, and a run of exactly `max_run` is allowed |
+| `dst` | checks the clock changes of `time_zone` (an IANA name, always given explicitly) that fall inside the data. The data are wall-clock times: naive timestamps as they are, aware ones converted to the zone |
+
+`gaps` and `dst` need `every`. The daylight-saving check reports two things per transition:
+rows at **local times that do not exist** (the hour the clocks skip in spring is an error if any
+row falls in it), and the **repeated local hour** in autumn. With `"fall_back": "repeat"` (the
+default) each step of the repeated hour must occur twice in a series that crosses it, with
+`"once"` exactly once (data that were disambiguated). A series that does not cover the repeated
+hour is not checked, and with naive times and a zone the missing hour is not counted as a gap.
+Rows with no time are skipped with a warning.
+
+From Python:
+
+```python
+from shape.quality import check_timeseries
+
+findings = check_timeseries(tables, [{"table": "readings", "time": "ts", "every": "1h", "gaps": {}}])
+```
+
+Each finding has `rule` (`timeseries.gaps`, `.stuck`, `.dst`, `.duplicates`, `.off_grid`,
+`.null_times`, `.time_column`, `.table_exists`, `.column_exists`), `severity` (`error` or
+`warning`), `table`, `column`, `message`, `expected` and `observed` (with the gaps, runs or
+transitions, up to 20 of each).
+
+## Reconciliation: source against target
+
+`"reconcile"` is a list of rules, each comparing two tables. A side is a path read through the
+same source layer as `shape profile` (CSV, Parquet, JSONL, globs, folders, Delta tables), or
+`{"table": "name"}` for a table of the data being verified:
+
+```json
+{
+  "format": "shape-verify-config",
+  "version": 1,
+  "reconcile": [
+    {"name": "orders vs warehouse",
+     "source": {"table": "orders"},
+     "target": "warehouse/orders.parquet",
+     "partition_by": ["order_date"],
+     "key": ["customer_id"],
+     "aggregates": [{"column": "amount", "agg": "sum", "tolerance": {"abs": 0.01}},
+                    {"column": "amount", "target_column": "amt", "agg": "max"}],
+     "tolerance": {"rel": 0.001},
+     "count_tolerance": {"abs": 0}}
+  ]
+}
+```
+
+| Key | Meaning |
+|---|---|
+| `source`, `target` | the two sides (required) |
+| `name` | a label for the reports (default: the two sides) |
+| `partition_by` | row counts per value combination of these columns; a partition on one side only counts as `0` on the other |
+| `key` | row counts per key, keys that exist on one side only, and each aggregate per key |
+| `aggregates` | `column`, `agg` (`sum`, `mean`, `min`, `max`, `count` of non-null values, `count_distinct`), optional `target_column` and `tolerance`. Without `key` they cover the whole table. Non-numeric values compare by equality |
+| `tolerance` | `{"abs": x, "rel": y}`, the default for counts and aggregates |
+| `count_tolerance` | overrides `tolerance` for counts |
+
+A difference `d` is within tolerance when `abs(d) <= abs + rel * max(abs(source), abs(target))`.
+Both default to `0`, an exact match: give a tolerance for floating-point sums. The row counts of
+the two sides are always compared. A missing column is a `reconcile.column_exists` error; a side
+that cannot be read fails the gate with the reason.
+
+```python
+from shape.quality import reconcile
+
+result = reconcile("orders.parquet", "warehouse/orders.parquet", key=["customer_id"],
+                   aggregates=[{"column": "amount", "agg": "sum"}], tolerance={"abs": 0.01})
+result.passed, result.findings    # rules: reconcile.count, .partition, .key, .key_count, .aggregate
+```
+
+## In a contract (`shape check`)
+
+Contract v1 accepts the same two lists as optional top-level rules, `"timeseries"` and
+`"reconcile"` (an older Shape refuses them as unknown keys). They check data, not a profile, so
+`shape check` takes the data too, and a contract with these rules and no data exits `2`:
+
+```bash
+shape check orders.shape contract.json --data out/        # exit 1 on a violation
+```
+
+```python
+shape.check(profile, "contract.json", data=tables_or_path)
+```
+
+Each error becomes a violation with `column` (`table.column`), `rule` (`timeseries.gaps`, ...),
+`expected` and `observed`; reconcile violations add `reconciliation` (the rule's name). Warnings
+are not violations. The rules go at the top level of the contract (they name their own tables),
+not inside a table's contract.
 
 ## The gate schema
 

@@ -25,7 +25,10 @@ _CONTRACT_KEYS = {
     "allow_extra_columns",
     "tables",
     "drift",  # the drift policy (thresholds, ignore, per-column thresholds): ignored by check
+    "timeseries",  # time-series rules (gaps, stuck values, daylight saving): need `data=`
+    "reconcile",  # source/target reconciliation rules: need `data=`
 }
+_DATA_RULES = ("timeseries", "reconcile")
 _ROW_COUNT_KEYS = {"min", "max"}
 _COLUMN_RULES = {
     "dtype",
@@ -73,10 +76,30 @@ def _load_contract(contract: dict[str, Any] | str | Path) -> dict[str, Any]:
     return contract
 
 
-def _validate_contract(contract: dict[str, Any]) -> None:
+def _validate_data_rules(contract: dict[str, Any], *, top: bool) -> None:
+    from shape.quality.reconcile import validate_reconcile_rules
+    from shape.quality.timeseries import validate_timeseries_rules
+
+    validators = {"timeseries": validate_timeseries_rules, "reconcile": validate_reconcile_rules}
+    for key in _DATA_RULES:
+        if key not in contract:
+            continue
+        if not top:
+            raise ContractError(
+                f"'{key}' rules belong at the top level of the contract (they name their own "
+                "tables), not inside a table's contract"
+            )
+        try:
+            validators[key](contract[key])
+        except ValueError as exc:
+            raise ContractError(str(exc)) from exc
+
+
+def _validate_contract(contract: dict[str, Any], *, top: bool = True) -> None:
     unknown = set(contract) - _CONTRACT_KEYS
     if unknown:
         raise ContractError(f"unknown contract keys: {sorted(unknown)}")
+    _validate_data_rules(contract, top=top)
     rc = contract.get("row_count", {})
     if not isinstance(rc, dict) or set(rc) - _ROW_COUNT_KEYS:
         raise ContractError("row_count accepts only 'min' and 'max'")
@@ -238,8 +261,45 @@ def _check_table(
     return violations
 
 
-def check(profile: Profile, contract: dict[str, Any] | str | Path) -> CheckResult:
+def _data_violations(contract: dict[str, Any], data: Any) -> list[dict[str, Any]]:
+    """The violations of the contract's ``timeseries`` and ``reconcile`` rules over ``data``."""
+    from shape.quality import load_tables
+    from shape.quality.gates import ValidationContext
+    from shape.quality.reconcile import ReconciliationGate
+    from shape.quality.timeseries import check_timeseries
+
+    present = [k for k in _DATA_RULES if k in contract]
+    if not present:
+        return []
+    if data is None:
+        raise ContractError(
+            f"the contract has {' and '.join(repr(k) for k in present)} rules, which check "
+            "data rather than a profile: pass the tables as data= (`shape check PROFILE "
+            "CONTRACT --data DATA`)"
+        )
+    tables = load_tables(data) if isinstance(data, (str, Path)) else dict(data)
+    violations: list[dict[str, Any]] = []
+    if "timeseries" in contract:
+        for f in check_timeseries(tables, contract["timeseries"]):
+            if f["severity"] == "error":
+                column = f"{f['table']}.{f['column']}" if f["column"] else None
+                violations.append(_violation(column, f["rule"], f["expected"], f["observed"]))
+    if "reconcile" in contract:
+        ctx = ValidationContext(tables=tables, config={"reconcile": contract["reconcile"]})
+        for f in ReconciliationGate().check(ctx).details["findings"]:
+            # a reconciliation's name says which of the contract's rules this violation is of
+            v = _violation(f["column"], f["rule"], f["expected"], f["observed"])
+            violations.append({**v, "reconciliation": f["table"]})
+    return violations
+
+
+def check(profile: Profile, contract: dict[str, Any] | str | Path, data: Any = None) -> CheckResult:
     """Check ``profile`` against a v1 contract (a dict, or the path to a JSON file).
+
+    The optional ``timeseries`` and ``reconcile`` rules check data, not a profile (see
+    ``docs/VERIFY.md``): ``data`` is the tables (``{name: pyarrow.Table}``, or a path that
+    :func:`shape.quality.load_tables` reads), and a contract with such rules and no ``data``
+    raises :class:`ContractError` rather than pass without testing them.
 
     The contract and the profile must describe the same tables. A ``tables`` contract against a
     single-table profile raises :class:`ContractError`; against a dataset, a table the contract
@@ -257,7 +317,7 @@ def check(profile: Profile, contract: dict[str, Any] | str | Path) -> CheckResul
             )
         violations: list[dict[str, Any]] = []
         for tname, sub in per_table.items():
-            _validate_contract(sub)
+            _validate_contract(sub, top=False)
             if tname not in profile.tables:
                 violations.append(_violation(None, "table_exists", tname, "missing"))
                 continue
@@ -267,6 +327,7 @@ def check(profile: Profile, contract: dict[str, Any] | str | Path) -> CheckResul
                 else:
                     v["rule"] = f"{tname}:{v['rule']}"
                 violations.append(v)
+        violations.extend(_data_violations(contract, data))
         return CheckResult(passed=not violations, violations=violations)
     if "tables" in contract:
         # A multi-table contract has nothing to say about one table: checking it would pass
@@ -277,6 +338,7 @@ def check(profile: Profile, contract: dict[str, Any] | str | Path) -> CheckResul
             "(`shape profile --dataset FOLDER`, or `shape.profile({name: source, ...})`)"
         )
     violations = _check_table(next(iter(profile.tables.values())), contract)
+    violations.extend(_data_violations(contract, data))
     return CheckResult(passed=not violations, violations=violations)
 
 

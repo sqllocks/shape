@@ -35,7 +35,9 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
 - `shape profile SRC -o OUT.shape` reads CSV, Parquet, JSONL, a folder or glob of them, or a Delta
   table, and writes a **profile**. A table with 0 rows prints `shape: warning: ... has 0 rows`
   (the profile is still written); `--fail-on-empty` exits 2 instead and writes nothing.
-- `shape check`, `shape diff`, `shape plan`, `shape generate --from` read profiles.
+- `shape check`, `shape diff`, `shape plan`, `shape generate --from` read profiles. `shape check
+  --data DATA` also checks the contract's `timeseries` and `reconcile` rules against data
+  (`docs/VERIFY.md`).
 - `shape inspect ARTIFACT.shape` prints what an artifact holds, a profile or a model. `shape show`
   is an alias of `shape inspect`.
 - `shape capture SRC` reads everything `shape profile` reads (CSV, Parquet, JSONL, a folder or

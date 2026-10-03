@@ -462,7 +462,12 @@ def _cmd_inspect(a):
 def _cmd_check(a):
     import shape
 
-    result = shape.check(shape.load(a.shape), a.contract)
+    data = None
+    if a.data:
+        from shape.quality import load_tables
+
+        data = load_tables(a.data, a.format)
+    result = shape.check(shape.load(a.shape), a.contract, data=data)
     out = result.to_dict()
     if a.json:
         _write_json(a.json, out)
@@ -1136,6 +1141,13 @@ def _build_parser(plugin_commands=()):
     ck = sub.add_parser("check", help="check a profile against a contract")
     ck.add_argument("shape", metavar="PROFILE.shape")
     ck.add_argument("contract", metavar="CONTRACT.json")
+    ck.add_argument(
+        "--data",
+        metavar="DATA",
+        help="a data file or directory of data files: needed by the contract's `timeseries` "
+        "and `reconcile` rules, which check data rather than the profile",
+    )
+    ck.add_argument("--format", choices=("auto", "csv", "parquet", "jsonl"), default="auto")
     ck.add_argument("--json", metavar="RESULT.json")
     ck.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     co = sub.add_parser(

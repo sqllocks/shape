@@ -5,6 +5,12 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Reconciliation and time-series quality checks (`docs/VERIFY.md`): `shape verify --config` takes
+  `reconcile` rules (row counts per table and partition, aggregates per key or group, with
+  tolerances, both sides read through the source layer) and `timeseries` rules (gaps in a regular
+  series, stuck values, daylight-saving missing and repeated local hours with an explicit time
+  zone). The contract accepts the same optional rules and `shape check` takes `--data`;
+  `shape.quality.reconcile` and `shape.quality.check_timeseries` are the Python API.
 - `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
   the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
   clearing cover every month of a multi-month table. `duration_hours` still overrides it

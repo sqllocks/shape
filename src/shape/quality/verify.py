@@ -29,6 +29,8 @@ from .gates import (
     ValidationContext,
 )
 from .gatespec import GateSchema
+from .reconcile import ReconciliationGate
+from .timeseries import TimeSeriesGate
 from .verifyconfig import VerifyConfig
 
 FORMATS = ("csv", "parquet", "jsonl")
@@ -166,6 +168,10 @@ class VerifyRunner:
                 results.append(TemporalConsistencyGate().check(ctx))
             if "baseline" in cfg.rules:
                 results.append(SchemaDriftGate().check(ctx))
+            if "timeseries" in cfg.rules:
+                results.append(TimeSeriesGate().check(ctx))
+            if "reconcile" in cfg.rules:
+                results.append(ReconciliationGate().check(ctx))
             if ctx.file_paths:
                 results.append(FileFormatGate().check(ctx))
         if self._statistical:
@@ -194,6 +200,10 @@ _GATE_DESCRIPTIONS = {
         "for start/end ordering."
     ),
     "schema_drift": "Tables and column types compared with the configured baseline.",
+    "timeseries_quality": (
+        "Time series checked for gaps, stuck values and daylight-saving transitions."
+    ),
+    "reconciliation": "Source and target compared on counts, partitions and aggregates.",
     "file_format": "Data files checked to exist, be non-empty and read in full.",
     "distribution": (
         "KS test (numeric) and chi-squared test (enum) comparing observed "
