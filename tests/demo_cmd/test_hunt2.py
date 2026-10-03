@@ -169,3 +169,32 @@ def test_701_a_dry_run_still_lists_the_session_folder_it_would_remove(
     assert (tmp_path / "land" / session / "customer").is_dir()  # nothing was removed
     code, real, _ = run("demo", "cleanup", session)
     assert "Removed: file/customer" in real and not (tmp_path / "land" / session).exists()
+
+
+# ---- #716: an input file that cannot be read is a message that names the file ---------------
+
+
+def test_716_a_repeated_column_name_is_a_message_without_a_traceback(run, home, tmp_path, caplog):
+    path = tmp_path / "dup.csv"
+    path.write_text("a,a\n1,2\n", encoding="utf-8")
+    code, out, err = run("demo", "run", "retail", "--input-file", path, "--rows", "200")
+    assert code == 1
+    assert "Traceback" not in out + err and "inference demo failed" not in caplog.text
+    assert f"{path}" in err and "more than once" in err
+
+
+def test_716_a_file_that_is_not_utf8_says_so_and_names_the_file(run, home, tmp_path):
+    path = tmp_path / "u16.csv"
+    path.write_bytes("a\n1\n".encode("utf-16"))
+    code, out, err = run("demo", "run", "retail", "--input-file", path, "--rows", "200", "--json")
+    result = json.loads(out)
+    assert code == 1 and result["success"] is False
+    assert str(path) in result["error"] and "UTF-8" in result["error"]
+    assert "codec can't decode" not in result["error"]
+
+
+def test_716_a_readable_file_still_runs(run, home, tmp_path):
+    path = tmp_path / "ok.csv"
+    path.write_text("a,b\n" + "\n".join(f"{i},x{i % 3}" for i in range(50)), encoding="utf-8")
+    code, out, _ = run("demo", "run", "retail", "--input-file", path, "--rows", "200")
+    assert code == 0 and "Fidelity" in out
