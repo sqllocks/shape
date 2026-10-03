@@ -265,9 +265,26 @@ SMALL_BATCH_ROWS = 32
 for 3 rows as for 3,000); the output is byte-identical."""
 
 
+_SEQ_KEY = b'"' + FIELD_SEQ.encode() + b'":'
+
+
 def poison_body(body: bytes) -> bytes:
-    """``body`` (one JSON object) cut off part way: a message no JSON parser accepts."""
-    return body[: max(1, (len(body) * 2) // 3)]
+    """``body`` (one JSON object) cut off part way: a message no JSON parser accepts.
+
+    The cut keeps the idempotency key (the flat event writes ``_shape_table`` and ``_shape_seq``
+    after the row's columns, so a plain two-thirds cut would lose them), drops at least the closing
+    brace, and falls on a character boundary, so the line is still valid UTF-8."""
+    cut = max(1, (len(body) * 2) // 3)
+    at = body.rfind(_SEQ_KEY)
+    if at >= 0:
+        end = at + len(_SEQ_KEY)
+        while end < len(body) and body[end : end + 1].isdigit():
+            end += 1
+        cut = max(cut, end)
+    cut = min(cut, len(body) - 1)
+    while cut > 1 and body[cut] & 0xC0 == 0x80:  # inside a multi-byte character: back to its start
+        cut -= 1
+    return body[:cut]
 
 
 def _split_poison(batch: pa.RecordBatch) -> tuple[pa.RecordBatch, list[bool] | None]:
