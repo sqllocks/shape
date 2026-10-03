@@ -98,7 +98,8 @@ def _name(table: pa.Table, i: int) -> str:
 
 
 def _float64(col: pa.Array) -> pa.Array:
-    return pc.cast(col, pa.float64())
+    """``col`` as float64; an integer above 2**53 is rounded (an unsafe cast), not refused."""
+    return pc.cast(col, pa.float64(), safe=False)
 
 
 def _stringify(col: pa.Array) -> list[str | None]:
@@ -363,7 +364,7 @@ class ValueChaosMutator(Mutator):
         frac = self._pick_fraction(0.03, intensity)
         idx = self._sample_indices(rng, table.num_rows, frac)
         col = _col(table, i)
-        peak = pc.max(pc.abs(col)).as_py()
+        peak = pc.max(pc.abs(_float64(col))).as_py()  # abs of the integer minimum would wrap
         baseline = float(peak) if peak and not math.isnan(peak) else 1000.0
         extreme = rng.uniform(baseline * 100, baseline * 1000, size=len(idx))
         return _put(table, i, _set_float(col, idx, extreme)), self._event(
