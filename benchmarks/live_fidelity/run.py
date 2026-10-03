@@ -21,8 +21,9 @@ For each workload (a domain or a generation schema, at a scale) the harness
    error alert (no false alarm).
 
 Then it measures the tee's overhead (events/s with and without it, on a file sink and on a null
-sink), and writes everything to ``$BENCH_OUT_DIR/live_fidelity/report.json`` (``--evidence FILE``
-also copies it). Exit 0 only when every check holds; 1 otherwise.
+sink; under the exclusive benchmark lock, each run after the load gate of plan 1.4), and writes
+everything to ``$BENCH_OUT_DIR/live_fidelity/report.json`` (``--evidence FILE`` also copies it).
+Exit 0 only when every check holds; 1 otherwise.
 """
 
 from __future__ import annotations
@@ -44,6 +45,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "benchmarks" / "vs_spindle"))
+from common import bench_lock, wait_for_quiet  # noqa: E402
 from paths import BENCH_OUT_DIR, SHAPE_PY  # noqa: E402
 
 TOLERANCE = 0.5  # points on the 0-100 scale (plan P5-03)
@@ -341,9 +343,11 @@ def overhead(name: str, scale: str, work: Path, repeats: int) -> dict[str, Any]:
     out: dict[str, Any] = {"workload": f"{name}:{scale}", "repeats": repeats}
     for sink_kind in ("file", "null"):
         runs: dict[str, list[float]] = {"none": [], "tee": [], "tee+profile": []}
-        for _ in range(repeats):  # interleaved, so a slow moment hits every mode
-            for mode in runs:
-                runs[mode].append(rate(schema, scale, reference, mode, sink_kind, work))
+        with bench_lock():  # a timed benchmark (plan 1.4)
+            for _ in range(repeats):  # interleaved, so a slow moment hits every mode
+                for mode in runs:
+                    wait_for_quiet()
+                    runs[mode].append(rate(schema, scale, reference, mode, sink_kind, work))
         med = {m: statistics.median(v) for m, v in runs.items()}
         out[sink_kind] = {
             "events_per_second": med,
@@ -376,9 +380,11 @@ def realtime(name: str, scale: str, work: Path, rate_per_s: int, seconds: float)
             )
             sink = TeeSink(sink, live)
         cfg = EmitConfig(realtime=True, rate=float(rate_per_s), duration=seconds)
-        cpu0, wall0 = time.process_time(), time.perf_counter()
-        report = EmitRunner(plan, sink, cfg).run()
-        cpu, wall = time.process_time() - cpu0, time.perf_counter() - wall0
+        with bench_lock():  # a timed benchmark (plan 1.4)
+            wait_for_quiet()
+            cpu0, wall0 = time.process_time(), time.perf_counter()
+            report = EmitRunner(plan, sink, cfg).run()
+            cpu, wall = time.process_time() - cpu0, time.perf_counter() - wall0
         full = report.per_second[1:-1]  # whole seconds only
         out[mode] = {
             "events": report.events,
