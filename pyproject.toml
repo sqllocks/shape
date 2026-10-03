@@ -300,6 +300,7 @@ source_modules = [
     "shape.packs",
     "shape.plugins",
     "shape.privacy",
+    "shape.project",
     "shape.profile",
     "shape.proposals",
     "shape.quality",
