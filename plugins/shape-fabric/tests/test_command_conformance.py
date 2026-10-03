@@ -20,6 +20,7 @@ NAMES = {
     "deploy-notebook": commands.DeployNotebookCommand,
     "setup-fabric": commands.SetupFabricCommand,
     "export-model": commands.ExportModelCommand,
+    "profile-model": commands.ProfileModelCommand,
 }
 
 

@@ -1,7 +1,7 @@
 # Fabric commands
 
-The `sqllocks-shape-fabric` plugin adds `shape fabric`, with five commands. Each is also a top-level
-command of its own:
+The `sqllocks-shape-fabric` plugin adds `shape fabric`, with five commands, each also a top-level
+command of its own, and `shape profile-model`:
 
 | `shape fabric …` | top-level | what it does |
 |---|---|---|
@@ -89,3 +89,39 @@ For a Warehouse or SQL Database source the one `--source-name` is used as both t
 database name in `Sql.Database(...)`; edit the expression for a server whose name differs from the
 database's. For a Lakehouse the expression keeps the placeholders `{workspace_id}` and
 `{lakehouse_id}` for you to fill in.
+
+## `profile-model`
+
+```
+shape profile-model Sales/Retail -o retail.shape [--tables Customer,Orders] [--max-rows 100000] [--json]
+```
+
+Profiles every table of a Power BI / Fabric semantic model as one dataset profile and records the
+model's relationships, the way `shape profile-db` does for a SQL Server schema. It needs `sempy`
+and runs inside a Fabric notebook (`pip install 'sqllocks-shape-fabric[semantic-link]'`); the
+tables are read through the [`semantic-model://` source](cloud-sources.md#semantic-models-semantic-model).
+`WORKSPACE/MODEL` are names or GUIDs (a `/` inside a name is `%2F`).
+
+- `--tables T1,T2`: only these tables (default: every table, hidden ones included).
+- `--max-rows N`: read at most `N` rows of each table (a DAX `TOPN`), so the statistics describe
+  those rows.
+- `--json`: print one JSON document (`written`, `shape_content_id`, `tables`, `relationships`,
+  `max_rows`) instead of a sentence.
+
+A table's column statistics equal those of the same rows profiled from a Parquet file. A hidden
+column carries `hidden: true`. Each relationship of the model (`sempy.fabric.list_relationships`)
+is stored in the profile's `relationships` with `evidence: "declared"`, `source: "semantic model"`,
+`type` (`one_to_many`, `one_to_one` or `many_to_many`) and `active`:
+
+- the many side is the child column, marked a foreign key (`is_foreign_key`, `fk_ref_table`,
+  `fk_evidence: "declared"`); the one side is the table's primary key when the profile has none;
+- an inactive relationship is recorded with `active: false` and is still a declared key;
+- a many-to-many relationship is recorded and is not a foreign key: `shape generate --from` and
+  `shape proposals` leave it out;
+- a relationship that names a table you did not select, or a multiplicity Shape does not know
+  (reported on stderr), is not recorded.
+
+`shape proposals` and `shape generate --from` treat the declared relationships as declared keys.
+The output is an ordinary `.shape` profile (format `shape`, version 1); its provenance names the
+workspace, the model and `max_rows`. Exit codes: `0` done; `2` the input is wrong (a name that is
+not in the model, a bad `--max-rows`, no `-o`, `sempy` missing).

@@ -146,6 +146,8 @@ def _candidates(ds: DatasetProfile) -> Iterator[tuple[str, str, str, str, bool]]
     """(child table, child column, parent table, parent column, profiler_detected)."""
     detected: set[tuple[str, str, str, str]] = set()
     for rel in ds.relationships:
+        if rel.get("type") == "many_to_many":
+            continue  # recorded in the profile, never a foreign key
         for cc, pcol in zip(
             rel.get("child_columns", []), rel.get("parent_columns", []), strict=False
         ):

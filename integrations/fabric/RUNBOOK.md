@@ -567,3 +567,27 @@ has *completed*, so a failed dbt test still gives the report) -> `CheckGate` (If
 - [ ] A failing dbt test (for example a tampered model): `passed: false`, `dbtFailed >= 1`, the column appears in `report.md`
 - [ ] Pipeline `shape_dbt_gate`: succeeds on the clean run; fails with `ShapeDbtGateFailed` on the failing one, and the report path is in the message
 - [ ] Anything in 13.1 that needed a correction is written down (open an issue or tell the lead)
+## 14. Profile a semantic model (W2-06)
+
+In a Fabric notebook (a Python notebook with `semantic-link-sempy`, which Fabric runtimes ship, or
+`%pip install 'sqllocks-shape-fabric[semantic-link]'`), one cell reads a table of a semantic model
+and one profiles the whole model with its relationships:
+
+```python
+import shape
+
+# one table: semantic-model://<workspace>/<model>/<table>
+prof = shape.profile("semantic-model://Sales/Retail/Customer")
+shape.save(prof, "/lakehouse/default/Files/shape/customer.shape")
+
+# the whole model, with its declared relationships (same as `shape profile-model Sales/Retail`)
+from shape_fabric.semantic_profile import profile_model
+
+model = profile_model("Sales", "Retail", max_rows=100_000)
+shape.save(model, "/lakehouse/default/Files/shape/retail.shape")
+```
+
+Workspace and model are names or GUIDs. See [cloud-sources.md](../../docs/plugins/cloud-sources.md#semantic-models-semantic-model)
+and [fabric-commands.md](../../docs/plugins/fabric-commands.md#profile-model). **[VERIFY]** the
+first run in a real tenant (section 11): the column and relationship tables `sempy` returns are
+read by the names the fake in the tests uses.

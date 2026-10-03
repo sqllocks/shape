@@ -29,6 +29,15 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   zone). The contract accepts the same optional rules and `shape check` takes `--data`;
   `shape.quality.reconcile` and `shape.quality.check_timeseries` are the Python API.
 - Fixed (#78): the SQL emulator test helper `rows_of` returned pyodbc `Row` objects, which no longer compare equal to tuples, so `test_awkward_names_cannot_break_out_of_their_quotes` failed in the Nightly `sqlserver-e2e` job. It now returns plain tuples; every assertion is unchanged. The Nightly `fabric-emit-e2e` job failed at install because `shape-fabric` requires `sqllocks-shape-sqlserver==0.9.0`, which the job did not install (workflow diff in `docs/plans/lane_status/BF-78.md`).
+- `semantic-model://` source and `shape profile-model` (`sqllocks-shape-fabric`, `docs/plugins/
+  cloud-sources.md`, `docs/plugins/fabric-commands.md`). `shape profile semantic-model://<workspace>/
+  <model>/<table>` reads a table of a Power BI / Fabric semantic model through `sempy` (options
+  `columns`, `batch_rows`, `max_rows` as a DAX `TOPN`, `mode`), with a documented type map to Arrow;
+  `shape profile-model WORKSPACE/MODEL -o OUT.shape [--tables] [--max-rows] [--json]` profiles every
+  table and records the model's relationships as declared (`evidence: "declared"`, `active`,
+  `type`). `sempy` is the plugin extra `semantic-link`, imported only when a semantic-model URI is
+  opened. A `many_to_many` relationship in a profile is recorded and no longer becomes a generated
+  foreign key or a proposal's profiler-detected key.
 
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
