@@ -243,6 +243,13 @@ def _text_problems(where: str, value: Any, out: list[str]) -> None:
         out.append(f"{where}: must not be empty")
 
 
+def _nan_problems(where: str, thresholds: Any, out: list[str]) -> None:
+    """A NaN threshold makes every comparison false: that drift check would never fire."""
+    for key, value in _dict(thresholds).items():
+        if isinstance(value, float) and value != value:
+            out.append(f"{where}.{key}: must be a number, not NaN")
+
+
 def _baseline_problems(where: str, b: dict[str, Any], out: list[str]) -> None:
     kind = b.get("kind")
     for key in ("registry", "name", "artifact", "ref"):
@@ -279,6 +286,7 @@ def _semantic_problems(doc: dict[str, Any]) -> list[str]:
         elif sname in RESERVED_SOURCE_NAMES:
             out.append(f"{where}: source name {sname!r} is a `shape profile` subcommand")
         s = _dict(src)
+        _nan_problems(f"{where}.thresholds", s.get("thresholds"), out)
         for key in ("path", "contract"):
             if key in s:
                 _text_problems(f"{where}.{key}", s[key], out)
@@ -289,6 +297,7 @@ def _semantic_problems(doc: dict[str, Any]) -> list[str]:
         for cname, col in _dict(s.get("columns")).items():
             if not str(cname).strip():
                 out.append(f"{where}.columns: a column name must not be empty")
+            _nan_problems(f"{where}.columns.{cname}.thresholds", _dict(col).get("thresholds"), out)
             if "owner" in _dict(col):
                 _text_problems(f"{where}.columns.{cname}.owner", col["owner"], out)
     if isinstance(doc.get("gates"), dict) and doc["gates"]:
