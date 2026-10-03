@@ -302,3 +302,17 @@ def _two_tables(child: dict[str, dict[str, Any]], rows: int = 3) -> pa.Table:
         "generation": {"scale": "s", "scales": {"s": {"p": 5, "t": rows}}},
     }
     return Engine(GenSchema.from_dict(doc), seed=7).generate().tables["t"]
+
+
+# ---- #201: a foreign key into its own table without a primary key is a clear error ------------
+
+
+def test_self_foreign_key_without_primary_key_is_a_circular_error() -> None:
+    import pytest
+
+    from shape.generation.strategy_kit import StrategyError
+
+    key = {"type": "integer", "generator": {"strategy": "sequence"}}
+    ref = {"type": "integer", "generator": {"strategy": "foreign_key", "ref": "t.k"}}
+    with pytest.raises(StrategyError, match=r"circular.*t\.y|t\.y.*circular"):
+        _table({"k": key, "y": ref}, rows=5)
