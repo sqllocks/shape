@@ -741,6 +741,15 @@ def _profile_column(
     top_n: int = 500,
     keep_uniques: bool = True,
 ) -> _Work:
+    try:
+        return _profile_one_column(c, row_count, top_n, keep_uniques)
+    except dtparse.ZonedTextError as exc:
+        if exc.column is not None:
+            raise
+        raise dtparse.ZonedTextError(exc.text, c.name) from exc  # say which column, and what to do
+
+
+def _profile_one_column(c: _Col, row_count: int, top_n: int, keep_uniques: bool) -> _Work:
     kind = c.kind
     if kind in _OBJECT_KINDS:
         return _profile_object_column(c, row_count, top_n)

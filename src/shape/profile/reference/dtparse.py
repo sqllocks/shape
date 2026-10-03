@@ -5,7 +5,8 @@ the type inference uses. ``guess_format`` is ``pandas.tseries.api.guess_datetime
 which ``pd.to_datetime(series, errors="coerce")`` (the call behind the date histograms) applies
 to the first element before parsing the rest strictly. Both sit on ``_dateutil_parser``.
 
-Zone-bearing text raises ``NotImplementedError`` (Shape does not model tz-aware text columns).
+Zone-bearing text raises ``ZonedTextError``, a ``NotImplementedError`` (Shape does not model
+tz-aware text columns).
 """
 
 from __future__ import annotations
@@ -16,6 +17,28 @@ import re
 from typing import Any
 
 from . import _dateutil_parser as du
+
+
+class ZonedTextError(NotImplementedError):
+    """Date text with a time zone or UTC offset, which Shape does not model. Raised with the
+    column's name once the profiler knows it, with the way to profile the column anyway."""
+
+    def __init__(self, text: str, column: str | None = None) -> None:
+        if column is None:
+            msg = f"zone-bearing date text is not modelled: {text!r}"
+        else:
+            msg = (
+                f"column {column!r} holds date text with a time zone or UTC offset ({text!r}), "
+                "which the profiler does not model; parse it into a timestamp column first, for "
+                f"example df[{column!r}] = pandas.to_datetime(df[{column!r}], utc=True), and "
+                "profile the DataFrame"
+            )
+        super().__init__(msg)
+        self.text, self.column = text, column
+
+    def __reduce__(self) -> tuple[Any, ...]:  # a fork-pool worker sends it back pickled
+        return type(self), (self.text, self.column)
+
 
 _NAT = object()  # the text pandas turns into NaT without error
 NAT_STRINGS = {"NaT", "nat", "NAT", "nan", "NaN", "NAN"}
@@ -299,7 +322,7 @@ def parse_mixed(s: str, today: _dt.datetime | None = None) -> Any:
     except ValueError:
         hit = None  # e.g. year 0: representable for numpy, not for datetime
     except du.ParsedTimeZone as exc:
-        raise NotImplementedError(f"zone-bearing date text is not modelled: {s!r}") from exc
+        raise ZonedTextError(s) from exc
     if hit is not None:
         return hit
     return _parse_datetime_string(s, today)
@@ -319,7 +342,7 @@ def _parse_datetime_string(s: str, today: _dt.datetime | None) -> _dt.datetime |
             return hit
         return _dateutil_parse(s, _DEFAULT)
     except du.ParsedTimeZone as exc:
-        raise NotImplementedError(f"zone-bearing date text is not modelled: {s!r}") from exc
+        raise ZonedTextError(s) from exc
     except (ValueError, OverflowError):
         return None
 
@@ -402,7 +425,7 @@ def guess_format(s: str, today: _dt.datetime | None = None) -> str | None:
     try:
         parsed = _dateutil_parse(s, default)
     except du.ParsedTimeZone as exc:
-        raise NotImplementedError(f"zone-bearing date text is not modelled: {s!r}") from exc
+        raise ZonedTextError(s) from exc
     except (ValueError, OverflowError):
         return None
     tokens: list[str] = du._timelex.split(s)
