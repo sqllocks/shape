@@ -145,3 +145,33 @@ the README names the safe profile, and the contributing guide names `make check`
 
 No workflow change is needed: the new tests run in the existing pytest jobs, and the scripts keep
 their command lines.
+
+## Checks run in this session (final)
+
+| Check | Result |
+|---|---|
+| `ruff check src tests plugins benchmarks/vs_spindle` | All checks passed |
+| `ruff format --check src tests plugins benchmarks/vs_spindle` | 1091 files already formatted |
+| `mypy` (strict, `packages = shape`) | no issues in 436 source files |
+| `mypy --strict` on each changed script | no issues |
+| `vulture`, `lint-imports`, `check_requirements`, `check_secrets`, `check_user_facing` (D-13), `check_shipped_data`, `check_plugin_skeletons`, `check_conformance_coverage`, `gen_plugin_api_docs --check` | all exit 0 |
+| `tests/release` (new and existing) | all pass |
+| `docs/talks/shape-v1/verify_snippets.sh` on fresh `demo/make_data.py` data | CLAIMS OK |
+| `SHAPE_KERNEL=rust pytest -m "not emulator and not live"` | 7220 passed, 5 failed |
+| `SHAPE_KERNEL=python pytest -m "not emulator and not live"` | 7221 passed, 4 failed |
+
+None of the failures involve this lane's changes, which add tests under `tests/release/`,
+scripts and docs and touch no `src/`, `plugins/` or other test code:
+
+- `tests/iss_gaps/test_landing_and_batches.py::test_file_sinks_take_path_template_and_batch_date`,
+  `tests/kernel/test_hashing.py::test_rust_equals_reference_on_a_million_values[float16]` and
+  `::test_one_and_one_point_zero_hash_equal` (both modes; reproduce in isolation): pyarrow 19.0.1,
+  which `tests/demo/fabric/requirements.txt` (`fabric-user-data-functions`) installed. Filed as #333.
+- `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references`
+  (both modes; passes in isolation): `azure.functions` is left in `sys.modules` by the Fabric UDF
+  tests that run before it. Filed as #77, #554, #558, #560.
+- `tests/profile/test_engine.py::test_bounded_mode_memory_does_not_grow_with_rows` (rust run only;
+  passes in isolation and in the python run): a memory measurement taken while the rest of the
+  suite runs in the same process.
+
+`origin/build/main-plan` was merged before finishing (no new commits since `5c91ea5`).
