@@ -39,7 +39,7 @@ file); `__version__` equals the distribution version; `load` reports a corrupt f
   tests; 30 failed before the fix (8 missing docstrings, 19 signatures absent from the then
   missing `docs/API.md`, the reference listing, the return annotations, and `mypy --strict` on
   `types.py`: `import-untyped` on the pyarrow import).
-- `AUD-api: fix #264 ...`: docstrings and return annotations in `api.py`, docstrings and the
+- `AUD-api: fix #264 public API docstrings, return types and docs/API.md` (ff89a44): docstrings and return annotations in `api.py`, docstrings and the
   strict-ready import in `types.py`, `docs/API.md`. All 50 pass.
 - `__init__.py` docstring points at `docs/API.md`; `docs/API_STABILITY.md` links it; CHANGELOG
   (Fixed).
@@ -59,6 +59,43 @@ in 436 source files"; on 5c91ea5 the same config reports the pyarrow `import-unt
      "shape.validation",
 ```
 
-## Commands and results
+- `AUD-api: tests for every dispatch path of shape.api` (3ff61e5): schema dict, `GenSchema`,
+  profile documents, unknown domain, query/view on a model and on a profile; `shape.api` line
+  coverage from `tests/api` alone is 100%.
 
-See the end of this file (updated at finish).
+## Left open
+
+Every behaviour defect (#245, #249, #251, #253, #256, #258, #260) is outside this lane's paths or
+is a behaviour change the lane may not make; #257 needs the one-line `pyproject.toml` change above.
+No existing test pins a defect; no test was skipped, xfailed or changed in expectation.
+
+## Commands and results (HEAD 3ff61e5 plus this file; Python 3.11.15)
+
+Environment: `pip install -e '.[dev,streaming,advanced]' -e plugins/shape-domains -r
+tests/demo/fabric/requirements.txt` (as CI). `$SPINDLE_ROOT` is not present in this session, so
+`tests/demo/content` and the verifiers were not run; none of this lane's changes touch output
+bytes (docstrings, annotations, docs, tests).
+
+- `ruff check src tests plugins benchmarks/vs_spindle`: all checks passed.
+- `ruff format --check src tests plugins benchmarks/vs_spindle`: 1088 files already formatted.
+- `mypy`: Success, no issues found in 436 source files (also with `shape.types` off the ratchet).
+- `python scripts/check_user_facing.py`: clean.
+- `pytest tests/api`: 55 passed (both kernels).
+- `SHAPE_KERNEL=rust pytest -m "not emulator and not live" --ignore=tests/demo/fabric
+  --ignore=tests/demo/content` (heavy included): 7 failed, 6878 passed, 2 skipped.
+- `SHAPE_KERNEL=python pytest -m "not emulator and not live and not heavy"` (same ignores):
+  6 failed, 6837 passed, 2 skipped. The first python-kernel run with `heavy` was stopped after
+  30 minutes inside `tests/profile/test_engine.py::test_bounded_mode_memory_does_not_grow_with_rows`
+  (20M rows profiled by the pure-Python kernel; CI runs `heavy` with the default Rust kernel, where
+  it passed above).
+
+The failures are not this lane's:
+- 5 fail identically on the unmodified base 5c91ea5 (checked in a clean worktree):
+  `tests/demo_cmd/test_notebook_and_outputs.py` (2), `tests/iss_gaps/test_landing_and_batches.py::
+  test_file_sinks_take_path_template_and_batch_date`, `tests/kernel/test_hashing.py` float16 and
+  1/1.0 (rust; 1 of them in python). They follow from the session's pyarrow 19.0.1, which the Fabric
+  demo requirements install (float16 and partition read-back; compare #76).
+- `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references`:
+  order-dependent (#77; the Fabric demo packages are installed), passes alone on HEAD.
+- `tests/validation/test_fuzz_smoke.py::test_smoke_run_has_no_findings`: a 5 s per-case timeout
+  (`pack-yaml` iteration 12) under full-suite load; passes alone on HEAD in both kernels.
