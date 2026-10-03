@@ -3,11 +3,14 @@ its licences and notices, its metadata, and version lockstep."""
 
 from __future__ import annotations
 
+import importlib.metadata
 import importlib.util
 import shutil
 import subprocess
 import sys
 import tarfile
+import tomllib
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -94,3 +97,46 @@ def test_core_sdist_has_what_a_build_needs(core_sdist: Path) -> None:
 def test_core_sdist_passes_the_user_facing_check(core_sdist: Path) -> None:
     hits = [h for label, data in cuf.archive_members(core_sdist) for h in cuf.hits(label, data)]
     assert hits == [], f"{len(hits)} user-facing hits, first: {hits[:5]}"
+
+
+# -- first-party plugin distributions ----------------------------------------------------------
+
+_skel_spec = importlib.util.spec_from_file_location(
+    "check_plugin_skeletons", ROOT / "scripts" / "check_plugin_skeletons.py"
+)
+assert _skel_spec and _skel_spec.loader
+skeletons = importlib.util.module_from_spec(_skel_spec)
+sys.modules["check_plugin_skeletons"] = skeletons
+_skel_spec.loader.exec_module(skeletons)
+
+
+def _setuptools_is_new_enough() -> bool:
+    if importlib.util.find_spec("setuptools") is None:
+        return False
+    major = importlib.metadata.version("setuptools").split(".")[0]
+    return major.isdigit() and int(major) >= 77
+
+
+@pytest.fixture(scope="module")
+def plugin_wheels(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Path]:
+    out = tmp_path_factory.mktemp("plugin-wheels")
+    assert skeletons.build_wheels(out, isolated=not _setuptools_is_new_enough()) == []
+    return {short: next(out.glob(f"sqllocks_shape_{short}-*.whl")) for short in skeletons.EXPECTED}
+
+
+def _wheel_files(wheel: Path) -> dict[str, bytes]:
+    with zipfile.ZipFile(wheel) as z:
+        return {n: z.read(n) for n in z.namelist() if not n.endswith("/")}
+
+
+def test_domains_distribution_carries_the_geonames_attribution(plugin_wheels: dict[str, Path]):
+    """It ships GeoNames-derived ZIP data, whose CC-BY-4.0 licence travels with the data."""
+    files = _wheel_files(plugin_wheels["domains"])
+    assert any(n.endswith("reference/us_zip_locations.arrow") for n in files)
+    notices = [
+        d for n, d in files.items() if n.endswith(".dist-info/licenses/THIRD_PARTY_NOTICES.md")
+    ]
+    assert notices, "the domains wheel has no THIRD_PARTY_NOTICES.md"
+    assert b"GeoNames" in notices[0] and b"CC-BY-4.0" in notices[0]
+    pyproject = tomllib.loads((ROOT / "plugins/shape-domains/pyproject.toml").read_text("utf-8"))
+    assert "THIRD_PARTY_NOTICES.md" in pyproject["project"]["license-files"]  # so the sdist has it
