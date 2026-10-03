@@ -15,7 +15,9 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   for good, or that cannot be encoded in the chosen format, to any `--sink`/`--to` destination as
   a `shape-dead-letter` record (version 1) instead of stopping the run; `--max-dead-letter N` stops it
   (exit 1) past N; new `shape.streaming.emit.RejectedEvents`, an extended emitter contract, and
-  `dead_lettered` counts by reason in the run report.
+  `dead_lettered` counts by reason in the run report. `--arrivals constant|poisson`: Poisson
+  arrivals with exponential gaps keyed by the seed and the event position (the same schedule on every
+  run and after a resume), combined with `--burst` and `--max-rate`.
 
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and

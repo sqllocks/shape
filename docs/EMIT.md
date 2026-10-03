@@ -77,6 +77,15 @@ whole once, so its rows equal `shape generate`'s; the others are read chunk by c
   only persists offsets that were delivered and flushed; the final checkpoint is synchronous.
 * `--burst START:DURATION:MULT` (repeatable, needs `--realtime`): from START seconds for DURATION
   seconds the rate is MULT times `--rate`. Bursts may not overlap.
+* `--arrivals constant|poisson` (default `constant`: events evenly spaced, as always; `poisson`
+  needs `--realtime`): `poisson` draws exponential gaps with mean `1/rate`, so arrivals are random
+  the way independent clients are. The draw for event position *p* is a function of the seed and
+  *p* alone, so the schedule is identical on every run, and a run resumed at offset *k* sees the
+  gaps the uninterrupted run had from *k* on. It follows `--burst` (and the ramps and curves
+  below): in a burst of MULT the mean gap is `1/(rate x MULT)`. `--max-rate` still caps it. Over
+  100,000 scheduled events the realised mean rate is within 1% of `--rate` and the gaps' coefficient
+  of variation is within 0.02 of 1 (tested with a fixed seed). The events themselves do not change,
+  only when they are sent.
 * `--speed 60x` (a virtual clock, instead of `--realtime`): pace by the events' **event time**, 60
   times faster than the clock, so a day of events replays in 24 minutes. An event stamped `t`
   seconds after the first is due `t / 60` seconds after the start; an event that is earlier than

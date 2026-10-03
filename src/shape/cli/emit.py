@@ -98,6 +98,14 @@ def add_options(em: Any, *, stream: bool = False) -> None:
         help="from START seconds for DURATION seconds the rate is MULT times --rate (repeatable)",
     )
     rate.add_argument(
+        "--arrivals",
+        choices=("constant", "poisson"),
+        default="constant",
+        help="events evenly spaced (default) or with random exponential gaps of mean 1/rate "
+        "(poisson; a function of the seed and the event position, the same on every run and "
+        "after a resume); needs --realtime",
+    )
+    rate.add_argument(
         "--max-rate",
         type=float,
         metavar="N",
@@ -564,6 +572,11 @@ def run(a: argparse.Namespace) -> int:
         )
     if a.burst and not a.realtime:
         raise ShapeError("--burst needs --realtime")
+    if a.arrivals != "constant" and not a.realtime:
+        raise ShapeError(
+            f"--arrivals {a.arrivals} needs --realtime (a replay by --speed keeps the events' own "
+            "times)"
+        )
     if a.max_rate is not None and a.max_rate <= 0:
         raise ShapeError("--max-rate must be a positive number of events per second")
     try:
@@ -615,6 +628,8 @@ def run(a: argparse.Namespace) -> int:
         retries=a.retries,
         speed=speed,
         max_rate=a.max_rate,
+        arrivals=a.arrivals,
+        seed=engine.seed,
     )
     # The sink is opened for appending exactly when a checkpoint says a run is to be continued.
     probe = EmitRunner(plan, _NullSink(), config)

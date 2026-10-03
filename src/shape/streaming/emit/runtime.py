@@ -168,6 +168,8 @@ class EmitConfig:
     retry_backoff: float = 0.1
     speed: float | None = None  # virtual clock: event time passes this many times faster
     max_rate: float | None = None  # hard cap, events per second
+    arrivals: str = "constant"  # realtime: constant spacing, or poisson (exponential gaps)
+    seed: int = 0  # keys the poisson draws
 
     def effective_queue(self) -> int:
         if self.queue_batches is not None:
@@ -243,7 +245,13 @@ class EmitRunner:
             raise ValueError("duration must be 0 or more")
         if cfg.speed is not None and cfg.realtime:
             raise ValueError("speed paces by event time and --realtime by rate: choose one")
-        self.schedule = RateSchedule(cfg.rate, cfg.bursts) if cfg.realtime else None
+        self.schedule = (
+            RateSchedule(cfg.rate, cfg.bursts, arrivals=cfg.arrivals, seed=cfg.seed)
+            if cfg.realtime
+            else None
+        )
+        if cfg.arrivals != "constant" and not cfg.realtime:
+            raise ValueError(f"arrivals={cfg.arrivals!r} needs realtime pacing")
         self.clock = VirtualClock(cfg.speed) if cfg.speed is not None else None
         self.cap = RateCap(cfg.max_rate) if cfg.max_rate is not None else None
         self.paced = self.schedule is not None or self.clock is not None or self.cap is not None
@@ -378,6 +386,8 @@ class EmitRunner:
         report = EmitReport(total_events=self.plan.total_events)
         offset, was_complete = self.load_offset()
         report.start_offset = report.end_offset = offset
+        if self.schedule is not None:
+            self.schedule.resume_at(offset)
         limit = self.limit
         if was_complete and offset >= limit:
             report.complete = report.already_complete = True
