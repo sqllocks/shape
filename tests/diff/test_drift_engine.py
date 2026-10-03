@@ -156,7 +156,17 @@ def test_every_change_record_has_a_score_between_0_and_1():
     d = shape.diff(prof(s=mix(rng, [80, 15, 5])), prof(s=mix(rng, [40, 40, 20]), extra=[1] * 4000))
     assert d.changes
     for c in d.changes:
-        assert set(c) == {"column", "kind", "baseline", "current", "severity", "score"}
+        # W1-13: each change also carries its class (and ``detail`` where the kind has one)
+        assert set(c) - {"detail"} == {
+            "column",
+            "kind",
+            "baseline",
+            "current",
+            "severity",
+            "score",
+            "class",
+            "class_reason",
+        }
         assert 0.0 <= c["score"] <= 1.0
 
 

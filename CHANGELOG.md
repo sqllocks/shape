@@ -265,6 +265,17 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   batches into a DuckDB file with `create`, `append`, `truncate`, `replace` and `upsert`. A run no
   longer waits forever when a sink fails after its last batch.
 
+- Semantic versioning of diffs (`docs/DRIFT.md`, "Change classes", W1-13). Every drift kind is
+  breaking, additive or cosmetic (`shape.drift.semver.classify`); each change in `shape.diff` and
+  `shape diff --json` carries `class` and `class_reason`, and the result adds
+  `semver: {bump, breaking, additive, cosmetic}` (major, minor, patch or none; planned changes
+  counted apart under `semver.planned`). `shape diff --fail-on breaking|additive|cosmetic`,
+  `--version-from X.Y.Z` and `shape.diff(..., fail_on=...)` build on it. A widening `dtype_change`
+  carries `detail.widening` and stays breaking unless the policy sets `dtype_widening`. The drift
+  policy gains `classes` and `column_classes`, `shape.yml` sources gain `classes`, a planned-change
+  entry gains an optional `class`, and gates that compare with a baseline gain `fail_on` (the
+  schema drift gate uses the classifier; default `breaking`, as before). Optional keys of the
+  existing version-1 formats: older files read as before.
 - Planned-change registry (`docs/PLANNED_CHANGES.md`, #90). `shape-changes.yml` (format
   `shape-planned-changes`, version 1, JSON Schema included) lists changes you expect, with a
   window and a reason. `shape diff`, `shape check` and `shape verify` read it (`shape.yml` key

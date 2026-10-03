@@ -41,6 +41,7 @@ sources:
 gates:
   schema_conformance: {mode: enforce}
   distribution: {mode: observe}
+  schema_drift: {mode: enforce, fail_on: additive}   # fail on new columns too
 ```
 
 ## Reference
@@ -57,9 +58,11 @@ gates:
 | `…contract` | The contract `shape check PROFILE.shape` uses when none is given. |
 | `…baseline` | See below. |
 | `…thresholds` | Any threshold of `docs/DRIFT.md` for the whole source. |
+| `…classes` | Optional. `{kind: class}` for the whole source (`breaking`, `additive` or `cosmetic`; `dtype_widening` is a kind too), the same as `classes` of a drift policy (`docs/DRIFT.md`, "Change classes"). Merged like `thresholds`: a `--policy` file replaces it, and the verify configuration beats it. |
 | `…ignore` | Columns left out of the comparison: a name, `table.column` or a glob. |
 | `…columns.COLUMN` | A column name, `table.column` or glob. `thresholds`, `ignore: true`, `owner`, `annotations` (strings, numbers, booleans). |
 | `gates.NAME.mode` | `observe` or `enforce`. NAME is a gate of `shape verify` (`schema_conformance`, `referential_integrity`, …). A gate that is not listed is enforced. |
+| `gates.NAME.fail_on` | Optional, only for a gate that compares with a baseline (`schema_drift`): `breaking` (default), `additive` or `cosmetic`. The gate fails on a change of that class or a stricter one. On any other gate it is a validation error naming the gate. |
 
 The JSON Schema is `src/shape/schemas/shape-project-v1.schema.json` (also `shape.project.schema()`).
 Rules a schema cannot state (name syntax, non-empty strings, the baseline keys that go with each
@@ -106,7 +109,7 @@ pass `--no-project`.
 | `shape profile NAME -o OUT.shape` | `NAME` is a source: its `path`, `dataset`, and (unless `--name`) its name. A real path called `NAME` wins. |
 | `shape diff [BASE] CURRENT.shape` | The source's thresholds, per-column thresholds and ignore list; with only `CURRENT.shape`, its baseline (`--baseline-date YYYY-MM-DD`). Changes carry the column's `owner` and `annotations`. |
 | `shape check PROFILE.shape [CONTRACT]` | The source's `contract` when none is given; violations carry `owner` and `annotations`. |
-| `shape verify NAME-or-DATA` | `NAME` may be a source; each gate's mode (below). |
+| `shape verify NAME-or-DATA` | `NAME` may be a source; each gate's mode (below); the source's `classes` and the `fail_on` of `schema_drift` for the schema drift gate. |
 | `--json` / `-o` reports | A `project` block (`file`, `format`, `version`, `source`, `baseline`), and for `verify` the `mode` of every gate. |
 
 The source is `--source NAME`, else the only source, else the one named like the profile. If

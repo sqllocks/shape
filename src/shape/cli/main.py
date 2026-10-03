@@ -657,6 +657,10 @@ def _diff_options(a):
 def _cmd_diff(a):
     import shape
     from shape.cli import project as project_cli
+    from shape.drift.semver import next_version
+
+    if a.version_from is not None:
+        next_version(a.version_from, "none")  # an input error before any work is done
 
     current_path = a.after if a.after is not None else a.before
     current = shape.load(current_path)
@@ -678,11 +682,16 @@ def _cmd_diff(a):
                 "shape.yml declares the source's baseline)"
             )
         result, baseline = _diff_against_baseline(ctx, source, current, options, as_of, plan_args)
-    out = {"drifted": result.drifted, "changes": result.changes}
+    out = {"drifted": result.drifted, "changes": result.changes, "semver": result.semver}
+    if a.version_from is not None:
+        out["semver"]["next_version"] = next_version(a.version_from, out["semver"]["bump"])
+    failed = a.fail_on is not None and result.fails(a.fail_on)
+    if a.fail_on is not None:
+        out["fail_on"], out["failed"] = a.fail_on, failed
     if planned:
-        out.update(result.to_dict())
+        out.update(result.to_dict() | {"semver": out["semver"]})
         project_cli.expiry_notices(out)
-        project_cli.planned_summary(out["changes"])
+    project_cli.diff_summary(out)
     if ctx:
         out["changes"] = [project_cli.annotate(source, c) for c in out["changes"]]
         out["project"] = ctx.block()
@@ -693,7 +702,7 @@ def _cmd_diff(a):
     if a.json:
         _write_json(a.json, out)
     _dump(out)
-    return 1 if (a.fail_on_drift and out["drifted"]) else 0
+    return 1 if (a.fail_on_drift and out["drifted"]) or failed else 0
 
 
 def _diff_against_baseline(ctx, source, current, options, as_of, plan_args=None):
@@ -837,6 +846,8 @@ def _cmd_verify_gates(a):
         raise ValueError(f"no {a.format} data files found in {a.shape}")
     schema = load_gate_schema(a.schema) if a.schema else None
     config = load_verify_config(a.config) if a.config else None
+    if config is not None and ctx is not None:
+        config = project_cli.with_project_classes(config, ctx)
     if config is not None and config.needs_source and not a.source:
         raise ValueError(
             "the verify configuration asks for the memorization or utility gate, which compare "
@@ -1374,6 +1385,17 @@ def _build_parser(plugin_commands=()):
     add_changes_flags(d)
     d.add_argument("--json", metavar="RESULT.json")
     d.add_argument("--fail-on-drift", action="store_true")
+    d.add_argument(
+        "--fail-on",
+        choices=("breaking", "additive", "cosmetic"),
+        help="exit 1 when an unplanned change of this class or a stricter one (breaking, then "
+        "additive, then cosmetic) is reported; may be combined with --fail-on-drift",
+    )
+    d.add_argument(
+        "--version-from",
+        metavar="X.Y.Z",
+        help="add semver.next_version: this version raised by the bump of the changes",
+    )
     d.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     _diff_policy_arguments(d)
     ex = sub.add_parser(

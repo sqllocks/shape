@@ -262,6 +262,7 @@ class VerifyReport:
                     "passed": g.passed,
                     "errors": g.errors,
                     "warnings": g.warnings,
+                    "fail_on": g.details.get("fail_on"),
                     "details": g.details,
                 }
                 for g in r.gate_results

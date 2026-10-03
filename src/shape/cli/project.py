@@ -159,6 +159,23 @@ def merge_diff_options(
     return {**options, "policy": base or None}
 
 
+def with_project_classes(config: Any, ctx: Context) -> Any:
+    """The verify configuration with the change classes of ``shape.yml`` underneath it: the
+    source's ``classes`` and the ``fail_on`` of the ``schema_drift`` gate, each used only when
+    the configuration file does not set it."""
+    from dataclasses import replace
+
+    base: dict[str, Any] = {}
+    if ctx.source is not None and ctx.source.classes:
+        base["classes"] = dict(ctx.source.classes)
+    fail_on = ctx.project.gate_fail_on("schema_drift")
+    if fail_on is not None:
+        base["fail_on"] = fail_on
+    if not base:
+        return config
+    return replace(config, rules={**base, **config.rules})
+
+
 def annotate(source: Source | None, record: dict[str, Any]) -> dict[str, Any]:
     """``record`` (a drift change or a contract violation) with the column's owner and
     annotations, when the project knows them."""
@@ -299,3 +316,21 @@ def planned_summary(changes: list[dict[str, Any]]) -> None:
                 f"shape: {what}: {c.get('kind') or c.get('rule')} (planned: {mark['id']})",
                 file=sys.stderr,
             )
+
+
+def diff_summary(out: dict[str, Any]) -> None:
+    """The text of ``shape diff`` on stderr: each change with its class (and the planned entry
+    that covers it), then the bump (``bump: major (2 breaking, 1 additive, 4 cosmetic)``)."""
+    for c in out["changes"]:
+        what = c.get("column") or "table"
+        mark = c.get("planned")
+        planned = f" (planned: {mark['id']})" if mark else ""
+        print(f"shape: {what}: {c['kind']} [{c['class']}]{planned}", file=sys.stderr)
+    s = out["semver"]
+    if "next_version" in s:
+        print(f"version: {s['next_version']}", file=sys.stderr)
+    print(
+        f"bump: {s['bump']} ({s['breaking']} breaking, {s['additive']} additive, "
+        f"{s['cosmetic']} cosmetic)",
+        file=sys.stderr,
+    )

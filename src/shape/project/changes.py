@@ -48,6 +48,7 @@ _KEY_ORDER = (
     "until",
     "action",
     "severity",
+    "class",
     "reason",
     "owner",
     "ticket",
@@ -153,6 +154,7 @@ class PlannedChange:
     ticket: str | None = None
     acknowledged_by: str | None = None
     acknowledged_at: str | None = None
+    class_: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """The entry as a plain mapping (dates as ISO text), in the file's key order."""
@@ -165,6 +167,7 @@ class PlannedChange:
             "until": self.until.isoformat(),
             "action": self.action,
             "severity": self.severity,
+            "class": self.class_,
             "reason": self.reason,
             "owner": self.owner,
             "ticket": self.ticket,
@@ -207,6 +210,7 @@ def _entry(raw: Mapping[str, Any]) -> PlannedChange:
         ticket=raw.get("ticket"),
         acknowledged_by=raw.get("acknowledged_by"),
         acknowledged_at=raw.get("acknowledged_at"),
+        class_=raw.get("class"),
     )
 
 

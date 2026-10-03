@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from shape import compat
+from shape.drift.semver import check_classes, check_column_classes, check_fail_on
 
 FORMAT = "shape-verify-config"
 VERSION = compat.KINDS["verify-config"].current
@@ -28,6 +29,9 @@ _RULE_KEYS = (
     "no_future",
     "ordering",
     "baseline",
+    "fail_on",
+    "classes",
+    "column_classes",
     "distribution_alpha",
     "timeseries",
     "reconcile",
@@ -118,6 +122,27 @@ def _check_baseline(value: Any) -> None:
                 f'baseline["{tname}"] must be {{"columns": {{"col": "dtype"}}}} '
                 '(dtypes are names such as "int64", "float64", "str")'
             )
+
+
+def _check_fail_on(value: Any) -> None:
+    try:
+        check_fail_on(value)
+    except ValueError as exc:
+        raise VerifyConfigError(f'"fail_on": {exc}') from exc
+
+
+def _check_classes_key(value: Any) -> None:
+    try:
+        check_classes(value, "classes")
+    except ValueError as exc:
+        raise VerifyConfigError(str(exc)) from exc
+
+
+def _check_column_classes_key(value: Any) -> None:
+    try:
+        check_column_classes(value)
+    except ValueError as exc:
+        raise VerifyConfigError(str(exc)) from exc
 
 
 def _check_alpha(value: Any) -> None:
@@ -238,6 +263,9 @@ _CHECKS = {
     "no_future": _check_no_future,
     "ordering": _check_ordering,
     "baseline": _check_baseline,
+    "fail_on": _check_fail_on,
+    "classes": _check_classes_key,
+    "column_classes": _check_column_classes_key,
     "distribution_alpha": _check_alpha,
     "timeseries": _check_timeseries,
     "reconcile": _check_reconcile,
@@ -255,9 +283,9 @@ class VerifyConfig:
     """The settings of the four config-driven gates.
 
     ``rules`` holds the ``ValidationContext.config`` keys (``ranges``, ``date_range``,
-    ``no_future``, ``ordering``, ``baseline``, ``distribution_alpha``, ``timeseries``,
-    ``reconcile``, ``classifications``, ``memorization``, ``utility``, ``privacy``);
-    ``file_paths`` are the
+    ``no_future``, ``ordering``, ``baseline``, ``fail_on``, ``classes``, ``column_classes``,
+    ``distribution_alpha``, ``timeseries``, ``reconcile``, ``classifications``, ``memorization``,
+    ``utility``, ``privacy``); ``file_paths`` are the
     files the ``file_format`` gate reads, and ``check_data_files`` adds every data file that
     ``shape verify`` loaded."""
 

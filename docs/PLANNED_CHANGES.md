@@ -20,6 +20,7 @@ changes:
     from: 2026-11-01                 # ISO date, UTC, inclusive (optional)
     until: 2026-11-30                # ISO date, UTC, inclusive (required)
     action: expect                   # expect (default) | suppress | severity
+    class: additive                  # optional: breaking | additive | cosmetic
     reason: Release 2026-11-02 adds the loyalty tier column
     owner: orders-team@example.com   # optional
     ticket: SHAPE-123                # optional
@@ -34,6 +35,7 @@ changes:
 | `kinds` | One or more drift kinds from `docs/DRIFT.md` (`column_added`, `dtype_change`, `null_rate_change`, `row_count_change`, ...) or contract rules (`unique`, `not_null`, `dtype`, ...). An unknown kind is a validation error. `not_null` also matches the `nullable` rule. |
 | `from`, `until` | ISO 8601 dates, UTC, both inclusive. `until` is required and must not be before `from`. Without `from` the entry is active from the beginning. |
 | `action` | `expect` (default): reported as planned, not failing. `suppress`: not reported at all. `severity`: reported with the `severity` given (`low`, `medium` or `high`, required with this action and only valid with it). |
+| `class` | Optional: `breaking`, `additive` or `cosmetic`. The change class (`docs/DRIFT.md`, "Change classes") of the changes the entry matches, instead of the class of their kind. It decides which count of `semver` a planned change is in, and what a `severity` entry that counts is counted as. A file without it reads as before. |
 | `reason` | Required. |
 | `owner`, `ticket` | Optional. |
 | `acknowledged_by`, `acknowledged_at` | Set by `shape changes ack`. |
@@ -79,6 +81,14 @@ The `--json` result adds three lists next to `drifted` and `changes`:
   failing: the release may not have happened yet.
 - `expired`: entries past their `until` that would have matched.
 
+The result's `semver` counts unplanned changes only; the planned ones are counted under
+`semver.planned`. `--fail-on CLASS` never fails on an `expect` entry, and fails again one day after
+its `until`:
+
+```
+shape diff base.shape today.shape --fail-on breaking --changes shape-changes.yml
+```
+
 A planned change is marked `(planned: ID)` in the lines `shape diff` prints on stderr.
 With a rolling-window baseline (`docs/PROJECT.md`) the lists describe the first run of the window,
 kept to the entries that still match a change after the window's intersection.
@@ -98,7 +108,8 @@ In Python: `shape.diff(before, after, planned=PATH_OR_ENTRIES, on="2026-11-15", 
 `shape verify` applies them to the schema drift gate (the verify configuration's `baseline`, and
 the gate modes of `shape.yml`): a planned new or removed table or column, or a type change, is a
 warning marked `(planned: ID)` instead of an error, so an enforced gate does not fail on it;
-`suppress` hides it; `severity: high` keeps it an error. Kinds: `table_added`, `table_removed`,
+`suppress` hides it; `severity: high` (or a class at or above the gate's `fail_on`) keeps it an
+error. Kinds: `table_added`, `table_removed`,
 `column_added`, `column_removed`, `dtype_change`. A report written with `-o x.json` carries
 `planned` and `expired`.
 

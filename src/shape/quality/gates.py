@@ -32,9 +32,10 @@ _DISTRIBUTION_MIN_SAMPLE = 20
 @dataclass
 class ValidationContext:
     """What every gate receives. ``config`` keys: ``ranges``, ``date_range``, ``no_future``,
-    ``ordering``, ``baseline``, ``distribution_alpha``, ``classifications``, ``memorization``,
-    ``utility`` (see each gate). ``source_tables`` are the real tables the generated ones are
-    compared with by the memorization and utility gates."""
+    ``ordering``, ``baseline``, ``fail_on``, ``classes``, ``column_classes``,
+    ``distribution_alpha``, ``classifications``, ``memorization``, ``utility`` (see each gate).
+    ``source_tables`` are the real tables the generated ones are compared with by the
+    memorization and utility gates."""
 
     tables: dict[str, pa.Table] = field(default_factory=dict)
     schema: GateSchema | None = None
@@ -567,43 +568,76 @@ class FileFormatGate(ValidationGate):
 
 class SchemaDriftGate(ValidationGate):
     """Compare the tables with ``config["baseline"]`` (``{"table": {"columns": {"col":
-    "int64"}}}``): new tables and columns are additive (warnings); removed tables or columns and
-    changed types are breaking (errors)."""
+    "int64"}}}``). Every change has a class (``shape.drift.semver``, ``docs/DRIFT.md``): removed
+    tables or columns and changed types are breaking, new tables and columns are additive.
+    A change of class ``config["fail_on"]`` (default ``breaking``) or a stricter one is an error;
+    the others are warnings. ``config["classes"]`` and ``config["column_classes"]`` are the drift
+    policy's class overrides. The details list the ``additive``, ``breaking`` and ``cosmetic``
+    changes."""
 
     name = "schema_drift"
 
     def check(self, context: ValidationContext) -> GateResult:
+        from shape.drift.engine import Policy
+        from shape.drift.semver import (
+            check_classes,
+            check_column_classes,
+            check_fail_on,
+            classify,
+            meets,
+            with_widening,
+        )
+
         baseline: dict[str, dict[str, Any]] = context.config.get("baseline", {})
+        fail_on = check_fail_on(context.config.get("fail_on", "breaking"))
         if not baseline:
             return GateResult(
-                self.name, True, warnings=["No baseline schema configured — nothing to check"]
+                self.name,
+                True,
+                warnings=["No baseline schema configured — nothing to check"],
+                details={"fail_on": fail_on},
             )
+        policy = Policy(
+            classes=check_classes(context.config.get("classes", {})),
+            column_classes=check_column_classes(context.config.get("column_classes", {})),
+        )
         errors: list[str] = []
         warnings: list[str] = []
-        additive: list[str] = []
-        breaking: list[str] = []
+        by_class: dict[str, list[str]] = {"additive": [], "breaking": [], "cosmetic": []}
         applier = context.planned
 
         def add(
-            change: str, kind: str, table: str, column: str | None, *, is_breaking: bool
+            change: str,
+            kind: str,
+            table: str,
+            column: str | None,
+            was: str | None = None,
+            now: str | None = None,
         ) -> None:
             """A planned change is a warning marked with the entry (``expect``), is left out
-            (``suppress``) or fails only at severity ``high`` (``severity``)."""
+            (``suppress``) or fails at severity ``high`` or at its class (``severity``)."""
+            record = with_widening({"kind": kind, "baseline": was, "current": now})
             hit = applier.match(table, column, kind) if applier is not None else None
+            cls = (
+                hit.class_
+                if hit is not None and hit.class_
+                else classify(record, policy.classes_for(table, column)).class_
+            )
+            fails = meets(cls, fail_on)
             if hit is not None:
                 if hit.action == "suppress":
                     return
-                is_breaking = hit.action == "severity" and hit.severity == "high"
+                fails = hit.action == "severity" and (hit.severity == "high" or fails)
                 change = f"{change} (planned: {hit.id})"
-            (errors if is_breaking else warnings).append(change)
-            (breaking if is_breaking else additive).append(change)
+            (errors if fails else warnings).append(change)
+            by_class[cls].append(change)
 
         for tname in baseline:
             if tname not in context.tables:
-                add(f"Table '{tname}' removed", "table_removed", tname, None, is_breaking=True)
+                add(f"Table '{tname}' removed", "table_removed", tname, None)
         for tname, table in context.tables.items():
             if tname not in baseline:
-                add(f"New table '{tname}' added", "table_added", tname, None, is_breaking=False)
+                add(f"New table '{tname}' added", "table_added", tname, None)
                 continue
             base_cols: dict[str, str] = baseline[tname].get("columns", {})
             actual = {f.name: dtype_name(f.type) for f in table.schema}
@@ -614,7 +648,6 @@ class SchemaDriftGate(ValidationGate):
                         "column_removed",
                         tname,
                         cname,
-                        is_breaking=True,
                     )
             for cname in actual:
                 if cname not in base_cols:
@@ -623,7 +656,6 @@ class SchemaDriftGate(ValidationGate):
                         "column_added",
                         tname,
                         cname,
-                        is_breaking=False,
                     )
             for cname, was in base_cols.items():
                 if cname in actual and actual[cname] != was:
@@ -633,14 +665,15 @@ class SchemaDriftGate(ValidationGate):
                         "dtype_change",
                         tname,
                         cname,
-                        is_breaking=True,
+                        was,
+                        actual[cname],
                     )
         return GateResult(
             self.name,
             not errors,
             errors,
             warnings,
-            {"additive": additive, "breaking": breaking},
+            {**by_class, "fail_on": fail_on},
         )
 
 
