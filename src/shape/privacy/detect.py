@@ -19,6 +19,8 @@ _EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 _SSN = re.compile(r"^\d{3}-?\d{2}-?\d{4}$")
 _PHONE = re.compile(r"^\+?[\d(). -]{7,20}$")
 _IPV4 = re.compile(r"^(?:\d{1,3}\.){3}\d{1,3}$")
+# Dates match the phone syntax (8 digits and separators); they are not phone numbers (#400).
+_DATE = re.compile(r"^(?:\d{4}([-/.])\d{1,2}\1\d{1,2}|\d{1,2}([-/.])\d{1,2}\2\d{2,4})$")
 
 
 def detect_value(value: Any) -> tuple[Detection, ...]:
@@ -30,7 +32,7 @@ def detect_value(value: Any) -> tuple[Detection, ...]:
         out.append(Detection("email", 0.98, "email syntax"))
     if _SSN.match(s):
         out.append(Detection("us_ssn", 0.95, "SSN syntax"))
-    if _PHONE.match(s) and sum(c.isdigit() for c in s) >= 7:
+    if _PHONE.match(s) and sum(c.isdigit() for c in s) >= 7 and not _DATE.match(s):
         out.append(Detection("phone", 0.75, "telephone-like syntax"))
     if _IPV4.match(s):
         try:
