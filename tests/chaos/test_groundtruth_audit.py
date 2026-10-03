@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 import pyarrow as pa
+import pytest
 
 from shape.chaos.groundtruth import Corruption, corrupt_tables
 
@@ -117,3 +118,33 @@ def test_a_corruption_aimed_at_an_empty_table_with_fitting_columns_changes_nothi
     empty = pa.table({"id": pa.array([], pa.int64()), "status": pa.array([], pa.string())})
     out = corrupt_tables({"t": empty}, [Corruption("case_whitespace", 0.5, "t")], seed=1)
     assert out.records == []
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    [
+        ({"seed": -1}, r"the seed is an integer 0 or more, got -1"),
+        ({"seed": 1, "batch": -1}, r"the batch is an integer 0 or more, got -1"),
+    ],
+)
+def test_corrupt_tables_names_a_bad_seed_or_batch(kwargs: dict[str, int], message: str) -> None:
+    """#408: the error names the seed or the batch."""
+    tables = {"t": pa.table({"id": [1, 2, 3]})}
+    with pytest.raises(ValueError, match=message):
+        corrupt_tables(tables, [Corruption("duplicates", 0.5, "t")], **kwargs)
+
+
+@pytest.mark.parametrize(
+    ("text", "message"),
+    [
+        ("duplicates=0.1@t:from=x", r"option from .* an integer, got 'x'"),
+        ("duplicates=0.1@t:to=", r"option to .* an integer, got ''"),
+        ("date_shift=0.1@t:days=1.5", r"option days .* an integer, got '1.5'"),
+        ("null_creep=0.1@t.c:step=lots", r"option step .* a number, got 'lots'"),
+        ("duplicates=0.1@t.status", r"duplicates applies to whole rows: name a table"),
+    ],
+)
+def test_corruption_parse_names_the_bad_option(text: str, message: str) -> None:
+    """#408: a bad option names itself; duplicates refuses a column."""
+    with pytest.raises(ValueError, match=message):
+        Corruption.parse(text)
