@@ -66,3 +66,42 @@ def test_694_a_fresh_run_still_starts_the_answer_key_empty(tmp_path):
     key.write_text('{"kind": "late", "table": "stale", "seq": 1}\n')
     assert _emit(tmp_path / "e.jsonl", key, "--max-events", "50", "--fresh") == 0
     assert all(r["table"] != "stale" for r in read_answer_key(str(key)))
+
+
+def test_695_the_answer_key_names_only_events_the_run_delivered(tmp_path):
+    out, key = tmp_path / "k.jsonl", tmp_path / "k.key"
+    args = ["emit", "retail", "--scale", "tiny", "--anomaly-fraction", "0.2"]
+    args += ["--out-of-order", "0.3", "--ooo-window", "20", "--seed", "3", "--sink", "file"]
+    args += ["-o", str(out), "--answer-key", str(key), "--max-events", "100", "--fresh"]
+    assert main(args) == 0
+    sent = {
+        (e["_shape_table"], e["_shape_seq"]) for e in map(json.loads, out.read_text().splitlines())
+    }
+    assert len(sent) == 100
+    records = read_answer_key(str(key))
+    assert records, "the faults of the delivered events are listed"
+    assert [r for r in records if (r["table"], r["seq"]) not in sent] == []
+
+
+def test_695_a_complete_run_lists_every_fault(tmp_path):
+    from shape.generation.engine import Engine
+    from shape.cli.generation import load_target
+    from shape.streaming.emit import (
+        AnomalyInjector,
+        AnswerKey,
+        EmitConfig,
+        EmitRunner,
+        EventPlan,
+        resolve_mutators,
+    )
+    from shape.streaming.emit.sinks import MemorySink
+
+    def run(staged: bool) -> set[tuple[str, str, int]]:
+        engine = Engine(load_target("retail", None), scale="tiny", seed=5)
+        key = AnswerKey(staged=staged)
+        injector = AnomalyInjector(0.1, resolve_mutators(()), engine.seed)
+        plan = EventPlan(engine, out_of_order=0.2, ooo_window=30, anomaly=injector, answer_key=key)
+        EmitRunner(plan, MemorySink(), EmitConfig(batch_events=64)).run()
+        return {(r["kind"], r["table"], r["seq"]) for r in key.records}
+
+    assert run(staged=True) == run(staged=False) != set()
