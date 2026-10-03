@@ -14,7 +14,8 @@ record keeps the verifier status and ``median_s`` is ``null``. The result is wri
 ``benchmarks/vs_spindle/results.json`` (schema: ``results.schema.json``) with verifier status and
 numbers for ``spindle``, ``reference_port`` and ``shape`` (the product: ``shape.profile`` for the
 profiling workloads; the generation workloads stay reference_port only until P6). The exit code
-is 1 if any verifier failed, else 0.
+is 1 if any verifier failed, else 0. ``--only profile|generate|stream`` measures one family and
+keeps the records of the other families that ``--out`` already holds.
 
 Everything runs under the exclusive benchmark lock (``$BENCH_OUT_DIR/bench.lock``).
 """
@@ -512,6 +513,23 @@ def other_domain_baselines(runs: int, out: dict) -> None:
         }
 
 
+def keep_other_families(path: Path, only: str, out: dict) -> None:
+    """``--only`` measures one family of workloads: keep every record of the other families from
+    the results file being replaced (the section 6.2(4) reference), so they are not dropped.
+    A file that cannot be read, or has another schema version, has nothing to keep."""
+    try:
+        old = json.loads(path.read_text())
+    except (OSError, ValueError):
+        return
+    if not isinstance(old, dict) or old.get("schema_version") != SCHEMA_VERSION:
+        return
+    for tool in ("spindle", IMPL, "shape"):
+        previous = (old.get(tool) or {}).get("workloads") or {}
+        for wid, rec in previous.items():
+            if isinstance(rec, dict) and rec.get("kind") != only:
+                out[tool]["workloads"].setdefault(wid, rec)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     g = ap.add_mutually_exclusive_group(required=True)
@@ -523,7 +541,8 @@ def main(argv: list[str] | None = None) -> int:
         "--only",
         choices=("all", "profile", "generate", "stream"),
         default="all",
-        help="run one family of workloads (the gate for a phase needs only its own)",
+        help="run one family of workloads (the gate for a phase needs only its own); the "
+        "records of the other families already in --out are kept",
     )
     a = ap.parse_args(argv)
 
@@ -587,6 +606,8 @@ def main(argv: list[str] | None = None) -> int:
     # kernel_microbench is written by kernel_bench.py; a full run must not drop it
     with contextlib.suppress(OSError, ValueError, KeyError):
         out["kernel_microbench"] = json.loads(Path(a.out).read_text())["kernel_microbench"]
+    if a.only != "all":
+        keep_other_families(Path(a.out), a.only, out)
     schema = json.loads(SCHEMA_FILE.read_text())
     errs = validate(out, schema)
     if errs:
@@ -599,7 +620,9 @@ def main(argv: list[str] | None = None) -> int:
     print(f"\nwrote {a.out}")
     for impl in (IMPL, "shape"):
         for wid, rec in out[impl]["workloads"].items():
-            sp = rec.get("spindle_median_s", out["spindle"]["workloads"][wid]["median_s"])
+            sp = rec.get(
+                "spindle_median_s", out["spindle"]["workloads"].get(wid, {}).get("median_s")
+            )
             print(
                 f"  {impl:14s} {wid:26s} verifier={rec['verifier']['status']:11s} "
                 f"spindle={sp if sp is None else round(sp, 2)} "

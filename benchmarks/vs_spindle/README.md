@@ -11,7 +11,7 @@ this directory hard-codes a machine path.
 | file | purpose |
 |---|---|
 | `setup_spindle.sh` | Clone the pinned Spindle, build its venv, write `$BENCH_OUT_DIR/spindle_freeze.txt` |
-| `run.py` | `--quick` (D1, D2, retail small + medium; 3 runs) or `--full` (all of section 3.4; 5 runs): verifiers, then benchmarks, then `results.json` |
+| `run.py` | `--quick` (D1, D2, retail small + medium; 3 runs) or `--full` (all of section 3.4; 5 runs): verifiers, then benchmarks, then `results.json`; `--only profile\|generate\|stream` re-measures one family and keeps the other families' records already in the file |
 | `results.json`, `results.schema.json` | The committed reference (section 6.2(4)) and its schema. `shape` is `null` until the product path exists |
 | `domain_1to1/` | Domain generation: `generate.py`, `verify.py` (T-21), `bench.py`, and the retail reference port |
 | `profile_1to1/` | Profiling: `datasets.py`, `verify.py` (T-22), `bench.py`, the reference port, `spindle_dump.py`, `spindle_cli_profile.py` |
