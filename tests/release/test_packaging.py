@@ -231,3 +231,31 @@ def test_built_plugin_wheels_publish_classifiers_and_urls(plugin_wheels: dict[st
         header = meta.split("\n\n", 1)[0]
         assert "Classifier: Programming Language :: Python :: 3.11" in header, short
         assert "Project-URL: Repository, https://github.com/sqllocks/shape" in header, short
+
+
+# -- version lockstep (T-09) -------------------------------------------------------------------
+
+
+def _first_party_pins(project: dict) -> list[str]:
+    reqs = list(project.get("dependencies", []))
+    for extra in project.get("optional-dependencies", {}).values():
+        reqs += extra
+    return [r for r in reqs if re.match(r"sqllocks-shape(-[a-z]+)?(\[|=|<|>|~|!|;|$)", r)]
+
+
+def test_every_version_and_first_party_pin_is_in_lockstep() -> None:
+    projects = _pyprojects()
+    version = projects["core"]["version"]
+    init = (ROOT / "src" / "shape" / "__init__.py").read_text("utf-8")
+    assert f'__version__ = "{version}"' in init
+    cargo = tomllib.loads((ROOT / "rust" / "shape-kernel" / "Cargo.toml").read_text("utf-8"))
+    assert cargo["package"]["version"] == version
+    pins: list[str] = []
+    for dist, project in projects.items():
+        assert project["version"] == version, dist
+        pins += _first_party_pins(project)
+    assert len(pins) >= 15  # core's plugin extras, every plugin's core pin, fabric's own pins
+    for pin in pins:
+        name_and_extras, _, rest = pin.partition("==")
+        assert rest == version, f"{pin!r} is not pinned to =={version}"
+        assert name_and_extras and ";" not in rest
