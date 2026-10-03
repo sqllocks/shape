@@ -137,3 +137,161 @@ Branch `lane/CI-FIX`; merged `origin/build/main-plan` first (no rebase). §11 an
   (set up with `benchmarks/vs_spindle/setup_spindle.sh`): both exit 0, VERDICT PASS.
   My venv held all plugins, so it does not prove the CI venv alone; the CI change mirrors the
   stream-plugins job.
+
+## Round 4
+
+Branch `lane/CI-FIX`; merged `origin/build/main-plan` and `origin/lane/CI-FIX` first (merge commits, no
+rebase). §11 and §2.3 untouched. Failures from CI run 37081340730 (lane/CI-FIX @ 4a6b857). No test was
+skipped, xfailed or weakened, and no bound or tolerance was changed.
+
+### Fixed (root causes)
+
+1. **Windows mypy** (`src/shape/scale/router.py`): `resource` does not exist on Windows. `peak_rss_gb`
+   now branches on `sys.platform == "win32"` (which mypy understands): Windows reads the peak working
+   set from `GetProcessMemoryInfo` (`psapi`, via `ctypes`, in `_windows_peak_working_set_bytes`);
+   POSIX keeps `ru_maxrss`. Any failure still returns 0.0, the documented "platform cannot say".
+2. **Windows 3.14**
+   a. `file:///C:/...` (what `Path.as_uri()` writes): `local_path` in `builtins/sources/files.py`
+      kept the leading `/` of the URI path (`/C:/x`), so `Delta` and the other file sources never found
+      the table. A `/X:` prefix is now the drive path (same rule `streaming/file_source.py` already used);
+      the same fix is in `builtins/emitters/uri_path`. Test: `test_a_file_uri_with_a_drive_letter_is_the_drive_path`
+      (platform independent).
+   b. `git diff` exit 128: git runs a textconv command through `sh`, and the test passed
+      `sys.executable` with backslashes unquoted, which `sh` strips (the CI log shows only the exit code,
+      not git's stderr; the test's `_git` helper now reports stderr). Product: new
+      `shape.cli.gitcmds.python_textconv_command()` writes the interpreter with forward slashes in
+      double quotes; `shape git-setup` uses it when `shape` is not on PATH, and the test uses it. This is
+      the diagnosis from reading the code and the log; it could not be run on Windows here, so the CI run
+      below is the check.
+   c. Job store privacy: Windows ignores POSIX modes. `JobStore` now calls
+      `restrict_to_current_user(root)` once per store: `icacls <dir> /inheritance:r /grant:r
+      DOMAIN\user:(OI)(CI)F`, so the directory has one entry (the current user) and every file created in
+      it inherits that. `icacls` ships with Windows (no pywin32 dependency). Failure to set the ACL raises
+      `OSError` (a store that cannot be private is not used). The test keeps its intent on every platform:
+      POSIX asserts mode 0600 (file) and 0700 (directory); Windows asserts, from `icacls`, that the file
+      has exactly one ACL entry and that it is the current user; both assert that the file holds no token
+      and that no temp files remain.
+   d. Fuzz harness hang detection (`validation/fuzz.py`): SIGALRM does not exist on Windows (nor off the
+      main thread), so the time limit was not enforced, the hang ran to completion and was reported as
+      `slow: over the limit`. Without SIGALRM the target now runs on a worker thread that is waited on
+      for the limit; a call still running is a hang: reported as `timeout`, the worker gets an
+      asynchronous `_Timeout` (ends a Python-level loop; a C-level sleep ends when it returns) and is
+      abandoned as a daemon. The worker has a 64 MB stack so deep-recursion inputs behave as on the main
+      thread. The existing test is parametrized to run both mechanisms on every platform
+      (`sigalrm`, `worker-thread`).
+3. **Ubuntu 3.12 `test_realtime_rate_holds_through_a_full_collection_of_a_large_heap`**: not a host stall.
+   Python 3.12 starts with objects already in the permanent generation (`gc.get_freeze_count()` is 375
+   at startup on 3.12.3; 0 on 3.10, 3.11 and 3.13), and `_gc_frozen` took "the freeze count is not zero"
+   to mean the host had frozen, so on 3.12 it never froze and the collection scanned the whole heap
+   (`max_lag` equals the full-collection time, `per_second` `[1880, 2120, 2000, 2000]`, the same shape as
+   before P5-01b). Reproduced on 3.12 (5 of 5 runs, `max_lag` 0.21 to 0.32 s, with and without
+   `--cov`, under 6 CPU burners on 4 cores; a gen-2 collection of 0.21 to 0.32 s during the run seen
+   with `gc.callbacks`); not on 3.11. Fix in `streaming/emit/runtime.py`: a freeze counts as the host's
+   only when it is larger than the count when the module was imported (`_GC_FROZEN_AT_IMPORT`); a run
+   that starts while another paces freezes again (it used to skip, so objects the host built in between
+   stayed unfrozen). After the fix: 20 of 20 runs pass on 3.12 under the same load. The bound
+   (`max(0.1, full / 2)`) is unchanged. The test's last assertion was `not gc.get_freeze_count()`, which
+   is false at startup on 3.12; it is now `<=` the count at the start of the test (the freeze is lifted).
+   New tests: `test_the_run_freezes_when_the_interpreter_already_froze_some_objects` (fails on the old
+   code on 3.12) and `test_a_freeze_made_by_the_host_is_left_alone`.
+
+### Checks run (this session)
+
+- Python 3.11 venv (`$SHAPE_VENV`): `ruff check` and `ruff format --check` on `src tests plugins
+  benchmarks/vs_spindle` clean; `mypy` clean (347 files); `check_user_facing` clean.
+- Targeted tests on 3.11 and 3.12: `tests/builtins/test_cloud_sources.py`, `tests/cli/test_shape_as_code.py`,
+  `tests/scale/test_jobs.py`, `tests/validation/test_fuzz_smoke.py`, `tests/streaming/emit`.
+- Full `pytest -m "not emulator and not live and not heavy"` (ignoring `tests/demo/fabric` and
+  `tests/demo/content`) on 3.11 with `--cov=shape` (before the fixes in 2.c and 3: 5198 passed, 16 skipped
+  for lack of scikit-learn in that venv) and on 3.12: see the CI section below.
+- Not runnable here: the Windows and macOS behaviour; the CI run is the check.
+
+### CI on lane/CI-FIX (round 4)
+
+Run 37094298568 (cd78ad3): every job green except the two Windows test jobs, including **ubuntu 3.12**
+(the realtime GC test, item 3), both macOS test jobs, mypy on Windows (item 1) and the Windows
+`stream-plugins`. Windows 3.14 passed items 2a, 2b and 2d (3.14 had only the two failures below); Windows
+3.11 ran its tests for the first time (mypy now passes) and had three failures. Remaining after this run:
+
+* **`tests/scale/test_jobs.py::test_store_files_are_private_and_hold_no_token`** (3.11 and 3.14): the file
+  still carried inherited entries (3.11: SYSTEM, Administrators and the user; 3.14: those plus OWNER
+  RIGHTS, which is the ACL Python 3.13+ gives `mkdir(mode=0o700)`), so the directory-level `icacls` did
+  not leave the user alone as an inheritable entry. I could not see the directory ACL in that log, so the
+  store no longer depends on inheritance: each file's ACL is set with `icacls <tmp> /inheritance:r
+  /grant:r user:F` before the atomic replace (the ACL travels with the file), the directory keeps its
+  own restriction, and a failing assertion now prints both ACLs.
+* **`tests/quality/test_verify_config.py::test_the_report_names_the_config`** (3.11 and 3.14): the test read
+  the report with the locale encoding (cp1252); the product writes it as UTF-8 explicitly
+  (`cli/main.py`). The test reads UTF-8.
+* **`tests/validation/test_fuzz_smoke.py::test_smoke_run_has_no_findings`** (3.11 only):
+  `pack-yaml` iteration 12 (the input is `[` x 10 000) hit the 5 s limit. Root cause: PyYAML's scanner
+  revisits every open flow collection per token, so deep flow nesting is quadratic (0.9 s here on
+  3.11; under `--cov` on a slower Windows runner over 5 s) before the composer's recursion limit refuses
+  it. `shape.security.yamlsafe` now refuses flow nesting over `MAX_FLOW_DEPTH = 100` with a linear
+  pre-scan (quoted scalars and comments skipped; same "nested too deeply" error as before). The limit
+  of the harness is unchanged. Test: `test_deeply_nested_yaml_is_refused_in_linear_time`.
+
+Checks before the next push: ruff, ruff format --check, mypy (also `--platform win32` on the two files
+with Windows-only code) clean; `tests/validation tests/security tests/scenario tests/scale
+tests/quality/test_verify_config.py` pass.
+
+Run 37097912266 (26cbb4d): every job green except the two Windows test jobs, and on both of those the
+whole main suite passed (3.11: 5188 passed, 2 skipped; 3.14: 5188 passed, 2 skipped), so items 1 and 2
+and the three round-4 follow-ups above are confirmed on Windows. What failed is the *heavy* step, which
+had never run on Windows before (the earlier runs stopped at the first step):
+`tests/streaming/emit/test_soak.py::test_realtime_rate_holds_at_10000_events_per_second` (10 minutes at
+10,000 events/s, a Linux-and-Windows test by the owner decision):
+
+| job | first bad 10 s window | overall rate | `max_lag` |
+|---|---|---|---|
+| Windows 3.11 | at 100 s: 6,260 events/s | 10,000.0 (within 5%) | 5,030 ms |
+| Windows 3.14 | at 140 s: 6,500 events/s | 10,000.0 (within 5%) | 5,618 ms |
+
+One stall of about 5 s in the run (the next window shows 13,500 to 13,740 events/s: the schedule caught
+up, nothing was dropped). Ubuntu and macOS legs of the same step pass (Linux max lag 50 ms in the P5-01
+measurement). Nothing in the runtime waits for 5 s (`q.put`/`q.get` time out at 0.05 s, the delivery
+retries total at most 0.7 s, `max_queue_depth` and `retries` were not printed), so the cause is either a
+whole-process stall (host) or something in the process holding the GIL; the log does not say which.
+No fix was made on a guess. The soak test now carries evidence for its own failure, with no change to
+any assertion or bound: a sleeping probe thread (gaps over 0.25 s, with the second into the run), a
+`gc` callback (collections over 0.1 s, with generation), `faulthandler` stack dumps when the probe has
+not run for 3 s (they name the code holding the GIL), the list of seconds off the rate, the retries
+and the queue depth, all printed in the assertion message. The next Windows run decides: a gap in the
+probe with `none` for dumps and no long collection is the host (then this item goes to the owner, as
+for macOS); a dump naming shape or numpy code, or a long collection, is a runtime cause to fix.
+
+### Windows soak stall: evidence (run 37100249946, 167e6e7)
+
+Every job was green on the evidence push except Windows 3.11, and there only the soak failed (the main
+suite passed again: 5188 passed). Windows 3.14 passed the same soak in this run (so it is intermittent:
+3.11 failed in two of two runs, 3.14 in one of two). The failure message of the 3.11 run:
+
+* `per_second` off the rate: `[(42, 8600), (43, 0), (44, 5700), (45, 1300), (46, 34400)]`: events stop
+  for about 4 s from second 42 and the schedule then catches up (34,400 in one second); the overall
+  rate and every other window are exact (`min 9990, max 10010`); `max_lag` 2.46 s.
+* The probe thread, which does nothing but `sleep(0.02)`, woke 1.66 s late and 0.97 s late (45.1 s into
+  the run, and one earlier gap): the whole process was not running, not just the pacing thread.
+* `gc` collections over 0.1 s: none. `faulthandler` dump after 3 s without the probe running: none
+  (each gap was under 3 s, so no stack was captured; the gaps are intermittent pieces of one stall).
+* Not the runtime's own memory or queue: on the builder VM (Linux) a 150 s run holds a flat 139 MB RSS
+  (no growth) and `max_queue_depth` 100 (the generator stays a full queue ahead of the sink), so the
+  pacing thread was not waiting for data, and no thread has heavy Python or C work to hold the GIL for
+  a second at a time. `q.put`/`q.get` time out at 0.05 s and delivery retries total 0.7 s at most.
+
+Conclusion: a thread that only sleeps is scheduled 1 to 1.7 s late, in pieces, several times in one
+10-minute run on the Windows hosted runner, with no collection, no memory growth and a full prefetch
+queue: the host (the same signature as the macOS runner in item 5 of round 2, which stopped every thread
+for 20 to 90 ms). It is outside the process. No runtime change was made on this item and no bound,
+tolerance or duration was touched. **For the owner:** the realtime soak
+(`test_realtime_rate_holds_at_10000_events_per_second`, marker `realtime` and `heavy`) is not reliable on
+`windows-latest`; the macOS decision (run the realtime tests on Linux only) would extend to the
+Windows leg of the heavy step, or the soak is allowed to retry on a stalled host. I did neither. The
+probe stays in the test: any future failure prints its own evidence.
+
+### Final state of this round
+
+* Fixed and confirmed in CI (runs 37097912266 and 37100249946): items 1, 2a, 2b, 2c, 2d, 3, and the
+  three extra Windows 3.11 findings (verify-report encoding, job-store ACL, YAML flow depth). macOS and
+  Linux legs, `stream-plugins`, `bench-quick`, `build`, `rust`, `audit`, `pure-wheel`, `fabric-demo` and
+  `plugin-skeletons`: green.
+* Open, owner's decision: the Windows realtime soak above (host stall).

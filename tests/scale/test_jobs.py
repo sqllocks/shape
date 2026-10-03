@@ -5,6 +5,9 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import subprocess
+import sys
 import threading
 import time
 
@@ -23,6 +26,7 @@ from shape.scale.jobs import (
     JobStateError,
     JobStore,
     StreamManager,
+    windows_current_user,
 )
 from shape.scale.router import ScaleCancelled
 
@@ -51,7 +55,22 @@ def test_store_persists_across_instances(store, tmp_path):
 def test_store_files_are_private_and_hold_no_token(store, tmp_path):
     store.put(JobRecord("spark-1", "fabric_spark", fabric={"workspace_id": WS}))
     path = tmp_path / "jobs" / "spark-1.json"
-    assert oct(path.stat().st_mode & 0o777) == "0o600"
+    if sys.platform == "win32":
+        # Windows ignores POSIX modes; the guarantee is the ACL: one entry, the current user.
+        def acl_of(target):
+            return subprocess.run(
+                ["icacls", str(target)], capture_output=True, text=True, check=True
+            ).stdout
+
+        acl = acl_of(path)
+        entries = re.findall(r"(\S+):\(", acl.replace(str(path), ""))
+        assert len(entries) == 1 and entries[0].lower().endswith(
+            windows_current_user().split("\\")[-1].lower()
+        ), f"file: {acl}\ndirectory: {acl_of(path.parent)}"
+    else:
+        assert oct(path.stat().st_mode & 0o777) == "0o600"
+        assert oct((tmp_path / "jobs").stat().st_mode & 0o777) == "0o700"
+    assert TOKEN not in path.read_text(encoding="utf-8")
     assert not list((tmp_path / "jobs").glob(".job-*"))
 
 

@@ -20,6 +20,7 @@ import contextlib
 import logging
 import os
 import queue
+import sys
 import threading
 import time
 import uuid
@@ -80,15 +81,59 @@ class ScaleStats:
         }
 
 
-def peak_rss_gb() -> float:
-    """The process's peak resident memory in GB (0.0 where the platform cannot say)."""
-    try:
-        import resource
-        import sys
+def _windows_peak_working_set_bytes() -> int:
+    """Peak working set of this process from ``GetProcessMemoryInfo`` (Windows only)."""
+    if sys.platform != "win32":
+        raise OSError("GetProcessMemoryInfo exists only on Windows")
+    import ctypes
+    from ctypes import wintypes
 
-        peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    class ProcessMemoryCounters(ctypes.Structure):
+        _fields_ = [
+            ("cb", wintypes.DWORD),
+            ("PageFaultCount", wintypes.DWORD),
+            ("PeakWorkingSetSize", ctypes.c_size_t),
+            ("WorkingSetSize", ctypes.c_size_t),
+            ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
+            ("QuotaPagedPoolUsage", ctypes.c_size_t),
+            ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+            ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+            ("PagefileUsage", ctypes.c_size_t),
+            ("PeakPagefileUsage", ctypes.c_size_t),
+        ]
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    psapi = ctypes.WinDLL("psapi", use_last_error=True)
+    kernel32.GetCurrentProcess.restype = wintypes.HANDLE
+    psapi.GetProcessMemoryInfo.argtypes = [
+        wintypes.HANDLE,
+        ctypes.POINTER(ProcessMemoryCounters),
+        wintypes.DWORD,
+    ]
+    psapi.GetProcessMemoryInfo.restype = wintypes.BOOL
+    counters = ProcessMemoryCounters()
+    counters.cb = ctypes.sizeof(counters)
+    if not psapi.GetProcessMemoryInfo(
+        kernel32.GetCurrentProcess(), ctypes.byref(counters), counters.cb
+    ):
+        raise OSError("GetProcessMemoryInfo failed")
+    return int(counters.PeakWorkingSetSize)
+
+
+def peak_rss_gb() -> float:
+    """The process's peak resident memory in GB (0.0 where the platform cannot say).
+
+    POSIX reads ``ru_maxrss`` (kilobytes on Linux, bytes on macOS); Windows has no
+    ``resource`` module and reads the peak working set from ``GetProcessMemoryInfo``.
+    """
+    try:
+        if sys.platform == "win32":
+            return round(_windows_peak_working_set_bytes() / 1024**3, 3)
+        import resource
+
+        peak = float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
         return round(peak / (1024**3 if sys.platform == "darwin" else 1024**2), 3)
-    except (ImportError, OSError):
+    except (ImportError, OSError, AttributeError):
         return 0.0
 
 

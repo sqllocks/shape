@@ -59,6 +59,10 @@ _END = object()
 _gc_lock = threading.Lock()
 _gc_holders = 0
 _gc_owned = False
+# CPython 3.12 starts with a few hundred objects already frozen (375 on 3.12.3), so "nothing is
+# frozen" is not how a freeze made by the caller is told apart. A freeze that is larger than what
+# the interpreter had when this module was imported is the caller's.
+_GC_FROZEN_AT_IMPORT = gc.get_freeze_count()
 
 
 @contextmanager
@@ -66,13 +70,14 @@ def _gc_frozen() -> Iterator[None]:
     """Keep full garbage collections cheap while a realtime run is pacing.
 
     Freezes the objects that exist now (they stay alive and are scanned again only after
-    ``gc.unfreeze``); runs may overlap, and a freeze the caller made itself is left alone."""
+    ``gc.unfreeze``). A run that starts while another is pacing freezes again, so the objects the
+    host created in between are covered too. A freeze the caller made itself is left alone."""
     global _gc_holders, _gc_owned
     with _gc_lock:
         if _gc_holders == 0:
-            _gc_owned = gc.get_freeze_count() == 0
-            if _gc_owned:
-                gc.freeze()
+            _gc_owned = gc.get_freeze_count() <= _GC_FROZEN_AT_IMPORT
+        if _gc_owned:
+            gc.freeze()
         _gc_holders += 1
     try:
         yield
