@@ -29,6 +29,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from shape import compat
 from shape.scale.http import FABRIC_API, Http, Transport
 
 logger = logging.getLogger(__name__)
@@ -123,6 +124,18 @@ def restrict_to_current_user(path: Path) -> None:
         )
 
 
+# The job record is a persisted file: it declares ``format`` and ``version`` like the kinds of
+# ``shape.compat.KINDS`` (this kind is local to the job store).
+JOB_KIND = compat.Kind(
+    name="job-record",
+    label="job record",
+    format="shape-job",
+    current=1,
+    first_release={1: "0.9.0"},
+    implicit_version=1,
+)
+
+
 @dataclass
 class JobRecord:
     """One job. ``request`` is what was asked (never a secret); ``fabric`` holds the ids of a
@@ -139,14 +152,22 @@ class JobRecord:
     error: str | None = None
     fabric: dict[str, Any] = field(default_factory=dict)
     attempts: int = 1
+    # fields a newer release wrote: kept, so an update by this release does not drop them
+    extra: dict[str, Any] = field(default_factory=dict, repr=False)
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        doc = asdict(self)
+        extra = doc.pop("extra")
+        return compat.stamp(JOB_KIND, {**extra, **doc}, aliases=False)
 
     @classmethod
-    def from_dict(cls, doc: dict[str, Any]) -> JobRecord:
-        known = {f.name for f in fields(cls)}
-        return cls(**{k: v for k, v in doc.items() if k in known})
+    def from_dict(cls, doc: dict[str, Any], source: object = "") -> JobRecord:
+        compat.check_format(JOB_KIND, doc)
+        compat.check_readable(JOB_KIND, doc, source)
+        known = {f.name for f in fields(cls)} - {"extra"}
+        compat.check_unknown(JOB_KIND, doc, known)
+        _, extra = compat.split_extras(JOB_KIND, doc, known)
+        return cls(**{k: v for k, v in doc.items() if k in known}, extra=extra)
 
 
 def new_job_id(kind: str) -> str:
@@ -214,7 +235,7 @@ class JobStore:
                 if path.is_file():
                     cached = self._jobs.get(job_id)
                     doc = json.loads(path.read_text(encoding="utf-8"))
-                    disk = JobRecord.from_dict(doc)
+                    disk = JobRecord.from_dict(doc, path.name)
                     if cached is None or disk.updated_at >= cached.updated_at:
                         self._jobs[job_id] = disk
             record = self._jobs.get(job_id)
