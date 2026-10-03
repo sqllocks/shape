@@ -316,6 +316,7 @@ source_modules = [
     "shape.streaming",
     "shape.types",
     "shape.validation",
+    "shape.vault",
 ]
 forbidden_modules = ["shape.builtins"]
 allow_indirect_imports = true
