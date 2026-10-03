@@ -1,4 +1,10 @@
-"""HUNT2-profile: regression tests for contract emission (#641, #642, #643, #644)."""
+"""HUNT2-profile: regression tests for contract emission (#641, #642, #644).
+
+#643 (an empty contract gives an invalid ``CREATE TABLE``) is left for the owner: the existing
+``test_emit_api.py::test_an_empty_contract_emits[ddl]`` and
+``test_emit_compat.py::test_the_declared_format_and_version`` require ``emit({}, "ddl")`` to
+succeed with nothing in ``not_expressed``.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +16,7 @@ from typing import Any
 import jsonschema
 import pytest
 
-from shape.contracts.emit import EmitError, contract_from, emit
+from shape.contracts.emit import contract_from, emit
 from shape.contracts.v1 import ContractError
 from shape.generation.ddl import from_ddl
 
@@ -99,30 +105,6 @@ def test_642_other_dialects_keep_their_character_limit(dialect: str, limit: int)
     contract = {"columns": {"c" * 200: {"dtype": "integer", "unique": True}}}
     (name,) = _names(emit(contract, "ddl", table="t", dialect=dialect).text)
     assert len(name) <= limit
-
-
-# ------------------------------------------------------------------ #643 empty tables
-
-
-@pytest.mark.parametrize("contract", [{}, {"row_count": {"min": 1}}])
-@pytest.mark.parametrize("dialect", ALL)
-def test_643_a_table_with_no_columns_is_refused(contract: dict[str, Any], dialect: str) -> None:
-    with pytest.raises(EmitError, match="no column"):
-        emit(contract, "ddl", table="t", dialect=dialect)
-
-
-def test_643_an_empty_table_in_a_tables_contract_is_refused_by_name() -> None:
-    contract = {"tables": {"a": {"columns": {"x": {"dtype": "integer"}}}, "e": {}}}
-    with pytest.raises(EmitError, match="'e'"):
-        emit(contract, "ddl", dialect="postgres")
-
-
-def test_643_cli_exits_2_for_an_empty_table(tmp_path: Any, capsys: Any) -> None:
-    from shape.cli.main import main
-
-    path = tmp_path / "e.json"
-    path.write_text("{}")
-    assert main(["contract", "emit", str(path), "--to", "ddl", "--strict"]) == 2
 
 
 # ----------------------------------------------------------------- #644 non-finite numbers
