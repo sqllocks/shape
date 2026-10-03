@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import base64
 import json
+import re
 from collections.abc import Iterator, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, NamedTuple
@@ -107,6 +108,18 @@ def _dumps(obj: Any) -> str:
     return json.dumps(obj, separators=(",", ":"), ensure_ascii=False, allow_nan=False, default=str)
 
 
+_HAS_OFFSET = re.compile(r"(Z|[+-]\d{2}:\d{2})$")
+
+
+def _rfc3339(value: str) -> str:
+    """``value`` (an event time as written in the data: a date, a zone-less or a zoned
+    timestamp) as the RFC 3339 timestamp with an offset that CloudEvents 1.0 requires. A
+    zone-less time is UTC; a date is that day at midnight UTC."""
+    if len(value) == 10:
+        return value + "T00:00:00Z"
+    return value if _HAS_OFFSET.search(value) else value + "Z"
+
+
 def _wrap(rows: list[dict[str, Any]], envelope: str, source: str) -> list[dict[str, Any]]:
     if envelope not in ENVELOPES:
         raise ValueError(f"unknown envelope {envelope!r}; choose from {', '.join(ENVELOPES)}")
@@ -122,7 +135,7 @@ def _wrap(rows: list[dict[str, Any]], envelope: str, source: str) -> list[dict[s
             "type": f"shape.{table}.row",
         }
         if row.get(FIELD_TIME) is not None:
-            ce["time"] = row[FIELD_TIME]
+            ce["time"] = _rfc3339(row[FIELD_TIME])
         ce["datacontenttype"] = "application/json"
         ce["shapetable"] = table
         ce["shapeseq"] = seq

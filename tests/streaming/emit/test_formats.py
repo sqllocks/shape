@@ -90,9 +90,33 @@ def test_cloudevents_envelope() -> None:
     assert ce["specversion"] == "1.0"
     assert ce["id"] == "t/7" and ce["type"] == "shape.t.row" and ce["source"] == "shape://demo"
     assert ce["shapetable"] == "t" and ce["shapeseq"] == 7
-    assert ce["time"] == "2024-01-02T03:04:05.678901"
+    # CloudEvents 1.0 wants RFC 3339 with an offset; zone-less event times are UTC (#166).
+    assert ce["time"] == "2024-01-02T03:04:05.678901Z"
     assert ce["data"][FIELD_SEQ] == 7
+    assert ce["data"][FIELD_TIME] == "2024-01-02T03:04:05.678901"  # data is unchanged
     assert event_key(decode_line(line)) == ("t", 7)
+
+
+def _envelope(arr: pa.Array) -> tuple[dict, dict]:
+    batch = pa.RecordBatch.from_pydict({"c": arr})
+    events = with_event_fields(batch, "t", 0)
+    flat = json.loads(encode_batch(events).splitlines()[0])
+    ce = json.loads(encode_batch(events, "cloudevents", "demo").splitlines()[0])
+    return flat, ce
+
+
+def test_cloudevents_time_of_a_date_column() -> None:
+    flat, ce = _envelope(pa.array([dt.date(2024, 5, 6)]))
+    assert ce["time"] == "2024-05-06T00:00:00Z"  # #166
+    assert flat[FIELD_TIME] == ce["data"][FIELD_TIME] == "2024-05-06"
+
+
+def test_cloudevents_time_of_a_zoned_column() -> None:
+    # A zoned column is already written in UTC with an offset; the envelope keeps it as is (#166).
+    zone = dt.timezone(dt.timedelta(hours=2))
+    flat, ce = _envelope(pa.array([dt.datetime(2024, 1, 2, 5, 4, 5, tzinfo=zone)]))
+    assert ce["time"] == "2024-01-02T03:04:05.000000Z"
+    assert flat[FIELD_TIME] == ce["data"][FIELD_TIME] == ce["time"]
 
 
 def test_unknown_envelope() -> None:
