@@ -270,3 +270,19 @@ def test_525_a_landing_root_through_a_link_creates_nothing_outside(tmp_path, ret
     result = PackRunner().run(pack, retail, "small", 1, out)
     assert not result.is_success and any("leaves the output" in e for e in result.errors)
     assert list(elsewhere.iterdir()) == []
+
+
+# ---- #526: a list of names does not take true or false -----------------------------------------
+
+
+@pytest.mark.parametrize("value", [[True], ["customer", False]])
+def test_526_a_list_of_names_refuses_a_bool(value):
+    from shape.scenario import PackError
+
+    with pytest.raises(PackError, match="file_drop.entities must be a list of names"):
+        PackLoader().parse({**FILE_DROP, "file_drop": {"entities": value}})
+
+
+def test_526_numbers_in_a_list_of_names_are_still_names():
+    pack = PackLoader().parse({**FILE_DROP, "file_drop": {"entities": ["customer", 2024]}})
+    assert pack.entities == ["customer", "2024"]
