@@ -1,0 +1,11 @@
+format: shape-project
+version: 1
+sources:
+  orders:
+    path: data/orders
+    baseline: {kind: rolling_window, window: 7}
+    columns:
+      amount: {owner: finance@example.com, annotations: {unit: EUR}}
+gates:
+  schema_conformance: {mode: enforce}
+  distribution: {mode: observe}

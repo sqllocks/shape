@@ -1144,6 +1144,9 @@ def _build_parser(plugin_commands=()):
         help="pretty-printed JSON with sorted keys, one value per line (git-diffable)",
     )
     gitcmds.add_parsers(sub)
+    from shape.cli import dictionary as dictionary_cmd
+
+    dictionary_cmd.add_arguments(sub)
     from shape.cli import design as design_cmd
 
     design_cmd.add_parsers(sub)
@@ -1649,6 +1652,10 @@ def _dispatch(argv):
         from shape.cli.design import run as run_design
 
         return _run(run_design, a)
+    if a.cmd == "dictionary":
+        from shape.cli.dictionary import run as run_dictionary
+
+        return _run(run_dictionary, a)
     if a.cmd in ("cat", "git-setup"):
         from shape.cli.gitcmds import run as run_gitcmds
 

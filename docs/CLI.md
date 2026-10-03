@@ -120,6 +120,21 @@ remove something or a preflight check failed, 2 bad input.
 (`--project FILE`, `--no-project`, `--source NAME`, `diff --baseline-date`). See
 `docs/PROJECT.md`.
 
+## `shape dictionary`
+
+`shape dictionary PROFILE.shape [--project FILE | --no-project] [--source NAME] [--format md|html|json] [--examples] -o OUT`
+writes a data dictionary (one entry per table and column) from a profile and `shape.yml`. Example
+and top values need `--examples` and are never written for a column classified `CONFIDENTIAL` or
+higher. Exit 0 done, 2 a missing or unreadable profile, an invalid `shape.yml` or a source that is
+not in the project. See `docs/DICTIONARY.md`.
+
+## Editor support
+
+The VS Code extension in `editors/vscode/` completes and validates `shape.yml`, offers snippets,
+and shows a `.shape` file as the text `shape cat FILE` prints (read-only), with **Shape: Compare
+with Git HEAD** for a diff. It needs `shape` 0.9.0 or newer (the `shape.path` setting, else `PATH`).
+See `editors/vscode/README.md`.
+
 ## Registries
 
 `shape registry` (content-addressed artifacts) and `shape profile registry` (named profiles) are

@@ -1,0 +1,9 @@
+format: shape-project
+version: 1
+sources:
+  orders:
+    path: data/orders
+    baseline: {kind: sometimes}
+    colour: red
+gates:
+  distribution: {mode: maybe}

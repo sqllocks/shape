@@ -29,3 +29,10 @@ target/
 *.so
 *.pyd
 *.dylib
+
+# VS Code extension build output
+editors/vscode/node_modules/
+editors/vscode/out/
+editors/vscode/stage/
+editors/vscode/*.vsix
+editors/vscode/.vscode-test/
