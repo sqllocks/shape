@@ -116,6 +116,26 @@ class _Context:
     def role(self, table: str) -> TableRole:
         return self.roles.get(table, TableRole.UNKNOWN)
 
+    def parents_first(self) -> list[str]:
+        """The tables with each one after its parents (a cycle is broken where it closes), ties
+        in schema order: rules that read a parent's role or row count see it decided."""
+        order: list[str] = []
+        state: dict[str, int] = {}  # 1 visiting, 2 done
+
+        def visit(name: str) -> None:
+            if state.get(name):
+                return
+            state[name] = 1
+            for parent in self.parents_of.get(name, []):
+                if parent in self.schema.tables and parent != name:
+                    visit(parent)
+            state[name] = 2
+            order.append(name)
+
+        for name in self.schema.tables:
+            visit(name)
+        return order
+
 
 # ---- table roles ------------------------------------------------------------------------
 
@@ -215,9 +235,10 @@ def _classify_table(name: str, table: Table, ctx: _Context) -> TableRole:
 
 
 def _table_roles(ctx: _Context) -> None:
-    for name, table in ctx.schema.tables.items():
-        role = _classify_table(name, table, ctx)
-        ctx.roles[name] = role
+    for name in ctx.parents_first():  # a child's rules read its parent's role
+        ctx.roles[name] = _classify_table(name, ctx.schema.tables[name], ctx)
+    for name in ctx.schema.tables:
+        role = ctx.roles[name]
         ctx.annotate(name, None, f"TC-{role.name}", f"Classified as {role.name}", 0.8)
 
 
@@ -547,6 +568,13 @@ def _cardinality(ctx: _Context) -> None:
         ratio, rule_id, desc = _ratio(name, role, parent, ctx.role(parent))
         gen.derived_counts[name] = {"per_parent": parent, "ratio": ratio}
         ctx.annotate(name, None, rule_id, desc, 0.8)
+    # The engine resolves derived counts in the order they are listed, a per_parent count from
+    # its parent's: parents first, whatever the order of the CREATE TABLE statements.
+    counts = gen.derived_counts
+    ordered = [n for n in ctx.parents_first() if n in counts]
+    gen.derived_counts = {n: counts[n] for n in ordered} | {
+        n: rule for n, rule in counts.items() if n not in ordered
+    }
     for name, parent in one_to_one.items():
         gen.derived_counts.pop(name, None)
         gen.derived_counts[name] = {"per_parent": parent, "ratio": 1.0}
