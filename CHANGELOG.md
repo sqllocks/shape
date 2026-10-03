@@ -5,6 +5,47 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
+  values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
+  records approximate functional dependencies, two-column keys, association measures for every
+  type pair (Pearson, Spearman, Kendall, Cramer's V, Theil's U, correlation ratio, mutual
+  information), conditional probability tables and the share of implausible rows, on a bounded
+  sample; `reference_pairs` / `--reference-pair` check that columns hold real combinations.
+  `shape diff` reports `dependency_broken`, `placeholder_surge`, `implausible_rate_change`,
+  `association_shift` and `reference_match_change`, naming the columns and the value. New optional
+  contract rules `fd`, `implies`, `reference_pair`, `max_implausible_rate` and `no_placeholder`.
+  Generation: hierarchical sampling (`hierarchy` and `hierarchy_field` strategies,
+  `HierarchicalSampler`), categorical joint tables from a profile (`conditional_table`), a Chow-Liu
+  joint model with per-row plausibility scores and a report of impossible combinations
+  (`fit_joint`), and a joint fidelity check (`joint_fidelity`). The joint analysis is on by default
+  for a single table and off for a dataset (several tables): `--joint` / `joint=True` turn it on,
+  `--no-joint` / `joint=False` off, `SHAPE_PROFILE_JOINT` when the call does not choose.
+
+- `shape fabric publish|notebook|deploy-notebook|setup|export-model` and the top-level `shape publish`,
+  `shape notebook`, `shape deploy-notebook`, `shape setup-fabric`, `shape export-model`
+  (`docs/plugins/fabric-commands.md`): publish a domain to a Lakehouse (landing zone and run manifest),
+  Warehouse, SQL Database or Eventhouse; make and deploy a Fabric notebook; make a Fabric Environment;
+  export a Power BI semantic model (`.bim`). Names that reach M and DAX are quoted, an accepted (202)
+  creation is followed to its end, the workspace listing is read across pages, and the notebook part is
+  named for its format. Harness: `benchmarks/vs_spindle/fabric_commands_1to1/` (the `.bim`, the
+  notebook, the requests and the landing zone against the baseline, an allow-list with probes,
+  negative controls).
+- `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
+  the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
+  clearing cover every month of a multi-month table. `duration_hours` still overrides it
+  (`docs/plugins/simulation.md`). Recorded as a named, probed difference (`SIM-9`) in the
+  parity harness.
+- `shape capture` reads every input `shape profile` reads (Parquet, Delta with `--version` and
+  `--as-of`, JSONL, globs, folders, `abfss://`) through the same source layer, and `--dataset`
+  captures a folder of one file per table. The model has the same content for the same data in any
+  format. `shape compatibility` compares models with several tables per table. `docs/CLI.md` and
+  `docs/QUICKSTART.md` show the schema-change check on a Parquet feed.
+- `--auth cli|msi|spn|sql|device-code|fabric` and credential references (`docs/plugins/fabric-auth.md`) for
+  every Fabric writer, source and sink: `shape generate --scale-mode`, `shape emit`, `shape stream`,
+  `shape profile` and `shape jobs`. Secrets are `env://`, `file://` or `kv://` references (one shared
+  resolver in core, `shape.security.credrefs`; Azure Key Vault comes from the Fabric plugin), never
+  command-line values; `file://` refuses a secret file that group or others can read; connection-string
+  passwords, keys and tokens are redacted in errors, job records and logs.
 - `shape generate --scale-mode local_single|local_mp|fabric_spark` and `shape jobs list|status|cancel|resume`
   (`docs/SCALE.md`): the scale router with sinks (memory, Parquet part files, Lakehouse, Warehouse,
   SQL Database, KQL), a durable job store (submit, status, cancel, resume), the `fabric_spark` router

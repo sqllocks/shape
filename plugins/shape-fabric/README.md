@@ -1,8 +1,10 @@
 # sqllocks-shape-fabric
 
-Shape plugin: Microsoft Fabric. Today it holds the two event emitters of `shape emit`
-(`shape.emitters`); Fabric, Synapse and Azure Data Factory pipeline integration is added by its own
-work packages.
+Shape plugin: Microsoft Fabric. It holds the two event emitters of `shape emit` (`shape.emitters`),
+the writers behind the scale router's Fabric sinks, `--auth` and credential references
+([fabric-auth](../../docs/plugins/fabric-auth.md)), and the commands `shape fabric
+publish|notebook|deploy-notebook|setup|export-model` with their top-level aliases
+([fabric-commands](../../docs/plugins/fabric-commands.md)).
 
 ```
 pip install sqllocks-shape-fabric          # brings sqllocks-shape-eventhubs
@@ -70,6 +72,15 @@ OneLake paths.
 
 Profile a lakehouse straight from OneLake: `shape profile onelake://<workspace>/<lakehouse>/Tables/<table>`
 (Delta) or `.../Files/<path>`; authentication and `adlfs` handling are core's `abfss://` source.
+
+## Sign-in and credential references
+
+`--auth cli|msi|spn|sql|device-code|fabric`, `--tenant-id`, `--client-id`, `--client-secret REF`,
+`--sql-user`, `--sql-password REF` and `--connection-string` on `shape generate --scale-mode`, `shape emit`,
+`shape stream`, `shape profile` and `shape jobs`; in Python `shape_fabric.auth` (`AuthSettings`,
+`build_credential`, `writer_options`) builds the `credential` every writer takes. Secrets are `env://`,
+`file://` (refused when others can read the file) or `kv://VAULT/SECRET` (`shape_fabric.keyvault`, Azure Key
+Vault over HTTPS) references, never command-line values. See `docs/plugins/fabric-auth.md`.
 
 ## Tests
 

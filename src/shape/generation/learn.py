@@ -158,6 +158,13 @@ def _column(doc: Mapping[str, Any]) -> ColumnProfile:
         outlier_rate=doc.get("outlier_rate"),
         value_counts_ext=value_counts,
         fit_score=doc.get("fit_score"),
+        nan_count=int(doc.get("nan_count") or 0),
+        inf_count=int(doc.get("inf_count") or 0),
+        pattern_rates=doc.get("pattern_rates"),
+        pattern_contains_rates=doc.get("pattern_contains_rates"),
+        precision=doc.get("precision"),
+        scale=doc.get("scale"),
+        placeholders=doc.get("placeholders"),
     )
 
 
@@ -169,6 +176,8 @@ def _table(doc: Mapping[str, Any]) -> TableProfile:
         primary_key=list(doc.get("primary_key") or []),
         detected_fks=dict(doc.get("detected_fks") or {}),
         correlation_matrix=doc.get("correlation_matrix"),
+        correlation_truncated=bool(doc.get("correlation_truncated")),
+        joint=doc.get("joint"),
     )
 
 
@@ -198,6 +207,28 @@ def _is_covered_enum(col: ColumnProfile) -> bool:
     """Whether the profile lists every distinct value of the column."""
     values = col.value_counts_ext or col.enum_values
     return values is not None and len(values) > 0 and len(values) >= col.cardinality
+
+
+def _zero_padded_width(col: ColumnProfile) -> int:
+    """The width of a text column whose values are all the same number of digits and some start
+    with a zero (so that read as numbers they would lose their zeros), else 0."""
+    if col.dtype != "string" or col.is_foreign_key or not col.string_length:
+        return 0
+    low, high = col.string_length.get("min"), col.string_length.get("max")
+    if low is None or low != high or not 2 <= low <= 18:
+        return 0
+    lo, hi = _text_of(col.min_value), _text_of(col.max_value)
+    if (
+        lo is None
+        or hi is None
+        or not (lo.isascii() and lo.isdigit() and hi.isascii() and hi.isdigit())
+    ):
+        return 0
+    return int(low) if lo.startswith("0") else 0
+
+
+def _text_of(value: Any) -> str | None:
+    return value if isinstance(value, str) else None
 
 
 def guess_provider(column_name: str) -> str:
@@ -353,6 +384,11 @@ class SchemaBuilder:
         self, col: ColumnProfile, parent_pk: Mapping[str, str], fit_threshold: float = 0.80
     ) -> dict[str, Any]:
         """The generator of one column: the first rule that applies."""
+        width = _zero_padded_width(col)
+        if width:  # an identifier kept as text (ZIP, NDC, member id): never a number or a pattern
+            if col.is_primary_key or col.is_unique:
+                return {"strategy": "faker", "provider": "digit_ids", "width": width}
+            return {"strategy": "faker", "provider": "digits", "width": width}
         if col.is_primary_key:
             if col.pattern == "uuid" or col.dtype == "string":
                 return {"strategy": "uuid"}

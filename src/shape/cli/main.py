@@ -250,6 +250,32 @@ def _cmd_verify_signature(a):
     return 0
 
 
+def _csv_format(a):
+    from shape.profile.reference.readers import CsvFormat
+
+    return CsvFormat(
+        getattr(a, "delimiter", None),
+        getattr(a, "encoding", None),
+        getattr(a, "quotechar", None),
+        getattr(a, "header", True),
+    )
+
+
+def _reference_pairs(a):
+    """``--reference-pair COLS=REFERENCE`` as the profile's ``reference_pairs`` list."""
+    out = []
+    for text in getattr(a, "reference_pair", None) or ():
+        cols, sep, reference = text.rpartition("=")
+        if not sep or not cols or not reference:
+            raise ValueError(f"--reference-pair {text!r}: expected COLS=REFERENCE")
+        mapping = {}
+        for item in cols.split(","):
+            column, _, field = item.partition(":")
+            mapping[column.strip()] = (field or column).strip()
+        out.append({"columns": mapping, "reference": reference})
+    return out or None
+
+
 def _profile_source(a):
     """What ``shape profile`` reads. A folder is one table (its files are partitions) unless
     ``--dataset`` asks for one table per file, named by the file's stem. A folder whose files
@@ -262,13 +288,23 @@ def _profile_source(a):
 
     if a.dataset:
         return {name: str(path) for name, path in folder_tables(a.src).items()}
-    if not folder_is_one_table(a.src):
+    if not folder_is_one_table(a.src, _csv_format(a)):
         raise ValueError(
             f"the files in {a.src} do not share their columns, so the folder is not one table: "
             "add --dataset to profile it as several tables (one per file, named by the file "
             "name without its extension)"
         )
     return a.src
+
+
+def _workbook_options(a):
+    """``--sheet`` and ``--include-hidden``: the options of an ``.xlsx`` source."""
+    opts = {}
+    if a.sheet:
+        opts["sheet"] = a.sheet
+    if a.include_hidden:
+        opts["include_hidden"] = True
+    return opts
 
 
 def _profile_name(a):
@@ -301,9 +337,31 @@ def _cmd_profile(a):
 
     if not a.output:
         raise ValueError("profile needs -o OUT.shape")
-    prof = shape.profile(
-        _profile_source(a), name=_profile_name(a), version=a.delta_version, as_of=a.as_of
+    from shape.cli import auth
+
+    settings = auth.settings_from_args(a)
+    if settings and "://" not in a.src:
+        raise ValueError("--auth is for a source in the cloud (onelake://, abfss://, ...)")
+    fmt = _csv_format(a)
+    options = dict(
+        name=_profile_name(a),
+        version=a.delta_version,
+        as_of=a.as_of,
+        delimiter=fmt.delimiter,
+        encoding=fmt.encoding,
+        quotechar=fmt.quotechar,
+        header=fmt.header,
+        reference_pairs=_reference_pairs(a),
+        joint=a.joint,
+        **_workbook_options(a),
     )
+    if settings:
+        from shape.profile.reference.sources import source_options
+
+        with source_options(credential=auth.make_credential(settings)):
+            prof = shape.profile(_profile_source(a), **options)
+    else:
+        prof = shape.profile(_profile_source(a), **options)
     _warn_empty(a, prof)
     content_id = shape.save(prof, a.output)
     key_id = _sign_output(a, a.output)
@@ -318,6 +376,59 @@ def _cmd_profile(a):
     if key_id:
         out["signed_by"] = key_id
     _dump(out)
+    return 0
+
+
+def _capture_document(a):
+    """``(name, document)`` of ``shape capture``: the captured table, or, with ``--dataset``, a
+    model with one table per file. The table comes from the profile's source layer, so every
+    input ``shape profile`` reads is read here."""
+    from shape.capture import capture_arrow
+    from shape.profile.reference.sources import load_table
+
+    if a.dataset:
+        from shape.spec.migrate import CAPTURE_ENGINE, MODEL_VERSION, migrate_capture_v1
+
+        if a.delta_version is not None or a.as_of is not None:
+            raise ValueError("--version and --as-of read one Delta table, not a dataset")
+        tables = {}
+        for name, path in _profile_source(a).items():
+            tables[name] = migrate_capture_v1(
+                capture_arrow(load_table(str(path), name)[1]).to_dict(), name
+            )["tables"][name]
+        name = os.path.basename(os.path.normpath(a.src))
+        model = {
+            "schema_version": MODEL_VERSION,
+            "engine": CAPTURE_ENGINE,
+            "mode": "bounded",
+            "name": name,
+            "tables": tables,
+        }
+        return name, model
+    name, table, _ = load_table(_profile_source(a), version=a.delta_version, as_of=a.as_of)
+    return name, capture_arrow(table).to_dict()
+
+
+def _cmd_capture(a):
+    from shape.artifact import write_shape
+
+    name, obj = _capture_document(a)
+    if a.output and str(a.output).endswith(".shape"):
+        cid = write_shape(a.output, obj, name=name)
+        out = {"written": a.output, "shape_content_id": cid}
+        kid = _sign_output(a, a.output)
+        if kid:
+            out["signed_by"] = kid
+        _dump(out)
+        return 0
+    if getattr(a, "sign", None):
+        raise ValueError("capture --sign needs -o OUT.shape")
+    raw = json.dumps(obj, sort_keys=True, indent=2, default=str)
+    if a.output:
+        with open(a.output, "w", encoding="utf-8") as fh:
+            fh.write(raw + "\n")
+    else:
+        print(raw)
     return 0
 
 
@@ -756,21 +867,43 @@ def _build_parser(plugin_commands=()):
     pld.add_argument("--json", action="store_true", help="print the report as JSON")
     c = sub.add_parser(
         "capture",
-        help="write a Shape model of a CSV (for `query`, `compatibility`, `plan`); "
+        help="write a Shape model of a table (for `query`, `compatibility`, `plan`); "
         "use `shape profile` for profiles",
-        description="Capture a CSV file as a Shape model: JSON, or a model .shape with -o "
-        "OUT.shape. It reads CSV only and writes a model, which `shape query`, `shape "
-        "compatibility` and `shape plan` read. `shape profile` is the command for profiling "
-        "data: it reads CSV, Parquet, JSONL, folders and Delta tables, and its profile feeds "
-        "`check`, `diff` and `generate --from`.",
+        description="Capture a table as a Shape model: JSON, or a model .shape with -o "
+        "OUT.shape. SRC is anything `shape profile` reads: a CSV, Parquet or JSONL file, a glob, "
+        "a folder, a Delta table (`--version`/`--as-of` pick a version) or an abfss:// source. "
+        "The model has the same content whatever the file format. It is what `shape query`, "
+        "`shape compatibility` and `shape plan` read, so `shape capture feed.parquet -o "
+        "BASE.shape` today and again tomorrow, then `shape compatibility BASE.shape NEW.shape`, "
+        "reports a renamed, dropped or retyped column. `shape profile` is the command for "
+        "profiling data: its profile feeds `check`, `diff` and `generate --from`.",
     )
-    c.add_argument("csv")
+    c.add_argument("src", metavar="SRC")
     c.add_argument("-o", "--output")
     c.add_argument("--sign", metavar="KEY", help="sign the written .shape; KEY: " + _KEY_HELP)
     _add_passphrase_args(c)
+    c.add_argument(
+        "--dataset",
+        action="store_true",
+        help="SRC is a folder of table files: capture one table per file, named by the file name "
+        "without its extension (without it a folder is one table)",
+    )
+    c.add_argument(
+        "--version",
+        dest="delta_version",
+        type=int,
+        metavar="N",
+        help="a Delta table: capture version N instead of the latest",
+    )
+    c.add_argument(
+        "--as-of",
+        metavar="TIMESTAMP",
+        help="a Delta table: capture the newest version committed at or before this ISO-8601 "
+        "time (no zone means UTC), instead of the latest",
+    )
     pr = sub.add_parser(
         "profile",
-        help="profile a file, glob, directory or Delta table",
+        help="profile a file, glob, directory, Excel workbook or Delta table",
         epilog="also: `shape profile safe PROFILE.shape -o SAFE.json` writes the share-safe "
         "form; `shape profile validate --safe ARTIFACT` scans it for leaks; "
         "`shape profile export|import|list|validate` and `shape profile registry "
@@ -810,8 +943,51 @@ def _build_parser(plugin_commands=()):
         action="store_true",
         help="exit 2 instead of warning when a table has 0 rows",
     )
+    pr.add_argument(
+        "--delimiter",
+        metavar="CHAR",
+        help="CSV field delimiter (default: sniffed among comma, semicolon, tab and pipe)",
+    )
+    pr.add_argument("--encoding", metavar="NAME", help="CSV text encoding (default: utf-8)")
+    pr.add_argument("--quotechar", metavar="CHAR", help='CSV quote character (default: ")')
+    pr.add_argument(
+        "--header",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="the CSV's first row is a header (--no-header: columns are named f0, f1, ...)",
+    )
+    pr.add_argument(
+        "--reference-pair",
+        action="append",
+        metavar="COLS=REFERENCE",
+        help="check that columns hold real combinations: COLS is a comma list (COLUMN or "
+        "COLUMN:FIELD), REFERENCE a CSV, Parquet or JSONL file, e.g. city,zip=zips.csv "
+        "(repeatable; stored in the profile for the reference_pair contract rule)",
+    )
+    pr.add_argument(
+        "--joint",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="the joint analysis (dependencies, keys, associations): on by default for one table, "
+        "off for a dataset; --joint turns it on, --no-joint off (SHAPE_PROFILE_JOINT=0|1 when "
+        "neither is given)",
+    )
+    pr.add_argument(
+        "--sheet",
+        metavar="SHEET",
+        help="SRC is an .xlsx workbook: profile this sheet alone (also SRC#SHEET); without it "
+        "every visible sheet is a table",
+    )
+    pr.add_argument(
+        "--include-hidden",
+        action="store_true",
+        help="SRC is an .xlsx workbook: read its hidden sheets too (they are always reported)",
+    )
     pr.add_argument("--html", metavar="REPORT.html")
     pr.add_argument("--json", metavar="SUMMARY.json")
+    from shape.cli.auth import add_arguments as add_auth_arguments
+
+    add_auth_arguments(pr, connection_string=False)
     sp = sub.add_parser(
         "stream-profile",
         help="profile a Kafka topic or an Event Hubs hub (bounded mode, windows, checkpoints)",
@@ -1060,7 +1236,7 @@ def _split_global(argv):
         "log_json": os.environ.get("SHAPE_LOG_JSON", "") not in ("", "0"),
         "log_level": os.environ.get("SHAPE_LOG_LEVEL", "INFO"),
         "metrics": os.environ.get("SHAPE_METRICS") or None,
-        "debug": False,
+        "debug": os.environ.get("SHAPE_DEBUG", "") not in ("", "0"),
     }
     rest = list(argv)
     while rest and rest[0].startswith("--"):
@@ -1103,9 +1279,23 @@ def _main(argv):
     _VERIFIED.clear()
     from shape.cli import errors
 
+    as_program = argv is None
     opts, argv = _split_global(sys.argv[1:] if argv is None else argv)
     errors.set_debug(opts["debug"])
-    return errors.guarded(lambda: _logged(opts, argv))
+    if errors.debug_enabled() or not as_program:
+        return errors.guarded(lambda: _logged(opts, argv))
+    try:
+        return errors.guarded(lambda: _logged(opts, argv))
+    except Exception as exc:  # noqa: BLE001 - the one place that turns a crash into a message
+        # An expected error is already one line (errors.guarded). As the program, an unexpected
+        # failure is also one line and exit 2, never a traceback; `--debug` (or SHAPE_DEBUG=1)
+        # lets it propagate. A call with an argv list (a library or test) always propagates it.
+        detail = str(exc) or "no detail"
+        print(
+            f"shape: error: {type(exc).__name__}: {detail} (run with --debug for the traceback)",
+            file=sys.stderr,
+        )
+        return errors.EXIT_INPUT_ERROR
 
 
 def _logged(opts, argv):
@@ -1143,6 +1333,46 @@ def _logged(opts, argv):
         if opts["metrics"]:
             with open(opts["metrics"], "w", encoding="utf-8") as fh:
                 fh.write(run.to_json() + "\n")
+
+
+def _is_generation_schema(doc):
+    """Whether ``doc`` is a generation schema (what ``shape from-ddl`` writes), not evidence."""
+    return (
+        isinstance(doc, dict)
+        and "schema_version" in doc
+        and isinstance(doc.get("tables"), dict)
+        and isinstance(doc.get("relationships"), list)
+    )
+
+
+def _cmd_evidence(a):
+    """``shape query|check|plan`` on an evidence document (JSON or ``.shape``). ``plan`` also
+    takes a generation schema and then prints the plan of its run, as ``generate --dry-run``."""
+    from shape.artifact import read_shape
+
+    _, s = read_shape(a.shape) if str(a.shape).endswith(".shape") else ({}, _load_json(a.shape))
+    if a.cmd == "query":
+        from shape.query import query as shape_query
+
+        _dump({"result": shape_query(s, a.expression)})
+        return 0
+    if a.cmd == "plan":
+        if _is_generation_schema(s):
+            from shape.generation.engine import Engine
+            from shape.generation.schema import GenSchema
+
+            _dump(Engine(GenSchema.from_dict(s)).dry_run().to_dict())
+            return 0
+        from shape.generation.fidelity import plan_reconstruction
+
+        _dump(plan_reconstruction(s).to_dict())
+        return 0
+    from shape.contracts import evaluate_contract
+
+    contract = _load_json(a.contract)
+    r = evaluate_contract(s, contract)
+    _dump(r.to_dict())
+    return 0 if r.passed else 4
 
 
 def _dispatch(argv):
@@ -1264,26 +1494,7 @@ def _dispatch(argv):
         _dump([asdict(x) for x in r])
         return 0 if all(x.passed for x in r) else 1
     if a.cmd == "capture":
-        from shape.artifact import write_shape
-        from shape.capture import capture_rows
-
-        obj = capture_rows(_rows(a.csv)).to_dict()
-        if a.output and str(a.output).endswith(".shape"):
-            cid = write_shape(a.output, obj, name=__import__("pathlib").Path(a.csv).stem)
-            out = {"written": a.output, "shape_content_id": cid}
-            kid = _sign_output(a, a.output)
-            if kid:
-                out["signed_by"] = kid
-            _dump(out)
-            return 0
-        if getattr(a, "sign", None):
-            raise ValueError("capture --sign needs -o OUT.shape")
-        raw = json.dumps(obj, sort_keys=True, indent=2, default=str)
-        if a.output:
-            open(a.output, "w", encoding="utf-8").write(raw + "\n")
-        else:
-            print(raw)
-        return 0
+        return _run(_cmd_capture, a)
     if a.cmd == "diff":
         from shape.drift import compare
 
@@ -1335,25 +1546,7 @@ def _dispatch(argv):
         )
         return 2
     if a.cmd in ("query", "check", "plan"):
-        from shape.artifact import read_shape
-
-        _, s = read_shape(a.shape) if str(a.shape).endswith(".shape") else ({}, _load_json(a.shape))
-        if a.cmd == "query":
-            from shape.query import query as shape_query
-
-            _dump({"result": shape_query(s, a.expression)})
-            return 0
-        if a.cmd == "plan":
-            from shape.generation.fidelity import plan_reconstruction
-
-            _dump(plan_reconstruction(s).to_dict())
-            return 0
-        from shape.contracts import evaluate_contract
-
-        contract = _load_json(a.contract)
-        r = evaluate_contract(s, contract)
-        _dump(r.to_dict())
-        return 0 if r.passed else 4
+        return _run(_cmd_evidence, a)
     if a.cmd in ("compatibility", "certify-shapes"):
         from shape.artifact import read_shape
 

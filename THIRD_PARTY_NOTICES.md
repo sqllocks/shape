@@ -11,6 +11,11 @@ license (CC-BY-4.0), https://creativecommons.org/licenses/by/4.0/. Attribution:
 "This work includes data from GeoNames (https://www.geonames.org/), licensed under
 CC-BY-4.0." Any distribution that includes this data must retain this attribution.
 
+Source of the licence statement for the postal-code data:
+https://download.geonames.org/export/zip/readme.txt ("This work is licensed under a Creative
+Commons Attribution 4.0 License"), checked 2026-10-02. That readme's own link still names the
+older 3.0 URL; this repository follows the readme's text, 4.0, everywhere.
+
 ## python-dateutil
 
 `src/shape/profile/reference/_dateutil_parser.py` is a port of the date/time string parser of

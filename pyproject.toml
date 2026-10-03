@@ -28,7 +28,7 @@ sqlserver=["sqllocks-shape-sqlserver==0.9.0"]
 domains=["sqllocks-shape-domains==0.9.0"]
 simulation=["sqllocks-shape-simulation==0.9.0"]
 streaming=["confluent-kafka>=2.5,<4","azure-eventhub>=5.12,<6"]
-dev=["pytest>=8.3","pytest-cov>=6","hypothesis>=6.115","ruff>=0.8","mypy>=1.13","pip-audit>=2.7","build>=1.2","pyyaml>=6","pandas>=2","deltalake>=0.17","twine>=5","cryptography>=50,<51","xxhash>=3.5","maturin>=1.15,<2","import-linter>=2","vulture>=2.11","bandit>=1.8","py-spy>=0.4","sqlglot>=25","openpyxl>=3.1","scipy>=1.11","pyspark>=4.0,<5"]
+dev=["pytest>=8.3","pytest-cov>=6","hypothesis>=6.115","ruff>=0.8","mypy>=1.13","pip-audit>=2.7","build>=1.2","pyyaml>=6","pandas>=2","deltalake>=0.17","twine>=5","cryptography>=50,<51","xxhash>=3.5","maturin>=1.15,<2","import-linter>=2","vulture>=2.11","bandit>=1.8","py-spy>=0.4","sqlglot>=25","openpyxl>=3.1","scipy>=1.11","pyspark>=4.0,<5","faker>=24"]
 
 [tool.maturin]
 # T-05: mixed Python/Rust layout. The kernel is `shape._kernel`, built from rust/shape-kernel.
@@ -52,7 +52,7 @@ include=[
 [tool.pytest.ini_options]
 testpaths=["tests"]
 addopts="-ra --strict-markers --import-mode=importlib"
-markers=["conformance: normative conformance","security: security invariant","zero_network: network forbidden","sign: needs the cryptography extra","contract: contract test (no external service)","emulator: needs a Docker emulator (CI nightly only)","live: needs live cloud resources","heavy: runs millions of values; CI runs these without coverage tracing"]
+markers=["conformance: normative conformance","security: security invariant","zero_network: network forbidden","sign: needs the cryptography extra","contract: contract test (no external service)","emulator: needs a Docker emulator (CI nightly only)","live: needs live cloud resources","heavy: runs millions of values; CI runs these without coverage tracing","realtime: wall-clock pacing assertions; run on Linux CI runners and the nightly soak"]
 
 [tool.ruff]
 target-version="py311"
@@ -190,6 +190,9 @@ correlated = "shape.builtins.strategies.linked:Correlated"
 reference_data = "shape.builtins.strategies.reference_data:ReferenceData"
 record_sample = "shape.builtins.strategies.reference_data:RecordSample"
 record_field = "shape.builtins.strategies.reference_data:RecordField"
+hierarchy = "shape.builtins.strategies.reference_hierarchy:Hierarchy"
+hierarchy_field = "shape.builtins.strategies.reference_hierarchy:HierarchyField"
+conditional_table = "shape.builtins.strategies.joint_table:ConditionalTable"
 bootstrap = "shape.builtins.strategies.bootstrap:Bootstrap"
 temporal = "shape.builtins.strategies.temporal:Temporal"
 foreign_key = "shape.builtins.strategies.keys:ForeignKey"

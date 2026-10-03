@@ -88,6 +88,28 @@ allow-list is exactly two fields, `is_enum` and `enum_values`; nothing else is d
 reads `is_enum`). Every other field is compared with the baseline as it is. A full run fails if the rule
 never turned a baseline enum off, or never kept one.
 
+### Intentional differences: issues #22 and #37 (ISS-profile)
+
+Two more owner-approved differences, each a narrow named allow-list in `verify.py`, each with a
+regression test in `tests/profile/test_profile_issues.py`. Everything else is compared as it was.
+
+* **Infinity is a value, not an error (#22).** The baseline raises `ValueError` on `edge/x_csv_inf.csv`
+  (its whole-number test casts inf to an integer). Shape profiles the file, counts the infinities in
+  `inf_count` (NaN in `nan_count`, kept apart from nulls) and leaves them out of every statistic, so
+  `NONFINITE_RULE` expects "Shape succeeds with `inf_count > 0`" for that dataset only. A single value
+  has `std = null`, not `NaN`; no dataset has one.
+* **Near-unique text lists no values (#37).** A string column with more than 500 distinct values, at
+  least 95% of its non-null count, has no `value_counts_ext` (nor order list): its top 500 would be an
+  arbitrary few, stored whole. `long_text_rule_baseline` turns the baseline column into that and
+  Shape must equal it; a full run fails if the rule never fired. The same change cuts a stored text
+  value (a count key, `enum_values`, a minimum, a maximum) to 256 characters; no dataset has one.
+  Wide tables keep each column's 25 strongest correlations past 256 numeric columns; no dataset is
+  that wide, so `correlation_matrix` is compared in full.
+
+New fields (`nan_count`, `inf_count`, `pattern_rates`, `pattern_contains_rates`, `precision`, `scale`,
+and from #47 the column `placeholders` and the table `joint` entry) are additive and not compared:
+`COLUMN_RULES` and `TABLE_RULES` are explicit field lists, so no allow-list entry was needed.
+
 ### Verification result (`verify.py --refresh`, all 30 variants)
 
 Every cell is `n/n*`: all within tolerance and **all bitwise-identical**, for every field
@@ -116,9 +138,7 @@ rests on reasoning rather than on a test, or where the port is known to be narro
    chunked inference is reproduced (chunks of the largest power of two below `2**20 // ncols`
    rows; a column whose chunks disagree becomes an object column of Python ints/floats/bools/
    strings). `inf` in a float column makes Spindle raise `ValueError` (its whole-number test); Shape
-   raises the same for *file* sources, and the verifier checks the error category. In-memory
-   Arrow tables and DataFrames still profile such columns (std `NaN`, min `-inf`), which the
-   `.shape` artifact tests rely on. EDGE: `x_csv_*`. Not modelled:
+   profiles such files and counts the infinities (an intentional difference, see issue #22 below). EDGE: `x_csv_*`. Not modelled:
    integers wider than 38 digits (`NotImplementedError`).
 3. **Parquet types: closed in P1-08.** Decimal, dictionary/categorical (unused categories and
    category order included), timezone-aware timestamps (wall-clock histograms, offset in

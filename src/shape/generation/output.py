@@ -122,6 +122,48 @@ def _options(fmt: str, schema: GenSchema, table: str, options: Mapping[str, Any]
     return merged
 
 
+_WORKBOOK_OPTIONS = ("chaos_log", "drift_plan", "autofilter")
+
+
+def _write_workbook(
+    result: GenerationResult,
+    out: Path,
+    options: Mapping[str, Any],
+    seed: int | None = None,
+    scale: str | None = None,
+) -> list[Path]:
+    """``excel``: one workbook, ``<domain>.xlsx``, a sheet per table and a ``_README`` sheet. The
+    ``chaos_log`` and ``drift_plan`` options name the files whose planted changes it lists;
+    ``autofilter=False`` leaves the header row without a filter."""
+    from shape.security.names import contained
+
+    schema = result.schema
+    model = schema.model
+    out.mkdir(parents=True, exist_ok=True)
+    target = contained(out, str(options.get("workbook") or model.domain or "workbook"), ".xlsx")
+    keys: dict[str, list[str]] = {
+        name: [
+            c.name for c in tdef.columns.values() if c.name in tdef.primary_key or c.is_foreign_key
+        ]
+        for name, tdef in schema.tables.items()
+    }
+    meta = {
+        "domain": model.domain or model.name,
+        "schema_mode": model.schema_mode,
+        "seed": seed if seed is not None else model.seed,
+        "scale": scale or schema.generation.scale,
+        "elapsed_seconds": round(result.elapsed_seconds, 3),
+    }
+    _sink("excel").write_workbook(
+        str(target),
+        {name: result.tables[name] for name in result.generation_order},
+        meta=meta,
+        identifier_columns_by_table=keys,
+        **{k: options[k] for k in _WORKBOOK_OPTIONS if options.get(k) is not None},
+    )
+    return [target]
+
+
 def _paths(fmt: str, output_dir: Path, tables: list[str]) -> list[Path]:
     return [output_dir / t if fmt == "delta" else _target(fmt, output_dir, t) for t in tables]
 
@@ -134,7 +176,10 @@ def write_result(
     max_workers: int | None = None,
     **options: Any,
 ) -> list[Path]:
-    """Write every table of ``result`` as ``fmt``; return the files (or Delta directories)."""
+    """Write every table of ``result`` as ``fmt``; return the files (or Delta directories). The
+    ``excel`` format is one workbook for all the tables."""
+    if fmt == "excel":
+        return _write_workbook(result, Path(output_dir), options)
     sink = _sink(fmt)
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -283,6 +328,8 @@ def write_engine(
     core busy generating, the encoder of the largest table is what the run ends up waiting for
     (``SHAPE_THREADS``, when set, is used as it is)."""
     engine.reserved_cores = max(engine.reserved_cores, 1)
+    if fmt == "excel":  # one workbook for all the tables: generated whole
+        return _write_workbook(engine.generate(), Path(output_dir), options, engine.seed)
     if needs_post_pass(engine.schema):
         return _write_overlapped(engine, fmt, output_dir, _writers(max_workers), options)
     engine.schema.validate_or_raise()
