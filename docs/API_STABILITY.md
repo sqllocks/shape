@@ -7,3 +7,5 @@ Stable interfaces follow semantic-versioning compatibility through the 1.x line.
 Artifact readers fail closed on unknown mandatory capabilities and tolerate unknown optional extensions only when they can be ignored safely.
 
 Plugin API v1 has its own promise, with the per-group rules and the deprecation process: `docs/plugins/stability.md`.
+
+The generation spec format (its JSON Schema, the stability promise within 1.x and the edit API) is described in `docs/GENERATION_SPEC.md`.

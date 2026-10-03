@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "t",
+    "seed": 7
+  },
+  "tables": {
+    "t": {
+      "name": "t",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "ts": {
+          "name": "ts",
+          "type": "datetime",
+          "generator": {
+            "strategy": "temporal",
+            "start": "2026-05-01T00:00:00",
+            "end": "2026-05-01T12:00:00"
+          }
+        }
+      }
+    }
+  },
+  "relationships": [],
+  "generation": {
+    "scale": "s",
+    "scales": {
+      "s": {
+        "t": 400
+      }
+    }
+  }
+}
