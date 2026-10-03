@@ -31,11 +31,11 @@ Severity: critical / high / medium / low. "Issue" and "Fix" are filled in phases
 | 18 | low | `query/core.py:25-34` `_column` | `column("t.c")` on a single-table model returns `None` | single table `t` with column `c` | the column | `None` (`.null_count` → "cannot access null_count") | #504 | f3c8876 |
 | 19 | low | `query/core.py:83-87` | A path after a missing column or relationship says "cannot access X" instead of what is missing | `column("zz").null_count` | `ShapeQueryError` naming `column("zz")` as not found | `cannot access null_count` | #504 | f3c8876 |
 | 20 | low | `docs/LANDING.md` | Says cloud targets are not written and omits `{part}`/`{hhmmss}`, while `docs/SINKS.md` documents the `abfss://` landing layout and rolling tokens | read both | consistent docs | contradiction | #505 | 74b4d6e |
-| 21 | low | `io/readers.py:457` | A file source is named up to the first dot: `my.data.csv` is `my` | `open_source("my.data.csv").name` | `my.data` | `my` | #506 | open: for the lead |
+| 21 | low | `io/readers.py:457` | A file source is named up to the first dot: `my.data.csv` is `my` | `open_source("my.data.csv").name` | `my.data` | `my` | #506 | ee59c7b |
 | 22 | low | `io/readers.py:432` | A streaming CSV reader is opened just for the schema and never closed | `open_source(big_csv)` | reader closed | file handle held until GC | #508 | closed: not reproducible |
-| 23 | low | `connectors/qualification.py:217-258` | `reconnecting_batches` reconnects in a tight loop (no pause) | 5 failing connects take 0 s | (not documented) | — | — | not filed |
-| 24 | low | `connectors/qualification.py:173-200` | `ExactlyOnceProjector.ids` grows without bound | long run with message ids | (not documented) | — | — | not filed |
-| 25 | low | `io/excel.py:144-157` | The zip-bomb check is per member, not for the archive total | many members each < 256 MiB | (defence in depth) | — | — | not filed |
+| 23 | low | `connectors/qualification.py:81-122` | `reconnecting_batches` reconnects in a tight loop (no pause) | 5 failing connects take 0 s | a growing pause between attempts | none | #562 | 726e854 |
+| 24 | low | `connectors/qualification.py:37-64` | `ExactlyOnceProjector.ids` grows without bound | long run with message ids | documented | not documented | — | 726e854 (docstring only, lead's decision) |
+| 25 | low | `io/excel.py:166-185` | The zip-bomb check is per member, not for the archive total | many members each < 256 MiB, more in total | `WorkbookError` | accepted | #563 | a7e5042 |
 
 Not defects (recorded for completeness):
 
