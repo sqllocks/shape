@@ -290,7 +290,40 @@ the file.
 
 ## Phase 2: issues
 
-Filled in below as issues are filed.
+| Finding | Issue | Owner | Action |
+|---|---|---|---|
+| S1 | #273 | AUD-privacy | file only |
+| S2 | #274 | this lane | fix |
+| S3 | #275 | this lane | fix |
+| S4 | #276 | AUD-builtins | file only |
+| S5 | #277 | this lane | fix |
+| S6 | #278 | AUD-cli | file only |
+| S7 | #279 | this lane | fix |
+| S8 | #280 | AUD-builtins | file only |
+| S9, S27 | #281 | this lane | fix |
+| S10 | #282 | this lane | fix |
+| S11 | #283 | this lane | fix |
+| S12 | #284 | this lane | fix |
+| S13, S24 | #285 | AUD-builtins | file only |
+| S15 | #286 | AUD-profile | file only |
+| S16, S31 | #287 | AUD-builtins | file only |
+| S17 | #288 | this lane | fix |
+| S18 | #289 | this lane | fix |
+| S19 | #290 | this lane | fix |
+| S20 | #291 | AUD-privacy | file only |
+| S21 | #292 | AUD-privacy | file only |
+| S22 | #293 | this lane | fix |
+| S23 | #294 | owner decision (default TLS changes local use) | file only |
+| S25 | #295 | this lane | fix |
+| S26 | #296 | AUD-profile | file only |
+| S28 | #297 | AUD-builtins | file only |
+| S30 | #298 | AUD-stream | file only |
+| S32 | #299 | this lane | fix |
+| S33 | #300 | this lane | fix |
+| S34 | #301 | AUD-packaging | file only |
+
+S14, S29, S35 and S36 are recorded, not filed (accepted risk R2, documented limits, by design, or
+no effect).
 
 ## Phase 3: fixes
 
