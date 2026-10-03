@@ -84,6 +84,14 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
   evidence no longer holds after a re-profile, and `contract -d DECISIONS.json -o CONTRACT.json
   [--merge EXISTING.json]` writes the accepted rules as a contract `shape check` reads (exit 2 on a
   conflict with a rule in the file merged into). See [PROPOSALS.md](PROPOSALS.md#rules).
+- `shape report-card REAL SYNTHETIC` runs the fidelity scores and tiers, the utility gate, the
+  memorization gate and (with `--holdout`) a membership-inference test, and writes one card as
+  JSON, Markdown or HTML (`-o`, by extension). Exit 0 when every section that ran passed, 1 when
+  one failed or a `--require`d one did not run, 2 for unusable input. See
+  [REPORT_CARD.md](REPORT_CARD.md).
+- `shape proposals propose|list|decide` keeps the answers to what a profile cannot settle alone
+  (foreign keys, personal data, meaning) in a decision file; `shape generate --from` and
+  `shape plan` take it with `--decisions`. See [PROPOSALS.md](PROPOSALS.md).
 
 - `shape bridge` serves Shape's commands as a versioned JSON protocol on standard input and output
   (one request and one response per line; `--once` for a single request; `--jobs-dir DIR` for the

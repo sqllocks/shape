@@ -80,6 +80,18 @@ from .quarantine import (
 from .quarantine import (
     QuarantineManager as QuarantineManager,
 )
+from .reportcard import (
+    ReportCard as ReportCard,
+)
+from .reportcard import (
+    ReportCardError as ReportCardError,
+)
+from .reportcard import (
+    load_report_card as load_report_card,
+)
+from .reportcard import (
+    report_card as report_card,
+)
 from .utility import UtilityGate as UtilityGate
 from .verify import (
     VerifyReport as VerifyReport,
