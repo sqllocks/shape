@@ -107,3 +107,14 @@ def test_awkward_names_cannot_break_out_of_their_quotes(schema):
         assert w.write_table(table, [batch]) == 1
         assert w.db.table_exists(schema, table)
     assert rows_of(schema, table, order="a]]b") == [(1, "x")]
+
+
+@pytest.mark.parametrize("mode", ["truncate", "replace"])
+def test_a_failed_truncate_or_replace_keeps_the_old_rows_on_a_real_server(schema, mode):
+    # #429: SQL Server rolls the TRUNCATE or the DROP TABLE back with the rows
+    with SqlDatabaseWriter(CS, schema_name=schema) as w:
+        w.write_table("customer", sample_batches(), primary_key=["id"])
+        bad = pa.RecordBatch.from_arrays([pa.array([1])], names=["x"])
+        with pytest.raises(ShapeError, match="a batch has columns"):
+            w.write_table("customer", [sample_batches()[1], bad], write_mode=mode)
+    assert len(rows_of(schema, "customer")) == 7
