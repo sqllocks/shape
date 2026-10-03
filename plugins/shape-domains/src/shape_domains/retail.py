@@ -4,6 +4,7 @@ promotion names, 40,977 US ZIP locations)."""
 
 from __future__ import annotations
 
+import copy
 import json
 from functools import cache
 from importlib import resources
@@ -55,19 +56,21 @@ class RetailDomain:
     def definition(self, mode: str = "3nf") -> DomainDefinition:
         if mode not in _FILES:
             raise ValueError(f"retail has no {mode!r} mode (3nf, star)")
-        schema = _schema(mode)
+        # Copies: the cached documents are shared by every load in the process, so a caller that
+        # changes what it is given must not change the next load. Arrow tables are immutable.
+        schema = copy.deepcopy(_schema(mode))
         return DomainDefinition(
             schema=schema,
-            reference_data=_reference_data(),
+            reference_data=dict(_reference_data()),
             scale_presets={k: dict(v) for k, v in schema["generation"]["scales"].items()},
         )
 
     def star_map(self) -> dict[str, Any]:
         """How ``shape transform star`` reshapes this domain's tables into dimensions and facts."""
-        star: dict[str, Any] = _transforms()["star"]
+        star: dict[str, Any] = copy.deepcopy(_transforms()["star"])
         return star
 
     def cdm_entities(self) -> dict[str, str]:
         """Table name to CDM entity name, for ``shape transform cdm``."""
-        entities: dict[str, str] = _transforms()["cdm_entities"]
+        entities: dict[str, str] = dict(_transforms()["cdm_entities"])
         return entities
