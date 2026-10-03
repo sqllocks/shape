@@ -859,6 +859,12 @@ def _build_parser(plugin_commands=()):
         "generators (--no-smart)",
     )
     fd.add_argument("--explain", action="store_true", help="print the inference report")
+    mg = sub.add_parser(
+        "migrate",
+        help="write a migrated copy of a persisted file (never in place; keeps the original)",
+        add_help=False,
+    )
+    mg.add_argument("rest", nargs=argparse.REMAINDER)
     kg = sub.add_parser("keygen", help="generate an Ed25519 signing key pair")
     kg.add_argument(
         "prefix",
@@ -1149,6 +1155,10 @@ def _dispatch(argv):
     if argv[:1] in (["--version"], ["-V"]):
         print(f"shape {_version()}")
         return 0
+    if argv[:1] == ["migrate"]:
+        from shape.cli import migrate as migrate_cli
+
+        return migrate_cli.main(argv[1:])
     if argv[:1] == ["profile"] and argv[1:2] in (["safe"], ["validate"]):
         from shape.cli import profiles
 
