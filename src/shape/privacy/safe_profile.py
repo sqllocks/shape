@@ -71,12 +71,28 @@ PII_PATTERN_FLOOR = 0.001
 WIDEN_BOUNDS = {"bounds_lo_quantile": "p0_5", "bounds_hi_quantile": "p99_5"}
 
 
+K_MINIMUM = 2
+
+
+def _check_k(k: object) -> None:
+    """A cohort of fewer than two rows hides nothing: ``unsafe_full_fidelity`` is the one explicit
+    opt-out, so a smaller ``k`` is an error rather than a silent switch-off."""
+    if k is not None and (not isinstance(k, int) or isinstance(k, bool) or k < K_MINIMUM):
+        raise ValueError(
+            f"k must be an integer of at least {K_MINIMUM}, got {k!r} "
+            "(use unsafe_full_fidelity to turn the disclosure controls off)"
+        )
+
+
 @dataclass(frozen=True)
 class ColumnConfig:
     """Per-column overrides: an explicit ``k`` wins over the ``sensitive`` flag."""
 
     k: int | None = None
     sensitive: bool = False
+
+    def __post_init__(self) -> None:
+        _check_k(self.k)
 
 
 @dataclass(frozen=True)
@@ -92,6 +108,9 @@ class SafeConfig:
     bounds_lo_quantile: str = "p1"
     bounds_hi_quantile: str = "p99"
     unsafe_full_fidelity: bool = False
+
+    def __post_init__(self) -> None:
+        _check_k(self.k)
 
     def column_k(self, column: str | None) -> int:
         """Effective ``k``; the most specific setting wins.
