@@ -70,6 +70,11 @@ class Dataset:
     @classmethod
     def from_rows(cls, name: str, rows: Sequence[Any]) -> Dataset:
         """A dataset from a JSON-style list: strings, or dicts (the first dict names the fields)."""
+        if isinstance(rows, str | bytes | Mapping) or not isinstance(rows, Sequence):
+            raise ValueError(
+                f"reference dataset {name!r} must be a list of strings or a list of objects, "
+                f"not a {type(rows).__name__}"
+            )
         if rows and all(isinstance(r, Mapping) for r in rows):
             fields = tuple(str(k) for k in rows[0])
             cols = {f: _arrow_column([r.get(f) for r in rows]) for f in fields}
@@ -106,6 +111,11 @@ def register_dataset(name: str, data: Iterable[Any] | pa.Table | Dataset) -> Non
         ds = data
     elif isinstance(data, pa.Table):
         ds = Dataset.from_table(name, data)
+    elif isinstance(data, str | bytes | Mapping):
+        raise ValueError(
+            f"reference dataset {name!r} must be a list of strings or a list of objects, "
+            f"not a {type(data).__name__}"
+        )
     else:
         ds = Dataset.from_rows(name, list(data))
     with _lock:
@@ -146,7 +156,10 @@ def _from_file(name: str, path: Path) -> Dataset:
         hit = _file_cache.get(key)
     if hit is not None:
         return hit
-    ds = Dataset.from_rows(name, json.loads(path.read_text(encoding="utf-8")))
+    try:
+        ds = Dataset.from_rows(name, json.loads(path.read_text(encoding="utf-8")))
+    except ValueError as exc:  # JSONDecodeError is one
+        raise ValueError(f"reference file {path}: {exc}") from None
     with _lock:
         _file_cache[key] = ds
     return ds
