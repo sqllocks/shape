@@ -2,7 +2,9 @@
 
 ``book.xlsx`` is a dataset with one table per visible sheet; ``book.xlsx#Sheet`` is that one sheet
 (a hidden sheet is read only when it is named this way, or with ``include_hidden``). The first
-non-empty row of a sheet is its header.
+non-empty row of a sheet is its header. Rows after the last row that holds a value are not data
+(a format alone extends Excel's used range) and are dropped; a sheet that declares a range of
+more than 100 million cells is refused with a message that says how to clear it.
 
 Cell types are kept: a cell stored as text stays text (so a ZIP code, an NDC or a member id keeps
 its leading zeros), numbers, dates, booleans and blanks come through as their Excel types, and a
@@ -160,6 +162,21 @@ def _refuse_zip_bomb(p: Path) -> None:
                 f"{p.name} is refused: {info.filename} inflates from {info.compress_size:,} to "
                 f"{info.file_size:,} bytes, which is not a spreadsheet"
             )
+
+
+MAX_SHEET_CELLS = 100_000_000  # a declared range larger than this is refused (rows x columns)
+
+
+def _refuse_huge_range(ws: Any, sheet: str) -> None:
+    """A sheet is read row by row over the range it declares, so a stray or formatted cell at
+    the far corner (``A1:XFD1048576`` is 17 billion cells) would run for hours."""
+    rows, cols = ws.max_row, ws.max_column
+    if rows and cols and rows * cols > MAX_SHEET_CELLS:
+        raise WorkbookError(
+            f"sheet {sheet!r} declares the range {ws.calculate_dimension()} "
+            f"({rows * cols:,} cells), which is too large to read: clear the unused rows and "
+            "columns after the data (select them, Clear All) and save a copy"
+        )
 
 
 @dataclass(frozen=True)
@@ -590,6 +607,9 @@ def _read_ws(
     header: list[Any] | None = None
     header_row = 0
     rows: list[list[Any]] = []
+    holds_error: list[bool] = []  # per record: it has an error cell (an error is data)
+    if block is None:
+        _refuse_huge_range(ws, sheet)
     col0 = block.min_col - 1 if block else 0
     bounds: dict[str, int] = {}
     if block:
@@ -609,13 +629,22 @@ def _read_ws(
                 header.pop()
             continue
         record: list[Any] = []
+        has_error = False
         for ci, c in enumerate(row):
             if c.data_type == "e":
                 errors.setdefault(ci, []).append((r, str(c.value)))
                 record.append(None)
+                has_error = True
             else:
                 record.append(None if _is_blank(c.value) else c.value)
         rows.append(record)
+        holds_error.append(has_error)
+    if block is None:
+        # cells that only carry a format extend a sheet's used range: blank rows after the last
+        # row with a value are not data (an explicit table or named range keeps its rows)
+        while rows and not holds_error[-1] and all(v is None for v in rows[-1]):
+            rows.pop()
+            holds_error.pop()
     width = len(header) if header is not None else 0
     for record in rows:  # data beyond the header's width is kept under a generated name
         while len(record) > width and record[-1] is None:
