@@ -224,3 +224,31 @@ def test_162_a_retry_after_a_failed_duplicate_resends_only_what_failed():
     sink.close()
     assert inner.failed
     assert Counter(inner.keys) == {seq: 2 for seq in range(6)}  # each event and one copy
+
+
+def test_163_checkpoint_counters_cannot_overwrite_other_attributes(tmp_path):
+    import pyarrow as pa
+
+    from shape.streaming import GlobalProfiler, KeyedSketches, StreamConsumer
+    from shape.streaming.checkpoint import CheckpointError, FileCheckpointStore
+    from shape.streaming.consumer import CHECKPOINT_FORMAT
+
+    schema = pa.schema([("v", pa.int64())])
+    store = FileCheckpointStore(tmp_path / "ck.json")
+    store.save_document(
+        {
+            "format": CHECKPOINT_FORMAT,
+            "uri": "mem://x",
+            "offset": None,
+            "positions": {},
+            "counters": {"profiler": 1},
+            "profiler": GlobalProfiler(schema).snapshot(),
+        }
+    )
+    with pytest.raises(CheckpointError, match="profiler"):
+        StreamConsumer(object(), "mem://x", GlobalProfiler(schema), store)
+
+    snap = KeyedSketches(4).snapshot()
+    snap["counters"]["max_keys"] = 1
+    with pytest.raises(ValueError, match="max_keys"):
+        KeyedSketches.restore(snap)
