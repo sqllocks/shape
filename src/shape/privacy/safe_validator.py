@@ -171,8 +171,16 @@ class SafeProfileValidator:
 
     def _check_row_counts(self, data: Any, result: ValidationResult) -> None:
         """Every table must carry a positive integer ``row_count``, or its safety is unknown."""
-        tables = data.get("tables") if isinstance(data, dict) else None
+        if not (isinstance(data, dict) and "tables" in data):
+            return
+        tables = data["tables"]
         if not isinstance(tables, dict):
+            # fail closed (#398): a list or scalar would otherwise skip every row_count check
+            result.add(
+                "row-count-missing",
+                "$.tables",
+                f"tables is not an object ({type(tables).__name__}); row_count undeterminable",
+            )
             return
         for tname, tnode in tables.items():
             if not isinstance(tnode, dict):
