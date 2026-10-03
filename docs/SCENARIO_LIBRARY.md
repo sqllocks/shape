@@ -40,9 +40,10 @@ The library index, `library/index.json` in the package, holds a one-paragraph de
 | `smoke` | `clean_baseline`, `nulls_injected`, `duplicate_rows`, `orphaned_foreign_keys`, `schema_add_column` |
 | `schema-evolution` | the five `schema_*` scenarios |
 
-`smoke` takes a couple of seconds at the `small` scale; the main CI job runs it. The full library
-runs nightly: `shape suite run` once per suite, or `pytest` with the plugin's marker
-(`docs/TESTING_WITH_SHAPE.md`).
+`smoke` is held to under 60 seconds at the `small` scale (a test enforces it), so it can run on
+every CI run; run the
+full library on a schedule (`shape suite run smoke` and `shape suite run schema-evolution`, or
+`pytest` with the plugin's marker, `docs/TESTING_WITH_SHAPE.md`).
 
 `shape suite run NAME|FILE [--scale small] [--seed N] [-o DIR] [--json]` runs every scenario of the
 suite, compares each outcome with its key and prints one line per scenario; a scenario that missed
