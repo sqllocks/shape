@@ -63,3 +63,30 @@ def test_state_transitions_keep_the_column_type(values, transitions, moved):
     status = d.updates["t"].sort_by("t_id")["status"]
     assert status.type == t["status"].type
     assert status.to_pylist() == moved
+
+
+def test_an_as_of_with_an_offset_is_stamped_in_utc():
+    # 190: the offset was dropped: 12:00+05:00 was stamped 12:00, the default now() is UTC.
+    import datetime as dt
+
+    t = pa.table({"t_id": pa.array([1, 2, 3])})
+    as_of = dt.datetime(2026, 1, 1, 12, tzinfo=dt.timezone(dt.timedelta(hours=5)))
+    d = ContinueEngine().continue_from(
+        {"t": t}, config=ContinueConfig(seed=1, insert_count=2, as_of=as_of)
+    )
+    stamps = set(d.inserts["t"]["_shape_delta_timestamp"].to_pylist())
+    assert stamps == {dt.datetime(2026, 1, 1, 7)}
+
+
+def test_a_reused_time_travel_engine_gives_the_same_output():
+    # 190: _high_water persisted between runs: last keys [106..110], then [116..120].
+    from shape.generation.incremental import TimeTravelConfig, TimeTravelEngine
+
+    t = pa.table({"t_id": pa.array(range(1, 101)), "v": pa.array([1.0] * 100)})
+    engine = TimeTravelEngine()
+    first = engine.generate_from({"t": t}, TimeTravelConfig(months=2, seed=3))
+    second = engine.generate_from({"t": t}, TimeTravelConfig(months=2, seed=3))
+    again = TimeTravelEngine().generate_from({"t": t}, TimeTravelConfig(months=2, seed=3))
+    for a, b, c in zip(first.snapshots, second.snapshots, again.snapshots, strict=True):
+        assert a.tables["t"].equals(b.tables["t"])
+        assert a.tables["t"].equals(c.tables["t"])
