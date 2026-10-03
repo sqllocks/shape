@@ -247,7 +247,7 @@ class ProfileRegistry:
                 "tags": _decode_tags(meta.get("tags")),
                 "source_rows": int(doc["tables"][table].get("row_count", 0)),
                 "form": "safe",
-                "path": str(path.relative_to(self.root)),
+                "path": path.relative_to(self.root).as_posix(),
             }
         prof = shape.load(path)  # verifies the content id
         meta = self._manifest(path).get("registry") or {}
@@ -259,7 +259,7 @@ class ProfileRegistry:
             "description": str(meta.get("description", "")),
             "tags": [str(t) for t in meta.get("tags", [])],
             "source_rows": int(data.get("row_count", 0)),
-            "path": str(path.relative_to(self.root)),
+            "path": path.relative_to(self.root).as_posix(),
         }
 
     # -- CRUD -----------------------------------------------------------------
