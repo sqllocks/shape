@@ -71,7 +71,9 @@ def describe(exc: BaseException) -> str:
 
 def fail(exc: BaseException) -> int:
     """Print ``exc`` as an expected error; returns the exit code."""
-    print(f"shape: error: {describe(exc)}", file=sys.stderr)
+    from shape.security.redact import redact_text
+
+    print(f"shape: error: {redact_text(describe(exc))}", file=sys.stderr)
     return EXIT_INPUT_ERROR
 
 

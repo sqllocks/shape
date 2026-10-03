@@ -1,0 +1,35 @@
+{
+  "channel": "identity",
+  "format": 1,
+  "result": {
+    "value": {
+      "token_issued": true
+    }
+  },
+  "scenario": "auth_device_code",
+  "source": "in-repo fake service",
+  "steps": [
+    {
+      "request": {
+        "created_with": {
+          "tenant_id": "11111111-2222-3333-4444-555555555555"
+        },
+        "credential": "DeviceCodeCredential"
+      },
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "request": {
+        "credential": "DeviceCodeCredential",
+        "get_token": [
+          "https://database.windows.net/.default"
+        ]
+      },
+      "response": {
+        "ok": true
+      }
+    }
+  ]
+}

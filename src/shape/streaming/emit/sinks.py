@@ -170,6 +170,7 @@ def open_sink(
     envelope: str = "flat",
     resuming: bool = False,
     choices: str = "console, file, or the URI of an emitter plugin (kafka://, eventhubs://, ...)",
+    **emitter_options: Any,
 ) -> EventSink:
     """The sink a name or URI stands for: ``console``, ``file`` (JSON lines in ``output``), or
     the URI of a ``shape.emitters`` plugin (``kafka://``, ``eventhubs://``, ...). Shared by
@@ -189,5 +190,7 @@ def open_sink(
     for name in host.names("shape.emitters"):
         emitter = host.try_get("shape.emitters", name)
         if emitter is not None and scheme and scheme in getattr(emitter, "schemes", ()):
-            return EmitterSink(emitter, sink, envelope=envelope, resuming=resuming)
+            return EmitterSink(
+                emitter, sink, envelope=envelope, resuming=resuming, **emitter_options
+            )
     raise ShapeError(f"unknown sink {sink!r}: {choices}")

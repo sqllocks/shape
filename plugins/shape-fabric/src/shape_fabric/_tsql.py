@@ -44,7 +44,9 @@ _SECRET_VALUE = re.compile(
 def redact(text: str) -> str:
     """``text`` (an error message, a connection string) with passwords and tokens hidden,
     wherever a ``PWD=...`` appears, also inside a longer sentence."""
-    return _SECRET_VALUE.sub(r"\1\2***", redact_connection_string(text))
+    from shape.security.redact import redact_text
+
+    return redact_text(_SECRET_VALUE.sub(r"\1\2***", redact_connection_string(text)))
 
 
 def ident(name: str) -> str:

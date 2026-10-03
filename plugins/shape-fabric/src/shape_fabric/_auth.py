@@ -90,4 +90,8 @@ def default_credential() -> Any:
 
 
 def _brief(exc: BaseException) -> str:
-    return " ".join(str(exc).split())[:300]
+    """What went wrong, short, with anything that looks like a secret hidden (a sign-in library
+    may echo what it was given in its message)."""
+    from shape.security.redact import redact_text
+
+    return redact_text(" ".join(str(exc).split()))[:300]

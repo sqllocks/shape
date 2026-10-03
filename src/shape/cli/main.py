@@ -301,9 +301,22 @@ def _cmd_profile(a):
 
     if not a.output:
         raise ValueError("profile needs -o OUT.shape")
-    prof = shape.profile(
-        _profile_source(a), name=_profile_name(a), version=a.delta_version, as_of=a.as_of
-    )
+    from shape.cli import auth
+
+    settings = auth.settings_from_args(a)
+    if settings and "://" not in a.src:
+        raise ValueError("--auth is for a source in the cloud (onelake://, abfss://, ...)")
+    if settings:
+        from shape.profile.reference.sources import source_options
+
+        with source_options(credential=auth.make_credential(settings)):
+            prof = shape.profile(
+                _profile_source(a), name=_profile_name(a), version=a.delta_version, as_of=a.as_of
+            )
+    else:
+        prof = shape.profile(
+            _profile_source(a), name=_profile_name(a), version=a.delta_version, as_of=a.as_of
+        )
     _warn_empty(a, prof)
     content_id = shape.save(prof, a.output)
     key_id = _sign_output(a, a.output)
@@ -812,6 +825,9 @@ def _build_parser(plugin_commands=()):
     )
     pr.add_argument("--html", metavar="REPORT.html")
     pr.add_argument("--json", metavar="SUMMARY.json")
+    from shape.cli.auth import add_arguments as add_auth_arguments
+
+    add_auth_arguments(pr, connection_string=False)
     sp = sub.add_parser(
         "stream-profile",
         help="profile a Kafka topic or an Event Hubs hub (bounded mode, windows, checkpoints)",
