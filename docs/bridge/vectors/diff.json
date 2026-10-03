@@ -1,5 +1,5 @@
 {
-  "api_version": "1.0",
+  "api_version": "1.1",
   "cases": [
     {
       "name": "drift",
@@ -13,7 +13,7 @@
         "id": "drift"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.1",
         "command": "diff",
         "id": "drift",
         "ok": true,
@@ -109,7 +109,7 @@
         "id": "no-drift"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.1",
         "command": "diff",
         "id": "no-drift",
         "ok": true,
@@ -142,7 +142,7 @@
         "id": "missing-profile"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.1",
         "command": "diff",
         "error": {
           "code": "input.not_found",
@@ -153,6 +153,113 @@
         "id": "missing-profile",
         "ok": false,
         "warnings": []
+      }
+    },
+    {
+      "name": "project-policy",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "after": "${DIR}/b.shape",
+          "before": "${DIR}/a.shape",
+          "project": "${DIR}/shape.yml"
+        },
+        "command": "diff",
+        "id": "project-policy"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "diff",
+        "id": "project-policy",
+        "ok": true,
+        "result": {
+          "change_count": 2,
+          "changes": [
+            {
+              "baseline": 100.625,
+              "column": "amount",
+              "current": 150.625,
+              "kind": "mean_shift",
+              "owner": "finance@example.com",
+              "score": 0.7235,
+              "severity": "medium"
+            },
+            {
+              "baseline": {
+                "p05": 69.85,
+                "p25": 85.75,
+                "p50": 99.5,
+                "p75": 114.25,
+                "p95": 125.8
+              },
+              "column": "amount",
+              "current": {
+                "p05": 119.85,
+                "p25": 135.75,
+                "p50": 149.5,
+                "p75": 164.25,
+                "p95": 175.8
+              },
+              "kind": "distribution_shift",
+              "owner": "finance@example.com",
+              "score": 0.8616,
+              "severity": "medium"
+            }
+          ],
+          "drifted": true,
+          "project": {
+            "file": "${DIR}/shape.yml",
+            "format": "shape-project",
+            "source": "orders",
+            "version": 1
+          }
+        },
+        "warnings": [
+          {
+            "code": "artifact_not_verified",
+            "message": "${DIR}/a.shape is not signed: its origin is not verified (check it with --verify PUBKEY)"
+          },
+          {
+            "code": "artifact_not_verified",
+            "message": "${DIR}/b.shape is not signed: its origin is not verified (check it with --verify PUBKEY)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "unknown-source",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "after": "${DIR}/b.shape",
+          "before": "${DIR}/a.shape",
+          "project": "${DIR}/shape.yml",
+          "source": "ghost"
+        },
+        "command": "diff",
+        "id": "unknown-source"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "diff",
+        "error": {
+          "code": "input.unknown_source",
+          "group": "input",
+          "hint": "run `project_show` for the sources",
+          "message": "no source 'ghost' in ${DIR}/shape.yml (sources: orders)"
+        },
+        "id": "unknown-source",
+        "ok": false,
+        "warnings": [
+          {
+            "code": "artifact_not_verified",
+            "message": "${DIR}/a.shape is not signed: its origin is not verified (check it with --verify PUBKEY)"
+          },
+          {
+            "code": "artifact_not_verified",
+            "message": "${DIR}/b.shape is not signed: its origin is not verified (check it with --verify PUBKEY)"
+          }
+        ]
       }
     }
   ],

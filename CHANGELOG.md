@@ -5,6 +5,26 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Bridge API 1.1 (`docs/BRIDGE.md`, W7-04): the JSON bridge now reaches the workflows the command
+  line has. New commands: `proposals_propose`, `proposals_list`, `proposals_decide` (proposals and
+  decision files), `project_validate`, `project_show` and the arguments `project` and `source` on
+  `profile`, `diff`, `check` and `verify` (the `shape.yml` project file; the bridge never looks for
+  one on its own), `design` and `design_from_data` (schema design, read-only), `format_schema` (the
+  JSON Schema of each format Shape reads), `profile_show` (a stored `.shape` profile without
+  profiling again), `contract_validate` and `safe_scan` (the leak scanner; a finding's message never
+  holds the value it found). `verify` gains `source` (the memorization and utility gates, as
+  `shape verify --source`) and `details` on every gate (counts, rates, distances and scores, never a
+  data value). Request schemas annotate every path argument (`x-path`: `read` or `write`) and
+  `domain` (`x-name-or-path`); `index.json` lists each command's `effects` (`reads_files`,
+  `writes_files`, `cancels`, `network`), the version that added it and each argument (`since`), and
+  every warning code. New error codes: `input.unknown_proposal`, `input.unknown_source`,
+  `input.unknown_format`. A request that declares `api_version` `1.0` is answered exactly as 1.0
+  answered it (a 1.1 command is `usage.unknown_command`, a 1.1 argument `usage.unknown_argument`,
+  and no 1.1 field is added); the 1.0 schemas and vectors are frozen in `docs/bridge/schema/1.0/` and
+  `docs/bridge/vectors/1.0/` and `tests/bridge/test_compat_1_0.py` replays them against the 1.1
+  bridge. The job file `shape-bridge-job` and the vector files `shape-bridge-vectors` stay at
+  version 1.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
@@ -78,6 +98,15 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `docs/bridge/schema/` (`shape bridge schema --out|--check`) with test vectors in
   `docs/bridge/vectors/`; a compatibility test per command keeps them from changing silently.
   Harness: `benchmarks/vs_spindle/bridge_1to1/`.
+- `shape.yml` project file and `shape init` (`docs/PROJECT.md`): named sources, a baseline per
+  source (previous run, same weekday, rolling window, month end or a pinned artifact, resolved
+  against the registry), drift thresholds and ignore lists per column, gates with `observe` or
+  `enforce` modes, and column owners and annotations. Versioned (`format`, integer `version`,
+  JSON Schema `shape-project-v1.schema.json`, a frozen version 1 file in the tests).
+  `shape profile`, `diff`, `check` and `verify` read it when present and every flag overrides it;
+  `shape init` scaffolds `shape.yml`, folders, `.gitattributes` and an example CI workflow;
+  `shape project validate` reports every problem with its key path. PyYAML stays an optional
+  extra (`yaml`).
 - `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
   the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
   clearing cover every month of a multi-month table. `duration_hours` still overrides it

@@ -2,17 +2,30 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": true,
   "properties": {
+    "enforced_passed": {
+      "type": "boolean"
+    },
     "gates": {
       "anyOf": [
         {
           "items": {
             "additionalProperties": true,
             "properties": {
+              "details": {
+                "additionalProperties": {},
+                "type": "object"
+              },
               "errors": {
                 "items": {
                   "type": "string"
                 },
                 "type": "array"
+              },
+              "mode": {
+                "enum": [
+                  "observe",
+                  "enforce"
+                ]
               },
               "name": {
                 "type": "string"
@@ -65,6 +78,33 @@
     "passed": {
       "type": "boolean"
     },
+    "project": {
+      "additionalProperties": true,
+      "properties": {
+        "baseline": {
+          "additionalProperties": {},
+          "type": "object"
+        },
+        "file": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "file",
+        "format",
+        "version"
+      ],
+      "type": "object"
+    },
     "row_counts": {
       "additionalProperties": {
         "type": "integer"
@@ -82,5 +122,6 @@
   ],
   "title": "verify result",
   "type": "object",
-  "x-api-version": "1.0"
+  "x-api-version": "1.1",
+  "x-since": "1.0"
 }

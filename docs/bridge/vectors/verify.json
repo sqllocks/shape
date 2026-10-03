@@ -1,5 +1,5 @@
 {
-  "api_version": "1.0",
+  "api_version": "1.1",
   "cases": [
     {
       "name": "csv",
@@ -12,7 +12,7 @@
         "id": "csv"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.1",
         "command": "verify",
         "id": "csv",
         "ok": true,
@@ -38,7 +38,7 @@
         "id": "missing-data"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.1",
         "command": "verify",
         "error": {
           "code": "input.not_found",
@@ -47,6 +47,279 @@
           "message": "Path not found: ${DIR}/missing.csv"
         },
         "id": "missing-data",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "observed-gate",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "config": "${DIR}/ranges.json",
+          "path": "orders",
+          "project": "${DIR}/shape.yml"
+        },
+        "command": "verify",
+        "id": "observed-gate"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "verify",
+        "id": "observed-gate",
+        "ok": true,
+        "result": {
+          "enforced_passed": true,
+          "gates": [
+            {
+              "details": {
+                "a.amount": {
+                  "above_max": 40
+                }
+              },
+              "errors": [
+                "a.amount: 40 values above maximum 50 (actual max: 144.0)"
+              ],
+              "mode": "observe",
+              "name": "range_constraint",
+              "passed": false,
+              "warnings": []
+            }
+          ],
+          "passed": false,
+          "project": {
+            "file": "${DIR}/shape.yml",
+            "format": "shape-project",
+            "source": "orders",
+            "version": 1
+          },
+          "row_counts": {
+            "a": 40
+          },
+          "statistical": false
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "bad-project",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "path": "${DIR}/a.csv",
+          "project": "${DIR}/none.yml"
+        },
+        "command": "verify",
+        "id": "bad-project"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "verify",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "file not found: ${DIR}/none.yml"
+        },
+        "id": "bad-project",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "memorization-fails",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "config": "${DIR}/memo.json",
+          "path": "${DIR}/people_copy",
+          "source": "${DIR}/people_real"
+        },
+        "command": "verify",
+        "id": "memorization-fails"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "verify",
+        "id": "memorization-fails",
+        "ok": true,
+        "result": {
+          "gates": [
+            {
+              "details": {
+                "fail_at": "CONFIDENTIAL",
+                "min_nn_distance": null,
+                "tables": {
+                  "people": {
+                    "columns": [
+                      "email",
+                      "name"
+                    ],
+                    "exact_match_rate": 1.0,
+                    "nn_distance": {
+                      "columns": [
+                        "age"
+                      ],
+                      "median": 0.0,
+                      "min": 0.0,
+                      "p05": 0.0,
+                      "rows_checked": 20
+                    },
+                    "reproduced_row_indices": [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      5,
+                      6,
+                      7,
+                      8,
+                      9,
+                      10,
+                      11,
+                      12,
+                      13,
+                      14,
+                      15,
+                      16,
+                      17,
+                      18,
+                      19
+                    ],
+                    "reproduced_rows": 20,
+                    "restricted": true,
+                    "rows": 20,
+                    "source_rows": 40
+                  }
+                }
+              },
+              "errors": [
+                "people: 20 of 20 generated rows reproduce a source row on the CONFIDENTIAL+ columns [email, name] (rows 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ...)"
+              ],
+              "name": "memorization",
+              "passed": false,
+              "warnings": []
+            }
+          ],
+          "passed": false,
+          "row_counts": {
+            "people": 20
+          },
+          "statistical": false
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "memorization-passes",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "config": "${DIR}/memo.json",
+          "path": "${DIR}/people_new",
+          "source": "${DIR}/people_real"
+        },
+        "command": "verify",
+        "id": "memorization-passes"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "verify",
+        "id": "memorization-passes",
+        "ok": true,
+        "result": {
+          "gates": [
+            {
+              "details": {
+                "fail_at": "CONFIDENTIAL",
+                "min_nn_distance": null,
+                "tables": {
+                  "people": {
+                    "columns": [
+                      "email",
+                      "name"
+                    ],
+                    "exact_match_rate": 0.0,
+                    "nn_distance": {
+                      "columns": [
+                        "age"
+                      ],
+                      "median": 0.0,
+                      "min": 0.0,
+                      "p05": 0.0,
+                      "rows_checked": 40
+                    },
+                    "reproduced_row_indices": [],
+                    "reproduced_rows": 0,
+                    "restricted": true,
+                    "rows": 40,
+                    "source_rows": 40
+                  }
+                }
+              },
+              "errors": [],
+              "name": "memorization",
+              "passed": true,
+              "warnings": []
+            }
+          ],
+          "passed": true,
+          "row_counts": {
+            "people": 40
+          },
+          "statistical": false
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "needs-the-source",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "config": "${DIR}/memo.json",
+          "path": "${DIR}/people_new"
+        },
+        "command": "verify",
+        "id": "needs-the-source"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "verify",
+        "error": {
+          "code": "input.invalid_value",
+          "group": "input",
+          "hint": null,
+          "message": "the verify configuration asks for the memorization or utility gate, which compare with the source data: give --source"
+        },
+        "id": "needs-the-source",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "missing-source",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "config": "${DIR}/memo.json",
+          "path": "${DIR}/people_new",
+          "source": "${DIR}/none"
+        },
+        "command": "verify",
+        "id": "missing-source"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "verify",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "Path not found: ${DIR}/none"
+        },
+        "id": "missing-source",
         "ok": false,
         "warnings": []
       }

@@ -1,0 +1,58 @@
+{
+  "api_version": "1.0",
+  "cases": [
+    {
+      "name": "csv",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "path": "${DIR}/a.csv"
+        },
+        "command": "verify",
+        "id": "csv"
+      },
+      "response": {
+        "api_version": "1.0",
+        "command": "verify",
+        "id": "csv",
+        "ok": true,
+        "result": {
+          "gates": [],
+          "passed": true,
+          "row_counts": {
+            "a": 40
+          },
+          "statistical": false
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "missing-data",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "path": "${DIR}/missing.csv"
+        },
+        "command": "verify",
+        "id": "missing-data"
+      },
+      "response": {
+        "api_version": "1.0",
+        "command": "verify",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "Path not found: ${DIR}/missing.csv"
+        },
+        "id": "missing-data",
+        "ok": false,
+        "warnings": []
+      }
+    }
+  ],
+  "command": "verify",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

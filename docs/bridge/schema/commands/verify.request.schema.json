@@ -11,7 +11,9 @@
       "properties": {
         "config": {
           "description": "a verify configuration file",
-          "type": "string"
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.0"
         },
         "format": {
           "description": "the data format (default: auto)",
@@ -21,23 +23,42 @@
             "parquet",
             "jsonl"
           ],
-          "type": "string"
+          "type": "string",
+          "x-since": "1.0"
         },
         "path": {
           "description": "a data file or a directory of data files",
-          "type": "string"
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.0"
+        },
+        "project": {
+          "description": "a shape.yml project file; its settings apply as for `--project FILE` (the bridge never looks for one on its own)",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.1"
         },
         "schema": {
           "description": "a gate schema (or a Shape model v2) file",
-          "type": "string"
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.0"
+        },
+        "source": {
+          "description": "the real data the data was made from (a file or directory, read with the same `format` as `path`): runs the memorization gate, and the utility gate when the configuration has a utility section",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.1"
         },
         "statistical": {
           "description": "add the KS and chi-squared tests",
-          "type": "boolean"
+          "type": "boolean",
+          "x-since": "1.0"
         },
         "strict": {
           "description": "a warning fails the run",
-          "type": "boolean"
+          "type": "boolean",
+          "x-since": "1.0"
         }
       },
       "required": [
@@ -62,18 +83,21 @@
         "async": {
           "default": false,
           "description": "for a command that can run as a job: return a job id at once and run in the background",
-          "type": "boolean"
+          "type": "boolean",
+          "x-since": "1.0"
         },
         "include_raw_values": {
           "default": false,
           "description": "return raw values (minimum, maximum, category values, offending values) even for classified columns; off by default",
-          "type": "boolean"
+          "type": "boolean",
+          "x-since": "1.0"
         },
         "max_inline_bytes": {
           "default": 262144,
           "description": "a result part larger than this is written to a file and returned as a reference",
           "minimum": 1024,
-          "type": "integer"
+          "type": "integer",
+          "x-since": "1.0"
         }
       },
       "type": "object"
@@ -85,5 +109,6 @@
   ],
   "title": "verify request",
   "type": "object",
-  "x-api-version": "1.0"
+  "x-api-version": "1.1",
+  "x-since": "1.0"
 }

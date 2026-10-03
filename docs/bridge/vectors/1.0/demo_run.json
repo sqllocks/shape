@@ -1,0 +1,59 @@
+{
+  "api_version": "1.0",
+  "cases": [
+    {
+      "name": "pending",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "dry_run": true,
+          "rows": 100,
+          "scenario": "retail"
+        },
+        "command": "demo_run",
+        "id": "pending"
+      },
+      "response": {
+        "api_version": "1.0",
+        "command": "demo_run",
+        "error": {
+          "code": "policy.capability_unavailable",
+          "group": "policy",
+          "hint": "use generate, scale_generate or stream for now",
+          "message": "demo_run needs `shape demo`, which this build does not include yet"
+        },
+        "id": "pending",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "bad-rows",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "rows": "100"
+        },
+        "command": "demo_run",
+        "id": "bad-rows"
+      },
+      "response": {
+        "api_version": "1.0",
+        "command": "demo_run",
+        "error": {
+          "code": "usage.invalid_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "argument 'rows' must be of type integer, got str"
+        },
+        "id": "bad-rows",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "demo_run",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

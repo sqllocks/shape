@@ -1,5 +1,5 @@
 {
-  "api_version": "1.0",
+  "api_version": "1.1",
   "cases": [
     {
       "name": "pending",
@@ -12,7 +12,7 @@
         "id": "pending"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.1",
         "command": "demo_status",
         "error": {
           "code": "policy.capability_unavailable",
@@ -34,7 +34,7 @@
         "id": "needs-a-session"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.1",
         "command": "demo_status",
         "error": {
           "code": "usage.missing_argument",

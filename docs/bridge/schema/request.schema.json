@@ -12,13 +12,17 @@
     "command": {
       "enum": [
         "check",
+        "contract_validate",
         "demo_cleanup",
         "demo_list",
         "demo_run",
         "demo_status",
         "describe",
+        "design",
+        "design_from_data",
         "diff",
         "dry_run",
+        "format_schema",
         "generate",
         "job_cancel",
         "job_list",
@@ -27,6 +31,13 @@
         "preview",
         "profile",
         "profile_info",
+        "profile_show",
+        "project_show",
+        "project_validate",
+        "proposals_decide",
+        "proposals_list",
+        "proposals_propose",
+        "safe_scan",
         "scale_cancel",
         "scale_generate",
         "scale_status",
@@ -51,18 +62,21 @@
         "async": {
           "default": false,
           "description": "for a command that can run as a job: return a job id at once and run in the background",
-          "type": "boolean"
+          "type": "boolean",
+          "x-since": "1.0"
         },
         "include_raw_values": {
           "default": false,
           "description": "return raw values (minimum, maximum, category values, offending values) even for classified columns; off by default",
-          "type": "boolean"
+          "type": "boolean",
+          "x-since": "1.0"
         },
         "max_inline_bytes": {
           "default": 262144,
           "description": "a result part larger than this is written to a file and returned as a reference",
           "minimum": 1024,
-          "type": "integer"
+          "type": "integer",
+          "x-since": "1.0"
         }
       },
       "type": "object"
@@ -73,5 +87,5 @@
   ],
   "title": "bridge request",
   "type": "object",
-  "x-api-version": "1.0"
+  "x-api-version": "1.1"
 }

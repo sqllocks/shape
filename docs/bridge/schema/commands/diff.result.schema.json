@@ -66,6 +66,33 @@
     },
     "drifted": {
       "type": "boolean"
+    },
+    "project": {
+      "additionalProperties": true,
+      "properties": {
+        "baseline": {
+          "additionalProperties": {},
+          "type": "object"
+        },
+        "file": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "file",
+        "format",
+        "version"
+      ],
+      "type": "object"
     }
   },
   "required": [
@@ -75,5 +102,6 @@
   ],
   "title": "diff result",
   "type": "object",
-  "x-api-version": "1.0"
+  "x-api-version": "1.1",
+  "x-since": "1.0"
 }
