@@ -180,3 +180,37 @@ def test_514_a_second_run_in_the_same_second_keeps_scale_and_seed(tmp_path, reta
     ]
     base = "20260102_030405_retail_xlarge_s7"
     assert ids == [base, f"{base}_x2", f"{base}_x3"]
+
+
+# ---- #515: a topic listed twice is an error ----------------------------------------------------
+
+STREAM_TOPICS = {
+    "pack_version": 1,
+    "id": "s",
+    "kind": "stream",
+    "domain": "retail",
+    "description": "",
+    "fabric_targets": {"x": 1},
+}
+
+
+def stream_pack(topics: list[dict], rate: float = 5.0):
+    streaming = {"cadence": {"rate_per_sec": rate}, "topics": topics}
+    return PackLoader().parse({**STREAM_TOPICS, "streaming": streaming})
+
+
+def test_515_a_topic_listed_twice_is_an_error_and_the_run_writes_nothing_twice(tmp_path, retail):
+    topic = {"name": "order", "event_type": "e", "payload_fields": ["order_id"]}
+    pack = stream_pack([topic, dict(topic)])
+    errors = PackValidator().validate(pack, retail).errors
+    assert any("listed twice" in e and "order_e.jsonl" in e for e in errors), errors
+    result = PackRunner().run(pack, retail, "small", 1, tmp_path / "out")
+    assert not result.is_success and result.events_emitted == 0
+
+
+def test_515_the_same_topic_with_another_event_type_is_fine(retail):
+    topics = [
+        {"name": "order", "event_type": "placed", "payload_fields": ["order_id"]},
+        {"name": "order", "event_type": "paid", "payload_fields": ["order_id"]},
+    ]
+    assert PackValidator().validate(stream_pack(topics), retail).is_valid
