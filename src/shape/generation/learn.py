@@ -28,6 +28,7 @@ import datetime as dt
 from collections.abc import Mapping
 from typing import Any
 
+from shape.generation.ddl_names import words
 from shape.generation.schema import GenSchema
 from shape.profile.reference.model import ColumnProfile, DatasetProfile, TableProfile
 
@@ -261,8 +262,12 @@ def guess_provider(column_name: str) -> str:
     lower = column_name.lower().strip()
     if lower in _FAKER_NAME_HINTS:
         return _FAKER_NAME_HINTS[lower]
+    # Hints match whole words (``home_city``, ``CustomerEmail``), never the end of a word:
+    # ``ethnicity`` is not a city, ``membership`` not an ip address.
+    parts = words(column_name)
+    joined = "_".join(parts)
     for hint, provider in _FAKER_NAME_HINTS.items():
-        if lower.endswith(f"_{hint}") or lower.endswith(hint):
+        if joined == hint or joined.endswith(f"_{hint}"):
             return provider
     for word, provider in (
         ("email", "email"),
@@ -274,9 +279,9 @@ def guess_provider(column_name: str) -> str:
         ("country", "country"),
         ("date", "date"),
     ):
-        if word in lower:
+        if any(w.startswith(word) for w in parts):  # a word that starts so (addr -> address)
             return provider
-    if "url" in lower or "link" in lower:
+    if any(w.startswith(("url", "link")) for w in parts):
         return "url"
     return "pystr"
 
