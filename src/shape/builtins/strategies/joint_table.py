@@ -6,7 +6,8 @@ value of the source to a mapping from a value of this column to its probability 
 ``values`` (a mapping from value to weight, drawn from when the source's value has no entry or is
 null: the column's own distribution). Weights of one source value are relative; a table may list
 only its likeliest values. Row addressed: one uniform per row from the column's own stream. Like
-``weighted_enum``, a column whose every value reads as a number is ``float64``, else a string.
+``weighted_enum``, a column whose every value reads as a number is ``float64``, else a string;
+``output_type: "string"`` keeps such labels as text (ZIP codes keep their leading zeros).
 """
 
 from __future__ import annotations
@@ -84,10 +85,13 @@ class ConditionalTable:
         if rest.any():
             draw(rest, fallback)
         out_labels = [k for k, _ in sorted(label_ix.items(), key=lambda kv: kv[1])]
+        text = pc.take(arrow_array(out_labels, type=pa.string()), arrow_array(picked))
+        if spec.get("output_type") == "string":  # labels such as ZIP codes: text, zeros and all
+            return text
         try:
             numbers = np.array([float(k) for k in out_labels], dtype=np.float64)
         except ValueError:
-            return pc.take(arrow_array(out_labels, type=pa.string()), arrow_array(picked))
+            return text
         return arrow_array(numbers[picked])
 
 

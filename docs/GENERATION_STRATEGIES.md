@@ -296,7 +296,9 @@ shares). Draws are row addressed like `record_sample`'s. See `docs/JOINT.md`.
 "values": {"A": 1, "B": 1}}`) draws a category given the value of another column of the same row
 (defined earlier). `table` maps each source value to the weights of this column's values; a source
 value without an entry, or a null, draws from `values`, the column's own distribution. `shape
-generate --from` writes it from a profile's conditional probability tables.
+generate --from` writes it from a profile's conditional probability tables. Labels that all read as
+numbers make a `float64` column, unless `output_type` is `"string"`, which keeps them as text (a
+ZIP code keeps its leading zero).
 
 ### `temporal`
 `{"pattern": "seasonal", "start": "2022-01-01", "end": "2025-12-31", "profiles": {...}}`.
