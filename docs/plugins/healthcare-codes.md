@@ -1,9 +1,9 @@
 # Healthcare code sets (`sqllocks-shape-healthcare-codes`)
 
-The API the healthcare payer domain (lane HC-domain, issue #45) builds on. Everything is
-importable from `shape_healthcare_codes`. Nothing reads the network at import or at lookup
-time: code sets are Arrow files built once by `shape healthcare-codes fetch` (free sets) or
-`shape healthcare-codes byo` (licensed sets you supply), and loaded from the data directory.
+The API a domain pack builds on. Everything is importable from `shape_healthcare_codes`.
+Nothing reads the network at import or at lookup time: code sets are Arrow files built once by
+`shape healthcare-codes fetch` (free sets) or `shape healthcare-codes byo` (licensed sets you
+supply), and loaded from the data directory.
 
 Licences, sources and releases: the plugin's `THIRD_PARTY_NOTICES.md` and
 `shape healthcare-codes notices`. Nothing licensed is shipped; only a starter subset of ICD-10-CM

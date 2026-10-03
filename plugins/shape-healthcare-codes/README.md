@@ -1,8 +1,8 @@
 # sqllocks-shape-healthcare-codes
 
 Shape plugin: healthcare reference code sets, validators and detectors. It is the code layer
-under the healthcare payer domain (issue #45): the domain asks it for codes that are real,
-valid on the date of service, and licensed for the way they are used.
+under a domain pack: the domain asks it for codes that are real, valid on the date of service,
+and licensed for the way they are used.
 
 * **Code sets**: ICD-10-CM, ICD-10-PCS, HCPCS Level II, FDA NDC, RxNorm (prescribable), CMS place
   of service, CMS-HCC mappings, AHRQ CCSR, and the international ICD-10 family, all behind one
