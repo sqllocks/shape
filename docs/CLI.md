@@ -100,6 +100,10 @@ the policy.
   job files). `shape bridge schema --out DIR` writes its JSON Schemas and `--check DIR` verifies a
   directory against them. See [`BRIDGE.md`](BRIDGE.md).
 
+- `shape resolve run FILE` finds duplicate entities in a CSV, Parquet or JSONL file and writes
+  golden records; `shape resolve synth FILE -o OUT` plants seeded duplicates and writes the true
+  clusters. See [RESOLVE.md](RESOLVE.md). Bad options or an unreadable file exit 2.
+
 ## `shape doctor`
 
 ```

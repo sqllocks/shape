@@ -313,6 +313,7 @@ source_modules = [
     "shape.relations",
     "shape.repro",
     "shape.report",
+    "shape.resolve",
     "shape.schemacheck",
     "shape.security",
     "shape.spec",

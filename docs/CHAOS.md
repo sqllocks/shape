@@ -78,7 +78,7 @@ applies to every table it fits; without a column, to the columns it picks itself
 
 | Kind | What it models | Column when not named | Options |
 |---|---|---|---|
-| `duplicates` | rows delivered twice (at-least-once delivery): copies are appended at the end | the table | |
+| `duplicates` | rows delivered twice (at-least-once delivery): copies are appended at the end | the table | `fuzz` (0 to 1, default none: the chance that a text, number or date cell of a copy is damaged, which makes near-duplicates; keys are left alone) |
 | `orphan_keys` | foreign keys that match no parent row | the table's foreign keys | |
 | `date_shift` | late-arriving or wrongly dated rows | every date and timestamp column | `days` (up to, default 7), `direction` (`both`, `late`, `early`) |
 | `negative_amounts` | sign flips of positive amounts | number columns that are not keys | |
@@ -103,6 +103,7 @@ corruptions, rows in and out per table). Every other line is one change (`record
 | `key` | the row's key (the schema's primary key, else the first column), so a check that reorders can still join |
 | `column`, `before`, `after` | the cell before and after (dates as ISO text); for `type_change` the type names |
 | `source_row` | duplicates: the row copied |
+| `fuzz` | duplicates with the `fuzz` option: the chance a cell of the copy was damaged (absent otherwise) |
 | `days`, `pii`, `rate` | the shift of a date, the PII kind, the null rate of that batch |
 
 The log is complete: a cell that is not in it is untouched. To score a data-quality check, compare
@@ -120,6 +121,13 @@ outcome = corrupt_tables(tables, [Corruption.parse("duplicates=0.02@order")], se
 outcome.tables, outcome.records           # the corrupted tables and the change records
 write_ground_truth("ground_truth.jsonl", outcome)
 ```
+
+**True duplicate clusters.** `duplicate_clusters(records)` returns, per table, the clusters of
+duplicates of one run: an original row with all its copies (a copy of a copy joins the same
+cluster), as sorted output row positions. It reads `outcome.records` or the records of a log read
+back with `read_ground_truth`, so a log file is enough to score a deduplication. Adding the
+`fuzz` option, or the clusters, does not change the tables or the log of a run that does not use
+`fuzz`. See [RESOLVE.md](RESOLVE.md) for scoring entity resolution against them.
 
 These corruptions are separate from the six categories: the categories keep their own scheduler
 and random order, and the targeted form has an exact rate and a log.
