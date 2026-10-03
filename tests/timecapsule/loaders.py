@@ -122,7 +122,7 @@ def _gsl(path: Path, corpus: Path, kind: str) -> Any:
 
     spec = GSLParser().parse(path)
     doc = dataclasses.asdict(spec)
-    for k in ("path", "_base_dir"):
+    for k in ("path", "_base_dir", "needs_release"):  # needs_release: added by W1-01, not content
         doc.pop(k, None)
     return doc
 
@@ -130,7 +130,9 @@ def _gsl(path: Path, corpus: Path, kind: str) -> Any:
 def _pack(path: Path, corpus: Path, kind: str) -> Any:
     from shape.scenario.loader import PackLoader
 
-    return dataclasses.asdict(PackLoader().load(path))
+    doc = dataclasses.asdict(PackLoader().load(path))
+    doc.pop("needs_release", None)  # added by W1-01 (bookkeeping, not content)
+    return doc
 
 
 def _registry_local(path: Path, corpus: Path, kind: str) -> Any:

@@ -30,6 +30,8 @@ from dataclasses import dataclass, field, fields
 from pathlib import Path
 from typing import Any
 
+from shape import compat
+
 from .cells import OTHER_BUCKET as OTHER_BUCKET
 from .cells import non_null_base, suppress_bins, suppress_weights
 
@@ -297,6 +299,8 @@ class SafeColumnProfile:
     temporal_histogram: dict[str, Any] | None = None
     # Cells withheld below the minimum cohort: folded categories plus zeroed histogram bins.
     cells_suppressed: int = 0
+    # Fields a newer release wrote that this one does not know: ignored, and written back as read.
+    extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
 
     @classmethod
     def from_column(
@@ -391,12 +395,14 @@ class SafeColumnProfile:
 
     def to_dict(self) -> dict[str, Any]:
         """Plain dict in a fixed key order, so the serialized artifact is byte-stable."""
-        return {f.name: getattr(self, f.name) for f in fields(self)}
+        out = {f.name: getattr(self, f.name) for f in fields(self) if f.name != "extra"}
+        return {**out, **{k: v for k, v in self.extra.items() if k not in out}}
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> SafeColumnProfile:
-        names = {f.name for f in fields(cls)}
-        return cls(**{k: v for k, v in data.items() if k in names})
+        names = {f.name for f in fields(cls)} - {"extra"}
+        known = {k: v for k, v in data.items() if k in names}
+        return cls(**known, extra={k: v for k, v in data.items() if k not in names})
 
 
 @dataclass
@@ -407,6 +413,7 @@ class SafeTableProfile:
     primary_key: list[str] = field(default_factory=list)
     detected_fks: dict[str, str] = field(default_factory=dict)
     correlation_matrix: dict[str, dict[str, float]] | None = None
+    extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
 
     @classmethod
     def from_table(cls, table: Mapping[str, Any], cfg: SafeConfig) -> SafeTableProfile:
@@ -423,8 +430,12 @@ class SafeTableProfile:
             correlation_matrix=table.get("correlation_matrix"),
         )
 
+    _KNOWN = frozenset(
+        {"name", "row_count", "columns", "primary_key", "detected_fks", "correlation_matrix"}
+    )
+
     def to_dict(self) -> dict[str, Any]:
-        return {
+        out: dict[str, Any] = {
             "name": self.name,
             "row_count": self.row_count,
             "columns": {n: c.to_dict() for n, c in self.columns.items()},
@@ -432,6 +443,7 @@ class SafeTableProfile:
             "detected_fks": dict(self.detected_fks),
             "correlation_matrix": self.correlation_matrix,
         }
+        return {**out, **{k: v for k, v in self.extra.items() if k not in out}}
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> SafeTableProfile:
@@ -442,6 +454,7 @@ class SafeTableProfile:
             primary_key=list(data.get("primary_key", [])),
             detected_fks=dict(data.get("detected_fks", {})),
             correlation_matrix=data.get("correlation_matrix"),
+            extra={k: v for k, v in data.items() if k not in cls._KNOWN},
         )
 
 
@@ -454,24 +467,35 @@ class SafeProfile:
     schema_version: int = SCHEMA_VERSION
     redaction_manifest: dict[str, Any] = field(default_factory=dict)
     unsafe: bool = False
+    # Fields a newer release wrote that this one does not know: ignored, and written back as read.
+    extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    _KNOWN = frozenset({"tables", "relationships", "redaction_manifest", "unsafe"})
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "schema_version": self.schema_version,
-            "unsafe": self.unsafe,
-            "tables": {n: t.to_dict() for n, t in self.tables.items()},
-            "relationships": self.relationships,
-            "redaction_manifest": self.redaction_manifest,
-        }
+        out = compat.stamp(
+            "safe-profile",
+            {
+                "unsafe": self.unsafe,
+                "tables": {n: t.to_dict() for n, t in self.tables.items()},
+                "relationships": self.relationships,
+                "redaction_manifest": self.redaction_manifest,
+            },
+            version=self.schema_version,
+        )
+        return {**out, **{k: v for k, v in self.extra.items() if k not in out}}
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> SafeProfile:
+    def from_dict(cls, data: Mapping[str, Any], source: object = "") -> SafeProfile:
+        version = compat.check_readable("safe-profile", data, source)
+        extra = compat.check_unknown("safe-profile", data, cls._KNOWN)
         return cls(
             tables={n: SafeTableProfile.from_dict(t) for n, t in data.get("tables", {}).items()},
             relationships=list(data.get("relationships", [])),
-            schema_version=data.get("schema_version", SCHEMA_VERSION),
+            schema_version=version,
             redaction_manifest=dict(data.get("redaction_manifest", {})),
             unsafe=bool(data.get("unsafe", False)),
+            extra={k: data[k] for k in extra},
         )
 
     def to_json(self) -> str:
@@ -487,10 +511,8 @@ class SafeProfile:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
         if not isinstance(data, dict) or "tables" not in data:
             raise ValueError(f"{path} is not a safe profile")
-        version = data.get("schema_version", SCHEMA_VERSION)
-        if not isinstance(version, int) or version > SCHEMA_VERSION:
-            raise ValueError(f"unsupported safe profile schema_version {version!r}")
-        return cls.from_dict(data)
+        compat.check_format("safe-profile", data)
+        return cls.from_dict(data, path)
 
 
 def _tables_of(profile: Mapping[str, Any]) -> tuple[dict[str, Any], list[Any]]:

@@ -106,6 +106,15 @@ def test_declared_version_rejects_malformed(doc: dict, problem: str) -> None:
         compat.declared_version(SAMPLE, doc)
 
 
+def test_disagreeing_keys_above_the_supported_version_are_a_newer_file() -> None:
+    """The highest claim decides: a file that says it is newer is refused as newer, never read
+    as the older version one of its keys names."""
+    with pytest.raises(UnsupportedVersionError, match="version 9"):
+        compat.check_readable(SAMPLE, {"version": 1, "schema_version": 9})
+    with pytest.raises(UnsupportedVersionError, match="version 9"):
+        compat.check_readable(SAMPLE, {"version": 9, "schema_version": 1})
+
+
 def test_a_kind_without_an_implicit_version_needs_one() -> None:
     strict = Kind(**{**SAMPLE.__dict__, "implicit_version": None})
     with pytest.raises(FormatError, match="declares no version"):

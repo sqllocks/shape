@@ -23,6 +23,8 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
+from shape import compat
+
 from .io import ArtifactSignatureError, read_artifact, write_container
 from .keys import Passphrase, PassphraseSource
 from .keys import load_private_key as _load_private_key
@@ -107,6 +109,13 @@ def verify_manifest_signature(
         raise ArtifactSignatureError("artifact is not signed")
     try:
         doc = json.loads(signature_member)
+    except (ValueError, RecursionError) as e:
+        raise ArtifactSignatureError(f"malformed signature: {type(e).__name__}") from e
+    if isinstance(doc, dict):
+        # a newer signature format is refused as such, naming the release that reads it
+        compat.check_format("signature", doc, error=ArtifactSignatureError)
+        compat.check_readable("signature", doc, error=ArtifactSignatureError)
+    try:
         if not isinstance(doc, dict) or doc.get("algorithm") != ALGORITHM:
             raise ValueError("unsupported signature algorithm")
         sig = base64.b64decode(str(doc["signature"]), validate=True)
@@ -145,11 +154,15 @@ def sign_artifact(
         manifest_bytes = src.read("manifest.json")
     sig = sign_ed25519(_message(manifest_bytes), private_key)
     member = json.dumps(
-        {
-            "algorithm": ALGORITHM,
-            "key_id": key_id(public_key),
-            "signature": base64.b64encode(sig).decode(),
-        },
+        compat.stamp(
+            "signature",
+            {
+                "algorithm": ALGORITHM,
+                "key_id": key_id(public_key),
+                "signature": base64.b64encode(sig).decode(),
+            },
+            aliases=False,
+        ),
         sort_keys=True,
         separators=(",", ":"),
     ).encode()

@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from shape import compat
 from shape.drift.engine import DEFAULT_THRESHOLDS as DRIFT_DEFAULTS
 from shape.drift.engine import diff_tables, resolve_policy, view_of_profile_column
 from shape.profile.reference.profile import Profile
@@ -74,7 +75,15 @@ def _load_contract(contract: dict[str, Any] | str | Path) -> dict[str, Any]:
 
 
 def _validate_contract(contract: dict[str, Any]) -> None:
-    unknown = set(contract) - _CONTRACT_KEYS
+    compat.check_format("contract", contract, error=ContractError)
+    compat.check_readable("contract", contract, error=ContractError)
+    unknown = {
+        k
+        for k in contract
+        if k not in _CONTRACT_KEYS
+        and k not in compat.BOOKKEEPING_KEYS
+        and not str(k).startswith("x_")
+    }
     if unknown:
         raise ContractError(f"unknown contract keys: {sorted(unknown)}")
     rc = contract.get("row_count", {})

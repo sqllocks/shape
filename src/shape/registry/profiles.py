@@ -32,9 +32,12 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
+from shape import compat
 from shape.errors import ShapeError
+from shape.registry.layout import open_layout
 
 INDEX = "_index.json"
+LAYOUT = "_layout.json"
 SUFFIX = ".shape"
 SAFE_SUFFIX = ".safe.json"
 _NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
@@ -92,6 +95,9 @@ class ProfileRegistry:
         self.root = Path(root) if root else default_root()
         self.root.mkdir(parents=True, exist_ok=True)
         self._real_root = self.root.resolve()
+        self.layout_version = open_layout(
+            self.root, LAYOUT, "profile-registry-layout", ProfileRegistryError
+        )
 
     # -- paths ----------------------------------------------------------------
 
@@ -154,14 +160,15 @@ class ProfileRegistry:
         ref = importlib.import_module("shape.profile.reference.profile")
 
         body = codec.dumps(table, sort_keys=False)
-        manifest = {
-            "format": ref.ARTIFACT_FORMAT,
-            "format_version": ref.ARTIFACT_FORMAT_VERSION,
-            "kind": ref.ARTIFACT_KIND,
-            "name": name,
-            "shape_content_id": hashlib.sha256(body).hexdigest(),
-            "registry": {"description": description, "tags": sorted(set(tags))},
-        }
+        manifest = compat.stamp(
+            "profile-artifact",
+            {
+                "kind": ref.ARTIFACT_KIND,
+                "name": name,
+                "shape_content_id": hashlib.sha256(body).hexdigest(),
+                "registry": {"description": description, "tags": sorted(set(tags))},
+            },
+        )
         path.parent.mkdir(parents=True, exist_ok=True)
         fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=".tmp-", suffix=SUFFIX)
         os.close(fd)

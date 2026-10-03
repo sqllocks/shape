@@ -15,6 +15,8 @@ MANIFEST_KEYS = {
     "run_id", "spec_hash", "pack_id", "domain", "scale", "seed", "engine_version", "outputs",
     "tables", "validation", "chaos", "timestamps", "workspace_id", "lakehouse_id", "sbom",
 }  # fmt: skip
+# the declaration every persisted file carries (docs/specs/STATE_AND_COMPATIBILITY.md)
+DECLARATION_KEYS = {"format", "version", "shape_version", "min_shape_version"}
 
 
 def run(tmp_path, retail, text, *, scale="fabric_demo", seed=42, name="p.yaml", out="out"):
@@ -49,7 +51,8 @@ def test_formats(tmp_path, retail, fmt, ext):
 def test_the_manifest_has_every_key_and_exact_per_table_paths(tmp_path, retail):
     result = run(tmp_path, retail, PACK.format(fmt="parquet"))
     manifest = manifest_of(result)
-    assert set(manifest) == MANIFEST_KEYS
+    assert set(manifest) == MANIFEST_KEYS | DECLARATION_KEYS
+    assert manifest["format"] == "shape-run-manifest" and manifest["version"] == 1
     assert (
         manifest["pack_id"] == "t" and manifest["scale"] == "fabric_demo" and manifest["seed"] == 42
     )

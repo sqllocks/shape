@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from typing import Any
 
+from shape import compat
 from shape.spec.view import (
     columns_of,
     distinct_bounds,
@@ -55,6 +56,7 @@ def evaluate_contract(
     equals the number of non-null rows; with a sketch estimate it fails only when even the
     estimate widened by its error bound is below that number (P14). The null rate of an empty
     table is 0 (P15)."""
+    compat.check_readable("contract", contract)
     t = table_of(model_of(shape), table)
     cols = columns_of(t)
     rows = int(t["rows"])

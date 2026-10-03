@@ -2,8 +2,10 @@
 
 The keys are ``run_id``, ``spec_hash``, ``pack_id``, ``domain``, ``scale``, ``seed``,
 ``engine_version``, ``outputs``, ``tables`` (``rows``, ``columns``, ``file_paths`` each),
-``validation``, ``chaos``, ``timestamps`` (``started``, ``finished``, ``elapsed_seconds``),
-``workspace_id``, ``lakehouse_id`` and ``sbom``. The run id is
+``validation``, ``chaos``, ``timestamps`` (``started`` and ``finished`` in UTC ISO 8601 with
+``Z``, ``elapsed_seconds``), ``workspace_id``, ``lakehouse_id`` and ``sbom``, then the
+declaration every persisted file carries (``format``, ``version``, ``shape_version``,
+``min_shape_version``; ``docs/specs/STATE_AND_COMPATIBILITY.md``). The run id is
 ``YYYYMMDD_HHMMSS_{domain}_{scale}_s{seed}``.
 """
 
@@ -17,8 +19,31 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from shape import compat
+
 SBOM_PACKAGES = ("sqllocks-shape", "pandas", "numpy", "faker", "pyarrow", "scipy")
 NOT_INSTALLED = "not installed"
+
+
+_KNOWN = frozenset(
+    {
+        "run_id",
+        "spec_hash",
+        "pack_id",
+        "domain",
+        "scale",
+        "seed",
+        "engine_version",
+        "outputs",
+        "tables",
+        "validation",
+        "chaos",
+        "timestamps",
+        "workspace_id",
+        "lakehouse_id",
+        "sbom",
+    }
+)
 
 
 @dataclass
@@ -40,6 +65,8 @@ class RunManifest:
     workspace_id: str = ""
     lakehouse_id: str = ""
     sbom: dict[str, str] = field(default_factory=dict)
+    # Fields a newer release wrote that this one does not know: ignored, and written back as read.
+    extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
 
     def summary(self) -> str:
         lines = [
@@ -61,6 +88,10 @@ class RunManifest:
         return "\n".join(lines)
 
     def to_dict(self) -> dict[str, Any]:
+        out = compat.stamp("run-manifest", self._body(), aliases=False)
+        return {**out, **{k: v for k, v in self.extra.items() if k not in out}}
+
+    def _body(self) -> dict[str, Any]:
         return {
             "run_id": self.run_id,
             "spec_hash": self.spec_hash,
@@ -102,7 +133,7 @@ class ManifestBuilder:
         from shape import __version__
 
         now = datetime.now(UTC)
-        self._started_iso = now.isoformat()
+        self._started_iso = compat.utc_iso(now)
         self._started = time.perf_counter()
         self._m = RunManifest(
             run_id=f"{now.strftime('%Y%m%d_%H%M%S')}_{domain_name}_{scale}_s{seed}",
@@ -138,7 +169,7 @@ class ManifestBuilder:
         m = self._m
         m.timestamps = {
             "started": self._started_iso,
-            "finished": datetime.now(UTC).isoformat(),
+            "finished": compat.utc_iso(),
             "elapsed_seconds": round(elapsed, 2),
         }
         m.workspace_id = self._workspace_id
@@ -149,7 +180,7 @@ class ManifestBuilder:
 
     @staticmethod
     def to_json(manifest: RunManifest) -> str:
-        return json.dumps(manifest.to_dict(), indent=2, default=str)
+        return json.dumps(manifest.to_dict(), indent=2, default=compat.json_default)
 
     @staticmethod
     def to_file(manifest: RunManifest, path: str | Path) -> None:
@@ -160,7 +191,13 @@ class ManifestBuilder:
     @staticmethod
     def from_file(path: str | Path) -> RunManifest:
         raw = json.loads(Path(path).read_text(encoding="utf-8"))
+        if not isinstance(raw, dict):
+            raise ValueError(f"{path} is not a run manifest")
+        compat.check_format("run-manifest", raw)
+        compat.check_readable("run-manifest", raw, path)
+        unknown = compat.check_unknown("run-manifest", raw, _KNOWN)
         return RunManifest(
+            extra={k: raw[k] for k in unknown},
             run_id=raw.get("run_id", ""),
             spec_hash=raw.get("spec_hash", ""),
             pack_id=raw.get("pack_id", ""),

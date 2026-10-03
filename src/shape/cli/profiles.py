@@ -17,9 +17,10 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+from shape import compat
+
 COMMANDS = ("export", "import", "list", "validate", "registry")
 EXPORT_FORMAT = "shape-profile"
-EXPORT_VERSION = 1
 
 
 def routes(argv: Sequence[str]) -> bool:
@@ -146,12 +147,9 @@ def _is_shape(path: str) -> bool:
 def export_document(prof: Any) -> dict[str, Any]:
     from shape.artifact import codec
 
-    return {
-        "format": EXPORT_FORMAT,
-        "format_version": EXPORT_VERSION,
-        "name": prof.name,
-        "profile": codec.encode(prof.to_dict()),
-    }
+    return compat.stamp(
+        "profile-export", {"name": prof.name, "profile": codec.encode(prof.to_dict())}
+    )
 
 
 def read_export(path: str) -> Any:
@@ -166,9 +164,7 @@ def read_export(path: str) -> Any:
         raise ValueError(f"{path} is not valid JSON: {e}") from e
     if not isinstance(doc, dict) or doc.get("format") != EXPORT_FORMAT:
         raise ValueError(f"{path} is not a Shape profile export (format {EXPORT_FORMAT!r})")
-    version = doc.get("format_version")
-    if not isinstance(version, int) or not 1 <= version <= EXPORT_VERSION:
-        raise ValueError(f"{path}: unsupported export version {version!r}")
+    compat.check_readable("profile-export", doc, path)
     body = codec.decode(doc.get("profile"))
     if not isinstance(body, dict):
         raise ValueError(f"{path}: the profile is not an object")

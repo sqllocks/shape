@@ -9,6 +9,7 @@ from functools import cache
 from importlib import resources
 from typing import Any
 
+from shape import compat
 from shape.schemacheck import validate as _validate_schema
 
 
@@ -24,15 +25,31 @@ class FieldContract:
 
 @dataclass(frozen=True, slots=True)
 class ShapeContract:
+    """A contract file: ``version`` is the format version of the file (always 1 so far), the
+    revision of a contract's content belongs in ``metadata``."""
+
+    _KNOWN = frozenset({"name", "fidelity", "fields", "metadata"})
+
     name: str
     version: int = 1
     fidelity: str = "gold"
     fields: tuple[FieldContract, ...] = ()
     metadata: dict[str, Any] = field(default_factory=dict)
+    # Fields a newer release wrote that this one does not know: ignored, and written back as read.
+    extra: dict[str, Any] = field(default_factory=dict, compare=False, repr=False)
 
     def validate(self) -> ShapeContract:
         if self.version < 1:
             raise ValueError("version must be >=1")
+        if self.version > compat.KINDS["contract-model"].current:
+            raise compat.UnsupportedVersionError(
+                f"unsupported contract model version {self.version}: this Shape reads up to "
+                f"version {compat.KINDS['contract-model'].current}; {compat.newer_hint(None)}",
+                kind="contract-model",
+                found=self.version,
+                supported=compat.KINDS["contract-model"].current,
+                min_shape_version=None,
+            )
         if self.fidelity not in {"bronze", "silver", "gold", "platinum"}:
             raise ValueError("unknown fidelity")
         names = [f.name for f in self.fields]
@@ -43,19 +60,27 @@ class ShapeContract:
         return self
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        body = asdict(self)
+        body.pop("extra")
+        body.pop("version")
+        out = compat.stamp("contract-model", body, version=self.version, aliases=False)
+        return {**out, **{k: v for k, v in self.extra.items() if k not in out}}
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict(), sort_keys=True, indent=2)
 
     @classmethod
     def from_dict(cls, o: Mapping[str, Any]) -> ShapeContract:
+        compat.check_format("contract-model", o)
+        version = compat.check_readable("contract-model", o)
+        unknown = compat.check_unknown("contract-model", o, cls._KNOWN)
         return cls(
             o["name"],
-            int(o.get("version", 1)),
+            version,
             o.get("fidelity", "gold"),
             tuple(FieldContract(**f) for f in o.get("fields", [])),
             o.get("metadata", {}),
+            {k: o[k] for k in unknown},
         ).validate()
 
     @classmethod

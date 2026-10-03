@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from shape import compat
 from shape.scenario.gsl import (
     LAKEHOUSE_MODES,
     SCHEMA_TYPES,
@@ -69,7 +70,10 @@ def validate_spec(spec: GenerationSpec) -> PackValidationResult:
     """Everything checkable without running: schema, pack, scale, chaos, gates and outputs."""
     result = PackValidationResult()
     if spec.version != 1:
-        result.errors.append(f"Unsupported spec version {spec.version}; this is version 1")
+        result.errors.append(
+            f"Unsupported spec version {spec.version}; this is version 1"
+            + (f"; {compat.newer_hint(spec.needs_release)}" if spec.version > 1 else "")
+        )
     domain: Any = None
     try:
         domain = spec_domain(spec)

@@ -267,38 +267,51 @@ def stamp(
     return out
 
 
+def _collect(
+    k: Kind, doc: Mapping[str, Any], error: type[Exception] | None, *, positive: bool = True
+) -> dict[str, int]:
+    """Every version key ``doc`` carries (``version`` or an older name) with its value; a key of
+    the wrong type or below 1 is an error."""
+    fe = format_error_class(error)
+    found: dict[str, int] = {}
+    for key in (VERSION_KEY, *k.legacy_version_keys):
+        if key not in doc:
+            continue
+        value = doc[key]
+        if not isinstance(value, int) or isinstance(value, bool):
+            raise fe(f"{k.label}: {key} must be an integer, got {_safe_text(value)}")
+        if positive and value < 1:
+            raise fe(f"{k.label}: {key} must be at least 1, got {value}")
+        found[key] = value
+    return found
+
+
 def declared_version(
-    kind: Kind | str, doc: Mapping[str, Any], *, error: type[Exception] | None = None
+    kind: Kind | str,
+    doc: Mapping[str, Any],
+    *,
+    error: type[Exception] | None = None,
+    positive: bool = True,
 ) -> int:
     """The version ``doc`` declares, under ``version`` or an older key name.
 
     Every key present must be an integer of at least 1 and they must agree. A document that
     declares none has the kind's implicit version, or is a :class:`FormatError`. In strict mode an
-    old key name without ``version`` is an error."""
+    old key name without ``version`` is an error. ``positive=False`` leaves the range check
+    (below 1) to the caller, for the authored kinds whose own validator reports it."""
     k = _kind_of(kind)
-    keys = [VERSION_KEY, *k.legacy_version_keys]
-    found: dict[str, int] = {}
-    for key in keys:
-        if key not in doc:
-            continue
-        value = doc[key]
-        if not isinstance(value, int) or isinstance(value, bool):
-            raise format_error_class(error)(
-                f"{k.label}: {key} must be an integer, got {_safe_text(value)}"
-            )
-        if value < 1:
-            raise format_error_class(error)(f"{k.label}: {key} must be at least 1, got {value}")
-        found[key] = value
+    fe = format_error_class(error)
+    found = _collect(k, doc, error, positive=positive)
     if len(set(found.values())) > 1:
         pairs = ", ".join(f"{a}={b}" for a, b in found.items())
-        raise format_error_class(error)(f"{k.label}: conflicting version keys ({pairs})")
+        raise fe(f"{k.label}: conflicting version keys ({pairs})")
     if not found:
         if k.implicit_version is None:
-            raise format_error_class(error)(f"{k.label} declares no version")
+            raise fe(f"{k.label} declares no version")
         return k.implicit_version
     if is_strict() and VERSION_KEY not in found:
         old = next(iter(found))
-        raise format_error_class(error)(
+        raise fe(
             f"{k.label}: strict mode: the version is under the old key {old!r}; the key is "
             f"{VERSION_KEY!r} (convert the file with `shape migrate`)"
         )
@@ -365,18 +378,19 @@ def check_readable(
     the first Shape release that reads it, from the file's ``min_shape_version`` or else its
     writer's ``shape_version``. A deprecated version warns (strict mode: raises)."""
     k = _kind_of(kind)
-    version = declared_version(k, doc, error=error)
+    claimed = _collect(k, doc, error)
+    if len(set(claimed.values())) > 1 and max(claimed.values()) > k.current:
+        # keys that disagree: the highest claim decides, so a file that says it is newer than
+        # this release reads is refused as such, never read as an older version
+        version = max(claimed.values())
+    else:
+        version = declared_version(k, doc, error=error)
     where = f"{source}: " if str(source) else ""
     if version > k.current:
-        needs = _needed_release(doc)
-        hint = (
-            f"it needs Shape {needs} or newer"
-            if needs
-            else "it was written by a newer Shape release"
-        )
+        needs = needed_release(doc)
         message = (
             f"{where}unsupported {k.label} version {version}: this Shape reads up to version "
-            f"{k.current}; {hint} (upgrade Shape)"
+            f"{k.current}; {newer_hint(needs)} (upgrade Shape)"
         )
         cls = error_class(error)
         raise cls(
@@ -398,7 +412,16 @@ def check_readable(
     return version
 
 
-def _needed_release(doc: Mapping[str, Any]) -> str | None:
+def newer_hint(needs: str | None) -> str:
+    """The sentence that tells a reader which release reads a newer file."""
+    return (
+        f"it needs Shape {needs} or newer" if needs else "it was written by a newer Shape release"
+    )
+
+
+def needed_release(doc: Mapping[str, Any]) -> str | None:
+    """The first Shape release that reads ``doc``, from its ``min_shape_version`` or else its
+    writer's ``shape_version``; ``None`` when neither is a plain release number."""
     for key in (MINIMUM_KEY, WRITER_KEY):
         value = doc.get(key)
         if parse_release(value) is not None:
