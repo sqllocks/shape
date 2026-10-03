@@ -6,6 +6,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from shape.cli.generation import load_target
 from shape.cli.main import main
 from shape.generation.engine import Engine
@@ -130,3 +132,51 @@ def test_697_one_decodable_event_among_bad_lines_is_profiled(tmp_path, capsys):
     assert main(["stream-profile", str(mixed), "-o", str(tmp_path / "o.json")]) == 0
     summary = json.loads(capsys.readouterr().out)
     assert summary["events"] == 1 and summary["undecodable"] == 2
+
+
+def _poisoned(values: dict, *, envelope: str = "flat", time: bool = False) -> bytes:
+    import pyarrow as pa
+
+    from shape.streaming.emit.formats import (
+        FIELD_POISON,
+        FIELD_SEQ,
+        FIELD_TABLE,
+        FIELD_TIME,
+        encode_batch,
+    )
+
+    cols = {**{k: [v] for k, v in values.items()}, FIELD_TABLE: ["t"], FIELD_SEQ: [7]}
+    if time:
+        cols[FIELD_TIME] = ["2024-01-01T00:00:00"]
+    cols[FIELD_POISON] = [True]
+    return encode_batch(pa.RecordBatch.from_pydict(cols), envelope).rstrip(b"\n")
+
+
+def test_699_a_poison_event_is_not_json_but_keeps_its_key():
+    for time in (False, True):
+        line = _poisoned({"name": "x" * 30}, time=time)
+        with pytest.raises(ValueError):
+            json.loads(line)
+        assert b'"_shape_table":"t","_shape_seq":7' in line
+
+
+def test_699_a_poison_event_is_valid_utf8_whatever_it_holds():
+    for n in range(1, 80):
+        for time in (False, True):
+            _poisoned({"name": "é" * n}, time=time).decode("utf-8")
+            _poisoned({"name": "☃x" * n}, time=time).decode("utf-8")
+
+
+def test_699_a_poison_cloudevent_keeps_its_id():
+    line = _poisoned({"name": "x" * 30}, envelope="cloudevents")
+    with pytest.raises(ValueError):
+        json.loads(line)
+    assert b'"id":"t/7"' in line
+
+
+def test_699_poison_stays_a_strict_prefix():
+    from shape.streaming.emit.formats import poison_body
+
+    for body in (b'{"a":1}', b'{"_shape_seq":3}', b'{"x":"\xc3\xa9","_shape_seq":10,"b":2}'):
+        cut = poison_body(body)
+        assert body.startswith(cut) and len(cut) < len(body)
