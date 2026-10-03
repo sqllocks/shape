@@ -52,8 +52,9 @@ preset.
   `--scale-mode local` runs here; `spark` submits the run to a Fabric Spark notebook that writes
   Delta tables to the Lakehouse; `auto` (the default) picks `spark` when the profile has a
   Lakehouse and the rows reach 500,000.
-* **streaming**: generates a small dataset and streams the first table's events as JSON lines,
-  in event-time order (`--max-events`, default 100). Nothing is written to a target.
+* **streaming**: generates a small dataset of one domain and streams the first table's events as
+  JSON lines, in event-time order (`--max-events`, default 100). Nothing is written to a target.
+  Inference and streaming take one domain; `--domains` with more is refused.
 
 `--dry-run` plans a run and `--estimate` prints the cost estimate; neither generates anything, in
 any mode.

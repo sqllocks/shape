@@ -13,7 +13,7 @@ from typing import Any
 from shape.demo.catalog import ScenarioMeta
 from shape.demo.connections import ConnectionProfile
 from shape.demo.dashboard import DemoStep, ProgressDashboard
-from shape.demo.errors import is_expected
+from shape.demo.errors import DemoError, is_expected
 from shape.demo.manifest import DemoManifest
 from shape.demo.modes.common import check_scale, load_schema, resolve_domains
 from shape.demo.params import DemoParams
@@ -57,6 +57,10 @@ class StreamingDemoMode:
         self._meta = meta
         self._rt = runtime
         domains = resolve_domains(params, meta)
+        if len(domains) != 1:
+            raise DemoError(
+                f"streaming streams one domain; got {len(domains)} domains ({', '.join(domains)})"
+            )
         self._domain = domains[0]
 
     def run(self) -> dict[str, Any]:
