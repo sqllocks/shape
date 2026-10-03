@@ -69,6 +69,11 @@ _SETTLEMENT_FAILURE_REASONS: list[str] = [
 ]
 _TIME_COLUMNS = ("transaction_time", "transaction_date")
 _HOUR_US = 3_600_000_000
+# The window is simulated hour by hour (a fraud-burst draw per hour, a settlement batch per
+# ``settlement_batch_hours``), so it is bounded: 100 years of hours, a million batches. A
+# sentinel time such as 9999-12-31 would otherwise make a run of millions of batches.
+MAX_WINDOW_HOURS = 24 * 366 * 100
+MAX_SETTLEMENT_BATCHES = 1_000_000
 
 
 @dataclass
@@ -185,6 +190,7 @@ class FinancialStreamSimulator:
             else parse_start(self._config.start_time)
         )
         self._window_hours = self._window()
+        self._check_window()
 
     def _window(self) -> float:
         """The simulated window in hours: ``duration_hours``, else the span of the transactions
@@ -198,6 +204,36 @@ class FinancialStreamSimulator:
         times = self._time_us[self._time_valid]
         span_hours = float(times.max() - times.min()) / _HOUR_US
         return span_hours + float(cfg.settlement_batch_hours)
+
+    def _check_window(self) -> None:
+        cfg = self._config
+        hours = self._window_hours
+        if not hours <= MAX_WINDOW_HOURS:  # also refuses NaN
+            if cfg.duration_hours is not None:
+                where = f"duration_hours is {cfg.duration_hours}"
+            else:
+                times = self._time_us[self._time_valid]
+                first, last = (
+                    np.datetime64(int(times.min()), "us"),
+                    np.datetime64(int(times.max()), "us"),
+                )
+                where = (
+                    f"the transactions run from {first} to {last}; a far-future time such as "
+                    "9999-12-31 is usually a placeholder: drop those rows or set duration_hours"
+                )
+            raise ValueError(
+                f"the simulated window is {hours:.0f} hours, more than the "
+                f"{MAX_WINDOW_HOURS} (100 years) a run covers: {where}"
+            )
+        if cfg.settlement_enabled and cfg.settlement_batch_hours > 0:
+            batches = hours / cfg.settlement_batch_hours
+            if batches > MAX_SETTLEMENT_BATCHES:
+                raise ValueError(
+                    f"settlement_batch_hours {cfg.settlement_batch_hours} over a {hours:.0f}-hour "
+                    f"window makes {batches:.0f} settlement batches, more than "
+                    f"{MAX_SETTLEMENT_BATCHES}: raise settlement_batch_hours or shorten "
+                    "duration_hours"
+                )
 
     # ---- public -----------------------------------------------------------------------------
 

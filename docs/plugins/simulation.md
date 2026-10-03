@@ -71,7 +71,8 @@ is then the span of the transactions (first to last transaction time) plus one s
 the lag a transaction waits to settle, so the last transactions settle too. A table that covers
 months gets settlements, fraud-burst chances and clearing for every month; `stats["duration_hours"]`
 reports the window used. Set `duration_hours` to override it (the window starts at the earliest
-transaction). Without a time column the default is 24 hours. The lag itself is unchanged: a
+transaction). A window over 100 years (usually a placeholder time such as 9999-12-31), or more
+than a million settlement batches, is refused with an error that names the setting to change. Without a time column the default is 24 hours. The lag itself is unchanged: a
 transaction settles when its batch ends, and the share of settled, partial and failed batches
 follows `settlement_success_rate`. `settlements` count and total the transactions in each window
 exactly; a partial or failed batch carries a failure reason.
