@@ -756,7 +756,7 @@ def _is_placeholder_enum(gen: dict[str, Any]) -> bool:
         if abs(weights[0] - weights[1]) < 0.01:
             return True
     keys = {k.lower() for k in values}
-    if keys == {"type_a", "type_b"}:
+    if keys in ({"type_a", "type_b"}, {"type_a", "type_b", "type_c"}):  # the parser's template
         return True
     if keys == {"active", "inactive"} and len(values) == 2:
         weights = list(values.values())
@@ -923,10 +923,15 @@ def _is_basic(col: Column) -> bool:
     return col.generator.get("strategy") in _BASIC_STRATEGIES
 
 
-def _find_col(columns: dict[str, Column], *patterns: str) -> str | None:
-    """The first column whose name has any of the terms as a whole word (or words)."""
+def _find_col(
+    columns: dict[str, Column], *patterns: str, skip: tuple[str | None, ...] = ()
+) -> str | None:
+    """The first column (other than ``skip``) whose name has any of the terms as a whole word
+    (or words)."""
     pattern = word_pattern(*patterns)
-    return next((name for name in columns if pattern.search(snake(name))), None)
+    return next(
+        (name for name in columns if name not in skip and pattern.search(snake(name))), None
+    )
 
 
 def _correlated(source: str, lo: float, hi: float) -> dict[str, Any]:
@@ -965,8 +970,8 @@ def _correlations(ctx: _Context) -> None:
         # CR-02: tax follows subtotal or amount
         tax = _find_col(cols, "tax")
         if tax and sem.get(tax) == money:
-            base = _find_col(cols, "subtotal", "amount")
-            if base and base != tax and _is_basic(cols[tax]):
+            base = _find_col(cols, "subtotal", "amount", skip=(tax,))  # not tax_amount itself
+            if base and _is_basic(cols[tax]):
                 cols[tax].generator = _correlated(base, 0.05, 0.15)
                 ctx.annotate(
                     table,
@@ -998,7 +1003,14 @@ def _correlations(ctx: _Context) -> None:
 
         # CR-05: net = gross - tax
         net, gross, tax = _find_col(cols, "net"), _find_col(cols, "gross"), _find_col(cols, "tax")
-        if net and gross and tax and len({net, gross, tax}) == 3 and _is_basic(cols[net]):
+        if (
+            net
+            and gross
+            and tax
+            and len({net, gross, tax}) == 3
+            and sem.get(net) == sem.get(gross) == money  # amounts, not net_weight
+            and _is_basic(cols[net])
+        ):
             cols[net].generator = {"strategy": "formula", "expression": f"{gross} - {tax}"}
             ctx.annotate(table, net, "CR-05", f"Net ({net}) = {gross} - {tax}")
 

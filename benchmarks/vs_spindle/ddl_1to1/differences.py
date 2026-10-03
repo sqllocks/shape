@@ -111,6 +111,12 @@ FIXES: dict[str, str] = {
         "generator has range_ref `model.date_range`. The baseline has none, so the temporal "
         "strategy's default range (from 2022-01-01) was used whatever the model's dates."
     ),
+    "F16": (
+        "A *_type text column that still holds the parser's template values (type_a, type_b, "
+        "type_c) is upgraded by the enum rules like any other placeholder (AUD-gen, issue "
+        "#218). The baseline checks for a two-value template the parser never writes, so no "
+        "*_type column was ever upgraded."
+    ),
 }
 
 
@@ -489,6 +495,14 @@ ALLOWED: list[Field | Note] = [
         )
         for where in ("generator.null_rate", "null_rate")
     ),
+    # F16 entries: a *_type column with the parser's template is upgraded
+    Field(
+        "F16",
+        "adventureworks_sample",
+        "tables.person_addresses.columns.address_type.generator",
+        SMART,
+    ),
+    Note("F16", "adventureworks_sample", "EN-CATEGORICAL", "person_addresses", "address_type"),
     # F15 entries: a transaction date is inside the model's date range
     *(
         Field("F15", case, f"tables.{table}.columns.{column}.generator.range_ref", SMART)
