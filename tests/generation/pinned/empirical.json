@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "m",
+    "seed": 7
+  },
+  "tables": {
+    "t": {
+      "name": "t",
+      "primary_key": [
+        "k"
+      ],
+      "columns": {
+        "k": {
+          "name": "k",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "x": {
+          "name": "x",
+          "type": "decimal",
+          "generator": {
+            "strategy": "empirical",
+            "quantiles": {
+              "p1": 26.66,
+              "p5": 33.4,
+              "p10": 37.13,
+              "p25": 43.22,
+              "p50": 49.98,
+              "p75": 56.72,
+              "p90": 62.77,
+              "p95": 66.504,
+              "p99": 73.41,
+              "p0_5": 24.3026,
+              "p99_5": 75.8022
+            }
+          }
+        }
+      }
+    }
+  },
+  "generation": {
+    "scale": "s",
+    "scales": {
+      "s": {
+        "t": 40000
+      }
+    }
+  },
+  "generators": {
+    "empirical": 1,
+    "sequence": 1
+  }
+}

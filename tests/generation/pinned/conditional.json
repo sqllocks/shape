@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "strategy_case",
+    "description": "",
+    "domain": "strategy_case",
+    "schema_mode": "3nf",
+    "locale": "en_US",
+    "seed": 42,
+    "date_range": {
+      "start": "2022-01-01",
+      "end": "2025-12-31"
+    }
+  },
+  "tables": {
+    "t": {
+      "name": "t",
+      "description": "",
+      "cdm_mapping": null,
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence",
+            "start": 1
+          },
+          "nullable": false,
+          "null_rate": 0.0,
+          "max_length": null,
+          "precision": null,
+          "scale": null
+        },
+        "tier": {
+          "name": "tier",
+          "type": "string",
+          "generator": {
+            "strategy": "weighted_enum",
+            "values": {
+              "A": 1,
+              "B": 1
+            }
+          },
+          "nullable": false,
+          "null_rate": 0.0,
+          "max_length": null,
+          "precision": null,
+          "scale": null
+        },
+        "x": {
+          "name": "x",
+          "type": "decimal",
+          "generator": {
+            "strategy": "conditional",
+            "condition": "tier == 'A'",
+            "true_generator": {},
+            "false_generator": {
+              "fixed": 2
+            }
+          },
+          "nullable": false,
+          "null_rate": 0.0,
+          "max_length": null,
+          "precision": null,
+          "scale": null
+        }
+      }
+    }
+  },
+  "relationships": [],
+  "business_rules": [],
+  "generation": {
+    "scale": "s",
+    "scales": {
+      "s": {
+        "t": 400
+      }
+    },
+    "derived_counts": {},
+    "output": {}
+  },
+  "correlated_columns": {},
+  "generators": {
+    "conditional": 1,
+    "sequence": 1,
+    "weighted_enum": 1
+  }
+}

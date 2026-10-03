@@ -93,6 +93,12 @@ the policy.
 - `shape contract emit CONTRACT.json --to ddl|jsonschema|pandera|gx` writes a contract as database
   DDL, a JSON Schema, a pandera schema or a Great Expectations suite, listing what the target cannot
   say (`--strict` fails on it). See [CONTRACT_EMIT.md](CONTRACT_EMIT.md).
+- `shape pin SPEC [-o OUT] [--json]` writes into a generation spec the current generator version of
+  every strategy and distribution it uses (its `generators` map), so the same spec and seed give the
+  same dataset id in every 1.x release; a pin that is there is kept. `shape pin SPEC --check`
+  writes nothing: exit 1 and the names the spec does not pin, 0 when all are pinned, 2 for a spec
+  that is not valid or pins a version this Shape does not have. See
+  [GENERATION_STABILITY.md](GENERATION_STABILITY.md).
 - `shape compatibility BEFORE AFTER` compares two Shape **models** (made by `shape capture` or
   written as model JSON), not profiles. Compare two profiles with `shape diff`. To check a feed
   for schema changes, capture it each day and compare with the baseline; a renamed or dropped

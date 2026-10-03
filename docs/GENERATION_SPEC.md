@@ -65,6 +65,14 @@ generates the same table twice. `_keys-1.0.json` is the key table of 1.0; the te
 strategy, a key, a `params` key or a family is missing from it later, or if a key that was optional
 became required. Adding a strategy needs a new frozen spec (the test lists strategies without one).
 
+**Generator versions.** An optional top-level `generators` map, `{"<strategy or distribution
+name>": <integer >= 1>}`, pins the generator version of each name; a name that is not pinned runs at
+its latest version. A spec that pins every name it uses gives the same dataset id in every 1.x
+release (see [GENERATION_STABILITY.md](GENERATION_STABILITY.md)). `shape pin SPEC` writes the map,
+`shape pin SPEC --check` lists the names that are not pinned, and a pin to a version this Shape does
+not have is an error (exit 2). The key is additive under the promise above and `SpecDocument` keeps
+it (`doc.generators`, `set_generator_version`, `remove_generator_version`).
+
 ## Load, validate, edit and save
 
 ```python

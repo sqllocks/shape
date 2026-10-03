@@ -15,12 +15,14 @@ from shape.generation.arrowkit import array as arrow_array
 from shape.generation.arrowkit import to_numpy as arrow_numpy
 from shape.generation.strategy_kit import (
     StrategyError,
+    pinned_version,
     require,
     round_to_scale,
     spec_params,
     stream,
     where,
 )
+from shape.generation.versions import generator_version
 from shape.plugins.api.v1 import GenerationContext
 
 SHAPE_API = "1.0"
@@ -46,6 +48,15 @@ class Distribution:
     """
 
     name = "distribution"
+    generator_version = 1
+
+    @staticmethod
+    def resolve_distribution(name: str) -> Any:
+        """The implementation a column naming ``name`` samples: a built-in family, else the
+        ``shape.distributions`` plugin of that name (``None`` when there is none). Used to find the
+        generator versions a spec uses (``docs/GENERATION_STABILITY.md``)."""
+        family = FAMILIES.get(name)
+        return family if family is not None else _plugin_distribution(name)
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         dist = str(spec.get("distribution", "uniform"))
@@ -53,9 +64,19 @@ class Distribution:
         family = FAMILIES.get(dist)
         if family is not None:
             try:
-                values = family.sample(
-                    stream(ctx, "v"), ctx.row_start, ctx.n_rows, family.from_spec(params)
-                )
+                select = getattr(family, "sample_versioned", None)
+                if select is None:
+                    values = family.sample(
+                        stream(ctx, "v"), ctx.row_start, ctx.n_rows, family.from_spec(params)
+                    )
+                else:
+                    values = select(
+                        stream(ctx, "v"),
+                        ctx.row_start,
+                        ctx.n_rows,
+                        family.from_spec(params),
+                        pinned_version(ctx, dist, generator_version(family)),
+                    )
             except FamilyError as exc:
                 raise StrategyError(f"{exc} ({where(ctx)})") from exc
         else:
@@ -65,7 +86,14 @@ class Distribution:
                 raise StrategyError(
                     f"unknown distribution {dist!r} for {where(ctx)}; known: {known}"
                 )
-            values = np.asarray(arrow_numpy(plugin.sample(dict(params), ctx)))
+            select = getattr(plugin, "sample_versioned", None)
+            if select is None:
+                sampled = plugin.sample(dict(params), ctx)
+            else:
+                sampled = select(
+                    dict(params), ctx, pinned_version(ctx, dist, generator_version(plugin))
+                )
+            values = np.asarray(arrow_numpy(sampled))
             values = values.astype(np.float64, copy=False)
         if params.get("min") is not None:
             values = np.maximum(values, float(params["min"]))
@@ -89,6 +117,7 @@ class Empirical:
     """
 
     name = "empirical"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         quantiles = require(spec, "quantiles", ctx, "empirical")

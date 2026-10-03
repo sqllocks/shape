@@ -197,7 +197,8 @@ def test_a_run_records_the_tuple_and_the_dataset_id(tmp_path, retail):
         m["format"] == MANIFEST_FORMAT == "shape-run-manifest"
         and m["version"] == MANIFEST_VERSION == 1
     )
-    assert set(m["reproducibility"]) == set(REPRODUCIBILITY_KEYS)
+    # W1-15 adds `generators` (the algorithm versions) to the seven facts of the environment
+    assert set(m["reproducibility"]) == set(REPRODUCIBILITY_KEYS) | {"generators"}
     assert m["reproducibility"]["seed"] == 42 and m["reproducibility"]["scale"] == "fabric_demo"
     assert m["dataset_id"].startswith(DATASET_ID_PREFIX)
     assert result.manifest.dataset_id == m["dataset_id"]  # type: ignore[union-attr]

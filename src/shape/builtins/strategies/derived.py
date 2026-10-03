@@ -103,6 +103,7 @@ class Derived:
     """
 
     name = "derived"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         source = str(spec.get("source", ""))
@@ -182,6 +183,7 @@ class Computed:
     ``lookup_parent``, see ``shape.generation.compute``)."""
 
     name = "computed"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         return pa.nulls(ctx.n_rows, pa.float64())

@@ -312,6 +312,19 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   The `--html` report shows the fields and `shape show` prints them (`Profile.summary()` is
   unchanged). A profile written before this change loads, displays and diffs as before.
 
+- Generator version pinning and a stability promise for pinned fixtures
+  (`docs/GENERATION_STABILITY.md`, #92). Every built-in strategy and distribution declares an
+  integer `generator_version` (all 1); a plugin may declare it too (optional, missing means 1). A
+  generation spec can pin versions in a top-level `generators` map (added to the published JSON
+  Schema, kept by `SpecDocument`): `shape generate`, `shape pack run` and `Engine` run a pinned
+  name at its pinned version and the rest at the latest. `shape pin SPEC [-o OUT] [--json]` writes
+  the current version of everything a spec uses; `shape pin SPEC --check` exits 1 listing the names
+  that are not pinned. A pin to a version this Shape does not have exits 2; a pin to a name the
+  spec does not use is a warning. The run manifest records `reproducibility.generators` and
+  `shape pack replay` regenerates with them. `tests/generation/pinned/` holds a pinned spec per
+  built-in strategy and distribution family with its committed dataset id for seed 42, checked in
+  both kernel modes in the regular suite.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

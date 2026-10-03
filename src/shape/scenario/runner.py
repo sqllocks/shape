@@ -15,12 +15,14 @@ from __future__ import annotations
 
 import json
 import time
+from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from shape.generation.versions import GeneratorPinError
 from shape.scenario.loader import ScenarioPack
 from shape.scenario.manifest import ManifestBuilder, RunManifest
 from shape.scenario.validator import (
@@ -100,11 +102,15 @@ class PackRunner:
         base_path: str | Path = ".",
         *,
         spec: GenerationSpec | None = None,
+        generators: Mapping[str, int] | None = None,
     ) -> RunResult:
         """Run ``pack`` on ``domain`` (a loaded domain or a generation schema) into ``base_path``.
 
         A generation ``spec`` overrides the pack's gates, chaos, landing root and entity list
-        where it sets them, and its file is hashed into the manifest.
+        where it sets them, and its file is hashed into the manifest. The run uses the generator
+        versions the schema pins (``generators`` overrides them: a replay passes the versions its
+        manifest recorded) and records the versions it used; a pin to a version this Shape does
+        not have raises :class:`~shape.generation.versions.GeneratorPinError`.
         """
         started = time.perf_counter()
         pack = _with_spec(pack, spec)
@@ -135,7 +141,11 @@ class PackRunner:
         try:
             from shape.generation.engine import Engine
 
-            generated = Engine(schema, scale=scale, seed=seed).generate()
+            engine = Engine(schema, scale=scale, seed=seed, generators=generators)
+            builder.record_generators(engine.generator_versions)
+            generated = engine.generate()
+        except GeneratorPinError:
+            raise
         except Exception as exc:
             return failed([f"Data generation failed: {exc}"], builder.finish())
 

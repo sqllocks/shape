@@ -89,6 +89,7 @@ class ForeignKey:
     """
 
     name = "foreign_key"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         ref = str(require(spec, "ref", ctx, "foreign_key"))
@@ -259,6 +260,7 @@ class CompositeForeignKey:
     """
 
     name = "composite_foreign_key"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> Mapping[str, pa.Array]:
         engine = engine_of(ctx, "composite_foreign_key")
@@ -304,6 +306,7 @@ class CompositeFkField:
     ``ref_column``."""
 
     name = "composite_fk_field"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         source = spec.get("source_column") or ""

@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "relational_case",
+    "description": "",
+    "domain": "relational_case",
+    "schema_mode": "3nf",
+    "locale": "en_US",
+    "seed": 42,
+    "date_range": {
+      "start": "2022-01-01",
+      "end": "2025-12-31"
+    }
+  },
+  "tables": {
+    "c": {
+      "name": "c",
+      "description": "",
+      "cdm_mapping": null,
+      "primary_key": [
+        "cid"
+      ],
+      "columns": {
+        "cid": {
+          "name": "cid",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          },
+          "nullable": false,
+          "null_rate": 0.0,
+          "max_length": null,
+          "precision": null,
+          "scale": null
+        }
+      }
+    },
+    "d": {
+      "name": "d",
+      "description": "",
+      "cdm_mapping": null,
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          },
+          "nullable": false,
+          "null_rate": 0.0,
+          "max_length": null,
+          "precision": null,
+          "scale": null
+        },
+        "k": {
+          "name": "k",
+          "type": "integer",
+          "generator": {
+            "strategy": "foreign_key",
+            "ref": "c.cid"
+          },
+          "nullable": false,
+          "null_rate": 0.0,
+          "max_length": null,
+          "precision": null,
+          "scale": null
+        },
+        "ver": {
+          "name": "ver",
+          "type": "integer",
+          "generator": {
+            "strategy": "scd2",
+            "role": "version",
+            "business_key": "k"
+          },
+          "nullable": false,
+          "null_rate": 0.0,
+          "max_length": null,
+          "precision": null,
+          "scale": null
+        },
+        "cur": {
+          "name": "cur",
+          "type": "boolean",
+          "generator": {
+            "strategy": "scd2",
+            "role": "is_current",
+            "business_key": "k"
+          },
+          "nullable": false,
+          "null_rate": 0.0,
+          "max_length": null,
+          "precision": null,
+          "scale": null
+        }
+      }
+    }
+  },
+  "relationships": [],
+  "business_rules": [],
+  "generation": {
+    "scale": "s",
+    "scales": {
+      "s": {
+        "c": 5,
+        "d": 60
+      }
+    },
+    "derived_counts": {},
+    "output": {}
+  },
+  "correlated_columns": {},
+  "generators": {
+    "foreign_key": 1,
+    "scd2": 1,
+    "sequence": 1
+  }
+}

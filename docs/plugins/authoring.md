@@ -193,3 +193,9 @@ release, and a future 2.0 host reports a clear error for it instead of misbehavi
 
 What is stable within 1.x, what counts as a breaking change, and the deprecation process are
 in [stability.md](stability.md).
+
+A strategy or distribution may also declare `generator_version` (an integer, default 1), the version
+of its algorithm; it is optional and additive in API v1, so a plugin that does not declare it keeps
+loading and counts as version 1. A plugin that raises it keeps the older versions selectable
+(`generate_versioned` / `sample_versioned`) so specs that pin them keep their data. See
+[GENERATION_STABILITY.md](../GENERATION_STABILITY.md).

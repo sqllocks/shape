@@ -24,6 +24,7 @@ class Lifecycle:
     """
 
     name = "lifecycle"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         phases = spec.get("phases") or spec.get("values")

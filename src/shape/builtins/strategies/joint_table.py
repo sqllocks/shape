@@ -40,6 +40,7 @@ class ConditionalTable:
     """A value drawn from the row's ``table[source value]`` (see the module docstring)."""
 
     name = "conditional_table"
+    generator_version = 1
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         source = str(require(spec, "source_column", ctx, "conditional_table"))

@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "m",
+    "seed": 3
+  },
+  "tables": {
+    "t": {
+      "name": "t",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "src": {
+          "name": "src",
+          "type": "string",
+          "generator": {
+            "strategy": "choice",
+            "values": [
+              "a",
+              "b",
+              "c"
+            ],
+            "weights": [
+              0.5,
+              0.3,
+              0.2
+            ]
+          }
+        },
+        "y": {
+          "name": "y",
+          "type": "string",
+          "generator": {
+            "strategy": "conditional_table",
+            "source_column": "src",
+            "table": {
+              "a": {
+                "x": 0.7,
+                "y": 0.3
+              },
+              "b": {
+                "y": 1.0
+              }
+            },
+            "values": {
+              "x": 1,
+              "y": 1,
+              "z": 2
+            }
+          }
+        }
+      }
+    }
+  },
+  "generation": {
+    "scale": "s",
+    "scales": {
+      "s": {
+        "t": 200
+      }
+    }
+  },
+  "generators": {
+    "choice": 1,
+    "conditional_table": 1,
+    "sequence": 1
+  }
+}

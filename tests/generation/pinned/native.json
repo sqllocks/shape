@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "m",
+    "seed": 3
+  },
+  "tables": {
+    "t": {
+      "name": "t",
+      "primary_key": [
+        "k"
+      ],
+      "columns": {
+        "k": {
+          "name": "k",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "x": {
+          "name": "x",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "zip_plus4"
+          }
+        }
+      }
+    }
+  },
+  "generation": {
+    "scale": "s",
+    "scales": {
+      "s": {
+        "t": 20000
+      }
+    }
+  },
+  "generators": {
+    "native": 1,
+    "sequence": 1
+  }
+}

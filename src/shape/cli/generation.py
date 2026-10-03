@@ -209,6 +209,11 @@ def load_target(target: str, mode: str | None = None) -> GenSchema:
     if _is_file(target):
         document = json.loads(Path(target).read_text(encoding="utf-8"))
         schema = GenSchema.from_dict(document)
+        if schema.generators:
+            from shape.generation import versions
+
+            # Name the file in the message; the engine would say "the spec".
+            versions.check_pins(schema.generators, versions.usage_of(schema.tables), target)
         if mode is not None and mode != schema.model.schema_mode:
             raise ValueError(
                 f"{target} is a {schema.model.schema_mode!r} schema; a schema file has one mode "
