@@ -36,7 +36,10 @@ def parse_run_folder(name: str) -> datetime | None:
     if match is None:
         return None
     second, micro, _ = match.groups()
-    moment = datetime.strptime(second, "%Y%m%dT%H%M%S").replace(tzinfo=UTC)
+    try:
+        moment = datetime.strptime(second, "%Y%m%dT%H%M%S").replace(tzinfo=UTC)
+    except ValueError:  # the right shape, but no such date or time (month 13, 30 February)
+        return None
     return moment.replace(microsecond=int(micro)) if micro else moment
 
 
