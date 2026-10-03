@@ -261,7 +261,7 @@ warning). Distributed probabilities that do not sum to 1 are normalized (warning
 ```
 shape behave run MODULES... --population N --years Y --seed S -o OUT
       [--start 2020-01-01] [--population-spec FILE.json] [--window-years 1]
-      [--poll "7 days"] [--strict]
+      [--poll "7 days"] [--strict] [--params FILE.json]
 shape behave check MODULES...            # validate; exit 1 on problems
 shape behave import-gmf FILE [-o OUT.json] [--strict]
 shape behave examples [-o DIR]           # write the built-in example modules
@@ -271,7 +271,8 @@ shape behave examples [-o DIR]           # write the built-in example modules
 `equipment_maintenance`, `healthcare_screening`. `run` writes `OUT/events/part-NNNN.parquet` (one
 file per window, so memory stays bounded), `OUT/entities.parquet` and `OUT/run.json` (seed,
 modules and digests, counts, import report). Exit codes: 0 success, 1 invalid module, 2 usage
-error.
+error. `--params` is described in section 11; an unreadable or wrong parameters file is a usage
+error (exit 2).
 
 ## 8. Domain packs on the engine
 
@@ -308,8 +309,9 @@ document into such an object, filling the members from the document; the engine 
 behavior that has a `module` (all of those wrapped this way). `shape behave run NAME` accepts the
 name of any registered behavior next to files and example names.
 
-The three built-in examples register this way (`shape.behaviors:subscription`,
-`:equipment_maintenance`, `:healthcare_screening`). A third party does the same in its own
+The three built-in examples and the five primitives of section 11 register this way (`shape.behaviors:subscription`,
+`:equipment_maintenance`, `:healthcare_screening`, `:event_sequence`, `:telemetry_series`,
+`:transaction_stream`, `:file_arrival`, `:entity_lifecycle`). A third party does the same in its own
 distribution; `examples/behavior-plugin` is a complete one (installed from outside the repository
 by `tests/plugins/test_plugin_kit_install.py`):
 
@@ -332,3 +334,182 @@ class LibraryLoans(ModuleBehavior):
 population twice per seed, and requires the events to be identical, non-empty, and only of
 declared kinds and states (rows of the engine itself, with an empty `state`, are the
 `entity_end` events of a population lifetime).
+
+## 11. Primitives
+
+Five reusable behaviors, built on the engine and ready to name and run: an **event sequence**
+(a funnel), a **telemetry series**, a **transaction stream**, a **file arrival** process and an
+**entity lifecycle**. Each is a builder in `shape_behavior.primitives` that returns a validated
+`Module` (format `shape-behavior/1`) from keyword parameters, and a registered behavior
+(`shape.behaviors:NAME`, built with its defaults) that `shape behave run NAME` and the plugin
+conformance kit (`python -m shape.plugins.kit sqllocks-shape-behavior`) reach by name.
+
+```python
+from shape_behavior.primitives import telemetry_series
+from shape_behavior.behaviors import behavior
+
+events = behavior(telemetry_series(interval="1 hour", missing_rate=0.02)).simulate(100, 7, 1)
+```
+
+* Every parameter has a default, so the call with no argument runs. An invalid parameter raises
+  `ModuleError` naming it, for example `telemetry_series: interval must be a positive duration,
+  got '0 days'`; all problems are reported at once.
+* The module records the effective parameters under `"parameters"` (and the name under
+  `"primitive"`); `run.json` copies them into each module's entry.
+* A run is deterministic: the same seed and parameters give byte-identical
+  `OUT/events/part-NNNN.parquet`, also across a checkpoint resume (`Simulator.resume`).
+* Durations are text such as `"90 seconds"`, `"1 hour"`, `"2 days"`, `"1 week"`. Rates "per year"
+  use the engine's 365.25-day year.
+* Entities do not interact (section 9), and one state entry emits at most one event. Turning the
+  event table into domain tables is a domain pack's job (section 8).
+* Four of the primitives add one state type each through the extension point of section 5
+  (`telemetry_reading`, `transaction_event`, `file_event`, `lifecycle_event`); importing
+  `shape_behavior.primitives` registers them, so a saved module document of a primitive loads
+  where that module is imported (the `shape behave` command always does).
+
+### 11.1 `event_sequence(steps, dropout, gap)`
+
+An ordered funnel of named events. Each entity starts the funnel on arrival (arrivals are spread
+over a year); after a step it continues with probability `1 - dropout` and otherwise leaves.
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `steps` | `["visit", "view", "add_to_cart", "checkout"]` | Unique, non-empty step names. |
+| `dropout` | `0.4` | Probability of leaving after a step: one number for every step, or a list with one value per step but the last. 0 means everyone completes the funnel, 1 means everyone stops after the first step. |
+| `gap` | `"2 minutes"` | Time between consecutive steps (zero allowed). A gap beyond the run's end cuts the funnel at the horizon. |
+
+Emits one event per step reached, `kind` = the step name.
+
+```bash
+shape behave run event_sequence --population 10000 --years 1 --seed 7 -o out/funnel
+```
+
+### 11.2 `telemetry_series(interval, unit, level, noise, drift, missing_rate, stuck_rate)`
+
+A regular reading per entity (a device), the first when it arrives.
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `interval` | `"1 day"` | Time between readings; positive. An interval longer than the run gives one reading per entity. |
+| `unit` | `"celsius"` | Text put in the `unit` column. |
+| `level` | `20.0` | Mean value at the first reading. |
+| `noise` | `0.5` | Standard deviation of the gaussian noise (not negative). |
+| `drift` | `0.1` | Change of the mean per year of elapsed time (any sign). |
+| `missing_rate` | `0.02` | Share of readings skipped (no event). 1 gives no events at all. |
+| `stuck_rate` | `0.01` | Probability that a reading repeats the previous reading's value; consecutive repeats form a stuck run. 1 repeats the first reading for ever. |
+
+Emits `kind` = `reading` with `value` and `unit`. State type `telemetry_reading` (whole-array
+handler; it draws only through `ctx.uniform`).
+
+```bash
+cat > telemetry.json <<'EOF'
+{"format": "shape-behavior-params", "version": 1, "primitive": "telemetry_series",
+ "params": {"interval": "1 hour", "unit": "kPa", "level": 101.3, "noise": 0.4}}
+EOF
+shape behave run telemetry_series --params telemetry.json --population 10000 --years 1 \
+    --window-years 0.02 --seed 7 -o out/telemetry
+```
+
+Memory stays bounded by the window: `--window-years` sets how much virtual time one output file
+holds. 10,000 devices at a 1-hour interval for a year is about 87.8 million events;
+`tests/test_primitives_scale.py` runs it with `--window-years` of one week and records the peak
+memory of the process.
+
+### 11.3 `transaction_stream(rate, amount, refund_rate, reversal_rate)`
+
+Transactions as a Poisson process per entity (the gaps are exponential; entities exist from the
+start of the run).
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `rate` | `24` | Transactions per entity per year; positive. |
+| `amount` | `{"mu": 3.5, "sigma": 0.8}` | Lognormal parameters of the `value` (`sigma` not negative). |
+| `refund_rate` | `0.05` | Probability that a transaction is followed by a `refund` before the next transaction. |
+| `reversal_rate` | `0.01` | The same for a `reversal`. |
+
+`refund_rate + reversal_rate` must be below 1. A transaction has at most one follow-up. Emits
+`transaction` (`value` = the amount, `code` = its id, `ENTITY-N`), and `refund` / `reversal`
+(`ref` = the id of the transaction they follow, `value` = its amount). State type
+`transaction_event`.
+
+```python
+from shape_behavior.primitives import transaction_stream
+from shape_behavior.behaviors import behavior
+
+table = behavior(transaction_stream(rate=40, refund_rate=0.08)).simulate(1000, 3, 2)
+```
+
+### 11.4 `file_arrival(schedule, late_rate, late_delay, missing_rate, duplicate_rate)`
+
+One entity per feed; every schedule slot (the first at the feed's start) has one outcome.
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `schedule` | `"daily"` | `daily`, `hourly` or `weekly`. |
+| `late_rate` | `0.1` | Probability that the file arrives `late_delay` after its slot. |
+| `late_delay` | a quarter of the period | Positive and shorter than the period. |
+| `missing_rate` | `0.03` | Probability that no file arrives (an event marks it at the slot time). |
+| `duplicate_rate` | `0.02` | Probability that the file arrives twice (the copy a tenth of a period later). |
+
+`late_rate + missing_rate + duplicate_rate` must not exceed 1; the rest arrive on time. Emits
+`file_arrived`, `file_late`, `file_missing`, `file_duplicate`; the `payload` of every event is
+`{"slot": "2020-01-05T00:00:00"}`, the expected arrival time. State type `file_event`.
+
+```bash
+cat > feed.json <<'EOF'
+{"format": "shape-behavior-params", "version": 1, "primitive": "file_arrival",
+ "params": {"schedule": "hourly", "late_rate": 0.2, "late_delay": "20 minutes"}}
+EOF
+shape behave run file_arrival --params feed.json --population 12 --years 0.1 -o out/feeds
+```
+
+### 11.5 `entity_lifecycle(states, update_rate, delete_rate)`
+
+Create, any number of updates and an optional delete per entity, so the event table can drive
+change-data-capture style tables. Entities are created over a year.
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `states` | `["active", "suspended", "closed"]` | Unique state names; the first is the state at creation. |
+| `update_rate` | `4` | Updates per entity per year while alive (not negative). |
+| `delete_rate` | `0.1` | Deletes per entity per year while alive (not negative); 0 means no entity is deleted. |
+
+Emits `created` (`text` = the first state, `value` = version 1), `updated` (`text` = a state other
+than the previous one when there is more than one state, `value` = the new version) and `deleted`
+(`text` = its state, `value` = its last version). Nothing follows a delete. State type
+`lifecycle_event`.
+
+```bash
+shape behave run entity_lifecycle --population 5000 --years 3 --seed 1 -o out/changes
+```
+
+### 11.6 The parameters file
+
+`shape behave run NAME --params FILE.json` builds the primitive `NAME` (named among the modules on
+the command line) from a JSON document:
+
+```json
+{"format": "shape-behavior-params", "version": 1, "primitive": "telemetry_series",
+ "params": {"interval": "1 hour", "missing_rate": 0.02}}
+```
+
+`params` may leave out any parameter (the default applies) and may be left out altogether. The
+file is a persisted format: `format` and an integer `version` are required, and
+`tests/fixtures/params_v1.json` is a frozen version-1 document that must keep loading. Exit
+status 2 (a usage error, naming the key) for a wrong `format`, a `version` newer than this Shape
+reads (the message says to upgrade), an unknown `primitive`, a primitive that is not among the
+modules, an unknown top-level key or an unknown parameter; an invalid parameter value is an
+invalid module (exit 1). `run.json` records the parameters each primitive ran with.
+
+### 11.7 Primitives and the table-level simulators
+
+`plugins/shape-simulation` works on tables a domain already generated; the primitives generate
+the events themselves from per-entity processes on the virtual clock.
+
+| Primitive | Related simulator in `shape-simulation` | Use the primitive when | Use the simulator when |
+|---|---|---|---|
+| `event_sequence` | `clickstream_patterns` | you need a funnel for any named steps, per entity, with a probability per step. | you need web sessions, page views, bounces and bot traffic as ready tables. |
+| `telemetry_series` | `iot_patterns` | you need a long, regular, deterministic series per device at any scale in bounded memory. | you have device and reading tables and want alert storms and fleet status layered on them. |
+| `transaction_stream` | `financial_patterns` | you need transactions as a Poisson process with refunds and reversals tied to the original. | you have transactions and accounts and want fraud bursts and settlement batches. |
+| `file_arrival` | `file_drop` | you need the arrival outcomes of a feed (on time, late, missing, duplicated) as events. | you need the files themselves: partitions, manifests, `_done` flags, backfills. |
+| `entity_lifecycle` | `scd2_file_drops` | you need create, update and delete events per entity (change data capture). | you need versioned rows and the full load plus daily delta files of a slowly changing dimension. |

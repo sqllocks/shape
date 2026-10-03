@@ -63,9 +63,12 @@ class EventBuffer:
         arr = np.asarray(v, dtype=object)
         if len(arr) != n:
             raise ValueError(f"event column {column!r} has {len(arr)} values for {n} rows")
-        codes = np.empty(n, np.int32)
-        for x in set(arr.tolist()):
-            codes[arr == x] = -1 if x is None else self.intern(column, str(x))
+        codes = np.full(n, -1, np.int32)
+        present = np.fromiter((x is not None for x in arr.tolist()), bool, n)
+        if present.any():  # one pass however many distinct values (ids are unique per row)
+            unique, inverse = np.unique(arr[present].astype(str), return_inverse=True)
+            ids = np.array([self.intern(column, str(x)) for x in unique.tolist()], np.int32)
+            codes[present] = ids[inverse]
         return codes
 
     def add(self, entity_id: Any, seq: Any, time: Any, columns: dict[str, Any], value: Any) -> None:

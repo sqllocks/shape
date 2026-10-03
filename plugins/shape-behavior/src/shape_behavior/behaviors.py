@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from shape_behavior.extension import get_handler
 from shape_behavior.model import EVENT_KINDS, Module, load_module
 
 SHAPE_API = "1.0"
@@ -76,6 +77,10 @@ def _event_kinds(module: Module) -> list[str]:
             kinds.add(str(state["event"]))
         elif kind in EVENT_KINDS:
             kinds.add(EVENT_KINDS[kind])
+        else:  # a registered state type may declare the kinds it emits (optional `kinds`)
+            declared = getattr(get_handler(kind), "kinds", None)
+            if declared is not None:
+                kinds.update(declared(state))
     return sorted(kinds)
 
 
@@ -98,3 +103,48 @@ class HealthcareScreening(ModuleBehavior):
 
     def __init__(self) -> None:
         super().__init__("healthcare_screening")
+
+
+class EventSequence(ModuleBehavior):
+    """An ordered funnel of named events with a continue probability per step (defaults)."""
+
+    def __init__(self) -> None:
+        from shape_behavior.primitives import event_sequence
+
+        super().__init__(event_sequence())
+
+
+class TelemetrySeries(ModuleBehavior):
+    """A regular reading per device with drift, noise, skipped and stuck readings (defaults)."""
+
+    def __init__(self) -> None:
+        from shape_behavior.primitives import telemetry_series
+
+        super().__init__(telemetry_series())
+
+
+class TransactionStream(ModuleBehavior):
+    """Transactions as a Poisson process per entity, with refunds and reversals (defaults)."""
+
+    def __init__(self) -> None:
+        from shape_behavior.primitives import transaction_stream
+
+        super().__init__(transaction_stream())
+
+
+class FileArrival(ModuleBehavior):
+    """A feed with an expected arrival per schedule slot: on time, late, missing, duplicated."""
+
+    def __init__(self) -> None:
+        from shape_behavior.primitives import file_arrival
+
+        super().__init__(file_arrival())
+
+
+class EntityLifecycle(ModuleBehavior):
+    """Create, update and delete events per entity (change-data-capture style)."""
+
+    def __init__(self) -> None:
+        from shape_behavior.primitives import entity_lifecycle
+
+        super().__init__(entity_lifecycle())

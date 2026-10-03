@@ -1,0 +1,14 @@
+{
+  "format": "shape-behavior-params",
+  "version": 1,
+  "primitive": "telemetry_series",
+  "params": {
+    "interval": "6 hours",
+    "unit": "bar",
+    "level": 5.5,
+    "noise": 0.25,
+    "drift": -0.5,
+    "missing_rate": 0.1,
+    "stuck_rate": 0.05
+  }
+}

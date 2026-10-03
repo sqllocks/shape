@@ -21,6 +21,11 @@ behave = "shape_behavior.cli:BehaveCommand"
 subscription = "shape_behavior.behaviors:Subscription"
 equipment_maintenance = "shape_behavior.behaviors:EquipmentMaintenance"
 healthcare_screening = "shape_behavior.behaviors:HealthcareScreening"
+event_sequence = "shape_behavior.behaviors:EventSequence"
+telemetry_series = "shape_behavior.behaviors:TelemetrySeries"
+transaction_stream = "shape_behavior.behaviors:TransactionStream"
+file_arrival = "shape_behavior.behaviors:FileArrival"
+entity_lifecycle = "shape_behavior.behaviors:EntityLifecycle"
 
 [tool.setuptools.packages.find]
 where = ["src"]
