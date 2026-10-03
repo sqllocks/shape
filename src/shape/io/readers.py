@@ -158,6 +158,8 @@ def expand_paths(spec: str | Path | Iterable[str | Path]) -> list[Path]:
     out: list[Path] = []
     for item in items:
         text = str(item)
+        if text == "":  # Path("") is the current directory: an empty setting is no source
+            raise FileNotFoundError("source not found: ''")
         if any(ch in text for ch in "*?["):
             hits = sorted(Path(m) for m in _glob.glob(text, recursive=True) if Path(m).is_file())
             if not hits:
