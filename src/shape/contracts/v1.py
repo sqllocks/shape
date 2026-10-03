@@ -355,8 +355,9 @@ def check(profile: Profile, contract: dict[str, Any] | str | Path) -> CheckResul
 
     The contract and the profile must describe the same tables. A ``tables`` contract against a
     single-table profile raises :class:`ContractError`; against a dataset, a table the contract
-    names and the profile lacks is a ``table_exists`` violation. Every rule is optional (§12.3), so
-    a profile table the contract does not name is not checked.
+    names and the profile lacks is a ``table_exists`` violation, and table rules beside
+    ``tables`` (anything but ``drift``) raise :class:`ContractError`. Every rule is optional
+    (§12.3), so a profile table the contract does not name is not checked.
     """
     contract = _load_contract(contract)
     _validate_contract(contract)
@@ -367,8 +368,18 @@ def check(profile: Profile, contract: dict[str, Any] | str | Path) -> CheckResul
                 "the profile has several tables: give the contract a 'tables' object "
                 "mapping table names to contracts"
             )
+        beside = sorted(set(contract) - {"tables", "drift"})
+        if beside:
+            raise ContractError(
+                f"the contract has a 'tables' object and table rules at its top level ({beside}): "
+                "put each table's rules in its own contract under 'tables'"
+            )
         violations: list[dict[str, Any]] = []
         for tname, sub in per_table.items():
+            if not isinstance(sub, dict):
+                raise ContractError(f"the contract of table {tname!r} must be an object")
+            if "tables" in sub:
+                raise ContractError(f"the contract of table {tname!r} cannot hold 'tables'")
             _validate_contract(sub)
             if tname not in profile.tables:
                 violations.append(_violation(None, "table_exists", tname, "missing"))
