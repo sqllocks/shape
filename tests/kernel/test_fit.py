@@ -161,3 +161,41 @@ def test_fit_in_a_forked_child_after_the_parent_used_rayon(native):
             native.fit_distribution, (pa.array(values[:2000]), pa.array(values))
         ).get(timeout=60)
     assert child == parent
+
+
+_FIRST_FITS_RACE = """
+import json, threading
+import numpy as np, pyarrow as pa
+from shape import _kernel
+rng = np.random.default_rng(11)
+data = [pa.array(rng.lognormal(0.0, 0.5, 2000)) for _ in range(16)]
+barrier = threading.Barrier(len(data))
+first = [None] * len(data)
+def fit(i):
+    barrier.wait()
+    first[i] = _kernel.fit_distribution(data[i])["distribution_params"]
+threads = [threading.Thread(target=fit, args=(i,)) for i in range(len(data))]
+for t in threads:
+    t.start()
+for t in threads:
+    t.join()
+later = [_kernel.fit_distribution(d)["distribution_params"] for d in data]
+print(json.dumps(sum(a != b for a, b in zip(first, later))))
+"""
+
+
+@pytest.mark.parametrize("attempt", range(8))
+def test_first_fits_made_by_concurrent_threads_equal_later_fits(native, attempt):
+    """#323: the first fits of a process, made by several threads at once (the profiler's column
+    pool), must not run before numpy's ``exp``/``log`` hooks are installed. Each child is a fresh
+    process, because the hooks are installed once per process."""
+    import subprocess
+
+    out = subprocess.run(
+        [sys.executable, "-c", _FIRST_FITS_RACE],
+        capture_output=True,
+        text=True,
+        timeout=300,
+        check=True,
+    )
+    assert out.stdout.strip() == "0", out.stdout + out.stderr
