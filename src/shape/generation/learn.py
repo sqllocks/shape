@@ -164,6 +164,7 @@ def _column(doc: Mapping[str, Any]) -> ColumnProfile:
         pattern_contains_rates=doc.get("pattern_contains_rates"),
         precision=doc.get("precision"),
         scale=doc.get("scale"),
+        placeholders=doc.get("placeholders"),
     )
 
 
@@ -176,6 +177,7 @@ def _table(doc: Mapping[str, Any]) -> TableProfile:
         detected_fks=dict(doc.get("detected_fks") or {}),
         correlation_matrix=doc.get("correlation_matrix"),
         correlation_truncated=bool(doc.get("correlation_truncated")),
+        joint=doc.get("joint"),
     )
 
 

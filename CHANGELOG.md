@@ -5,6 +5,22 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
+  values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
+  records approximate functional dependencies, two-column keys, association measures for every
+  type pair (Pearson, Spearman, Kendall, Cramer's V, Theil's U, correlation ratio, mutual
+  information), conditional probability tables and the share of implausible rows, on a bounded
+  sample; `reference_pairs` / `--reference-pair` check that columns hold real combinations.
+  `shape diff` reports `dependency_broken`, `placeholder_surge`, `implausible_rate_change`,
+  `association_shift` and `reference_match_change`, naming the columns and the value. New optional
+  contract rules `fd`, `implies`, `reference_pair`, `max_implausible_rate` and `no_placeholder`.
+  Generation: hierarchical sampling (`hierarchy` and `hierarchy_field` strategies,
+  `HierarchicalSampler`), categorical joint tables from a profile (`conditional_table`), a Chow-Liu
+  joint model with per-row plausibility scores and a report of impossible combinations
+  (`fit_joint`), and a joint fidelity check (`joint_fidelity`). The joint analysis is on by default
+  for a single table and off for a dataset (several tables): `--joint` / `joint=True` turn it on,
+  `--no-joint` / `joint=False` off, `SHAPE_PROFILE_JOINT` when the call does not choose.
+
 - `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
   the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
   clearing cover every month of a multi-month table. `duration_hours` still overrides it

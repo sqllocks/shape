@@ -42,6 +42,11 @@ A change is reported only when it passes its threshold, so a stable column produ
 | `length_change` | mean string length moved by more than `length_ratio` = 25% | low | the relative change |
 | `outlier_rate_change` | outlier rate moved by more than `outlier_rate` = 0.02 | low | the change |
 | `uniqueness_change` | distinct values per row moved by more than `uniqueness_rate` = 0.05 (unique-like columns) | medium | the change |
+| `dependency_broken` | an approximate functional dependency of the baseline (`zip -> city`) lost more than `dependency_confidence` = 0.02 of its confidence (never below the sampling noise); a baseline determinant that was unique counts as confidence 1 (`docs/JOINT.md`) | high | the drop |
+| `placeholder_surge` | the share of rows holding a placeholder value (`00000`, `-1`, `N/A`, ...) rose by more than `placeholder_share` = 0.01 | medium | the rise |
+| `implausible_rate_change` | the share of implausible rows rose by more than `implausible_rate` = 0.02 | medium | the rise |
+| `association_shift` | an association measure (Cramer's V, Theil's U, correlation ratio, Pearson, Spearman) moved by more than `association_shift` = 0.2 | low | the change |
+| `reference_match_change` | the share of rows whose columns are a real combination of a reference fell by more than `reference_match_rate` = 0.02 | high | the drop |
 | `hour_of_day_change`, `day_of_week_change` | total variation distance of the mix > `temporal_tvd` = 0.20 (day of week: both columns span 14 days or more) | low | the distance |
 
 The first five thresholds (`null_rate`, `cardinality_ratio_max`, `cardinality_ratio_min`,

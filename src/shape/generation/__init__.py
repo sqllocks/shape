@@ -39,9 +39,14 @@ if TYPE_CHECKING:
     from .fidelity import plan_reconstruction as plan_reconstruction
     from .geo_fidelity import GeoFidelity as GeoFidelity
     from .geo_fidelity import geographic_fidelity as geographic_fidelity
+    from .hierarchy import HierarchicalSampler as HierarchicalSampler
+    from .hierarchy import hierarchy_violations as hierarchy_violations
     from .joint import JointModel as JointModel
     from .joint import fit_joint_numeric as fit_joint_numeric
     from .joint import generate_joint_numeric as generate_joint_numeric
+    from .joint_model import ChowLiuModel as ChowLiuModel
+    from .joint_model import fit_joint as fit_joint
+    from .joint_model import joint_fidelity as joint_fidelity
     from .levels import LEVELS as LEVELS
     from .levels import FidelityLevel as FidelityLevel
     from .levels import assess_fidelity as assess_fidelity
@@ -97,6 +102,11 @@ _EXPORTS = {
     "plan_reconstruction": ("fidelity", "plan_reconstruction"),
     "GeoFidelity": ("geo_fidelity", "GeoFidelity"),
     "geographic_fidelity": ("geo_fidelity", "geographic_fidelity"),
+    "HierarchicalSampler": ("hierarchy", "HierarchicalSampler"),
+    "hierarchy_violations": ("hierarchy", "hierarchy_violations"),
+    "ChowLiuModel": ("joint_model", "ChowLiuModel"),
+    "fit_joint": ("joint_model", "fit_joint"),
+    "joint_fidelity": ("joint_model", "joint_fidelity"),
     "JointModel": ("joint", "JointModel"),
     "fit_joint_numeric": ("joint", "fit_joint_numeric"),
     "generate_joint_numeric": ("joint", "generate_joint_numeric"),
