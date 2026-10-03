@@ -357,3 +357,56 @@ def test_parquet_cleanup_leaves_files_it_did_not_name_alone(tmp_path):
     _run_parquet(tmp_path, 5)
     assert (tmp_path / "t" / "notes.txt").read_text() == "mine"
     assert (tmp_path / "t" / "part-9.parquet").exists()
+
+
+# ---- planted symlinks (#288) -----------------------------------------------------------------
+
+
+@pytest.mark.parametrize("planted", ["_COMPLETE.tmp", "part-000000.parquet.tmp"])
+def test_parquet_sink_does_not_write_through_a_planted_symlink(tmp_path, planted):
+    # Regression #288: fixed temp names were opened with a plain open and followed the link.
+    victim = tmp_path / "victim.txt"
+    victim.write_text("keep me")
+    out = tmp_path / "out"
+    (out / "t").mkdir(parents=True)
+    (out / "t" / planted).symlink_to(victim)
+    _run_parquet(out, 5)
+    assert victim.read_text() == "keep me"
+    assert json.loads((out / "t" / COMPLETE).read_text()) == {"rows": 5, "parts": 1}
+    assert pq.read_table(out / "t" / "part-000000.parquet").num_rows == 5
+
+
+def test_parquet_sink_refuses_a_table_directory_that_leaves_the_output(tmp_path):
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    out = tmp_path / "out"
+    out.mkdir()
+    (out / "t").symlink_to(elsewhere, target_is_directory=True)
+    with pytest.raises(ValueError, match="leaves"):
+        _run_parquet(out, 5)
+    assert list(elsewhere.iterdir()) == []
+
+
+def test_worker_part_files_do_not_follow_a_planted_symlink(tmp_path):
+    import os
+    import uuid
+
+    from scale_schemas import plain_doc
+
+    from shape.generation.schema import GenSchema
+    from shape.scale.chunk_worker import generate_chunk_file
+
+    victim = tmp_path / "victim.txt"
+    victim.write_text("keep me")
+    (tmp_path / "out" / "customer").mkdir(parents=True)
+    (tmp_path / "out" / "customer" / f"part-000000.parquet.tmp{os.getpid()}").symlink_to(victim)
+    spec = {
+        "key": uuid.uuid4().hex,
+        "schema": GenSchema.from_dict(plain_doc()).to_dict(),
+        "seed": 1,
+        "row_counts": {"customer": 40, "order": 1200, "order_line": 3100},
+        "chunk_rows": 100,
+    }
+    generate_chunk_file(spec, "customer", 0, 0, 40, str(tmp_path / "out"), False)
+    assert victim.read_text() == "keep me"
+    assert pq.read_table(tmp_path / "out" / "customer" / "part-000000.parquet").num_rows == 40
