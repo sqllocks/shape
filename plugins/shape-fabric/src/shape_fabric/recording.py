@@ -49,12 +49,42 @@ _JWT = r"eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]*"
 _KEYS = (
     r"(?:pwd|password|accountkey|sharedaccesskey|sharedaccesssignature|sig|client_secret|secret)"
 )
-_PATTERNS: list[tuple[re.Pattern[str], str]] = [
+# The value after a secret's key, in each form it is written: an ODBC braced value (``}}`` is a
+# literal ``}``), a JSON string escaped inside another JSON string (a body on a tape), a quoted
+# string, or a bare value: after ``=`` it runs to the next separator (an ODBC value may hold
+# spaces), after ``:`` it is one word.
+_VALUE = (
+    r"\{(?:[^}]|\}\})*\}"
+    r'|\\"(?:[^"\\]|\\[^"])*\\"'
+    r'|"(?:[^"\\]|\\.)*"'
+    r"|'[^']*'"
+    r"|[^;&\s\"',}\\][^;&\r\n\"',}\\]*"
+)
+
+
+def _secret_value(match: re.Match[str]) -> str:
+    """The key and separator kept, the value redacted inside the quotes it was written in."""
+    key, close, sep, value = match.groups()
+    if REDACTED in value:
+        return match.group(0)
+    for quote in ('\\"', '"', "'"):
+        if value.startswith(quote) and len(value) > len(quote):
+            return f"{key}{close}{sep}{quote}{REDACTED}{quote}"
+    if "=" not in sep:
+        # ``key: value`` is prose or a header: the value is one word, and the rest is kept.
+        word = re.match(r"\S+", value)
+        rest = value[word.end() :] if word else ""
+        return f"{key}{close}{sep}{REDACTED}{rest}"
+    return f"{key}{close}{sep}{REDACTED}"  # ``key=value``: an ODBC value runs to the next ``;``
+
+
+_PATTERNS: list[tuple[re.Pattern[str], str | Callable[[re.Match[str]], str]]] = [
     (re.compile(r"(?i)(bearer\s+)(?!<redacted>)[A-Za-z0-9._~+/=-]{8,}"), rf"\1{REDACTED}"),
     (re.compile(_JWT), REDACTED),
     (
-        re.compile(rf"(?i)\b({_KEYS})(\s*[=:]\s*)(?!<redacted>)(\{{[^}}]*\}}|[^;&\s\"',]+)"),
-        rf"\1\2{REDACTED}",
+        # The key may be a quoted JSON key (``"password": ...``, escaped on a tape).
+        re.compile(rf"(?i)\b({_KEYS})(\\?[\"']?)(\s*[=:]\s*)({_VALUE})"),
+        _secret_value,
     ),
     (
         re.compile(
