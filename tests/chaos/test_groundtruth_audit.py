@@ -59,3 +59,26 @@ def test_orphan_keys_on_a_decimal_or_boolean_column_is_a_clear_error() -> None:
     ):
         with pytest.raises(ValueError, match=r"orphan_keys: t\.x_id is .* integer, float or text"):
             _orphans(col)
+
+
+def test_negative_amounts_refuses_a_named_unsigned_column() -> None:
+    """#401: an unsigned column cannot hold a negative amount, so naming one is an error."""
+    import pytest
+
+    t = pa.table({"id": list(range(10)), "u": pa.array(range(1, 11), pa.uint32())})
+    with pytest.raises(ValueError, match=r"negative_amounts: t\.u is uint32"):
+        corrupt_tables({"t": t}, [Corruption("negative_amounts", 0.5, "t", "u")], seed=1)
+
+
+def test_negative_amounts_skips_unsigned_columns_it_picks_itself() -> None:
+    """#401: the columns picked without a name are those that can hold a negative."""
+    t = pa.table(
+        {
+            "id": list(range(10)),
+            "u": pa.array(range(1, 11), pa.uint32()),
+            "amount": pa.array([float(i + 1) for i in range(10)]),
+        }
+    )
+    out = corrupt_tables({"t": t}, [Corruption("negative_amounts", 0.5, "t")], seed=1)
+    assert {r["column"] for r in out.records} == {"amount"}
+    assert all(r["after"] < 0 for r in out.records)
