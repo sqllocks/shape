@@ -17,6 +17,7 @@ import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from . import hashing as H
+from .sketch import _check_kll, _check_registers
 
 QUANTILES = (0.0, 0.01, 0.05, 0.25, 0.5, 0.75, 0.95, 0.99, 1.0)
 BOUNDED_TOP = 64
@@ -605,8 +606,15 @@ def _read_tracker(r: _Reader) -> _Tracker:
     p = r.unpack("B")
     if not 4 <= p <= 18:
         raise ValueError("snapshot holds an invalid HLL precision")
-    t.hll = sk.HyperLogLog(p, list(r.take(1 << p)))
+    registers = list(r.take(1 << p))
+    try:
+        _check_registers(p, registers)
+    except ValueError as exc:
+        raise ValueError(f"snapshot: {exc}") from None
+    t.hll = sk.HyperLogLog(p, registers)
     capacity, n, clock, length = (r.unpack(f) for f in "IQQI")
+    if capacity == 0:
+        raise ValueError("snapshot holds a SpaceSaving capacity of 0")
     if length > capacity:
         raise ValueError("snapshot holds more SpaceSaving entries than its capacity")
     ss = sk.SpaceSaving(capacity)
@@ -633,6 +641,10 @@ def _read_kll(r: _Reader) -> Any:
     for _ in range(nlevels):
         length = r.unpack("I")
         levels.append(list(struct.unpack(f"<{length}d", r.take(8 * length))))
+    try:
+        _check_kll(k, levels)
+    except ValueError as exc:
+        raise ValueError(f"snapshot: {exc}") from None
     return _sketches().KLL(k, levels or [[]], n, compactions)
 
 

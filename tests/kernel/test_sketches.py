@@ -356,7 +356,8 @@ def test_hll_from_registers_rejects_impossible_register_values(native):
     for mod in _kernels(native):
         with pytest.raises(ValueError, match="register"):
             mod.Hll.from_registers(4, bytes([255] * 16))
-        ok = mod.Hll.from_registers(4, bytes([61] * 16))  # 64 - p + 1 is the largest rank
+        assert mod.Hll.from_registers(4, bytes([61] * 16)).p == 4  # 64 - p + 1: the largest rank
+        ok = mod.Hll.from_registers(4, bytes([5] * 16))
         assert ok.estimate() > 0
 
 

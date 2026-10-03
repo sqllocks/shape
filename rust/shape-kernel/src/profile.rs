@@ -1059,8 +1059,13 @@ fn read_tracker(r: &mut SnapReader) -> Result<Tracker, String> {
         return Err("snapshot holds an invalid HLL precision".into());
     }
     let mut hll = HllCore::new(p);
-    hll.registers.copy_from_slice(r.take(1usize << p)?);
+    let registers = r.take(1usize << p)?;
+    HllCore::check_registers(p, registers).map_err(|e| format!("snapshot: {e}"))?;
+    hll.registers.copy_from_slice(registers);
     let capacity = r.u32()? as usize;
+    if capacity == 0 {
+        return Err("snapshot holds a SpaceSaving capacity of 0".into());
+    }
     let n = r.u64()?;
     let clock = r.u64()?;
     let len = r.u32()? as usize;
@@ -1103,6 +1108,7 @@ fn read_kll(r: &mut SnapReader) -> Result<KllCore, String> {
         }
         levels.push(level);
     }
+    KllCore::check_parts(k, &levels).map_err(|e| format!("snapshot: {e}"))?;
     Ok(KllCore::from_parts(k, levels, n, compactions))
 }
 

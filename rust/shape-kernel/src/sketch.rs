@@ -57,6 +57,17 @@ fn tau(mut x: f64) -> f64 {
 }
 
 impl HllCore {
+    /// Restored registers must be ranks `update_hash` can produce: at most `64 - p + 1`.
+    pub fn check_registers(p: u32, registers: &[u8]) -> Result<(), String> {
+        let max = 65 - p;
+        if registers.iter().any(|&r| u32::from(r) > max) {
+            return Err(format!(
+                "an HLL register is above {max}, the largest rank for p={p}"
+            ));
+        }
+        Ok(())
+    }
+
     pub fn new(p: u32) -> Self {
         HllCore {
             p,
@@ -140,6 +151,21 @@ impl KllCore {
     /// Number of compactions so far (the parity of the next one).
     pub fn compactions(&self) -> u64 {
         self.compactions
+    }
+
+    /// Restored state must be state `update` and `merge` can produce: `k >= 8`, at most 64
+    /// levels (an item's weight is `2**level`), and no NaN item.
+    pub fn check_parts(k: u64, levels: &[Vec<f64>]) -> Result<(), String> {
+        if k < 8 {
+            return Err(format!("KLL k is {k}; it must be >= 8"));
+        }
+        if levels.len() > 64 {
+            return Err(format!("KLL has {} levels; at most 64", levels.len()));
+        }
+        if levels.iter().flatten().any(|x| x.is_nan()) {
+            return Err("KLL holds a NaN item".into());
+        }
+        Ok(())
     }
 
     /// Rebuild a sketch from its serialized state (snapshot restore).
@@ -474,6 +500,7 @@ impl PyHll {
         if registers.len() != s.core.registers.len() {
             return Err(PyValueError::new_err("register count does not match p"));
         }
+        HllCore::check_registers(p, registers).map_err(PyValueError::new_err)?;
         s.core.registers.copy_from_slice(registers);
         Ok(s)
     }

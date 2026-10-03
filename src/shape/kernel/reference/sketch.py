@@ -27,6 +27,23 @@ def _valid_hashes(array: Any) -> list[int]:
     return [int(h) for h in hash_array(array, 0).to_pylist() if h is not None]
 
 
+def _check_registers(p: int, registers: bytes | list[int]) -> None:
+    """Restored registers must be ranks ``update_hash`` can produce: at most ``64 - p + 1``."""
+    top = 65 - p
+    if any(r > top for r in registers):
+        raise ValueError(f"an HLL register is above {top}, the largest rank for p={p}")
+
+
+def _check_kll(k: int, levels: list[list[float]]) -> None:
+    """Restored KLL state: ``k >= 8``, at most 64 levels, no NaN item."""
+    if k < 8:
+        raise ValueError(f"KLL k is {k}; it must be >= 8")
+    if len(levels) > 64:
+        raise ValueError(f"KLL has {len(levels)} levels; at most 64")
+    if any(x != x for level in levels for x in level):
+        raise ValueError("KLL holds a NaN item")
+
+
 class Hll:
     def __init__(self, p: int = 14) -> None:
         self._s = _sk().HyperLogLog(p)
@@ -61,6 +78,7 @@ class Hll:
         out = Hll(p)
         if len(registers) != len(out._s.registers):
             raise ValueError("register count does not match p")
+        _check_registers(p, registers)
         out._s.registers = list(registers)
         return out
 
