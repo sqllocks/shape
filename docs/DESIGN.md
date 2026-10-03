@@ -89,6 +89,48 @@ Warehouse, which does not enforce constraints, they are `NOT ENFORCED`. `--drop`
 `DROP TABLE` statements. `--schema-name` qualifies the tables. The text has no timestamp and no
 version.
 
+## TMDL
+
+`shape design INPUT --mode star --tmdl DIR` (and `shape.design.tmdl.write_tmdl(design, DIR,
+source=design_input)`) also writes the star or snowflake design as a **TMDL** folder, the format a
+Power BI Desktop project uses for a semantic model:
+
+```
+DIR/definition/database.tmdl
+DIR/definition/model.tmdl
+DIR/definition/relationships.tmdl
+DIR/definition/tables/<table>.tmdl        one per table
+```
+
+Fact and dimension tables have typed columns (`int64`, `decimal`, `double`, `string`, `boolean`,
+`dateTime`; a date column has the `Short Date` format and a timestamp `General Date`). Every
+foreign key is a relationship from the surrogate keys; where two relationships join the same pair
+of tables (a role-playing date dimension) the first is active and the others are `isActive: false`.
+The date dimension is marked as a date table (`dataCategory: Time`, its `date` column the key).
+Surrogate and foreign keys are hidden. Each table has an import-mode partition over a Lakehouse
+table (`{workspace_id}` and `{lakehouse_id}` are placeholders to fill in; the `warehouse` and
+`sql_database` sources, as in `shape fabric export-model`, are available from `write_tmdl`).
+
+Default measures: `<Fact> Count` (`COUNTROWS`) per fact, and `<Fact> Total <Measure>` (`SUM`) per
+measure declared `additive`. A `non_additive` or `semi_additive` measure, and one with no declared
+additivity, gets no sum: summing it would be wrong. Giving `source` (the design input) is what
+supplies the additivity; without it only the row counts are written. Names are quoted the way
+`shape fabric export-model` quotes them: a TMDL name that is not a plain word in single quotes with
+a quote doubled, a DAX table `'name'`, a column's closing bracket doubled, and M identifiers
+`#"..."`.
+
+The files have no time stamp, no GUID and no version, tabs for indentation, and `\n` line ends: the
+same design gives the same bytes (tests compare two runs and four `PYTHONHASHSEED` values). A 3NF
+design is refused (a semantic model is built over facts and dimensions). A `definition` folder that
+already holds `.tmdl` files this design does not write is refused instead of mixed; nothing is
+deleted. With `--tmdl` and no `-o` the DDL is not printed.
+
+`shape import-schema DIR` reads the folder back ([IMPORTERS.md](IMPORTERS.md)). Tables, column
+names and order, column types (a `uuid` or `time` column comes back as a string, TMDL having no
+such type), every relationship, and the one-column keys of dimensions survive the round trip. Not
+surviving: nullability, string lengths, precision, the composite key of a fact or bridge table (the
+importer adds an `id` column), the date dimension's key, measures and the generators.
+
 ## Lint
 
 | Code | Severity | Meaning |

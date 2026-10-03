@@ -5,6 +5,17 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Schema importers (`docs/IMPORTERS.md`, #82). `shape import-schema FILE -o OUT.gen.json` reads a
+  JSON Schema (draft 2020-12 and 7), OpenAPI 3.0 and 3.1, Avro, Protobuf (`proto3`, parsed without
+  `protoc`), Pydantic v2 (`--allow-import`, since it runs the named module) or TMDL source and
+  writes a generation spec that validates against the published schema, choosing each column's
+  generator from its type and constraints. `--report` writes a `shape-import-report` (version 1)
+  of every element and what it became or why it was not imported; `--strict` exits 1 and writes no
+  spec when anything was not imported; a malformed input exits 2 with the file, line and element.
+  `shape design --mode star --tmdl DIR` (`shape.design.tmdl.write_tmdl`) writes a star or
+  snowflake design as a TMDL folder with relationships, a date table and default measures (a row
+  count per fact, a sum per additive measure), byte-identical for the same design.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

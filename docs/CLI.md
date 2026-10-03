@@ -50,7 +50,12 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
   second way to profile; use `shape profile` for that.
 - `shape design INPUT.json` reads a **design input** and writes DDL for a 3NF, star or snowflake
   schema, after linting it; `shape design DATA.csv --from-data` builds a design input from data.
-  See [DESIGN.md](DESIGN.md).
+  See [DESIGN.md](DESIGN.md). `--tmdl DIR` also writes the star or snowflake design as a TMDL
+  semantic model.
+- `shape import-schema FILE -o OUT.gen.json` imports a JSON Schema, OpenAPI, Avro, Protobuf,
+  Pydantic or TMDL schema as a generation spec, with `--from`, `--report`, `--strict` and
+  `--allow-import` (Pydantic runs the module it imports). Exit 1 means `--strict` found an element
+  that was not imported; 2 is a malformed or ambiguous input. See [IMPORTERS.md](IMPORTERS.md).
 - `shape compatibility BEFORE AFTER` compares two Shape **models** (made by `shape capture` or
   written as model JSON), not profiles. Compare two profiles with `shape diff`. To check a feed
   for schema changes, capture it each day and compare with the baseline; a renamed or dropped
