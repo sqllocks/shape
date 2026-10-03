@@ -11,6 +11,7 @@ environment that is not activated, a CI step, a notebook). Both start the same p
 | 1 | a check failed, drift was found, a signature or leak scan failed |
 | 2 | bad input: a missing or unreadable file, the wrong kind of file, a bad argument |
 | 3 and above | a command's own verdict (a certificate below its threshold, a failed contract, an incompatible change); each command's `--help` says which |
+| 141 | standard output was closed before the command finished (`shape ... \| head`); nothing is printed |
 
 ## Errors
 
