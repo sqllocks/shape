@@ -152,7 +152,8 @@ def file_kind(path: str | Path) -> str | None:
 
 def expand_paths(spec: str | Path | Iterable[str | Path]) -> list[Path]:
     """Files named by ``spec``: a file, a glob, a directory (recursive, recognised suffixes,
-    hidden and ``_``-prefixed files skipped) or a list of those. Sorted, de-duplicated."""
+    hidden and ``_``-prefixed files and folders skipped) or a list of those. Sorted,
+    de-duplicated."""
     items = [spec] if isinstance(spec, (str, Path)) else list(spec)
     out: list[Path] = []
     for item in items:
@@ -171,7 +172,7 @@ def expand_paths(spec: str | Path | Iterable[str | Path]) -> list[Path]:
                 p
                 for p in path.rglob("*")
                 if p.is_file()
-                and not p.name.startswith((".", "_"))
+                and not any(part.startswith((".", "_")) for part in p.relative_to(path).parts)
                 and _strip_compression(p) in _SUFFIX_KIND
             )
             if not found:

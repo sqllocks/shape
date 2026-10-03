@@ -107,13 +107,22 @@ def _kind(path: str) -> str | None:
     return file_kind(PurePosixPath(path))  # type: ignore[arg-type]
 
 
+def _hidden(path: str, root: str) -> bool:
+    """True when ``path`` or a folder between ``root`` and it starts with ``.`` or ``_`` (the
+    sink's ``_shape_tmp`` staging folder, ``_delta_log``, Spark's ``_temporary``)."""
+    base = PurePosixPath(root.strip("/"))
+    parts = PurePosixPath(path.strip("/")).parts
+    below = parts[len(base.parts) :] if parts[: len(base.parts)] == base.parts else parts[-1:]
+    return any(part.startswith((".", "_")) for part in below)
+
+
 def _list_files(fs: Any, root: str) -> list[str]:
     if any(ch in root for ch in _GLOB):
         found = sorted(p for p in fs.glob(root) if fs.isfile(p))
     elif fs.isfile(root):
         found = [root]
     elif fs.isdir(root):
-        found = sorted(p for p in fs.find(root) if not PurePosixPath(p).name.startswith((".", "_")))
+        found = sorted(p for p in fs.find(root) if not _hidden(p, root))
     else:
         raise FileNotFoundError(f"abfss path not found: {root}")
     found = [p for p in found if _kind(_suffix_compression(p)[0]) is not None]

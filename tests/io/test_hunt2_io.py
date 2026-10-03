@@ -139,7 +139,8 @@ def _failing(*, schema_change: bool = False):  # type: ignore[no-untyped-def]
 
 @pytest.mark.parametrize(
     ("fmt", "name", "schema_change"),
-    [(f, n, False) for f, n in _PLAIN] + [(f, n, True) for f, n in _PLAIN if f in ("parquet", "ipc")],
+    [(f, n, False) for f, n in _PLAIN]
+    + [(f, n, True) for f, n in _PLAIN if f in ("parquet", "ipc")],
 )  # text formats have no schema to violate
 def test_failed_write_keeps_the_previous_file(
     tmp_path: Path, fmt: str, name: str, schema_change: bool
@@ -251,7 +252,9 @@ def test_abfss_source_skips_hidden_and_underscore_folders() -> None:
             "/hunt2/root/sub/part-2.parquet",
         ]
         # a root that is itself below an underscore folder is still read
-        assert _list_files(fs, "hunt2/root/_delta_log") == ["/hunt2/root/_delta_log/0.checkpoint.parquet"]
+        assert _list_files(fs, "hunt2/root/_delta_log") == [
+            "/hunt2/root/_delta_log/0.checkpoint.parquet"
+        ]
     finally:
         fs.rm("/hunt2", recursive=True)
 
