@@ -73,9 +73,10 @@ def test_a_cancelled_run_gives_the_open_table_an_error():
     seen = [0]
 
     def progress(info):
-        seen[0] += 1
-        if seen[0] == 7:
-            cancel.set()
+        if info["table"] == "order":  # 5000 rows in chunks of 400: stop after the third chunk
+            seen[0] += 1
+            if seen[0] == 3:
+                cancel.set()
 
     engine = Engine(load_target("retail", None), scale="small")
     router = ScaleRouter(

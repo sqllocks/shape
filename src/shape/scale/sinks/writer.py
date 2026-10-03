@@ -23,7 +23,12 @@ if TYPE_CHECKING:
     from shape.generation.schema import GenSchema
 
 _END = object()
+_ABORT = object()
 _DEPTH = 4
+
+
+class RunStopped(RuntimeError):
+    """What a writer's batch iterator raises when the run stopped before the table was whole."""
 
 
 class _TableStream:
@@ -41,6 +46,8 @@ class _TableStream:
 
     def _drain(self) -> Iterator[Any]:
         while (item := self._queue.get()) is not _END:
+            if item is _ABORT:
+                raise RunStopped(f"the run stopped before table {self.table!r} was complete")
             yield item
         self._ended = True
 
@@ -69,6 +76,13 @@ class _TableStream:
         self._thread.join()
         if self.error is not None:
             raise self.error
+
+    def abort(self) -> None:
+        """Hand the writer an error instead of a clean end; what it raises is not reported (the
+        run's own error is)."""
+        self._queue.put(_ABORT)
+        self._queue.put(_END)
+        self._thread.join()
 
 
 class WriterSink(BaseSink):
@@ -132,6 +146,13 @@ class WriterSink(BaseSink):
         stream = self._streams.pop(table, None)
         if stream is not None:
             stream.finish()
+
+    def abort(self) -> None:
+        """The run stopped early: the tables still open are not ended cleanly, so a writer does
+        not load a table that was cut short as if it were whole."""
+        streams, self._streams = list(self._streams.values()), {}
+        for stream in streams:
+            stream.abort()
 
     def close(self) -> None:
         errors: list[BaseException] = []
