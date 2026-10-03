@@ -205,7 +205,8 @@ def inject_anomalies(
     pick_kind = rng.random(count)
     pick_col = rng.random(count)
     if not plan or count == 0:
-        return AnomalyResult(batch, (), (), (), ChaosReport("anomalies", 0, {"requested": count}))
+        details = {"fraction": fraction, "requested": int(count), "kinds": {}}
+        return AnomalyResult(batch, (), (), (), ChaosReport("anomalies", 0, details))
 
     kind_of = np.minimum((pick_kind * len(plan)).astype(np.int64), len(plan) - 1)
     columns = list(batch.columns)
