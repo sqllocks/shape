@@ -117,14 +117,18 @@ def _tag_scalar(v: Any) -> list[Any] | None:
     if isinstance(v, float):
         return ["float", None if math.isnan(v) else float(v)]
     if isinstance(v, str):
-        return ["str", v if len(v) <= MAX_VALUE_CHARS else v[:MAX_VALUE_CHARS] + "\u2026"]
+        return ["str", _cut(v)]
     if type_name == "Timestamp":
         return ["timestamp", str(v)]
     if isinstance(v, _dt.datetime):
         return ["datetime", str(v)]
     if isinstance(v, _dt.date):
         return ["date", str(v)]
-    return [type_name, str(v)]
+    return [type_name, _cut(str(v))]  # bytes and the rest are cut like text (#317)
+
+
+def _cut(text: str) -> str:
+    return text if len(text) <= MAX_VALUE_CHARS else text[:MAX_VALUE_CHARS] + "\u2026"
 
 
 def _column_dict(cp: ColumnProfile) -> dict[str, Any]:
