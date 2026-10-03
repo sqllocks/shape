@@ -13,7 +13,10 @@ from shape.generation.schema import GenSchema
 
 
 def _table(
-    columns: dict[str, dict[str, Any]], rows: int = 1000, seed: int = 7, chunk_rows: int | None = None
+    columns: dict[str, dict[str, Any]],
+    rows: int = 1000,
+    seed: int = 7,
+    chunk_rows: int | None = None,
 ) -> pa.Table:
     doc = {
         "schema_version": 1,
@@ -28,7 +31,9 @@ def _table(
     return Engine(GenSchema.from_dict(doc), seed=seed, **options).generate().tables["t"]
 
 
-def _times(generator: dict[str, Any], rows: int = 2000, chunk_rows: int | None = None) -> list[datetime]:
+def _times(
+    generator: dict[str, Any], rows: int = 2000, chunk_rows: int | None = None
+) -> list[datetime]:
     table = _table(
         {"ts": {"type": "datetime", "generator": {"strategy": "temporal", **generator}}},
         rows,
@@ -77,14 +82,15 @@ def test_seasonal_timed_bounds_do_not_depend_on_chunking() -> None:
 
 
 def test_seasonal_partial_edge_days_weigh_their_share_of_the_day() -> None:
-    # 18:00 on the 1st to 06:00 on the 3rd: the 1st and the 3rd hold a quarter of a day each and
-    # the 2nd a whole day, so the 2nd holds about two thirds of the values
+    # 18:00 on the 1st to 06:00 on the 3rd with every day and hour equally likely: the 1st and
+    # the 3rd hold a quarter of a day each and the 2nd a whole day, so about two thirds of the
+    # values fall on the 2nd
     values = _times(
         {
             "pattern": "seasonal",
             "start": "2024-01-01T18:00:00",
             "end": "2024-01-03T06:00:00",
-            "profiles": {"month": {"Jan": 1}},
+            "profiles": {"hour_of_day": {str(h): 1 for h in range(24)}},
         },
         rows=6000,
     )

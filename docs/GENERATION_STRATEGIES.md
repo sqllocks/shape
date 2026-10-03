@@ -313,6 +313,9 @@ generate --from` writes it from a profile's conditional probability tables.
   bucket is the product of the two weights, shared equally by the days of the range in it; the
   probability of a bucket with no day in the range is spread over the other days. The end date is a
   possible day, as it is for `uniform`. Without a month or weekday profile the range is uniform.
+  When the start or an exclusive end has a time of day, the partial first and last days weigh
+  the share of the day inside the range and their values are moved into that part of the day, so
+  every value lies in `[start, end)` for the seasonal and `hour_of_day` patterns too.
 * `profiles.hour_of_day` replaces the time of day by a whole second in an hour drawn uniformly, from
   one weight per hour (`{"0": 0.01, ..., "23": 0.02}`, a profile's hour histogram), or from
   `{"distribution": "bimodal", "peaks": [12, 18], "std_dev": 2}`: equally likely Gaussian

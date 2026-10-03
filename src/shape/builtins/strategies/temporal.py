@@ -93,6 +93,52 @@ def _range(spec: Mapping[str, Any], ctx: GenerationContext) -> _Range:
 _UNITS = ("s", "ms", "us", "ns")
 
 
+class _Edges:
+    """The partial first and last days of a day-weighted range whose start or (exclusive) end has
+    a time of day (#129). A date range has none, and its values are left as drawn. Otherwise the
+    edge days weigh the share of the day inside the range, and a value drawn on an edge day has its
+    time of day mapped linearly into the part of the day inside the range, so every value lies in
+    ``[start, stop)`` and a profile's hour shape is kept, compressed, on those days."""
+
+    __slots__ = ("first", "high", "last", "low")
+
+    def __init__(self, window: _Range, first: int, n_days: int) -> None:
+        self.first, self.last = first, first + n_days - 1
+        self.low = window.start - first * _DAY_US  # time of day of the start, 0 at midnight
+        self.high = window.stop - self.last * _DAY_US  # of the stop, in (0, one day]
+
+    @property
+    def whole(self) -> bool:
+        return self.low == 0 and self.high == _DAY_US
+
+    def weigh(self, days: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
+        if self.whole:
+            return days
+        out = np.array(days, dtype=np.float64)
+        if self.first == self.last:
+            out[0] *= (self.high - self.low) / _DAY_US
+        else:
+            out[0] *= (_DAY_US - self.low) / _DAY_US
+            out[-1] *= self.high / _DAY_US
+        return out
+
+    def inside(self, values: pa.Array, *, whole_seconds: bool) -> pa.Array:
+        if self.whole or not len(values):
+            return values
+        micros = np.asarray(arrow_numpy(values.cast(pa.int64())), dtype=np.int64)
+        day = micros // _DAY_US
+        tod = micros - day * _DAY_US
+        low = np.where(day == self.first, self.low, 0)
+        high = np.where(day == self.last, self.high, _DAY_US)
+        span = high - low
+        moved = low + np.minimum(np.floor(tod / _DAY_US * span).astype(np.int64), span - 1)
+        if whole_seconds:
+            seconds = moved - moved % 1_000_000
+            moved = np.where(seconds >= low, seconds, moved)
+        out = np.where((low > 0) | (high < _DAY_US), day * _DAY_US + moved, micros)
+        return arrow_array(out, type=pa.int64()).cast(pa.timestamp("us"))
+
+
 def _uniform(window: _Range, ctx: GenerationContext) -> npt.NDArray[np.int64]:
     """Microsecond timestamps uniform on ``[start, stop)``: a date end is a possible day."""
     window.check(ctx)
@@ -181,7 +227,7 @@ class Temporal:
 
     def _microseconds(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         window = _range(spec, ctx)
-        start, end = window.start, window.end
+        start = window.start
         if spec.get("pattern", "uniform") != "seasonal":
             return arrow_array(
                 _uniform(window, ctx).astype("datetime64[us]"), type=pa.timestamp("us")
@@ -194,22 +240,21 @@ class Temporal:
         month_w, dow_w = profiles.get("month") or {}, profiles.get("day_of_week") or {}
         hour_profile = profiles.get("hour_of_day") or {}
         hours = self._hours(hour_profile, ctx)
+        if not month_w and not dow_w and not hour_profile:
+            return arrow_array(
+                _uniform(window, ctx).astype("datetime64[us]"), type=pa.timestamp("us")
+            )
+        # the days from the start's day to the last day before the (exclusive) stop
+        first = start // _DAY_US
+        n_days = -(-window.stop // _DAY_US) - first
+        window.check_days(n_days, ctx)
         if not month_w and not dow_w:
-            if not hour_profile:
-                return arrow_array(
-                    _uniform(window, ctx).astype("datetime64[us]"), type=pa.timestamp("us")
-                )
-            first = start // _DAY_US
-            n_days = -(-window.stop // _DAY_US) - first
-            window.check_days(n_days, ctx)
             days = np.ones(n_days)
         else:
-            first = start // _DAY_US
-            n_days = end // _DAY_US - first + 1
-            window.check_days(n_days, ctx)
             days = _day_weights(first, n_days, _weights(month_w, _MONTHS), _weights(dow_w, _DOW))
-        return kernel_ops.temporal_sample(
-            arrow_array(days),
+        edges = _Edges(window, first, n_days)
+        values = kernel_ops.temporal_sample(
+            arrow_array(edges.weigh(days)),
             arrow_array(hours),
             first,
             stream(ctx, "t"),
@@ -217,6 +262,7 @@ class Temporal:
             ctx.n_rows,
             whole_seconds=bool(hour_profile),
         )
+        return edges.inside(values, whole_seconds=bool(hour_profile))
 
     @staticmethod
     def _hours(profile: Mapping[str, Any], ctx: GenerationContext) -> npt.NDArray[np.float64]:
