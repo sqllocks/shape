@@ -130,6 +130,7 @@ def test_live_fidelity_overhead_is_timed_under_the_benchmark_lock(monkeypatch, t
     waits for the load gate before timing."""
     mod = _load("benchmarks_live_fidelity_run", ROOT / "benchmarks" / "live_fidelity" / "run.py")
     import common
+
     monkeypatch.setattr(common, "BENCH_OUT_DIR", tmp_path)
     monkeypatch.delenv("BENCH_LOCK_HELD", raising=False)
     gated = []
@@ -148,3 +149,19 @@ def test_live_fidelity_overhead_is_timed_under_the_benchmark_lock(monkeypatch, t
     mod.overhead("retail", "small", tmp_path, 1)
     assert held and set(held) == {"1"}
     assert gated
+
+
+@pytest.mark.parametrize(
+    ("platform", "maxrss", "mb"), [("linux", 1_048_576, 1024.0), ("darwin", 1 << 30, 1024.0)]
+)
+def test_peak_rss_is_megabytes_on_every_platform(monkeypatch, platform, maxrss, mb):
+    """``ru_maxrss`` is KiB on Linux and bytes on macOS; the harness records megabytes."""
+    gen = _load("vs_spindle_domain_generate", BENCH / "domain_1to1" / "generate.py")
+    import resource
+
+    class Usage:
+        ru_maxrss = maxrss
+
+    monkeypatch.setattr(sys, "platform", platform)
+    monkeypatch.setattr(resource, "getrusage", lambda who: Usage())
+    assert gen._peak_rss_mb() == mb
