@@ -5,8 +5,13 @@ from pathlib import Path
 
 import pytest
 import shape_databases
-from shape_databases import MySqlSink, PostgresSink
-from shape_databases.testing import FakeServer, sample_batch
+from shape_databases import DatabricksSink, MySqlSink, PostgresSink, SnowflakeSink
+from shape_databases.testing import (
+    FakeDatabricks,
+    FakeServer,
+    FakeSnowflake,
+    sample_batch,
+)
 
 from shape.plugins import kit
 
@@ -41,16 +46,41 @@ def test_each_sink_passes_the_kit_sink_check(sink_type, dialect, uri):
     assert len(server.rows("kit_table")) == 8
 
 
+@pytest.mark.parametrize(
+    ("sink_type", "fake_type", "uri"),
+    [
+        (SnowflakeSink, FakeSnowflake, "snowflake://shape@acct/DB/PUBLIC"),
+        (DatabricksSink, FakeDatabricks, "databricks://h.example/sql/1.0/warehouses/w"),
+    ],
+)
+def test_the_cloud_sinks_pass_the_kit_sink_check(sink_type, fake_type, uri):
+    server = fake_type()
+    names = sample_batch().schema.names
+    kit.check_sink(
+        sink_type(connect=server.connect),
+        uri,
+        [sample_batch(0, 4), sample_batch(4, 4)],
+        read_back=lambda: __import__("pyarrow").table(
+            {n: [r[i] for r in server.rows("kit_table")] for i, n in enumerate(names)}
+        ),
+    )
+    assert len(server.rows("kit_table")) == 8
+
+
 def test_names_and_schemes():
     assert (PostgresSink.name, PostgresSink.schemes) == ("postgres", ("postgresql", "postgres"))
     assert (MySqlSink.name, MySqlSink.schemes) == ("mysql", ("mysql",))
+    assert (SnowflakeSink.name, SnowflakeSink.schemes) == ("snowflake", ("snowflake",))
+    assert (DatabricksSink.name, DatabricksSink.schemes) == ("databricks", ("databricks",))
 
 
 def test_the_installed_distribution_conforms():
     lines = kit.check_installed("sqllocks-shape-databases")
     assert [ln.split(":")[0] + ":" + ln.split(":")[1] for ln in lines] == [
+        "shape.sinks:databricks",
         "shape.sinks:mysql",
         "shape.sinks:postgres",
+        "shape.sinks:snowflake",
     ]
 
 
@@ -69,9 +99,21 @@ def test_lockstep_and_extras_with_core():
     assert extras["databases"] == [f"{name}[postgres,mysql]=={version}"]
     assert any(d.startswith("psycopg") for d in plugin["optional-dependencies"]["postgres"])
     assert any(d.lower().startswith("pymysql") for d in plugin["optional-dependencies"]["mysql"])
+    # T-08: the two cloud drivers are extras of the plugin, and core has no extra for them
+    assert [d.split(">")[0] for d in plugin["optional-dependencies"]["snowflake"]] == [
+        "snowflake-connector-python"
+    ]
+    assert [d.split(">")[0] for d in plugin["optional-dependencies"]["databricks"]] == [
+        "databricks-sql-connector"
+    ]
+    assert not {"snowflake", "databricks"} & set(extras)
     # T-07: the drivers are in no core dependency list
     for deps in [core["dependencies"], *extras.values()]:
-        assert not any(d.lower().startswith(("psycopg", "pymysql")) for d in deps)
+        assert not any(
+            d.lower().startswith(("psycopg", "pymysql", "snowflake", "databricks"))
+            for d in deps
+            if "sqllocks-shape-databases" not in d
+        )
 
 
 def test_importing_the_plugin_does_not_import_a_driver():
@@ -80,7 +122,8 @@ def test_importing_the_plugin_does_not_import_a_driver():
 
     code = (
         "import sys, shape_databases; "
-        "bad = [m for m in ('psycopg', 'pymysql', 'psycopg2') if m in sys.modules]; "
+        "bad = [m for m in ('psycopg', 'pymysql', 'psycopg2', 'snowflake', 'databricks', "
+        "'cryptography') if m in sys.modules]; "
         "sys.exit(1 if bad else 0)"
     )
     assert subprocess.run([sys.executable, "-c", code], check=False).returncode == 0

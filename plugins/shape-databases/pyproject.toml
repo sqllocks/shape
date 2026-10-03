@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "sqllocks-shape-databases"
 # Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
 version = "0.9.0"
-description = "Shape plugin: live PostgreSQL (COPY) and MySQL sinks"
+description = "Shape plugin: live PostgreSQL, MySQL, Snowflake and Databricks sinks"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -19,10 +19,15 @@ dependencies = ["sqllocks-shape==0.9.0"]
 [project.optional-dependencies]
 postgres = ["psycopg[binary]>=3.1,<4"]
 mysql = ["pymysql>=1.1,<2"]
+# Plugin extras only: core carries no database client (T-07, T-08).
+snowflake = ["snowflake-connector-python>=3.7,<5"]
+databricks = ["databricks-sql-connector>=3.1,<5"]
 
 [project.entry-points."shape.sinks"]
 postgres = "shape_databases:PostgresSink"
 mysql = "shape_databases:MySqlSink"
+snowflake = "shape_databases:SnowflakeSink"
+databricks = "shape_databases:DatabricksSink"
 
 [tool.setuptools.packages.find]
 where = ["src"]

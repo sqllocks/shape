@@ -16,6 +16,8 @@ once.
 | `warehouse://...` | `warehouse` | `sqllocks-shape-fabric` | Fabric Warehouse, `COPY INTO` from a staging path |
 | `postgresql://host/db` | `postgres` | `sqllocks-shape-databases[postgres]` | `COPY ... FROM STDIN` |
 | `mysql://host/db` | `mysql` | `sqllocks-shape-databases[mysql]` | batched multi-row `INSERT` |
+| `snowflake://user@account/db/schema` | `snowflake` | `sqllocks-shape-databases[snowflake]` | Parquet `PUT` to the table stage, one `COPY INTO`, row count checked |
+| `databricks://host/http_path?catalog=C&schema=S` | `databricks` | `sqllocks-shape-databases[databricks]` | Delta tables in Unity Catalog, batched bound multi-row `INSERT` |
 | `kafka://`, `eventhubs://`, `eventstream://`, `eventhouse://` | emitters | their plugins | streaming sinks (`shape.emitters`), `shape emit` only |
 
 An unknown scheme is an error that lists the schemes installed.

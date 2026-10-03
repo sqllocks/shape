@@ -15,6 +15,7 @@ import datetime as dt
 import re
 from collections.abc import Callable, Sequence
 from decimal import Decimal
+from pathlib import Path
 from typing import Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
@@ -269,4 +270,351 @@ class FakeConnection:
 
     def close(self) -> None:
         self.closed = True
+        self.server.events.append(("close",))
+
+
+# -- Snowflake and Databricks ----------------------------------------------------------------
+_SF_STAGE = rf"@(?:({_IDENT})\.)?%({_IDENT})"
+_SF_CREATE = re.compile(rf"CREATE TABLE {_QUALIFIED} \(\n(.*)\n\)\Z", re.S)
+_SF_PUT = re.compile(
+    rf"PUT '((?:[^'\\]|\\.|'')*)' {_SF_STAGE} AUTO_COMPRESS = FALSE OVERWRITE = TRUE\Z"
+)
+_SF_COPY = re.compile(
+    rf"COPY INTO {_QUALIFIED} FROM {_SF_STAGE} FILE_FORMAT = \(TYPE = PARQUET\) "
+    r"MATCH_BY_COLUMN_NAME = CASE_SENSITIVE PURGE = TRUE\Z"
+)
+_SF_REMOVE = re.compile(rf"REMOVE {_SF_STAGE} PATTERN = '(.*)'\Z")
+_DBX_CREATE = re.compile(rf"CREATE TABLE {_QUALIFIED} \(\n(.*)\n\) USING DELTA\Z", re.S)
+# A pattern that reads statements, not one that builds them.
+_DBX_INSERT_PATTERN = rf"INSERT INTO {_QUALIFIED} \((.*?)\) VALUES (.*)\Z"  # nosec B608
+_DBX_INSERT_HEAD = re.compile(_DBX_INSERT_PATTERN, re.S)
+
+
+class FakeSnowflake:
+    """A Snowflake account: tables, table stages, and a transaction model in which DDL commits
+    at once and ``COPY INTO`` is transactional. ``server.connect`` is the sink's ``connect``.
+
+    ``copy_loads_fewer=N`` makes ``COPY INTO`` report (and load) N rows fewer than staged;
+    ``fail_on`` is called with each statement and may raise; ``purge_fails`` keeps staged files
+    after a load (``PURGE`` is best effort)."""
+
+    def __init__(
+        self,
+        *,
+        default_schema: str = "PUBLIC",
+        copy_loads_fewer: int = 0,
+        fail_on: Callable[[str], None] | None = None,
+        fail_connect: str | None = None,
+        purge_fails: bool = False,
+    ) -> None:
+        self.default_schema = default_schema
+        self.tables: dict[Key, list[tuple[Any, ...]]] = {}
+        self.columns: dict[Key, list[str]] = {}
+        self.stages: dict[Key, dict[str, Any]] = {}
+        self.events: list[tuple[Any, ...]] = []
+        self.put_paths: list[Path] = []
+        self.uploaded: list[tuple[str, Any]] = []
+        self.copy_loads_fewer = copy_loads_fewer
+        self.fail_on = fail_on
+        self.fail_connect = fail_connect
+        self.purge_fails = purge_fails
+        self._snapshot: tuple[dict[Key, list[tuple[Any, ...]]], dict[Key, list[str]]] | None = None
+
+    def connect(self, **params: Any) -> FakeSnowflakeConnection:
+        self.events.append(("connect", dict(params)))
+        if self.fail_connect is not None:
+            raise FakeDriverError(self.fail_connect)
+        return FakeSnowflakeConnection(self)
+
+    def key(self, schema: str | None, table: str) -> Key:
+        return (schema or self.default_schema, table)
+
+    def rows(self, table: str, schema: str | None = None) -> list[tuple[Any, ...]]:
+        return list(self.tables.get(self.key(schema, table), []))
+
+    def staged_files(self, table: str, schema: str | None = None) -> list[str]:
+        return sorted(self.stages.get(self.key(schema, table), {}))
+
+    def statements(self) -> list[str]:
+        return [e[1] for e in self.events if e[0] == "execute"]
+
+    def text(self) -> str:
+        return repr(self.events)
+
+    def begin(self) -> None:
+        if self._snapshot is None:
+            self._snapshot = (copy.deepcopy(self.tables), copy.deepcopy(self.columns))
+
+    def commit(self) -> None:
+        self._snapshot = None
+
+    def rollback(self) -> None:
+        if self._snapshot is not None:
+            self.tables, self.columns = self._snapshot
+            self._snapshot = None
+
+
+class FakeSnowflakeCursor:
+    def __init__(self, server: FakeSnowflake) -> None:
+        self.server = server
+        self._result: list[tuple[Any, ...]] = []
+        self.description: list[tuple[str]] | None = None
+
+    def _set(self, names: Sequence[str], rows: list[tuple[Any, ...]]) -> None:
+        self.description = [(n,) for n in names]
+        self._result = rows
+
+    def execute(self, sql: str, params: Sequence[Any] | None = None) -> None:
+        import pyarrow.parquet as pq
+
+        s = self.server
+        s.events.append(("execute", sql, tuple(params) if params is not None else None))
+        self._set((), [])
+        if s.fail_on is not None:
+            s.fail_on(sql)
+        if sql.startswith("SELECT 1 FROM information_schema.tables"):
+            assert params is not None
+            schema, table = params
+            self._set(("1",), [(1,)] if s.key(schema, table) in s.tables else [])
+            return
+        if _SCHEMA.match(sql):
+            s.commit()
+            return
+        if m := _SF_CREATE.match(sql):
+            s.commit()
+            key = s.key(_unquote(m[1]) if m[1] else None, _unquote(m[2]))
+            if key in s.tables:
+                raise FakeDriverError(f"object {key[1]} already exists")
+            lines = [ln.strip() for ln in m[3].split(",\n")]
+            s.tables[key] = []
+            s.columns[key] = [
+                _unquote(_ONE_IDENT.match(ln)[0])  # type: ignore[index]
+                for ln in lines
+                if not ln.startswith("PRIMARY KEY")
+            ]
+            s.stages[key] = {}
+            return
+        if m := _DROP.match(sql):
+            s.commit()
+            key = s.key(_unquote(m[1]) if m[1] else None, _unquote(m[2]))
+            s.tables.pop(key, None)
+            s.columns.pop(key, None)
+            s.stages.pop(key, None)
+            return
+        if m := _TRUNCATE.match(sql):
+            s.commit()
+            s.tables[s.key(_unquote(m[1]) if m[1] else None, _unquote(m[2]))] = []
+            return
+        if m := _SF_PUT.match(sql):
+            key = s.key(_unquote(m[2]) if m[2] else None, _unquote(m[3]))
+            if key not in s.stages:
+                raise FakeDriverError("stage does not exist")
+            path = Path(m[1].replace("''", "'").replace("\\\\", "\\")[len("file://") :])
+            s.put_paths.append(path)
+            s.stages[key][path.name] = pq.read_table(path)
+            s.uploaded.append((path.name, s.stages[key][path.name]))
+            self._set(("source", "target", "status"), [(path.name, path.name, "UPLOADED")])
+            return
+        if m := _SF_COPY.match(sql):
+            key = s.key(_unquote(m[1]) if m[1] else None, _unquote(m[2]))
+            if key not in s.tables:
+                raise FakeDriverError("table does not exist")
+            files = s.stages.get(key, {})
+            names = ("file", "status", "rows_parsed", "rows_loaded", "error_limit", "errors_seen")
+            if not files:
+                self._set(("status",), [("Copy executed with 0 files processed.",)])
+                return
+            s.begin()
+            result = []
+            for name, table in sorted(files.items()):
+                if table.column_names != s.columns[key]:
+                    raise FakeDriverError("the staged columns do not match the table's")
+                columns = [table.column(c).to_pylist() for c in table.column_names]
+                s.tables[key].extend(zip(*columns, strict=True))
+                reported = table.num_rows - s.copy_loads_fewer
+                result.append((name, "LOADED", table.num_rows, reported, 1, 0))
+            self._set(names, result)
+            s.copy_loads_fewer = 0 if len(files) == 1 else s.copy_loads_fewer
+            if not s.purge_fails:
+                files.clear()
+            return
+        if m := _SF_REMOVE.match(sql):
+            key = s.key(_unquote(m[1]) if m[1] else None, _unquote(m[2]))
+            pattern = re.compile(m[3])
+            files = s.stages.get(key, {})
+            for name in [n for n in files if pattern.fullmatch(n) or pattern.search(n)]:
+                del files[name]
+            return
+        raise FakeDriverError(f"the fake server does not understand: {sql[:60]}")
+
+    def fetchone(self) -> tuple[Any, ...] | None:
+        return self._result[0] if self._result else None
+
+    def fetchall(self) -> list[tuple[Any, ...]]:
+        return list(self._result)
+
+    def close(self) -> None:
+        pass
+
+
+class FakeSnowflakeConnection:
+    def __init__(self, server: FakeSnowflake) -> None:
+        self.server = server
+
+    def cursor(self) -> FakeSnowflakeCursor:
+        return FakeSnowflakeCursor(self.server)
+
+    def commit(self) -> None:
+        self.server.events.append(("commit",))
+        self.server.commit()
+
+    def rollback(self) -> None:
+        self.server.events.append(("rollback",))
+        self.server.rollback()
+
+    def close(self) -> None:
+        self.server.events.append(("close",))
+
+
+class FakeDatabricks:
+    """A Databricks SQL warehouse: every statement commits at once and a rollback is refused (as
+    the real connector refuses it), so a sink that calls ``rollback`` fails its test.
+    ``server.connect`` is the sink's ``connect``; ``fail_after_rows=N`` fails the INSERT that
+    would carry the table past N rows."""
+
+    def __init__(
+        self,
+        *,
+        default_schema: str = "default",
+        fail_after_rows: int | None = None,
+        fail_connect: str | None = None,
+        fail_message: str = "simulated driver failure",
+    ) -> None:
+        self.default_schema = default_schema
+        self.tables: dict[Key, list[tuple[Any, ...]]] = {}
+        self.columns: dict[Key, list[str]] = {}
+        self.events: list[tuple[Any, ...]] = []
+        self.fail_after_rows = fail_after_rows
+        self.fail_connect = fail_connect
+        self.fail_message = fail_message
+        self.rows_seen = 0
+
+    def connect(self, **params: Any) -> FakeDatabricksConnection:
+        self.events.append(("connect", dict(params)))
+        if self.fail_connect is not None:
+            raise FakeDriverError(self.fail_connect)
+        return FakeDatabricksConnection(self)
+
+    def key(self, schema: str | None, table: str) -> Key:
+        return (schema or self.default_schema, table)
+
+    def rows(self, table: str, schema: str | None = None) -> list[tuple[Any, ...]]:
+        return list(self.tables.get(self.key(schema, table), []))
+
+    def statements(self) -> list[str]:
+        return [e[1] for e in self.events if e[0] == "execute"]
+
+    def inserts(self) -> list[tuple[str, list[Any]]]:
+        return [
+            (e[1], e[2]) for e in self.events if e[0] == "execute" and e[1].startswith("INSERT")
+        ]
+
+    def text(self) -> str:
+        return repr(self.events)
+
+
+def _top_level_groups(text: str) -> list[str]:
+    """The parenthesised groups at depth 0 of a ``VALUES`` list."""
+    groups, depth, start = [], 0, 0
+    for i, ch in enumerate(text):
+        if ch == "(":
+            if depth == 0:
+                start = i + 1
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+            if depth == 0:
+                groups.append(text[start:i])
+    return groups
+
+
+class FakeDatabricksCursor:
+    def __init__(self, server: FakeDatabricks) -> None:
+        self.server = server
+        self._result: list[tuple[Any, ...]] = []
+
+    def execute(self, sql: str, parameters: Sequence[Any] | None = None) -> None:
+        s = self.server
+        s.events.append(("execute", sql, list(parameters) if parameters is not None else None))
+        if sql.startswith("SELECT 1 FROM information_schema.tables"):
+            assert parameters is not None
+            schema, table = parameters
+            self._result = [(1,)] if s.key(schema, table) in s.tables else []
+            return
+        if _SCHEMA.match(sql):
+            return
+        if m := _DBX_CREATE.match(sql):
+            key = s.key(_unquote(m[1]) if m[1] else None, _unquote(m[2]))
+            if key in s.tables:
+                raise FakeDriverError(f"table {key[1]} already exists")
+            lines = [ln.strip() for ln in m[3].split(",\n")]
+            s.tables[key] = []
+            s.columns[key] = [
+                _unquote(_ONE_IDENT.match(ln)[0])  # type: ignore[index]
+                for ln in lines
+                if not ln.startswith("PRIMARY KEY")
+            ]
+            return
+        if m := _DROP.match(sql):
+            key = s.key(_unquote(m[1]) if m[1] else None, _unquote(m[2]))
+            s.tables.pop(key, None)
+            s.columns.pop(key, None)
+            return
+        if m := _TRUNCATE.match(sql):
+            s.tables[s.key(_unquote(m[1]) if m[1] else None, _unquote(m[2]))] = []
+            return
+        if m := _DBX_INSERT_HEAD.match(sql):
+            key = s.key(_unquote(m[1]) if m[1] else None, _unquote(m[2]))
+            names = [_unquote(x) for x in _ONE_IDENT.findall(m[3])]
+            groups = _top_level_groups(m[4])
+            marks = m[4].count("?")
+            params = list(parameters or [])
+            if marks != len(params) or marks != len(groups) * len(names):
+                raise FakeDriverError(
+                    f"{marks} markers, {len(params)} parameters, {len(groups)} rows of "
+                    f"{len(names)} columns"
+                )
+            if key not in s.tables:
+                raise FakeDriverError("table does not exist")
+            if s.fail_after_rows is not None and s.rows_seen + len(groups) > s.fail_after_rows:
+                raise FakeDriverError(s.fail_message)
+            width = len(names)
+            for i in range(len(groups)):
+                s.tables[key].append(tuple(params[i * width : (i + 1) * width]))
+            s.rows_seen += len(groups)
+            return
+        raise FakeDriverError(f"the fake server does not understand: {sql[:60]}")
+
+    def fetchone(self) -> tuple[Any, ...] | None:
+        return self._result[0] if self._result else None
+
+    def close(self) -> None:
+        pass
+
+
+class FakeDatabricksConnection:
+    def __init__(self, server: FakeDatabricks) -> None:
+        self.server = server
+
+    def cursor(self) -> FakeDatabricksCursor:
+        return FakeDatabricksCursor(self.server)
+
+    def commit(self) -> None:
+        self.server.events.append(("commit",))
+
+    def rollback(self) -> None:
+        self.server.events.append(("rollback",))
+        raise FakeDriverError("transactions are not supported")
+
+    def close(self) -> None:
         self.server.events.append(("close",))

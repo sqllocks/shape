@@ -5,6 +5,19 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Sinks II, part a (W2-08, #96): `shape generate --to` and `shape emit --to` write to Snowflake
+  (`snowflake://user@account/database/schema?warehouse=WH&role=ROLE`: Parquet files `PUT` to the
+  table stage, one `COPY INTO` whose loaded row count must equal the staged rows, staged files
+  removed also on failure; key-pair or password sign-in) and to Databricks
+  (`databricks://host/http_path?catalog=CAT&schema=SCH`: Delta tables in Unity Catalog through a SQL
+  warehouse, batched bound multi-row `INSERT`; token or OAuth machine-to-machine sign-in). Both are
+  in `plugins/shape-databases` (`shape_databases.SnowflakeSink`, `DatabricksSink`; drivers are the
+  plugin extras `[snowflake]` and `[databricks]`, none in core), take the same `write_mode`,
+  `schema_name`, `table_prefix`, `commit_rows`, `columns` and `primary_key` as the other database
+  sinks, check identifier limits (255 characters, names the database would change) before any
+  connection, refuse a secret in the URI and redact credentials in every message. Type maps and
+  what a failure leaves behind are in the plugin README.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
