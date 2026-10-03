@@ -340,6 +340,11 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   read twice raises instead of yielding nothing (#498); a damaged Parquet/IPC file or an unknown
   `columns` name is a `ReaderError` for every file kind (#499); a workbook sheet whose name
   contains `#` can be selected (`book.xlsx#Q#1`, #497).
+- Readers (`shape.io`): a one-file source is named after the file without its recognised format
+  suffix and any compression suffix, no longer up to its first dot (#506). **Tables of file names
+  with more than one dot are renamed** in profiles and models: `my.data.csv` is `my.data` (was
+  `my`), `sales.2024-01.csv.gz` is `sales.2024-01` (was `sales`), so `sales.2024-01.csv` and
+  `sales.2024-02.csv` no longer share a table name. Names with one dot (`orders.csv`) are unchanged.
 - Connectors: `DBAPISource` refuses result columns with the same name and says when a statement
   has no result set (#494); Kafka and Event Hubs decoding keep every key and each value's type
   (#495).

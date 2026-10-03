@@ -5,7 +5,9 @@ row group), JSONL, Arrow IPC (file or stream, memory-mapped), ``dict[str, array]
 tables/batches/readers, any object exporting the Arrow PyCapsule interface (polars and others,
 zero-copy), pandas DataFrames, and iterables of row dicts (the edge adapter). Paths may be a
 file, a glob, a directory (searched recursively) or a list of those; many files are read as one
-table whose schema is the first file's.
+table whose schema is the first file's. A one-file source is named after the file without its
+recognised format suffix and any compression suffix (``sales.2024-01.csv.gz`` is
+``sales.2024-01``); a source of many files after their directory.
 
 CSV values are typed by inference, not left as strings (bug P1). ``CsvOptions`` covers schema
 overrides and null/boolean tokens; ``PANDAS_CSV`` reproduces ``pandas.read_csv`` token semantics
@@ -118,6 +120,18 @@ def _strip_compression(path: Path) -> str:
     while suffixes and suffixes[-1] in _COMPRESSION:
         suffixes.pop()
     return suffixes[-1] if suffixes else ""
+
+
+def _source_name(path: Path) -> str:
+    """The file name without its compression suffixes and its recognised format suffix:
+    ``sales.2024-01.csv.gz`` is ``sales.2024-01`` (#506: it used to stop at the first dot)."""
+    name = path.name
+    while (suffix := Path(name).suffix).lower() in _COMPRESSION and suffix:
+        name = name[: -len(suffix)]
+    suffix = Path(name).suffix
+    if suffix.lower() in _SUFFIX_KIND:
+        name = name[: -len(suffix)]
+    return name
 
 
 def _kind_of(path: Path) -> str:
@@ -534,7 +548,7 @@ def _files_source(
                     break
                 yield _conform(batch, out_schema, str(p)) if i or refined else batch
 
-    stem = paths[0].name.split(".")[0] if len(paths) == 1 else paths[0].parent.name or "table"
+    stem = _source_name(paths[0]) if len(paths) == 1 else paths[0].parent.name or "table"
     rows = None
     if kind == "parquet":
         rows = sum(_readable(p, kind, pq.ParquetFile, p).metadata.num_rows for p in paths)
