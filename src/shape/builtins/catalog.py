@@ -42,6 +42,7 @@ BUILTINS: tuple[tuple[str, str, str], ...] = (
     ("shape.strategies", "derived", "shape.builtins.strategies.derived:Derived"),
     ("shape.strategies", "computed", "shape.builtins.strategies.derived:Computed"),
     ("shape.strategies", "address", "shape.builtins.strategies:AddressStrategy"),
+    ("shape.strategies", "locale", "shape.builtins.strategies.locale_pack:Locale"),
     ("shape.strategies", "uuid", "shape.builtins.strategies.basic:Uuid"),
     ("shape.strategies", "weighted_enum", "shape.builtins.strategies.basic:WeightedEnum"),
     ("shape.strategies", "distribution", "shape.builtins.strategies.numeric:Distribution"),

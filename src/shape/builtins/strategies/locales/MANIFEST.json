@@ -1,0 +1,69 @@
+{
+  "format": "shape-locale-data",
+  "version": 1,
+  "files": {
+    "au_places.tsv": {
+      "source": "https://download.geonames.org/export/zip/AU.zip",
+      "upstream_sha256": "cc8df389cd0107d2acebf9dc2520c275006e098246bf1df4c2d1f733a5478a36",
+      "licence": "Creative Commons Attribution 4.0 (CC-BY-4.0)",
+      "licence_text_url": "https://download.geonames.org/export/zip/readme.txt",
+      "read_on": "2026-10-03",
+      "rows": 3171,
+      "sha256": "b5bf85f0d74a5ffe2713e43a3c242106870556582e47da303b3420910116d00e"
+    },
+    "ca_places.tsv": {
+      "source": "https://download.geonames.org/export/zip/CA.zip",
+      "upstream_sha256": "24175b988419ff7ba08905e82edc0827fb4100ed0027b3dd71892a0f57b0eee1",
+      "licence": "Creative Commons Attribution 4.0 (CC-BY-4.0)",
+      "licence_text_url": "https://download.geonames.org/export/zip/readme.txt",
+      "read_on": "2026-10-03",
+      "rows": 1651,
+      "sha256": "a108f5d11f5e76f658d82319d5136433ba050ebaf7801d122fb411572ef95049"
+    },
+    "de_places.tsv": {
+      "source": "https://download.geonames.org/export/zip/DE.zip",
+      "upstream_sha256": "d86c76d5ec2e4e8df3bb450cd136f5cfae28da4ed7d84b473257b0ef7314e853",
+      "licence": "Creative Commons Attribution 4.0 (CC-BY-4.0)",
+      "licence_text_url": "https://download.geonames.org/export/zip/readme.txt",
+      "read_on": "2026-10-03",
+      "rows": 8172,
+      "sha256": "a329bbb9a6439ba5a32c18e411a2b68db4c022b65df27d0fd0fac32957692215"
+    },
+    "fr_first_names.txt": {
+      "source": "https://www.insee.fr/fr/statistiques/fichier/2540004/nat2021_csv.zip",
+      "upstream_sha256": "cf452bd00484ad6910f36ad6f19fd68b36cdf6f5b205aebe06713f3b6954166a",
+      "licence": "Licence Ouverte / Open Licence version 2.0 (Etalab)",
+      "licence_text_url": "https://www.insee.fr/fr/statistiques/2540004",
+      "read_on": "2026-10-03",
+      "rows": 1000,
+      "sha256": "87f1855f3fc50bb1e2a0a94e74b528a8c6c8f3bb36aeb31f82a809d8b0ead963"
+    },
+    "fr_places.tsv": {
+      "source": "https://download.geonames.org/export/zip/FR.zip",
+      "upstream_sha256": "cb5087429a53cd8cc87e5bd8921998faa4721a88642eb1a7642af6a752c6bf3d",
+      "licence": "Creative Commons Attribution 4.0 (CC-BY-4.0)",
+      "licence_text_url": "https://download.geonames.org/export/zip/readme.txt",
+      "read_on": "2026-10-03",
+      "rows": 6064,
+      "sha256": "1ea07022646b6d445f8337f280d67e1e9079ce41d2971a2e18b29504f2d59c4c"
+    },
+    "gb_places.tsv": {
+      "source": "https://download.geonames.org/export/zip/GB.zip",
+      "upstream_sha256": "1559e5660d3c0b04fbd6b5ef71d6405ab50c2d06194a598ccc7137cb901917ec",
+      "licence": "Creative Commons Attribution 4.0 (CC-BY-4.0)",
+      "licence_text_url": "https://download.geonames.org/export/zip/readme.txt",
+      "read_on": "2026-10-03",
+      "rows": 2980,
+      "sha256": "2f878382ea5b94249506c1c1eeaedebb8d9b85125caace470a279807c797f677"
+    },
+    "in_places.tsv": {
+      "source": "https://download.geonames.org/export/zip/IN.zip",
+      "upstream_sha256": "d6cc2ef89611ec9fa2f675d4d163b81c26ca0dd17d958fc96ae630b536a6facb",
+      "licence": "Creative Commons Attribution 4.0 (CC-BY-4.0)",
+      "licence_text_url": "https://download.geonames.org/export/zip/readme.txt",
+      "read_on": "2026-10-03",
+      "rows": 19238,
+      "sha256": "9a3c49db5974ebb27bf271e88b0e851b8beaf99686a96f83ae1a0586ba88df82"
+    }
+  }
+}

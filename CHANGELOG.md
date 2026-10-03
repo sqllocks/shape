@@ -5,6 +5,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Basic locale packs (`{"strategy": "locale"}`, `docs/LOCALES.md`): places and postcodes for the US, Canada, the UK, Germany, France, India and Australia (GeoNames, CC BY 4.0), phone numbers only in ranges reserved for fiction (US, CA, FR), French first names (INSEE, Licence Ouverte 2.0), and no national identifiers. Names, phone ranges and streets for the other countries are not shipped yet; each provider says so. Sources and licences: `THIRD_PARTY_NOTICES.md`.
 - `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
   the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
   clearing cover every month of a multi-month table. `duration_hours` still overrides it

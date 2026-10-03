@@ -43,3 +43,47 @@ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVI
 DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
 WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
 WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+## Locale packs (W4-03): places, postal codes, first names, reserved phone ranges
+
+Files in `src/shape/builtins/strategies/locales/`, built by `scripts/build_locale_data.py`; each
+file's upstream archive SHA-256, licence and read date are in `MANIFEST.json` next to it. All read
+on 2026-10-03.
+
+### GeoNames postal codes: GB, CA, DE, FR, IN, AU
+
+`gb_places.tsv`, `ca_places.tsv`, `de_places.tsv`, `fr_places.tsv`, `in_places.tsv` and
+`au_places.tsv` (city, region, postal code, latitude, longitude; one place per postal code) are
+derived from these downloads: https://download.geonames.org/export/zip/GB.zip,
+https://download.geonames.org/export/zip/CA.zip, https://download.geonames.org/export/zip/DE.zip,
+https://download.geonames.org/export/zip/FR.zip, https://download.geonames.org/export/zip/IN.zip
+and https://download.geonames.org/export/zip/AU.zip. Licence: Creative Commons Attribution 4.0, from the readme at
+https://download.geonames.org/export/zip/readme.txt ("This work is licensed under a Creative
+Commons Attribution 4.0 License"), read 2026-10-03. Attribution: "This work includes data from
+GeoNames (https://www.geonames.org/), licensed under CC-BY-4.0." The files hold the first part of
+a British postcode and the first three characters of a Canadian one only; the German file is
+reduced to places (the rows of single companies are left out).
+
+### INSEE, Fichier des prénoms: FR first names
+
+`fr_first_names.txt` is the 1,000 most given first names of persons born in France from 1950 on,
+from INSEE's "Fichier des prénoms" (national file, 2021 edition),
+https://www.insee.fr/fr/statistiques/fichier/2540004/nat2021_csv.zip, described at
+https://www.insee.fr/fr/statistiques/2540004. Licence: the page states that the data are
+available "sous la Licence Ouverte / Open Licence version 2.0 (Etalab)",
+https://www.etalab.gouv.fr/licence-ouverte-open-licence, read 2026-10-03. Source: INSEE, Fichier
+des prénoms, 2021 edition. Names were re-cased and counts dropped.
+
+### ARCEP, French numbering plan: reserved fiction numbers
+
+The six roots `01 99 00`, `02 61 91`, `03 53 01`, `04 65 71`, `05 36 49` and `06 39 98` used by the
+French `phone_number` provider are the "numéros pour œuvres audiovisuelles" of Arcep's Decision
+n° 2018-0881 of 24 July 2018 as amended, national numbering plan, version of 1 January 2026,
+section "Numéros pour œuvres audiovisuelles": "peuvent être utilisés comme numéros de téléphone
+dans des fictions qui en auraient besoin". https://www.arcep.fr/uploads/tx_gsavis/18-0881.pdf,
+read 2026-10-03. The document states no data licence; only these six facts are used.
+
+### Not shipped
+
+No other source is shipped. The `docs/LOCALES.md` section "What is not shipped" lists the data
+that could not be read under a licence this session.

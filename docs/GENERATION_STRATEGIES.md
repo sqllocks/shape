@@ -353,6 +353,11 @@ column is a struct of `address_line_1`, `city`, `county`, `state`, `postal_code`
 Row addressed: the value of row `r` depends on the seed, the table, the group, `r` and the spec,
 never on the chunk.
 
+### `locale`
+`{"strategy": "locale", "locale": "FR", "provider": "postcode"}`: places, postcodes, phone numbers in
+ranges reserved for fiction, and first names for a country, from data shipped with Shape. See
+`docs/LOCALES.md` for the countries, the sources and licences, and what is not shipped.
+
 ## Strategies of P4-04d
 
 The relational strategies. All are row addressed (the parent or version of row `r` is a function of the
