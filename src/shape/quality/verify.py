@@ -34,7 +34,6 @@ from .utility import UtilityGate
 from .verifyconfig import VerifyConfig
 
 FORMATS = ("csv", "parquet", "jsonl")
-_GLOBS = {"csv": "*.csv", "parquet": "*.parquet", "jsonl": "*.jsonl"}
 _SUFFIX_FORMAT = {".csv": "csv", ".parquet": "parquet", ".jsonl": "jsonl"}
 
 
@@ -82,12 +81,19 @@ def data_files(path: str | Path, fmt: str = "auto") -> list[Path]:
 
 
 def _select(p: Path, fmt: str) -> list[tuple[Path, str]]:
-    chosen = [(fp, f) for f in FORMATS for fp in sorted(p.glob(_GLOBS[f])) if fmt in ("auto", f)]
+    # every data file directly in the directory, by its extension in any case (``B.CSV`` too);
+    # a sub-directory is never a table, whatever its name
+    if not p.is_dir():
+        return []
+    found = [
+        (fp, _SUFFIX_FORMAT[fp.suffix.lower()])
+        for fp in p.iterdir()
+        if fp.suffix.lower() in _SUFFIX_FORMAT and fp.is_file()
+    ]
+    chosen = [(fp, f) for fp, f in found if fmt in ("auto", f)]
     chosen.sort(key=lambda item: (item[0].stem, item[0].name))
     if fmt != "auto":
-        skipped = sorted(
-            fp.name for f in FORMATS if f != fmt for fp in p.glob(_GLOBS[f]) if fp.is_file()
-        )
+        skipped = sorted(fp.name for fp, f in found if f != fmt)
         for name in skipped:
             warnings.warn(
                 f"skipped {name}: format {(kind := _SUFFIX_FORMAT[Path(name).suffix.lower()])} "
