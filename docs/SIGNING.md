@@ -111,6 +111,11 @@ A plain read does not check it, so it says so. Whenever an artifact is read with
   `shape.artifact.io.set_notice_handler`, or pass `notice=False` to silence one read);
 - `shape inspect` includes the same `signature` object in its JSON.
 
+`shape cat` takes `--verify PUBKEY` too. As a git `textconv` filter it reads a temporary copy of
+each file, so it prints the note on every diff of an unsigned or unchecked `.shape`; put the key in
+the filter (`shape git-setup --command 'shape cat --verify PUBKEY'`) to check each file and print
+no note, or to refuse to show one that is not signed by that key.
+
 The notice never changes what is accepted: an invalid, forged or wrong-key signature still fails
 closed with exit code 1 under `--verify`, and a plain read stays a plain read.
 

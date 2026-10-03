@@ -160,6 +160,13 @@ def add_parsers(sub: Any) -> None:
     )
     c.add_argument("file", metavar="FILE", help="a .shape artifact or a JSON file")
     c.add_argument("--json", action="store_true", help="pretty-printed JSON with sorted keys")
+    c.add_argument(
+        "--verify",
+        metavar="PUBKEY",
+        help="require FILE to be signed by this public key (exit 1 if not), which also ends the "
+        "'not verified' note; use it in the textconv command: "
+        "`shape git-setup --command 'shape cat --verify PUBKEY'`",
+    )
     g = sub.add_parser(
         "git-setup",
         help="configure this git repository to show readable diffs of .shape files",

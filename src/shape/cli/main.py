@@ -177,7 +177,7 @@ def _verify_inputs(a):
     from shape.artifact.signing import load_public_key, verify_artifact
 
     key = load_public_key(a.verify)
-    for name in ("shape", "before", "after", "target", "observed"):
+    for name in ("shape", "before", "after", "target", "observed", "file"):
         path = getattr(a, name, None)
         if isinstance(path, str) and _looks_like_artifact(path):
             verify_artifact(path, key)
