@@ -41,6 +41,7 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 from shape.kernel.dispatch import get_kernel
 from shape.profile.engine import table_entry
 from shape.streaming import versions
+from shape.streaming.checkpoint import inflate
 from shape.streaming.messages import partition_of
 
 SNAPSHOT_FORMAT = "shape-stream-window-v1"
@@ -181,7 +182,7 @@ def _encode_state(state: Any) -> str:
 
 
 def _decode_state(schema: pa.Schema, text: str) -> Any:
-    raw = zlib.decompress(base64.b64decode(text))
+    raw = inflate(base64.b64decode(text))
     return get_kernel().ProfileState.from_snapshot(schema, raw)
 
 

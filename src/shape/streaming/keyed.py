@@ -26,6 +26,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.kernel.hashing import hash_column, hash_value
 from shape.streaming import versions
+from shape.streaming.checkpoint import MAX_STATE_BYTES, inflate
 
 
 @dataclass
@@ -211,9 +212,13 @@ def _pack(a: np.ndarray) -> str:
     return base64.b64encode(zlib.compress(np.ascontiguousarray(a).tobytes(), 6)).decode("ascii")
 
 
-def _unpack(text: str, dtype: Any) -> np.ndarray:
+def _unpack(text: str, dtype: Any, max_items: int | None = None) -> np.ndarray:
+    """A packed array. ``max_items`` is the most values the caller expects (its declared size); the
+    field is not inflated past it, so a hostile file cannot fill memory."""
+    itemsize = np.dtype(dtype).itemsize
+    limit = MAX_STATE_BYTES if max_items is None else max_items * itemsize
     return np.frombuffer(
-        zlib.decompress(base64.b64decode(text)), dtype=np.dtype(dtype).newbyteorder("<")
+        inflate(base64.b64decode(text), limit), dtype=np.dtype(dtype).newbyteorder("<")
     ).astype(dtype)
 
 
@@ -599,14 +604,14 @@ class KeyedSketches:
         if n > obj.max_keys:
             raise ValueError("snapshot holds more keys than its cap")
         for name, arr in obj._arrays().items():
-            data = _unpack(snap["arrays"][name], arr.dtype)
+            data = _unpack(snap["arrays"][name], arr.dtype, n)
             if len(data) != n:
                 raise ValueError(f"snapshot array {name!r} has {len(data)} entries, not {n}")
             arr[:n] = data
         if obj._registers is not None:
-            obj._registers[:n] = _unpack(snap["arrays"]["registers"], np.uint8).reshape(
-                n, 1 << obj.hll_p
-            )
+            obj._registers[:n] = _unpack(
+                snap["arrays"]["registers"], np.uint8, n << obj.hll_p
+            ).reshape(n, 1 << obj.hll_p)
         obj._alive[:n] = True
         obj._used = n
         obj._index = dict(zip(obj._key[:n].tolist(), range(n), strict=True))

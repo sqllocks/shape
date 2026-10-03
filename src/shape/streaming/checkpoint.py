@@ -10,10 +10,27 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+import zlib
 from pathlib import Path
 from typing import Any
 
 from .core import StreamCheckpoint
+
+MAX_STATE_BYTES = 256 << 20
+"""The most a compressed state field may expand to when its size is not declared (a profile
+window's state): a checkpoint is a file another process or user may have written."""
+
+
+def inflate(raw: bytes, limit: int = MAX_STATE_BYTES) -> bytes:
+    """``raw`` (zlib data) decompressed, which must be at most ``limit`` bytes and a whole stream:
+    a damaged or hostile field fails with a ``ValueError`` instead of filling memory."""
+    stream = zlib.decompressobj()
+    out = stream.decompress(raw, limit + 1)
+    if len(out) > limit or stream.unconsumed_tail:
+        raise ValueError(f"a compressed state field expands past its size limit of {limit:,} bytes")
+    if not stream.eof:
+        raise ValueError("a compressed state field is truncated")
+    return out
 
 
 class CheckpointError(ValueError):
