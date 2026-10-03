@@ -130,11 +130,11 @@ def pool(country: str, name: str) -> list[str]:
 
 @cache
 def _arrow_places(country: str) -> tuple[pa.Array, pa.Array, pa.Array]:
-    p = places(country)
+    data = places(country)
     return (
-        arrow_array(p["city"], type=pa.string()),
-        arrow_array(p["region"], type=pa.string()),
-        arrow_array(p["postal_code"], type=pa.string()),
+        arrow_array(data["city"], type=pa.string()),
+        arrow_array(data["region"], type=pa.string()),
+        arrow_array(data["postal_code"], type=pa.string()),
     )
 
 
