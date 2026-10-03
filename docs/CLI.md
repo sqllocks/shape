@@ -120,6 +120,16 @@ remove something or a preflight check failed, 2 bad input.
 (`--project FILE`, `--no-project`, `--source NAME`, `diff --baseline-date`). See
 `docs/PROJECT.md`.
 
+## Change classes
+
+`shape diff` classes every change as breaking, additive or cosmetic and prints a closing line
+`bump: major (2 breaking, 1 additive, 4 cosmetic)` on stderr; the `--json` result and the line on
+stdout carry `class`, `class_reason` and `semver` (`docs/DRIFT.md`, "Change classes").
+`--fail-on breaking|additive|cosmetic` exits 1 when an unplanned change of that class or a stricter
+one is reported (it may be combined with `--fail-on-drift`; the run fails when either fails), and
+`--version-from X.Y.Z` adds `semver.next_version`. A class other than those three, or a version that
+is not `X.Y.Z`, exits 2. A drift policy that names an unknown kind or class exits 2 too.
+
 ## Planned changes
 
 `shape changes validate|list|add|ack` manages `shape-changes.yml`, the reviewable list of planned

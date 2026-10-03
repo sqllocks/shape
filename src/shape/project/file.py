@@ -30,6 +30,8 @@ MAX_BYTES = 1 << 20
 _NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 #: ``shape profile NAME`` words that are subcommands, so a source cannot carry them.
 RESERVED_SOURCE_NAMES = frozenset({"safe", "validate", "export", "import", "list", "registry"})
+#: the gates that compare with a baseline: the only ones that take ``fail_on``
+BASELINE_GATES = frozenset({"schema_drift"})
 BASELINE_KINDS = ("previous_run", "same_weekday", "rolling_window", "month_end", "pinned")
 GATE_MODES = ("observe", "enforce")
 DEFAULT_REGISTRY = "shapes/registry"
@@ -89,12 +91,15 @@ class Source:
     thresholds: Mapping[str, Any] = field(default_factory=dict)
     ignore: tuple[str, ...] = ()
     columns: Mapping[str, ColumnSettings] = field(default_factory=dict)
+    classes: Mapping[str, str] = field(default_factory=dict)
 
     def drift_policy(self) -> dict[str, Any]:
         """The ``shape diff`` policy of this source (the layout of ``--policy``)."""
         policy: dict[str, Any] = {}
         if self.thresholds:
             policy["thresholds"] = dict(self.thresholds)
+        if self.classes:
+            policy["classes"] = dict(self.classes)
         per_column = {c: dict(s.thresholds) for c, s in self.columns.items() if s.thresholds}
         if per_column:
             policy["columns"] = per_column
@@ -134,6 +139,7 @@ class Project:
     sources: Mapping[str, Source]
     gates: Mapping[str, str]
     changes: str | None = None
+    fail_on: Mapping[str, str] = field(default_factory=dict)
 
     @property
     def root(self) -> Path:
@@ -161,6 +167,11 @@ class Project:
     def gate_mode(self, gate: str) -> str:
         """``observe`` or ``enforce``; a gate the file does not list is enforced."""
         return self.gates.get(gate, "enforce")
+
+    def gate_fail_on(self, gate: str) -> str | None:
+        """The change class a baseline gate fails on (``fail_on`` of the gate), or None when the
+        file does not set it (the gate's default, ``breaking``, applies)."""
+        return self.fail_on.get(gate)
 
 
 # ---- discovery and parsing ---------------------------------------------------------------------
@@ -240,6 +251,9 @@ def _tidy(line: str) -> str:
     if found and path.endswith("thresholds"):
         known = ", ".join(sorted(schema()["$defs"]["thresholds"]["properties"]))
         return f"{path}: unknown threshold '{found[1]}' (known: {known})"
+    if found and path.endswith("classes"):
+        known = ", ".join(sorted(schema()["$defs"]["classes"]["properties"]))
+        return f"{path}: unknown change kind '{found[1]}' (known: {known})"
     return f"{path}: {message}"
 
 
@@ -305,9 +319,15 @@ def _semantic_problems(doc: dict[str, Any]) -> list[str]:
         from shape.quality.gates import GateRunner
 
         known = GateRunner.available_gates()
-        for gname in doc["gates"]:
+        for gname, gate in doc["gates"].items():
             if gname not in known:
                 out.append(f"gates: unknown gate {gname!r} (gates: {', '.join(known)})")
+            elif "fail_on" in _dict(gate) and gname not in BASELINE_GATES:
+                out.append(
+                    f"gates.{gname}.fail_on: gate {gname!r} does not compare with a baseline, "
+                    f"so it has no change class to fail on (fail_on goes with: "
+                    f"{', '.join(sorted(BASELINE_GATES))})"
+                )
     return out
 
 
@@ -368,6 +388,7 @@ def _source(root: Path, name: str, doc: dict[str, Any]) -> Source:
         thresholds=dict(doc.get("thresholds", {})),
         ignore=tuple(doc.get("ignore", ())),
         columns=columns,
+        classes=dict(doc.get("classes", {})),
     )
 
 
@@ -394,7 +415,8 @@ def parse_project(text: str, path: str | os.PathLike[str]) -> Project:
         raise ProjectError(f"{where}: " + "; ".join(found), tuple(found))
     sources = {str(n): _source(where.parent, str(n), s) for n, s in doc["sources"].items()}
     gates = {str(g): v["mode"] for g, v in doc.get("gates", {}).items()}
-    return Project(where, doc, doc.get("name"), sources, gates, doc.get("changes"))
+    fail_on = {str(g): v["fail_on"] for g, v in doc.get("gates", {}).items() if "fail_on" in v}
+    return Project(where, doc, doc.get("name"), sources, gates, doc.get("changes"), fail_on)
 
 
 def load_project(path: str | os.PathLike[str]) -> Project:

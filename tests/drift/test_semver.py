@@ -218,12 +218,12 @@ def test_a_class_override_replaces_the_default_and_says_so():
     got = classify(change("column_removed"), {"column_removed": "cosmetic"})
     assert got.class_ == "cosmetic"
     # an override beats the conditional rule, in both branches
-    assert classify(change("null_rate_change", 0, 0.3), {"null_rate_change": "cosmetic"}).class_ == (
-        "cosmetic"
-    )
-    assert classify(change("null_rate_change", 0.1, 0.3), {"null_rate_change": "breaking"}).class_ == (
-        "breaking"
-    )
+    assert classify(
+        change("null_rate_change", 0, 0.3), {"null_rate_change": "cosmetic"}
+    ).class_ == ("cosmetic")
+    assert classify(
+        change("null_rate_change", 0.1, 0.3), {"null_rate_change": "breaking"}
+    ).class_ == ("breaking")
 
 
 def test_unknown_kind_or_class_in_overrides_is_a_value_error():
@@ -396,11 +396,16 @@ def test_policy_classes_and_column_classes_change_the_class():
     # a column pattern beats the policy-wide class; the most specific pattern wins
     policy = {
         "classes": {"column_added": "breaking"},
-        "column_classes": {"t*": {"column_added": "cosmetic"}, "tier": {"column_added": "additive"}},
+        "column_classes": {
+            "t*": {"column_added": "cosmetic"},
+            "tier": {"column_added": "additive"},
+        },
     }
     r = shape.diff(base, cur, policy=policy)
     assert r.changes[0]["class"] == "additive"
-    r = shape.diff(base, cur, policy={**policy, "column_classes": {"t*": {"column_added": "cosmetic"}}})
+    r = shape.diff(
+        base, cur, policy={**policy, "column_classes": {"t*": {"column_added": "cosmetic"}}}
+    )
     assert r.changes[0]["class"] == "cosmetic"
     r = shape.diff(base, cur, policy={"column_classes": {"other": {"column_added": "breaking"}}})
     assert r.changes[0]["class"] == "additive"  # the pattern does not match

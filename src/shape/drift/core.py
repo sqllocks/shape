@@ -9,7 +9,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .engine import diff_records, resolve_policy
+from .engine import Policy, diff_records, resolve_policy
+from .semver import classify
 
 # The path suffix of a change: the Shape model's own name for what moved.
 _FIELD = {
@@ -27,7 +28,8 @@ _FIELD = {
 class Drift:
     """One change. ``path`` addresses it (``columns.<column>[.<field>]``, with
     ``tables.<table>.`` in front for several tables); ``column``, ``kind`` and ``severity`` are
-    the engine's change record, and ``score`` is its size from 0 to 1."""
+    the engine's change record, ``class_`` and ``class_reason`` its change class (``breaking``,
+    ``additive`` or ``cosmetic``; ``docs/DRIFT.md``) and ``score`` is its size from 0 to 1."""
 
     path: str
     score: float
@@ -37,21 +39,30 @@ class Drift:
     column: str | None = None
     kind: str = ""
     severity: str = ""
+    class_: str = ""
+    class_reason: str = ""
+    detail: Mapping[str, Any] | None = None
 
     def to_change(self) -> dict[str, Any]:
         """The change as ``shape.diff`` reports it."""
-        return {
+        out: dict[str, Any] = {
             "column": self.column,
             "kind": self.kind,
             "baseline": self.before,
             "current": self.after,
             "severity": self.severity,
             "score": self.score,
+            "class": self.class_,
+            "class_reason": self.class_reason,
         }
+        if self.detail:
+            out["detail"] = dict(self.detail)
+        return out
 
 
-def _drift(table: str | None, column: str | None, record: dict[str, Any]) -> Drift:
+def _drift(table: str | None, column: str | None, record: dict[str, Any], policy: Policy) -> Drift:
     kind = record["kind"]
+    found = classify(record, policy.classes_for(table, column))
     if column is None:
         path = f"tables.{table}"
     else:
@@ -68,6 +79,9 @@ def _drift(table: str | None, column: str | None, record: dict[str, Any]) -> Dri
         record["column"],
         kind,
         record["severity"],
+        found.class_,
+        found.reason,
+        record.get("detail"),
     )
 
 
@@ -91,5 +105,5 @@ def compare(
         only_columns=only_columns,
         policy=policy,
     )
-    out = [_drift(t, c, r) for t, c, r in diff_records(before, after, resolved)]
+    out = [_drift(t, c, r, resolved) for t, c, r in diff_records(before, after, resolved)]
     return sorted(out, key=lambda x: (-x.score, x.path))

@@ -61,6 +61,7 @@ the gate schema and the contract format, with its own `format` and `version`:
 | `ranges` | `range_constraint` | `"table.column"` stays within `min` / `max` |
 | `date_range`, `no_future`, `ordering` | `temporal_consistency` | timestamp columns lie in `start`..`end` (ISO 8601); `table.column` has no future dates; `end >= start` per rule |
 | `baseline` | `schema_drift` | removed tables or columns and changed types fail; new ones warn (dtype names: `int64`, `float64`, `str`, `bool`, `datetime64[us]`, `object`) |
+| `fail_on`, `classes`, `column_classes` | `schema_drift` | optional. Every change has a class (`docs/DRIFT.md`, "Change classes"); a change of class `fail_on` (`breaking` by default, `additive` or `cosmetic`) or a stricter one fails, the others warn. `classes` and `column_classes` are the drift policy's overrides (`int32` to `int64` is breaking, unless `{"dtype_widening": "additive"}`). The gate's details list `breaking`, `additive` and `cosmetic` changes, and each gate in the JSON report carries its `fail_on` (`null` for a gate that does not compare with a baseline). `shape.yml` sets the same keys (`docs/PROJECT.md`); this file beats it |
 | `file_paths`, `check_data_files` | `file_format` | the listed files (and, with `check_data_files`, every data file that was loaded) exist, are non-empty and read in full |
 | `distribution_alpha` | `distribution` (`--statistical`) | the p-value below which it warns (default 0.05) |
 | `classifications`, `memorization` | `memorization` (`--source`) | column classifications, and the gate's options (below) |

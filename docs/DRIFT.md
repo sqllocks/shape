@@ -10,7 +10,8 @@ import shape
 
 d = shape.diff(shape.load("baseline.shape"), shape.profile("today.parquet"))
 d.drifted            # bool
-d.changes            # [{column, kind, baseline, current, severity, score}, ...]
+d.changes            # [{column, kind, baseline, current, severity, score, class, class_reason}, ...]
+d.semver             # {"bump": "major", "breaking": 1, "additive": 0, "cosmetic": 3}
 ```
 
 ```
@@ -94,6 +95,80 @@ section 12.3 and keep their values.
   move that counts). Without quantiles to compare, only samples of `min_rows` or more name a
   family. The size of a real distribution change is `distribution_shift`.
 
+## Change classes
+
+`severity` says how large a change is. The **class** says what it does to the people who read the
+data: **breaking** (readers that worked yesterday can fail today), **additive** (something new,
+nobody who read the old data is affected) or **cosmetic** (the schema and the constraints are
+unchanged, values moved). Every change carries `class` and a one-line `class_reason`, and the
+result summarises them as a version bump:
+
+| Class | Kinds |
+|---|---|
+| breaking | `table_removed`, `column_removed`, `dtype_change`, `pattern_change`, `dependency_broken`, `reference_match_change`; `null_rate_change` when the baseline null rate is 0 and the current one is above 0; `uniqueness_change` when the baseline column was a primary key or had as many distinct values as non-null rows and the current one does not |
+| additive | `table_added`, `column_added`, `new_categorical_values` |
+| cosmetic | every other kind: `row_count_change`, `cardinality_change`, `mean_shift`, `spread_change`, `distribution_shift`, `distribution_change`, `category_shift`, `true_rate_change`, `range_change`, `length_change`, `outlier_rate_change`, `hour_of_day_change`, `day_of_week_change`, `placeholder_surge`, `implausible_rate_change`, `association_shift`; `null_rate_change` and `uniqueness_change` otherwise |
+
+The table lives in `shape.drift.semver` (`DEFAULT_CLASSES`) and a test fails when a kind of the
+table above has no default class, so a new kind cannot ship without one.
+`shape.drift.semver.classify(change, classes=None)` returns the `Classification` (`class_` and
+`reason`) of one change record.
+
+**Widening.** A `dtype_change` whose current Arrow type can hold every value of the baseline type
+carries `detail.widening: true`: a signed integer to a wider signed one, an unsigned integer to a
+wider integer, `float32` to `float64`, an integer of 32 bits or fewer to `float64`, `string` to
+`large_string`, `binary` to `large_binary`, a decimal with more precision and the same scale.
+Widening is still **breaking** by default (readers see another type), so nothing that fails a gate
+today passes; set the pseudo-kind `dtype_widening` to `additive` to class widening that way.
+`int64` to `int32`, a different scale and every other type change are never widening. A profile
+records a type family (`integer`, `float`, `string`), not a width, so the flag appears where the
+Arrow types are known: the schema drift gate of `shape verify` (`int32` to `int64`) and any change
+record that names Arrow types.
+
+**Overrides.** The drift policy (`policy=` or `--policy POLICY.json`, a contract's `"drift"`
+object, a source's `classes` in `shape.yml`) takes two more keys:
+
+```json
+{
+  "classes": {"column_added": "cosmetic", "dtype_widening": "additive"},
+  "column_classes": {"amount_*": {"mean_shift": "breaking"}, "orders.status": {"new_categorical_values": "breaking"}}
+}
+```
+
+`classes` is `{kind: class}`; `column_classes` is `{pattern: {kind: class}}` with patterns as for
+`column_thresholds`, the most specific winning (`*`, a glob, the column name, `table.column`). A
+policy class replaces the default, in both branches of `null_rate_change` and `uniqueness_change`.
+A planned-change entry (`docs/PLANNED_CHANGES.md`) may carry a `class`, which wins over the policy
+for the changes it matches. An unknown kind or an unknown class (a severity such as `high` is not
+one) raises `ValueError`, and exits 2 on the command line.
+
+**The bump.** `semver` counts the *unplanned* changes: `major` when any is breaking, else `minor`
+when any is additive, else `patch` when any is cosmetic, else `none`. Planned changes
+(`docs/PLANNED_CHANGES.md`) are counted apart, under `semver.planned`, and never change the bump;
+a `severity` entry that still counts is counted at its class. `--version-from X.Y.Z` (or
+`semver.next_version(version, bump)`) adds `semver.next_version`: `2.0.0`, `1.5.0`, `1.4.3` and
+`1.4.2` for the four bumps of `1.4.2`.
+
+```
+$ shape diff base.shape today.shape --fail-on breaking --version-from 1.4.2
+shape: status: column_removed [breaking]
+shape: tier: column_added [additive]
+shape: amount: mean_shift [cosmetic]
+version: 2.0.0
+bump: major (1 breaking, 1 additive, 1 cosmetic)
+```
+
+**Failing on a class.** `shape diff --fail-on breaking|additive|cosmetic` (and
+`shape.diff(..., fail_on=...)`, which sets `DiffResult.failed`) fails when an unplanned change of
+that class or a stricter one (breaking, then additive, then cosmetic) is reported. `--fail-on-drift`
+and `min_severity` keep their meaning, and both flags may be given: the run fails when either
+fails. Planned changes with action `expect` never count. A removed column gives `bump: major` and
+exit 1 with `--fail-on breaking`; an added column alone gives `minor`, exit 0 with
+`--fail-on breaking` and exit 1 with `--fail-on additive`; a mean shift alone gives `patch`.
+The schema drift gate of `shape verify` uses the same classes and takes its `fail_on` from the
+verify configuration or from `shape.yml` (`docs/PROJECT.md`, `docs/VERIFY.md`); its default,
+`breaking`, gives the results it always gave.
+
 ## Planned changes
 
 A change you expect (a release adds a column, a migration changes a type) is listed in a
@@ -147,7 +222,8 @@ shape.diff(
   `min_severity` can be set per column as well.
 - An unknown threshold, a value that is not a number of 0 or more (`min_severity` is `low`,
   `medium` or `high`) or an unknown policy key raises `ValueError`.
-- A policy file is `{"thresholds": {...}, "columns": {...}, "ignore": [...], "only": [...]}`. A
+- A policy file is `{"thresholds": {...}, "columns": {...}, "ignore": [...], "only": [...],
+  "classes": {...}, "column_classes": {...}}` (the last two: "Change classes"). A
   contract may carry the same object as `"drift"`, so a team keeps one policy file:
   `shape diff a.shape b.shape --policy contract.json`. `shape check` ignores the `drift` key.
 
@@ -158,7 +234,8 @@ shape diff BASE.shape CURRENT.shape
     [--threshold KEY=VALUE]...           any threshold by name, e.g. category_tvd=0.2
     [--column-threshold COLUMN:KEY=VALUE]...
     [--ignore COL1,COL2] [--only COL1,COL2] [--policy POLICY.json]
-    [--json RESULT.json] [--fail-on-drift]
+    [--json RESULT.json] [--fail-on-drift] [--fail-on breaking|additive|cosmetic]
+    [--version-from X.Y.Z]
 ```
 
 Contract rules for flags: `"min_true_rate"` and `"max_true_rate"` on a column (a number from 0 to

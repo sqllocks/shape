@@ -161,9 +161,7 @@ class Policy:
             return 0 if pattern == "*" else 1
 
         return [
-            by_pattern[p]
-            for p in sorted(by_pattern, key=rank)
-            if self._matches([p], table, column)
+            by_pattern[p] for p in sorted(by_pattern, key=rank) if self._matches([p], table, column)
         ]
 
     def for_column(self, table: str | None, column: str | None) -> dict[str, Any]:
@@ -213,7 +211,9 @@ def resolve_policy(
     only = tuple(only_columns) if only_columns is not None else tuple(base.get("only", ()))
     classes = check_classes(base.get("classes", {}))
     column_classes = check_column_classes(base.get("column_classes", {}))
-    return Policy(th, columns, tuple(map(str, ignore)), tuple(map(str, only)), classes, column_classes)
+    return Policy(
+        th, columns, tuple(map(str, ignore)), tuple(map(str, only)), classes, column_classes
+    )
 
 
 def _load_policy(policy: Mapping[str, Any] | str | Path) -> Mapping[str, Any]:
@@ -685,9 +685,7 @@ def _diff_column(name: str, base: View, cur: View, th: Mapping[str, Any]) -> lis
         and (base.origin != cur.origin or base.origin == "engine")
     )
     if base.dtype != cur.dtype and not cross_numeric:
-        out.append(
-            with_widening(_change(name, "dtype_change", base.dtype, cur.dtype, 1.0))
-        )
+        out.append(with_widening(_change(name, "dtype_change", base.dtype, cur.dtype, 1.0)))
     b_null, c_null = base.null_rate, cur.null_rate
     if b_null is not None and c_null is not None and abs(c_null - b_null) > th["null_rate"]:
         out.append(_change(name, "null_rate_change", b_null, c_null, abs(c_null - b_null)))

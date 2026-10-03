@@ -194,7 +194,7 @@ def test_owners_and_annotations_appear_on_changes(work, capsys):
 def test_output_is_unchanged_when_there_is_no_project(work, capsys):
     root, base, cur = work
     _, out, _ = diff(capsys, str(base), str(cur), "--null-rate", "0.01")
-    assert set(out) == {"drifted", "changes"}
+    assert set(out) == {"drifted", "changes", "semver"}  # W1-13 adds the version bump
     assert all("owner" not in c for c in out["changes"])
 
 
