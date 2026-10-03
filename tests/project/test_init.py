@@ -44,6 +44,7 @@ def test_init_scaffolds_a_valid_project(tmp_path: Path, capsys):
             "data/.gitkeep",
             "shapes/.gitkeep",
             "contracts/.gitkeep",
+            "contracts/consumers/.gitkeep",
         ]
     )
     assert out["skipped"] == [] and out["updated"] == []
@@ -200,3 +201,23 @@ def test_init_loads_nothing_heavy():
     )
     r = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True)
     assert r.stdout.strip().endswith("[]")
+
+
+def test_init_creates_the_consumer_contracts_folder(tmp_path: Path, capsys):
+    run_init(capsys, str(tmp_path))
+    assert (tmp_path / "contracts" / "consumers" / ".gitkeep").is_file()
+
+
+def test_ci_workflow_checks_the_consumer_contracts(tmp_path: Path, capsys):
+    run_init(capsys, str(tmp_path), "--source", "orders", "--source", "billing")
+    flow = yaml.safe_load((tmp_path / ".github" / "workflows" / "shape.yml").read_text())
+    runs = [s.get("run", "") for s in next(iter(flow["jobs"].values()))["steps"]]
+    for name in ("orders", "billing"):
+        (profile,) = [i for i, r in enumerate(runs) if f"shape profile {name} -o" in r]
+        (consumers,) = [
+            i
+            for i, r in enumerate(runs)
+            if f"shape contracts check-consumers shapes/current/{name}.shape" in r
+        ]
+        assert consumers == profile + 1  # after the profile it checks, before the drift comparison
+        assert f"--source {name}" in runs[consumers]

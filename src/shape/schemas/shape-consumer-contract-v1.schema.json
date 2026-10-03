@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sqllocks.github.io/shape/schemas/shape-consumer-contract-v1.schema.json",
+  "title": "Shape consumer contract, version 1",
+  "description": "What a consuming team depends on in a dataset another team produces. `requires` is a contract v1 body (see `shape check`); extra tables and columns of the producer are always allowed.",
+  "type": "object",
+  "required": ["format", "version", "consumer", "owner", "source", "since", "requires"],
+  "additionalProperties": false,
+  "properties": {
+    "format": {"const": "shape-consumer-contract"},
+    "version": {"type": "integer", "minimum": 1},
+    "consumer": {"type": "string", "description": "the consuming team or system"},
+    "owner": {"type": "string", "description": "who to contact when this contract breaks"},
+    "source": {"type": "string", "description": "the producer's source name in shape.yml"},
+    "since": {"type": "string", "description": "the date the consumer started to depend on this, YYYY-MM-DD"},
+    "requires": {
+      "type": "object",
+      "description": "a contract v1 body limited to the tables, columns and rules the consumer depends on"
+    }
+  }
+}

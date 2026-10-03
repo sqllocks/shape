@@ -390,6 +390,36 @@ def view_of_profile_column(col: Mapping[str, Any], rows: int) -> View:
     return view
 
 
+def view_of_safe_column(col: Mapping[str, Any], rows: int, *, primary_key: bool = False) -> View:
+    """A column of a share-safe profile (``shape profile safe``). It holds winsorized bounds
+    instead of the exact range, folded category weights, and no top values, so the range, the
+    outlier rate and the top values are unknown (``None``)."""
+    dtype = str(col["dtype"])
+    null_rate = col.get("null_rate")
+    null_rate = float(null_rate) if isinstance(null_rate, (int, float)) else None
+    non_null = rows if null_rate is None else max(int(round(rows * (1.0 - null_rate))), 0)
+    categories = _complete(col.get("categorical_weights")) if dtype != "datetime" else None
+    length = col.get("string_length") or {}
+    view = View(
+        dtype=dtype,
+        non_null=non_null,
+        null_rate=null_rate,
+        cardinality=col.get("cardinality"),
+        primary_key=primary_key,
+        mean=_number(col.get("mean")),
+        std=_number(col.get("std")),
+        quantiles=_quantile_pairs(col.get("quantiles")),
+        pattern=col.get("pattern"),
+        categories=categories,
+        length_mean=_number(length.get("mean")) if dtype == "string" else None,
+        distribution=col.get("distribution"),
+    )
+    if dtype == "datetime":
+        view.hour = _normalise(col.get("hour_histogram"))
+        view.dow = _normalise(col.get("dow_histogram"))
+    return view
+
+
 _ENGINE_DTYPE = {
     "int": "integer",
     "float": "float",
@@ -701,6 +731,14 @@ def _diff_column(name: str, base: View, cur: View, th: Mapping[str, Any]) -> lis
     if base.dtype == "datetime" and cur.dtype == "datetime":
         out.extend(_diff_temporal(name, base, cur, th, enough))
     return out
+
+
+def diff_column_views(
+    name: str, base: View, cur: View, thresholds: Mapping[str, Any]
+) -> list[dict[str, Any]]:
+    """The changes of one column between two views, before any severity filter (the parity check
+    reads the null-rate and distribution kinds from it)."""
+    return _diff_column(name, base, cur, thresholds)
 
 
 def _diff_cardinality(

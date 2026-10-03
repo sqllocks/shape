@@ -122,10 +122,11 @@ is the raw result, `enforced_passed` is what decided the exit code.
 shape init [DIR] [--name NAME] [--source NAME[=PATH]]... [--force]
 ```
 
-Writes `shape.yml` (valid, with the optional settings as comments), `data/`, `shapes/` and
-`contracts/`, a `.gitattributes` rule (`*.shape diff=shape`, see `shape git-setup`) and
-`.github/workflows/shape.yml`, an example that validates the project, profiles each source and
-diffs it against its baseline. It never overwrites `shape.yml` (use `--force`), keeps an existing
+Writes `shape.yml` (valid, with the optional settings as comments), `data/`, `shapes/`,
+`contracts/` and `contracts/consumers/` (where consuming teams commit their contracts, see
+`docs/CONSUMER_CONTRACTS.md`), a `.gitattributes` rule (`*.shape diff=shape`, see `shape git-setup`) and
+`.github/workflows/shape.yml`, an example that validates the project, profiles each source, checks
+its consumer contracts and diffs it against its baseline. It never overwrites `shape.yml` (use `--force`), keeps an existing
 workflow, and only extends `.gitattributes`. Run `shape git-setup` in the repository to
 configure the `git diff` filter itself.
 

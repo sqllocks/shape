@@ -1375,6 +1375,11 @@ def _build_parser(plugin_commands=()):
 
     add_registry_arguments(sub)
     add_project_arguments(sub)
+    from shape.cli.contracts import add_arguments as add_contracts_arguments
+    from shape.cli.parity import add_arguments as add_parity_arguments
+
+    add_contracts_arguments(sub)
+    add_parity_arguments(sub)
     for rec in plugin_commands:  # listed in --help only; the plugin loads when it is run
         sub.add_parser(rec.name, help=f"(plugin {rec.source})", add_help=False)
     return p
@@ -1587,6 +1592,14 @@ def _dispatch(argv):
         from shape.cli.project import run as run_project
 
         return _run(run_project, a)
+    if a.cmd == "contracts":
+        from shape.cli.contracts import run as run_contracts
+
+        return _run(run_contracts, a)
+    if a.cmd == "parity":
+        from shape.cli.parity import run as run_parity
+
+        return _run(run_parity, a)
     if a.cmd in ("generate", "describe", "list", "presets"):
         from shape.cli.generation import run as run_generation
 

@@ -11,7 +11,7 @@ from pathlib import Path
 from shape.project.file import _NAME, FILE_NAMES, RESERVED_SOURCE_NAMES, ProjectError
 
 WORKFLOW = Path(".github") / "workflows" / "shape.yml"
-FOLDERS = ("data", "shapes", "contracts")
+FOLDERS = ("data", "shapes", "contracts", "contracts/consumers")
 DEFAULT_SOURCE = "example"
 
 _PROJECT = """\
@@ -53,6 +53,7 @@ _SOURCE = """\
 
 _WORKFLOW = """\
 # Shape checks for this project (created by `shape init`; Shape never rewrites it).
+# Consumer teams commit their contracts to contracts/consumers/ (docs/CONSUMER_CONTRACTS.md).
 # Seed each source's baseline once, then commit shapes/registry:
 #   shape profile SOURCE -o shapes/current/SOURCE.shape
 #   shape registry shapes/registry commit SOURCE shapes/current/SOURCE.shape --allow-raw
@@ -89,6 +90,10 @@ _STEPS = """\
         run: |
           mkdir -p shapes/current
           shape profile {name} -o shapes/current/{name}.shape
+      - name: Check the consumers of {name}
+        run: |
+          shape contracts check-consumers shapes/current/{name}.shape --source {name} \\
+            -o shapes/current/{name}.consumers.json
       - name: Compare {name} with its baseline
         if: ${{{{ hashFiles('shapes/registry/logs/{name}.jsonl') != '' }}}}
         run: |

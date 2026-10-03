@@ -110,6 +110,11 @@ def _validate_contract(contract: dict[str, Any]) -> None:
     _validate_joint_rules(contract)
 
 
+def validate_contract(contract: dict[str, Any]) -> None:
+    """Raise :class:`ContractError` for the first thing wrong with a v1 contract body."""
+    _validate_contract(contract)
+
+
 def _validate_no_placeholder(name: str, rules: dict[str, Any]) -> None:
     if "no_placeholder" not in rules:
         return

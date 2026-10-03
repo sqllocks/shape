@@ -63,6 +63,9 @@ A folder is one table (its files are partitions) unless you pass `--dataset`, wh
 table per file, named by the file name: `shape profile data/ --dataset -o data.shape`. A contract
 with a `tables` object is checked against such a dataset profile only; against a single table
 `shape check` exits 2, and a table of the profile that the contract does not name fails it.
+`shape parity A B` shows that a reloaded environment still has production's shape
+(`docs/PARITY.md`), and consumer teams state what they depend on in contracts that the producer's
+CI runs with `shape contracts check-consumers` (`docs/CONSUMER_CONTRACTS.md`).
 
 ```bash
 shape --version

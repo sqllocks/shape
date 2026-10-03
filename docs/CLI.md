@@ -119,6 +119,16 @@ remove something or a preflight check failed, 2 bad input.
 (`--project FILE`, `--no-project`, `--source NAME`, `diff --baseline-date`). See
 `docs/PROJECT.md`.
 
+## Parity and consumer contracts
+
+`shape parity A B` checks that environment B has the same shape as environment A (tables, columns,
+types, keys, relationships, null rates, distributions, table sizes); exit 0 parity, 1 a check
+failed, 2 unusable input. See `docs/PARITY.md`. `shape contracts validate FILE` checks a consumer
+contract file (exit 0 valid, 2 not, with every problem and its key path), and
+`shape contracts check-consumers PROFILE.shape` runs the consumer contracts of a source in the
+producer's CI (exit 0 every consumer passes, 1 one is broken, 2 unusable input; `--baseline`
+marks the violations a change introduced). See `docs/CONSUMER_CONTRACTS.md`.
+
 ## Registries
 
 `shape registry` (content-addressed artifacts) and `shape profile registry` (named profiles) are

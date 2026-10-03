@@ -5,6 +5,19 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Environment parity and consumer contracts (`docs/PARITY.md`, `docs/CONSUMER_CONTRACTS.md`).
+  `shape parity A B` shows that a reloaded environment still looks like production: the same
+  tables, columns, types, keys and relationships, null rates and distributions within the
+  `shape.yml` drift thresholds, and table sizes within `--row-tolerance` (or, with `--scaled`, in
+  the same proportions). A and B may be data, profiles, exports or share-safe profiles; what an
+  input cannot support is `not measured`, never a pass. Report `shape-parity-report` v1.
+  Consumer contracts (`shape-consumer-contract` v1, JSON Schema shipped): a consuming team states
+  the tables, columns and rules it depends on, and the producer's CI runs
+  `shape contracts check-consumers PROFILE.shape` (report `shape-consumer-check` v1, with consumer
+  and producer-column owners; `--baseline` marks the violations a change introduced).
+  `shape contracts validate FILE` lists every problem with its key path. `shape init` creates
+  `contracts/consumers/` and adds the check to its workflow example. `shape.yml` is unchanged.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
