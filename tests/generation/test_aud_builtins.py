@@ -171,3 +171,11 @@ def test_wide_digits_are_uniform_in_every_position() -> None:
         last = np.bincount([int(v[-1]) for v in values], minlength=10)
         assert last.min() > 1700, last  # 2000 expected per digit
         assert len({v[-3:] for v in values}) > 990
+
+
+# ---- #134: zero-padded hour_of_day keys are hours ---------------------------------------------
+
+
+def test_zero_padded_hour_keys_are_read_as_hours() -> None:
+    values = _times({"pattern": "seasonal", "profiles": {"hour_of_day": {"00": 1, "07": 1}}})
+    assert {v.hour for v in values} == {0, 7}
