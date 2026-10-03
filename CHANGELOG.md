@@ -330,3 +330,28 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Repository cleaned up for public release: removed internal milestone and
   qualification records.
 - README and changelog rewritten to describe the current state.
+
+### Fixed (security review)
+
+- A compressed `.jsonl.gz` (or `.bz2`, `.zst`, `.lz4`) is depth-checked after decompression, so a
+  deeply nested line is refused instead of crashing the reader (#274).
+- A bearer token is never sent to another origin: it is not copied onto a redirect, a redirected
+  answer from another origin is an error, and the Fabric `Location` and `continuationUri` URLs are
+  followed only on the Fabric API host (#275).
+- `shape bridge` redacts error messages, warnings and its internal-error log (#277), and job files
+  hold no password inside a URI or an error message (#279).
+- `shape pack run` refuses a domain or scale name that is a path, so its manifest stays inside
+  `--output`, and checks the landing root before creating it (#281).
+- A workbook part that inflates more than 100 times above 16 MiB is refused before it is parsed
+  (#282); the registry's raw-profile check reads the manifest within the artifact limit (#283).
+- `shape_fabric.notebook.generate_notebook` refuses a domain, seed or version that could become
+  code in the notebook (#284).
+- The scale Parquet sink writes through `O_EXCL` temp files inside a contained table directory, so
+  a planted link is never written through (#288).
+- The bridge's jobs directory is made private (0700) before a job is written, one unreadable job
+  file no longer breaks `job_list`, and job and session ids are matched whole (#289).
+- `--log-json` records redact messages, `extra` fields and exceptions (#290); the Fabric UDF
+  redacts the errors it returns (#299).
+- The fidelity e-mail format pattern runs in linear time (#293).
+- The kql scale sink percent-encodes its database name (#295); Spark job and `COPY INTO` checks
+  take whole values, and backticks in Spark column names are doubled (#300).
