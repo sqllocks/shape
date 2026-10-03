@@ -24,7 +24,7 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from shape.kernel.reference.exact import all_whole
 
-from .reference.column import _all_parse_datetime, _coerce_datetime_strings
+from .reference.column import _all_parse_datetime, _coerce_datetime_strings, _first_is_iso
 from .reference.readers import _arrow_cols, _csv_cols
 
 _BOOL_WORDS = ["true", "false", "0", "1", "yes", "no"]
@@ -99,10 +99,14 @@ def infer_column_type(array: Any, source: str = "arrow") -> str:
     if _try_cast(uniq, pa.float64()):
         u = pc.cast(uniq, pa.float64()).to_numpy()
         return "integer" if all_whole(u) else "float"
-    parsed = _coerce_datetime_strings(non_null, keep_nulls=True)
-    if (parsed is not None and parsed.null_count == 0) or _all_parse_datetime(uniq):
-        return "datetime"
-    return "string"
+    # the profiler's decision, in its order (#336): ISO text is parsed in bulk; anything else is
+    # checked on its distinct values, stopping at the first that does not parse, so ordinary
+    # text costs one failed parse rather than one per distinct value
+    if _first_is_iso(non_null):
+        parsed = _coerce_datetime_strings(non_null, keep_nulls=True)
+        if parsed is not None and parsed.null_count == 0:
+            return "datetime"
+    return "datetime" if _all_parse_datetime(uniq) else "string"
 
 
 def is_number(v: Any) -> bool:
