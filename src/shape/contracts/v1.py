@@ -27,16 +27,13 @@ _CONTRACT_KEYS = {
     "allow_extra_columns",
     "tables",
     "drift",  # the drift policy (thresholds, ignore, per-column thresholds): ignored by check
-<<<<<<< HEAD
     "timeseries",  # time-series rules (gaps, stuck values, daylight saving): need `data=`
     "reconcile",  # source/target reconciliation rules: need `data=`
-=======
     # joint rules (#47), all optional like every rule: absent from a contract, nothing changes
     "fd",  # [{"determinant": "zip", "dependent": "city", "min_confidence": 0.99}]
     "implies",  # [{"if": {"column": "state", "equals": "CA"}, "then": {...}, "min_confidence": 1}]
     "reference_pair",  # [{"columns": ["city", "zip"], "reference": "...", "min_match_rate": 0.99}]
     "max_implausible_rate",  # the share of rows that break a dependency or hold a placeholder
->>>>>>> origin/build/main-plan
 }
 _DATA_RULES = ("timeseries", "reconcile")
 _ROW_COUNT_KEYS = {"min", "max"}
