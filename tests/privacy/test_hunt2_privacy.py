@@ -114,3 +114,85 @@ def test_two_different_emails_that_collide_are_still_an_error(monkeypatch):
     table = pa.table({"e": ["a@x.com", "b@x.com"]})
     with pytest.raises(MaskingError, match="same mask"):
         m.mask_tables({"t": table}, {"t": {"e": "email"}})
+
+
+# --- #650: release_for and the joint block ----------------------------------------------------
+
+from shape.privacy.policy import VALUE_KEYS, release_for  # noqa: E402
+
+
+def _joint_doc() -> dict:
+    cond = {
+        "given": "city",
+        "target": "state",
+        "cramers_v": 1.0,
+        "table": {
+            "SECRETCITYA": {"n": 136, "p": {"SECRETSTATE1": 1.0}},
+            "RARETOWN": {"n": 2, "p": {"RAREPLACE": 1.0}},
+            "MIXED": {"n": 100, "p": {"BIGSTATE": 0.98, "TINYSTATE": 0.02}},
+        },
+    }
+    dep = {
+        "determinant": ["city"],
+        "dependent": "state",
+        "confidence": 0.9,
+        "violations": [
+            {
+                "determinant_value": "SECRETCITYA",
+                "rows": 50,
+                "distinct_dependents": 2,
+                "dependent_values": {"SECRETSTATE1": 40, "VIOLATIONSTATE": 10},
+            },
+            {
+                "determinant_value": "RARETOWN",
+                "rows": 3,
+                "distinct_dependents": 2,
+                "dependent_values": {"RARESTATE": 2, "RAREOTHER": 1},
+            },
+        ],
+    }
+    col = {"kind": "text", "count": 400, "classification": "PUBLIC"}
+    return {
+        "rows": 400,
+        "columns": {
+            "city": {**col, "placeholders": [{"value": "00000", "kind": "listed", "count": 40}]},
+            "state": dict(col),
+            "zip": dict(col),
+        },
+        "joint": {
+            "version": 1,
+            "columns": ["city", "state"],
+            "associations": [{"a": "city", "b": "state", "cramers_v": 1.0}],
+            "dependencies": [dep],
+            "conditionals": [cond],
+        },
+    }
+
+
+def test_values_of_a_column_above_the_target_leave_the_joint_block():
+    r = release_for(_joint_doc(), {"city": "CONFIDENTIAL"}, "PUBLIC")
+    text = json.dumps(r.shape)
+    for leaked in ("SECRET", "RARE", "VIOLATIONSTATE", "00000"):
+        assert leaked not in text, leaked
+    assert "placeholders" in VALUE_KEYS
+    assert r.shape["joint"]["associations"] == [{"a": "city", "b": "state", "cramers_v": 1.0}]
+
+
+def test_cells_below_the_minimum_cohort_are_withheld_from_the_joint_block():
+    r = release_for(_joint_doc(), {}, "PUBLIC", minimum_cohort=5)
+    text = json.dumps(r.shape["joint"])
+    for small in ("RARETOWN", "RAREPLACE", "TINYSTATE", "RARESTATE", "RAREOTHER"):
+        assert small not in text, small
+    # cells at or above the minimum are kept, so the block is still useful
+    (cond,) = r.shape["joint"]["conditionals"]
+    assert set(cond["table"]) == {"SECRETCITYA", "MIXED"}
+    assert cond["table"]["MIXED"]["p"] == {"BIGSTATE": 0.98}
+    (dep,) = r.shape["joint"]["dependencies"]
+    assert [v["determinant_value"] for v in dep["violations"]] == ["SECRETCITYA"]
+    assert dep["violations"][0]["dependent_values"] == {"SECRETSTATE1": 40, "VIOLATIONSTATE": 10}
+
+
+def test_a_document_without_a_joint_block_is_released_as_before():
+    doc = _joint_doc()
+    del doc["joint"]
+    assert "joint" not in release_for(doc, {}, "PUBLIC").shape
