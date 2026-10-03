@@ -148,10 +148,13 @@ def _round_1sig(x: float, rounder: Callable[[float], float]) -> float:
 
 
 def _coerce_number(key: str) -> float | None:
+    """The finite number a key spells, else None (``inf``, ``nan`` and ``1e400`` cannot be
+    bucketed: the column falls back to hashed keys, #412)."""
     try:
-        return float(str(key).replace(",", "").strip())
+        value = float(str(key).replace(",", "").strip())
     except (TypeError, ValueError):
         return None
+    return value if math.isfinite(value) else None
 
 
 def _coerce_year(key: str) -> int | None:
