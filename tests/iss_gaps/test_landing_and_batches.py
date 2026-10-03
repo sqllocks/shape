@@ -79,7 +79,8 @@ def test_file_sinks_take_path_template_and_batch_date(tmp_path) -> None:
     csv = tmp_path / "customers/ingest_date=2026-08-04/customers_20260804.csv"
     parquet = tmp_path / "orders/ingest_date=2026-08-04/orders_20260804.parquet"
     assert pacsv.read_csv(csv).num_rows == 3
-    assert pq.read_table(parquet).equals(t)
+    # partitioning=None: older pyarrow infers `ingest_date` from the directory name
+    assert pq.read_table(parquet, partitioning=None).equals(t)
 
 
 def test_a_sink_without_the_option_writes_as_before(tmp_path) -> None:

@@ -100,10 +100,13 @@ def test_rust_equals_reference_on_a_million_values(native, name):
     assert len(arr) == N
     # sprinkle nulls in every type
     rng = np.random.default_rng(1)
-    mask = pa.array(rng.random(N) < 0.03)
+    null_at = rng.random(N) < 0.03
     view = pa.types.is_string_view(arr.type)  # if_else has no string_view kernel
     base = arr.cast(pa.string()) if view else arr
-    base = pa.compute.if_else(mask, pa.scalar(None, base.type), base)
+    if pa.types.is_float16(base.type):  # if_else has no halffloat kernel before pyarrow 25
+        base = pa.array(base.to_numpy(zero_copy_only=False), mask=null_at)
+    else:
+        base = pa.compute.if_else(pa.array(null_at), pa.scalar(None, base.type), base)
     arr = base.cast(pa.string_view()) if view else base
     assert arr.null_count > 0
     for seed in (0, 0x5EED):
@@ -143,7 +146,8 @@ def test_nan_is_excluded_but_infinities_are_not(native):
 
 def test_one_and_one_point_zero_hash_equal(native):
     ints = [pa.array([1], type=t) for t in (pa.int8(), pa.int64(), pa.uint16(), pa.uint64())]
-    floats = [pa.array([1.0], type=t) for t in (pa.float32(), pa.float64(), pa.float16())]
+    # numpy scalars: older pyarrow rejects a Python float for a float16 array
+    floats = [pa.array(np.array([1.0], dtype=t)) for t in (np.float32, np.float64, np.float16)]
     dec = [pa.array([decimal.Decimal("1.000")], type=pa.decimal128(10, 3))]
     hashes = {pa.array(native.hash_array(a, 9)).to_pylist()[0] for a in ints + floats + dec}
     assert len(hashes) == 1
