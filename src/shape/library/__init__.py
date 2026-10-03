@@ -165,7 +165,7 @@ def profile_path(name: str, root: Path | None = None) -> Path:
     path = (root or ROOT) / entry["profile"]
     if not path.is_file():
         raise DatasetLibraryError(f"dataset {name!r} lists {entry['profile']}, which is missing")
-    return path
+    return Path(path)
 
 
 def is_reference(ref: object) -> bool:

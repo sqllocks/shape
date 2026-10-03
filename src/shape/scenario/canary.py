@@ -192,7 +192,7 @@ def make(
     nothing is written. Raises :class:`CanaryError` for a target that cannot make a canary, a
     folder that is not a new or empty local folder, a marker that collides with a column and a
     check that does not fire at this size."""
-    import pyarrow as pa  # type: ignore[import-untyped]
+    import pyarrow as pa
 
     if fmt not in FORMATS:
         raise CanaryError(f"--format must be one of {', '.join(FORMATS)}")

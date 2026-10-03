@@ -69,11 +69,11 @@ def read_table(path: Path) -> Any:
 def write_table(table: Any, path: Path) -> None:
     kind = _READERS[path.suffix.lower()]
     if kind == "csv":
-        import pyarrow.csv as pacsv  # type: ignore[import-untyped]
+        import pyarrow.csv as pacsv
 
         pacsv.write_csv(table, path)
     elif kind == "parquet":
-        import pyarrow.parquet as pq  # type: ignore[import-untyped]
+        import pyarrow.parquet as pq
 
         pq.write_table(table, path)
     else:
@@ -250,7 +250,7 @@ _MOMENT = ("late_arrivals", "shift_hours", "chaos_temporal")
 
 def _candidates(kind: str, table: Any) -> list[str]:
     """The columns of ``table`` an injection of ``kind`` may use, best first."""
-    import pyarrow as pa  # type: ignore[import-untyped]
+    import pyarrow as pa
 
     cols = list(zip(table.column_names, table.schema.types, strict=True))
     text = [n for n, t in cols if pa.types.is_string(t) or pa.types.is_large_string(t)]
@@ -362,7 +362,7 @@ def run_check(argv: list[str]) -> tuple[int, str, str, float]:
     started = time.perf_counter()
     with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
         try:
-            code = main([*argv, *flags])
+            code = main([*argv, *flags])  # type: ignore[no-untyped-call]
         except SystemExit as exc:  # argparse exits for an argument it cannot parse
             code = exc.code if isinstance(exc.code, int) else 2
     return int(code or 0), out.getvalue(), err.getvalue(), time.perf_counter() - started

@@ -33,12 +33,45 @@ All the scenarios use the `retail` domain (the one built-in domain; `pip install
 
 The library index, `library/index.json` in the package, holds a one-paragraph description of each.
 
+## Scenarios for the failure mode catalog
+
+W6-03 adds the scenarios that the [failure mode catalog](FAILURE_MODES.md) reproduces its entries
+with. Each has an answer key like the starter ones. A data scenario plants defects in one batch; a
+drift scenario is a change over time.
+
+| Scenario | What it plants |
+|---|---|
+| `null_flood` | 60% of customer last names are null |
+| `unit_change` | the last half of the order totals is 100 times larger |
+| `truncated_strings` | 40% of customer emails are cut to five characters |
+| `placeholder_values` | 20% of customer first names are `N/A` |
+| `encoding_corruption` | 30% of customer emails end in the mojibake of a Latin-1 read |
+| `volume_spike` | the order table has ten times its rows; keys repeat |
+| `empty_load` | the order table has no rows |
+| `partial_load` | the order table has one row |
+| `out_of_order_events` | every order date is swapped with another's (no check sees it) |
+| `timezone_offset` | every order date is eight hours later |
+| `dst_boundary` | 30% of order dates sit on daylight-saving boundary hours |
+| `concept_drift` | address cities are swapped between rows |
+| `late_backfill` | 20% of order dates are 200 days earlier |
+| `class_imbalance_shift` | from day 5 most orders are cancelled (drift) |
+| `new_category_values` | from day 5 a new order status appears (drift) |
+| `null_rate_creep` | the null share of customer last names climbs to 40% (drift) |
+| `numeric_shift` | product unit prices are 1.8 times larger from day 5 (drift) |
+| `detective_text_trouble`, `detective_renovations`, `detective_clocks_and_keys` | several defects at once, for the [detective packs](DETECTIVE.md) |
+
+The data defects are built on the chaos mutators (`chaos_temporal`, `chaos_volume`) and on defect
+kinds of their own (`defects.py`: `shuffle_column`, `scale_values`, `shift_hours`,
+`truncate_strings`, `placeholder_values`, `corrupt_encoding`, `rename_column`, `drop_column`,
+`retype_column`, `add_column`); the drift scenarios use `DriftPlan` events.
+
 ## The suites
 
 | Suite | Scenarios |
 |---|---|
 | `smoke` | `clean_baseline`, `nulls_injected`, `duplicate_rows`, `orphaned_foreign_keys`, `schema_add_column` |
 | `schema-evolution` | the five `schema_*` scenarios |
+| `failure-modes` | the scenario of every entry of the failure mode catalog; the suite also checks that every check an entry names fires |
 
 `smoke` is held to under 60 seconds at the `small` scale (a test enforces it), so it can run on
 every CI run; run the

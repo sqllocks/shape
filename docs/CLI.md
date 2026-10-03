@@ -120,6 +120,25 @@ the policy.
   job files). `shape bridge schema --out DIR` writes its JSON Schemas and `--check DIR` verifies a
   directory against them. See [`BRIDGE.md`](BRIDGE.md).
 
+## Failure modes, detective, library, canary and game day
+
+- `shape failure-modes list [--json]` and `shape failure-modes show ID` print the failure mode
+  catalog (`docs/FAILURE_MODES.md`). `shape suite run failure-modes` runs the scenario of every
+  entry and checks that every check the entry names fires; it exits 1 when one does not.
+- `shape detective list`, `start NAME -o DIR`, `hint NAME N` and `check NAME --answer ANSWER.json`
+  play a data detective pack (`docs/DETECTIVE.md`). `check` exits 0 when every planted finding is
+  named and none is wrong, 1 otherwise, 2 for a malformed answer or an unknown pack.
+- `shape library list`, `show NAME` and `get NAME -o X.shape` print and copy the safe profiles of
+  public datasets (`docs/DATASET_LIBRARY.md`); `shape generate --from dataset:NAME` generates from
+  one with no network.
+- `shape canary make (library:NAME | ID) [--rows N] [--seed N] [--marker COLUMN=VALUE] [--format
+  csv|parquet|jsonl] -o DIR [--dry-run]` writes a marked batch with planted failures;
+  `shape canary check canary.json --result RESULT.json...` exits 0 when every expected detection is
+  present, 1 when one is missing (a blind spot), 2 for malformed input (`docs/CANARIES.md`).
+- `shape gameday run PLAN.json -o DIR [--seed N] [--dry-run]` plants failures in copies of your
+  local data and runs the checks you list; it exits 0 when every expectation was detected, 1 when
+  one was missed, 2 for a malformed plan (`docs/GAMEDAY.md`).
+
 ## `shape suite`, `shape seed` and the starter library
 
 - `shape pack list --library` lists the starter scenarios and suites; `shape pack run library:NAME`
