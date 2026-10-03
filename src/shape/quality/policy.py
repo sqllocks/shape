@@ -34,6 +34,15 @@ class QualityResult:
         return not any(v.severity == "error" for v in self.violations)
 
 
+def _out_of_range(v: Any, bound: Any, *, below: bool) -> bool:
+    """True when ``v`` is below (or above) ``bound``; a value that cannot be compared with it
+    (text in a numeric column) is out of range too, not a crash."""
+    try:
+        return bool(v < bound) if below else bool(v > bound)
+    except TypeError:
+        return True
+
+
 def validate_rows(rows: Iterable[Mapping[str, Any]], rules: tuple[Rule, ...]) -> QualityResult:
     out = []
     n = 0
@@ -45,9 +54,9 @@ def validate_rows(rows: Iterable[Mapping[str, Any]], rules: tuple[Rule, ...]) ->
             if q.kind == "not_null":
                 bad = v is None
             elif q.kind == "min":
-                bad = v is not None and v < q.value
+                bad = v is not None and _out_of_range(v, q.value, below=True)
             elif q.kind == "max":
-                bad = v is not None and v > q.value
+                bad = v is not None and _out_of_range(v, q.value, below=False)
             elif q.kind == "in":
                 bad = v is not None and v not in q.value
             elif q.kind == "unique":
