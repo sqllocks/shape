@@ -175,7 +175,7 @@ def inject_anomalies(
     * ``out_of_range``: a number 100 to 1000 times the column's largest magnitude (integers are
       clipped to their range).
     * ``negative``: a number's sign flips (signed integer and float columns; zero is unchanged).
-    * ``future_date``: a timestamp or date between 2031 and 2039.
+    * ``future_date``: a timestamp or ``date32`` between 2031 and 2039 (``date64`` is left alone).
     * ``encoding``: a text cell gets a leading byte-order mark or a trailing Latin-1 character.
 
     ``protect`` names columns that are never touched (a stream's key and event-time columns).

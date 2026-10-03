@@ -32,7 +32,7 @@ kinds: Sequence[str] | None = None, protect: Sequence[str] = ()) -> AnomalyResul
   | `null` | the cell becomes null | nullable fields |
   | `out_of_range` | 100 to 1000 times the column's largest magnitude (integers are clipped) | integer and float columns |
   | `negative` | the sign flips (zero is unchanged) | signed integer and float columns |
-  | `future_date` | a date between 2031 and 2039 | timestamp and date columns |
+  | `future_date` | a date between 2031 and 2039 | timestamp and `date32` columns (`date64` is left alone) |
   | `encoding` | a leading byte-order mark or a trailing Latin-1 character | string columns |
 
 - **`protect`** names columns that are never touched. Pass the stream's key and event-time
