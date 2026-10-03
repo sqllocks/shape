@@ -84,7 +84,7 @@ def _dependencies(
     table: str | None,
     bt: TableView,
     ct: TableView,
-    th: Mapping[str, Any],
+    scope: str | None,
     policy: Policy,
 ) -> list[dict[str, Any]]:
     bj, cj = bt.joint or {}, ct.joint or {}
@@ -99,7 +99,8 @@ def _dependencies(
         c_conf = None if c is None else float(c["confidence"])
         effective = c_conf if c_conf is not None else MIN_REPORTED_CONFIDENCE
         drop = b_conf - effective
-        floor = max(th["dependency_confidence"], _noise(b_conf, n_base, n_cur))
+        limit = max(_th(policy, scope, c)["dependency_confidence"] for c in (det, dep))
+        floor = max(limit, _noise(b_conf, n_base, n_cur))
         if drop <= floor:
             return
         violations = [] if c is None else list(c.get("violations", ()))
@@ -146,7 +147,8 @@ def _dependencies(
         if basis == "key":
             msg += f" ({det} was unique, so the dependency held trivially)"
         out.append(
-            _record(
+            _with_columns(
+                [det, dep],
                 _label(table, f"{det} -> {dep}"),
                 "dependency_broken",
                 round(b_conf, 6),
@@ -159,7 +161,7 @@ def _dependencies(
 
     for key, b in base.items():
         det, dep = key[0][0], key[1]
-        if len(key[0]) != 1 or _skipped(policy, table, [det, dep]):
+        if len(key[0]) != 1 or _skipped(policy, scope, [det, dep]):
             continue
         if det not in ct.columns or dep not in ct.columns:
             continue  # a removed column is a column change already
@@ -171,7 +173,7 @@ def _dependencies(
         emit(det, dep, float(b["confidence"]), "dependency", found)
     for key, c in cur.items():
         det, dep = key[0][0], key[1]
-        if key in base or len(key[0]) != 1 or _skipped(policy, table, [det, dep]):
+        if key in base or len(key[0]) != 1 or _skipped(policy, scope, [det, dep]):
             continue
         bv = bt.columns.get(det)
         if bv is None or dep not in bt.columns:
@@ -182,13 +184,14 @@ def _dependencies(
 
 
 def _placeholders(
-    table: str | None, bt: TableView, ct: TableView, th: Mapping[str, Any], policy: Policy
+    table: str | None, bt: TableView, ct: TableView, scope: str | None, policy: Policy
 ) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for name, cv in ct.columns.items():
         bv = bt.columns.get(name)
-        if bv is None or not cv.placeholders or _skipped(policy, table, [name]):
+        if bv is None or not cv.placeholders or _skipped(policy, scope, [name]):
             continue
+        th = _th(policy, scope, name)
         for p in cv.placeholders:
             value = str(p["value"])
             known = _placeholder_in(bv, value)
@@ -206,7 +209,8 @@ def _placeholders(
                 f"{before:.1%} to {now:.1%} of rows"
             )
             out.append(
-                _record(
+                _with_columns(
+                    [name],
                     _label(table, name),
                     "placeholder_surge",
                     round(before, 6),
@@ -227,13 +231,27 @@ def _placeholders(
 
 
 def _implausible(
-    table: str | None, bt: TableView, ct: TableView, th: Mapping[str, Any]
+    table: str | None, bt: TableView, ct: TableView, scope: str | None, policy: Policy
 ) -> list[dict[str, Any]]:
+    th = policy.for_column(scope, None)
     b = (bt.joint or {}).get("implausible_rate")
     c = (ct.joint or {}).get("implausible_rate")
     if b is None or c is None or c - b <= th["implausible_rate"]:
         return []
     cj = ct.joint or {}
+    # the columns that can make a row implausible: those holding placeholders, and those of a
+    # dependency with violations; the change follows the ignore and only lists through them
+    involved = sorted(
+        {n for n, v in ct.columns.items() if v.placeholders}
+        | {
+            str(col)
+            for e in cj.get("dependencies", ())
+            if e.get("violations")
+            for col in [*e["determinant"], e["dependent"]]
+        }
+    )
+    if involved and _skipped(policy, scope, involved):
+        return []
     msg = f"implausible rows went from {b:.1%} to {c:.1%}"
     return [
         _record(
@@ -252,20 +270,22 @@ def _implausible(
 
 
 def _associations(
-    table: str | None, bt: TableView, ct: TableView, th: Mapping[str, Any], policy: Policy
+    table: str | None, bt: TableView, ct: TableView, scope: str | None, policy: Policy
 ) -> list[dict[str, Any]]:
     base = {(e["a"], e["b"], e["kind"]): e for e in (bt.joint or {}).get("associations", ())}
     out: list[dict[str, Any]] = []
     for e in (ct.joint or {}).get("associations", ()):
         b = base.get((e["a"], e["b"], e["kind"]))
-        if b is None or _skipped(policy, table, [e["a"], e["b"]]):
+        if b is None or _skipped(policy, scope, [e["a"], e["b"]]):
             continue
+        shift = max(_th(policy, scope, c)["association_shift"] for c in (e["a"], e["b"]))
         for key in _ASSOC_KEYS:
             if key not in e or b.get(key) is None or e[key] is None:
                 continue
-            if abs(abs(e[key]) - abs(b[key])) > th["association_shift"]:
+            if abs(abs(e[key]) - abs(b[key])) > shift:
                 out.append(
-                    _record(
+                    _with_columns(
+                        [e["a"], e["b"]],
                         _label(table, f"{e['a']} ~ {e['b']}"),
                         "association_shift",
                         b[key],
@@ -279,7 +299,7 @@ def _associations(
 
 
 def _reference_pairs(
-    table: str | None, bt: TableView, ct: TableView, th: Mapping[str, Any], policy: Policy
+    table: str | None, bt: TableView, ct: TableView, scope: str | None, policy: Policy
 ) -> list[dict[str, Any]]:
     base = {
         (tuple(e["columns"]), e["reference"]): e
@@ -290,14 +310,15 @@ def _reference_pairs(
         b = base.get((tuple(e["columns"]), e["reference"]))
         if b is None or b["match_rate"] is None or e["match_rate"] is None:
             continue
-        if _skipped(policy, table, list(e["columns"])):
+        if _skipped(policy, scope, list(e["columns"])):
             continue
         drop = b["match_rate"] - e["match_rate"]
-        if drop <= th["reference_match_rate"]:
+        if drop <= max(_th(policy, scope, c)["reference_match_rate"] for c in e["columns"]):
             continue
         names = ", ".join(e["columns"])
         out.append(
-            _record(
+            _with_columns(
+                list(e["columns"]),
                 _label(table, f"({names}) in {e['reference']}"),
                 "reference_match_change",
                 b["match_rate"],
@@ -317,18 +338,43 @@ def _reference_pairs(
 
 
 def diff_joint(
-    table: str | None, bt: TableView, ct: TableView, policy: Policy
+    table: str | None,
+    bt: TableView,
+    ct: TableView,
+    policy: Policy,
+    *,
+    scope: str | None = None,
 ) -> list[tuple[str | None, str | None, dict[str, Any]]]:
-    """Joint changes between two tables as ``(table, column, record)`` (the engine's shape)."""
+    """Joint changes between two tables as ``(table, column, record)`` (the engine's shape).
+    ``table`` names the records (``None`` for a single table); ``scope`` is the table name the
+    policy's patterns are matched against (default ``table``). Each record follows the
+    thresholds and ``min_severity`` of its columns (the strictest of them)."""
     from .engine import SEVERITY_RANK
 
-    th = policy.for_column(table, None)
+    scope = table if scope is None else scope
     records = (
-        _dependencies(table, bt, ct, th, policy)
-        + _placeholders(table, bt, ct, th, policy)
-        + _implausible(table, bt, ct, th)
-        + _associations(table, bt, ct, th, policy)
-        + _reference_pairs(table, bt, ct, th, policy)
+        _dependencies(table, bt, ct, scope, policy)
+        + _placeholders(table, bt, ct, scope, policy)
+        + _implausible(table, bt, ct, scope, policy)
+        + _associations(table, bt, ct, scope, policy)
+        + _reference_pairs(table, bt, ct, scope, policy)
     )
-    floor = SEVERITY_RANK[th["min_severity"]]
-    return [(table, None, r) for r in records if SEVERITY_RANK[r["severity"]] >= floor]
+    out: list[tuple[str | None, str | None, dict[str, Any]]] = []
+    for r in records:
+        columns = r.pop("_columns", None) or [None]
+        floor = max(SEVERITY_RANK[_th(policy, scope, c)["min_severity"]] for c in columns)
+        if SEVERITY_RANK[r["severity"]] >= floor:
+            out.append((table, None, r))
+    return out
+
+
+def _th(policy: Policy, scope: str | None, column: str | None) -> dict[str, Any]:
+    return policy.for_column(scope, column)
+
+
+def _with_columns(columns: list[str], *args: Any) -> dict[str, Any]:
+    """A record that also names its columns (for the per-column policy; removed before it is
+    returned)."""
+    record = _record(*args)
+    record["_columns"] = [str(c) for c in columns]
+    return record

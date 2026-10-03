@@ -140,9 +140,18 @@ shape.diff(
 ```
 
 - A pattern is a column name, `table.column` or a glob (`*`, `?`). For a dataset the changes are
-  named `table.column`; a bare name matches that column in every table.
+  named `table.column`; a bare name matches that column in every table. `table.column` also
+  matches in a single-table profile, whose table is the profile's name.
+- A table-level change (`row_count_change`, `table_added`, `table_removed`) matches `*`, the
+  table's name and `table.*`; a column name does not match it. In a dataset the record names its
+  table in a `table` field.
 - Per-column thresholds apply least specific first: `*`, a glob, the column name, `table.column`.
   `min_severity` can be set per column as well.
+- The joint-analysis kinds (placeholders, dependencies, associations, reference pairs, implausible
+  rows) follow the thresholds and `min_severity` of the columns they name (the strictest, when
+  they name several). A change on several columns is dropped when any of them is ignored, and kept
+  when any is in the `only` list; implausible rows are matched through the columns that hold
+  placeholders or break a dependency.
 - An unknown threshold, a value that is not a number of 0 or more (`min_severity` is `low`,
   `medium` or `high`) or an unknown policy key raises `ValueError`.
 - A policy file is `{"thresholds": {...}, "columns": {...}, "ignore": [...], "only": [...]}`. A

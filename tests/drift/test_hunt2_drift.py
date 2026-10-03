@@ -194,3 +194,11 @@ def test_621_a_dataset_row_count_change_names_its_table() -> None:
         _p(_orders(100, ["a", "b"] * 50), name="orders"),
     ).changes
     assert "table" not in next(c for c in single if c["kind"] == "row_count_change")
+
+
+def test_621_table_added_and_removed_name_their_table() -> None:
+    both = _dataset(1000)
+    extra = {**both, "returns": pd.DataFrame({"id": range(10)})}
+    added = [c for c in shape.diff(_p(both), _p(extra)).changes if c["kind"] == "table_added"]
+    removed = [c for c in shape.diff(_p(extra), _p(both)).changes if c["kind"] == "table_removed"]
+    assert [c["table"] for c in added] == [c["table"] for c in removed] == ["returns"]

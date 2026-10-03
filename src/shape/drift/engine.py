@@ -130,9 +130,19 @@ class Policy:
     only: tuple[str, ...] = ()
 
     def _matches(self, patterns: Iterable[str], table: str | None, column: str | None) -> bool:
-        names = [n for n in (column, f"{table}.{column}" if table and column else None) if n]
-        if column is None and table:
-            names = [table]  # a table-level change: the table's name
+        if column is None:
+            # a table-level change: the table's name, ``*``, or ``table.*`` naming its table
+            return any(
+                p == "*"
+                or (table is not None and fnmatch.fnmatchcase(table, p))
+                or (
+                    table is not None
+                    and p.endswith(".*")
+                    and fnmatch.fnmatchcase(table, p[: -len(".*")])
+                )
+                for p in patterns
+            )
+        names = [n for n in (column, f"{table}.{column}" if table else None) if n]
         return any(fnmatch.fnmatchcase(n, p) for p in patterns for n in names)
 
     def skips(self, table: str | None, column: str | None) -> bool:
@@ -929,18 +939,26 @@ def diff_records(
     if dataset:
         for tname in b_tables:
             if tname not in c_tables:
-                changes.append((tname, None, _change(None, "table_removed", tname, None, 1.0)))
+                ch = _change(None, "table_removed", tname, None, 1.0)
+                ch["table"] = tname
+                changes.append((tname, None, ch))
         for tname in c_tables:
             if tname not in b_tables:
-                changes.append((tname, None, _change(None, "table_added", None, tname, 1.0)))
+                ch = _change(None, "table_added", None, tname, 1.0)
+                ch["table"] = tname
+                changes.append((tname, None, ch))
         pairs = [(t, b_tables[t], c_tables[t]) for t in b_tables if t in c_tables]
     else:
         ((bn, bt),) = b_tables.items()
         ((_, ct),) = c_tables.items()
         pairs = [(bn, bt, ct)]
     for tname, bt, ct in pairs:
-        th_rows = policy.for_column(tname if dataset else None, None)
+        # the policy sees the table's name in a single-table profile too, so ``table.column``
+        # patterns match there (#620); the records name it only in a dataset
+        th_rows = policy.for_column(tname, None)
         for ch in _diff_rows(bt, ct, th_rows):
+            if dataset:
+                ch["table"] = tname  # which table changed size (#621)
             changes.append((tname, None, ch))
         for cname in bt.columns:
             if cname not in ct.columns and cname != _WINDOW_TIME:
@@ -956,23 +974,23 @@ def diff_records(
                 changes.append((tname, cname, ch))
         for cname, bv in bt.columns.items():
             if cname in ct.columns:
-                th = policy.for_column(tname if dataset else None, cname)
+                th = policy.for_column(tname, cname)
                 for ch in _diff_column(_qualify(tname, cname, dataset), bv, ct.columns[cname], th):
                     changes.append((tname, cname, ch))
     out: list[tuple[str | None, str | None, dict[str, Any]]] = []
     for owner, col, record in changes:
         scope = owner if dataset else None
-        if policy.skips(scope, col):
+        if policy.skips(owner, col):
             continue
         if (
             SEVERITY_RANK[record["severity"]]
-            >= SEVERITY_RANK[policy.for_column(scope, col)["min_severity"]]
+            >= SEVERITY_RANK[policy.for_column(owner, col)["min_severity"]]
         ):
             out.append((scope, col, record))
     from .joint import diff_joint
 
     for tname, bt, ct in pairs:
-        out.extend(diff_joint(tname if dataset else None, bt, ct, policy))
+        out.extend(diff_joint(tname if dataset else None, bt, ct, policy, scope=tname))
     return out
 
 
