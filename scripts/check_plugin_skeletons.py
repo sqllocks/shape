@@ -33,18 +33,10 @@ EXPECTED = (
     "sqlserver",
     "domains",
     "simulation",
-EXPECTED = (
-    "kafka",
-    "eventhubs",
-    "fabric",
-    "sqlserver",
-    "domains",
-    "simulation",
     "dbt",
     "behavior",
     "healthcare-codes",
     "healthcare-standards",
-)
 )
 
 
@@ -87,18 +79,10 @@ def check_tree() -> list[str]:
                 problems.append(f"{where}: entry-point group {group!r} is not a plugin API group")
         if not (d / "LICENSE").is_file() or (d / "LICENSE").read_text(encoding="utf-8") != licence:
             problems.append(f"{where}: LICENSE must equal the repository LICENSE")
-EXPECTED = (
-    "kafka",
-    "eventhubs",
-    "fabric",
-    "sqlserver",
-    "domains",
-    "simulation",
-    "dbt",
-    "behavior",
-    "healthcare-codes",
-    "healthcare-standards",
-)
+        pkg_name = f"shape_{short}".replace("-", "_")
+        init = d / "src" / pkg_name / "__init__.py"
+        if not init.is_file() or "SHAPE_API" not in init.read_text(encoding="utf-8"):
+            problems.append(f"{where}: src/{pkg_name}/__init__.py must declare SHAPE_API")
     return problems
 
 
