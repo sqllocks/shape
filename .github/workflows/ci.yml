@@ -154,7 +154,7 @@ jobs:
           source scripts/env.sh
           python -m venv "$SHAPE_VENV"
           "$SHAPE_VENV/bin/pip" install -U pip
-          "$SHAPE_VENV/bin/pip" install -e '.[dev]' 'pyarrow==25.0.1'
+          "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains 'pyarrow==25.0.1'
       - run: source scripts/env.sh && python benchmarks/vs_spindle/check_coverage.py
       - run: source scripts/env.sh && python benchmarks/vs_spindle/run.py --quick --out "$BENCH_OUT_DIR/results.json"
       # P6-09: `shape verify` against the baseline's `verify` on retail small (internal harness).
