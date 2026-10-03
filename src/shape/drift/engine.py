@@ -32,6 +32,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from .semver import check_classes, check_column_classes, with_widening
+
 if TYPE_CHECKING:
     import numpy as np
 
@@ -105,7 +107,7 @@ _DISTRIBUTION_LABEL_SCORE = 0.2  # a fitted-family name changed; the size is dis
 
 # --- policy: thresholds, per-column overrides, ignore and only lists ----------------------------
 
-_POLICY_KEYS = {"thresholds", "columns", "ignore", "only"}
+_POLICY_KEYS = {"thresholds", "columns", "ignore", "only", "classes", "column_classes"}
 
 
 def _check_thresholds(th: Mapping[str, Any], where: str = "") -> None:
@@ -122,12 +124,15 @@ def _check_thresholds(th: Mapping[str, Any], where: str = "") -> None:
 
 @dataclass(frozen=True)
 class Policy:
-    """Thresholds (global and per column) plus the ignore and only lists."""
+    """Thresholds (global and per column), the ignore and only lists, and the change classes
+    (``classes``: kind to class; ``column_classes``: pattern to that, ``docs/DRIFT.md``)."""
 
     thresholds: dict[str, Any] = field(default_factory=lambda: dict(DEFAULT_THRESHOLDS))
     columns: dict[str, dict[str, Any]] = field(default_factory=dict)
     ignore: tuple[str, ...] = ()
     only: tuple[str, ...] = ()
+    classes: dict[str, str] = field(default_factory=dict)
+    column_classes: dict[str, dict[str, str]] = field(default_factory=dict)
 
     def _matches(self, patterns: Iterable[str], table: str | None, column: str | None) -> bool:
         names = [n for n in (column, f"{table}.{column}" if table and column else None) if n]
@@ -141,12 +146,11 @@ class Policy:
             return True
         return bool(self.only) and not self._matches(self.only, table, column)
 
-    def for_column(self, table: str | None, column: str | None) -> dict[str, Any]:
-        """The thresholds for one column: the global ones, then the overrides of every matching
-        pattern, least specific first (``*``, a glob, the column name, ``table.column``)."""
-        th = dict(self.thresholds)
-        if not self.columns:
-            return th
+    def _ranked(
+        self, by_pattern: Mapping[str, Any], table: str | None, column: str | None
+    ) -> list[Any]:
+        """The values of every pattern that matches, least specific first (``*``, a glob, the
+        column name, ``table.column``)."""
         full = f"{table}.{column}" if table and column else None
 
         def rank(pattern: str) -> int:
@@ -156,10 +160,27 @@ class Policy:
                 return 2
             return 0 if pattern == "*" else 1
 
-        for pattern in sorted(self.columns, key=rank):
-            if self._matches([pattern], table, column):
-                th.update(self.columns[pattern])
+        return [
+            by_pattern[p]
+            for p in sorted(by_pattern, key=rank)
+            if self._matches([p], table, column)
+        ]
+
+    def for_column(self, table: str | None, column: str | None) -> dict[str, Any]:
+        """The thresholds for one column: the global ones, then the overrides of every matching
+        pattern, least specific first (``*``, a glob, the column name, ``table.column``)."""
+        th = dict(self.thresholds)
+        for over in self._ranked(self.columns, table, column):
+            th.update(over)
         return th
+
+    def classes_for(self, table: str | None, column: str | None) -> dict[str, str]:
+        """The change classes for one column: the policy's, then those of every matching
+        ``column_classes`` pattern, least specific first (most specific wins)."""
+        out = dict(self.classes)
+        for over in self._ranked(self.column_classes, table, column):
+            out.update(over)
+        return out
 
 
 def resolve_policy(
@@ -190,7 +211,9 @@ def resolve_policy(
             columns.setdefault(str(pattern), {}).update(over)
     ignore = tuple(base.get("ignore", ())) + tuple(ignore_columns or ())
     only = tuple(only_columns) if only_columns is not None else tuple(base.get("only", ()))
-    return Policy(th, columns, tuple(map(str, ignore)), tuple(map(str, only)))
+    classes = check_classes(base.get("classes", {}))
+    column_classes = check_column_classes(base.get("column_classes", {}))
+    return Policy(th, columns, tuple(map(str, ignore)), tuple(map(str, only)), classes, column_classes)
 
 
 def _load_policy(policy: Mapping[str, Any] | str | Path) -> Mapping[str, Any]:
@@ -533,9 +556,14 @@ def tables_of(obj: Any) -> tuple[dict[str, TableView], bool]:
 
 
 def _change(
-    column: str | None, kind: str, baseline: Any, current: Any, score: float
+    column: str | None,
+    kind: str,
+    baseline: Any,
+    current: Any,
+    score: float,
+    detail: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    return {
+    record = {
         "column": column,
         "kind": kind,
         "baseline": baseline,
@@ -543,6 +571,9 @@ def _change(
         "severity": KIND_SEVERITY[kind],
         "score": round(min(1.0, max(0.0, float(score))), 4),
     }
+    if detail:
+        record["detail"] = detail
+    return record
 
 
 def _ratio_score(ratio: float) -> float:
@@ -654,7 +685,9 @@ def _diff_column(name: str, base: View, cur: View, th: Mapping[str, Any]) -> lis
         and (base.origin != cur.origin or base.origin == "engine")
     )
     if base.dtype != cur.dtype and not cross_numeric:
-        out.append(_change(name, "dtype_change", base.dtype, cur.dtype, 1.0))
+        out.append(
+            with_widening(_change(name, "dtype_change", base.dtype, cur.dtype, 1.0))
+        )
     b_null, c_null = base.null_rate, cur.null_rate
     if b_null is not None and c_null is not None and abs(c_null - b_null) > th["null_rate"]:
         out.append(_change(name, "null_rate_change", b_null, c_null, abs(c_null - b_null)))
@@ -728,6 +761,7 @@ def _diff_cardinality(
                         round(b_rate, 6),
                         round(c_rate, 6),
                         abs(c_rate - b_rate),
+                        {"baseline_primary_key": True} if base.primary_key else None,
                     )
                 ]
         if base.unique_like and cur.unique_like:

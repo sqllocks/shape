@@ -17,11 +17,12 @@ from shape.drift.engine import (
     SEVERITY_RANK,
     Policy,
     diff_records,
-    diff_tables,
     resolve_policy,
     tables_of,
     view_of_profile_column,
 )
+from shape.drift.semver import check_fail_on, classify, summarise
+from shape.drift.semver import fails as semver_fails
 from shape.profile.reference.profile import Profile
 
 from .joint import check_joint_rules, check_no_placeholder
@@ -402,10 +403,12 @@ DEFAULT_THRESHOLDS: dict[str, Any] = DRIFT_DEFAULTS
 
 @dataclass
 class DiffResult:
-    """Outcome of :func:`diff`. With ``planned=`` the result also lists the planned entries that
-    matched (``planned``), the active ``expect`` entries that matched nothing
-    (``planned_not_observed``) and the entries past their ``until`` that would have matched
-    (``expired``); ``drifted`` then counts only unplanned changes (``counted`` says which)."""
+    """Outcome of :func:`diff`. Each change carries its ``class`` and ``class_reason``
+    (``docs/DRIFT.md``, "Change classes"); ``semver`` summarises them as a version bump. With
+    ``planned=`` the result also lists the planned entries that matched (``planned``), the active
+    ``expect`` entries that matched nothing (``planned_not_observed``) and the entries past their
+    ``until`` that would have matched (``expired``); ``drifted`` then counts only unplanned
+    changes (``counted`` says which). ``failed`` is set by ``fail_on``."""
 
     drifted: bool
     changes: list[dict[str, Any]] = field(default_factory=list)
@@ -413,9 +416,25 @@ class DiffResult:
     planned_not_observed: list[dict[str, Any]] | None = None
     expired: list[dict[str, Any]] | None = None
     counted: list[bool] | None = None
+    fail_on: str | None = None
+    failed: bool = False
+
+    @property
+    def semver(self) -> dict[str, Any]:
+        """``{"bump", "breaking", "additive", "cosmetic"}`` over the unplanned changes, and with
+        planned changes ``planned``: the same counts for the others."""
+        return summarise(self.changes, self.counted, planned=self.planned is not None)
+
+    def fails(self, fail_on: str) -> bool:
+        """True when an unplanned change of class ``fail_on`` or a stricter one is reported."""
+        return semver_fails(self.changes, self.counted, fail_on)
 
     def to_dict(self) -> dict[str, Any]:
         out: dict[str, Any] = {"drifted": self.drifted, "changes": [dict(c) for c in self.changes]}
+        out["semver"] = self.semver
+        if self.fail_on is not None:
+            out["fail_on"] = self.fail_on
+            out["failed"] = self.failed
         if self.planned is not None:
             out["planned"] = [dict(e) for e in self.planned]
             out["planned_not_observed"] = [dict(e) for e in self.planned_not_observed or []]
@@ -435,6 +454,7 @@ def diff(
     planned: Any = None,
     on: Any = None,
     source: str | None = None,
+    fail_on: str | None = None,
 ) -> DiffResult:
     """Compare two profiles with the documented defaults (``docs/DRIFT.md``).
 
@@ -450,8 +470,16 @@ def diff(
     an entry active on ``on`` (a date or ``YYYY-MM-DD``; default today, UTC) carries
     ``planned: {"id", "action"}`` and does not count as drift; ``source`` is the source name the
     entries' ``source`` key is matched against.
+
+    Every change carries its ``class`` (``breaking``, ``additive`` or ``cosmetic``) and
+    ``class_reason``; the policy's ``classes`` and ``column_classes`` and a planned entry's
+    ``class`` change them (``docs/DRIFT.md``). ``fail_on`` (one of those classes) sets
+    ``DiffResult.failed`` when an unplanned change of that class or a stricter one is reported.
     """
     from shape.project.changes import coerce
+
+    if fail_on is not None:
+        check_fail_on(fail_on)
 
     resolved = resolve_policy(
         thresholds,
@@ -462,9 +490,32 @@ def diff(
     )
     plan = coerce(planned)
     if plan is None:
-        changes = diff_tables(baseline, current, resolved)
-        return DiffResult(drifted=bool(changes), changes=changes)
-    return _diff_planned(baseline, current, resolved, plan.applier(on, source))
+        changes = [
+            _classified(record, resolved, scope, column)
+            for scope, column, record in diff_records(baseline, current, resolved)
+        ]
+        result = DiffResult(drifted=bool(changes), changes=changes)
+    else:
+        result = _diff_planned(baseline, current, resolved, plan.applier(on, source))
+    if fail_on is not None:
+        result.fail_on = fail_on
+        result.failed = result.fails(fail_on)
+    return result
+
+
+def _classified(
+    record: dict[str, Any],
+    policy: Policy,
+    scope: str | None,
+    column: str | None,
+    entry_class: str | None = None,
+) -> dict[str, Any]:
+    """``record`` with ``class`` and ``class_reason``: the planned entry's class if it has one,
+    else the policy's for this column, else the default of the kind."""
+    found = classify(record, policy.classes_for(scope, column))
+    if entry_class is not None:
+        return {**record, "class": entry_class, "class_reason": "set by the planned change"}
+    return {**record, "class": found.class_, "class_reason": found.reason}
 
 
 def _diff_planned(baseline: Any, current: Any, resolved: Policy, applier: Any) -> DiffResult:
@@ -483,6 +534,7 @@ def _diff_planned(baseline: Any, current: Any, resolved: Policy, applier: Any) -
         floor = SEVERITY_RANK[resolved.for_column(scope, column)["min_severity"]]
         was = SEVERITY_RANK[record["severity"]]
         hit = applier.match(scope or only_table, column, record["kind"])
+        record = _classified(record, resolved, scope, column, hit.class_ if hit else None)
         if hit is None:
             if was >= floor:
                 changes.append(record)

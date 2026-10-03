@@ -395,7 +395,7 @@ def test_diff_accepts_a_path_and_a_list_of_entries(profiles, tmp_path):
 def test_diff_without_planned_is_unchanged(profiles):
     base, cur = profiles
     r = shape.diff(base, cur)
-    assert r.to_dict().keys() == {"drifted", "changes"}
+    assert r.to_dict().keys() == {"drifted", "changes", "semver"}  # W1-13 adds the summary
 
 
 def test_bad_on_date_is_an_error(profiles):
