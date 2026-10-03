@@ -34,8 +34,10 @@ sink.write(
 
 `abfss://` authentication is the Azure source's: `token`, `credential`, `account_key`,
 `sas_token`, `connection_string`, `account_name`, then Fabric notebook credentials, then
-`DefaultAzureCredential` (`shape.builtins.sources._azure_auth`). The `--auth` flags and credential
-references of P6-07b are not wired in yet; they will arrive through the same options.
+`DefaultAzureCredential` (`shape.builtins.sources._azure_auth`). The `--auth` modes and credential
+references of [fabric-auth](plugins/fabric-auth.md) belong to the Fabric plugin's writers and are
+not applied by this sink: pass `credential` (an azure-identity credential) or `token` for a
+specific identity.
 
 A `_shape_delta_type` column (`INSERT`, `UPDATE`, `DELETE`, `UPSERT`) sets the marker of each row
 and is not written; `_shape_delta_timestamp` stays as a data column. A column named
