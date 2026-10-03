@@ -25,9 +25,11 @@ _FIELD = {
 
 @dataclass(frozen=True, slots=True)
 class Drift:
-    """One change. ``path`` addresses it (``columns.<column>[.<field>]``, with
-    ``tables.<table>.`` in front for several tables); ``column``, ``kind`` and ``severity`` are
-    the engine's change record, and ``score`` is its size from 0 to 1."""
+    """One change. ``path`` addresses it (``columns.<column>[.<field>]``, ``rows`` for the row
+    count, ``joint.<dependency or association>`` for a joint change, with ``tables.<table>.`` in
+    front for several tables, and ``tables.<table>`` for a table added or removed); ``column``,
+    ``kind`` and ``severity`` are the engine's change record, and ``score`` is its size from 0
+    to 1."""
 
     path: str
     score: float
@@ -52,10 +54,19 @@ class Drift:
 
 def _drift(table: str | None, column: str | None, record: dict[str, Any]) -> Drift:
     kind = record["kind"]
-    if column is None:
+    prefix = f"tables.{table}." if table is not None else ""
+    if kind in ("table_added", "table_removed"):
         path = f"tables.{table}"
+    elif kind == "row_count_change":
+        path = f"{prefix}rows"
+    elif column is None:
+        # a joint change: named by what it is about (``zip -> city``, ``a ~ b`` and its measure)
+        label = str(record["column"])
+        if table is not None and label.startswith(f"{table}."):
+            label = label[len(table) + 1 :]
+        measure = (record.get("detail") or {}).get("measure")
+        path = f"{prefix}joint.{label}" + (f".{measure}" if measure else "")
     else:
-        prefix = f"tables.{table}." if table is not None else ""
         path = f"{prefix}columns.{column}"
         if kind not in ("column_added", "column_removed"):
             path += f".{_FIELD.get(kind, kind)}"

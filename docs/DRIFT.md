@@ -175,6 +175,10 @@ model or a capture) every `every` rows with the same engine and takes `shape.dif
 objects with `column`, `kind`, `severity`, `score`, `path`, `before` and `after`; `event.changes`
 gives them as `shape.diff` records. `shape.drift.compare(before, after)` and
 `ShapeTimeline.changes()` return the same objects; `shape.drift.gate` checks their scores.
+A `path` is `columns.<column>.<field>` for a column change, `rows` for the row count and
+`joint.<dependency or association>[.<measure>]` for a joint change (`joint.zip -> city`,
+`joint.state ~ city.cramers_v`); for a dataset it starts with `tables.<table>.`, and a table
+added or removed is `tables.<table>`. `gate(..., overrides={path: limit})` uses these paths.
 
 ## Planting drift: `shape generate-drift`
 
