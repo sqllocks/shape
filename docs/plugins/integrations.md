@@ -185,8 +185,9 @@ is inferred from the Arrow types and has no relationships.
 and `ci`, and `notes` with the library's own warnings), and `inference` (the same per `secrets`
 column). 0 is the best risk and 1 the worst. `n_attacks` is 500, or fewer when the real or
 control table has fewer rows. Linkability splits the columns in two halves in table order.
-Singling out is seeded; Anonymeter does not seed the other two attacks, so their rates can
-differ a little between runs. A table with one column skips linkability and inference
+The singling-out attack queries are seeded, so its attack rate repeats; Anonymeter does not seed
+its baseline (random-guess) rates or the linkability and inference sampling, so those can differ
+a little between runs. A table with one column skips linkability and inference
 (`{"skipped": "needs at least 2 columns"}`).
 
 **What is written:** only the report file you name, or standard output. It holds scores, counts

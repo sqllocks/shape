@@ -3,8 +3,9 @@
 Per table: singling out (multivariate queries of up to three columns, fixed seed), linkability (the columns split in
 two halves in table order, ten neighbours at most) and inference (each column in turn as the
 secret, the others as what the attacker knows). ``n_attacks`` is 500, or fewer when the real or
-control table has fewer rows. Singling out is seeded; the other two sample attacks without a
-seed in Anonymeter, so their rates can differ a little between runs.
+control table has fewer rows. The singling-out *attack* queries are seeded, so its attack rate
+repeats; Anonymeter does not seed its baseline (random-guess) rates or the linkability and
+inference sampling, so those can differ a little between runs.
 """
 
 from __future__ import annotations

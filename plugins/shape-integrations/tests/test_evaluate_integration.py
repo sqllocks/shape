@@ -116,13 +116,15 @@ class TestAnonymeter:
         assert res["attacks"] == ["linkability"]
         assert set(res["tables"]["people"]) == {"rows", "linkability"}
 
-    def test_singling_out_is_seeded(self, dirs, capsys):
+    def test_the_singling_out_attack_is_seeded(self, dirs, capsys):
         args = ["anonymeter", dirs[0], dirs[1], "--control", dirs[2], "--attacks", "singling-out"]
         run(*args, "--json")
         a = json.loads(capsys.readouterr().out)["results"]["tables"]["people"]["singling_out"]
         run(*args, "--json")
         b = json.loads(capsys.readouterr().out)["results"]["tables"]["people"]["singling_out"]
-        assert a == b
+        # The attack queries are seeded; Anonymeter's baseline guesses are not.
+        for key in ("n_attacks", "n_success", "attack_rate"):
+            assert a[key] == b[key]
 
     def test_a_single_column_table_skips_linkability_and_inference(self, tmp_path, capsys):
         for name, seed in (("r", 1), ("s", 2), ("c", 3)):
