@@ -5,6 +5,16 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `semantic-model://` source and `shape profile-model` (`sqllocks-shape-fabric`, `docs/plugins/
+  cloud-sources.md`, `docs/plugins/fabric-commands.md`). `shape profile semantic-model://<workspace>/
+  <model>/<table>` reads a table of a Power BI / Fabric semantic model through `sempy` (options
+  `columns`, `batch_rows`, `max_rows` as a DAX `TOPN`, `mode`), with a documented type map to Arrow;
+  `shape profile-model WORKSPACE/MODEL -o OUT.shape [--tables] [--max-rows] [--json]` profiles every
+  table and records the model's relationships as declared (`evidence: "declared"`, `active`,
+  `type`). `sempy` is the plugin extra `semantic-link`, imported only when a semantic-model URI is
+  opened. A `many_to_many` relationship in a profile is recorded and no longer becomes a generated
+  foreign key or a proposal's profiler-detected key.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

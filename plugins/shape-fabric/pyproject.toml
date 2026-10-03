@@ -22,6 +22,8 @@ dependencies = [
 entra = ["azure-identity>=1.15"]
 # Reading and writing OneLake / ADLS Gen2 paths (abfss://, onelake://): adlfs and azure-identity.
 onelake = ["sqllocks-shape[azure]==0.9.0"]
+# Reading a semantic model (semantic-model://, shape profile-model): sempy runs inside a Fabric notebook.
+semantic-link = ["semantic-link-sempy>=0.8"]
 
 # Entry points (shape.* groups, plugin API v1) are added here by the work package that
 # implements each part of this plugin; see docs/plugins/authoring.md.
@@ -36,6 +38,7 @@ notebook = "shape_fabric.commands:NotebookCommand"
 deploy-notebook = "shape_fabric.commands:DeployNotebookCommand"
 setup-fabric = "shape_fabric.commands:SetupFabricCommand"
 export-model = "shape_fabric.commands:ExportModelCommand"
+profile-model = "shape_fabric.commands:ProfileModelCommand"
 
 [project.entry-points."shape.sinks"]
 sqlserver = "shape_fabric:SqlServerSink"
@@ -43,6 +46,7 @@ warehouse = "shape_fabric:WarehouseSink"
 
 [project.entry-points."shape.sources"]
 onelake = "shape_fabric:LakehouseSource"
+semantic-model = "shape_fabric.semantic_source:SemanticModelSource"
 
 [tool.setuptools.packages.find]
 where = ["src"]

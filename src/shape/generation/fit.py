@@ -822,6 +822,8 @@ def _dataset_items(dataset: DatasetProfile) -> list[PlanItem]:
         PlanItem("dataset.row_order", _N, "the order of the rows is not reproduced"),
     ]
     for rel in dataset.relationships:
+        if rel.get("type") == "many_to_many":
+            continue  # recorded in the profile, never generated as a foreign key
         items.append(PlanItem(f"relationship:{rel.get('name')}", _P, "generated as a foreign key"))
     return items
 

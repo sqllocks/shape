@@ -4,7 +4,11 @@
   (``eventstream://<name>``) and ``eventhouse`` to an Eventhouse (KQL database) by streaming
   ingestion (``eventhouse://<query-uri host>/<database>``), for ``shape emit``.
 * ``shape.sources``: ``onelake`` reads a lakehouse Delta table or files by
-  ``onelake://<workspace>/<lakehouse>/Tables|Files/...`` (profiling, ``shape profile``).
+  ``onelake://<workspace>/<lakehouse>/Tables|Files/...`` (profiling, ``shape profile``), and
+  ``semantic-model`` reads a table of a Power BI / Fabric semantic model through ``sempy`` by
+  ``semantic-model://<workspace>/<model>/<table>`` (:mod:`shape_fabric.semantic_source`).
+* ``shape.commands``: ``shape profile-model WORKSPACE/MODEL`` profiles every table of a semantic
+  model with its declared relationships (:mod:`shape_fabric.semantic_profile`).
 * ``shape.sinks``: ``sqlserver`` writes to a live SQL Server, Azure SQL or Fabric SQL database
   (``mssql://`` and ``sqlserver://`` URIs, bulk insert) and ``warehouse`` to a Fabric Warehouse
   (``warehouse://``, Parquet staged in OneLake then ``COPY INTO``).

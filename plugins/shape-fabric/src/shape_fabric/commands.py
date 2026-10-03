@@ -1,4 +1,5 @@
-"""The Fabric commands: ``shape fabric publish|notebook|deploy-notebook|setup|export-model``.
+"""The Fabric commands: ``shape fabric publish|notebook|deploy-notebook|setup|export-model``, and
+``shape profile-model`` (a semantic model as a profile).
 
 Each command is also a top-level command (``shape publish``, ``shape notebook``,
 ``shape deploy-notebook``, ``shape setup-fabric``, ``shape export-model``): the same code behind
@@ -691,6 +692,76 @@ def _run_publish(a: argparse.Namespace) -> int:
 # the commands
 
 
+def _configure_profile_model(p: argparse.ArgumentParser) -> None:
+    p.add_argument(
+        "model",
+        metavar="WORKSPACE/MODEL",
+        help="the workspace and the semantic model, names or GUIDs (a / inside a name is %%2F)",
+    )
+    p.add_argument("-o", "--output", metavar="OUT.shape", help="write the profile here")
+    p.add_argument("--tables", metavar="T1,T2", help="only these tables (default: every table)")
+    p.add_argument(
+        "--max-rows",
+        metavar="N",
+        help="read at most N rows of each table, as a DAX TOPN (default: every row)",
+    )
+    p.add_argument("--json", action="store_true", help="print one JSON document, not a sentence")
+
+
+def _model_ref(text: str) -> tuple[str, str]:
+    from urllib.parse import unquote
+
+    parts = text.split("/")
+    if len(parts) != 2 or not all(parts):
+        raise ValueError(f"expected WORKSPACE/MODEL (a / inside a name is %2F), got {text!r}")
+    return unquote(parts[0]), unquote(parts[1])
+
+
+@_guarded
+def _run_profile_model(a: argparse.Namespace) -> int:
+    import shape
+
+    from .semantic_profile import profile_model
+
+    if not a.output:
+        raise ValueError("profile-model needs -o OUT.shape")
+    workspace, model = _model_ref(a.model)
+    cap: int | None = None
+    if a.max_rows is not None:
+        try:
+            cap = int(a.max_rows)
+        except ValueError:
+            cap = -1
+        if cap < 0:
+            raise ValueError(f"--max-rows must be a whole number of 0 or more, got {a.max_rows!r}")
+    names = [t for t in (x.strip() for x in a.tables.split(",")) if t] if a.tables else None
+    prof = profile_model(workspace, model, tables=names, max_rows=cap)
+    content_id = shape.save(prof, a.output)
+    data = prof.to_dict()
+    tables, rels = len(data["tables"]), len(data["relationships"])
+    if a.json:
+        print(
+            json.dumps(
+                {
+                    "written": a.output,
+                    "shape_content_id": content_id,
+                    "workspace": workspace,
+                    "model": model,
+                    "tables": tables,
+                    "relationships": rels,
+                    "max_rows": cap,
+                }
+            )
+        )
+    else:
+        print(
+            f"Profiled {tables} table{'s' if tables != 1 else ''} and {rels} "
+            f"relationship{'s' if rels != 1 else ''} of semantic model {model} in workspace "
+            f"{workspace}: {a.output}"
+        )
+    return EXIT_OK
+
+
 class _Command:
     """One ``shape`` command: ``name``, ``help``, ``configure(parser)`` and ``run(args)``."""
 
@@ -713,6 +784,15 @@ class ExportModelCommand(_Command):
     help = "export a domain as a Power BI / Fabric semantic model (.bim)"
     _configure = staticmethod(_configure_export_model)
     _run = staticmethod(_run_export_model)
+
+
+class ProfileModelCommand(_Command):
+    """``shape profile-model``: profile a whole semantic model with its relationships."""
+
+    name = "profile-model"
+    help = "profile every table of a Power BI / Fabric semantic model and its relationships"
+    _configure = staticmethod(_configure_profile_model)
+    _run = staticmethod(_run_profile_model)
 
 
 class NotebookCommand(_Command):

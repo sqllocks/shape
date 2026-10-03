@@ -368,7 +368,11 @@ class SchemaBuilder:
                 "date_range": {},
             },
             "tables": tables,
-            "relationships": [self._relationship(r) for r in dataset.relationships],
+            "relationships": [
+                self._relationship(r)
+                for r in dataset.relationships
+                if r.get("type") != "many_to_many"  # recorded in the profile, never a foreign key
+            ],
             "business_rules": [],
             "generation": self._scales(dataset),
             "correlated_columns": self._correlated(dataset, correlation_threshold),
