@@ -119,3 +119,40 @@ def test_kernel_is_reachable_as_an_attribute_of_the_package():
     assert shape._kernel.version() == shape.__version__
     with pytest.raises(AttributeError):
         shape._not_a_thing  # noqa: B018
+
+
+def test_every_native_function_has_a_twin_and_a_stub():
+    # Regression #553: lognorm_probe and numpy_loops_mode had no twin; nine functions had no stub.
+    import ast
+    from pathlib import Path
+
+    import shape
+    from shape.kernel import dispatch, reference
+
+    native = dispatch._import_native()
+    public = {n for n in dir(native) if not n.startswith("_")}
+    assert sorted(n for n in public if not hasattr(reference, n)) == []
+    stub = Path(shape.__file__).with_name("_kernel.pyi")
+    tree = ast.parse(stub.read_text(encoding="utf-8"))
+    declared = {
+        node.name if not isinstance(node, ast.AnnAssign) else node.target.id  # type: ignore[union-attr]
+        for node in tree.body
+        if isinstance(node, (ast.FunctionDef, ast.ClassDef, ast.AnnAssign))
+    }
+    assert sorted(public - declared) == []
+
+
+def test_the_lognorm_probe_twin_equals_the_native_one():
+    import numpy as np
+
+    from shape.kernel import dispatch, reference
+
+    native = dispatch._import_native()
+    data = np.random.default_rng(3).lognormal(1.0, 0.8, 500) - 3.0
+    for loc in (float(data.min()) - 0.7, float(data.min()) - 20.0):
+        got = reference.lognorm_probe(pa.array(data), loc)
+        want = native.lognorm_probe(pa.array(data), loc)
+        assert got == pytest.approx(want, rel=1e-12)
+    assert reference.numpy_loops_mode() == "native"
+    with pytest.raises(ValueError, match="float64"):
+        reference.lognorm_probe(pa.array([1, 2]), 0.0)
