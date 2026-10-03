@@ -52,8 +52,25 @@ def _require(ok: bool, message: str) -> None:
         raise ConformanceError(message)
 
 
+def _nan_equal(x: Any, y: Any) -> bool:
+    if isinstance(x, float) and isinstance(y, float):
+        return x == y or (math.isnan(x) and math.isnan(y))
+    if isinstance(x, dict) and isinstance(y, dict):
+        return x.keys() == y.keys() and all(_nan_equal(x[k], y[k]) for k in x)
+    if isinstance(x, (list, tuple)) and isinstance(y, (list, tuple)):
+        return len(x) == len(y) and all(_nan_equal(p, q) for p, q in zip(x, y, strict=True))
+    return bool(x == y)
+
+
 def _same(a: Any, b: Any) -> bool:
-    return bool(a.equals(b))
+    """Equal Arrow data; unlike ``equals``, a NaN equals a NaN (a plugin may return them)."""
+    if a.equals(b):
+        return True
+    schema_a = getattr(a, "schema", getattr(a, "type", None))
+    schema_b = getattr(b, "schema", getattr(b, "type", None))
+    if schema_a != schema_b or len(a) != len(b):
+        return False
+    return _nan_equal(a.to_pylist(), b.to_pylist())
 
 
 # -- shared rules ---------------------------------------------------------------------------
@@ -150,8 +167,9 @@ def check_source(obj: Any, uri: str, *, unrelated_uri: str = _UNRELATED_URI) -> 
         )
     second = list(obj.read(uri))
     _require(
-        pa.Table.from_batches(first, schema=schema).equals(
-            pa.Table.from_batches(second, schema=schema)
+        _same(
+            pa.Table.from_batches(first, schema=schema),
+            pa.Table.from_batches(second, schema=schema),
         ),
         "read() twice on the same URI gave different data",
     )
@@ -314,7 +332,7 @@ def _layout_independent(
     ]
     joined = pa.chunked_array([*_chunks(parts[0]), *_chunks(parts[1])])
     _require(
-        pa.chunked_array(_chunks(whole)).equals(joined),
+        _same(pa.chunked_array(_chunks(whole)), joined),
         f"{what} depends on the chunk layout (one chunk != two half chunks)",
     )
 
@@ -389,7 +407,9 @@ def check_chaos(obj: Any, batch: pa.RecordBatch, *, seed: int = 1) -> None:
     _require(isinstance(report, v1.ChaosReport), "mutate() must return a ChaosReport second")
     _require(mutated.schema.equals(batch.schema), "mutate() must keep the batch schema")
     _require(
-        isinstance(report.rows_affected, int) and report.rows_affected >= 0,
+        isinstance(report.rows_affected, int)
+        and not isinstance(report.rows_affected, bool)
+        and report.rows_affected >= 0,
         "ChaosReport.rows_affected must be a non-negative int",
     )
     _require(
@@ -401,7 +421,7 @@ def check_chaos(obj: Any, batch: pa.RecordBatch, *, seed: int = 1) -> None:
         _same(mutated, again) and report == report2,
         "mutate() is not deterministic for a fixed seed",
     )
-    _require(pa.Table.from_batches([batch]).equals(snapshot), "mutate() modified its input batch")
+    _require(_same(pa.Table.from_batches([batch]), snapshot), "mutate() modified its input batch")
 
 
 def check_emitter(obj: Any, uri: str, batches: Iterable[pa.RecordBatch]) -> None:
@@ -549,6 +569,10 @@ def check_behavior(obj: Any, *, population: int = 200, seed: int = 1, years: flo
         "simulate() columns must be entity_id (integer), time (timestamp), state and kind (string)",
     )
     _require(table.num_rows > 0, f"simulate({population}, {seed}, {years}) emitted no events")
+    _require(table.column("kind").null_count == 0, "simulate() `kind` must not contain nulls")
+    _require(
+        table.column("entity_id").null_count == 0, "simulate() `entity_id` must not contain nulls"
+    )
     kinds = set(table.column("kind").to_pylist())
     _require(
         kinds <= events | {"entity_end"},

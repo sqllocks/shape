@@ -16,12 +16,17 @@ from shape.plugins.host import PluginBlockedError, PluginHost, PluginLoadError, 
 COMMANDS_GROUP = "shape.commands"
 
 
+def full_group(group: str) -> str:
+    """``shape.commands`` for ``commands``: the allow-list and its messages use the short form."""
+    return group if group in v1.GROUPS or f"shape.{group}" not in v1.GROUPS else f"shape.{group}"
+
+
 def list_report(host: PluginHost, group: str | None = None) -> list[dict[str, Any]]:
     """Every registered plugin as ``PluginRecord.as_dict()``; imports no plugin code. With an
     allow-list in force each row also has ``allowed`` (a bool) and ``reason`` (why it is blocked,
     else ``None``)."""
     rows = []
-    for r in host.records(group):
+    for r in host.records(full_group(group) if group else group):
         row = r.as_dict()
         if host.allowlist_active:
             blocked = r.status == "blocked"
@@ -49,7 +54,7 @@ def find_records(host: PluginHost, ref: str) -> list[PluginRecord]:
     """Resolve ``GROUP:NAME`` or a bare ``NAME`` (which may match in several groups)."""
     if ":" in ref:
         group, _, name = ref.partition(":")
-        rec = host.record(group, name)
+        rec = host.record(full_group(group), name)
         return [rec] if rec else []
     return [r for r in host.records() if r.name == ref]
 
@@ -153,8 +158,14 @@ def run_command(host: PluginHost, name: str, argv: list[str]) -> int:
     except SystemExit as exc:
         return exc.code if isinstance(exc.code, int) else (0 if exc.code is None else 1)
     except Exception as exc:  # a plugin is third-party code: report it, never a traceback
+        from shape.cli import errors
+
+        if errors.debug_enabled():  # --debug / SHAPE_DEBUG=1 asks for the traceback
+            raise
         print(
-            f"shape: plugin command {name!r} failed: {type(exc).__name__}: {exc}", file=sys.stderr
+            f"shape: plugin command {name!r} failed: {type(exc).__name__}: {exc} "
+            "(run with --debug for the traceback)",
+            file=sys.stderr,
         )
         return 1
 
