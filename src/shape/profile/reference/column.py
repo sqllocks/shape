@@ -16,6 +16,7 @@ import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from shape.kernel.dispatch import get_kernel
 from shape.kernel.reference.exact import PCTS as _PCTS
+from shape.kernel.reference.exact import all_whole
 from shape.kernel.reference.exact import lerp as _lerp
 from shape.kernel.reference.exact import linear_index as _linear_index
 from shape.profile.fitting import detect_distribution as _kernel_detect_distribution
@@ -627,7 +628,7 @@ def _profile_column(
                     u = pc.cast(uniq, pa.float64()).to_numpy()
                     if c.strict:
                         _require_finite(u)
-                    stype = "integer" if np.all(u == u.astype(np.int64)) else "float"
+                    stype = "integer" if all_whole(u) else "float"
                     numeric = pc.cast(non_null, pa.float64()).to_numpy()
                 else:
                     # pandas: to_datetime(format="mixed") must accept every value.  If the

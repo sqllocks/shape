@@ -22,6 +22,7 @@ WINDOW = 10
 
 
 @pytest.mark.heavy
+@pytest.mark.realtime
 def test_realtime_rate_holds_at_10000_events_per_second() -> None:
     rows = RATE * (SECONDS + 5)
     engine = Engine(load_target("retail"), scale="small", seed=5, row_counts={"order_line": rows})

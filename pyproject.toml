@@ -52,7 +52,7 @@ include=[
 [tool.pytest.ini_options]
 testpaths=["tests"]
 addopts="-ra --strict-markers --import-mode=importlib"
-markers=["conformance: normative conformance","security: security invariant","zero_network: network forbidden","sign: needs the cryptography extra","contract: contract test (no external service)","emulator: needs a Docker emulator (CI nightly only)","live: needs live cloud resources","heavy: runs millions of values; CI runs these without coverage tracing"]
+markers=["conformance: normative conformance","security: security invariant","zero_network: network forbidden","sign: needs the cryptography extra","contract: contract test (no external service)","emulator: needs a Docker emulator (CI nightly only)","live: needs live cloud resources","heavy: runs millions of values; CI runs these without coverage tracing","realtime: wall-clock pacing assertions; run on Linux CI runners and the nightly soak"]
 
 [tool.ruff]
 target-version="py311"
