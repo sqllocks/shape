@@ -178,3 +178,6 @@ script fails until they match.
 `SHAPE_API` is `"MAJOR.MINOR"`. The host loads a plugin whose major version equals its own
 (`shape.plugins.api.v1.SHAPE_API`), so a plugin written for API 1.0 keeps loading on every 1.x
 release, and a future 2.0 host reports a clear error for it instead of misbehaving.
+
+What is stable within 1.x, what counts as a breaking change, and the deprecation process are
+in [stability.md](stability.md).
