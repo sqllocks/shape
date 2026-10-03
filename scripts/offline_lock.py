@@ -17,6 +17,7 @@ import subprocess
 import sys
 import tomllib
 from pathlib import Path
+from typing import Any
 
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
@@ -43,27 +44,45 @@ def _is_first_party(req: Requirement) -> bool:
     return canonical(req.name).startswith(FIRST_PARTY_PREFIX)
 
 
-def _plugin_dependencies(root: Path, dist: str) -> list[Requirement]:
-    for path in sorted((root / "plugins").glob("*/pyproject.toml")):
-        project = tomllib.loads(path.read_text("utf-8"))["project"]
+def _project(root: Path, dist: str) -> dict[str, Any] | None:
+    """The ``[project]`` table of core (``sqllocks-shape``) or of the plugin named ``dist``."""
+    paths = [root / "pyproject.toml", *sorted((root / "plugins").glob("*/pyproject.toml"))]
+    for path in paths:
+        if not path.is_file():
+            continue
+        project: dict[str, Any] = tomllib.loads(path.read_text("utf-8"))["project"]
         if canonical(project["name"]) == canonical(dist):
-            return [Requirement(d) for d in project.get("dependencies", [])]
-    return []
+            return project
+    return None
+
+
+def _first_party_dependencies(root: Path, req: Requirement) -> list[Requirement]:
+    """What a first-party requirement brings: the distribution's own dependencies (none for
+    core, whose dependencies every set already holds) and those of each extra it asks for."""
+    project = _project(root, req.name)
+    if project is None:
+        return []
+    deps = [] if canonical(req.name) == FIRST_PARTY_PREFIX else project.get("dependencies", [])
+    extras = project.get("optional-dependencies", {})
+    for extra in sorted(req.extras):
+        deps = [*deps, *extras.get(extra, [])]
+    return [Requirement(d) for d in deps]
 
 
 def _expand(root: Path, reqs: list[Requirement], seen: set[str] | None = None) -> list[Requirement]:
-    """Replace first-party requirements by their plugin's third-party dependencies."""
+    """Replace first-party requirements by the third-party dependencies they bring, extras
+    included (``sqllocks-shape-databases[postgres]`` brings the plugin's ``postgres`` extra)."""
     seen = set() if seen is None else seen
     out: list[Requirement] = []
     for req in reqs:
         if not _is_first_party(req):
             out.append(req)
             continue
-        key = canonical(req.name)
-        if key in seen or key == FIRST_PARTY_PREFIX:
+        key = f"{canonical(req.name)}[{','.join(sorted(req.extras))}]"
+        if key in seen:
             continue
         seen.add(key)
-        out += _expand(root, _plugin_dependencies(root, req.name), seen)
+        out += _expand(root, _first_party_dependencies(root, req), seen)
     return out
 
 
