@@ -451,3 +451,31 @@ def test_cancel_of_a_run_that_finished_first_reports_it_was_not_cancelled(store)
     out = jobs.cancel(job["job_id"])
     timer.join()
     assert out["status"] == "succeeded" and out["cancelled"] is False
+
+
+def test_a_cancel_from_another_process_stops_the_run_between_chunks(tmp_path):
+    # Regression #486: the other process's cancel was recorded, the run never read it and the
+    # job ended "succeeded".
+    runner = Jobs(JobStore(tmp_path))  # the process running the job
+    other = Jobs(JobStore(tmp_path))  # `shape jobs cancel` in a second terminal
+    started = threading.Event()
+    steps: list[int] = []
+
+    def run(req, cancel, progress, resume):
+        started.set()
+        for i in range(200):
+            if cancel.is_set():
+                raise ScaleCancelled("the run was cancelled")
+            steps.append(i)
+            progress({"rows_done": i})
+            time.sleep(0.02)
+        return {"rows_generated": 200}
+
+    job = runner.start_local({"domain": "x"}, run)
+    started.wait()
+    time.sleep(0.1)
+    assert other.cancel(job["job_id"])["cancelled"] is True
+    final = runner.wait(job["job_id"], timeout=30)
+    assert final["status"] == "cancelled"
+    assert len(steps) < 200
+    assert JobStore(tmp_path).get(job["job_id"]).status == "cancelled"
