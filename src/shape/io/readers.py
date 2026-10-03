@@ -148,7 +148,8 @@ def expand_paths(spec: str | Path | Iterable[str | Path]) -> list[Path]:
     out: list[Path] = []
     for item in items:
         text = str(item)
-        if any(ch in text for ch in "*?["):
+        # a name that exists is that file or directory, even when it has glob characters
+        if any(ch in text for ch in "*?[") and not Path(text).exists():
             hits = sorted(Path(m) for m in _glob.glob(text, recursive=True) if Path(m).is_file())
             if not hits:
                 raise FileNotFoundError(f"no files match {text!r}")
