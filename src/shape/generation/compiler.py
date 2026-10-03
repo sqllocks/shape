@@ -79,7 +79,7 @@ def generate_from_shape(
     if n is None:
         n = int(shape.get("rows") or 0)
     if n < 0:
-        raise ValueError("n")
+        raise ValueError(f"the row count must be 0 or more, got {n}")
     rng = np.random.default_rng(seed)
     cols = {}
     degraded = []
@@ -95,6 +95,8 @@ def generate_from_shape(
     for fk in rel.get("foreign_keys", ()):
         field = fk["field"]
         pc = int(fk["parent_count"])
+        if pc < 1:
+            raise ValueError(f"foreign key {field!r}: parent_count must be at least 1, got {pc}")
         cols[field] = rng.integers(0, pc, size=n, dtype=np.int64)
         preserved.append(f"foreign_key:{field}")
     for c in rel.get("correlations", ()):
@@ -111,8 +113,19 @@ def generate_from_shape(
             xs = np.nanstd(x)
             if xs > 0 and sd > 0:
                 z = rng.normal(0, 1, n)
-                cols[b] = mu + sd * (rho * ((x - xm) / xs) + math.sqrt(max(0, 1 - rho * rho)) * z)
+                y = mu + sd * (rho * ((x - xm) / xs) + math.sqrt(max(0, 1 - rho * rho)) * z)
+                # the target keeps its own bounds and its missing rows
+                lo, hi = bs.get("min"), bs.get("max")
+                low = -np.inf if lo is None else float(lo)
+                y = np.clip(y, low, np.inf if hi is None else float(hi))
+                missing = np.asarray([v is None for v in cols[b]], dtype=bool)
+                if missing.any():
+                    y = y.astype(object)
+                    y[missing] = None
+                cols[b] = y
                 preserved.append(f"correlation:{a}:{b}")
+            else:
+                degraded.append(f"correlation:{a}:{b}")  # a constant side has no correlation
         except Exception:
             degraded.append(f"correlation:{a}:{b}")
     for rule in rel.get("conditionals", ()):
@@ -145,7 +158,9 @@ def generate_relational(
         pk = r["parent_key"]
         fk = r["child_fk"]
         pn = len(next(iter(out[parent].values()))) if out[parent] else rows[parent]
-        if pk not in out[parent]:
+        existing = out[parent].get(pk)
+        if existing is None or len(set(np.asarray(existing).tolist())) != pn:
+            # a key is unique: a value column of the same name (drawn from its shape) is not
             out[parent][pk] = np.arange(pn, dtype=np.int64)
         keys = np.asarray(out[parent][pk])
         cn = len(next(iter(out[child].values()))) if out[child] else rows[child]
