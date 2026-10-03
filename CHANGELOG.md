@@ -94,6 +94,15 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   each first-party plugin can reach (checked against the source by a test). There is still no
   sandbox (D-09).
 
+- VS Code extension and data dictionary (W6-04, #87). `editors/vscode/` (TypeScript, MIT) validates
+  and completes `shape.yml` (the bundled `shape-project-v1.schema.json`, through the Red Hat YAML
+  extension), offers snippets, shows a `.shape` file as the read-only text of `shape cat` and
+  diffs it against Git HEAD (`shape.path` setting; no telemetry, no network). CI builds, tests
+  and packages a `.vsix`; marketplace publishing stays a manual step (`docs/RELEASE_POLICY.md`).
+  `shape dictionary PROFILE.shape [--project FILE] [--source NAME] --format md|html|json -o OUT`
+  writes a data dictionary (`shape-data-dictionary`, version 1) with owners and annotations from
+  `shape.yml`; example and top values only with `--examples` and never for columns classified
+  CONFIDENTIAL or higher (`docs/DICTIONARY.md`). `jsonschema` joins the `dev` extra.
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
@@ -167,6 +176,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `docs/bridge/schema/` (`shape bridge schema --out|--check`) with test vectors in
   `docs/bridge/vectors/`; a compatibility test per command keeps them from changing silently.
   Harness: `benchmarks/vs_spindle/bridge_1to1/`.
+
 - `shape.yml` project file and `shape init` (`docs/PROJECT.md`): named sources, a baseline per
   source (previous run, same weekday, rolling window, month end or a pinned artifact, resolved
   against the registry), drift thresholds and ignore lists per column, gates with `observe` or
