@@ -247,8 +247,50 @@ def read_csv(
         timestamp_parsers=["@@never%Y"],  # pandas.read_csv does not parse datetimes
     )
     table = pacsv.read_csv(path, read_options=ro, parse_options=po, convert_options=co)
+    if f.header:
+        names = _header_names(table.column_names)
+        if names != table.column_names:
+            table = table.rename_columns(names)
+            # the integer re-read names the columns itself, the header row is skipped as data
+            ro = pacsv.ReadOptions(
+                use_threads=ro.use_threads,
+                block_size=ro.block_size,
+                encoding=ro.encoding,
+                column_names=names,
+                skip_rows=1,
+            )
     table = _refine_integers(path, table, ro, po, co)
     return _mixed_chunk_columns(table)
+
+
+def _header_names(names: list[str]) -> list[str]:
+    """pandas' names for a CSV header (#167): a repeated name gets ``.1``, ``.2``, ... (skipping
+    names the header already has), and a blank one is ``Unnamed: <position>`` (made unique the
+    same way), so no column is lost to a duplicate name."""
+    header = {n for n in names if n != ""}
+    counts: dict[str, int] = {}
+    out: list[str | None] = []
+    for col in names:
+        if col == "":
+            out.append(None)
+            continue
+        old, cur = col, counts.get(col, 0)
+        while cur > 0:
+            counts[old] = cur + 1
+            col = f"{old}.{cur}"
+            cur = cur + 1 if col in header else counts.get(col, 0)
+        out.append(col)
+        counts[col] = cur + 1
+    used = {n for n in out if n is not None}
+    named: list[str] = []
+    for i, name in enumerate(out):
+        if name is None:
+            name, k = f"Unnamed: {i}", 1
+            while name in used:
+                name, k = f"Unnamed: {i}.{k}", k + 1
+            used.add(name)
+        named.append(name)
+    return named
 
 
 def _chunk_rows(ncols: int) -> int:
