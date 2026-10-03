@@ -143,6 +143,7 @@ class PartitionedKeyedState:
 # ----------------------------------------------------------------- per-key sketches
 
 SKETCH_FORMAT = "shape-keyed-sketches-v1"
+_SKETCH_COUNTERS = ("batches", "events", "null_keys", "evicted", "expired")
 _DICT_BYTES_PER_KEY = 120  # estimate: a dict slot, the hash key's int object and the slot's int
 _PER_KEY_FIELDS = (  # (name, dtype): one array each, one entry per slot
     ("key", np.uint64),
@@ -574,6 +575,8 @@ class KeyedSketches:
         obj._tick, obj._born_next = int(snap["tick"]), int(snap["born"])
         obj._now, obj._swept = snap["now"], snap["swept"]
         for name, value in snap["counters"].items():
+            if name not in _SKETCH_COUNTERS:  # never an arbitrary attribute from a file
+                raise ValueError(f"snapshot holds an unknown counter {name!r}")
             setattr(obj, name, int(value))
         return obj
 
