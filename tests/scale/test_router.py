@@ -13,7 +13,7 @@ from scale_schemas import computed_schema, plain_schema
 from shape.generation.engine import Engine
 from shape.scale.chunked import ChunkedGenerator, derive_counts, reference_counts
 from shape.scale.router import ScaleCancelled, ScaleRouter
-from shape.scale.sinks.base import BaseSink
+from shape.scale.sinks.base import BaseSink, SinkError
 from shape.scale.sinks.memory import MemorySink
 from shape.scale.sinks.parquet import ParquetSink
 
@@ -254,3 +254,34 @@ def test_anchor_mode_sizes_every_table_from_one():
         ChunkedGenerator(schema).generate_chunked(target_count=5)
     with pytest.raises(ValueError, match="not in the schema"):
         derive_counts(schema, "nope", 5)
+
+
+class _FailsTwice(BaseSink):
+    name = "twice"
+
+    def write_batch(self, table, batch):
+        raise RuntimeError("disk full while writing")
+
+    def close(self):
+        raise RuntimeError("close failed")
+
+
+def test_the_original_failure_is_raised_when_close_fails_too():
+    # Regression #490: the close error replaced the write error.
+    engine = Engine(plain_schema(), seed=1)
+    with pytest.raises(SinkError, match="disk full while writing") as caught:
+        ScaleRouter(engine, [_FailsTwice()], mode="local_single").run()
+    assert "close failed" not in str(caught.value)
+
+
+def test_a_cancelled_run_stays_cancelled_when_close_fails():
+    class CloseFails(BaseSink):
+        name = "close-fails"
+
+        def close(self):
+            raise RuntimeError("close failed")
+
+    cancel = threading.Event()
+    cancel.set()
+    with pytest.raises(ScaleCancelled):
+        ScaleRouter(Engine(plain_schema(), seed=1), [CloseFails()], cancel=cancel).run()
