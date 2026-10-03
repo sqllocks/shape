@@ -63,3 +63,22 @@ def test_a_real_row_id_column_is_kept_and_the_surrogate_takes_another_name():
     assert set(out["_row_id"].to_pylist()) == {5}
     plan = {i.evidence: i.status for i in fit.plan.items}
     assert plan[f"t.{surrogate}"] == "approximate"
+
+
+def test_zoned_timestamps_are_generated_inside_the_observed_wall_clock_range():
+    # 207: bounds like '2023-12-31 19:00:00-05:00' went to the strategy, which converted them to
+    # UTC: values came out to 2024-02-28 20:58, past the observed wall-clock maximum.
+    import datetime as dt
+
+    zone = dt.timezone(dt.timedelta(hours=-5))
+    start = dt.datetime(2023, 12, 31, 19, tzinfo=zone)
+    stamps = [start + dt.timedelta(hours=7 * i) for i in range(200)]
+    t = pa.table(
+        {"id": list(range(200)), "at": pa.array(stamps, pa.timestamp("us", tz="America/New_York"))}
+    )
+    schema = learn(shape.profile(t, name="t"))
+    out = Engine(schema, row_counts={"t": 500}).generate().tables["t"]["at"].to_pylist()
+    low = min(s.astimezone(zone).replace(tzinfo=None) for s in stamps)
+    high = max(s.astimezone(zone).replace(tzinfo=None) for s in stamps)
+    values = [v.replace(tzinfo=None) for v in out if v is not None]
+    assert low <= min(values) and max(values) <= high, (min(values), max(values), low, high)
