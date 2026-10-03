@@ -5,6 +5,12 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Mergeable profiles (`docs/PROFILE_MERGE.md`): `shape profile --sketches` keeps an optional,
+  versioned sketch state beside the profile (the profile and its content id are unchanged), and
+  `shape profile merge A.shape B.shape -o OUT.shape` / `shape.profile.merge_profiles` combine
+  profiles of partitions or days without re-reading the data: exact statistics exactly,
+  cardinality, quantiles and top values within each sketch's documented error. Merged profiles
+  carry their inputs' content ids (`Profile.merged_from`).
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
