@@ -327,3 +327,33 @@ def test_numeric_sink_settings_accept_numbers_written_as_text():
         "parquet", {"output_dir": "x", "chunk_rows": "250", "writer_threads": "2"}, resolve=False
     )
     assert isinstance(sink, ParquetSink) and sink._chunk_rows == 250 and sink._threads == 2
+
+
+def _run_parquet(base, n, chunk_rows=10):
+    sink = ParquetSink(base, chunk_rows=chunk_rows)
+    sink.open(None)
+    sink.write_batch("t", pa.record_batch({"x": list(range(n))}))
+    sink.finish_table("t")
+    sink.close()
+
+
+def test_parquet_rerun_removes_the_parts_of_an_earlier_larger_run(tmp_path):
+    # Regression #483: parts 2-4 of the first run stayed, so the directory read 50 rows.
+    import pyarrow.dataset as ds
+
+    _run_parquet(tmp_path, 50)
+    (tmp_path / "t" / "part-000007.parquet.tmp1234").write_bytes(b"half a file")
+    _run_parquet(tmp_path, 20)
+    names = sorted(p.name for p in (tmp_path / "t").iterdir())
+    assert names == [COMPLETE, "part-000000.parquet", "part-000001.parquet"]
+    assert ds.dataset(tmp_path / "t", format="parquet").count_rows() == 20
+    assert json.loads((tmp_path / "t" / COMPLETE).read_text()) == {"rows": 20, "parts": 2}
+
+
+def test_parquet_cleanup_leaves_files_it_did_not_name_alone(tmp_path):
+    (tmp_path / "t").mkdir()
+    (tmp_path / "t" / "notes.txt").write_text("mine")
+    (tmp_path / "t" / "part-9.parquet").write_text("not a part name of the sink")
+    _run_parquet(tmp_path, 5)
+    assert (tmp_path / "t" / "notes.txt").read_text() == "mine"
+    assert (tmp_path / "t" / "part-9.parquet").exists()
