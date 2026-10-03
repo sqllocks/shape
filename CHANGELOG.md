@@ -330,3 +330,12 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Repository cleaned up for public release: removed internal milestone and
   qualification records.
 - README and changelog rewritten to describe the current state.
+
+### Fixed
+
+- Public Python API documentation (#264): every function `import shape` exports has a docstring
+  that matches what it does (`shape.generate` documents each input form, what it returns and the
+  arguments it ignores; `timeline`, `view`, `query`, `certify` and `plan` say what they read),
+  `view`, `timeline`, `certify` and `plan` declare their return class, `shape.types` passes
+  `mypy --strict`, and the new `docs/API.md` lists every exported name with the code's own
+  signature, checked by `tests/api/`.

@@ -3,6 +3,9 @@
 Names are loaded on first use (PEP 562), so ``import shape`` costs almost nothing and
 ``shape --version`` starts in a few milliseconds; ``shape.profile`` and the rest import their
 modules when they are first touched.
+
+``__all__`` is the public API; ``docs/API.md`` documents each name with its signature. The
+expected failures derive from ``shape.errors.ShapeError``, except those listed in that page.
 """
 
 from __future__ import annotations
