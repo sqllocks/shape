@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import base64
 import json
+import re
 import uuid
 from pathlib import Path
 from typing import Any
@@ -20,6 +21,21 @@ PLATFORM_SCHEMA = (
     "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/"
     "platformProperties/2.0.0/schema.json"
 )
+
+
+# The values that go into notebook code: a domain is a plain name (an installed domain plugin), a
+# version is a PEP 440 version, a seed an integer. Anything else could become code in a cell.
+_DOMAIN = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*")
+_VERSION = re.compile(r"[A-Za-z0-9][A-Za-z0-9.+!_-]*")
+
+
+def _checked(domain: Any, seed: Any, version: Any) -> None:
+    if not isinstance(domain, str) or not _DOMAIN.fullmatch(domain):
+        raise ValueError(f"not a domain name: {domain!r} (an installed domain, such as 'retail')")
+    if not isinstance(seed, int) or isinstance(seed, bool):
+        raise ValueError(f"the seed must be an integer, not {seed!r}")
+    if not isinstance(version, str) or not _VERSION.fullmatch(version):
+        raise ValueError(f"not a package version: {version!r}")
 
 
 def _version() -> str:
@@ -46,6 +62,7 @@ def generate_notebook(
             f"unknown notebook target {output_target!r}; choose one of {', '.join(OUTPUT_TARGETS)}"
         )
     ver = version or _version()
+    _checked(domain, seed, ver)
     cells: list[dict[str, Any]] = [
         _markdown(
             f"# Shape data generation: {domain.title()}\n\n"
