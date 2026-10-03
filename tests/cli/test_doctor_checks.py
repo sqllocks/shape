@@ -340,10 +340,11 @@ def test_report_keeps_earlier_keys_and_adds_checks():
 def test_cli_json_includes_every_check(monkeypatch, capsys):
     net = FakeNet(dns={"b": [V4]}, tcp={"192.0.2.10"})
     monkeypatch.setattr(dc, "default_net", lambda: net)
+    monkeypatch.setattr(dc, "kafka_probe", lambda: lambda servers: None)
     assert main(["doctor", "--json", "--broker", "kafka://b:9092/t"]) == 0
     o = json.loads(capsys.readouterr().out)
     ids = [c["id"] for c in o["checks"]]
-    assert ids[:2] == ["broker.dns", "broker.tcp"]
+    assert ids == ["broker.dns", "broker.tcp", "broker.auth"]
     assert {"id", "status", "message", "next"} <= set(o["checks"][0])
     assert o["ok"] is True
 
