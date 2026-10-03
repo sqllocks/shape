@@ -9,10 +9,15 @@ its leading zeros), numbers, dates, booleans and blanks come through as their Ex
 column that mixes text with other types becomes text. Cached formula results are read, not the
 formulas.
 
+``book.xlsx#Name`` also takes the name of an Excel table or of a named range (a defined name that
+points at one block of cells on one sheet); the first row of the block is its header. A sheet of
+that name wins over a table, and a table over a named range. Merged cells read as the value of the
+top-left cell (the rest are blank) and are reported.
+
 Reading also records what a reader of the workbook would want to know, as *findings* (plain
 dicts with ``kind``, ``table``, ``count``, cell positions and examples): numbers and dates stored
 as text, hidden columns and sheets, error cells, duplicate or blank headers (renamed
-deterministically) and sentinel values.
+deterministically), merged cells and sentinel values.
 """
 
 from __future__ import annotations
@@ -301,12 +306,300 @@ def read_sheet(path: str | Path, sheet: str) -> SheetRead:
         wb.close()
 
 
-def _read_ws(ws: Any, path: Path, sheet: str) -> SheetRead:
+@dataclass(frozen=True)
+class Block:
+    """A block of cells on one sheet, 1-based and inclusive: an Excel table or a named range."""
+
+    name: str
+    kind: str  # "table" or "range"
+    sheet: str
+    min_col: int
+    min_row: int
+    max_col: int
+    max_row: int
+
+
+_CELL = re.compile(r"^\$?([A-Za-z]{1,3})\$?(\d+)$")
+
+
+def _column_index(letters: str) -> int:
+    n = 0
+    for ch in letters.upper():
+        n = n * 26 + ord(ch) - 64
+    return n
+
+
+def _parse_ref(ref: str) -> tuple[int, int, int, int] | None:
+    """``"B3:D6"`` (``$`` allowed) -> ``(min_col, min_row, max_col, max_row)``; ``None`` for a
+    single cell or anything else."""
+    head, sep, tail = ref.partition(":")
+    a, b = _CELL.match(head), _CELL.match(tail)
+    if not (sep and a and b):
+        return None
+    c1, r1, c2, r2 = _column_index(a[1]), int(a[2]), _column_index(b[1]), int(b[2])
+    return min(c1, c2), min(r1, r2), max(c1, c2), max(r1, r2)
+
+
+def _split_sheet_ref(text: str) -> tuple[str, str] | None:
+    """``"'My Sheet'!$A$1:$B$2"`` -> ``("My Sheet", "$A$1:$B$2")``; ``None`` if there is no
+    sheet part."""
+    sheet, sep, ref = text.rpartition("!")
+    if not sep:
+        return None
+    if sheet.startswith("'") and sheet.endswith("'") and len(sheet) >= 2:
+        sheet = sheet[1:-1].replace("''", "'")
+    return sheet, ref
+
+
+def _read_zip_xml(zf: zipfile.ZipFile, part: str) -> Any:
+    from openpyxl.xml.functions import fromstring
+
+    return fromstring(zf.read(part))
+
+
+def _local(el: Any) -> str:
+    return str(el.tag).rsplit("}", 1)[-1]
+
+
+def _rels_of(zf: zipfile.ZipFile, part: str) -> dict[str, str]:
+    """``{relationship id: target part}`` for ``part`` (``xl/worksheets/sheet1.xml``)."""
+    folder, _, base = part.rpartition("/")
+    rels = f"{folder}/_rels/{base}.rels"
+    if rels not in zf.namelist():
+        return {}
+    out: dict[str, str] = {}
+    for el in _read_zip_xml(zf, rels):
+        target = el.get("Target", "")
+        if target.startswith("/"):
+            out[el.get("Id", "")] = target.lstrip("/")
+        else:
+            parts = [*folder.split("/")]
+            for seg in target.split("/"):
+                if seg == "..":
+                    parts.pop()
+                elif seg != ".":
+                    parts.append(seg)
+            out[el.get("Id", "")] = "/".join(parts)
+    return out
+
+
+@dataclass
+class _Names:
+    blocks: list[Block] = field(default_factory=list)
+    refused: dict[str, str] = field(default_factory=dict)  # name -> why it is not a block
+
+
+def _find_blocks(path: Path) -> _Names:
+    """The Excel tables and the named ranges of a workbook, from its XML (read-only mode of
+    openpyxl exposes neither)."""
+    names = _Names()
+    try:
+        with zipfile.ZipFile(path) as zf:
+            book = _read_zip_xml(zf, "xl/workbook.xml")
+            sheets: list[str] = []
+            parts: dict[str, str] = {}
+            workbook_rels = _rels_of(zf, "xl/workbook.xml")
+            defined: list[Any] = []
+            for el in book.iter():
+                tag = _local(el)
+                if tag == "sheet":
+                    title = el.get("name", "")
+                    sheets.append(title)
+                    rid = next((v for k, v in el.attrib.items() if k.endswith("}id")), None)
+                    if rid in workbook_rels:
+                        parts[title] = workbook_rels[rid]
+                elif tag == "definedName":
+                    defined.append(el)
+            for title, part in parts.items():
+                names.blocks.extend(_table_blocks(zf, title, part, names))
+            taken = {b.name.casefold() for b in names.blocks if b.kind == "table"}
+            for el in defined:
+                _add_range(names, el, sheets, taken)
+    except (zipfile.BadZipFile, KeyError, ValueError):
+        pass
+    return names
+
+
+def _table_blocks(zf: zipfile.ZipFile, sheet: str, part: str, names: _Names) -> list[Block]:
+    if part not in zf.namelist():
+        return []
+    out: list[Block] = []
+    for el in _read_zip_xml(zf, part).iter():
+        if _local(el) != "tablePart":
+            continue
+        rid = next((v for k, v in el.attrib.items() if k.endswith("}id")), None)
+        table_part = _rels_of(zf, part).get(rid or "")
+        if table_part is None or table_part not in zf.namelist():
+            continue
+        t = _read_zip_xml(zf, table_part)
+        name = t.get("displayName") or t.get("name") or ""
+        box = _parse_ref(t.get("ref", ""))
+        if not name or box is None:
+            continue
+        c1, r1, c2, r2 = box
+        if t.get("headerRowCount") == "0":
+            names.refused[name] = f"table {name!r} has no header row"
+            continue
+        if t.get("totalsRowCount") not in (None, "0"):
+            r2 -= int(t.get("totalsRowCount", "1"))
+        out.append(Block(name, "table", sheet, c1, r1, c2, r2))
+    return out
+
+
+def _add_range(names: _Names, el: Any, sheets: list[str], taken: set[str]) -> None:
+    name = el.get("name", "")
+    if not name or name.startswith("_xlnm.") or el.get("hidden") in ("1", "true"):
+        return
+    if name.casefold() in taken:
+        return
+    text = (el.text or "").strip()
+    if "," in re.sub(r"'(?:[^']|'')*'", "", text):  # several areas (a comma outside a sheet name)
+        names.refused[name] = f"named range {name!r} has more than one area ({text})"
+        return
+    target = _split_sheet_ref(text)
+    if target is None:
+        names.refused[name] = f"named range {name!r} is not a block of cells ({text})"
+        return
+    sheet, ref = target
+    if sheet not in sheets:
+        names.refused[name] = f"named range {name!r} points at {sheet!r}, which is not a sheet"
+        return
+    box = _parse_ref(ref)
+    if box is None:
+        names.refused[name] = f"named range {name!r} is one cell or not a block of cells ({text})"
+        return
+    names.blocks.append(Block(name, "range", sheet, *box))
+
+
+def resolve_block(path: Path, name: str, sheets: list[str]) -> Block | None:
+    """The table or named range called ``name`` (exact match first, then ignoring case), or
+    ``None``. A name that exists but cannot be read as a block raises :class:`WorkbookError`."""
+    found = _find_blocks(path)
+    for fold in (False, True):
+
+        def same(a: str, b: str, fold: bool = fold) -> bool:
+            return a.casefold() == b.casefold() if fold else a == b
+
+        for kind in ("table", "range"):
+            for b in found.blocks:
+                if b.kind == kind and same(b.name, name):
+                    return b
+        for refused, why in found.refused.items():
+            if same(refused, name):
+                raise WorkbookError(f"{path.name}: {why}")
+    return None
+
+
+def read_block(path: str | Path, block: Block) -> SheetRead:
+    """Read a table or named range into a :class:`SheetRead` named after it."""
+    p = check_workbook_file(path)
+    openpyxl = _import_openpyxl()
+    wb = _open(openpyxl, p)
+    try:
+        return _read_ws(wb[block.sheet], p, block.name, block, sheet_name=block.sheet)
+    finally:
+        wb.close()
+
+
+def read_selection(path: str | Path, name: str) -> SheetRead:
+    """Read what ``book.xlsx#name`` names: a sheet, else an Excel table, else a named range."""
+    p = check_workbook_file(path)
+    names = [i.name for i in sheet_infos(p)]
+    if name in names:
+        return read_sheet(p, name)
+    block = resolve_block(p, name, names)
+    if block is None:
+        raise WorkbookError(_no_such(p, name, names))
+    return read_block(p, block)
+
+
+def _no_such(p: Path, name: str, sheets: list[str]) -> str:
+    found = _find_blocks(p)
+    text = f"{p.name} has no sheet {name!r} (and no table or named range of that name); "
+    text += f"sheets: {sheets}"
+    if found.blocks:
+        text += f"; tables and named ranges: {[b.name for b in found.blocks]}"
+    return text
+
+
+def _merged_ranges(path: Path, sheet: str) -> list[tuple[int, int, int, int]]:
+    """The merged ranges of one sheet as ``(min_col, min_row, max_col, max_row)``."""
+    from openpyxl.xml.functions import iterparse
+
+    try:
+        with zipfile.ZipFile(path) as zf:
+            target = _sheet_part(zf, sheet)
+            if target is None:
+                return []
+            out: list[tuple[int, int, int, int]] = []
+            with zf.open(target) as fh:
+                for _, el in iterparse(fh, events=("end",)):
+                    tag = el.tag.rsplit("}", 1)[-1]
+                    if tag == "mergeCell":
+                        box = _parse_ref(el.get("ref", ""))
+                        if box is not None:
+                            out.append(box)
+                    elif tag == "row":
+                        el.clear()
+            return out
+    except (zipfile.BadZipFile, KeyError, ValueError):
+        return []
+
+
+def _merged_finding(
+    path: Path, sheet: str, name: str, area: tuple[int, int, int, int] | None
+) -> dict[str, Any] | None:
+    """A ``merged_cells`` finding for the merges that touch ``area`` (the whole sheet if
+    ``None``): the ranges, their top-left cells (whose value is read) and how many other cells
+    they leave blank."""
+    ranges: list[tuple[int, int, int, int]] = []
+    for c1, r1, c2, r2 in _merged_ranges(path, sheet):
+        if area is not None:
+            a1, b1, a2, b2 = area
+            if c2 < a1 or c1 > a2 or r2 < b1 or r1 > b2:
+                continue
+        ranges.append((c1, r1, c2, r2))
+    if not ranges:
+        return None
+    ranges.sort(key=lambda b: (b[1], b[0]))
+
+    def label(box: tuple[int, int, int, int]) -> str:
+        return f"{_letters(box[0])}{box[1]}:{_letters(box[2])}{box[3]}"
+
+    return {
+        "kind": "merged_cells",
+        "table": name,
+        "count": len(ranges),
+        "blank_cells": sum((c2 - c1 + 1) * (r2 - r1 + 1) - 1 for c1, r1, c2, r2 in ranges),
+        "ranges": [label(b) for b in ranges[:MAX_CELLS]],
+        "cells": [f"{_letters(b[0])}{b[1]}" for b in ranges[:MAX_CELLS]],
+    }
+
+
+def _read_ws(
+    ws: Any,
+    path: Path,
+    sheet: str,
+    block: Block | None = None,
+    *,
+    sheet_name: str | None = None,
+) -> SheetRead:
+    """One sheet, or ``block`` of it. ``sheet`` names the table; cell positions in findings are
+    always positions on the sheet."""
     errors: dict[int, list[tuple[int, str]]] = {}  # column index -> [(row, error code)]
     header: list[Any] | None = None
     header_row = 0
     rows: list[list[Any]] = []
-    for r, row in enumerate(ws.iter_rows(), 1):
+    col0 = block.min_col - 1 if block else 0
+    bounds: dict[str, int] = {}
+    if block:
+        bounds = {
+            "min_row": block.min_row,
+            "max_row": block.max_row,
+            "min_col": block.min_col,
+            "max_col": block.max_col,
+        }
+    for r, row in enumerate(ws.iter_rows(**bounds), block.min_row if block else 1):
         if header is None:
             first = [c.value for c in row]
             if all(_is_blank(v) for v in first):
@@ -336,23 +629,32 @@ def _read_ws(ws: Any, path: Path, sheet: str) -> SheetRead:
         return SheetRead(sheet, pa.table({}), findings)
     names, notes = _unique_headers(header)
     for note in notes:
+        cell = note["cell"]
+        if col0:  # the header cell on the sheet, not in the block
+            note = {**note, "cell": f"{_letters(_column_index(cell[:-1]) + col0)}{header_row}"}
         findings.append({**note, "table": sheet})
-    hidden = _hidden_columns(path, sheet)
+    hidden = _hidden_columns(path, sheet_name or sheet)
     for ci, name in enumerate(names):
-        if ci + 1 in hidden:
+        if ci + 1 + col0 in hidden:
             findings.append(
                 {
                     "kind": "hidden_column",
                     "table": sheet,
                     "column": name,
-                    "cell": f"{_letters(ci + 1)}{header_row}",
-                    "column_letter": _letters(ci + 1),
+                    "cell": f"{_letters(ci + 1 + col0)}{header_row}",
+                    "column_letter": _letters(ci + 1 + col0),
                 }
             )
     arrays = []
     for ci, (name, values) in enumerate(zip(names, columns, strict=True)):
-        findings.extend(_column_findings(sheet, name, ci, values, header_row, errors.get(ci, [])))
+        findings.extend(
+            _column_findings(sheet, name, ci + col0, values, header_row, errors.get(ci, []))
+        )
         arrays.append(_to_arrow(values))
+    area = (block.min_col, block.min_row, block.max_col, block.max_row) if block else None
+    merged = _merged_finding(path, sheet_name or sheet, sheet, area)
+    if merged is not None:
+        findings.append(merged)
     table = pa.table(dict(zip(names, arrays, strict=True))) if names else pa.table({})
     return SheetRead(sheet, table, findings)
 
@@ -579,13 +881,17 @@ def _text(value: Any) -> str:
 def read_workbook(
     path: str | Path, sheet: str | None = None, *, include_hidden: bool = False
 ) -> WorkbookRead:
-    """Read a workbook: every visible sheet, or the named ``sheet`` (hidden or not). Hidden
+    """Read a workbook: every visible sheet, or the named ``sheet`` (hidden or not; the name of an
+    Excel table or a named range also works, see :func:`read_selection`). Hidden
     sheets are reported, and read only with ``include_hidden`` or when named."""
     p = check_workbook_file(path)
     infos = sheet_infos(p)
     names = [i.name for i in infos]
+    block: Block | None = None
     if sheet is not None and sheet not in names:
-        raise WorkbookError(f"{p.name} has no sheet {sheet!r}; sheets: {names}")
+        block = resolve_block(p, sheet, names)
+        if block is None:
+            raise WorkbookError(_no_such(p, sheet, names))
     findings = [
         {
             "kind": "hidden_sheet",
@@ -604,6 +910,8 @@ def read_workbook(
     )
     if not wanted:
         raise WorkbookError(f"{p.name} has no visible sheets")
+    if block is not None:
+        return WorkbookRead(str(p), {block.name: read_block(p, block)}, findings)
     sheets = {name: read_sheet(p, name) for name in wanted}
     return WorkbookRead(str(p), sheets, findings)
 
