@@ -183,3 +183,37 @@ dbt gate imports it). INT-15's `database-plugins` job is unchanged.
    pure-wheel:
      # PF-03: the T-29 pure wheel is py3-none-any and under 28.6 MB, and the UDF helpers and
 ```
+
+## Round 2 commands and results
+
+Python 3.11, `~/.venvs/shape` (editable core and all eleven plugins, `dbt-duckdb`, `tests/demo/fabric/requirements.txt`,
+unixODBC from apt). Final tree = merge commit plus the round-2 status commits.
+
+| Check | Result |
+|---|---|
+| `ruff check src tests plugins benchmarks/vs_spindle` | All checks passed |
+| `ruff format --check` (same paths) | all files already formatted |
+| `mypy` | no issues |
+| `python scripts/check_plugin_skeletons.py` / `--build OUT` | OK, 11 distributions, 11 wheels |
+| `pytest tests/plugins` | 122 passed |
+| `pytest -m "not emulator and not live and not dbt"` on dbt, behavior, healthcare-codes (after the LF/`dbt.exe` edits) | 294 passed |
+| `python scripts/offline_lock.py generate` then `check` | OK, 25 sets |
+| `SHAPE_KERNEL=rust pytest -m "not emulator and not live"` (whole suite incl. `tests/demo/fabric`) | 7120 passed, 6 failed, 13 deselected (2318 s) |
+| `SHAPE_KERNEL=python`, same | 7121 passed, 5 failed, 13 deselected (7729 s) |
+
+(The two full runs ran at the same time on one machine.) Failures, each checked on a worktree of
+`origin/int/INT-15` (merge not applied), same venv, `PYTHONPATH=src`:
+
+| Test | On INT-15 alone | Verdict |
+|---|---|---|
+| `tests/kernel/test_hashing.py::test_rust_equals_reference_on_a_million_values[float16]` | fails (`Expected np.float16 instance`) | pre-existing, not fixed here |
+| `tests/kernel/test_hashing.py::test_one_and_one_point_zero_hash_equal` | fails | pre-existing |
+| `tests/streaming/emit/test_faults.py::test_emit_to_two_files` | fails (`assert 2 == 0`) | pre-existing |
+| `tests/iss_gaps/test_landing_and_batches.py::test_file_sinks_take_path_template_and_batch_date` | fails (extra `ingest_date` dictionary column) | pre-existing |
+| `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references` | fails when `tests/demo/fabric/test_udf.py` is collected first (`azure.functions` already imported) | pre-existing order dependence; fails in both kernels |
+| `tests/cli/test_generate_to.py::test_to_postgresql_routes_to_the_database_sink` | not run under load on INT-15 | failed once in the rust run only ("dictionary changed size during iteration" in the in-memory server); passes alone, in the python run, and in `tests/cli tests/security` (392 passed). Likely load-sensitive; **not proven pre-existing**. |
+
+Not run: emulator and live tests, the Windows and macOS CI legs, `dbt deps` from the hub (see gaps above), the dbt-build
+tests (the hub is unreachable from this sandbox, so they error at setup here; round 1 ran them with local packages),
+a CI run of the `ci.yml` diff. Housekeeping: the lock generator wrote `/lock` at the filesystem root (empty `TMPDIR`);
+the sandbox blocked its removal, so the lead can delete it.
