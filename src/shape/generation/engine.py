@@ -543,6 +543,13 @@ class Engine:
             raise ValueError("chunk_rows must be at least 1")
         self.schema = copy.deepcopy(schema)
         if scale is not None:
+            presets = self.schema.generation.scales
+            if scale not in presets:  # never a silent fallback to 100 rows a table (#717)
+                raise ValueError(
+                    f"unknown scale {scale!r}; the presets are: {', '.join(presets)}"
+                    if presets
+                    else f"unknown scale {scale!r}: the schema has no scale presets"
+                )
             self.schema.generation.scale = scale
         if seed is not None:
             self.schema.model.seed = int(seed)

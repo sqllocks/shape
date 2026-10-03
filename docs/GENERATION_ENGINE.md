@@ -437,13 +437,14 @@ closed and the output flushed, instead of freeing the tables and unloading the m
 
 A target is an installed domain or the path of a generation schema file. `--mode star` picks a
 domain's star schema (a domain that has none exits 2; a schema file has the one mode it was
-written in). `--scale` must be one of the schema's presets (`shape presets`), `--seed` defaults to
+written in). `--scale` must be one of the schema's presets (`shape presets`; the engine refuses any
+other name, also from Python), `--seed` defaults to
 the schema's. `--format summary` (the default) prints the result and writes nothing; every other
 format needs `-o DIR` and is written by the writers above. `--json` prints the result, the plan or
 the description as JSON. Exit codes: 0 done, 1 a dry run found problems (or `validate` found the
 file invalid), 2 bad input.
 
-`shape generate --from X.shape` is reserved for generating from a profile and exits 2 for now.
+`shape generate --from X.shape` generates from a profile (see "From data" above).
 
 In Python, `shape.api.generate("retail", scale="medium", seed=42, mode="star")` returns the
 `GenerationResult`: `result.tables` maps names to Arrow tables (as does `result["order"]`).
