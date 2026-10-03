@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "relational_case",
+    "description": "",
+    "domain": "relational_case",
+    "schema_mode": "3nf",
+    "locale": "en_US",
+    "seed": 42,
+    "date_range": {
+      "start": "2022-01-01",
+      "end": "2025-12-31"
+    }
+  },
+  "tables": {
+    "p": {
+      "name": "p",
+      "description": "",
+      "cdm_mapping": null,
+      "primary_key": [
+        "pid"
+      ],
+      "columns": {
+        "pid": {
+          "name": "pid",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence",
+            "start": 1
+          },
+          "nullable": false,
+          "null_rate": 0.0,
+          "max_length": null,
+          "precision": null,
+          "scale": null
+        }
+      }
+    },
+    "c": {
+      "name": "c",
+      "description": "",
+      "cdm_mapping": null,
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence",
+            "start": 1
+          },
+          "nullable": false,
+          "null_rate": 0.0,
+          "max_length": null,
+          "precision": null,
+          "scale": null
+        },
+        "cid": {
+          "name": "cid",
+          "type": "integer",
+          "generator": {
+            "strategy": "foreign_key",
+            "ref": "p.pid"
+          },
+          "nullable": false,
+          "null_rate": 0.0,
+          "max_length": null,
+          "precision": null,
+          "scale": null
+        },
+        "flag": {
+          "name": "flag",
+          "type": "boolean",
+          "generator": {
+            "strategy": "first_per_parent",
+            "parent_column": "cid"
+          },
+          "nullable": false,
+          "null_rate": 0.0,
+          "max_length": null,
+          "precision": null,
+          "scale": null
+        }
+      }
+    }
+  },
+  "relationships": [],
+  "business_rules": [],
+  "generation": {
+    "scale": "s",
+    "scales": {
+      "s": {
+        "p": 60,
+        "c": 60
+      }
+    },
+    "derived_counts": {},
+    "output": {}
+  },
+  "correlated_columns": {}
+}
