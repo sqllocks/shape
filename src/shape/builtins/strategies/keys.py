@@ -98,6 +98,9 @@ class ForeignKey:
                 f"for column {where(ctx)}"
             )
         ref_table, ref_column = ref.split(".", 1)
+        if ctx.n_rows == 0:  # an empty child needs no parent row, even of an empty parent (#220)
+            pool = parent_pool(ctx, ref_table, ref_column, "foreign_key")
+            return pool.take(np.zeros(0, dtype=np.int64))
         params = _params(spec)
         constrained_by = spec.get("constrained_by")
         if constrained_by and constrained_by in ctx.columns:
@@ -281,17 +284,20 @@ class CompositeForeignKey:
                     f"composite_foreign_key on {where(ctx)}: "
                     f"ref_column '{name}' not found in '{ref_table}'"
                 )
-        if parent.num_rows == 0:
+        if ctx.n_rows == 0:  # an empty child needs no parent row, even of an empty parent (#220)
+            taken = arrow_array(np.zeros(0, dtype=np.int64))
+        elif parent.num_rows == 0:
             raise StrategyError(f"composite_foreign_key on {where(ctx)}: '{ref_table}' has 0 rows")
-        index = _indices(
-            "zipf" if spec.get("distribution") == "zipf" else "uniform",
-            dict(spec.get("params") or {}),
-            parent.num_rows,
-            ctx.row_start,
-            ctx.n_rows,
-            ctx,
-        )
-        taken = arrow_array(index)
+        else:
+            index = _indices(
+                "zipf" if spec.get("distribution") == "zipf" else "uniform",
+                dict(spec.get("params") or {}),
+                parent.num_rows,
+                ctx.row_start,
+                ctx.n_rows,
+                ctx,
+            )
+            taken = arrow_array(index)
         values = {name: pc.take(parent.column(name), taken) for name in ref_columns}
         out: dict[str, pa.Array] = {ctx.column: values[ref_columns[0]]}
         out.update({cfo_key(ctx.column, name): arr for name, arr in values.items()})
