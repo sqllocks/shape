@@ -604,7 +604,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         mod, _, attr = ns.samples.partition(":")
         if not attr:
             p.error("--samples must be MODULE:ATTR")
-        samples = getattr(importlib.import_module(mod), attr)
+        try:
+            samples = getattr(importlib.import_module(mod), attr)
+        except (ImportError, AttributeError) as exc:
+            p.error(f"--samples {ns.samples}: {type(exc).__name__}: {exc}")
     try:
         lines = check_installed(ns.distribution, samples)
     except (ConformanceError, KeyError) as exc:
