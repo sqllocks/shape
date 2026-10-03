@@ -12,11 +12,12 @@ failed contract, an incompatible change).
 
 from __future__ import annotations
 
+import contextlib
 import os
 import re
 import sys
 import zipfile
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 
 from shape.errors import ShapeError
 
@@ -81,6 +82,19 @@ def fail(exc: BaseException) -> int:
     # A message can quote a connection string or a URI with a key in it: never print the secret.
     print(f"shape: error: {redact_text(describe(exc))}", file=sys.stderr)
     return EXIT_INPUT_ERROR
+
+
+@contextlib.contextmanager
+def quiet_notices() -> Iterator[None]:
+    """Reads raise no "not verified" notice in this block: for files Shape itself wrote a moment
+    ago (temporary copies, a self-test), whose names mean nothing to the user."""
+    from shape.artifact.io import set_notice_handler
+
+    previous = set_notice_handler(lambda _message: None)
+    try:
+        yield
+    finally:
+        set_notice_handler(previous)
 
 
 def pipe_closed() -> int:

@@ -277,11 +277,11 @@ def _drift(first: bytes, second: bytes) -> dict[str, Any]:
     import tempfile
 
     import shape
-    from shape.cli.main import _quiet_notices
+    from shape.cli.errors import quiet_notices
 
     # The registry checked the bytes against their content id; the temporary copies' names
     # would only confuse a "not verified" note.
-    with tempfile.TemporaryDirectory() as tmp, _quiet_notices():
+    with tempfile.TemporaryDirectory() as tmp, quiet_notices():
         paths = []
         for i, blob in enumerate((first, second)):
             path = Path(tmp) / f"{i}.shape"

@@ -92,10 +92,10 @@ def run(a: argparse.Namespace) -> int:
     document = schema.to_dict()
     bad = _non_finite(document)
     if bad is not None:
-        path, value = bad
-        where = f"column {path[1]}.{path[3]}" if path[:1] == ["tables"] and len(path) > 3 else ""
+        at, value = bad
+        where = f"column {at[1]}.{at[3]}" if at[:1] == ["tables"] and len(at) > 3 else ""
         raise ValueError(
-            f"the inferred schema holds {value} at {'.'.join(path)}"
+            f"the inferred schema holds {value} at {'.'.join(at)}"
             + (f" ({where}: its values overflow a float)" if where else "")
             + f", which JSON cannot hold; {out} was not written"
         )

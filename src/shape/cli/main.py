@@ -1518,24 +1518,6 @@ def _dispatch(argv):
         warnings.showwarning = restore
 
 
-def _quiet_notices():
-    """A context in which reads raise no "not verified" notice: for files Shape itself wrote a
-    moment ago (temporary copies, a self-test), whose names mean nothing to the user."""
-    import contextlib
-
-    from shape.artifact.io import set_notice_handler
-
-    @contextlib.contextmanager
-    def quiet():
-        previous = set_notice_handler(lambda _message: None)
-        try:
-            yield
-        finally:
-            set_notice_handler(previous)
-
-    return quiet()
-
-
 def _dispatch_command(argv):
     if argv[:1] in (["--version"], ["-V"]):
         print(f"shape {_version()}")
@@ -1665,9 +1647,10 @@ def _dispatch_command(argv):
 
         return run_doctor(a)
     if a.cmd == "conformance":
+        from shape.cli.errors import quiet_notices
         from shape.validation.suite import conformance
 
-        with _quiet_notices():
+        with quiet_notices():
             r = conformance()
         _dump([asdict(x) for x in r])
         return 0 if all(x.passed for x in r) else 1
