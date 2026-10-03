@@ -123,7 +123,7 @@ def save_notebook(notebook: dict[str, Any], output_path: str | Path) -> Path:
     """Write ``notebook`` to ``output_path`` (parent folders are created); return the path."""
     path = Path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as fh:
+    with open(path, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(notebook, fh, indent=1)
     return path
 
