@@ -105,7 +105,9 @@ def scd2_offsets(codes: Any, total_days: int, min_gap: int, k0: int, k1: int) ->
             continue
         usable = max(total_days - min_gap * (m - 1), m)
         offsets = np.sort(_below(words, usable))
-        result[rows] = np.minimum(offsets + min_gap * np.arange(m, dtype=np.int64), total_days)
+        # Python ints: min_gap * v overflows int64 for a huge gap; the cap brings it back.
+        capped = [min(int(o) + min_gap * v, total_days) for v, o in enumerate(offsets.tolist())]
+        result[rows] = np.array(capped, dtype=np.int64)
     return arrow_array(result)
 
 

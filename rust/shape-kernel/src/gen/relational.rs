@@ -152,14 +152,14 @@ pub fn scd2_offsets(
             result[rows[0]] = below(words[0], total_days.max(1) as u64) as i64;
             continue;
         }
-        let usable = (total_days - min_gap * (m as i64 - 1)).max(m as i64);
-        let mut offsets: Vec<i64> = words
-            .iter()
-            .map(|&w| below(w, usable as u64) as i64)
-            .collect();
+        // In i128: `min_gap * v` overflows i64 for a huge gap; every result is capped at
+        // `total_days`, so it fits again.
+        let (total, gap) = (i128::from(total_days), i128::from(min_gap));
+        let usable = (total - gap * (m as i128 - 1)).max(m as i128) as u64;
+        let mut offsets: Vec<i64> = words.iter().map(|&w| below(w, usable) as i64).collect();
         offsets.sort_unstable();
         for (v, &row) in rows.iter().enumerate() {
-            result[row] = (offsets[v] + min_gap * v as i64).min(total_days);
+            result[row] = (i128::from(offsets[v]) + gap * v as i128).min(total) as i64;
         }
     }
     Ok(result)
@@ -282,8 +282,13 @@ fn group_sums<T: Copy + Default>(
     (sums, counts)
 }
 
+/// A dense int64 input: a null would be read as the value under it, so it is refused.
 fn values(a: PyArray, what: &str) -> PyResult<Vec<i64>> {
-    Ok(i64_array(a, what)?.values().to_vec())
+    let arr = i64_array(a, what)?;
+    if arr.null_count() > 0 {
+        return Err(err(format!("{what} must not contain nulls")));
+    }
+    Ok(arr.values().to_vec())
 }
 
 fn int_out(v: Vec<i64>) -> PyArray {

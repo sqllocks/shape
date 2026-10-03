@@ -31,7 +31,7 @@ most 1024. Calls with at least 32,768 rows run on all cores (`SHAPE_THREADS` / `
 Conversions (shared by both implementations):
 
 * uniform: `(word >> 11) * 2**-53`, in `[0, 1)`;
-* index below `n` (`n < 2**32`): `floor(word * n / 2**64)`, integer arithmetic;
+* index below `n` (`0 < n < 2**63`): `floor(word * n / 2**64)`, integer arithmetic;
 * normal: Box-Muller, `sqrt(-2 ln(1 - u1)) * cos(2 pi u2)` from words `slot` and `slot + 1`.
 
 ## Functions
@@ -50,8 +50,8 @@ Conversions (shared by both implementations):
 | `uuid4_strings(k0, k1, row_start, n_rows)` | 2 | `string`: version-4 UUIDs; the 16 bytes are word 0 then word 1, little-endian |
 | `random_strings(k0, k1, row_start, n_rows, length, alphabet)` | `length` | `string`: `length` characters per row, one word each |
 | `day_weights(start_day, n_days, month_weights, dow_weights, per_bucket=True)` | | float64 per day: `month_w[m] * dow_w[d]`, divided (with `per_bucket`) by the number of days in the range with that month and weekday, so each (month, weekday) pair carries its own weight |
-| `hour_weights_peaks(peaks, std)` | | the 24 hour weights of equally likely Gaussian peaks, wrapped modulo 24 |
-| `temporal_sample(day_weights, hour_weights, start_day, k0, k1, row_start, n_rows, whole_seconds=False)` | 5 | `timestamp[us]`: a day, an hour, and an offset inside the hour; words 0-1 day, 2-3 hour, 4 offset |
+| `hour_weights_peaks(peaks, std)` | | the 24 hour weights of equally likely Gaussian peaks, wrapped modulo 24; above a std of 10,000 hours they are uniform (`len(peaks) / 24` each); peaks must be finite |
+| `temporal_sample(day_weights, hour_weights, start_day, k0, k1, row_start, n_rows, whole_seconds=False)` | 5 | `timestamp[us]`: a day, an hour, and an offset inside the hour; words 0-1 day, 2-3 hour, 4 offset; the days must lie inside the int64-microsecond range |
 | `first_flags(codes)` | | `bool`: true on the first row of each non-negative group code (`0 <= code < len`); a negative code is never first |
 | `group_order(codes, keys)` | | `(rank, size, next)`, all int64: the 0-based place of each row in its group sorted by `keys` (ties keep row order), the group's size, and the row that follows it (-1 for the last); a negative code gives `(-1, 0, -1)` |
 | `dense_rows(keys, start, size)` | | `int64` row of the sequence key `start, start + 1, ...` (`size` rows) that holds each key; null for a null key or one outside the sequence (compared without int64 overflow) |

@@ -89,11 +89,22 @@ fn normal_cdf(z: f64) -> f64 {
     0.5 * (1.0 + erf(z / std::f64::consts::SQRT_2))
 }
 
+/// Above this std (hours) the hour weights of a peak are uniform.
+pub const UNIFORM_STD: f64 = 1e4;
+
 /// Weights of the 24 hours for a mixture of equally likely Gaussian peaks (hours, `std` hours
 /// wide): the probability that `floor(N(peak, std))` wrapped modulo 24 equals each hour.
 pub fn hour_weights_peaks(peaks: &[f64], std: f64) -> Result<Vec<f64>, String> {
     if peaks.is_empty() || !(std.is_finite() && std > 0.0) {
         return Err("hour_weights_peaks needs peaks and a positive std".into());
+    }
+    if peaks.iter().any(|p| !p.is_finite()) {
+        return Err("hour_weights_peaks needs finite peaks".into());
+    }
+    if std > UNIFORM_STD {
+        // Wrapped modulo 24, a peak this wide is uniform to far below f64 precision, and the
+        // sum below would take `8 * std / 24` terms per hour.
+        return Ok(vec![peaks.len() as f64 / 24.0; 24]);
     }
     let k = (8.0 * std / 24.0).ceil() as i64 + 1;
     let mut w = vec![0.0f64; 24];
@@ -106,6 +117,20 @@ pub fn hour_weights_peaks(peaks: &[f64], std: f64) -> Result<Vec<f64>, String> {
         }
     }
     Ok(w)
+}
+
+/// Days `start_day .. start_day + n_days` must have their microseconds in i64 (about years
+/// -290308 to 294247), or `(start_day + day) * US_PER_DAY` would wrap.
+pub fn check_day_range(start_day: i64, n_days: usize) -> Result<(), String> {
+    let first = i128::from(start_day) * i128::from(US_PER_DAY);
+    let end = (i128::from(start_day) + n_days as i128) * i128::from(US_PER_DAY) - 1;
+    if first < i128::from(i64::MIN) || end > i128::from(i64::MAX) {
+        return Err(format!(
+            "days {start_day}..{} are outside the timestamp range (int64 microseconds)",
+            i128::from(start_day) + n_days as i128
+        ));
+    }
+    Ok(())
 }
 
 /// Words per row used by [`sample`].
@@ -127,6 +152,7 @@ pub fn sample(
     if hour_weights.len() != 24 {
         return Err("hour_weights must have 24 entries".into());
     }
+    check_day_range(start_day, day_weights.len())?;
     let (dp, da) = alias::build(day_weights)?;
     let (hp, ha) = alias::build(hour_weights)?;
     let mut out = vec![0i64; n_rows];

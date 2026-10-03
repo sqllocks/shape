@@ -206,6 +206,9 @@ fn alias_sample(
     check_stream(row_start, n_rows, per_row)?;
     let prob = f64_values(prob, "prob")?;
     let alias_a = i64_array(alias, "alias")?;
+    if alias_a.null_count() > 0 {
+        return Err(err("alias must not contain nulls".into()));
+    }
     let alias_v = alias_a.values().to_vec();
     if prob.is_empty() || prob.len() != alias_v.len() {
         return Err(err(

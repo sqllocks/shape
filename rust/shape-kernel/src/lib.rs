@@ -261,6 +261,11 @@ fn lognorm_probe(py: Python<'_>, data: PyArray, loc: f64) -> PyResult<(f64, f64,
     let p = arr
         .as_primitive_opt::<Float64Type>()
         .ok_or_else(|| PyValueError::new_err("lognorm_probe needs a float64 array"))?;
+    if p.null_count() > 0 {
+        return Err(PyValueError::new_err(
+            "lognorm_probe data must not contain nulls",
+        ));
+    }
     let values = p.values();
     // detached: the parallel passes call numpy from rayon workers, which need the GIL
     ignore_fp_errors(py, || py.detach(|| fit::lognorm_probe(values, loc)))

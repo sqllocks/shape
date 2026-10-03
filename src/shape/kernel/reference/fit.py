@@ -55,6 +55,8 @@ def lognorm_probe(data: Any, loc: float) -> tuple[float, float, float, float]:
     arr = data if isinstance(data, pa.Array) else pa.array(data)
     if not pa.types.is_float64(arr.type):
         raise ValueError("lognorm_probe needs a float64 array")
+    if arr.null_count:
+        raise ValueError("lognorm_probe data must not contain nulls")
     x = np.asarray(arr.to_numpy(zero_copy_only=False), dtype=np.float64)
     with np.errstate(all="ignore"):
         logs = np.log(x - loc)

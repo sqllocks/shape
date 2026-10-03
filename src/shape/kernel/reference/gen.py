@@ -28,6 +28,7 @@ _TWO_NEG_53 = 2.0**-53
 _MAX_BELOW = 2**32 - 1
 _US_PER_HOUR = 3_600_000_000
 _US_PER_DAY = 86_400_000_000
+_UNIFORM_STD = 1e4  # hours; above it a wrapped peak's hour weights are uniform
 # Same literals as the Rust constants (std::f64::consts::FRAC_2_SQRT_PI and SQRT_2).
 _FRAC_2_SQRT_PI = 1.1283791670955126
 _SQRT_2 = 1.4142135623730951
@@ -70,9 +71,12 @@ def _unit(w: npt.NDArray[np.uint64]) -> npt.NDArray[np.float64]:
 
 
 def _below(w: npt.NDArray[np.uint64], n: int) -> npt.NDArray[np.int64]:
-    """``floor(w * n / 2**64)`` in 64-bit arithmetic (``n`` below 2**32)."""
-    if not 0 < n <= _MAX_BELOW:
+    """``floor(w * n / 2**64)``: in 64-bit arithmetic for ``n`` below 2**32, as Python ints
+    above (the native kernel multiplies in 128 bits)."""
+    if not 0 < n < 2**63:
         raise ValueError(f"range {n} is out of bounds")
+    if n > _MAX_BELOW:
+        return np.array([(int(x) * n) >> 64 for x in w.tolist()], dtype=np.int64)
     nn = np.uint64(n)
     hi = w >> np.uint64(32)
     lo = w & np.uint64(0xFFFFFFFF)
@@ -178,7 +182,10 @@ def alias_sample(
 ) -> pa.Array:
     _slot(per_row, slot, 2)
     p = _f64(prob, "prob")
-    a = np.asarray(arrow_numpy(arrow_array(alias)), dtype=np.int64)
+    alias_arr = alias if isinstance(alias, pa.Array) else arrow_array(alias)
+    if alias_arr.null_count:
+        raise ValueError("alias must not contain nulls")
+    a = np.asarray(arrow_numpy(alias_arr), dtype=np.int64)
     if len(p) == 0 or len(p) != len(a):
         raise ValueError("prob and alias must be non-empty and equally long")
     if ((a < 0) | (a >= len(p))).any():
@@ -367,6 +374,10 @@ def _cdf(z: float) -> float:
 def hour_weights_peaks(peaks: Sequence[float], std: float) -> pa.Array:
     if len(peaks) == 0 or not (math.isfinite(std) and std > 0.0):
         raise ValueError("hour_weights_peaks needs peaks and a positive std")
+    if not all(math.isfinite(p) for p in peaks):
+        raise ValueError("hour_weights_peaks needs finite peaks")
+    if std > _UNIFORM_STD:  # as the native kernel: uniform far below f64 precision
+        return arrow_array([len(peaks) / 24.0] * 24, type=pa.float64())
     k = math.ceil(8.0 * std / 24.0) + 1
     w = [0.0] * 24
     for h in range(24):
@@ -391,6 +402,11 @@ def temporal_sample(
     hw = _f64(hour_weights, "hour_weights")
     if len(hw) != 24:
         raise ValueError("hour_weights must have 24 entries")
+    end = start_day + len(dw)
+    if start_day * _US_PER_DAY < -(2**63) or end * _US_PER_DAY - 1 > 2**63 - 1:
+        raise ValueError(
+            f"days {start_day}..{end} are outside the timestamp range (int64 microseconds)"
+        )
     dp, da = _build_alias([float(x) for x in dw])
     hp, ha = _build_alias([float(x) for x in hw])
     w = _words(k0, k1, row_start, n_rows, 5).reshape(n_rows, 5)
