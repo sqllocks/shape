@@ -120,3 +120,38 @@ def test_duplicate_csv_header_with_signed_integers_profiles(tmp_path):
     path.write_text("a,a\n+1,+2\n+3,+4\n")
     cols = shape.profile(str(path)).to_dict()["columns"]
     assert cols["a"]["max_value"] == ["int", 3] and cols["a.1"]["max_value"] == ["int", 4]
+
+
+# ---- #216: concurrent profile() calls keep their own columns ------------------------------
+
+
+@pytest.mark.skipif(
+    "fork" not in __import__("multiprocessing").get_all_start_methods(), reason="no fork pool"
+)
+def test_concurrent_profiles_on_the_fork_pool_keep_their_own_columns(monkeypatch):
+    import threading
+
+    import pandas as pd
+
+    monkeypatch.setenv("PROFILE_POOL", "process")
+    monkeypatch.setenv("PROFILE_THREADS", "2")
+    r = np.random.default_rng(4)
+    frames = {
+        "A": pd.DataFrame({f"a{i}": r.integers(0, 10, 2000) for i in range(16)}),
+        "B": pd.DataFrame({f"b{i}": r.integers(0, 10**5, 2000) for i in range(24)}),
+    }
+    for _ in range(5):
+        out: dict[str, object] = {}
+
+        def run(key: str) -> None:
+            try:
+                out[key] = sorted(shape.profile(frames[key]).to_dict()["columns"])
+            except Exception as exc:  # noqa: BLE001 - a crash is a failure of this test
+                out[key] = repr(exc)
+
+        threads = [threading.Thread(target=run, args=(k,)) for k in frames]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        assert out == {k: sorted(df.columns) for k, df in frames.items()}
