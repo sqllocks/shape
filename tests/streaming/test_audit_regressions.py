@@ -182,6 +182,7 @@ def test_161_deduplicate_ids_keeps_ids_of_different_types_apart():
     from shape.streaming import deduplicate_ids
 
     seen: set = set()
-    assert deduplicate_ids([1, "1", 1, 2.5, "2.5"], seen).tolist() == [True, True, False, True, True]
+    keep = deduplicate_ids([1, "1", 1, 2.5, "2.5"], seen)
+    assert keep.tolist() == [True, True, False, True, True]
     assert seen == {1, "1", 2.5, "2.5"}
     assert deduplicate_ids([True, 1, 1.0], set()).tolist() == [True, False, False]  # equal in a set
