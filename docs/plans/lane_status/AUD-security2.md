@@ -327,4 +327,31 @@ no effect).
 
 ## Phase 3: fixes
 
-Filled in below as fixes land.
+Each fix has a regression test committed first (it failed before the fix; the failing output is in
+that commit's message), then the fix. CHANGELOG.md, "Fixed (security review)": 559b12a.
+
+| Finding | Issue | Test commit | Fix commit | Fix |
+|---|---|---|---|---|
+| S2 | #274 | 12da0c6 | 5bd9684 | `check_json_file` reads the decompressed lines of `.gz`/`.bz2`/`.zst` JSONL |
+| S3 | #275 | d2d0e16 | 5b8d27e | no redirect is followed with a bearer token; `Location` and `continuationUri` must stay on the request's origin |
+| S5 | #277 | 5a8a868 | e76525d | bridge error messages, warnings and the `internal.error` log go through `redact_text` |
+| S7 | #279 | ce3f78f | 72bae0a | job records redact every string value, not only secret-named keys |
+| S9, S27 | #281 | db57c74 | 398a2dc | pack runs refuse a domain or scale name that is a path; the landing dir is checked before `mkdir` |
+| S10 | #282 | 1da2e37 | 188b14d | a workbook part over 16 MiB that inflates more than 100x is refused |
+| S11 | #283 | bda735e | 7c44297 | the raw-profile check reads `manifest.json` through the bounded artifact reader |
+| S12 | #284 | f733e51 | b9ca045 | `generate_notebook` refuses a domain, seed or version that could become code |
+| S18 | #289 | 84df47e | 79e5c22 | jobs dir forced to 0700, a bad job file is skipped by `job_list`, ids use `fullmatch` |
+| S17 | #288 | 746cd6d | 86153d6 | scale Parquet parts and markers use `O_EXCL` temp files in a contained table dir |
+| S19 | #290 | bbc9ffa | e1d2819 | JSON run-log records redact the message, string extras, secret-named extras and the exception |
+| S22 | #293 | 40c348d | 394d58a | a linear tier-2 e-mail pattern that accepts exactly what the old one did |
+| S25 | #295 | 64d8ca0 | b53f690 | the kql sink percent-encodes the database name into one URI segment |
+| S32 | #299 | 4063fee | 9c7fb7c | the Fabric UDF redacts the error text it returns |
+| S33 | #300 | 7419c9f | 6e6cc7c | Spark and COPY INTO checks use `fullmatch`; backticks in Spark column names are doubled |
+
+### Left open
+
+Every finding owned by this lane is fixed. These stay open for their owners (filed only, no code
+changed here): #273 and #291, #292 (AUD-privacy, `src/shape/security/`); #276, #280, #285, #287,
+#297 (AUD-builtins); #278 (AUD-cli); #286, #296 (AUD-profile); #298 (AUD-stream); #301
+(AUD-packaging); #294 (owner decision: requiring TLS by default changes local and emulator use).
+No `.github/workflows` change is needed.
