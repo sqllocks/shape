@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from shape.demo.errors import ConnectionNotFoundError, DemoError
+from shape.demo.filelock import locked
 from shape.demo.home import check_name, connections_path
 
 AUTH_METHODS = ("cli", "msi", "spn", "sql", "device-code", "fabric")
@@ -130,9 +131,10 @@ class ConnectionRegistry:
 
     def save(self, profile: ConnectionProfile) -> None:
         check_profile(profile)
-        data = self._load_all()
-        data[profile.name] = asdict(profile)
-        self._save_all(data)
+        with locked(self.path):  # another process may be saving a profile right now
+            data = self._load_all()
+            data[profile.name] = asdict(profile)
+            self._save_all(data)
 
     def load(self, name: str) -> ConnectionProfile:
         data = self._load_all()
@@ -147,9 +149,10 @@ class ConnectionRegistry:
         return list(self._load_all())
 
     def delete(self, name: str) -> None:
-        data = self._load_all()
-        data.pop(name, None)
-        self._save_all(data)
+        with locked(self.path):
+            data = self._load_all()
+            data.pop(name, None)
+            self._save_all(data)
 
     def exists(self, name: str) -> bool:
         return name in self._load_all()
