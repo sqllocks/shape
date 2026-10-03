@@ -21,6 +21,7 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.sinks` | `excel` | Excel workbook (`pip install 'sqllocks-shape[excel]'`, openpyxl) |
 | `shape.sinks` | `delta` | Delta table (`pip install 'sqllocks-shape[delta]'`, deltalake); `delta+abfss://` in OneLake and ADLS Gen2, with a commit per micro-batch (`commit_rows`) |
 | `shape.sinks` | `abfss` | Files (Parquet, CSV, TSV, JSONL, IPC) in OneLake and ADLS Gen2, dated Hive-style folders, rolling files, atomic publish (extra `[azure]`) |
+| `shape.sinks` | `fabric-mirror` | Fabric open mirroring landing zone, local or `abfss://` (`docs/FABRIC_MIRROR.md`) |
 | `shape.emitters` | `console` | events as JSON lines on standard output (`shape emit`; [../EMIT.md](../EMIT.md)) |
 | `shape.emitters` | `file` | events as JSON lines in one file (`file:///path.jsonl`) |
 | `shape.emitters` | `jsonl` | events as JSON lines, one `<table>.jsonl` file per table in a directory (`jsonl:///dir`) |

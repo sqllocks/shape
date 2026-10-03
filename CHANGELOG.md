@@ -110,6 +110,10 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   profiles of partitions or days without re-reading the data: exact statistics exactly,
   cardinality, quantiles and top values within each sketch's documented error. Merged profiles
   carry their inputs' content ids (`Profile.merged_from`).
+- `fabric-mirror` sink (`docs/FABRIC_MIRROR.md`): tables as Parquet or CSV files in a Fabric open
+  mirroring landing zone, local or `abfss://` OneLake: `__rowMarker__` last (insert, update, delete,
+  upsert; `shape continue` delta types map to them), 20-digit sequential file names, publish by
+  rename, `_metadata.json` with `keyColumns`. Format rules cited to Microsoft Learn.
 - `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
   the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
   clearing cover every month of a multi-month table. `duration_hours` still overrides it

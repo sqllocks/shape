@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from .azure import AbfssSink as AbfssSink
     from .delta import DeltaSink as DeltaSink
     from .excel import ExcelSink as ExcelSink
+    from .fabric_mirror import FabricMirrorSink as FabricMirrorSink
     from .files import CsvSink as CsvSink
     from .files import IpcSink as IpcSink
     from .files import JsonlSink as JsonlSink
@@ -27,6 +28,7 @@ _EXPORTS = {
     "CsvSink": "files",
     "DeltaSink": "delta",
     "ExcelSink": "excel",
+    "FabricMirrorSink": "fabric_mirror",
     "IpcSink": "files",
     "JsonlSink": "files",
     "ParquetSink": "files",
