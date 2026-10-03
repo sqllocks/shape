@@ -119,7 +119,7 @@ installing (`rm -rf plugins/*/build`).
 | `make check PYTHON=python` (every step: ruff check, ruff format --check, mypy, compileall, vulture, lint-imports, check_requirements, check_secrets, check_user_facing, check_shipped_data, check_plugin_skeletons, check_conformance_coverage, coverage run, heavy run, python-kernel kernel tests, cargo fmt, clippy, cargo test) | exit 0: 6815 passed (coverage gate 86 met); heavy 42 passed; `SHAPE_KERNEL=python pytest tests/kernel` 265 passed; cargo test 34 passed |
 | `python scripts/check_user_facing.py` | exit 0, clean |
 | `SHAPE_KERNEL=rust pytest -m "not emulator and not live" --ignore=tests/demo/fabric` | exit 0: 6895 passed, 13 deselected |
-| `SHAPE_KERNEL=python pytest -m "not emulator and not live" --ignore=tests/demo/fabric` | running (slow heavy tests on the pure-Python kernel); result to follow in the next commit |
+| `SHAPE_KERNEL=python pytest -m "not emulator and not live" --ignore=tests/demo/fabric` | exit 0: 6895 passed, 13 deselected (1 h 56 min: the heavy memory test profiles 24M and 48M rows on the pure-Python kernel) |
 | `SHAPE_KERNEL=rust pytest -m "not emulator and not live" tests/demo/fabric` (fabric venv) | exit 0: 216 passed |
 | `SHAPE_KERNEL=python pytest -m "not emulator and not live" tests/demo/fabric` (fabric venv) | exit 0: 216 passed |
 
