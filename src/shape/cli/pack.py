@@ -141,7 +141,7 @@ def _validate(a: argparse.Namespace) -> int:
     path = _resolve(a)
     if is_spec_document(path):
         spec = GSLParser().parse(path)
-        result = validate_spec(spec)
+        result = validate_spec(spec, _pack_domain(a, "") if a.domain else None)
         kind, ident = "spec", spec.name or path.name
     else:
         pack = PackLoader().load(path)
@@ -191,7 +191,8 @@ def _run(a: argparse.Namespace) -> int:
     path = _resolve(a)
     if is_spec_document(path):
         spec = GSLParser().parse(path)
-        checked = validate_spec(spec)
+        given = _pack_domain(a, "") if a.domain else None
+        checked = validate_spec(spec, given)
         if not checked.is_valid:
             if a.json:
                 _emit(_failed_json(spec.name or path.name, checked.errors, checked.warnings))
@@ -199,7 +200,7 @@ def _run(a: argparse.Namespace) -> int:
                 print(checked.summary())
             return 1
         pack = spec_pack(spec)
-        domain = _pack_domain(a, "") if a.domain else spec_domain(spec)
+        domain = given if given is not None else spec_domain(spec)
         ref = spec.scenario
         scale = a.scale or (ref.scale if ref else None) or "small"
         seed = a.seed if a.seed is not None else (ref.seed if ref else 42)
@@ -246,11 +247,12 @@ def _replay(a: argparse.Namespace) -> int:
     spec = None
     if is_spec_document(path):
         spec = GSLParser().parse(path)
-        checked = validate_spec(spec)
+        given = _pack_domain(a, "") if a.domain else None
+        checked = validate_spec(spec, given)
         if not checked.is_valid:
             raise ValueError("the spec is not valid: " + "; ".join(checked.errors))
         pack = spec_pack(spec)
-        domain = _pack_domain(a, "") if a.domain else spec_domain(spec)
+        domain = given if given is not None else spec_domain(spec)
     else:
         pack = PackLoader().load(path)
         domain = _pack_domain(a, manifest.domain or pack.domain)

@@ -66,19 +66,20 @@ def spec_pack(spec: GenerationSpec) -> ScenarioPack:
     return PackLoader().load(target)
 
 
-def validate_spec(spec: GenerationSpec) -> PackValidationResult:
-    """Everything checkable without running: schema, pack, scale, chaos, gates and outputs."""
+def validate_spec(spec: GenerationSpec, domain: Any = None) -> PackValidationResult:
+    """Everything checkable without running: schema, pack, scale, chaos, gates and outputs.
+    ``domain`` replaces the domain the spec's schema section names (``--domain``)."""
     result = PackValidationResult()
     if spec.version != 1:
         result.errors.append(
             f"Unsupported spec version {spec.version}; this is version 1"
             + (f"; {compat.newer_hint(spec.needs_release)}" if spec.version > 1 else "")
         )
-    domain: Any = None
-    try:
-        domain = spec_domain(spec)
-    except Exception as exc:
-        result.errors.append(f"schema: {exc}")
+    if domain is None:
+        try:
+            domain = spec_domain(spec)
+        except Exception as exc:
+            result.errors.append(f"schema: {exc}")
     pack: ScenarioPack | None = None
     try:
         pack = spec_pack(spec)
