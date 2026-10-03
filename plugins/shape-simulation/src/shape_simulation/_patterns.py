@@ -110,12 +110,38 @@ def timestamp_us(col: pa.ChunkedArray | pa.Array) -> tuple[np.ndarray, np.ndarra
     elif pa.types.is_date(col.type):
         col = col.cast(pa.timestamp("us"))
     elif pa.types.is_string(col.type) or pa.types.is_large_string(col.type):
-        col = pc.cast(col, pa.timestamp("us"))
+        col = _text_times(col)
     else:
         raise TypeError(f"{col.type} is not a date or timestamp type")
     valid = ~np.asarray(col.is_null().to_numpy(zero_copy_only=False), dtype=bool)
     ints = col.cast(pa.int64()).fill_null(0).to_numpy(zero_copy_only=False)
     return ints.astype(np.int64), valid, tz
+
+
+def _text_times(col: pa.Array) -> pa.Array:
+    """ISO-8601 text as naive ``timestamp[us]``: a time with ``Z`` or an offset becomes its UTC
+    wall time, one without is taken as it is. Text that is not a time raises ``ValueError``."""
+    try:
+        return pc.cast(col, pa.timestamp("us"))
+    except pa.ArrowInvalid:
+        pass
+    try:  # every time carries a zone
+        return pc.cast(col, pa.timestamp("us", "UTC")).cast(pa.timestamp("us"))
+    except pa.ArrowInvalid:
+        pass
+    values: list[datetime | None] = []
+    for text in col.to_pylist():  # some with a zone, some without
+        if text is None:
+            values.append(None)
+            continue
+        try:
+            value = datetime.fromisoformat(text)
+        except ValueError:
+            raise ValueError(f"{text!r} is not an ISO-8601 date or time") from None
+        if value.tzinfo is not None:
+            value = value.astimezone(UTC).replace(tzinfo=None)
+        values.append(value)
+    return pa.array(values, pa.timestamp("us"))
 
 
 def timestamps(us: np.ndarray, tz: str | None = None, valid: np.ndarray | None = None) -> pa.Array:
