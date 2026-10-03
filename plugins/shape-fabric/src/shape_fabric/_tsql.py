@@ -8,6 +8,7 @@ parameter (the file location of ``COPY INTO``, a string literal) is validated an
 
 from __future__ import annotations
 
+import hashlib
 import math
 import re
 import time
@@ -156,6 +157,8 @@ def create_table_sql(
     """``CREATE TABLE`` for ``schema``. Key columns are ``NOT NULL``; a Warehouse key is
     declared ``NONCLUSTERED ... NOT ENFORCED`` (the Warehouse does not enforce keys)."""
     columns = columns or {}
+    if len(schema) == 0:
+        raise ShapeError(f"table {table!r} has no columns: a SQL table needs at least one column")
     key = list(primary_key)
     unknown = [c for c in key if c not in schema.names]
     if unknown:
@@ -168,7 +171,7 @@ def create_table_sql(
         lines.append(f"    {ident(field.name)} {sql_type} {'NULL' if nullable else 'NOT NULL'}")
     if key:
         cols = ", ".join(ident(c) for c in key)
-        name = ident("PK_" + table)
+        name = ident(_key_name(table))
         if warehouse:
             lines.append(f"    CONSTRAINT {name} PRIMARY KEY NONCLUSTERED ({cols}) NOT ENFORCED")
         else:
@@ -176,6 +179,16 @@ def create_table_sql(
     body = ",\n".join(lines)
     # every name went through ident(); there are no values in this statement
     return f"CREATE TABLE {qualified(schema_name, table)} (\n{body}\n)"  # nosec B608
+
+
+def _key_name(table: str) -> str:
+    """``PK_<table>``; when that is longer than a SQL name may be (128), the table name is cut
+    and a hash of the whole name keeps two long tables' keys apart."""
+    name = "PK_" + table
+    if len(name) <= 128:
+        return name
+    digest = hashlib.sha256(table.encode("utf-8")).hexdigest()[:8]
+    return f"PK_{table[:116]}_{digest}"
 
 
 def drop_table_sql(schema_name: str, table: str, *, if_exists: bool = False) -> str:
