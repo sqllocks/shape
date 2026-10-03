@@ -290,3 +290,38 @@ def test_command_errors_never_print_the_password(monkeypatch, capsys, tmp_path):
     )
     assert cmd.run(args) == 2
     assert "hunter2" not in capsys.readouterr().err
+
+
+def test_alias_type_columns_are_read_and_profiled_as_their_base_type():
+    # Issue #340: the catalog named an alias type (CREATE TYPE Amount FROM int) by its alias, so
+    # the column was typed as text, failed to read and was profiled as a string.
+    def conn():
+        return FakeConnection(
+            [
+                FakeTable(
+                    "t",
+                    [
+                        FakeColumn("id", "int"),
+                        FakeColumn("amt", "decimal", precision=10, scale=2, alias="Amount"),
+                        FakeColumn("flag", "bit", alias="Flag"),
+                    ],
+                    [(1, Decimal("5.25"), True), (2, Decimal("6.50"), False)],
+                    primary_key=("id",),
+                )
+            ]
+        )
+
+    src = SqlServerSource()
+    schema = src.schema("mssql:///?table=t", connection=conn())
+    assert schema.field("amt").type == pa.decimal128(10, 2)
+    assert schema.field("flag").type == pa.bool_()
+    (batch,) = list(src.read("mssql:///?table=t", connection=conn()))
+    assert batch.column("amt").to_pylist() == [Decimal("5.25"), Decimal("6.50")]
+    assert batch.column("flag").to_pylist() == [True, False]
+
+    from shape_sqlserver import profile_database
+
+    columns = profile_database(connection=conn()).to_dict()["tables"]["t"]["columns"]
+    assert columns["amt"]["dtype"] == "float"
+    assert columns["amt"]["min_value"] == 5.25
+    assert columns["flag"]["dtype"] == "boolean"

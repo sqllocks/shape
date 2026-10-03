@@ -30,6 +30,9 @@ class FakeColumn:
     max_length: int = 0
     precision: int = 0
     scale: int = 0
+    # A user-defined alias type (``CREATE TYPE alias FROM type_name``): the catalog reports it
+    # as the column's type, and ``type_name`` as its base system type.
+    alias: str | None = None
 
 
 @dataclass(slots=True)
@@ -190,7 +193,7 @@ class FakeConnection:
             )
         elif "FROM sys.columns c JOIN sys.types tp" in text:
             rows_t = _row_type(
-                "column_name type_name max_length precision scale "
+                "column_name type_name base_type_name max_length precision scale "
                 "is_nullable is_identity column_id",
             )
             table = self._by_id(params[0])
@@ -199,6 +202,7 @@ class FakeConnection:
                 [
                     rows_t(
                         c.name,
+                        c.alias or c.type_name,
                         c.type_name,
                         c.max_length,
                         c.precision,
