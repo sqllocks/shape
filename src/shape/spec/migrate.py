@@ -142,6 +142,10 @@ def migrate_capture_v1(obj: Mapping[str, Any], name: str | None = None) -> dict[
     cols = obj.get("columns")
     cols = cols if isinstance(cols, Mapping) else {}
     table_name = name or (obj["name"] if isinstance(obj.get("name"), str) else "") or "table"
+    names = [str(k) for k in cols]
+    repeated = next((n for i, n in enumerate(names) if n in names[:i]), None)
+    if repeated is not None:
+        raise ModelError(f"a v1 shape has two columns named {repeated!r}")
     doc: dict[str, Any] = {
         "schema_version": MODEL_VERSION,
         "engine": CAPTURE_ENGINE,
