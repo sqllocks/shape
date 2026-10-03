@@ -21,6 +21,7 @@ from shape.kernel.reference.exact import all_whole
 from shape.kernel.reference.exact import lerp as _lerp
 from shape.kernel.reference.exact import linear_index as _linear_index
 from shape.profile.fitting import detect_distribution as _kernel_detect_distribution
+from shape.profile.mixture import mixture as fit_mixture
 from shape.profile.univariate import univariate_stats
 
 from . import dtparse
@@ -901,7 +902,11 @@ def _profile_column(
         fitted = _kernel_detect_distribution(numeric)
         dist_name, dist_params = fitted["distribution"], fitted["distribution_params"]
         fit_score_val = fitted["fit_score"]
-        univariate = univariate_stats(numeric, integer=stype == "integer") or None
+        univariate = univariate_stats(numeric, integer=stype == "integer")
+        mixed = fit_mixture(numeric)
+        if mixed is not None:
+            univariate["mixture"] = mixed
+        univariate = univariate or None
         if st["has_quantiles"]:
             vals = st["quantiles"]
             quantiles = {f"p{p}": round(float(v), 6) for p, v in zip(_PCTS, vals[:9], strict=True)}

@@ -42,8 +42,11 @@ FIELDS = (
     "heaping",
     "benford",
     "tail_index",
+    "mixture",
+    "seasonality",
 )
-"""The column fields this module writes into a profile."""
+"""The column fields of the univariate depth (W3-07, W7-03) that a profile carries; ``mixture``
+comes from :mod:`shape.profile.mixture` and ``seasonality`` from :mod:`shape.profile.seasonality`."""
 FAMILIES = ("normal", "lognormal", "exponential", "uniform", "gamma", "weibull")
 _MAX_SHAPE = 1e5  # a gamma or Weibull shape above this is a point mass for practical purposes
 _HEAP_UNITS = (5, 10, 100, 1000)
