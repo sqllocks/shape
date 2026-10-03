@@ -1450,6 +1450,36 @@ def _cmd_evidence(a):
 
 
 def _dispatch(argv):
+    """Run the command; every "artifact not verified" notice it raises is one ``shape: note:``
+    line, whichever command reads the artifact (docs/SIGNING.md)."""
+    restore = _notices_to_stderr()
+    try:
+        return _dispatch_command(argv)
+    finally:
+        import warnings
+
+        warnings.showwarning = restore
+
+
+def _quiet_notices():
+    """A context in which reads raise no "not verified" notice: for files Shape itself wrote a
+    moment ago (temporary copies, a self-test), whose names mean nothing to the user."""
+    import contextlib
+
+    from shape.artifact.io import set_notice_handler
+
+    @contextlib.contextmanager
+    def quiet():
+        previous = set_notice_handler(lambda _message: None)
+        try:
+            yield
+        finally:
+            set_notice_handler(previous)
+
+    return quiet()
+
+
+def _dispatch_command(argv):
     if argv[:1] in (["--version"], ["-V"]):
         print(f"shape {_version()}")
         return 0
@@ -1580,7 +1610,8 @@ def _dispatch(argv):
     if a.cmd == "conformance":
         from shape.validation.suite import conformance
 
-        r = conformance()
+        with _quiet_notices():
+            r = conformance()
         _dump([asdict(x) for x in r])
         return 0 if all(x.passed for x in r) else 1
     if a.cmd == "capture":
