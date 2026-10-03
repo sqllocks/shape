@@ -94,6 +94,12 @@ example when a date column's minimum is a string tag in one and a date in the ot
 `shape diff` finds no drift between them. Compare profiles with `shape diff`, not by id, when the
 sources differ in format.
 
+## `shape demo`
+
+`shape demo init|list|run|preflight|cleanup|status|notebook|report` runs scenarios for talks, clients and
+workshops and cleans up after them; see `docs/DEMO.md`. Exit 0 done, 1 a run failed, a cleanup could not
+remove something or a preflight check failed, 2 bad input.
+
 ## Registries
 
 `shape registry` (content-addressed artifacts) and `shape profile registry` (named profiles) are
