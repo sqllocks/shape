@@ -19,7 +19,7 @@ from __future__ import annotations
 import importlib
 from collections.abc import Mapping
 from typing import Any
-from urllib.parse import urlsplit
+from urllib.parse import quote, urlsplit
 
 from shape.scale.sinks.writer import WriterSink
 
@@ -220,7 +220,7 @@ class KqlSink(WriterSink):
         self._prefix = table_prefix
         super().__init__(
             writer or (lambda: plugin_sink("EventhouseSink")),
-            f"eventhouse://{parts.netloc}/{database}{query}",
+            f"eventhouse://{parts.netloc}/{quote(database, safe='')}{query}",
             {"write_mode": _check_mode(write_mode), **dict(writer_options or {})},
             name="kql",
         )
