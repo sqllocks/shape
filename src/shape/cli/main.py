@@ -1331,6 +1331,7 @@ def _version():
 
 
 _GLOBAL_VALUE_OPTIONS = ("--log-level", "--metrics")
+_LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
 
 
 def _split_global(argv):
@@ -1419,6 +1420,20 @@ def _logged(opts, argv):
     lifecycle.quick_exit_allowed = False  # the log line and metrics file come after the command
     import logging
     import time
+
+    # Checked before the command runs: a bad option must not cost the work, or hide its result.
+    if opts["log_json"] and str(opts["log_level"]).upper() not in _LOG_LEVELS:
+        raise ValueError(
+            f"--log-level {opts['log_level']}: use one of {', '.join(_LOG_LEVELS)} "
+            "(or SHAPE_LOG_LEVEL)"
+        )
+    if opts["metrics"]:
+        folder = os.path.dirname(os.path.abspath(opts["metrics"]))
+        if not os.path.isdir(folder) or os.path.isdir(opts["metrics"]):
+            raise ValueError(
+                f"--metrics {opts['metrics']}: cannot write there (the folder {folder} does not "
+                "exist, or the path is a folder)"
+            )
 
     from shape import runlog
 
