@@ -8,7 +8,9 @@ token, an account key or a SAS token; delta-rs takes no connection string).
 Options: ``mode`` (``overwrite`` by default, or ``append``), ``partition_by`` (column names),
 ``commit_rows`` / ``commit_seconds`` (micro-batch mode: a Delta commit every N rows or seconds
 instead of one at the end, so Fabric and Spark readers see rows while a stream runs; the first
-commit applies ``mode``, later ones append), ``storage_options``.
+commit applies ``mode``, later ones append), ``storage_options``, ``fingerprint`` (``True`` or the
+run's context; a local table in mode ``overwrite``: after the write one more commit sets the table
+property ``shape.fingerprint``, see ``docs/FINGERPRINT.md``).
 
 Tables are written at Delta reader version 1 / writer version 2, with no table features and no
 table configuration, so that every engine can read them (Python notebooks, pipelines, Spark,
@@ -177,6 +179,10 @@ class DeltaSink:
                 "a Delta table needs a schema: pass `schema` when there are no batches"
             )
         schema = _utc_timestamps(schema)
+        if options.get("fingerprint") and (
+            options.get("commit_rows") or options.get("commit_seconds")
+        ):
+            raise ValueError("fingerprint does not combine with micro-batch commits")
         if options.get("commit_rows") or options.get("commit_seconds"):
             writer = self.open_table(uri, table, schema, **options)
 
@@ -191,18 +197,33 @@ class DeltaSink:
                 writer.abort()
                 raise
             return writer.close()
+        stamp = options.get("fingerprint")
+        if stamp:
+            if options.get("mode", "overwrite") != "overwrite":
+                raise ValueError(
+                    "fingerprint needs mode overwrite: the table_id covers the whole table"
+                )
+            if uri.startswith(CLOUD_PREFIX):
+                raise ValueError("fingerprint writes a local Delta table only")
         location, storage = _location(uri, table, options)
         write_deltalake = _deltalake().write_deltalake
         rows = 0
+        kept: list[pa.RecordBatch] = []
 
         def counted() -> Iterator[pa.RecordBatch]:
             nonlocal rows
             if first is not None:
                 rows += first.num_rows
-                yield first.cast(schema)
+                cast = first.cast(schema)
+                if stamp:
+                    kept.append(cast)
+                yield cast
             for batch in stream:
                 rows += batch.num_rows
-                yield batch.cast(schema)
+                cast = batch.cast(schema)
+                if stamp:
+                    kept.append(cast)
+                yield cast
 
         write_deltalake(
             location,
@@ -211,4 +232,9 @@ class DeltaSink:
             partition_by=options.get("partition_by") or None,
             storage_options=storage,
         )
+        if stamp:
+            from shape.fingerprint import KEY, dump, for_sink, set_delta_property
+
+            whole = pa.Table.from_batches(kept, schema=schema)
+            set_delta_property(location, KEY, dump(for_sink(table, whole, stamp)))
         return rows

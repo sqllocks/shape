@@ -69,6 +69,20 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
   (foreign keys, personal data, meaning) in a decision file; `shape generate --from` and
   `shape plan` take it with `--decisions`. See [PROPOSALS.md](PROPOSALS.md).
 
+- `shape fingerprint embed|show|verify` writes, reads and checks a signed statement inside a Parquet
+  file or Delta table that the data is synthetic and which run made it; `shape generate
+  --fingerprint` writes it at generation time (exit 0 valid, 1 digest or signature mismatch, 2 none,
+  a newer version or bad input). See [FINGERPRINT.md](FINGERPRINT.md).
+- `shape share-bundle create|verify` checks generated data against its source (memorization gate and
+  a top-values check) and writes a zip with a signed attestation, or, for `verify`, recomputes its
+  dataset id and checks it (`create`: 1 a check failed, nothing written; `verify`: 1 tampered or
+  failing, 2 malformed). Evidence that the checks passed, not a privacy guarantee. See
+  [SHARE_BUNDLE.md](SHARE_BUNDLE.md).
+- `shape skew-rehearsal PROFILE.shape --schema SCHEMA --scale S -o DIR` generates at scale with the
+  profile's key skew and reports, per column, the profile's top share against the generated one
+  (exit 1 outside the tolerance, 2 no frequency data for a requested column). See
+  [SCALE.md](SCALE.md#skew-rehearsal).
+
 - `shape bridge` serves Shape's commands as a versioned JSON protocol on standard input and output
   (one request and one response per line; `--once` for a single request; `--jobs-dir DIR` for the
   job files). `shape bridge schema --out DIR` writes its JSON Schemas and `--check DIR` verifies a

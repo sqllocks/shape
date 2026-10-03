@@ -21,6 +21,48 @@ Row counts are exact in every mode: a table has the rows of the scale preset, an
 points at a key that exists in the full parent table, whichever chunk it is in. Seed for seed, the
 two local modes write the same rows.
 
+## Skew rehearsal
+
+A scale test with uniform keys misses the hot keys production has. `shape skew-rehearsal` generates
+a schema at scale with the key skew a profile measured, and says whether the generated data kept it:
+
+```bash
+shape skew-rehearsal PROFILE.shape --schema SCHEMA --scale S [--seed N] -o DIR \
+    [--columns TABLE.COLUMN,...] [--tolerance 0.02]
+```
+
+`SCHEMA` is a domain or generation schema file, `S` one of its scale presets (local generation; Spark
+and Fabric modes are not offered). The tables are written to `DIR` as Parquet files, with
+`DIR/skew_report.json`.
+
+**Which columns.** With `--columns`, those: each must be a `foreign_key` column of the schema and
+have frequency data in the profile, or the command exits 2. Without it, every `foreign_key` column
+of the schema that the profile has frequency data for; the others are listed under `skipped` in the
+report with the reason (no frequency data, or `sample_rate` / `constrained_by`, which draw keys
+without the fan-out).
+
+**Concentration.** From the profile column's distinct count `c` and its most frequent values and
+their frequencies, the top is `k = min(listed, max(1, round(0.2 * c)))` keys (a fraction of `k / c`,
+0.2 when the profile lists enough values) and the profile's top share is their summed frequency. The
+generated column is drawn with `fan_out` (`shape.generation.fanout.concentration_weights`) so that
+the same fraction of its parents holds the same share, whatever the scale (power shape; `shape` in
+the report).
+
+**The report** (`shape-skew-report`, version 1) states, per column, the parent count, the row count,
+the top fraction, the profile's top share, the generated top share
+(`shape.generation.fanout.top_share_of`), their absolute difference, and whether it is within the
+tolerance, which the report states (default 0.02, `--tolerance`, between 0 and 1).
+
+| exit | meaning |
+|---|---|
+| 0 | every column is within tolerance |
+| 1 | a column is outside it |
+| 2 | the profile has no frequency data for a requested column, no column qualifies, or other bad input |
+
+The generated share is measured on the realized counts, so a nearly flat column with few rows per
+key reads higher than the fraction (the heaviest 20% of random counts hold more than 20%): allow
+for it with `--tolerance`, or rehearse at a scale with more rows per key.
+
 ## Sinks
 
 `--sink NAME` (repeatable) with settings as `--sink-config NAME.KEY=VALUE`. With only `-o DIR` the
