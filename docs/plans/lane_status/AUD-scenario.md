@@ -209,6 +209,17 @@ anything is recorded), deterministic notebook cell ids.
   - `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references`:
     passes alone; fails after `tests/demo/fabric/test_udf.py` has imported `azure.functions` in the
     same process (reproduced on 5c91ea5 with those two files) (#77, #554).
-- `pytest tests/scenario tests/demo tests/demo_cmd`: see the python-kernel line below for the final
-  run; during the work every fix ran its package's tests (scenario 143 passed, demo_cmd 165 passed
-  with the bridge demo tests, demo content 39 passed).
+- `SHAPE_KERNEL=python pytest -m "not emulator and not live"`, run in two halves (one run of the
+  whole suite in python mode exceeds the session's 2-hour job limit; the 48M-row bounded-memory
+  profile test alone takes over 15 minutes): half A (artifact ... types, 24 directories) 2646
+  passed, 1 failed (`test_core_imports_no_cloud_sdk_to_resolve_references`, #77/#554); half B (the
+  other 24 directories and the top-level test files, including `tests/scenario` and
+  `tests/demo_cmd`) 4528 passed, 3 failed (the three pyarrow-19 tests above, #76). Total 7174 passed,
+  the same four pre-existing failures as rust mode.
+- During the work every fix ran its package's tests: scenario 143 passed, demo_cmd 165 passed with
+  the bridge demo tests, and demo content 39 passed.
+
+## Left open
+
+- #513 (as an error), #522, #528: for the lead, reasons above.
+- `docs/SCENARIO_PACKS.md` wording (outside this lane's paths), above.
