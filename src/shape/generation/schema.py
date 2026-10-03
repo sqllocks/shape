@@ -268,7 +268,7 @@ class GenSchema:
                         c.name: {
                             "name": c.name,
                             "type": c.type,
-                            "generator": json.loads(json.dumps(c.generator)),
+                            "generator": _plain_json(c.generator),
                             "nullable": c.nullable,
                             "null_rate": c.null_rate,
                             "max_length": c.max_length,
@@ -321,7 +321,7 @@ class GenSchema:
         if problems:
             more = f" (+{len(problems) - 5} more)" if len(problems) > 5 else ""
             raise GenSchemaError("; ".join(problems[:5]) + more)
-        m, g = doc["model"], doc["generation"]
+        m, g = doc["model"], doc.get("generation", {})  # generation is optional
         model = Model(
             name=m["name"],
             description=m.get("description", ""),
