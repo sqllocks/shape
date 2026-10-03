@@ -36,6 +36,18 @@ def add_arguments(sub: Any) -> None:
         "input file's extension; csv for a directory)",
     )
     ma.add_argument("--seed", type=int, default=42, help="random seed (default 42)")
+    keys = ma.add_mutually_exclusive_group()
+    keys.add_argument(
+        "--key-file",
+        metavar="FILE",
+        help="keyed masking: read the secret key from FILE (not readable by others, and outside "
+        "the output directory); the same value and key always give the same mask, in any run",
+    )
+    keys.add_argument(
+        "--key-env",
+        metavar="VAR",
+        help="keyed masking: read the secret key from this environment variable",
+    )
     ma.add_argument(
         "--exclude", action="append", default=[], metavar="COLUMN", help="leave this column as is"
     )
@@ -75,6 +87,19 @@ def _pii(pairs: list[str]) -> dict[str, str]:
     return out
 
 
+def _key(a: argparse.Namespace, out_dir: Path) -> bytes | None:
+    """The secret key for keyed masking, or None. The key is never written anywhere."""
+    from shape.masking import load_key
+
+    if a.key_file:
+        if Path(a.key_file).resolve().is_relative_to(out_dir.resolve()):
+            raise ValueError("the key file is inside the output directory; keep the key apart")
+        return load_key(file=a.key_file)
+    if a.key_env:
+        return load_key(env=a.key_env)
+    return None
+
+
 def _read(path: Path, fmt: str) -> Any:
     """The file as an Arrow table, CSV values as text (so unmasked columns are written back
     exactly as they were read)."""
@@ -109,11 +134,12 @@ def run(a: argparse.Namespace) -> int:
         if (out_dir / p.name).resolve() == p.resolve():
             raise ValueError("the output directory would overwrite the input files")
     pii = _pii(a.pii)
+    key = _key(a, out_dir)
 
     tables = {name: _read(p, fmt) for name, p in files.items()}
     typed = profile({name: str(p) for name, p in files.items()}).to_dict()
     transform = default_host().get("shape.transforms", "mask")
-    result = transform.mask(tables, seed=a.seed, exclude=a.exclude, pii=pii, profile=typed)
+    result = transform.mask(tables, seed=a.seed, exclude=a.exclude, pii=pii, profile=typed, key=key)
 
     out_dir.mkdir(parents=True, exist_ok=True)
     written = []
@@ -130,6 +156,7 @@ def run(a: argparse.Namespace) -> int:
             json.dumps(
                 {
                     "files": written,
+                    "keyed": key is not None,
                     "columns_masked": result.columns_masked,
                     "column_types": result.column_types,
                     "stats": result.stats,

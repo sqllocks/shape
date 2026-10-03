@@ -277,7 +277,7 @@ def _email(originals: list[str], rng: np.random.Generator) -> list[str]:
     last = [x.lower() for x in _pick(rng, _pool("last_names"), n)]
     sep = _pick(rng, ["", ".", "_"], n)
     num = _digits(rng, n, 3)
-    domains = _pick(rng, _pool("email_domains"), n)
+    domains = _pick(rng, ["example.com", "example.org", "example.net"], n)
     return [
         f"{f}{s}{ln}{d}@{dom}"
         for f, s, ln, d, dom in zip(first, sep, last, num, domains, strict=True)
