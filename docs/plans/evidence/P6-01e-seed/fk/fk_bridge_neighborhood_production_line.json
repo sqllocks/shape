@@ -1,0 +1,60 @@
+{
+ "args": {
+  "domain": "composite_supply_chain-real_estate-manufacturing",
+  "scale": "small",
+  "table": "real_estate_neighborhood",
+  "column": "shared_location_manufacturing_production_line_id",
+  "parent_table": "manufacturing_production_line",
+  "parent_column": "line_id",
+  "n": 100,
+  "out": "docs/plans/evidence/P6-01e-seed/fk/fk_bridge_neighborhood_production_line.json"
+ },
+ "pooled_chi2": {
+  "chi2": 30.60986312365504,
+  "dof": 19,
+  "p": 0.044531927043929505,
+  "bins": 20
+ },
+ "per_run": {
+  "max_share": {
+   "spindle_mean": 0.11520000000000001,
+   "spindle_sd": 0.019719241487655782,
+   "shape_mean": 0.11659999999999998,
+   "shape_sd": 0.021092389359408503,
+   "p_mannwhitney": 0.5987327290167678,
+   "p_ks": 0.9996892272702655
+  },
+  "top10_share": {
+   "spindle_mean": 0.737,
+   "spindle_sd": 0.03497473835831119,
+   "shape_mean": 0.743,
+   "shape_sd": 0.03942772444036626,
+   "p_mannwhitney": 0.29390464655010895,
+   "p_ks": 0.469506448503778
+  },
+  "distinct": {
+   "spindle_mean": 18.51,
+   "spindle_sd": 1.0199524647271707,
+   "shape_mean": 18.31,
+   "shape_sd": 1.186583245280245,
+   "p_mannwhitney": 0.2650451419994557,
+   "p_ks": 0.9084105017744525
+  },
+  "mean_rank": {
+   "spindle_mean": 0.47807999999999995,
+   "spindle_sd": 0.04445578441189368,
+   "shape_mean": 0.47157999999999994,
+   "shape_sd": 0.0438074713428491,
+   "p_mannwhitney": 0.24975151408540375,
+   "p_ks": 0.8154147124661313
+  },
+  "null_rate": {
+   "spindle_mean": 0.0,
+   "spindle_sd": 0.0,
+   "shape_mean": 0.0,
+   "shape_sd": 0.0,
+   "p_mannwhitney": 1.0,
+   "p_ks": 1.0
+  }
+ }
+}
