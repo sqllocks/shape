@@ -201,7 +201,10 @@ def open_sink(
     from shape.plugins.host import default_host
 
     host = default_host()
-    for name in host.names("shape.emitters"):
+    # The emitter named after the scheme comes first: a plugin that also writes ``file://``
+    # (FHIR NDJSON, say) must not take over the built-in ``file`` emitter by sorting before it.
+    names = host.names("shape.emitters")
+    for name in sorted(names, key=lambda n: n != scheme):
         emitter = host.try_get("shape.emitters", name)
         if emitter is not None and scheme and scheme in getattr(emitter, "schemes", ()):
             return EmitterSink(
