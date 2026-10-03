@@ -186,3 +186,41 @@ def test_161_deduplicate_ids_keeps_ids_of_different_types_apart():
     assert keep.tolist() == [True, True, False, True, True]
     assert seen == {1, "1", 2.5, "2.5"}
     assert deduplicate_ids([True, 1, 1.0], set()).tolist() == [True, False, False]  # equal in a set
+
+
+def test_162_a_retry_after_a_failed_duplicate_resends_only_what_failed():
+    from collections import Counter
+
+    import pyarrow as pa
+
+    from shape.streaming.emit.faults import FaultSink
+    from shape.streaming.emit.formats import with_event_fields
+
+    class Flaky:
+        def __init__(self):
+            self.keys = []
+            self.failed = False
+
+        def send(self, batch):
+            if batch.num_rows == 1 and not self.failed:  # the first duplicate copy fails
+                self.failed = True
+                raise ConnectionError("dropped")
+            self.keys += batch.column("_shape_seq").to_pylist()
+
+        def flush(self):
+            pass
+
+        def close(self):
+            pass
+
+    inner = Flaky()
+    sink = FaultSink(inner, seed=1, duplicate_fraction=1.0, duplicate_window=1)
+    events = with_event_fields(pa.record_batch({"v": list(range(6))}), "t", 0)
+    first, second = events.slice(0, 3), events.slice(3)
+    sink.send(first)
+    with pytest.raises(ConnectionError):
+        sink.send(second)  # delivered, then the first copy due fails
+    sink.send(second)  # the runtime retries the call
+    sink.close()
+    assert inner.failed
+    assert Counter(inner.keys) == {seq: 2 for seq in range(6)}  # each event and one copy
