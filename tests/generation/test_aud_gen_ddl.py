@@ -104,7 +104,8 @@ def test_a_primary_key_that_is_a_foreign_key_is_unique(child, smart):
 
 @pytest.mark.parametrize("smart", [True, False])
 def test_composite_primary_key_columns_are_never_null(smart):
-    # 175: without NOT NULL the key columns were nullable and got null_rate 0.15.
+    # 175: without NOT NULL the key columns got null_rate 0.15 (FK-04). They stay declared
+    # nullable, as the baseline reads them (ddl_1to1), but are never generated null.
     schema, _ = from_ddl(
         "CREATE TABLE orders (id INT PRIMARY KEY); CREATE TABLE product (id INT PRIMARY KEY);"
         "CREATE TABLE order_product (order_id INT REFERENCES orders(id), "
@@ -113,7 +114,6 @@ def test_composite_primary_key_columns_are_never_null(smart):
     )
     table = schema.tables["order_product"]
     for name in ("order_id", "product_id"):
-        assert not table.columns[name].nullable
         assert table.columns[name].null_rate == 0
     res = Engine(schema).generate()
     assert res.tables["order_product"]["order_id"].null_count == 0

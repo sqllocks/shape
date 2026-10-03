@@ -194,7 +194,9 @@ single-column primary keys, are sequences. A declared foreign key is a `foreign_
 relationship (a self-reference is `self_referencing`), whether it is a table-level constraint or a
 column-level clause such as `customer_id INT REFERENCES customer(id)` (with or without
 `CONSTRAINT name` and `ON DELETE ...`; `REFERENCES customer` alone means the parent's primary
-key). Column names ending `_id` or `Id` (`customer_id`, `CustomerId`, `CustomerID`) that match a
+key). A foreign key that is also the table's whole primary key
+(`customer_profile.customer_id`) is a one-to-one child: it takes each parent at most once, and the
+table has as many rows as its parent. A primary-key column is never generated null. Column names ending `_id` or `Id` (`customer_id`, `CustomerId`, `CustomerID`) that match a
 table by its singular or plural name (`order_id` to `order` or `orders`, `category_id` to
 `categories`) are foreign keys too, when the DDL does not declare them: the key points at that
 table's primary key, whatever it is called, and is left out (the column stays a plain number) when

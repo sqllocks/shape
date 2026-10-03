@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Any
 
+from shape.generation.ddl import one_to_one_parent
 from shape.generation.ddl_names import snake, word_pattern
 from shape.generation.schema import BusinessRule, Column, GenSchema, Table
 
@@ -451,13 +452,15 @@ def _fk_distributions(ctx: _Context) -> None:
             if not col.is_foreign_key:
                 continue
             parent = col.fk_ref_table
-            if parent is None:
-                continue
+            if parent is None or (
+                one_to_one_parent(table) == parent and cname in table.primary_key
+            ):
+                continue  # a one-to-one key takes each parent once (``ddl._foreign_key``)
             gen = col.generator
             dist, params, rule_id, desc = _fk_distribution(ctx, cname, tname, parent, table)
             gen["distribution"] = dist
             gen["params"] = params
-            if col.nullable:
+            if col.nullable and cname not in table.primary_key:  # a key column is never null
                 # A column property: the engine reads it there (a generator key is ignored).
                 col.null_rate = 0.15
                 ctx.annotate(tname, cname, "FK-04", "Nullable FK — added null_rate 0.15", 0.9)
@@ -515,7 +518,12 @@ def _ratio(
 
 def _cardinality(ctx: _Context) -> None:
     gen = ctx.schema.generation
+    one_to_one: dict[str, str] = {}
     for name, table in ctx.schema.tables.items():
+        parent_of_key = one_to_one_parent(table)
+        if parent_of_key in ctx.schema.tables:
+            one_to_one[name] = parent_of_key  # as many rows as its parent: set last, below
+            continue
         role = ctx.role(name)
         parents = ctx.parents_of.get(name, [])
         if role in (TableRole.LOOKUP, TableRole.DIMENSION):
@@ -539,6 +547,9 @@ def _cardinality(ctx: _Context) -> None:
         ratio, rule_id, desc = _ratio(name, role, parent, ctx.role(parent))
         gen.derived_counts[name] = {"per_parent": parent, "ratio": ratio}
         ctx.annotate(name, None, rule_id, desc, 0.8)
+    for name, parent in one_to_one.items():
+        gen.derived_counts.pop(name, None)
+        gen.derived_counts[name] = {"per_parent": parent, "ratio": 1.0}
 
 
 # ---- numeric distributions --------------------------------------------------------------

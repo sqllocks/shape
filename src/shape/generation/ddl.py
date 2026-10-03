@@ -693,11 +693,7 @@ class DdlParser:
                     "levels": 3,
                     "root_count": 8,
                 }
-            return {
-                "strategy": "foreign_key",
-                "ref": f"{fk.parent_table}.{fk.parent_column}",
-                "distribution": "pareto",
-            }
+            return _foreign_key(f"{fk.parent_table}.{fk.parent_column}", col, table)
 
         # A key the DDL does not declare, guessed by the ``<table>_id`` convention (also
         # ``CustomerId``): it points at the parent's single-column primary key, and is not
@@ -711,11 +707,7 @@ class DdlParser:
             if real is not None and real.lower() != table.name.lower():
                 key = keys.get(real.lower(), [])
                 if len(key) == 1:
-                    return {
-                        "strategy": "foreign_key",
-                        "ref": f"{real}.{key[0]}",
-                        "distribution": "pareto",
-                    }
+                    return _foreign_key(f"{real}.{key[0]}", col, table)
 
         if col.name in table.primary_key and len(table.primary_key) == 1:
             return {"strategy": "sequence", "start": 1}
@@ -825,7 +817,32 @@ class DdlParser:
                 small[name], medium[name], large[name] = 2500, 25000, 250000
             else:
                 small[name], medium[name], large[name] = 1000, 10000, 100000
+        for _ in tables:  # a key shared with the parent: as many rows as the parent (#175)
+            for name, table in tables.items():
+                parent = one_to_one_parent(table)
+                if parent in tables:
+                    for preset in (small, medium, large):
+                        preset[name] = preset[parent]
         return Generation(scale="small", scales={"small": small, "medium": medium, "large": large})
+
+
+def _foreign_key(ref: str, col: _ParsedColumn, table: _ParsedTable) -> dict[str, Any]:
+    """A foreign key's first generator. A key that is also the table's whole primary key (a
+    one-to-one child, ``customer_profile.customer_id``) takes each parent at most once: a
+    without-replacement sample of every parent (``sample_rate`` 1), so it stays unique."""
+    if table.primary_key == [col.name]:
+        return {"strategy": "foreign_key", "ref": ref, "sample_rate": 1.0}
+    return {"strategy": "foreign_key", "ref": ref, "distribution": "pareto"}
+
+
+def one_to_one_parent(table: Table) -> str | None:
+    """The parent of a table whose whole primary key is a foreign key to it, else ``None``."""
+    if len(table.primary_key) != 1 or table.primary_key[0] not in table.columns:
+        return None
+    col = table.columns[table.primary_key[0]]
+    if col.strategy != "foreign_key" or col.generator.get("sample_rate") != 1.0:
+        return None
+    return col.fk_ref_table
 
 
 _PATTERN_TOKEN = re.compile(r"\{(\w+)(?::(\d+))?\}")
