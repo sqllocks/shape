@@ -475,7 +475,8 @@ class TemporalConsistencyGate(ValidationGate):
             if not pa.types.is_timestamp(col.type):
                 warnings.append(f"{spec}: not a timestamp column ({col.type}); not checked")
                 continue
-            now = datetime.now(UTC) if col.type.tz else datetime.now()
+            # a timestamp without a zone is UTC, so the answer does not depend on where this runs
+            now = datetime.now(UTC) if col.type.tz else datetime.now(UTC).replace(tzinfo=None)
             future = _count_true(pc.greater(col.drop_null(), _timestamp_scalar(now, col.type)))
             if future > 0:
                 errors.append(f"{spec}: {future:,} values are in the future")

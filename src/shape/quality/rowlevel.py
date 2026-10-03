@@ -253,7 +253,8 @@ def _temporal(ctx: ValidationContext) -> list[CheckOutcome]:
         col = table.column(cname)
         if not pa.types.is_timestamp(col.type):
             continue
-        now = datetime.now(UTC) if col.type.tz else datetime.now()
+        # a timestamp without a zone is UTC, so the answer does not depend on where this runs
+        now = datetime.now(UTC) if col.type.tz else datetime.now(UTC).replace(tzinfo=None)
         mask = _to_mask(pc.greater(col, _timestamp_scalar(now, col.type)))
         out.append(
             _outcome("temporal_consistency", tname, (cname,), "future", table.num_rows, mask)
