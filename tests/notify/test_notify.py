@@ -570,6 +570,32 @@ def test_dry_run_lists_each_notification_as_a_send_action_and_opens_no_socket(
         assert rec.url not in out and "SECRETPATH123" not in out
 
 
+@pytest.mark.zero_network
+def test_no_socket_is_opened_when_no_notification_is_configured(tmp_path, monkeypatch, capsys):
+    root = _project(tmp_path, "pass")  # a project without a `notifications:` key
+    monkeypatch.chdir(root)
+    assert main(["profile", "orders", "-o", "cur.shape"]) == 0
+    capsys.readouterr()
+
+    def refuse(*a, **k):
+        raise AssertionError("a socket was used with no notification configured")
+
+    for name in ("connect", "connect_ex", "bind"):
+        monkeypatch.setattr(socket.socket, name, refuse)
+    monkeypatch.setattr(socket, "create_connection", refuse)
+    monkeypatch.setattr(socket, "getaddrinfo", refuse)
+    monkeypatch.setattr(http.client.HTTPConnection, "connect", refuse)
+    monkeypatch.setattr(http.client.HTTPSConnection, "connect", refuse)
+    assert main(["diff", "--source", "orders", "cur.shape"]) == 0
+    assert main(["diff", "--source", "orders", "cur.shape", "--json", "-"]) == 0
+    capsys.readouterr()
+    # no project at all: the same
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "a.csv").write_text("id,v\n1,2\n3,4\n")
+    (tmp_path / "b.csv").write_text("id,v\n1,2\n3,4\n")
+    assert main(["fidelity", "a.csv", "b.csv"]) in (0, 1)
+
+
 # ---- shape notify test ---------------------------------------------------------------------
 
 
