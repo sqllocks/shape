@@ -28,15 +28,17 @@ _BIG = [9007199254740993, 9007199254740992, 9007199254740995, 7]
 def test_685_rows_keep_integers_exact_like_columns() -> None:
     cols = capture_columns({"id": _BIG})["columns"]["id"]
     rows = capture_rows([{"id": v} for v in _BIG]).to_dict()["columns"]["id"]
-    for key in ("kind", "min", "max", "distinct_estimate", "topk", "count", "null_count"):
+    for key in ("kind", "min", "max", "count", "null_count"):
         assert rows[key] == cols[key], key
+    assert sorted(rows["topk"]) == sorted(cols["topk"])  # ties: the modes order them differently
     assert rows["max"] == 9007199254740995 and type(rows["max"]) is int
-    assert rows["distinct_estimate"] == 4
+    # capture_rows is bounded: the distinct count is a HyperLogLog estimate, of 4 values
+    assert cols["distinct_estimate"] == 4 and round(rows["distinct_estimate"]) == 4
 
 
 def test_685_arrow_keeps_integers_exact() -> None:
     doc = capture_arrow(pa.table({"id": pa.array(_BIG, pa.int64())})).to_dict()["columns"]["id"]
-    assert doc["max"] == 9007199254740995 and doc["distinct_estimate"] == 4
+    assert doc["max"] == 9007199254740995 and round(doc["distinct_estimate"]) == 4
 
 
 def test_685_numpy_integers_with_nulls_stay_integers() -> None:

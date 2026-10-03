@@ -38,6 +38,7 @@ class CapturedShape:
 
 
 _TOP = 10
+_INT64_MIN, _INT64_MAX = -(2**63), 2**63 - 1
 _EXACT_CARD = ErrorModel("exact-hash-table", True)
 _EXACT_QUANTILE = ErrorModel("exact-sort", True)
 
@@ -199,6 +200,9 @@ def capture_columns(columns: dict[str, Any], mode: str = "exact") -> dict[str, A
             continue
         # correctness fallback: the row path is the schema reference for the other kinds
         items = arrays[name].to_pylist() if arrays[name] is not None else list(values)
+        if not items:  # no rows: the column is still described, as capture_arrow does (#687)
+            out[name] = _ColumnState(name, "bounded").summary()
+            continue
         out[name] = capture_rows({name: x} for x in items).to_dict()["columns"][name]
     return {"rows": n, "columns": {name: out[name] for name in columns}}
 
@@ -208,13 +212,19 @@ class _ColumnState:
 
     def __init__(self, name: str, mode: str) -> None:
         kernel = get_kernel()
+        self.name = name
         self.text_schema = pa.schema([(name, pa.string())])
         self.num_schema = pa.schema([(name, pa.float64())])
+        self.int_schema = pa.schema([(name, pa.int64())])
         self.text = kernel.ProfileState(self.text_schema, mode)
         self.num = kernel.ProfileState(self.num_schema, mode)
+        # integers are also fed exactly while every number is one that fits int64 (#685): a
+        # float64 loses integers past 2**53 (ids), so the extremes and distinct values would too
+        self.ints = kernel.ProfileState(self.int_schema, mode)
         self.numeric_count = 0
         self.other_count = 0
         self.numeric_ok = True  # every non-null value so far is a number
+        self.int_ok = True  # every number so far is an integer within int64
 
     @property
     def is_numeric(self) -> bool:
@@ -224,29 +234,57 @@ class _ColumnState:
     def feed_nulls(self, n: int) -> None:
         self.text.update(pa.record_batch([pa.nulls(n, pa.string())], schema=self.text_schema))
         self.num.update(pa.record_batch([pa.nulls(n, pa.float64())], schema=self.num_schema))
+        self.ints.update(pa.record_batch([pa.nulls(n, pa.int64())], schema=self.int_schema))
+
+    def _text_of(self, v: Any) -> str | None:
+        if v is None:
+            return None
+        if isinstance(v, (bytes, bytearray, memoryview)):  # binary: its UTF-8 text (#688)
+            try:
+                return bytes(v).decode("utf-8")
+            except UnicodeDecodeError as exc:
+                raise ValueError(
+                    f"column {self.name!r} holds bytes that are not UTF-8 text ({exc.reason} at "
+                    f"byte {exc.start}): convert the file to UTF-8 first"
+                ) from None
+        return str(v)
 
     def feed(self, values: list[Any]) -> None:
-        text = [None if v is None else str(v) for v in values]
+        text = [self._text_of(v) for v in values]
         self.text.update(pa.record_batch([pa.array(text, pa.string())], schema=self.text_schema))
         numbers: list[float | None] = []
+        ints: list[int | None] = []
         for v in values:
             if v is None:
                 numbers.append(None)
+                ints.append(None)
             elif is_number(v):
                 self.numeric_count += 1
-                numbers.append(float(as_number(v)))
+                n = as_number(v)
+                numbers.append(float(n))
+                if isinstance(n, int) and _INT64_MIN <= n <= _INT64_MAX:
+                    ints.append(n)
+                else:
+                    self.int_ok = False
+                    ints.append(None)
             else:
                 self.other_count += 1
                 self.numeric_ok = False
                 numbers.append(None)
+                ints.append(None)
         if self.numeric_ok:  # once a text value has been seen the numeric side is never used
             self.num.update(
                 pa.record_batch([pa.array(numbers, pa.float64())], schema=self.num_schema)
             )
+            if self.int_ok:
+                self.ints.update(
+                    pa.record_batch([pa.array(ints, pa.int64())], schema=self.int_schema)
+                )
 
     def summary(self) -> dict[str, Any]:
         if self.is_numeric:
-            return _numeric(self.num.finalize()["columns"][0])
+            state = self.ints if self.int_ok else self.num
+            return _numeric(state.finalize()["columns"][0])
         return _text(self.text.finalize()["columns"][0])
 
 
