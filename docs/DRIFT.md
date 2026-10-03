@@ -52,6 +52,8 @@ A change is reported only when it passes its threshold, so a stable column produ
 | `heaping_change` | the current column is heaped (`heaping.heaped`) and the baseline was not, or both are and the ratio rose to `heaping_ratio` = 2.0 times the baseline's; in both cases the ratio rose by more than four standard errors | low | `1 - 1/ratio` when it appeared, else `1 - baseline ratio / current ratio` |
 | `benford_change` | Benford conformity (`close`, `acceptable`, `marginal`, `nonconformity`) got worse by `benford_class_steps` = 2 classes or more, and the MAD rose by more than three standard errors of the difference; both sides must be applicable | medium | steps / 3 |
 | `tail_change` | the Hill tail index alpha fell by more than `tail_alpha_drop` = 0.3 of the baseline's, to below `tail_alpha_max` = 3, and by more than three standard errors of the difference | low | `1 - current / baseline` |
+| `mixture_change` | the Gaussian mixture of a numeric column changed: `k` differs, `multimodal` flipped, or, for equal `k`, a component's weight (components paired in order of mean) moved by more than `mixture_weight` = 0.1; and the KS distance between the two fitted mixtures' CDFs beats the critical value of the sample sizes (alpha = 0.001, at most 4,000 values per side) | low | `abs(k change) / 3` for a `k` change, else the largest weight move (at least 0.5 for a `multimodal` flip) |
+| `seasonality_change` | both sides are applicable, against the same time column, and the `seasonal` flag flipped with the strength moved by 0.1 or more, or both are seasonal and the period changed, or the strength moved by more than `seasonality_strength` = 0.2 | medium | the strength move (at least 0.5 for a flip or a period change) |
 | `hour_of_day_change`, `day_of_week_change` | total variation distance of the mix > `temporal_tvd` = 0.20 (day of week: both columns span 14 days or more) | low | the distance |
 
 The first five thresholds (`null_rate`, `cardinality_ratio_max`, `cardinality_ratio_min`,
@@ -77,6 +79,14 @@ section 12.3 and keep their values.
   standard errors of the difference. A Hill estimate on a few hundred values is noisy, so a 30%
   fall on its own would flag two samples of one distribution. A fall in heaping, an improvement in Benford conformity and a lighter tail are not
   changes.
+- **Mixtures and seasonality.** `mixture_change` and `seasonality_change` read the column fields
+  `mixture` and `seasonality`. The `k` of a mixture of skewed data is unstable between two samples
+  (a log-normal is fitted with three or four components), so a change in `k`, in `multimodal` or in
+  a weight only counts when the two fitted mixtures also differ as distributions by more than
+  sampling noise. The period of a series that is not seasonal is whichever candidate fits the noise
+  best, so a period change counts only when both sides are seasonal. A side that is not applicable
+  (fewer than three periods, no time column, a constant or sparse series) has nothing to compare,
+  and a profile written before these fields existed reports neither kind.
 - **Small samples.** With fewer than `min_rows` = 30 non-null values a column gets no distribution
   comparison (category mix, spread, KS, range, outliers, true rate, hour of day).
 - **Keys.** A primary key, or a dense unique integer column (a counter), has no `mean_shift`,

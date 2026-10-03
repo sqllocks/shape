@@ -5,6 +5,8 @@ from __future__ import annotations
 import html
 from typing import TYPE_CHECKING, Any
 
+from shape.profile.mixture import describe as describe_mixture
+from shape.profile.seasonality import describe as describe_seasonality
 from shape.profile.univariate import describe
 
 if TYPE_CHECKING:
@@ -127,6 +129,8 @@ def _card(name: str, col: dict[str, Any]) -> str:
             f"fit: {_e(col['distribution'])}" + (f" (score {fit:.3f})" if fit is not None else "")
         )
     facts.extend(_e(line) for line in describe(col))
+    facts.extend(_e(line) for line in describe_mixture(col))
+    facts.extend(_e(line) for line in describe_seasonality(col))
     body = [f"<h3>{_e(name)}</h3>", "<p>" + " · ".join(facts) + "</p>"]
     if col.get("quantiles"):
         lo, hi = _plain(col["min_value"]), _plain(col["max_value"])

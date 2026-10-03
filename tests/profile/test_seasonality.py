@@ -16,6 +16,12 @@ import shape
 from shape.cli.main import main
 from shape.profile import seasonality as S
 
+CODE = (
+    "import shape,json;"
+    "d=shape.profile({path!r}).to_dict();"
+    "print(json.dumps(d['columns']['sales']['seasonality']))"
+)
+
 
 def _daily(values: np.ndarray, start: str = "2023-01-02") -> pa.Table:
     days = np.datetime64(start) + np.arange(len(values)).astype("timedelta64[D]")
@@ -185,7 +191,7 @@ def test_the_seasonality_is_in_both_kernels(tmp_path: Path) -> None:
             [
                 sys.executable,
                 "-c",
-                f"import shape,json;print(json.dumps(shape.profile({str(p)!r}).to_dict()['columns']['sales']['seasonality']))",
+                CODE.format(path=str(p)),
             ],
             env={**os.environ, "SHAPE_KERNEL": kernel},
             capture_output=True,

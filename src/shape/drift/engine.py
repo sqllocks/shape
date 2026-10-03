@@ -70,6 +70,8 @@ DEFAULT_THRESHOLDS: dict[str, Any] = {
     "benford_class_steps": 2,  # conformity classes (close .. nonconformity) the data got worse by
     "tail_alpha_drop": 0.3,  # relative fall of the Hill tail index alpha
     "tail_alpha_max": 3.0,  # ... and it must end below this
+    "mixture_weight": 0.1,  # absolute move of a matched mixture component's weight
+    "seasonality_strength": 0.2,  # absolute move of the seasonal strength
 }
 
 KIND_SEVERITY: dict[str, str] = {
@@ -104,6 +106,8 @@ KIND_SEVERITY: dict[str, str] = {
     "heaping_change": "low",
     "benford_change": "medium",
     "tail_change": "low",
+    "mixture_change": "low",
+    "seasonality_change": "medium",
 }
 
 _NUMERIC = ("integer", "float")
@@ -362,7 +366,15 @@ def _complete(proportions: Mapping[str, float] | None) -> dict[str, float] | Non
 
 
 _PATTERN_DATE = {"date"}
-_UNIVARIATE_FIELDS = ("zero_share", "zero_inflation", "heaping", "benford", "tail_index")
+_UNIVARIATE_FIELDS = (
+    "zero_share",
+    "zero_inflation",
+    "heaping",
+    "benford",
+    "tail_index",
+    "mixture",
+    "seasonality",
+)
 
 
 def view_of_profile_column(col: Mapping[str, Any], rows: int) -> View:
