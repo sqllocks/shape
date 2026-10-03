@@ -16,7 +16,18 @@ class DBAPISource:
         cur = self.connection.cursor()
         try:
             cur.execute(self.query, self.params)
+            if cur.description is None:
+                raise ValueError(
+                    f"the statement returns no rows (no result set): {self.query!r}; "
+                    "DBAPISource reads a SELECT"
+                )
             names = [d[0] for d in cur.description]
+            repeated = sorted({n for n in names if names.count(n) > 1})
+            if repeated:  # a dict row would keep only the last of them
+                raise ValueError(
+                    f"the result has several columns named {', '.join(map(repr, repeated))}: "
+                    "give each one an alias (SELECT a.id AS a_id, b.id AS b_id ...)"
+                )
             while True:
                 data = cur.fetchmany(self.batch_size)
                 if not data:
