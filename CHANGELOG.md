@@ -330,3 +330,22 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Repository cleaned up for public release: removed internal milestone and
   qualification records.
 - README and changelog rewritten to describe the current state.
+
+### Fixed (documentation, examples and scripts audit)
+
+- Offline locks: a plugin extra's lock now holds the dependencies of the plugin extras it names
+  (`postgres`, `mysql` and `databases` get their database drivers; #259).
+- `scripts/check_shipped_data.py` reports `from urllib import request`, `from http import client`,
+  `urllib3` and `socket` (#261).
+- `scripts/check_secrets.py` finds Azure Storage and Event Hubs keys, GitHub tokens, AWS key ids,
+  quoted `client_secret` values and encrypted, DSA and PGP private keys, names the line, and scans
+  what git would commit, so an in-tree virtualenv no longer fails it (#262, #350).
+- `scripts/fuzz_artifacts.py` refuses `--iterations` below 1 (#263).
+- The talk's slide 20 quotes what a raw profile holds today, and its claim verifier passes again
+  (#377).
+- Docs: the tutorial compares models with `shape compatibility` and profiles with `shape diff`
+  (#347); `shape demo notebook ... --output` (#305); `pip install sqllocks-shape-fabric` in
+  docs/SCALE.md (#247); INSTALL.md states Python 3.11–3.14 and every offline-lock set (#255); the
+  README names the shipped safe profile (#346); dead spec references fixed (#348, #507); the
+  contributing guide names `make check` (#349). `tests/release/test_docs.py` keeps documented
+  commands, options, extras, links and supported Pythons in step with the code.
