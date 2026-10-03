@@ -382,3 +382,20 @@ def test_temporal_bound_with_an_offset_is_the_utc_instant() -> None:
         warnings.simplefilter("error")
         values = _times({"start": "2024-01-01T05:00:00+05:00", "end": "2024-01-01T01:00:00Z"})
     assert min(values) >= datetime(2024, 1, 1) and max(values) < datetime(2024, 1, 1, 1)
+
+
+# ---- #148: a sequence that leaves int64 is an error, not wrapped keys ---------------------------
+
+
+def test_sequence_past_int64_is_a_strategy_error() -> None:
+    import pytest
+
+    from shape.generation.strategy_kit import StrategyError
+
+    big = {"strategy": "sequence", "start": 2**62, "step": 2**62}
+    with pytest.raises(StrategyError, match=r"int64.*t\.y|t\.y.*int64"):
+        _table({"y": {"type": "integer", "generator": big}}, rows=3)
+    edge = {"strategy": "sequence", "start": 2**63 - 3, "step": 1}
+    assert _table({"y": {"type": "integer", "generator": edge}}, rows=3)["y"].to_pylist()[-1] == (
+        2**63 - 1
+    )
