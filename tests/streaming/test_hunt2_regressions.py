@@ -556,3 +556,23 @@ def test_741_live_options_without_a_live_target_are_refused(tmp_path, capsys):
     assert main(
         [*base, "-o", str(tmp_path / "ok.jsonl"), "--live-target", "retail", "--live-fail"]
     ) in (0, 1)
+
+
+def test_710_argument_errors_say_what_is_wrong_and_what_to_pass():
+    from shape.streaming import ShapeMonitor
+    from shape.streaming.keyed import KeyedState, PartitionedKeyedState
+    from shape.streaming.online import OnlineShape
+
+    cases = [
+        (lambda: ShapeMonitor(object(), every=0), "every must be at least 1"),
+        (lambda: OnlineShape(max_buffer=0), "max_buffer must be at least 1"),
+        (lambda: PartitionedKeyedState(0, 60), "partitions must be at least 1"),
+        (lambda: KeyedState(0, 5), "ttl_seconds must be positive"),
+        (lambda: KeyedState(60, 0), "max_keys must be at least 1"),
+    ]
+    for build, text in cases:
+        with pytest.raises(ValueError, match=text):
+            build()
+    ShapeMonitor(object(), every=1)  # the boundary is accepted
+    OnlineShape(max_buffer=1)
+    KeyedState(0.001, 1)
