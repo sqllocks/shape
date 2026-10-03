@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import sys
 import tempfile
 import threading
 import time
@@ -69,9 +70,62 @@ def mask_secrets(value: Any) -> Any:
     return value
 
 
+_STILL_ACTIVE = 259
+_ERROR_ACCESS_DENIED = 5
+_PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+
+
+class _WinApi:
+    """The three kernel32 calls the Windows liveness probe makes."""
+
+    def __init__(self) -> None:
+        import ctypes
+        from ctypes import wintypes
+
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)  # type: ignore[attr-defined]
+        k32.OpenProcess.restype = wintypes.HANDLE
+        k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+        k32.GetExitCodeProcess.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+        k32.CloseHandle.argtypes = [wintypes.HANDLE]
+        self._ctypes, self._wintypes, self._k32 = ctypes, wintypes, k32
+
+    def open_process(self, access: int, pid: int) -> int:
+        return int(self._k32.OpenProcess(access, False, pid) or 0)
+
+    def exit_code_of(self, handle: int) -> int | None:
+        code = self._wintypes.DWORD()
+        if not self._k32.GetExitCodeProcess(handle, self._ctypes.byref(code)):
+            return None
+        return int(code.value)
+
+    def close(self, handle: int) -> None:
+        self._k32.CloseHandle(handle)
+
+    def last_error(self) -> int:
+        return int(self._ctypes.get_last_error())  # type: ignore[attr-defined]
+
+
+def _win_api() -> _WinApi:  # pragma: no cover - Windows only
+    return _WinApi()
+
+
+def _pid_alive_windows(pid: int) -> bool:
+    """Windows: ``os.kill(pid, 0)`` would send ``CTRL_C_EVENT``, so ask the process table."""
+    api = _win_api()
+    handle = api.open_process(_PROCESS_QUERY_LIMITED_INFORMATION, pid)
+    if not handle:
+        return api.last_error() == _ERROR_ACCESS_DENIED  # exists, but not ours to open
+    try:
+        return api.exit_code_of(handle) == _STILL_ACTIVE
+    finally:
+        api.close(handle)
+
+
 def pid_alive(pid: int) -> bool:
     if pid <= 0:
         return False
+    if sys.platform == "win32":
+        return _pid_alive_windows(pid)
     try:
         os.kill(pid, 0)
     except ProcessLookupError:
