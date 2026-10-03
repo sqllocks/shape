@@ -84,3 +84,41 @@ def test_measure_product_names_a_dataset_with_the_wrong_row_count(measure, monke
     with pytest.raises(SystemExit, match=r"d1\.parquet.*5 rows.*200000"):
         measure.main()
     assert not measure.OUT.exists()
+
+
+@pytest.fixture
+def kernel_bench(monkeypatch):
+    pytest.importorskip("shape._kernel")
+    mod = _load("vs_spindle_kernel_bench", BENCH / "kernel_bench.py")
+    monkeypatch.setattr(mod, "wait_for_quiet", lambda *a, **k: 0.0)
+    monkeypatch.setenv("BENCH_LOCK_HELD", "1")
+    return mod
+
+
+def test_kernel_bench_checks_the_timed_output_itself(kernel_bench, monkeypatch, tmp_path):
+    """Equivalence is checked on the output being timed: a kernel whose full-size result is
+    wrong (while a separate small call is right) must not be recorded."""
+    real = kernel_bench.cases
+
+    def cases(n):
+        out = real(n)
+        if n == 2000:  # the timed size: corrupt the first value of one kernel's result
+            case = next(c for c in out if c["name"] == "philox_uniform")
+            native = case["native"]
+            case["native"] = lambda: [-1.0, *list(native())[1:]]
+        return out
+
+    monkeypatch.setattr(kernel_bench, "cases", cases)
+    out = tmp_path / "results.json"
+    out.write_text("{}")
+    rc = kernel_bench.main(
+        ["--rows", "2000", "--ref-rows", "500", "--runs", "1", "--out", str(out)]
+    )
+    assert rc == 1
+    assert "kernel_microbench" not in out.read_text()
+
+
+def test_kernel_bench_reports_a_missing_results_file_before_timing(kernel_bench, tmp_path, capsys):
+    rc = kernel_bench.main(["--rows", "100", "--runs", "1", "--out", str(tmp_path / "none.json")])
+    assert rc == 2
+    assert "none.json" in capsys.readouterr().err
