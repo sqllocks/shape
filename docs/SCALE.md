@@ -40,7 +40,7 @@ sink is `parquet`; with nothing, `memory`.
 schema. Sign-in is the connection string's (or a `credential` given to the writer in library use);
 the `--auth` modes come with the Fabric auth work package.
 
-The Fabric sinks use the writers of the `shape-fabric` plugin (`pip install 'sqllocks-shape[fabric]'`). A table flows into its writer as it
+The Fabric sinks use the writers of the `shape-fabric` plugin (`pip install sqllocks-shape-fabric`). A table flows into its writer as it
 is generated (a few batches in flight), not held until the end. Every sink gets every chunk;
 a failing sink fails the run, after the others have finished the same chunk, and every sink is closed.
 
