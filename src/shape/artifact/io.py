@@ -256,6 +256,10 @@ def _read_artifact(
             for k, v in hashes.items()
         ):
             raise ArtifactError("invalid content hash entry")
+        if "manifest.json" in hashes or SIGNATURE_MEMBER in hashes:
+            # the writer refuses these names; a component must never alias the manifest or the
+            # signature (signing such a file would write the signature member twice, #407)
+            raise ArtifactError("unsafe/reserved component path in content_hashes")
         expected = {"manifest.json", SIGNATURE_MEMBER, *hashes.keys()}
         if (
             SIGNATURE_MEMBER in names
