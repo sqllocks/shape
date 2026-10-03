@@ -242,3 +242,24 @@ def test_project_validate_json_always_prints_json(tmp_path: Path, capsys, target
     assert main(["project", "validate", target, "--json"]) == 2
     doc = json.loads(capsys.readouterr().out)
     assert doc["valid"] is False and doc["file"] == target and doc["problems"]
+
+
+# -- #670 ------------------------------------------------------------------------------------
+
+
+def test_continue_refuses_to_write_over_its_input(tmp_path: Path, capsys) -> None:
+    data = tmp_path / "data"
+    assert main(["generate", "retail", "--scale", "small", "-o", str(data), "--format", "csv"]) == 0
+    before = {p.name: p.read_bytes() for p in data.iterdir()}
+    capsys.readouterr()
+    for out in (data, tmp_path / "data" / ".." / "data"):
+        assert main(["continue", "retail", "--input", str(data), "-o", str(out)]) == 2
+        assert "would overwrite the input" in capsys.readouterr().err
+    assert {p.name: p.read_bytes() for p in data.iterdir()} == before
+
+
+def test_continue_into_another_folder_still_works(tmp_path: Path, capsys) -> None:
+    data = tmp_path / "data"
+    assert main(["generate", "retail", "--scale", "small", "-o", str(data), "--format", "csv"]) == 0
+    assert main(["continue", "retail", "--input", str(data), "-o", str(tmp_path / "next")]) == 0
+    assert (tmp_path / "next" / "customer.csv").is_file()
