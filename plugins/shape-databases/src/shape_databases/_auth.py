@@ -110,11 +110,18 @@ def resolve_password(
 def scrub(text: str, secrets: Iterable[Secret | str | None] = (), limit: int = 400) -> str:
     """``text`` on one line with every known secret, ``password=...`` pair and URI password
     hidden (a driver may echo what it was given in its message)."""
-    out = " ".join(str(text).split())
-    for secret in secrets:
-        value = secret.reveal() if isinstance(secret, Secret) else secret
+    values = [s.reveal() if isinstance(s, Secret) else s for s in secrets]
+    out = str(text)
+    # Each secret is replaced before and after the whitespace is collapsed: a secret holding a
+    # run of spaces or a tab no longer matches the collapsed text.
+    for value in values:
         if value:
             out = out.replace(value, "***")
+    out = " ".join(out.split())
+    for value in values:
+        collapsed = " ".join(value.split()) if value else ""
+        if collapsed:
+            out = out.replace(collapsed, "***")
     out = _URI_PASSWORD.sub(r"\1***@", out)
     out = _KEYWORDS.sub(lambda m: m.group(1) + "=***", out)
     return out[:limit]
