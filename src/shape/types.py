@@ -11,6 +11,29 @@ if TYPE_CHECKING:
     import pyarrow as pa
 
 
+#: Every logical kind, with the bit widths it may have (empty: any, or none given).
+KINDS: dict[str, tuple[int, ...]] = {
+    "boolean": (),
+    "int": (8, 16, 32, 64),
+    "uint": (8, 16, 32, 64),
+    "float": (16, 32, 64),
+    "decimal": (),
+    "string": (),
+    "large_string": (),
+    "binary": (),
+    "large_binary": (),
+    "date": (),
+    "time": (),
+    "timestamp": (),
+    "duration": (),
+    "list": (),
+    "large_list": (),
+    "struct": (),
+    "map": (),
+    "fixed_binary": (),
+}
+
+
 @dataclass(frozen=True, slots=True)
 class LogicalType:
     kind: str
@@ -24,12 +47,22 @@ class LogicalType:
     fields: tuple[FieldType, ...] = ()
 
     def __post_init__(self) -> None:
+        if self.kind not in KINDS:
+            raise ShapeTypeError(
+                f"unknown logical type kind {self.kind!r}; the kinds are: {', '.join(KINDS)}"
+            )
+        widths = KINDS[self.kind]
+        if self.bit_width is not None and widths and self.bit_width not in widths:
+            raise ShapeTypeError(
+                f"{self.kind} has no bit width {self.bit_width} "
+                f"(it has: {', '.join(map(str, widths))})"
+            )
         if self.kind == "decimal" and (self.precision is None or self.scale is None):
-            raise ValueError("decimal requires precision and scale")
+            raise ShapeTypeError("decimal requires precision and scale")
         if self.kind in {"list", "large_list"} and self.value_type is None:
-            raise ValueError(f"{self.kind} requires value_type")
+            raise ShapeTypeError(f"{self.kind} requires value_type")
         if self.kind == "map" and (self.key_type is None or self.value_type is None):
-            raise ValueError("map requires key_type and value_type")
+            raise ShapeTypeError("map requires key_type and value_type")
 
 
 @dataclass(frozen=True, slots=True)

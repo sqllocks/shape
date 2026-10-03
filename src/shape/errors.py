@@ -5,8 +5,8 @@ class ShapeError(Exception):
     """Base class for expected public Shape failures."""
 
 
-class ShapeTypeError(ShapeError):
-    """A physical/logical type cannot be represented safely."""
+class ShapeTypeError(ShapeError, ValueError):
+    """A physical/logical type cannot be represented safely (also a ``ValueError``)."""
 
 
 class ShapeSchemaError(ShapeError):
