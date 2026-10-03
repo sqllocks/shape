@@ -458,7 +458,8 @@ def _fk_distributions(ctx: _Context) -> None:
             gen["distribution"] = dist
             gen["params"] = params
             if col.nullable:
-                gen.setdefault("null_rate", 0.15)
+                # A column property: the engine reads it there (a generator key is ignored).
+                col.null_rate = 0.15
                 ctx.annotate(tname, cname, "FK-04", "Nullable FK — added null_rate 0.15", 0.9)
             ctx.annotate(tname, cname, rule_id, desc, 0.8)
 

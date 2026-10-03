@@ -1092,7 +1092,7 @@ def _split_global(argv):
         "log_json": os.environ.get("SHAPE_LOG_JSON", "") not in ("", "0"),
         "log_level": os.environ.get("SHAPE_LOG_LEVEL", "INFO"),
         "metrics": os.environ.get("SHAPE_METRICS") or None,
-        "debug": False,
+        "debug": os.environ.get("SHAPE_DEBUG", "") not in ("", "0"),
     }
     rest = list(argv)
     while rest and rest[0].startswith("--"):
@@ -1135,9 +1135,23 @@ def _main(argv):
     _VERIFIED.clear()
     from shape.cli import errors
 
+    as_program = argv is None
     opts, argv = _split_global(sys.argv[1:] if argv is None else argv)
     errors.set_debug(opts["debug"])
-    return errors.guarded(lambda: _logged(opts, argv))
+    if errors.debug_enabled() or not as_program:
+        return errors.guarded(lambda: _logged(opts, argv))
+    try:
+        return errors.guarded(lambda: _logged(opts, argv))
+    except Exception as exc:  # noqa: BLE001 - the one place that turns a crash into a message
+        # An expected error is already one line (errors.guarded). As the program, an unexpected
+        # failure is also one line and exit 2, never a traceback; `--debug` (or SHAPE_DEBUG=1)
+        # lets it propagate. A call with an argv list (a library or test) always propagates it.
+        detail = str(exc) or "no detail"
+        print(
+            f"shape: error: {type(exc).__name__}: {detail} (run with --debug for the traceback)",
+            file=sys.stderr,
+        )
+        return errors.EXIT_INPUT_ERROR
 
 
 def _logged(opts, argv):
@@ -1175,6 +1189,46 @@ def _logged(opts, argv):
         if opts["metrics"]:
             with open(opts["metrics"], "w", encoding="utf-8") as fh:
                 fh.write(run.to_json() + "\n")
+
+
+def _is_generation_schema(doc):
+    """Whether ``doc`` is a generation schema (what ``shape from-ddl`` writes), not evidence."""
+    return (
+        isinstance(doc, dict)
+        and "schema_version" in doc
+        and isinstance(doc.get("tables"), dict)
+        and isinstance(doc.get("relationships"), list)
+    )
+
+
+def _cmd_evidence(a):
+    """``shape query|check|plan`` on an evidence document (JSON or ``.shape``). ``plan`` also
+    takes a generation schema and then prints the plan of its run, as ``generate --dry-run``."""
+    from shape.artifact import read_shape
+
+    _, s = read_shape(a.shape) if str(a.shape).endswith(".shape") else ({}, _load_json(a.shape))
+    if a.cmd == "query":
+        from shape.query import query as shape_query
+
+        _dump({"result": shape_query(s, a.expression)})
+        return 0
+    if a.cmd == "plan":
+        if _is_generation_schema(s):
+            from shape.generation.engine import Engine
+            from shape.generation.schema import GenSchema
+
+            _dump(Engine(GenSchema.from_dict(s)).dry_run().to_dict())
+            return 0
+        from shape.generation.fidelity import plan_reconstruction
+
+        _dump(plan_reconstruction(s).to_dict())
+        return 0
+    from shape.contracts import evaluate_contract
+
+    contract = _load_json(a.contract)
+    r = evaluate_contract(s, contract)
+    _dump(r.to_dict())
+    return 0 if r.passed else 4
 
 
 def _dispatch(argv):
@@ -1367,25 +1421,7 @@ def _dispatch(argv):
         )
         return 2
     if a.cmd in ("query", "check", "plan"):
-        from shape.artifact import read_shape
-
-        _, s = read_shape(a.shape) if str(a.shape).endswith(".shape") else ({}, _load_json(a.shape))
-        if a.cmd == "query":
-            from shape.query import query as shape_query
-
-            _dump({"result": shape_query(s, a.expression)})
-            return 0
-        if a.cmd == "plan":
-            from shape.generation.fidelity import plan_reconstruction
-
-            _dump(plan_reconstruction(s).to_dict())
-            return 0
-        from shape.contracts import evaluate_contract
-
-        contract = _load_json(a.contract)
-        r = evaluate_contract(s, contract)
-        _dump(r.to_dict())
-        return 0 if r.passed else 4
+        return _run(_cmd_evidence, a)
     if a.cmd in ("compatibility", "certify-shapes"):
         from shape.artifact import read_shape
 
