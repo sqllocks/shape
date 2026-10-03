@@ -166,7 +166,8 @@ def _no_schema(name: str, what: str, *, passed: bool = False) -> GateResult:
 
 
 class ReferentialIntegrityGate(ValidationGate):
-    """Every foreign-key value of a child column exists in the parent's key column."""
+    """Every foreign-key value of a child column exists in the parent's key column; a
+    composite key is checked as a whole (each child combination must be a parent's)."""
 
     name = "referential_integrity"
 
@@ -184,20 +185,42 @@ class ReferentialIntegrityGate(ValidationGate):
                 continue
             parent = context.tables[rel.parent]
             child = context.tables[rel.child]
-            for p_col, c_col in zip(rel.parent_columns, rel.child_columns, strict=False):
-                if p_col not in parent.column_names:
-                    errors.append(f"Parent column '{rel.parent}.{p_col}' not found in DataFrame")
-                    continue
-                if c_col not in child.column_names:
-                    errors.append(f"Child column '{rel.child}.{c_col}' not found in DataFrame")
-                    continue
+            p_cols, c_cols = list(rel.parent_columns), list(rel.child_columns)
+            if len(p_cols) != len(c_cols):
+                errors.append(
+                    f"Relationship '{rel.name}' has {len(p_cols)} parent columns and "
+                    f"{len(c_cols)} child column{'' if len(c_cols) == 1 else 's'}: "
+                    "they must pair up"
+                )
+                continue
+            missing = [
+                f"Parent column '{rel.parent}.{c}' not found in DataFrame"
+                for c in p_cols
+                if c not in parent.column_names
+            ] + [
+                f"Child column '{rel.child}.{c}' not found in DataFrame"
+                for c in c_cols
+                if c not in child.column_names
+            ]
+            if missing:
+                errors.extend(missing)
+                continue
+            if len(c_cols) == 1:
+                p_col, c_col = p_cols[0], c_cols[0]
                 orphans = _count_orphans(_present(child.column(c_col)), parent.column(p_col))
-                orphan_counts[f"{rel.child}.{c_col}->{rel.parent}.{p_col}"] = orphans
-                if orphans > 0:
-                    errors.append(
-                        f"{rel.child}.{c_col} has {orphans:,} orphan FK values "
-                        f"not found in {rel.parent}.{p_col}"
-                    )
+                key = f"{rel.child}.{c_col}->{rel.parent}.{p_col}"
+                what = f"{rel.child}.{c_col} has {orphans:,} orphan FK values"
+                target = f"{rel.parent}.{p_col}"
+            else:
+                # a composite key holds as a whole: each child combination must be a parent's
+                orphans = _count_composite_orphans(child.select(c_cols), parent.select(p_cols))
+                c_names, p_names = ", ".join(c_cols), ", ".join(p_cols)
+                key = f"{rel.child}.({c_names})->{rel.parent}.({p_names})"
+                what = f"{rel.child}.({c_names}) has {orphans:,} orphan FK rows"
+                target = f"{rel.parent}.({p_names})"
+            orphan_counts[key] = orphans
+            if orphans > 0:
+                errors.append(f"{what} not found in {target}")
         return GateResult(
             self.name,
             not errors,
@@ -232,6 +255,37 @@ def _count_orphans(child_values: pa.ChunkedArray, parent_keys: pa.ChunkedArray) 
             pass
     parents = set(parent_keys.to_pylist())
     return sum(1 for v in child_values.to_pylist() if v not in parents)
+
+
+def _count_composite_orphans(child: pa.Table, parent: pa.Table) -> int:
+    """Child rows whose key combination no parent row has. A row with a null (or NaN) in any
+    key column is not checked, as a single-column key skips nulls."""
+    keep = None
+    for col in child.columns:
+        valid = pc.is_valid(col)
+        if pa.types.is_floating(col.type):
+            valid = pc.and_(valid, pc.invert(pc.fill_null(pc.is_nan(col), False)))
+        keep = valid if keep is None else pc.and_(keep, valid)
+    child = child.filter(keep)
+    if child.num_rows == 0:
+        return 0
+    names = [f"k{i}" for i in range(child.num_columns)]
+    child = child.rename_columns(names)
+    parent = parent.rename_columns(names)
+    if all(_comparable(c.type, p.type) for c, p in zip(child.columns, parent.columns, strict=True)):
+        try:
+            cast = (
+                pa.table({n: pc.cast(parent[n], child[n].type) for n in names})
+                .group_by(names, use_threads=False)
+                .aggregate([])
+            )
+            return int(child.join(cast, keys=names, join_type="left anti").num_rows)
+        except (pa.ArrowInvalid, pa.ArrowNotImplementedError, pa.ArrowTypeError):
+            pass
+    parents = set(zip(*(parent[n].to_pylist() for n in names), strict=True))
+    return sum(
+        1 for row in zip(*(child[n].to_pylist() for n in names), strict=True) if row not in parents
+    )
 
 
 # Expected schema type -> the dtype-name fragments that satisfy it.

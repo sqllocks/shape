@@ -29,7 +29,7 @@ Without `--schema` only row counts are reported. With one, `shape verify` runs:
 | `schema_conformance` | a declared table or column is missing | extra columns; a column type that does not fit the declared type |
 | `null_constraint` | nulls (or NaN) in a column declared non-nullable | |
 | `unique_constraint` | duplicates in the primary key | |
-| `referential_integrity` | foreign-key values with no parent key | a relationship whose table is absent |
+| `referential_integrity` | foreign-key values with no parent key (a composite key as a whole: each child combination must be a parent's; a key with a null part is not checked); parent and child column lists of different lengths | a relationship whose table is absent |
 | `distribution` (`--statistical`) | never | KS test (`distribution`) or chi-squared test (`enum`) with p below 0.05 |
 
 `distribution` needs scipy (`pip install "sqllocks-shape[scipy]"`) and is skipped with a
