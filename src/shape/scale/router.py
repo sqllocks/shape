@@ -181,8 +181,13 @@ class ScaleRouter:
             if not used_processes:
                 with thread_limit(threads):
                     self._run_threads()
-        finally:
-            self._registry.close()
+        except BaseException:
+            # The run's own failure (or cancellation) is what the caller needs; a sink that
+            # also fails to close is logged by the registry, not raised over it.
+            with contextlib.suppress(SinkError):
+                self._registry.close()
+            raise
+        self._registry.close()
         elapsed = time.perf_counter() - started
         skipped += sum(int(getattr(s, "parts_skipped", 0)) for s in self.sinks)
         rows = sum(self._tables.values())
