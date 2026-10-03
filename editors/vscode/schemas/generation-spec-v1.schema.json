@@ -1,0 +1,2721 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shape-as-code.org/schema/1.0/generation-spec-v1.schema.json",
+  "title": "Shape generation spec, version 1",
+  "description": "A generation spec: a model (seed, locale, date range, mode), tables whose columns each carry a generator (a strategy name plus the keys that strategy reads), relationships, business rules, scale presets and derived row counts, and correlated column pairs. Stable within 1.x (docs/GENERATION_SPEC.md): keys and strategies are only ever added.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "model",
+    "tables"
+  ],
+  "additionalProperties": false,
+  "patternProperties": {
+    "^(x-|\\$comment$)": {}
+  },
+  "properties": {
+    "format": {
+      "const": "shape-generation-schema"
+    },
+    "version": {
+      "const": 1
+    },
+    "shape_version": {
+      "type": "string"
+    },
+    "min_shape_version": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "model": {
+      "$ref": "#/$defs/model"
+    },
+    "tables": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/table"
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/relationship"
+      }
+    },
+    "business_rules": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/rule"
+      }
+    },
+    "generation": {
+      "$ref": "#/$defs/generation"
+    },
+    "correlated_columns": {
+      "type": "object",
+      "description": "table -> [column_a, column_b, r] triples for the Gaussian-copula post-pass.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "array"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "model": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "patternProperties": {
+        "^(x-|\\$comment$)": {}
+      },
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "schema_mode": {
+          "enum": [
+            "3nf",
+            "star"
+          ]
+        },
+        "locale": {
+          "type": "string"
+        },
+        "seed": {
+          "type": "integer"
+        },
+        "date_range": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "table": {
+      "type": "object",
+      "required": [
+        "name",
+        "columns"
+      ],
+      "additionalProperties": false,
+      "patternProperties": {
+        "^(x-|\\$comment$)": {}
+      },
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "cdm_mapping": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "primary_key": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "columns": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/column"
+          }
+        }
+      }
+    },
+    "column": {
+      "type": "object",
+      "required": [
+        "name",
+        "type",
+        "generator"
+      ],
+      "additionalProperties": false,
+      "patternProperties": {
+        "^(x-|\\$comment$)": {}
+      },
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "generator": {
+          "$ref": "#/$defs/generator"
+        },
+        "nullable": {
+          "type": "boolean"
+        },
+        "null_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "max_length": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "precision": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "scale": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      }
+    },
+    "relationship": {
+      "type": "object",
+      "required": [
+        "name",
+        "parent",
+        "child"
+      ],
+      "additionalProperties": false,
+      "patternProperties": {
+        "^(x-|\\$comment$)": {}
+      },
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "parent": {
+          "type": "string"
+        },
+        "child": {
+          "type": "string"
+        },
+        "parent_columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "child_columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "enum": [
+            "one_to_many",
+            "one_to_one",
+            "many_to_many",
+            "self_referencing"
+          ]
+        },
+        "cardinality": {
+          "type": "object"
+        },
+        "optional": {
+          "type": "boolean"
+        }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "required": [
+        "name",
+        "type",
+        "rule"
+      ],
+      "additionalProperties": false,
+      "patternProperties": {
+        "^(x-|\\$comment$)": {}
+      },
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "rule": {
+          "type": "string"
+        },
+        "table": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "via": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "when": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "generation": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^(x-|\\$comment$)": {}
+      },
+      "properties": {
+        "scale": {
+          "type": "string"
+        },
+        "scales": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "derived_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "output": {
+          "type": "object"
+        }
+      }
+    },
+    "generator": {
+      "type": "object",
+      "description": "A strategy name plus the keys that strategy reads. A strategy that is not built in (a plugin's) accepts any keys.",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "examples": [
+            "address",
+            "bootstrap",
+            "choice",
+            "composite_fk_field",
+            "composite_foreign_key",
+            "computed",
+            "conditional",
+            "conditional_table",
+            "constant",
+            "correlated",
+            "derived",
+            "distribution",
+            "empirical",
+            "faker",
+            "first_per_parent",
+            "foreign_key",
+            "formula",
+            "hierarchy",
+            "hierarchy_field",
+            "lifecycle",
+            "locale",
+            "lookup",
+            "native",
+            "normal",
+            "pattern",
+            "record_field",
+            "record_sample",
+            "reference_data",
+            "scd2",
+            "self_ref_field",
+            "self_referencing",
+            "sequence",
+            "temporal",
+            "uniform",
+            "uuid",
+            "weighted_enum"
+          ]
+        }
+      },
+      "patternProperties": {
+        "^(x-|\\$comment$)": {}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "address"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "exclude": {},
+              "field": {},
+              "group": {},
+              "mode": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "reference": {},
+              "scope": {},
+              "strategy": {
+                "const": "address"
+              },
+              "weights": {}
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "bootstrap"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "dataset": {
+                "type": "string"
+              },
+              "field": {},
+              "jitter": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "strategy": {
+                "const": "bootstrap"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "dataset",
+              "field"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "choice"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "strategy": {
+                "const": "choice"
+              },
+              "values": {},
+              "weights": {}
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "values"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "composite_fk_field"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "ref_column": {},
+              "source_column": {},
+              "strategy": {
+                "const": "composite_fk_field"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "ref_column",
+              "source_column"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "composite_foreign_key"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "distribution": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "params": {
+                "type": "object",
+                "properties": {
+                  "alpha": {}
+                },
+                "additionalProperties": false,
+                "patternProperties": {
+                  "^(x-|\\$comment$)": {}
+                }
+              },
+              "ref_columns": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "ref_table": {
+                "type": "string"
+              },
+              "strategy": {
+                "const": "composite_foreign_key"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "ref_columns",
+              "ref_table"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "computed"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "child_column": {
+                "type": "string"
+              },
+              "child_table": {
+                "type": "string"
+              },
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "rule": {},
+              "strategy": {
+                "const": "computed"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "child_column",
+              "child_table",
+              "rule"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "conditional"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "condition": {
+                "type": "string"
+              },
+              "false_generator": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "strategy": {
+                "const": "conditional"
+              },
+              "true_generator": {}
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "condition"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "conditional_table"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "source_column": {},
+              "strategy": {
+                "const": "conditional_table"
+              },
+              "table": {},
+              "values": {}
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "source_column",
+              "table",
+              "values"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "constant"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "strategy": {
+                "const": "constant"
+              },
+              "value": {}
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "value"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "correlated"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "operation": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "params": {
+                "type": "object",
+                "properties": {
+                  "factor_max": {},
+                  "factor_min": {},
+                  "max": {},
+                  "min": {},
+                  "offset_max": {},
+                  "offset_min": {}
+                },
+                "additionalProperties": false,
+                "patternProperties": {
+                  "^(x-|\\$comment$)": {}
+                }
+              },
+              "rule": {},
+              "source_column": {
+                "type": "string"
+              },
+              "strategy": {
+                "const": "correlated"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "source_column"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "derived"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "days": {},
+              "operation": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "params": {
+                "type": "object",
+                "properties": {
+                  "distribution": {},
+                  "max": {},
+                  "mean": {},
+                  "min": {},
+                  "sigma": {},
+                  "std_dev": {}
+                },
+                "additionalProperties": false,
+                "patternProperties": {
+                  "^(x-|\\$comment$)": {}
+                }
+              },
+              "rule": {},
+              "source": {},
+              "strategy": {
+                "const": "derived"
+              },
+              "via": {}
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "source"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "distribution"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "distribution": {
+                "type": "string"
+              },
+              "params": {
+                "type": "object"
+              },
+              "min": {},
+              "max": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "distribution": {
+                      "const": "bernoulli"
+                    }
+                  },
+                  "required": [
+                    "distribution"
+                  ]
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "distribution": {},
+                    "max": {},
+                    "min": {},
+                    "output_type": {
+                      "enum": [
+                        "int64",
+                        "float64",
+                        "bool",
+                        "string",
+                        "decimal",
+                        "timestamp"
+                      ]
+                    },
+                    "p": {},
+                    "params": {
+                      "type": "object",
+                      "properties": {
+                        "max": {},
+                        "min": {},
+                        "p": {},
+                        "probability": {}
+                      },
+                      "additionalProperties": false,
+                      "patternProperties": {
+                        "^(x-|\\$comment$)": {}
+                      }
+                    },
+                    "probability": {},
+                    "strategy": {
+                      "const": "distribution"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^(x-|\\$comment$)": {}
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "distribution": {
+                      "const": "beta"
+                    }
+                  },
+                  "required": [
+                    "distribution"
+                  ]
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "a": {},
+                    "b": {},
+                    "distribution": {},
+                    "max": {},
+                    "min": {},
+                    "output_type": {
+                      "enum": [
+                        "int64",
+                        "float64",
+                        "bool",
+                        "string",
+                        "decimal",
+                        "timestamp"
+                      ]
+                    },
+                    "params": {
+                      "type": "object",
+                      "properties": {
+                        "a": {},
+                        "b": {},
+                        "max": {},
+                        "min": {}
+                      },
+                      "additionalProperties": false,
+                      "patternProperties": {
+                        "^(x-|\\$comment$)": {}
+                      }
+                    },
+                    "strategy": {
+                      "const": "distribution"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^(x-|\\$comment$)": {}
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "distribution": {
+                      "const": "exponential"
+                    }
+                  },
+                  "required": [
+                    "distribution"
+                  ]
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "distribution": {},
+                    "lam": {},
+                    "lambda": {},
+                    "max": {},
+                    "min": {},
+                    "output_type": {
+                      "enum": [
+                        "int64",
+                        "float64",
+                        "bool",
+                        "string",
+                        "decimal",
+                        "timestamp"
+                      ]
+                    },
+                    "params": {
+                      "type": "object",
+                      "properties": {
+                        "lam": {},
+                        "lambda": {},
+                        "max": {},
+                        "min": {},
+                        "rate": {}
+                      },
+                      "additionalProperties": false,
+                      "patternProperties": {
+                        "^(x-|\\$comment$)": {}
+                      }
+                    },
+                    "rate": {},
+                    "strategy": {
+                      "const": "distribution"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^(x-|\\$comment$)": {}
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "distribution": {
+                      "const": "gamma"
+                    }
+                  },
+                  "required": [
+                    "distribution"
+                  ]
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "distribution": {},
+                    "k": {},
+                    "max": {},
+                    "min": {},
+                    "output_type": {
+                      "enum": [
+                        "int64",
+                        "float64",
+                        "bool",
+                        "string",
+                        "decimal",
+                        "timestamp"
+                      ]
+                    },
+                    "params": {
+                      "type": "object",
+                      "properties": {
+                        "k": {},
+                        "max": {},
+                        "min": {},
+                        "theta": {}
+                      },
+                      "additionalProperties": false,
+                      "patternProperties": {
+                        "^(x-|\\$comment$)": {}
+                      }
+                    },
+                    "strategy": {
+                      "const": "distribution"
+                    },
+                    "theta": {}
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^(x-|\\$comment$)": {}
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "distribution": {
+                      "const": "geometric"
+                    }
+                  },
+                  "required": [
+                    "distribution"
+                  ]
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "distribution": {},
+                    "max": {},
+                    "min": {},
+                    "output_type": {
+                      "enum": [
+                        "int64",
+                        "float64",
+                        "bool",
+                        "string",
+                        "decimal",
+                        "timestamp"
+                      ]
+                    },
+                    "p": {},
+                    "params": {
+                      "type": "object",
+                      "properties": {
+                        "max": {},
+                        "min": {},
+                        "p": {}
+                      },
+                      "additionalProperties": false,
+                      "patternProperties": {
+                        "^(x-|\\$comment$)": {}
+                      }
+                    },
+                    "strategy": {
+                      "const": "distribution"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^(x-|\\$comment$)": {}
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "distribution": {
+                      "const": "log_normal"
+                    }
+                  },
+                  "required": [
+                    "distribution"
+                  ]
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "distribution": {},
+                    "max": {},
+                    "mean": {},
+                    "min": {},
+                    "mu": {},
+                    "output_type": {
+                      "enum": [
+                        "int64",
+                        "float64",
+                        "bool",
+                        "string",
+                        "decimal",
+                        "timestamp"
+                      ]
+                    },
+                    "params": {
+                      "type": "object",
+                      "properties": {
+                        "max": {},
+                        "mean": {},
+                        "min": {},
+                        "mu": {},
+                        "sigma": {},
+                        "std": {}
+                      },
+                      "additionalProperties": false,
+                      "patternProperties": {
+                        "^(x-|\\$comment$)": {}
+                      }
+                    },
+                    "sigma": {},
+                    "std": {},
+                    "strategy": {
+                      "const": "distribution"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^(x-|\\$comment$)": {}
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "distribution": {
+                      "const": "negative_binomial"
+                    }
+                  },
+                  "required": [
+                    "distribution"
+                  ]
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "distribution": {},
+                    "max": {},
+                    "min": {},
+                    "output_type": {
+                      "enum": [
+                        "int64",
+                        "float64",
+                        "bool",
+                        "string",
+                        "decimal",
+                        "timestamp"
+                      ]
+                    },
+                    "p": {},
+                    "params": {
+                      "type": "object",
+                      "properties": {
+                        "max": {},
+                        "min": {},
+                        "p": {},
+                        "r": {}
+                      },
+                      "additionalProperties": false,
+                      "patternProperties": {
+                        "^(x-|\\$comment$)": {}
+                      }
+                    },
+                    "r": {},
+                    "strategy": {
+                      "const": "distribution"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^(x-|\\$comment$)": {}
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "distribution": {
+                      "const": "normal"
+                    }
+                  },
+                  "required": [
+                    "distribution"
+                  ]
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "distribution": {},
+                    "max": {},
+                    "mean": {},
+                    "min": {},
+                    "mu": {},
+                    "output_type": {
+                      "enum": [
+                        "int64",
+                        "float64",
+                        "bool",
+                        "string",
+                        "decimal",
+                        "timestamp"
+                      ]
+                    },
+                    "params": {
+                      "type": "object",
+                      "properties": {
+                        "max": {},
+                        "mean": {},
+                        "min": {},
+                        "mu": {},
+                        "sigma": {},
+                        "std": {},
+                        "std_dev": {}
+                      },
+                      "additionalProperties": false,
+                      "patternProperties": {
+                        "^(x-|\\$comment$)": {}
+                      }
+                    },
+                    "sigma": {},
+                    "std": {},
+                    "std_dev": {},
+                    "strategy": {
+                      "const": "distribution"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^(x-|\\$comment$)": {}
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "distribution": {
+                      "const": "pareto"
+                    }
+                  },
+                  "required": [
+                    "distribution"
+                  ]
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "alpha": {},
+                    "distribution": {},
+                    "max": {},
+                    "min": {},
+                    "output_type": {
+                      "enum": [
+                        "int64",
+                        "float64",
+                        "bool",
+                        "string",
+                        "decimal",
+                        "timestamp"
+                      ]
+                    },
+                    "params": {
+                      "type": "object",
+                      "properties": {
+                        "alpha": {},
+                        "max": {},
+                        "min": {},
+                        "xm": {}
+                      },
+                      "additionalProperties": false,
+                      "patternProperties": {
+                        "^(x-|\\$comment$)": {}
+                      }
+                    },
+                    "strategy": {
+                      "const": "distribution"
+                    },
+                    "xm": {}
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^(x-|\\$comment$)": {}
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "distribution": {
+                      "const": "poisson"
+                    }
+                  },
+                  "required": [
+                    "distribution"
+                  ]
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "distribution": {},
+                    "lam": {},
+                    "lambda": {},
+                    "max": {},
+                    "min": {},
+                    "output_type": {
+                      "enum": [
+                        "int64",
+                        "float64",
+                        "bool",
+                        "string",
+                        "decimal",
+                        "timestamp"
+                      ]
+                    },
+                    "params": {
+                      "type": "object",
+                      "properties": {
+                        "lam": {},
+                        "lambda": {},
+                        "max": {},
+                        "min": {}
+                      },
+                      "additionalProperties": false,
+                      "patternProperties": {
+                        "^(x-|\\$comment$)": {}
+                      }
+                    },
+                    "strategy": {
+                      "const": "distribution"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^(x-|\\$comment$)": {}
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "distribution": {
+                      "const": "power_law_cutoff"
+                    }
+                  },
+                  "required": [
+                    "distribution"
+                  ]
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "alpha": {},
+                    "distribution": {},
+                    "lam": {},
+                    "max": {},
+                    "min": {},
+                    "output_type": {
+                      "enum": [
+                        "int64",
+                        "float64",
+                        "bool",
+                        "string",
+                        "decimal",
+                        "timestamp"
+                      ]
+                    },
+                    "params": {
+                      "type": "object",
+                      "properties": {
+                        "alpha": {},
+                        "lam": {},
+                        "max": {},
+                        "min": {},
+                        "xmin": {}
+                      },
+                      "additionalProperties": false,
+                      "patternProperties": {
+                        "^(x-|\\$comment$)": {}
+                      }
+                    },
+                    "strategy": {
+                      "const": "distribution"
+                    },
+                    "xmin": {}
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^(x-|\\$comment$)": {}
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "distribution": {
+                      "const": "triangular"
+                    }
+                  },
+                  "required": [
+                    "distribution"
+                  ]
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "distribution": {},
+                    "high": {},
+                    "low": {},
+                    "max": {},
+                    "min": {},
+                    "mode": {},
+                    "output_type": {
+                      "enum": [
+                        "int64",
+                        "float64",
+                        "bool",
+                        "string",
+                        "decimal",
+                        "timestamp"
+                      ]
+                    },
+                    "params": {
+                      "type": "object",
+                      "properties": {
+                        "high": {},
+                        "low": {},
+                        "max": {},
+                        "min": {},
+                        "mode": {}
+                      },
+                      "additionalProperties": false,
+                      "patternProperties": {
+                        "^(x-|\\$comment$)": {}
+                      }
+                    },
+                    "strategy": {
+                      "const": "distribution"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^(x-|\\$comment$)": {}
+                  }
+                }
+              },
+              {
+                "if": {
+                  "anyOf": [
+                    {
+                      "properties": {
+                        "distribution": {
+                          "const": "uniform"
+                        }
+                      },
+                      "required": [
+                        "distribution"
+                      ]
+                    },
+                    {
+                      "not": {
+                        "required": [
+                          "distribution"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "distribution": {},
+                    "high": {},
+                    "low": {},
+                    "max": {},
+                    "min": {},
+                    "output_type": {
+                      "enum": [
+                        "int64",
+                        "float64",
+                        "bool",
+                        "string",
+                        "decimal",
+                        "timestamp"
+                      ]
+                    },
+                    "params": {
+                      "type": "object",
+                      "properties": {
+                        "high": {},
+                        "low": {},
+                        "max": {},
+                        "min": {}
+                      },
+                      "additionalProperties": false,
+                      "patternProperties": {
+                        "^(x-|\\$comment$)": {}
+                      }
+                    },
+                    "strategy": {
+                      "const": "distribution"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^(x-|\\$comment$)": {}
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "distribution": {
+                      "const": "weibull"
+                    }
+                  },
+                  "required": [
+                    "distribution"
+                  ]
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "distribution": {},
+                    "k": {},
+                    "lam": {},
+                    "max": {},
+                    "min": {},
+                    "output_type": {
+                      "enum": [
+                        "int64",
+                        "float64",
+                        "bool",
+                        "string",
+                        "decimal",
+                        "timestamp"
+                      ]
+                    },
+                    "params": {
+                      "type": "object",
+                      "properties": {
+                        "k": {},
+                        "lam": {},
+                        "max": {},
+                        "min": {}
+                      },
+                      "additionalProperties": false,
+                      "patternProperties": {
+                        "^(x-|\\$comment$)": {}
+                      }
+                    },
+                    "strategy": {
+                      "const": "distribution"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^(x-|\\$comment$)": {}
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "distribution": {
+                      "const": "zipf"
+                    }
+                  },
+                  "required": [
+                    "distribution"
+                  ]
+                },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "a": {},
+                    "alpha": {},
+                    "distribution": {},
+                    "max": {},
+                    "min": {},
+                    "output_type": {
+                      "enum": [
+                        "int64",
+                        "float64",
+                        "bool",
+                        "string",
+                        "decimal",
+                        "timestamp"
+                      ]
+                    },
+                    "params": {
+                      "type": "object",
+                      "properties": {
+                        "a": {},
+                        "alpha": {},
+                        "max": {},
+                        "min": {}
+                      },
+                      "additionalProperties": false,
+                      "patternProperties": {
+                        "^(x-|\\$comment$)": {}
+                      }
+                    },
+                    "strategy": {
+                      "const": "distribution"
+                    }
+                  },
+                  "additionalProperties": false,
+                  "patternProperties": {
+                    "^(x-|\\$comment$)": {}
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "empirical"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "interpolation": {},
+              "max": {},
+              "min": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "quantiles": {},
+              "strategy": {
+                "const": "empirical"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "quantiles"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "faker"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "args": {},
+              "domains": {},
+              "max_length": {
+                "deprecated": true,
+                "description": "Written by older tools and ignored by the strategy."
+              },
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "provider": {
+                "type": "string"
+              },
+              "range": {},
+              "strategy": {
+                "const": "faker"
+              },
+              "width": {}
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "provider"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "first_per_parent"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "default": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "parent_column": {
+                "type": "string"
+              },
+              "strategy": {
+                "const": "first_per_parent"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "parent_column"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "foreign_key"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "alpha": {},
+              "constrained_by": {},
+              "distribution": {},
+              "fan_out": {},
+              "filter": {},
+              "max_per_parent": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "params": {
+                "type": "object",
+                "properties": {
+                  "alpha": {},
+                  "max_per_parent": {}
+                },
+                "additionalProperties": false,
+                "patternProperties": {
+                  "^(x-|\\$comment$)": {}
+                }
+              },
+              "ref": {
+                "type": "string"
+              },
+              "sample_rate": {},
+              "strategy": {
+                "const": "foreign_key"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "ref"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "formula"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "expression": {
+                "type": "string"
+              },
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "strategy": {
+                "const": "formula"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "expression"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "hierarchy"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "dataset": {},
+              "field": {},
+              "levels": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "strategy": {
+                "const": "hierarchy"
+              },
+              "top_weights": {},
+              "weighting": {}
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "dataset",
+              "field",
+              "levels"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "hierarchy_field"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "dataset": {},
+              "field": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "strategy": {
+                "const": "hierarchy_field"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "dataset",
+              "field"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "lifecycle"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "phases": {},
+              "strategy": {
+                "const": "lifecycle"
+              },
+              "values": {}
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "phases"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "locale"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "format": {},
+              "group": {},
+              "locale": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "provider": {},
+              "strategy": {
+                "const": "locale"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "locale",
+              "provider"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "lookup"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "key": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "source_column": {
+                "type": "string"
+              },
+              "source_table": {
+                "type": "string"
+              },
+              "strategy": {
+                "const": "lookup"
+              },
+              "via": {}
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "source_column",
+              "source_table",
+              "via"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "native"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "args": {},
+              "domains": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "provider": {
+                "type": "string"
+              },
+              "range": {},
+              "strategy": {
+                "const": "native"
+              },
+              "width": {}
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "normal"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "mean": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "stddev": {},
+              "strategy": {
+                "const": "normal"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "mean",
+              "stddev"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "pattern"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "format": {
+                "type": "string"
+              },
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "strategy": {
+                "const": "pattern"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "format"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "record_field"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "dataset": {
+                "type": "string"
+              },
+              "field": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "strategy": {
+                "const": "record_field"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "dataset",
+              "field"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "record_sample"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "dataset": {
+                "type": "string"
+              },
+              "field": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "strategy": {
+                "const": "record_sample"
+              },
+              "unique": {}
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "dataset",
+              "field"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "reference_data"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "dataset": {
+                "type": "string"
+              },
+              "field": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "strategy": {
+                "const": "reference_data"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "dataset"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "scd2"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "business_key": {},
+              "effective_date_column": {},
+              "min_gap_days": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "role": {},
+              "strategy": {
+                "const": "scd2"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "business_key",
+              "role"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "self_ref_field"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "field": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "strategy": {
+                "const": "self_ref_field"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "field"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "self_referencing"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "levels": {},
+              "max_depth": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "pk_column": {
+                "type": "string"
+              },
+              "root_count": {},
+              "strategy": {
+                "const": "self_referencing"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "pk_column"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "sequence"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "start": {},
+              "step": {},
+              "strategy": {
+                "const": "sequence"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "temporal"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "date_range": {},
+              "day_of_week_weights": {},
+              "end": {},
+              "granularity": {},
+              "month_weights": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "pattern": {},
+              "profiles": {},
+              "range": {},
+              "range_ref": {},
+              "start": {},
+              "strategy": {
+                "const": "temporal"
+              },
+              "type": {
+                "deprecated": true,
+                "description": "Written by older tools and ignored by the strategy."
+              },
+              "unit": {}
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "uniform"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "high": {},
+              "low": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "strategy": {
+                "const": "uniform"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "high",
+              "low"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "uuid"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "strategy": {
+                "const": "uuid"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "weighted_enum"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "strategy": {
+                "const": "weighted_enum"
+              },
+              "values": {}
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "values"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "x-shape-format": "generation-spec",
+  "x-shape-version": 1
+}

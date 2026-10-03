@@ -128,7 +128,7 @@
     },
     "thresholds": {
       "type": "object",
-      "description": "Drift thresholds by name (docs/DRIFT.md).",
+      "description": "Drift thresholds by name (docs/DRIFT.md). Thresholds are only ever added within version 1 (dependency_confidence through row_count_ratio_min came with the drift engine's later comparisons), so a file that was valid stays valid.",
       "additionalProperties": false,
       "properties": {
         "null_rate": {
@@ -195,6 +195,34 @@
           "minimum": 0
         },
         "min_rows": {
+          "type": "number",
+          "minimum": 0
+        },
+        "dependency_confidence": {
+          "type": "number",
+          "minimum": 0
+        },
+        "placeholder_share": {
+          "type": "number",
+          "minimum": 0
+        },
+        "implausible_rate": {
+          "type": "number",
+          "minimum": 0
+        },
+        "association_shift": {
+          "type": "number",
+          "minimum": 0
+        },
+        "reference_match_rate": {
+          "type": "number",
+          "minimum": 0
+        },
+        "row_count_ratio_max": {
+          "type": "number",
+          "minimum": 0
+        },
+        "row_count_ratio_min": {
           "type": "number",
           "minimum": 0
         }
