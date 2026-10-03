@@ -270,16 +270,18 @@ class SqlServerSink:
         write_opts = {k: opts.pop(k) for k in _WRITE_KEYS if k in opts}
         _unknown(self.name, opts)
         conn = str(given) if given else None
+        # The URI's write options and schema apply either way; a connection string (or an open
+        # connection) replaces only how the sink connects.
+        query, parts = self._parse(uri)
+        if "schema" in query and schema_name is None:
+            schema_name = query.pop("schema")
+        for key in ("write_mode", "batch_size", "commit_rows"):
+            if key in query:
+                write_opts.setdefault(key, query[key])
         if not given:
-            query, parts = self._parse(uri)
-            if "schema" in query and schema_name is None:
-                schema_name = query.pop("schema")
             for key in _CONN_KEYS:
                 if key in query:
                     conn_opts.setdefault(key, query[key])
-            for key in ("write_mode", "batch_size", "commit_rows"):
-                if key in query:
-                    write_opts.setdefault(key, query[key])
             if connection is None:
                 conn = self._connection_string(parts, conn_opts, credential)
         for key in ("batch_size", "commit_rows"):
