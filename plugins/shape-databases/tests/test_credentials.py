@@ -214,3 +214,18 @@ def test_other_driver_errors_are_reported_with_their_type(flavour):
     with pytest.raises(WriteError, match=r"\(FakeDriverError\): disk full"):
         type(sink)(connect=server.connect).write(uri, "t", iter([sample_batch()]))
     assert issubclass(FakeDriverError, Exception)
+
+
+def test_a_secret_with_whitespace_is_hidden_although_the_message_is_collapsed(flavour):
+    # Issue #338: scrub collapsed the message's whitespace before replacing the secret, so a
+    # password with a run of spaces or a tab no longer matched and was reported in clear.
+    spaced = "pa  ss\tw0rd!"
+    sink, uri, _ = flavour
+    server = FakeServer(sink.dialect, fail_after_rows=1, fail_message=f"login '{spaced}' refused")
+    with pytest.raises(WriteError) as failed:
+        type(sink)(connect=server.connect).write(uri, "t", iter([sample_batch()]), password=spaced)
+    message = _every_message(failed.value)
+    assert spaced not in message
+    assert "pa ss w0rd!" not in message
+    assert "w0rd" not in message
+    assert scrub(f"a {spaced} b", [Secret(spaced)]) == "a *** b"
