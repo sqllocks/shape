@@ -204,6 +204,34 @@ FILES["format_schema"] = {
     ]
 }
 
+PROFILE_A = setup("profile", source=f"{D}/a.csv", output=f"{D}/a.shape")
+
+FILES["profile_show"] = {
+    "setup": [PROFILE_A],
+    "cases": [
+        case("a-profile", "profile_show", {"path": f"{D}/a.shape"}),
+        case("missing-file", "profile_show", {"path": f"{D}/none.shape"}),
+        case("needs-a-path", "profile_show", {}, valid_request=False),
+    ],
+}
+FILES["contract_validate"] = {
+    "cases": [
+        case("good-file", "contract_validate", {"path": f"{D}/contract.json"}),
+        case("good-text", "contract_validate", {"text": '{"row_count": {"min": 1}}'}),
+        case("bad-rule", "contract_validate", {"path": f"{D}/contract_invalid.json"}),
+        case("missing-file", "contract_validate", {"path": f"{D}/none.json"}),
+        case("text-and-path", "contract_validate", {"text": "{}", "path": f"{D}/contract.json"}),
+    ]
+}
+FILES["safe_scan"] = {
+    "cases": [
+        case("safe-profile", "safe_scan", {"path": f"{D}/safe.json"}),
+        case("leaks", "safe_scan", {"path": f"{D}/leaky.json"}),
+        case("missing-file", "safe_scan", {"path": f"{D}/none.json"}),
+        case("text-and-path", "safe_scan", {"text": "{}", "path": f"{D}/safe.json"}),
+    ]
+}
+
 #: Setup and cases added to the vector files of 1.0 commands.
 EXTENDS: dict[str, dict[str, Any]] = {
     "profile": {
@@ -275,11 +303,39 @@ EXTENDS: dict[str, dict[str, Any]] = {
 }
 
 
+LEAKY = {
+    "schema_version": 1,
+    "tables": {
+        "people": {
+            "row_count": 10,
+            "columns": {
+                "mail": {"example": "vector.person@example.com"},
+                "amount": {"min": 123, "max": 456},
+            },
+        }
+    },
+}
+
+
+def _write_safe_profile(folder: Path) -> None:
+    """``safe.json``: the share-safe form of a profile of ``a.csv``."""
+    import shape
+    from shape.privacy.safe_profile import SafeConfig, to_safe_profile
+
+    safe = to_safe_profile(shape.profile(str(folder / "a.csv")), SafeConfig())
+    (folder / "safe.json").write_text(safe.to_json() + "\n", encoding="utf-8")
+
+
 def write_fixtures(folder: Path) -> None:
     write_dataset(folder / "shop", shop_tables())
     for name in ("retail", "tiny", "failing"):
         write_design(folder, name)
     (folder / "shape.yml").write_text(PROJECT_YML)
+    (folder / "contract_invalid.json").write_text(
+        json.dumps({"columns": {"id": {"colour": 1}}}, indent=2) + "\n"
+    )
+    (folder / "leaky.json").write_text(json.dumps(LEAKY, indent=2, sort_keys=True) + "\n")
+    _write_safe_profile(folder)
     (folder / "ranges.json").write_text(
         json.dumps(
             {"format": "shape-verify-config", "version": 1, "ranges": {"a.amount": {"max": 50}}},

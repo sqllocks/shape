@@ -7,46 +7,22 @@
       "type": "string"
     },
     "args": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "a .shape profile",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.1"
+        }
+      },
+      "required": [
+        "path"
+      ],
       "type": "object"
     },
     "command": {
-      "enum": [
-        "check",
-        "contract_validate",
-        "demo_cleanup",
-        "demo_list",
-        "demo_run",
-        "demo_status",
-        "describe",
-        "design",
-        "design_from_data",
-        "diff",
-        "dry_run",
-        "format_schema",
-        "generate",
-        "job_cancel",
-        "job_list",
-        "job_status",
-        "list",
-        "preview",
-        "profile",
-        "profile_info",
-        "profile_show",
-        "project_show",
-        "project_validate",
-        "proposals_decide",
-        "proposals_list",
-        "proposals_propose",
-        "safe_scan",
-        "scale_cancel",
-        "scale_generate",
-        "scale_status",
-        "stream",
-        "stream_status",
-        "stream_stop",
-        "validate",
-        "verify"
-      ]
+      "const": "profile_show"
     },
     "id": {
       "maxLength": 128,
@@ -83,9 +59,11 @@
     }
   },
   "required": [
-    "command"
+    "command",
+    "args"
   ],
-  "title": "bridge request",
+  "title": "profile_show request",
   "type": "object",
-  "x-api-version": "1.1"
+  "x-api-version": "1.1",
+  "x-since": "1.1"
 }

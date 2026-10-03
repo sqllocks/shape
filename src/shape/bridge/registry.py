@@ -17,11 +17,23 @@ def _build() -> dict[str, Command]:
         project,
         proposals,
         scale,
+        stored,
         workflow11,
     )
 
     table: dict[str, Command] = {}
-    for module in (catalog, generate, flow, scale, demo, proposals, project, design, formats):
+    for module in (
+        catalog,
+        generate,
+        flow,
+        scale,
+        demo,
+        proposals,
+        project,
+        design,
+        formats,
+        stored,
+    ):
         for command in module.COMMANDS:
             if command.name in table:
                 raise AssertionError(f"duplicate bridge command {command.name!r}")

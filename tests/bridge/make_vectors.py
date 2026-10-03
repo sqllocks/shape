@@ -362,7 +362,6 @@ def merge_1_1() -> None:
 def write_fixtures() -> None:
     folder = lib.VECTOR_DIR / "fixtures"
     folder.mkdir(parents=True, exist_ok=True)
-    v11.write_fixtures(folder)
     (folder / "schema.json").write_text(
         json.dumps(plain_doc(ROWS), indent=2, sort_keys=True) + "\n"
     )
@@ -389,6 +388,7 @@ def write_fixtures() -> None:
                 out.writerow(
                     [i, f"user{i}@example.com", status, round(rng.gauss(100 + shift * 50, 20))]
                 )
+    v11.write_fixtures(folder)
 
 
 def run_case(

@@ -46,6 +46,9 @@ ADDED_1_1 = {
     "design",
     "design_from_data",
     "format_schema",
+    "profile_show",
+    "contract_validate",
+    "safe_scan",
 }
 
 

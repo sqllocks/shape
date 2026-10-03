@@ -19,6 +19,22 @@
       "since": "1.0",
       "summary": "Check a profile against a contract."
     },
+    "contract_validate": {
+      "args": {
+        "path": "1.1",
+        "text": "1.1"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/contract_validate.request.schema.json",
+      "result": "commands/contract_validate.result.schema.json",
+      "since": "1.1",
+      "summary": "Validate a contract of the format `shape check` reads (row_count, columns, ...)."
+    },
     "demo_cleanup": {
       "args": {
         "dry_run": "1.0",
@@ -336,6 +352,21 @@
       "since": "1.0",
       "summary": "The distribution weights and derived-count ratios a domain generates with."
     },
+    "profile_show": {
+      "args": {
+        "path": "1.1"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/profile_show.request.schema.json",
+      "result": "commands/profile_show.result.schema.json",
+      "since": "1.1",
+      "summary": "Show a stored .shape profile: its tables and summary, without profiling again."
+    },
     "project_show": {
       "args": {
         "path": "1.1"
@@ -425,6 +456,22 @@
       "result": "commands/proposals_propose.result.schema.json",
       "since": "1.1",
       "summary": "Find proposals for a profile and merge them into a decision file."
+    },
+    "safe_scan": {
+      "args": {
+        "path": "1.1",
+        "text": "1.1"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/safe_scan.request.schema.json",
+      "result": "commands/safe_scan.result.schema.json",
+      "since": "1.1",
+      "summary": "Scan a share-safe profile for leaks of values, as `shape profile validate --safe` does."
     },
     "scale_cancel": {
       "args": {
