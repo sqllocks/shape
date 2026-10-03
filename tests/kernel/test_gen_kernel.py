@@ -432,3 +432,75 @@ print(json.dumps(out))
         assert outcome.startswith("ValueError: ") and (
             "use smaller chunks" in outcome or "width" in outcome
         ), f"{name}: {outcome}"
+
+
+# ---- hour peaks, timestamp range and SCD2 offsets at the extremes (#551) ------------------------
+
+
+@pytest.mark.parametrize("kernel", ["shape._kernel", "shape.kernel.reference"])
+def test_a_very_wide_hour_peak_is_uniform_and_quick(kernel):
+    # Regression #551: k = ceil(8 * std / 24) + 1 wraps per peak, so std=1e12 never returned and
+    # std=1e300 gave zeros natively. Run in a child process: a regression is a hang.
+    import json
+    import subprocess
+    import sys
+
+    script = f"""
+import importlib, json, pyarrow as pa
+m = importlib.import_module({kernel!r})
+out = [pa.array(m.hour_weights_peaks([12.0, 3.0], s)).to_pylist() for s in (1e12, 1e300)]
+print(json.dumps(out))
+"""
+    proc = subprocess.run(
+        [sys.executable, "-c", script], capture_output=True, text=True, timeout=60
+    )
+    assert proc.returncode == 0, proc.stderr[-1000:]
+    for weights in json.loads(proc.stdout):
+        assert weights == pytest.approx([2 / 24] * 24, rel=1e-9)
+
+
+@pytest.mark.parametrize("peaks", [[float("nan")], [float("inf")], [12.0, -float("inf")]])
+def test_non_finite_hour_peaks_are_value_errors(nat, peaks):
+    for mod in (nat, ref):
+        with pytest.raises(ValueError, match="finite"):
+            mod.hour_weights_peaks(peaks, 2.0)
+
+
+def test_typical_hour_peaks_are_unchanged(nat):
+    for mod in (nat, ref):
+        w = pa.array(mod.hour_weights_peaks([12.0, 18.0], 2.0)).to_pylist()
+        assert sum(w) == pytest.approx(2.0, abs=1e-9)
+
+
+@pytest.mark.parametrize("start_day", [106_751_991, 2**62, -106_751_992, -(2**62)])
+def test_days_outside_the_timestamp_range_are_value_errors(nat, start_day):
+    # Regression #551: (start_day + day) * 86_400_000_000 wrapped to 1970 or negative times.
+    day = pa.array([1.0, 1.0])
+    hours = pa.array([1.0] * 24)
+    for mod in (nat, ref):
+        with pytest.raises(ValueError, match="timestamp range"):
+            mod.temporal_sample(day, hours, start_day, 1, 2, 0, 2)
+
+
+def test_the_last_days_of_the_timestamp_range_still_sample(nat):
+    hours = pa.array([1.0] * 24)
+    for start in (106_751_990, -106_751_991):
+        a = pa.array(nat.temporal_sample(pa.array([1.0]), hours, start, 1, 2, 0, 50))
+        b = pa.array(ref.temporal_sample(pa.array([1.0]), hours, start, 1, 2, 0, 50))
+        assert a.cast(pa.int64()).to_pylist() == b.cast(pa.int64()).to_pylist()
+
+
+@pytest.mark.parametrize(
+    ("codes", "total_days", "min_gap"),
+    [([0] * 5, 10, 2**62), ([0, 0, 0], 2**63 - 1, 2**62), ([0], 2**33, 0), ([0, 0], 2**40, 3)],
+)
+def test_scd2_offsets_stay_in_range_and_agree_at_extremes(nat, codes, total_days, min_gap):
+    # Regression #551: min_gap * v wrapped to negative offsets; the twin refused ranges >= 2**32.
+    from shape.kernel.reference import relational as rel
+
+    got = [
+        pa.array(mod.scd2_offsets(pa.array(codes), total_days, min_gap, 1, 2)).to_pylist()
+        for mod in (nat, rel)
+    ]
+    assert got[0] == got[1]
+    assert all(0 <= x <= total_days for x in got[0]) and got[0] == sorted(got[0])
