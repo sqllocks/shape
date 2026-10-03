@@ -578,3 +578,50 @@ def test_rows_that_need_a_parent_that_has_none_are_still_an_error() -> None:
 
     with pytest.raises(StrategyError, match="has no rows"):
         _parent_child({"strategy": "foreign_key", "ref": "p.id"}, {"p": 0, "c": 3})
+
+
+def test_an_empty_composite_child_of_an_empty_parent_generates() -> None:
+    from shape.generation.engine import Engine
+    from shape.generation.strategy_kit import StrategyError
+
+    parent = {
+        "name": "p",
+        "primary_key": ["a", "b"],
+        "columns": {
+            "a": {"name": "a", "type": "integer", "generator": {"strategy": "sequence"}},
+            "b": {
+                "name": "b",
+                "type": "string",
+                "generator": {"strategy": "pattern", "format": "B{seq:2}"},
+            },
+        },
+    }
+    child = {
+        "name": "c",
+        "primary_key": [],
+        "columns": {
+            "k": {
+                "name": "k",
+                "type": "integer",
+                "generator": {
+                    "strategy": "composite_foreign_key",
+                    "ref_table": "p",
+                    "ref_columns": ["a", "b"],
+                },
+            },
+            "kb": {
+                "name": "kb",
+                "type": "string",
+                "generator": {
+                    "strategy": "composite_fk_field",
+                    "source_column": "k",
+                    "ref_column": "b",
+                },
+            },
+        },
+    }
+    doc = {"schema_version": 1, "model": {"name": "m"}, "tables": {"p": parent, "c": child}}
+    result = Engine(GenSchema.from_dict(doc), row_counts={"p": 0, "c": 0}).generate()
+    assert result.tables["c"].num_rows == 0 and result.tables["c"].column_names == ["k", "kb"]
+    with pytest.raises(StrategyError, match="0 rows"):
+        Engine(GenSchema.from_dict(doc), row_counts={"p": 0, "c": 2}).generate()
