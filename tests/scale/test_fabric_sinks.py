@@ -215,3 +215,31 @@ def test_writer_sink_accepts_a_writer_object_directly_and_close_finishes_open_ta
 def test_sinks_reject_bad_settings(make):
     with pytest.raises(ValueError):
         make()
+
+
+def test_a_writer_that_stops_reading_early_is_an_error_not_a_hang():
+    # Regression #487: the producer blocked forever on the full queue.
+    class FirstOnly:
+        def write(self, uri, table, batches, **options):
+            next(batches)
+            return 1
+
+    sink = WriterSink(FirstOnly(), "x://y")
+    sink.open(None)
+    outcome: list[BaseException | None] = []
+
+    def produce() -> None:
+        try:
+            for _ in range(20):
+                sink.write_batch("t", pa.record_batch({"a": [1]}))
+            sink.finish_table("t")
+            outcome.append(None)
+        except BaseException as exc:
+            outcome.append(exc)
+
+    worker = threading.Thread(target=produce, daemon=True)
+    worker.start()
+    worker.join(timeout=10)
+    assert not worker.is_alive(), "the sink hung"
+    assert isinstance(outcome[0], RuntimeError)
+    assert "'t'" in str(outcome[0]) and "returned before" in str(outcome[0])
