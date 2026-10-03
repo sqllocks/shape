@@ -39,10 +39,13 @@ def _rt(runtime: DemoRuntime | None) -> DemoRuntime:
     return runtime or DemoRuntime()
 
 
-def _as_list(value: Any) -> list[str]:
+def _as_list(key: str, value: Any) -> list[str]:
+    """A list setting: comma-separated text, or a list (or tuple) of text."""
     if isinstance(value, str):
         return [v.strip() for v in value.split(",") if v.strip()]
-    return [str(v) for v in value]
+    if isinstance(value, (list, tuple)) and all(isinstance(v, str) for v in value):
+        return list(value)
+    raise DemoError(f"{key} must be a list of names or comma-separated text, got {value!r}")
 
 
 def params_from(values: Mapping[str, Any]) -> DemoParams:
@@ -59,10 +62,10 @@ def params_from(values: Mapping[str, Any]) -> DemoParams:
                 raise DemoError(f"{key} must be a whole number, got {given[key]!r}") from None
     for key in _LIST_KEYS:
         if key in given:
-            given[key] = _as_list(given[key])
+            given[key] = _as_list(key, given[key])
     for key in ("dry_run", "estimate_only", "auto_cleanup"):
-        if key in given:
-            given[key] = bool(given[key])
+        if key in given and not isinstance(given[key], bool):
+            raise DemoError(f"{key} must be true or false, got {given[key]!r}")
     scenario = given.get("scenario", "retail")
     if "rows" not in given:
         given["rows"] = get_catalog().get(scenario).default_rows
