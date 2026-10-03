@@ -304,3 +304,76 @@ def test_s1_platinum_bins_use_the_stable_hash():
     assert ev._bin(float("nan")) is None
     ev.update("a", float("nan"))
     assert ev.n == 0
+
+
+# ---- hash_value agrees with hash_column for numpy, pandas and Arrow scalars (#538) -------------
+
+
+def _null_likes():
+    import pandas as pd
+
+    return [
+        pd.NaT,
+        pd.NA,
+        np.datetime64("NaT"),
+        np.datetime64("NaT", "ns"),
+        np.timedelta64("NaT"),
+        pa.scalar(None, pa.int64()),
+        pa.scalar(None, pa.timestamp("ns")),
+    ]
+
+
+def test_null_likes_hash_to_none():
+    # Regression #538: pd.NA and NaT got hashes; pd.NaT raised struct.error.
+    from shape.kernel.hashing import hash_value
+    from shape.kernel.values import DistinctCounter, TopValues
+
+    for value in _null_likes():
+        assert hash_value(value) is None, repr(value)
+    top, distinct = TopValues(), DistinctCounter()
+    for value in [1, *_null_likes(), 1]:
+        top.update(value)
+        distinct.update(value)
+    assert top.top() == [[1, 2, 0]] and round(distinct.estimate()) == 1
+
+
+@pytest.mark.parametrize(
+    ("scalar", "array"),
+    [
+        (np.datetime64(1_000_000_999, "ns"), pa.array([1_000_000_999], pa.timestamp("ns"))),
+        (np.datetime64(-1_999, "ns"), pa.array([-1_999], pa.timestamp("ns"))),
+        (np.datetime64(3, "s"), pa.array([3], pa.timestamp("s"))),
+        (np.datetime64("2024-02-29"), pa.array([19782], pa.date32())),
+        (np.timedelta64(5_500, "ns"), pa.array([5_500], pa.duration("ns"))),
+        (np.timedelta64(7, "ms"), pa.array([7], pa.duration("ms"))),
+        (pa.scalar(1), pa.array([1])),
+        (pa.scalar(1_500, pa.timestamp("ns")), pa.array([1_500], pa.timestamp("ns"))),
+        (pa.scalar(2, pa.duration("us")), pa.array([2], pa.duration("us"))),
+        (pa.scalar("x"), pa.array(["x"])),
+    ],
+)
+def test_hash_value_of_numpy_and_arrow_scalars_equals_hash_column(scalar, array):
+    # Regression #538: datetime64[ns] hashed as a plain integer, Arrow scalars as "other".
+    from shape.kernel.hashing import hash_column, hash_value
+
+    assert hash_value(scalar) == hash_column(array)[0].as_py()
+
+
+@pytest.mark.parametrize("kernel", ["rust", "python"])
+@pytest.mark.parametrize(
+    ("values", "typ"),
+    [
+        (["1E+3", "-2E+3", None], pa.decimal128(5, -3)),
+        (["12E+2", "0"], pa.decimal128(4, -2)),
+    ],
+)
+def test_negative_scale_decimals_hash_like_their_integers(native, kernel, values, typ):
+    # Regression #540: the twin computed 10 ** (negative int), a float, and struct.pack failed.
+    from decimal import Decimal
+
+    mod = native if kernel == "rust" else reference
+    array = pa.array([None if v is None else Decimal(v) for v in values], typ)
+    got = pa.array(mod.hash_array(array, 0)).to_pylist()
+    want = [None if v is None else reference.hash_array(pa.array([int(Decimal(v))]), 0)[0].as_py()
+            for v in values]  # fmt: skip
+    assert got == want
