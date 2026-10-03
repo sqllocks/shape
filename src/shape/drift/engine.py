@@ -61,6 +61,8 @@ DEFAULT_THRESHOLDS: dict[str, Any] = {
     "implausible_rate": 0.02,  # absolute rise of the share of implausible rows
     "association_shift": 0.2,  # absolute change of an association measure (V, U, eta, |r|)
     "reference_match_rate": 0.02,  # absolute drop of the share of rows in a reference
+    "row_count_ratio_max": 2.0,  # table rows over baseline's: more than double is a change
+    "row_count_ratio_min": 0.5,  # fewer than half is one too (a 1.5x extract is not)
 }
 
 KIND_SEVERITY: dict[str, str] = {
@@ -69,6 +71,7 @@ KIND_SEVERITY: dict[str, str] = {
     "column_added": "high",
     "column_removed": "high",
     "dtype_change": "high",
+    "row_count_change": "medium",
     "null_rate_change": "medium",
     "cardinality_change": "medium",
     "uniqueness_change": "medium",
@@ -473,6 +476,12 @@ class TableView:
     columns: dict[str, View]
     joint: Mapping[str, Any] | None = None  # the profile's joint analysis (#47)
 
+    @property
+    def window(self) -> bool:
+        """A stream runtime window (it carries the event-time column): how many rows it holds
+        is the window's size, not the table's."""
+        return _WINDOW_TIME in self.columns
+
 
 def _profile_tables(obj: Any) -> dict[str, TableView]:
     out: dict[str, TableView] = {}
@@ -614,6 +623,27 @@ def _quantile_at(view: View, level: float) -> float | None:
     return None
 
 
+def _ks_critical(base: View, cur: View) -> float:
+    """The KS distance two samples of one distribution stay under (alpha = 0.001)."""
+    return _KS_ALPHA_001 * math.sqrt(
+        (base.non_null + cur.non_null) / (base.non_null * cur.non_null)
+    )
+
+
+def _family_evidence(base: View, cur: View, enough: bool) -> bool:
+    """True when a changed fitted-family name is backed by the data. The family a column is fit
+    as flips between two samples of one distribution, so the name alone is not a change: the
+    samples must also differ by more than the noise samples of their sizes show (the KS critical
+    value, with no floor, so a small real change still counts). Without quantiles to compare, only
+    samples of ``min_rows`` or more are trusted to name a family."""
+    ks = _ks(base, cur)
+    if ks is None:
+        return enough
+    if not base.non_null or not cur.non_null:
+        return False
+    return ks > _ks_critical(base, cur)
+
+
 def _diff_column(name: str, base: View, cur: View, th: Mapping[str, Any]) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     # The two profilers type whole-valued floats differently, and Shape models know one numeric
@@ -635,7 +665,13 @@ def _diff_column(name: str, base: View, cur: View, th: Mapping[str, Any]) -> lis
     if base.dtype in _NUMERIC and cur.dtype in _NUMERIC and not keyed and not flag:
         out.extend(_diff_numeric(name, base, cur, th, enough))
     fitted = "engine" not in (base.origin, cur.origin)  # the engine's documents carry no fit
-    if fitted and not keyed and not flag and base.distribution != cur.distribution:
+    if (
+        fitted
+        and not keyed
+        and not flag
+        and base.distribution != cur.distribution
+        and _family_evidence(base, cur, enough)
+    ):
         out.append(
             _change(
                 name,
@@ -733,10 +769,7 @@ def _diff_numeric(
     if base.categories is None or cur.categories is None:
         ks = _ks(base, cur)
         if ks is not None:
-            critical = _KS_ALPHA_001 * math.sqrt(
-                (base.non_null + cur.non_null) / (base.non_null * cur.non_null)
-            )
-            if ks > max(th["ks_distance"], critical):
+            if ks > max(th["ks_distance"], _ks_critical(base, cur)):
                 out.append(_change(name, "distribution_shift", _summary(base), _summary(cur), ks))
     out.extend(_diff_range(name, base, cur, th))
     b_out, c_out = base.outlier_rate, cur.outlier_rate
@@ -837,6 +870,21 @@ def _diff_temporal(
     return out
 
 
+def _diff_rows(base: TableView, cur: TableView, th: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """The table's row count moved past the ratio thresholds. Row counts are exact, so there is
+    no sampling noise to allow for. A stream window is not compared (its size is its width), and
+    an empty baseline against a filled table scores 1."""
+    b_rows, c_rows = base.rows, cur.rows
+    if b_rows == c_rows or base.window or cur.window:
+        return []
+    if b_rows <= 0:
+        return [_change(None, "row_count_change", b_rows, c_rows, 1.0)]
+    ratio = c_rows / b_rows
+    if ratio > th["row_count_ratio_max"] or ratio < th["row_count_ratio_min"]:
+        return [_change(None, "row_count_change", b_rows, c_rows, _ratio_score(ratio))]
+    return []
+
+
 def _qualify(table: str, name: str, dataset: bool) -> str:
     return f"{table}.{name}" if dataset else name
 
@@ -865,6 +913,9 @@ def diff_records(
         ((_, ct),) = c_tables.items()
         pairs = [(bn, bt, ct)]
     for tname, bt, ct in pairs:
+        th_rows = policy.for_column(tname if dataset else None, None)
+        for ch in _diff_rows(bt, ct, th_rows):
+            changes.append((tname, None, ch))
         for cname in bt.columns:
             if cname not in ct.columns and cname != _WINDOW_TIME:
                 ch = _change(
