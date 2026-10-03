@@ -98,3 +98,17 @@ def test_a_broken_dependency_inside_an_installed_library_is_not_reported_as_miss
     finally:
         sys.path.remove(str(tmp_path))
         sys.modules.pop("half_installed", None)
+
+
+def test_the_installed_distribution_passes_the_conformance_kit_for_every_entry_point():
+    lines = kit.check_installed("sqllocks-shape-integrations")
+    assert len(lines) == 5
+    joined = "\n".join(lines)
+    for ref in (
+        "shape.commands:lineage",
+        "shape.commands:mlflow",
+        "shape.commands:evaluate",
+        "shape.detectors:presidio",
+        "shape.sources:duckdb",
+    ):
+        assert ref in joined

@@ -207,3 +207,48 @@ pip install --no-deps 'anonymeter>=1,<2'
 
 The `anonymeter` extra is declared so that the install command in every message stays the same
 once that release exists.
+
+## Ibis and DuckDB
+
+**Install:** `pip install 'sqllocks-shape-integrations[ibis]'` (`ibis-framework[duckdb]` 12.x and
+`duckdb` 1.x).
+
+**The `duckdb` source** (entry-point group `shape.sources`, scheme `duckdb`) reads one table of a
+DuckDB file:
+
+```
+duckdb://FILE.duckdb?table=T          duckdb:///abs/path/x.duckdb?table=main.T
+```
+
+Everything between `duckdb://` and `?` is the file path: `duckdb:///tmp/x.duckdb` is absolute and
+`duckdb://data/x.duckdb` is relative to the working directory. `table` is `T` or `SCHEMA.T`. It is
+the only option: any other, in particular one that could ask for a writable connection, is
+refused. Anything that reads a URL through `shape.sources` can use it, for example
+`shape profile duckdb:///tmp/x.duckdb?table=people`.
+
+- The connection is **read-only** (`read_only=True`); a missing file is an error and is never
+  created; an in-memory database is refused.
+- Rows come out as Arrow batches. The `batch_size` option sets the largest batch (65,536 rows by
+  default).
+- Table names are quoted as identifiers and never spliced into SQL text; a table that does not
+  exist is an error that lists the tables the file has.
+- Writing to DuckDB is not part of this plugin.
+
+**The Ibis helper** is for a notebook:
+
+```python
+from shape_integrations.ibis import connect
+
+con = connect("out/")                 # an Ibis DuckDB connection
+con.list_tables()                     # one view per Parquet, CSV or JSONL file
+con.table("customer").count().execute()
+```
+
+`connect(PATH)` registers every table of a Shape output directory as a view, named by the file
+stem (the rule `shape verify` uses). A table that exists in two formats, a missing or empty
+directory, and a path that is not a directory are errors. The views read the files on demand and
+copy nothing; DuckDB infers CSV and JSONL column types itself, so a CSV column can have a
+different type here than in Shape's own reader.
+
+**What is sent or written:** nothing. The source only reads the file you name; the helper only
+reads the directory you name; neither opens a network connection.
