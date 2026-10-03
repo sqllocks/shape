@@ -141,3 +141,17 @@ def test_hierarchy_sampler_cache_survives_a_reused_object_id(monkeypatch: Any) -
     big = Dataset.from_rows("geo", [{"state": f"S{i}", "city": "x"} for i in range(4)])
     rows = rh._sampler(big, spec, ctx).records(2000, 1, start=0, table="t", key="c")
     assert set(rh._take(big, "state", rows, ctx).to_pylist()) == {"S0", "S1", "S2", "S3"}
+
+
+# ---- #132: empirical cubic interpolation stays within the outermost anchors -----------------
+
+
+def test_empirical_cubic_never_leaves_the_outermost_anchors() -> None:
+    import pytest
+
+    pytest.importorskip("scipy")
+    quantiles = {k: 0 for k in ("p1", "p5", "p10", "p25", "p50", "p75", "p90")}
+    quantiles.update({"p95": 100, "p99": 101})
+    generator = {"strategy": "empirical", "quantiles": quantiles, "interpolation": "cubic"}
+    values = _table({"x": {"type": "float", "generator": generator}}, rows=20_000)["x"].to_numpy()
+    assert values.min() >= 0 and values.max() <= 101
