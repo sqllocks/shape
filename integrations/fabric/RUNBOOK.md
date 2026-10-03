@@ -22,6 +22,8 @@ What you are building:
 | `shape_profile_domain` | Python notebook: profile the generated tables, check the domain's contract (PF-06) | `notebooks/shape_profile_domain.ipynb` |
 | `shape_generate_gate` | Data pipeline: generate, then profile, then check (PF-06) | `pipelines/shape_generate_gate.DataPipeline` |
 | `generateSample` | a function of `shape_udf`: rows of one table of a domain (PF-06) | `udf/function_app.py` |
+| `shape_profile_dbt` | Python notebook: profile the dbt models' tables, check the contract and drift, one report with the dbt run results (ISS2-dbt) | `notebooks/shape_profile_dbt.ipynb` |
+| `shape_dbt_gate` | Data pipeline: dbt job, then `shape_profile_dbt`, then the gate (ISS2-dbt) | `pipelines/shape_dbt_gate.DataPipeline` |
 
 ## 1. Prerequisites
 
@@ -508,3 +510,60 @@ Test it from the portal, for example `domain = retail`, `table = customer`, `row
 - [ ] Pipeline `shape_generate_gate`: succeeds with the defaults (both exit-value expressions **verified**); fails at `FailGate` on a damaged table
 - [ ] `generateSample` called from the portal and from a Functions activity: row count, determinism, and the errors above
 - [ ] Timings (generate, profile, `generateSample`) recorded in `demo/LIVE_TIMINGS.md`
+
+
+## 13. dbt in pipelines (ISS2-dbt)
+
+The pattern, the commands and the report are in [docs/DBT.md](../../docs/DBT.md). **Built and
+tested locally, and against DuckDB (`pytest -m dbt plugins/shape-dbt/tests`,
+`pytest tests/demo/fabric/test_dbt.py`); not run in a Fabric workspace.** The dbt job is a Fabric
+preview (tenant setting "dbt jobs (preview)").
+
+`RunDbt` (the dbt job) -> `ProfileDbtOutputs` (notebook `shape_profile_dbt`, run when the dbt job
+has *completed*, so a failed dbt test still gives the report) -> `CheckGate` (If Condition on
+`passed`; **False** runs `FailGate`, error code `ShapeDbtGateFailed`).
+
+1. Upload `sqllocks_shape_dbt-0.9.0-py3-none-any.whl` (`pip wheel --no-deps plugins/shape-dbt`) to
+   *Resources > builtin* next to the Shape wheel; the notebook installs both with `%pip` and the
+   pipeline passes `_inlineInstallationEnabled = true` (section 4).
+2. Import `shape_profile_dbt.ipynb`, attach the lakehouse that holds the dbt models' tables.
+3. Create the pipeline with `bind` as in section 7.1, adding `--notebook shape_profile_dbt=<id>
+   --dbt-job <id>`, or build it by hand as in 7.2 with the activities above.
+4. Parameters: `dbtCommand` (`build`), `models` (comma-separated model names; each is a Delta table
+   `<tableRoot>/<model>`), `tableRoot`, `contractPath` (a multi-table contract; `shape to-dbt-tests`
+   compiles the same contract to dbt tests), `baselinePath` (an earlier `.shape` of the models),
+   `runResultsPath` and `manifestPath` (the dbt job's `run_results.json` and `manifest.json`, under
+   `Files/` or absolute), `outputDir`, `failOnDrift`.
+5. Expected exit value: `{models, rows, passed, dbtFailed, dbtTotal, violations, drifted, changes,
+   byColumn, artifactPath, reportPath, truncated, kernel}`; `Files/shape/dbt/<timestamp>/` has
+   `report.md`, `report.json`, `dbt.shape` and `dbt.html`.
+
+### 13.1 Verify in the workspace on first run (ISS2-dbt)
+
+1. **The dbt job activity.** `RunDbt` has the type `DbtJob` with `dbtJobId`, `workspaceId` and
+   `command`. These are the builder's reading of the preview's item model and are **not** taken
+   from a real export: replace the activity with one exported from a workspace where the dbt job
+   preview is enabled (and keep its name, `RunDbt`, and the `Completed` dependency of the next
+   activity). If the preview has no pipeline activity, run the dbt job on its own schedule and start
+   `shape_profile_dbt` after it.
+2. Where the dbt job writes `run_results.json` and `manifest.json` in OneLake. Microsoft Learn names
+   `manifest.json` and `catalog.json` for `docs generate`; whether a `build` or `test` run leaves
+   `run_results.json` next to them is not confirmed. The notebook takes both paths as parameters.
+3. How a notebook reads the model tables: Lakehouse tables (`dbt-fabricspark`) are Delta tables of
+   the default lakehouse; Warehouse tables (`dbt-fabric`) need an absolute OneLake path in
+   `tableRoot`, which was not tried.
+4. The exit-value expressions of `CheckGate` and `FailGate` (as in section 10, item 3 and 4), and
+   `_inlineInstallationEnabled` for this notebook (item 13).
+5. The dbt runtime's version of dbt Core (documented as 1.11) reads the `arguments:` form of test
+   arguments that `shape to-dbt-tests` writes (dbt 1.10 and later), and that `dbt_utils` and
+   `dbt_expectations` install from the package hub in the job. If not, use `--args-style inline`.
+6. Seed load time of a Shape seed on `dbt-fabric` and `dbt-fabricspark` (docs/DBT.md, size guidance).
+
+### 13.2 Owner live dry-run checklist (ISS2-dbt)
+
+- [ ] The dbt preview is enabled; a dbt job with the sample project (`examples/dbt_jaffle_shop`, seeds from `shape dbt-seeds`) runs `build` and passes
+- [ ] The location of `run_results.json` and `manifest.json` is written down (13.1 item 2)
+- [ ] `shape_profile_dbt` run by hand after the job: `passed: true`, `dbtFailed: 0`, `report.md` renders
+- [ ] A failing dbt test (for example a tampered model): `passed: false`, `dbtFailed >= 1`, the column appears in `report.md`
+- [ ] Pipeline `shape_dbt_gate`: succeeds on the clean run; fails with `ShapeDbtGateFailed` on the failing one, and the report path is in the message
+- [ ] Anything in 13.1 that needed a correction is written down (open an issue or tell the lead)

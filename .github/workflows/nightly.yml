@@ -333,3 +333,36 @@ jobs:
         with:
           name: fuzz-findings
           path: fuzz-findings/
+  dbt-build:
+    # ISS2-dbt, PLUG-INT: the jaffle-shop sample end to end against DuckDB: `shape from-dbt`,
+    # generate, load as seeds, `dbt build`, profile the outputs, and run a compiled test set
+    # (dbt_utils, dbt_expectations from the package hub) in dbt. dbt is installed in this job
+    # only: sqllocks-shape and the plugin never depend on dbt-core.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -U pip
+      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-dbt dbt-duckdb
+      - run: python -m pytest -q -m dbt plugins/shape-dbt/tests
+  healthcare-standards-validator:
+    # HC-standards, PLUG-INT: the generated FHIR bundles pass the official HL7 validator
+    # (about one minute; downloads validator_cli.jar and the US Core and CARIN BB packages).
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '21'}
+      - run: python -m pip install -U pip
+      - run: pip install -e '.[dev]' -e plugins/shape-healthcare-codes -e 'plugins/shape-healthcare-standards[test]'
+      - run: |
+          mkdir -p "$HOME/.cache/shape-hc"
+          curl -sSL -o "$HOME/.cache/shape-hc/validator_cli.jar" https://github.com/hapifhir/org.hl7.fhir.core/releases/latest/download/validator_cli.jar
+      - run: |
+          export SHAPE_FHIR_VALIDATOR_JAR="$HOME/.cache/shape-hc/validator_cli.jar"
+          python -m pytest -q -m live plugins/shape-healthcare-standards/tests/fhir/test_official_validator.py

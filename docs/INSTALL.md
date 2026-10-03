@@ -18,6 +18,13 @@ pip install 'sqllocks-shape[kafka]'
 pip install 'sqllocks-shape[eventhubs]'
 ```
 
+dbt (`shape from-dbt`, `shape to-dbt-tests`, `shape dbt-seeds`, `shape dbt-report`, `docs/DBT.md`); it
+reads and writes dbt's files and does not install dbt:
+
+```bash
+pip install sqllocks-shape-dbt
+```
+
 ## Offline and air-gapped installs
 
 Shape does not require raw data to leave the environment, and it downloads nothing at run time.
