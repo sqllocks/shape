@@ -496,6 +496,13 @@ def _cmd_fidelity(a):
         from shape.cli.tiers import run_fidelity
 
         return run_fidelity(a)
+    from shape.plugins.host import default_host
+
+    formats = sorted(default_host().names("shape.reports"))
+    if a.format not in formats:
+        raise ValueError(
+            f"--format {a.format}: no such report format; use one of {', '.join(formats)}"
+        )
     from shape.generation.report import Thresholds, compare_tables, render_report
     from shape.quality import load_tables
 

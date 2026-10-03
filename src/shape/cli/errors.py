@@ -60,6 +60,8 @@ def describe(exc: BaseException) -> str:
         return f"file not found: {found['path']}" if found else str(exc)
     if isinstance(exc, KeyError):
         key = exc.args[0] if exc.args else ""
+        if isinstance(key, str) and " " in key.strip():
+            return " ".join(key.split())  # a message, not the name of a missing key
         return f"missing key {key!r} in the input"
     if isinstance(exc, ValueError) and type(exc).__name__ == "JSONDecodeError":
         return f"not valid JSON: {exc}"
