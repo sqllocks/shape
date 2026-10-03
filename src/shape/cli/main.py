@@ -496,7 +496,12 @@ def _cmd_check(a):
             "shape check needs CONTRACT.json: pass one, or set `contract` on the source in "
             "shape.yml"
         )
-    result = shape.check(profile, contract)
+    data = None
+    if a.data:
+        from shape.quality import load_tables
+
+        data = load_tables(a.data, a.format)
+    result = shape.check(profile, contract, data=data)
     out = result.to_dict()
     if ctx:
         out["violations"] = [project_cli.annotate(source, v) for v in out["violations"]]
@@ -1382,6 +1387,13 @@ def _build_parser(plugin_commands=()):
         nargs="?",
         help="default: the `contract` of the source in shape.yml",
     )
+    ck.add_argument(
+        "--data",
+        metavar="DATA",
+        help="a data file or directory of data files: needed by the contract's `timeseries` "
+        "and `reconcile` rules, which check data rather than the profile",
+    )
+    ck.add_argument("--format", choices=("auto", "csv", "parquet", "jsonl"), default="auto")
     ck.add_argument("--json", metavar="RESULT.json")
     add_project_flags(ck)
     ck.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)

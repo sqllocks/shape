@@ -29,6 +29,8 @@ _RULE_KEYS = (
     "ordering",
     "baseline",
     "distribution_alpha",
+    "timeseries",
+    "reconcile",
     "classifications",
     "memorization",
     "utility",
@@ -126,6 +128,24 @@ def _check_file_paths(value: Any) -> None:
         raise VerifyConfigError('"file_paths" must be a list of file paths')
 
 
+def _check_timeseries(value: Any) -> None:
+    from .timeseries import validate_timeseries_rules
+
+    try:
+        validate_timeseries_rules(value)
+    except ValueError as exc:
+        raise VerifyConfigError(str(exc)) from exc
+
+
+def _check_reconcile(value: Any) -> None:
+    from .reconcile import validate_reconcile_rules
+
+    try:
+        validate_reconcile_rules(value)
+    except ValueError as exc:
+        raise VerifyConfigError(str(exc)) from exc
+
+
 def _check_bool(value: Any) -> None:
     if not isinstance(value, bool):
         raise VerifyConfigError('"check_data_files" must be true or false')
@@ -203,6 +223,8 @@ _CHECKS = {
     "ordering": _check_ordering,
     "baseline": _check_baseline,
     "distribution_alpha": _check_alpha,
+    "timeseries": _check_timeseries,
+    "reconcile": _check_reconcile,
     "file_paths": _check_file_paths,
     "check_data_files": _check_bool,
     "classifications": _check_classifications,
@@ -216,8 +238,8 @@ class VerifyConfig:
     """The settings of the four config-driven gates.
 
     ``rules`` holds the ``ValidationContext.config`` keys (``ranges``, ``date_range``,
-    ``no_future``, ``ordering``, ``baseline``, ``distribution_alpha``, ``classifications``,
-    ``memorization``, ``utility``); ``file_paths`` are the
+    ``no_future``, ``ordering``, ``baseline``, ``distribution_alpha``, ``timeseries``,
+    ``reconcile``, ``classifications``, ``memorization``, ``utility``); ``file_paths`` are the
     files the ``file_format`` gate reads, and ``check_data_files`` adds every data file that
     ``shape verify`` loaded."""
 
