@@ -124,6 +124,55 @@ write_ground_truth("ground_truth.jsonl", outcome)
 These corruptions are separate from the six categories: the categories keep their own scheduler
 and random order, and the targeted form has an exact rate and a log.
 
+## Chaos only corrupts data Shape wrote
+
+`shape chaos --input DIR` is for synthetic tables. It accepts a table file (`.csv`, `.parquet`,
+`.jsonl`) only when
+
+- `DIR/_shape_provenance.json` lists it with a matching SHA-256, or
+- it is a Parquet file whose schema metadata has the `shape_synthetic` key.
+
+Anything else exits 2 before a byte is written:
+
+```
+shape: error: chaos input DIR/orders.csv is not marked as Shape-generated data; chaos only corrupts synthetic data (pass --allow-real-input to override)
+```
+
+A generated file that was edited afterwards fails the SHA-256 check and the message ends with
+`(its sha256 differs from the provenance record)`. `_shape_provenance.json` and `_SUCCESS` are not
+tables; `shape profile DIR`, `--dataset` and `--input` skip them.
+
+`--allow-real-input` overrides the check. It prints
+`shape: warning: --allow-real-input: corrupting data that is not marked as Shape-generated` on
+stderr when a file is unmarked, and the ground-truth `run` record gets
+`"input_provenance": "unverified"` (`"verified"` when every file was marked; the key is absent
+when chaos generated its own tables, which need no check).
+
+`-o DIR` must not be the `--input` folder or inside it (exit 2,
+`shape: error: chaos output DIR is the input folder; give a different -o`), so input files are
+never overwritten.
+
+From Python: `shape.chaos.input_check.verify_chaos_input(dir, allow_real_input=False)` returns
+`"verified"` or `"unverified"` and raises `ChaosInputError` (a `ValueError`);
+`check_output_folder(input_dir, output_dir)` is the `-o` rule.
+
+### `_shape_provenance.json`
+
+`shape generate -o DIR`, `shape continue`, `shape time-travel`, `shape pack run` and `shape chaos`
+write it in each output folder (a landing layout has one at its root; the paths are relative to
+it). The table files and their bytes are unchanged. Writing into a folder that has one adds to it.
+
+```json
+{"format": "shape-provenance", "version": 1, "shape_version": "0.9.0", "seed": 42,
+ "domain": "retail", "scale": "small", "spec_hash": null,
+ "files": [{"path": "orders.csv", "sha256": "…", "rows": 1000}]}
+```
+
+`rows` is an integer, or `null` when the writer did not count it (a pack that splits a table over
+several files). Directory outputs such as Delta tables are not listed. A file of `version` 2 or
+later is refused with a message that names the newer Shape. It is a record of origin, not a
+signature: see `docs/THREAT_MODEL.md` for what it does and does not stop.
+
 ## The six categories
 
 Each mutator is a class in `shape.chaos.categories` with

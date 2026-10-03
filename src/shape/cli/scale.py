@@ -210,6 +210,12 @@ def run_scale(a: argparse.Namespace) -> int:
     from shape.scale.jobs import TOKEN_ENV, Jobs
 
     request = build_request(a)
+    from shape.cli.to import confirm_targets
+    from shape.io.targets import scale_sink_destinations
+
+    confirm_targets(
+        a, scale_sink_destinations(request["sinks"], request["sink_config"])
+    )  # before any sign-in
     normalize(request)  # raises ValueError for anything it rejects, before any work
     if a.dry_run:
         return _dry_run(a, request)

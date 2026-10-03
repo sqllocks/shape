@@ -181,6 +181,7 @@ class PackRunner:
                     errors.append(f"Validation gate '{gate}' failed: {message}")
 
         manifest = builder.finish()
+        _record_provenance(generated, table_files, seed, name, scale, manifest.spec_hash)
         manifest_path = output_root / f"{manifest.run_id}_manifest.json"
         counter = 1
         while manifest_path.exists():  # two runs in one second must not overwrite each other
@@ -264,6 +265,28 @@ class PackRunner:
                 pack.hybrid.stream.topics, generated, output_root, "stream_", table_files, files
             )
         return events
+
+
+def _record_provenance(
+    generated: GenerationResult,
+    table_files: dict[str, list[str]],
+    seed: int,
+    domain: str,
+    scale: str,
+    spec_hash: str,
+) -> None:
+    """``_shape_provenance.json`` in each folder the run wrote table files to."""
+    from shape.io.provenance import write_provenance
+
+    by_folder: dict[Path, list[tuple[Path, int | None]]] = {}
+    for table, paths in table_files.items():
+        rows = generated.tables[table].num_rows if len(paths) == 1 else None
+        for item in paths:
+            by_folder.setdefault(Path(item).parent, []).append((Path(item), rows))
+    for folder, pairs in by_folder.items():
+        write_provenance(
+            folder, pairs, seed=seed, domain=domain, scale=scale, spec_hash=spec_hash or None
+        )
 
 
 # ---- spec overrides -----------------------------------------------------------------------
