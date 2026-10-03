@@ -121,7 +121,8 @@ def why_row_count(value: Any) -> str | None:
 
 def normalize_table(contract: Mapping[str, Any]) -> dict[str, Any]:
     """One table's contract without the rules that say nothing (``nullable: true``,
-    ``unique: false``, ``allow_extra_columns: true``, a column with no rules), the null rate
+    ``unique: false``, ``allow_extra_columns: true``), a column with no other rules listed in
+    ``required_columns`` (``shape check`` requires every column a contract names), the null rate
     rounded to nine places, ``required_columns`` sorted and without repeats, and the ``None``
     of an ``allowed_values`` list removed (a null is ``nullable``'s business). Two contracts that
     mean the same compare equal."""
@@ -130,6 +131,7 @@ def normalize_table(contract: Mapping[str, Any]) -> dict[str, Any]:
     if rc:
         out["row_count"] = rc
     columns: dict[str, Any] = {}
+    bare: list[str] = []
     for name, rules in (contract.get("columns") or {}).items():
         kept: dict[str, Any] = {}
         for key, value in rules.items():
@@ -146,10 +148,13 @@ def normalize_table(contract: Mapping[str, Any]) -> dict[str, Any]:
             kept[key] = copy.deepcopy(value)
         if kept:
             columns[name] = kept
+        else:
+            bare.append(name)  # no rule but its presence: a required column (#641)
     if columns:
         out["columns"] = columns
-    if contract.get("required_columns"):
-        out["required_columns"] = sorted(set(contract["required_columns"]))
+    required = [*(contract.get("required_columns") or ()), *bare]
+    if required:
+        out["required_columns"] = sorted(set(required))
     if contract.get("allow_extra_columns") is False:
         out["allow_extra_columns"] = False
     for key in JOINT_RULES:

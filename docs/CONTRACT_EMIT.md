@@ -16,7 +16,8 @@ shape contract emit orders.contract.json --to jsonschema --strict    # exit 1 if
 
 The same contract and options always give the same bytes (no timestamp, no id, sorted keys).
 What a target cannot say is **listed, never silently dropped** (`not_expressed`), and kept as
-metadata where the target has a place for it.
+metadata where the target has a place for it. A column a contract names with no rules (or only
+`nullable: true`) is a column that must exist, and every target emits it as such.
 
 ## Command
 
@@ -72,8 +73,9 @@ expressible(contract, "jsonschema")                      # what contract_from re
 ```
 
 `contract_from` reads `jsonschema` and `gx` documents; the result is one table's contract in a
-normal form (rules that say nothing, such as `nullable: true`, are dropped; `required_columns` is
-sorted; the null rate has nine places; a `None` in `allowed_values` is removed because
+normal form (rules that say nothing, such as `nullable: true`, are dropped, and a column left with
+no rule is listed in `required_columns`, since `shape check` requires every column a contract
+names; `required_columns` is sorted; the null rate has nine places; a `None` in `allowed_values` is removed because
 `nullable` decides about nulls). A schema or suite written by hand is read for the parts it has.
 
 ## Mapping tables
