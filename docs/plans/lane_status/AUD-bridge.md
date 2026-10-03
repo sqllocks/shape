@@ -4,7 +4,7 @@ Branch `lane/AUD-bridge` (from `origin/build/main-plan` at `5c91ea5`). Area: `sr
 `src/shape/api.py`, `src/shape/errors.py`, `src/shape/types.py`, `tests/bridge/**`, `tests/types/**`,
 `docs/BRIDGE.md`, `docs/bridge/**`, `docs/API_STABILITY.md`.
 
-Status: **phase 1 (hunt) done; phase 2 (file) and 3 (fix) in progress.**
+Status: **done: 11 defects fixed (8 filed by this lane, 2 filed by AUD-api, plus the #546 group); 1 left for the lead (#541), 1 left open (finding 14), 1 filed outside the area (#543).**
 
 ## Phase 1: baseline
 
@@ -111,3 +111,61 @@ depth), argument checking (types, enums, minimum, `1e999`), path handling of job
 traversal), atomic `0600` job and spill writes, error mapping by type only, `internal.error`
 keeping tracebacks out of responses, stdout purity, profile summary redaction, the published
 schemas check, every domain and mode through `describe`/`dry_run`/`profile_info`/`preview`.
+
+## Phase 3: fixes
+
+Each defect: a regression test committed first (its failing output in the commit message), then
+the fix. All pushed to `lane/AUD-bridge`.
+
+| finding | issue | test commit | fix commit | what changed |
+|---|---|---|---|---|
+| 1 | #533 | `04a24050` | `6d67d9c2` | `flow.entry_columns` reads every column a joint entry names (label and `detail`); such an entry is withheld when any is classified, `message` and `detail` included |
+| 2 | #535 | `bef2c04e` | `7cee8ab3` | `verify` replaces `(actual max: X)` with `(actual max withheld)` and marks the gate `redacted` unless `include_raw_values` |
+| 3 | #537 | `323ac222` | `0483928d` | `profile` saves through a `mkstemp` scratch file per call |
+| 4 | #539 | `e80907f2` | `4a57981c` | `serve` reads standard input's bytes as UTF-8 (`surrogateescape`); a request with a non-UTF-8 byte is `usage.invalid_json` |
+| 6 | #542 | `c26228a6` | `082e24f0` | `_poll` keeps a job active on a status it has no name for, reported as `progress.fabric_status` |
+| 7 | #544 | `5630d488` | `61cd5035` | `jobs.check_fields`: the record's `job_id` is its file's, and `command`, `status`, `created_at`, `progress`, `worker`, `external` have their types |
+| 8 | #545 | `c34b99b9` | `3e6beee1` | the stream waits in steps of at most an hour |
+| 9–13 | #546 | `d05fe886`, `b0430c61` | `9293c130` | size limit in UTF-8 bytes without the line end; jobs dir made absolute; NumPy scalars and arrays via `tolist`; `jsonable` inside `handle`'s `try`; finished threads dropped from `_live` |
+| 15 | #251 | `d5cdaf1c` | `6541fef6` | `shape.generate` raises `TypeError` naming an argument its form cannot use |
+| 16 | #260 | `e9bec1bf` | `1c13f720` | `LogicalType` checks its kind and bit width; invalid types raise `ShapeTypeError`, now also a `ValueError` |
+
+Improvement (no defect): `e546aab9` tests for paths no test reached (scale-job error codes,
+`writing`, `pid_alive`, `jsonable` of dates/decimals/bytes, a profile on a schema file, a spill that
+fails half-way). Bridge coverage 92% → 97%; `types.py` 71% → 100%.
+
+`docs/BRIDGE.md` describes each changed behaviour (joint redaction, verify, UTF-8, unknown Fabric
+status). `CHANGELOG.md` has the Fixed entries (`3d3de6f9`).
+
+## Left open, and why
+
+- **#541 (finding 5), for the lead.** Wiring `demo_*` to `shape.demo.api` changes the expectation
+  of two existing tests (`tests/bridge/test_demo.py::test_a_valid_demo_request_waits_for_shape_demo`,
+  `::test_the_demo_commands_are_marked_pending_in_the_command_table_and_nothing_else_is`) and the
+  published schema index (`"pending": "P6-12"`). The lane rules forbid changing an existing test's
+  expectation, so it is recorded, not done.
+- **Finding 14 (`stream_stop` on a failed stream answers `stopped`).** Saying more needs a new
+  `status` value in the `stream_stop` result (a 1.x minor addition to a published schema); left for
+  the lead to decide, not filed as a defect.
+- **#543 (`scale`: `STATUS_MAP` lacks `Deduped`).** Outside this area: filed only. The bridge side
+  (#542) no longer depends on it.
+
+## Merging with other lanes
+
+- `lane/AUD-security2` (fixes #277, #279, #289 in `bridge/jobs.py`, `errors.py`, `protocol.py`):
+  `git merge-tree` shows no conflict with this branch.
+- `lane/AUD-api` rewrote the docstrings of `src/shape/api.py` and `src/shape/types.py`: both files
+  conflict, in docstrings only. Resolution: keep AUD-api's docstrings, and change their two
+  "not used/validated (issue #251/#260)" sentences to what the code now does: `generate` raises
+  `TypeError` for `n`/`relationships` with a domain or schema, `mode` with anything but a domain and
+  `scale`/`mode` with an evidence document (a profile refuses `relationships` and `mode`);
+  `LogicalType` raises `ShapeTypeError` (a `ValueError`) for an unknown kind, a bit width the kind
+  does not have, and an incomplete decimal, list or map.
+
+## Equivalence verifiers
+
+No output that a verifier compares changed. `benchmarks/vs_spindle/bridge_1to1` compares `list`,
+`describe`, `dry_run`, `profile_info`, `generate`, `preview` and the scale commands; none of their
+results changed (the `jsonable` change only touches NumPy objects, which none returns, and paths
+are not compared). `tests/bridge/test_parity_compare.py` passes. The harness itself needs
+`$SPINDLE_ROOT`, which this container does not have.
