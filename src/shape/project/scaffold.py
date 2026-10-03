@@ -123,9 +123,20 @@ _YAML_WORDS = frozenset({"true", "false", "yes", "no", "on", "off", "null", "y",
 
 def _yaml_scalar(value: str) -> str:
     """``value`` as a YAML scalar: plain when that is safe, else a JSON (double-quoted) string."""
-    if _PLAIN.fullmatch(value) and value.lower() not in _YAML_WORDS:
+    if _PLAIN.fullmatch(value) and value.lower() not in _YAML_WORDS and _reads_back(value):
         return value
     return json.dumps(value)
+
+
+def _reads_back(value: str) -> bool:
+    """Whether YAML reads the plain scalar ``value`` as that same string (``.inf``, ``.5`` and
+    ``.nan`` are numbers)."""
+    try:
+        import yaml  # type: ignore[import-untyped]
+
+        return bool(yaml.safe_load(value) == value)
+    except Exception:  # not installed or not parseable: quote it
+        return False
 
 
 @dataclass(slots=True)
@@ -168,6 +179,17 @@ def scaffold(
         if (root / rel).is_symlink():
             raise ValueError(f"{root / rel} is a symbolic link; refusing to write through it")
 
+    folders = [root / f for f in FOLDERS] + [root / ".github", root / ".github" / "workflows"]
+    files = [root / f / ".gitkeep" for f in FOLDERS] + [root / WORKFLOW]
+    for path, want_folder in [(p, True) for p in folders] + [(p, False) for p in files]:
+        if path.exists() and path.is_dir() != want_folder:
+            raise ValueError(f"{path} exists and is not a {'folder' if want_folder else 'file'}")
+    attrs = root / ".gitattributes"
+    try:
+        attr_lines = attrs.read_text(encoding="utf-8").splitlines() if attrs.exists() else []
+    except (UnicodeDecodeError, OSError) as exc:
+        raise ValueError(f"{attrs} cannot be read as UTF-8 text ({exc})") from None
+
     result = ScaffoldResult()
     text = _PROJECT.format(
         name=_yaml_scalar(label),
@@ -190,9 +212,8 @@ def scaffold(
 
     from shape.cli.gitcmds import DEFAULT_PATTERN, _has_rule
 
-    attrs = root / ".gitattributes"
     rule = f"{DEFAULT_PATTERN} diff=shape"
-    lines = attrs.read_text(encoding="utf-8").splitlines() if attrs.exists() else []
+    lines = attr_lines
     if not _has_rule(lines, DEFAULT_PATTERN):
         (result.updated if attrs.exists() else result.created).append(".gitattributes")
         _write(attrs, "\n".join([*lines, rule]) + "\n")
