@@ -20,6 +20,7 @@ import datetime
 import re
 import string
 import time
+from collections import deque
 from typing import Any, cast
 from calendar import monthrange
 from decimal import Decimal
@@ -55,8 +56,10 @@ class _timelex(object):
             )
 
         self.instream = instream
-        self.charstack: list[str] = []
-        self.tokenstack: list[str] = []
+        # deques: tokens and characters are taken off the front, and a list's pop(0) made a
+        # long value quadratic to tokenize (#270)
+        self.charstack: deque[str] = deque()
+        self.tokenstack: deque[str] = deque()
         self.eof = False
 
     def get_token(self) -> str | None:
@@ -74,7 +77,7 @@ class _timelex(object):
         demands that multiple tokens be parsed at once.
         """
         if self.tokenstack:
-            return self.tokenstack.pop(0)
+            return self.tokenstack.popleft()
 
         seenletters = False
         token: Any = None
@@ -86,7 +89,7 @@ class _timelex(object):
             # that character may be part of the next token, it's stored in the
             # charstack.
             if self.charstack:
-                nextchar = self.charstack.pop(0)
+                nextchar = self.charstack.popleft()
             else:
                 nextchar = self.instream.read(1)
                 while nextchar == "\x00":
