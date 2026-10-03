@@ -1,6 +1,6 @@
 # Install Shape
 
-Supported Python: 3.11–3.13.
+Supported Python: 3.11–3.14.
 
 ```bash
 python -m venv .venv
@@ -30,9 +30,11 @@ point at a service) says so in its own documentation.
 To install into a disconnected environment:
 
 1. **Take the pinned lock files.** CI's `offline-lock` job writes `requirements-core.txt` and one
-   `requirements-<extra>.txt` per extra (`yaml`, `sign`, `delta`, `excel`, `azure`, `pandas`,
-   `scipy`, `advanced`, `ctgan`, `kafka`, `eventhubs`, `sqlserver`, `domains`, `simulation`,
-   `streaming`, `dev`) as the `offline-lock` artifact. Each file pins every package, including
+   `requirements-<extra>.txt` per extra (`yaml`, `sign`, `delta`, `delta-fallback`, `excel`,
+   `azure`, `pandas`, `scipy`, `advanced`, `ctgan`, `kafka`, `eventhubs`, `sqlserver`, `domains`,
+   `simulation`, `postgres`, `mysql`, `databases`, `streaming`, `dev`) as the `offline-lock`
+   artifact. A plugin extra's file holds the plugin's third-party dependencies, including those
+   of the plugin extras it names (`postgres` holds the PostgreSQL driver). Each file pins every package, including
    transitive ones, to one version with `sha256` hashes (Python 3.11 and up, all platforms). Each
    extra's file also holds core. Generate them yourself with
    `pip install uv packaging && python scripts/offline_lock.py generate lock/`.

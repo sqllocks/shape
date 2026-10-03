@@ -1,6 +1,6 @@
 # Shape
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/sqllocks/shape/blob/main/LICENSE)
 
 **Shape by SQLLocks** — Shape as Code: a portable, executable description of how
 data behaves, not merely its schema.
