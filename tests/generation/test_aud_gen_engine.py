@@ -125,3 +125,59 @@ def test_a_negative_row_count_override_is_an_error():
 
     with pytest.raises(ShapeSchemaError, match="'c'"):
         Engine(_counted(), row_counts={"c": -5})
+
+
+def _lookup_schema():
+    from aud_gen_fixtures import build, col
+
+    return build(
+        {
+            "src": (
+                ["id"],
+                {"id": col("sequence"), "name": col("weighted_enum", "string", values={"x": 1})},
+            ),
+            "dst": (
+                ["id"],
+                {
+                    "id": col("sequence"),
+                    "k": col("uniform", "integer", low=1, high=1000, output_type="int64"),
+                    "nm": col(
+                        "lookup",
+                        "string",
+                        source_table="src",
+                        source_column="name",
+                        via="k",
+                        key="id",
+                    ),
+                },
+            ),
+        },
+        {"src": 40_000, "dst": 40_000},
+    )
+
+
+def test_a_lookup_source_is_a_level_before_its_reader():
+    # 186: dependency_levels read foreign keys only: [['dst', 'src']].
+    from shape.generation.engine import dependency_levels
+
+    assert dependency_levels(_lookup_schema()) == [["src"], ["dst"]]
+    assert dependency_levels(_composite(0.0)) == [["p"], ["c"]]
+
+
+def test_threads_generate_a_parent_once(monkeypatch):
+    # 186: with 4 threads, src (40k rows) was generated once per thread plus once.
+    from collections import Counter
+
+    from shape.generation import engine as engine_module
+
+    rows: Counter[str] = Counter()
+    original = engine_module.Engine.generate_chunk
+
+    def counted(self, table, row_start, n_rows, *, chunk=None):
+        rows[table] += n_rows
+        return original(self, table, row_start, n_rows, chunk=chunk)
+
+    monkeypatch.setattr(engine_module.Engine, "generate_chunk", counted)
+    monkeypatch.setenv("SHAPE_THREADS", "4")
+    engine_module.Engine(_lookup_schema()).generate()
+    assert rows == {"src": 40_000, "dst": 40_000}
