@@ -314,3 +314,35 @@ def test_cli_verify_a_mixed_directory_runs_the_referential_gate(tmp_path, capsys
     out = capsys.readouterr()
     assert "customer: 2" in out.out and "order: 3" in out.out
     assert "not found" not in out.err
+
+
+# ---- AUD-quality
+
+
+def test_load_tables_skips_directories_and_matches_extensions_in_any_case(tmp_path):
+    # #479: a sub-directory named a.csv broke the load; B.CSV was not loaded from a directory
+    d = tmp_path / "d"
+    (d / "a.csv").mkdir(parents=True)
+    (d / "B.CSV").write_text("x\n1\n2\n", encoding="utf-8")
+    pq.write_table(pa.table({"y": [1]}), d / "c.PARQUET")
+    tables = load_tables(d)
+    assert {k: v.num_rows for k, v in tables.items()} == {"B": 2, "c": 1}
+    from shape.quality.verify import data_files
+
+    assert sorted(p.name for p in data_files(d)) == ["B.CSV", "c.PARQUET"]
+    assert sorted(load_tables(d, "csv")) == ["B"]
+
+
+def test_the_markdown_report_names_the_configured_alpha(tmp_path):
+    # #480: the methodology said alpha = 0.05 whatever distribution_alpha was
+    from shape.quality import VerifyConfig
+
+    tables = load_tables(write_data(tmp_path / "d"))
+    cfg = VerifyConfig.from_dict(
+        {"format": "shape-verify-config", "version": 1, "distribution_alpha": 0.01}
+    )
+    result = VerifyRunner(GateSchema.from_dict(SCHEMA), True, "d", config=cfg).run(tables)
+    md = VerifyReport(result).to_markdown()
+    assert "(α=0.01)" in md and "(α=0.05)" not in md
+    default = VerifyRunner(GateSchema.from_dict(SCHEMA), True, "d").run(tables)
+    assert "(α=0.05)" in VerifyReport(default).to_markdown()
