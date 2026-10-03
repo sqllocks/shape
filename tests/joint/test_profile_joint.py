@@ -25,6 +25,7 @@ def _fds(profile: object) -> dict[tuple[str, str], dict]:
 
 
 def test_the_example_reports_the_dependency_that_broke(city_zip: dict) -> None:
+    # #46: the zero-padded ZIP column is text, so the placeholder is '00000', not 0
     good = shape.profile(city_zip["good"])
     bad = shape.profile(city_zip["bad"])
     gj, bj = _table(good)["joint"], _table(bad)["joint"]
@@ -32,7 +33,7 @@ def test_the_example_reports_the_dependency_that_broke(city_zip: dict) -> None:
     broken = _fds(bad)[("zip", "city")]
     assert broken["confidence"] == pytest.approx(0.87575)  # the same number `shape fd` gives
     assert broken["violating_groups"] == 178
-    assert broken["violations"][0]["determinant_value"] == "0"  # the placeholder, read as 0
+    assert broken["violations"][0]["determinant_value"] == "00000"  # the placeholder, as text
     assert broken["violations"][0]["rows"] == 320
     assert gj["implausible_rate"] == 0.0
     assert bj["implausible_rate"] == pytest.approx(0.08)  # the 8% placeholder rows
@@ -62,9 +63,13 @@ def _csv(path):  # noqa: ANN001, ANN202
 
 
 def test_every_input_kind_gets_the_same_joint_analysis(city_zip: dict, tmp_path) -> None:
+    import pyarrow.csv as pcsv
     import pyarrow.parquet as pq
 
-    t = _csv(city_zip["bad"])
+    # #46: the zip column is text (the CSV profile reads it so), so the table inputs carry text too
+    t = pcsv.read_csv(
+        city_zip["bad"], convert_options=pcsv.ConvertOptions(column_types={"zip": pa.string()})
+    )
     pq.write_table(t, tmp_path / "bad.parquet")
     expect = _table(shape.profile(city_zip["bad"]))["joint"]
     for source in (tmp_path / "bad.parquet", t, t.to_pandas() if _has_pandas() else t):
