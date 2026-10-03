@@ -71,6 +71,15 @@ OneLake paths.
 Profile a lakehouse straight from OneLake: `shape profile onelake://<workspace>/<lakehouse>/Tables/<table>`
 (Delta) or `.../Files/<path>`; authentication and `adlfs` handling are core's `abfss://` source.
 
+## Sign-in and credential references
+
+`--auth cli|msi|spn|sql|device-code|fabric`, `--tenant-id`, `--client-id`, `--client-secret REF`,
+`--sql-user`, `--sql-password REF` and `--connection-string` on `shape generate --scale-mode`, `shape emit`,
+`shape stream`, `shape profile` and `shape jobs`; in Python `shape_fabric.auth` (`AuthSettings`,
+`build_credential`, `writer_options`) builds the `credential` every writer takes. Secrets are `env://`,
+`file://` (refused when others can read the file) or `kv://VAULT/SECRET` (`shape_fabric.keyvault`, Azure Key
+Vault over HTTPS) references, never command-line values. See `docs/plugins/fabric-auth.md`.
+
 ## Tests
 
 Contract tests replay recorded interactions (`tests/fixtures/*.json`, made by `python -m

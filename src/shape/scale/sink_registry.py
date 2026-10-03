@@ -14,6 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import TYPE_CHECKING, Any
 
 from shape.scale.sinks.base import Sink, SinkError, sink_name
+from shape.security.redact import redact_text
 
 if TYPE_CHECKING:
     import pyarrow as pa  # type: ignore[import-untyped]
@@ -55,7 +56,7 @@ class SinkRegistry:
                     errors.append((sink_name(sink), exc))
         if errors:
             for name, err in errors:
-                logger.error("sink %s: %s failed: %s", name, label, err)
+                logger.error("sink %s: %s failed: %s", name, label, redact_text(str(err)))
             raise SinkError(errors)
 
     def open(self, schema: GenSchema | None) -> None:
@@ -88,7 +89,7 @@ class SinkRegistry:
                 sink.close()
             except Exception as exc:
                 errors.append((sink_name(sink), exc))
-                logger.error("sink %s: close failed: %s", sink_name(sink), exc)
+                logger.error("sink %s: close failed: %s", sink_name(sink), redact_text(str(exc)))
         self._opened = []
         pool, self._pool = self._pool, None
         if pool is not None:
