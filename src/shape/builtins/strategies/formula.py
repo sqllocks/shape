@@ -39,6 +39,7 @@ from shape.plugins.api.v1 import GenerationContext
 SHAPE_API = "1.0"
 
 MAX_EXPRESSION_CHARS = 2_000
+_TOO_DEEP = "the expression is nested too deeply"  # Python's recursion limit (#137)
 
 _BINARY: dict[type[ast.operator], Callable[[Any, Any], Any]] = {
     ast.Add: operator.add,
@@ -114,7 +115,9 @@ def _check(node: ast.AST, names: set[str]) -> None:
         if not isinstance(node.value, int | float):  # bool is an int
             raise ValueError(f"only numbers are allowed, not {node.value!r}")
     elif isinstance(node, ast.Name):
-        if node.id not in _CONSTANTS and node.id not in _FUNCTIONS:
+        if node.id in _FUNCTIONS:  # a call's own name is skipped below: this is a value
+            raise ValueError(f"{node.id} is a function: call it, as in {node.id}(x)")
+        if node.id not in _CONSTANTS:
             names.add(node.id)
     elif isinstance(node, ast.BinOp):
         if not isinstance(node.op, ast.Pow) and type(node.op) not in _BINARY:
@@ -148,8 +151,13 @@ def compile_expression(expression: str) -> _Compiled:
         tree = ast.parse(expression.strip(), mode="eval")
     except SyntaxError as exc:
         raise ValueError(f"not a valid expression: {exc.msg}") from exc
+    except (RecursionError, MemoryError) as exc:  # the parser's own nesting limit
+        raise ValueError(_TOO_DEEP) from exc
     names: set[str] = set()
-    _check(tree, names)
+    try:
+        _check(tree, names)
+    except RecursionError as exc:
+        raise ValueError(_TOO_DEEP) from exc
     return _Compiled(tree.body, tuple(sorted(names)))
 
 
@@ -247,6 +255,10 @@ class Formula:
         try:
             with np.errstate(all="ignore"):
                 result = _evaluate(compiled.tree, env)
+        except RecursionError as exc:
+            raise StrategyError(
+                f"Failed to evaluate formula {expression!r} for column {where(ctx)}: {_TOO_DEEP}"
+            ) from exc
         except (TypeError, ValueError, ZeroDivisionError, OverflowError) as exc:
             raise StrategyError(
                 f"Failed to evaluate formula {expression!r} for column {where(ctx)}: {exc}"
