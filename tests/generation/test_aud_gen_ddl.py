@@ -130,3 +130,11 @@ def test_a_scale_override_sets_the_row_count_over_smart_inference():
         scale="medium:customer=5000,orders=7777",
     )
     assert calculate_row_counts(schema) == {"customer": 5000, "orders": 7777}
+
+
+@pytest.mark.parametrize("gap", ["  ", "\n    ", "\t"])
+def test_not_null_with_any_whitespace(gap):
+    # 198: "NOT  NULL" made the base type "int not" (string + faker) and the column nullable.
+    schema, _ = from_ddl(f"CREATE TABLE t (id INT PRIMARY KEY, a INT NOT{gap}NULL)", smart=False)
+    a = schema.tables["t"].columns["a"]
+    assert (a.type, a.nullable) == ("integer", False)
