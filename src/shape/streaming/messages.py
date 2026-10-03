@@ -120,16 +120,47 @@ def _inferred(values: list[Any]) -> pa.Array:
         )
 
 
+def _fits(value: Any, typ: pa.DataType) -> bool:
+    """Whether a JSON value may be read into a column of ``typ`` without being changed. Arrow
+    converts more than that: a boolean becomes ``1``, ``1.5`` becomes ``1`` in an integer column."""
+    if value is None:
+        return True
+    if isinstance(value, bool):
+        return not (
+            pa.types.is_integer(typ) or pa.types.is_floating(typ) or pa.types.is_decimal(typ)
+        )
+    if pa.types.is_integer(typ) and isinstance(value, float):
+        return bool(math.isfinite(value) and value == math.floor(value))
+    return True
+
+
+def _plain_numbers(values: list[Any], typ: pa.DataType) -> bool:
+    """Whether Arrow's own inference shows that no value of a numeric column needs ``_fits`` (it
+    saw only integers, or integers and floats for a float column): the fast path."""
+    if not (pa.types.is_integer(typ) or pa.types.is_floating(typ) or pa.types.is_decimal(typ)):
+        return True
+    try:
+        seen = pa.array(values).type
+    except (pa.ArrowInvalid, pa.ArrowTypeError, OverflowError):
+        return False
+    if pa.types.is_null(seen) or pa.types.is_integer(seen):
+        return True
+    return pa.types.is_floating(seen) and pa.types.is_floating(typ)
+
+
 def _typed(values: list[Any], typ: pa.DataType) -> tuple[pa.Array, list[int]]:
     """``values`` as ``typ``, and the indexes of the values that could not take it (set null)."""
-    try:
-        return pa.array(values, type=typ), []
-    except (pa.ArrowInvalid, pa.ArrowTypeError, OverflowError):
-        pass
+    if _plain_numbers(values, typ):
+        try:
+            return pa.array(values, type=typ), []
+        except (pa.ArrowInvalid, pa.ArrowTypeError, OverflowError):
+            pass
     bad: list[int] = []
     kept: list[Any] = []
     for i, v in enumerate(values):
         try:
+            if not _fits(v, typ):
+                raise pa.ArrowInvalid("the value changes in this column")
             pa.array([v], type=typ)
         except (pa.ArrowInvalid, pa.ArrowTypeError, OverflowError):
             bad.append(i)
