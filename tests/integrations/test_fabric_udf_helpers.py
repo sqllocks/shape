@@ -172,3 +172,35 @@ def test_imports_without_the_fabric_sdk():
         "assert (e.message, e.properties) == ('m', {'k': 1})"
     )
     subprocess.run([sys.executable, "-c", code], check=True)
+
+
+class _WideCursor:
+    """A cursor over a large, wide table that counts the rows it hands out."""
+
+    def __init__(self, n_rows: int, n_cols: int):
+        self.n_rows, self.n_cols, self.fetched, self.description = n_rows, n_cols, 0, None
+
+    def execute(self, sql: str):
+        self.description = [(f"c{i}",) for i in range(self.n_cols)]
+        self._next = 0
+
+    def fetchmany(self, size: int = 1):
+        stop = min(self._next + size, self.n_rows)
+        rows = [tuple(range(self.n_cols))] * (stop - self._next)
+        self._next = stop
+        self.fetched += len(rows)
+        return rows
+
+    def fetchall(self):
+        return self.fetchmany(self.n_rows)
+
+
+def test_a_table_over_the_cell_limit_is_refused_before_it_is_read(monkeypatch):
+    """#367: the cell guard stops the read; the table is not fetched in full first."""
+    monkeypatch.setattr(udf, "MAX_TABLE_CELLS", 1_000)
+    cursor = _WideCursor(n_rows=200_000, n_cols=10)
+    conn = types.SimpleNamespace(cursor=lambda: cursor, close=lambda: None)
+    lakehouse = types.SimpleNamespace(connectToSql=lambda: conn)
+    with pytest.raises(udf.UserThrownError, match="cell"):
+        udf.profile_lakehouse_table(lakehouse, "wide", max_rows=1_000_000)
+    assert cursor.fetched <= 20_000
