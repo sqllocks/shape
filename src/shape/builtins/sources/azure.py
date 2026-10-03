@@ -30,6 +30,7 @@ import pyarrow.json as pajson  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from shape.io import file_kind
+from shape.security.jsondepth import check_json_depth
 
 from . import _azure_auth as auth
 
@@ -185,7 +186,11 @@ class _Opened:
             self.schema = ipc.schema
             self._iter = _ipc_batches(ipc)
         else:  # jsonl
-            table = pajson.read_json(self._stream)
+            # pyarrow's JSON reader recurses without a limit: refuse a deep line before it runs
+            # (the local readers do the same, P7-04). The reader holds the whole file anyway.
+            data = self._stream.read()
+            check_json_depth(data)
+            table = pajson.read_json(pa.BufferReader(data))
             self.schema = table.schema
             self._iter = iter(table.to_batches(max_chunksize=self._batch_rows))
 
