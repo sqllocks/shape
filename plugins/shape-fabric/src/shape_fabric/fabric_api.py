@@ -119,9 +119,19 @@ class FabricApi:
     ) -> None:
         if credential is None:
             raise AuthError("the Fabric API needs a sign-in (--auth cli, msi, spn, ...), not sql")
-        token = token_for(credential, SCOPE_FABRIC)
-        self._http = Http(token, transport, sleep=sleep)
+        # The first token is fetched now, so a sign-in that fails does so before any work; each
+        # later request asks the credential again (it caches and refreshes, so a long setup or
+        # poll never runs on an expired token).
+        self._credential = credential
+        self._first: str | None = token_for(credential, SCOPE_FABRIC)
+        self._http = Http(self._first, transport, sleep=sleep)
         self._sleep = sleep
+
+    def _request(self, method: str, url: str, **options: Any) -> Any:
+        token, self._first = self._first, None
+        if token is None:
+            token = token_for(self._credential, SCOPE_FABRIC)
+        return self._http.request(method, url, token=token, **options)
 
     # ---- workspaces ------------------------------------------------------------------------
 
@@ -134,7 +144,7 @@ class FabricApi:
         token = ""
         seen: set[str] = set()
         while True:
-            page = self._http.request(
+            page = self._request(
                 "GET", url + (f"?continuationToken={quote(token)}" if token else "")
             )
             doc = _document(page, "the workspace listing")
@@ -167,9 +177,7 @@ class FabricApi:
         seen: set[str] = set()
         while True:
             doc = _document(
-                self._http.request(
-                    "GET", url + (f"&continuationToken={quote(token)}" if token else "")
-                ),
+                self._request("GET", url + (f"&continuationToken={quote(token)}" if token else "")),
                 "the item listing",
             )
             for item in _rows(doc, "the item listing"):
@@ -185,7 +193,7 @@ class FabricApi:
         Raises :class:`ItemExistsError` when the name is taken."""
         name, kind = str(body["displayName"]), str(body["type"])
         try:
-            response = self._http.request(
+            response = self._request(
                 "POST",
                 f"{FABRIC_API}/workspaces/{_seg(workspace_id)}/items",
                 body=body,
@@ -223,7 +231,7 @@ class FabricApi:
             )
         for _ in range(POLL_LIMIT):
             self._sleep(wait)
-            answer = self._http.request("GET", location)
+            answer = self._request("GET", location)
             state = _document(answer, f"the operation creating the {kind} {name!r}")
             status = state.get("status", "")
             if status == "Succeeded":
@@ -242,7 +250,7 @@ class FabricApi:
 
     def delete_item(self, workspace_id: str, item_id: str) -> None:
         """Delete an item (the live tests remove what they made)."""
-        self._http.request(
+        self._request(
             "DELETE", f"{FABRIC_API}/workspaces/{_seg(workspace_id)}/items/{_seg(item_id)}"
         )
 
