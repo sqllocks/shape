@@ -216,7 +216,7 @@ def test_text_infinity_in_a_file_still_fails_as_the_baseline_does(kernel, tmp_pa
 
 
 def _fold(n: int) -> pa.Array:
-    utc = dt.timezone.utc
+    utc = dt.UTC
     v = [
         dt.datetime(2021, 11, 7, 5, 30, tzinfo=utc),  # 01:30 EDT
         dt.datetime(2021, 11, 7, 6, 30, tzinfo=utc),  # 01:30 EST, an hour later

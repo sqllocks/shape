@@ -889,7 +889,9 @@ def _profile_column(
                 ok = _try(lambda a: pc.cast(a, pa.float64()), uniq)
                 u = pc.cast(uniq, pa.float64()).to_numpy() if ok else None
                 if u is not None and np.isnan(u).any():
-                    ok = False  # a NaN word: pandas' to_numeric gives NaN, so the column is text (#224)
+                    ok = (
+                        False  # a NaN word: pandas' to_numeric gives NaN, the column is text (#224)
+                    )
                 if ok:
                     assert u is not None
                     if c.strict:
@@ -943,7 +945,7 @@ def _profile_column(
             top_counts = counts[top]
         keys = _keys_py(top_keys, kind)
         if zoned is not None:
-            keys = [str(v) for v in _aware_datetimes(pc.cast(top_keys, zoned), c.tz)]
+            keys = [str(v) for v in _aware_datetimes(pc.cast(top_keys, zoned), zoned.tz)]
         if kind == "float" and "0.0" in keys:
             zeros = np.flatnonzero(raw_nn == 0)
             if len(zeros) and np.signbit(raw_nn[zeros[0]]):
@@ -965,7 +967,7 @@ def _profile_column(
             if kind == "dt64":
                 if zoned is not None:
                     instants = pc.cast(pa.array([lo, hi], non_null.type), zoned)
-                    lo, hi = _aware_datetimes(instants, c.tz)
+                    lo, hi = _aware_datetimes(instants, zoned.tz)
                 lo, hi = _to_timestamp(lo), _to_timestamp(hi)
             elif kind in ("uint64", "objint"):
                 lo, hi = int(lo), int(hi)
