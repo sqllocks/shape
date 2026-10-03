@@ -203,3 +203,31 @@ def test_entities_unknown_names_are_skipped_and_pandas_frames_are_accepted(
     ).run()
     assert list(res.stats) == ["orders"]
     assert res.stats["orders"]["rows_written"] == len(pd.DataFrame(orders.to_pandas()))
+
+
+def test_backfill_and_restatement_of_a_table_without_time_redrop_its_partition_rows(
+    tmp_path: Path,
+) -> None:
+    # Issue #345: the partitions of a table without a time column are dealt out round robin,
+    # but the backfill and restatements of a slot re-dropped table.slice(...) rows instead.
+    table = pa.table({"product_id": list(range(12)), "price": [float(i) for i in range(12)]})
+    cfg = FileDropConfig(
+        base_path=str(tmp_path),
+        date_range_start="2024-01-01",
+        date_range_end="2024-01-04",
+        lateness_enabled=False,
+        backfill_enabled=True,
+        max_days_back=2,
+        restatement_enabled=True,
+        restatement_probability=1.0,
+        seed=1,
+    )
+    FileDropSimulator({"product": table}, cfg).run()
+    redropped = 0
+    for part in sorted(tmp_path.glob("default/product/dt=*")):
+        on_time = pq.read_table(next(part.glob("*_00001.parquet"))).column("product_id")
+        for seq in ("00980", "00990"):
+            for f in part.glob(f"*_{seq}.parquet"):
+                assert pq.read_table(f).column("product_id").to_pylist() == on_time.to_pylist()
+                redropped += 1
+    assert redropped >= 5  # four restatements and a backfill
