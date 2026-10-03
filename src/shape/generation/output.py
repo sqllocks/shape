@@ -214,21 +214,6 @@ def _write_workbook(
     return [target]
 
 
-def _paths(fmt: str, sink: Any, output_dir: Path, tables: list[str]) -> list[Path]:
-    directory = not _extension(fmt, sink)
-    return [output_dir / t if directory else _target(fmt, sink, output_dir, t) for t in tables]
-
-
-def _check_destination(sink: Any, output_dir: str | Path) -> Path:
-    """The output directory as a path, after the sink has accepted its URI scheme: a path made
-    from ``abfss://account/dir`` would otherwise be created as a local folder called ``abfss:``.
-    A local destination does not load a lazy sink (that happens on a writer thread)."""
-    text = str(output_dir)
-    if uri_scheme(text) != "file":
-        require_scheme(sink.loaded() if isinstance(sink, _LazySink) else sink, text)
-    return local_path(text)
-
-
 def write_result(
     result: GenerationResult,
     fmt: str,
