@@ -91,3 +91,26 @@ existing test was changed, skipped or loosened.
   a test-portability question (T-07 admits pyarrow 19), not a writer defect; the test was not
   changed.
 * No `.github/workflows/*` change is needed by this lane.
+* Outside the area, filed only (#560): `tests/security/test_credential_refs.py::
+  test_core_imports_no_cloud_sdk_to_resolve_references` fails when `tests/demo/fabric` runs
+  earlier in the same process (the Fabric UDF SDK loads `azure.*`). It fails the same way on
+  `build/main-plan`. CI never runs the two together.
+
+## Commands and results (this session, Python 3.11, pyarrow 25.0.1, unixODBC installed)
+
+| command | result |
+|---|---|
+| `ruff check src tests plugins benchmarks/vs_spindle` | All checks passed |
+| `ruff format --check src tests plugins benchmarks/vs_spindle` | 1108 files already formatted |
+| `mypy` | no issues in 436 source files |
+| `python scripts/check_user_facing.py` (D-13) | clean |
+| `SHAPE_KERNEL=python pytest -m "not emulator and not live"` | 7085 passed, 1 failed (#560 only) |
+| `SHAPE_KERNEL=rust pytest -m "not emulator and not live" -x` | 5512 passed, stopped at #560; the remaining directories (`tests/security` to `tests/validation` and the root test files) then: 1590 passed |
+| `pytest tests/security/test_credential_refs.py` on its own | passes |
+| `SHAPE_KERNEL=rust|python pytest -m "not emulator and not live" plugins/shape-fabric plugins/shape-eventhubs plugins/shape-kafka` | 715 passed in each mode |
+| coverage of the three plugins (`--cov=shape_fabric --cov=shape_eventhubs --cov=shape_kafka`) | 93% at the start, 94% at the end |
+
+No equivalence verifier compares bytes this lane changed: the notebook text is unchanged for valid
+input, and the `.bim` measure names (#425) were left alone. `origin/build/main-plan` was merged
+(no new commits since the lane started). Emulator and live tests were not run (no Docker, no
+secrets); they run nightly in CI.
