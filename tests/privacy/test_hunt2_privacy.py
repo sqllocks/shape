@@ -386,3 +386,38 @@ def test_well_formed_documents_are_unchanged_by_the_type_checks():
     assert suppress_shape(doc)["columns"]["a"]["count"] == 10
     assert redact_sensitive(doc, {})["columns"]["a"]["count"] == 10
     assert SafeProfile.from_dict({"tables": {}}).tables == {}
+
+
+# --- #706: signing in place follows a symbolic link -------------------------------------------
+
+import os  # noqa: E402
+
+
+def test_signing_a_symlink_signs_the_target(tmp_path):
+    pytest.importorskip("cryptography")
+    from shape.artifact.signing import generate_keypair, sign_artifact, verify_artifact
+
+    target = tmp_path / "m.shape"
+    shape.save(shape.profile(pa.table({"a": [1, 2, 3]}), name="m"), str(target))
+    link = tmp_path / "lnk.shape"
+    try:
+        os.symlink(target.name, link)
+    except (OSError, NotImplementedError):
+        pytest.skip("symbolic links are not available")
+    sk, pk = generate_keypair()
+    sign_artifact(link, sk)
+    assert link.is_symlink()
+    assert verify_artifact(target, pk)["verified"] is True
+
+
+def test_signing_to_an_explicit_output_leaves_the_source_alone(tmp_path):
+    pytest.importorskip("cryptography")
+    from shape.artifact.signing import generate_keypair, sign_artifact, verify_artifact
+
+    source = tmp_path / "m.shape"
+    shape.save(shape.profile(pa.table({"a": [1, 2, 3]}), name="m"), str(source))
+    before = source.read_bytes()
+    sk, pk = generate_keypair()
+    sign_artifact(source, sk, out=tmp_path / "signed.shape")
+    assert source.read_bytes() == before
+    assert verify_artifact(tmp_path / "signed.shape", pk)["verified"] is True
