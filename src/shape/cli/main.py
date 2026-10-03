@@ -250,6 +250,17 @@ def _cmd_verify_signature(a):
     return 0
 
 
+def _csv_format(a):
+    from shape.profile.reference.readers import CsvFormat
+
+    return CsvFormat(
+        getattr(a, "delimiter", None),
+        getattr(a, "encoding", None),
+        getattr(a, "quotechar", None),
+        getattr(a, "header", True),
+    )
+
+
 def _profile_source(a):
     """What ``shape profile`` reads. A folder is one table (its files are partitions) unless
     ``--dataset`` asks for one table per file, named by the file's stem. A folder whose files
@@ -262,7 +273,7 @@ def _profile_source(a):
 
     if a.dataset:
         return {name: str(path) for name, path in folder_tables(a.src).items()}
-    if not folder_is_one_table(a.src):
+    if not folder_is_one_table(a.src, _csv_format(a)):
         raise ValueError(
             f"the files in {a.src} do not share their columns, so the folder is not one table: "
             "add --dataset to profile it as several tables (one per file, named by the file "
@@ -301,8 +312,16 @@ def _cmd_profile(a):
 
     if not a.output:
         raise ValueError("profile needs -o OUT.shape")
+    fmt = _csv_format(a)
     prof = shape.profile(
-        _profile_source(a), name=_profile_name(a), version=a.delta_version, as_of=a.as_of
+        _profile_source(a),
+        name=_profile_name(a),
+        version=a.delta_version,
+        as_of=a.as_of,
+        delimiter=fmt.delimiter,
+        encoding=fmt.encoding,
+        quotechar=fmt.quotechar,
+        header=fmt.header,
     )
     _warn_empty(a, prof)
     content_id = shape.save(prof, a.output)
@@ -809,6 +828,19 @@ def _build_parser(plugin_commands=()):
         "--fail-on-empty",
         action="store_true",
         help="exit 2 instead of warning when a table has 0 rows",
+    )
+    pr.add_argument(
+        "--delimiter",
+        metavar="CHAR",
+        help="CSV field delimiter (default: sniffed among comma, semicolon, tab and pipe)",
+    )
+    pr.add_argument("--encoding", metavar="NAME", help="CSV text encoding (default: utf-8)")
+    pr.add_argument("--quotechar", metavar="CHAR", help='CSV quote character (default: ")')
+    pr.add_argument(
+        "--header",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="the CSV's first row is a header (--no-header: columns are named f0, f1, ...)",
     )
     pr.add_argument("--html", metavar="REPORT.html")
     pr.add_argument("--json", metavar="SUMMARY.json")

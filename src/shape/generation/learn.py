@@ -158,6 +158,12 @@ def _column(doc: Mapping[str, Any]) -> ColumnProfile:
         outlier_rate=doc.get("outlier_rate"),
         value_counts_ext=value_counts,
         fit_score=doc.get("fit_score"),
+        nan_count=int(doc.get("nan_count") or 0),
+        inf_count=int(doc.get("inf_count") or 0),
+        pattern_rates=doc.get("pattern_rates"),
+        pattern_contains_rates=doc.get("pattern_contains_rates"),
+        precision=doc.get("precision"),
+        scale=doc.get("scale"),
     )
 
 
@@ -169,6 +175,7 @@ def _table(doc: Mapping[str, Any]) -> TableProfile:
         primary_key=list(doc.get("primary_key") or []),
         detected_fks=dict(doc.get("detected_fks") or {}),
         correlation_matrix=doc.get("correlation_matrix"),
+        correlation_truncated=bool(doc.get("correlation_truncated")),
     )
 
 
