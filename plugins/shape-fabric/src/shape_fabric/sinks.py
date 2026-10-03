@@ -72,12 +72,24 @@ def connection_string_for(uri: str, options: dict[str, Any], scheme: str) -> str
     if options.get("connection") is not None:
         return None
     parts = urlsplit(uri)
-    database = unquote(parts.path.lstrip("/")).split("/")[0]
-    if parts.scheme != scheme or not parts.netloc or not database:
+    if "@" in parts.netloc:
+        # Never echo the URI here: its user info may hold a password.
         raise ShapeError(
-            f"give connection_string, or a URI of the form {scheme}://<host>/<database>: {uri!r}"
+            f"a {scheme}:// URI holds no user or password: sign in with credential= (Microsoft "
+            "Entra), or give connection_string"
         )
-    return str(build_connection_string(parts.netloc, database))
+    try:
+        port = parts.port
+    except ValueError:
+        raise ShapeError(f"the {scheme}:// URI has no usable port") from None
+    database = unquote(parts.path.lstrip("/")).split("/")[0]
+    if parts.scheme != scheme or not parts.hostname or not database:
+        raise ShapeError(
+            f"give connection_string, or a URI of the form {scheme}://<host>[:port]/<database>: "
+            f"{uri!r}"
+        )
+    server = f"{parts.hostname},{port}" if port else parts.hostname
+    return str(build_connection_string(server, database))
 
 
 class LakehouseSink:
