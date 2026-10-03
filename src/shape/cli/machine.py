@@ -386,7 +386,19 @@ def envelope(
     return doc
 
 
-class _Echo(io.StringIO):
+class _Capture(io.TextIOWrapper):
+    """Text standard output over bytes, so code that writes to ``sys.stdout.buffer`` works too."""
+
+    def __init__(self) -> None:
+        self.raw = io.BytesIO()
+        super().__init__(self.raw, encoding="utf-8", newline="")
+
+    def getvalue(self) -> str:
+        self.flush()
+        return self.raw.getvalue().decode("utf-8")
+
+
+class _Echo(_Capture):
     """Standard output that is also passed on: the command's output stays as it was."""
 
     def __init__(self, inner: Any) -> None:
@@ -403,7 +415,7 @@ def _enveloped(path: str, fn: Callable[[], int], errors: Any, to_file: Path | No
     from shape.security.redact import redact_text
 
     lifecycle.quick_exit_allowed = False  # the document is printed after the command returns
-    buf = _Echo(sys.stdout) if to_file is not None else io.StringIO()
+    buf = _Echo(sys.stdout) if to_file is not None else _Capture()
     tee = _Tee(sys.stderr)
     saved = sys.stderr
     sys.stderr = tee

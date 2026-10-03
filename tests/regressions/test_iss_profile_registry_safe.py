@@ -78,7 +78,7 @@ def test_list_shows_the_form(work: Path, capsys: pytest.CaptureFixture[str]) -> 
     assert _save(name="q2") == 0
     capsys.readouterr()
     assert main(["profile", "registry", "list", "--root", "preg", "--json"]) == 0
-    rows = {r["name"]: r for r in json.loads(capsys.readouterr().out)}
+    rows = {r["name"]: r for r in json.loads(capsys.readouterr().out)["payload"]}
     assert rows["q1"]["form"] == "safe" and rows["q1"]["source_rows"] == 500
     assert "form" not in rows["q2"] or rows["q2"]["form"] == "raw"
     assert main(["profile", "registry", "list", "--root", "preg"]) == 0
@@ -94,7 +94,7 @@ def test_tags_survive_a_reindex(work: Path, capsys: pytest.CaptureFixture[str]) 
     assert main(["profile", "registry", "reindex", "--root", "preg"]) == 0
     capsys.readouterr()
     assert main(["profile", "registry", "list", "--root", "preg", "--json"]) == 0
-    (row,) = json.loads(capsys.readouterr().out)
+    (row,) = json.loads(capsys.readouterr().out)["payload"]
     assert row["tags"] == ["daily", "prod", "reviewed"] and row["description"] == "customers"
     assert row["form"] == "safe"
     assert main(["profile", "registry", "validate", "--root", "preg"]) == 0
@@ -152,7 +152,7 @@ def test_delete_removes_a_safe_entry(work: Path, capsys: pytest.CaptureFixture[s
     assert not list((work / "preg").rglob("*.safe.json"))
     capsys.readouterr()
     assert main(["profile", "registry", "list", "--root", "preg", "--json"]) == 0
-    assert json.loads(capsys.readouterr().out) == []
+    assert json.loads(capsys.readouterr().out)["payload"] == []
 
 
 def test_safe_options_need_safe(work: Path, capsys: pytest.CaptureFixture[str]) -> None:
