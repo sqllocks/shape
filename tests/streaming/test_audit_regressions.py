@@ -266,3 +266,30 @@ def test_164_a_csv_column_that_changes_type_later_is_read_to_the_end(tmp_path, c
     assert main(["stream-profile", str(path), "--window", "global", "-o", str(out)]) == 0
     summary = json.loads(capsys.readouterr().out.strip().splitlines()[-1])
     assert summary["events"] == 200_001 and summary["rejected"] == 1
+
+
+def test_165_platinum_batch_helpers_skip_missing_values():
+    import numpy as np
+
+    from shape.streaming.platinum import (
+        GeoGridEvidence,
+        RelationalEvidence,
+        geo_grid_batch,
+        relational_batch,
+    )
+
+    nan = float("nan")
+    grid = geo_grid_batch([nan, 1.0, 1.0], [1.0, nan, 1.0])
+    assert grid.summary()["top_cells"] == [((10, 10), 1)]
+    one = GeoGridEvidence()
+    one.update(nan, 1.0)  # skipped, as None is
+    assert one.summary()["cells"] == 0
+    assert relational_batch(np.array([1.0, nan, 9.0]), 5).summary() == {
+        "checked": 2,
+        "orphans": 1,
+        "orphan_rate": 0.5,
+    }
+    ref = RelationalEvidence()
+    for fk in (1, None, 9):
+        ref.update(fk, fk is not None and fk < 5)
+    assert ref.summary()["checked"] == 2
