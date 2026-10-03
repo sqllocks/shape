@@ -503,6 +503,14 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ### Fixed
 
+- Plugin trust, signing and kit fixes (HUNT2-plugins, #579-#588): a RECORD path with a line break
+  is refused when building a signed file list (two file lists could share one signed message); a
+  malformed RECORD (CSV error, `shake_*` hash) blocks the plugin instead of escaping discovery;
+  `shape plugins sign` quotes file names with commas, keeps the wheel's file mode, names the output
+  path in errors, and a signature file with version below 1 is refused; the conformance kit treats
+  NaN as equal to NaN and reports null behavior ids as conformance errors; a crashing plugin command
+  honours `--debug`; `shape plugins info` and `list --group` accept the short group form
+  (`commands:name`).
 - `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references` no longer depends on test order (#77): it resolves the references in a fresh interpreter and reports which cloud SDK modules got imported, so `azure*` modules left in `sys.modules` by `tests/demo/fabric` cannot fail it.
 - Issue #76. The three tests that failed were not numpy-dependent: they called pyarrow in ways older
   releases reject (float16 from Python floats, `if_else` on half-float, hive partition inference on a
