@@ -228,7 +228,8 @@ class KustoClient:
 
     def prepare(self, table: str, schema: pa.Schema, *, create: str = "merge") -> None:
         """Create (``create="merge"``: or extend) the table, its JSON mapping and its streaming
-        policy, once per client for one schema. ``create="strict"`` fails if the table exists."""
+        policy; again only when another schema was prepared for the table since (its JSON mapping
+        replaced this one). ``create="strict"`` fails if the table exists."""
         mark = (table, schema.to_string())
         if mark in self._prepared:
             return
@@ -245,6 +246,9 @@ class KustoClient:
             self.mgmt(streaming_policy_command(table))
         except (ShapeError, AuthError):
             pass
+        # A table has one mapping by that name, and this one replaced it: another schema
+        # prepared for the same table must send its own mapping again.
+        self.forget(table)
         self._prepared.add(mark)
 
     def forget(self, table: str) -> None:
