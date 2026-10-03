@@ -206,6 +206,12 @@ class DesignInput:
             for name, _ in e.history.attributes:
                 _names_exist((name,), have, f"entity {e.name!r} history")
             for a in e.attributes:
+                if a.precision is not None and a.scale is not None and a.scale > a.precision:
+                    raise DesignError(
+                        f"entity {e.name!r} attribute {a.name!r}: scale {a.scale} is larger than "
+                        f"precision {a.precision}; a decimal cannot have more fraction digits "
+                        "than digits"
+                    )
                 if a.references is not None and a.references not in by_name:
                     raise DesignError(
                         f"entity {e.name!r} attribute {a.name!r}: unknown entity "

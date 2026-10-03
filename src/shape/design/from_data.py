@@ -113,13 +113,12 @@ def _entity(
         if kind == "string":
             attr["max_length"] = max([1, *(len(str(v)) for v in values[c] if v is not None)])
         elif kind == "decimal":
-            places = [
-                -exp
-                for v in values[c]
-                if isinstance(v, Decimal) and isinstance(exp := v.as_tuple().exponent, int)
-            ]
-            attr["precision"] = 38
-            attr["scale"] = max([0, *places])
+            finite = [v.as_tuple() for v in values[c] if isinstance(v, Decimal) and v.is_finite()]
+            scale = max([0, *(-int(t.exponent) for t in finite)])
+            whole = max([0, *(len(t.digits) + int(t.exponent) for t in finite)])
+            # 38 (the T-SQL maximum) unless the values need more digits than that
+            attr["precision"] = max(38, whole + scale)
+            attr["scale"] = scale
         attributes.append(attr)
     if (max_key_size > 1 or max_determinant > 1) and len(columns) > MAX_COLUMNS_FOR_PAIRS:
         raise DesignError(
