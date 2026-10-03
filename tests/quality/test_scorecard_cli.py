@@ -210,3 +210,29 @@ def test_missing_data_is_input_error(tmp_path, capsys):
 def test_negative_samples_is_input_error(data, capsys):
     d, g = data
     assert main(["scorecard", str(d), "--schema", str(g), "--samples", "-1"]) == 2
+
+
+# -- HUNT2-quality ----------------------------------------------------------------------------
+
+
+def test_history_without_a_name_is_refused(data, tmp_path, capsys):
+    """#571: --history alone was accepted and ignored, so no trend was ever shown."""
+    d, g = data
+    rc = main(["scorecard", str(d), "--schema", str(g), "--history", str(tmp_path / "h")])
+    assert rc == 2
+    assert "--name" in capsys.readouterr().err
+
+
+def test_nothing_to_score_says_so_on_stderr(data, capsys):
+    """#571: no schema and no config gave an all-n/a scorecard and no hint."""
+    d, _ = data
+    assert main(["scorecard", str(d)]) == 0
+    cap = capsys.readouterr()
+    assert "# Shape data quality scorecard" in cap.out
+    assert "--schema" in cap.err and "--config" in cap.err
+
+
+def test_no_hint_when_a_schema_is_given(data, capsys):
+    d, g = data
+    assert main(["scorecard", str(d), "--schema", str(g)]) == 0
+    assert capsys.readouterr().err == ""

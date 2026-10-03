@@ -380,3 +380,25 @@ def test_the_cli_runs_the_timeseries_gate(tmp_path, capsys):
     assert "timeseries_quality" in out.out and "1 missing step" in out.err
     cfg.write_text(json.dumps(doc(timeseries=[{**RULE, "gaps": {"max_missing": 1}}])))
     assert main(["verify", str(d), "--config", str(cfg)]) == 0
+
+
+# -- HUNT2-quality ----------------------------------------------------------------------------
+
+
+def test_stuck_check_on_a_column_that_cannot_be_compared_is_a_finding():
+    """#576: the Arrow error was swallowed and the check passed."""
+    import datetime as dt
+
+    import pyarrow as pa
+
+    from shape.quality.timeseries import check_timeseries
+
+    ts = pa.array([dt.datetime(2024, 1, 1, h) for h in range(4)], pa.timestamp("us"))
+    rule = {"table": "t", "time": "ts", "stuck": {"column": "v", "max_run": 1}}
+    bad = check_timeseries({"t": pa.table({"ts": ts, "v": [{"a": 1}] * 4})}, [rule])
+    assert [f["rule"] for f in bad] == ["timeseries.column_type"]
+    assert bad[0]["severity"] == "error" and bad[0]["column"] == "v"
+    ok = check_timeseries({"t": pa.table({"ts": ts, "v": [1, 2, 3, 4]})}, [rule])
+    assert ok == []
+    stuck = check_timeseries({"t": pa.table({"ts": ts, "v": [1, 1, 1, 1]})}, [rule])
+    assert [f["rule"] for f in stuck] == ["timeseries.stuck"]

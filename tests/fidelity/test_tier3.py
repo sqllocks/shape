@@ -302,3 +302,16 @@ def test_psi_report_flags_a_column_that_gained_infinite_values():
     assert rep.drifted_columns == ["a"]
     same = psi_report(pa.table({"a": x}), pa.table({"a": x}))
     assert not same.columns["a"].is_drifted
+
+
+def test_bootstrap_negative_row_count_says_what_is_wrong():
+    """#578: numpy's 'negative dimensions' error named nothing."""
+    import pyarrow as pa
+    import pytest
+
+    from shape.fidelity.tier3 import bootstrap_table
+
+    t = pa.table({"a": [1, 2, 3]})
+    with pytest.raises(ValueError, match="n_rows must be zero or more"):
+        bootstrap_table(t, n_rows=-1)
+    assert bootstrap_table(t, n_rows=0)[0].num_rows == 0
