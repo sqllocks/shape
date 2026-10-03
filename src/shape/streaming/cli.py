@@ -242,6 +242,19 @@ def _late_report(prof: WindowedProfiler, rows: int) -> str | None:
     )
 
 
+def _refuse_unreadable(source: Any) -> None:
+    """A stream that gave no event although it held messages that could not be read is a wrong
+    input (the wrong file or format), not an empty one: say so, with the counts."""
+    stats = getattr(source, "stats", None)
+    if stats is None or not (stats.undecodable or stats.rejected):
+        return
+    raise StreamSourceError(
+        f"the stream had no usable event: {stats.undecodable} undecodable and {stats.rejected} "
+        "rejected messages (each must be one JSON object per line, or a CSV or Parquet row); "
+        "check the input and its format (--option format=jsonl|csv|parquet)"
+    )
+
+
 def _checkpoint_schema(store: FileCheckpointStore) -> pa.Schema | None:
     doc = store.load_document()
     if doc is None or doc.get("format") != CHECKPOINT_FORMAT:
@@ -320,6 +333,7 @@ def run(args: Any) -> int:
             first = next(gen)
         except StopIteration:
             gen.close()
+            _refuse_unreadable(source)
             note = "the stream had no events; nothing was written"
             print(f"shape: {note}", file=sys.stderr)
             print(json.dumps({"uri": args.uri, "events": 0, "note": note}))
