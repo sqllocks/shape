@@ -103,7 +103,7 @@ class LocalRegistry:
                     os.unlink(tmp)
                 raise
         e = {"name": name, "content_id": h, "created_at": time.time(), "metadata": metadata or {}}
-        with log.open("a") as f:
+        with log.open("a", encoding="utf-8", newline="\n") as f:
             f.write(json.dumps(e, sort_keys=True) + "\n")
         self._write_ref(name, "latest", h)
         return h
@@ -114,7 +114,7 @@ class LocalRegistry:
         p.mkdir(parents=True, exist_ok=True)
         fd, tmp = tempfile.mkstemp(dir=p, prefix=".tmp-")
         try:
-            with os.fdopen(fd, "w") as fh:
+            with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as fh:
                 fh.write(h)
             os.replace(tmp, p / ref)
         except BaseException:
@@ -128,10 +128,10 @@ class LocalRegistry:
         _check("ref", ref)
         p = self._path("refs", name, ref)
         if p.is_file():
-            return p.read_text().strip()
+            return p.read_text(encoding="utf-8").strip()
         t = self._path("tags", name, ref)
         if t.is_file():
-            return t.read_text().strip()
+            return t.read_text(encoding="utf-8").strip()
         if any(e.get("content_id") == ref for e in self.log(name)):
             return ref
         raise RegistryError(f"{name}@{ref} is not recorded in the registry")
@@ -149,7 +149,7 @@ class LocalRegistry:
         p = self._path("tags", name)
         p.mkdir(parents=True, exist_ok=True)
         self._path("tags", name, tag)
-        (p / tag).write_text(h)
+        (p / tag).write_text(h, encoding="utf-8", newline="\n")
         return h
 
     def promote(self, name: str, source: str, target: str) -> str:
@@ -160,12 +160,20 @@ class LocalRegistry:
     def log(self, name: str) -> list[dict[str, Any]]:
         _check("name", name)
         p = self._path("logs", f"{name}.jsonl")
-        return [json.loads(x) for x in p.read_text().splitlines()] if p.exists() else []
+        return (
+            [json.loads(x) for x in p.read_text(encoding="utf-8").splitlines()]
+            if p.exists()
+            else []
+        )
 
     def refs(self, name: str) -> dict[str, str]:
         _check("name", name)
         p = self._path("refs", name)
-        return {x.name: x.read_text().strip() for x in p.iterdir()} if p.exists() else {}
+        return (
+            {x.name: x.read_text(encoding="utf-8").strip() for x in p.iterdir()}
+            if p.exists()
+            else {}
+        )
 
     def names(self) -> list[str]:
         """The names with at least one commit, sorted."""
@@ -175,7 +183,11 @@ class LocalRegistry:
         """The tags of ``name`` and the content id each points at."""
         _check("name", name)
         p = self._path("tags", name)
-        return {x.name: x.read_text().strip() for x in sorted(p.iterdir())} if p.exists() else {}
+        return (
+            {x.name: x.read_text(encoding="utf-8").strip() for x in sorted(p.iterdir())}
+            if p.exists()
+            else {}
+        )
 
     def entry(self, name: str, ref: str = "latest") -> dict[str, Any]:
         """The newest log entry whose content is ``ref`` (a ref, tag or content id) of ``name``."""
