@@ -197,6 +197,34 @@
         "min_rows": {
           "type": "number",
           "minimum": 0
+        },
+        "dependency_confidence": {
+          "type": "number",
+          "minimum": 0
+        },
+        "placeholder_share": {
+          "type": "number",
+          "minimum": 0
+        },
+        "implausible_rate": {
+          "type": "number",
+          "minimum": 0
+        },
+        "association_shift": {
+          "type": "number",
+          "minimum": 0
+        },
+        "reference_match_rate": {
+          "type": "number",
+          "minimum": 0
+        },
+        "row_count_ratio_max": {
+          "type": "number",
+          "minimum": 0
+        },
+        "row_count_ratio_min": {
+          "type": "number",
+          "minimum": 0
         }
       }
     },

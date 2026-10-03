@@ -693,7 +693,8 @@ def _cmd_verify_gates(a):
     )
     from shape.quality.verify import data_files
 
-    ctx = project_cli.context(a)
+    # verify's own --source is the data a generator copied from, not a source of shape.yml
+    ctx = project_cli.context(argparse.Namespace(**{**vars(a), "source": None}))
     named = project_cli.use_source_path(a, "shape", ctx)
     if named is not None:  # `shape verify orders`: the source of shape.yml, not a path
         a.shape = named.path
