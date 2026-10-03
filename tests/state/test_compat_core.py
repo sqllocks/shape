@@ -213,6 +213,12 @@ def test_strict_mode_refuses_legacy_key_names() -> None:
         assert compat.check_readable(SAMPLE, {"version": 2}) == 2
 
 
+def test_strict_mode_accepts_the_model_s_own_key_name() -> None:
+    """The model's body is content-addressed, so ``schema_version`` is its one right key."""
+    with compat.strict_formats():
+        assert compat.declared_version("model", {"schema_version": 2}) == 2
+
+
 def test_strict_mode_refuses_unknown_fields() -> None:
     compat.check_unknown(SAMPLE, {"a": 1, "x_extra": 2}, known={"a"})  # lenient: ignored
     with compat.strict_formats(), pytest.raises(FormatError, match="x_extra"):

@@ -557,3 +557,29 @@ def test_shape_migrate_help_through_the_shape_command(capsys: pytest.CaptureFixt
         main(["migrate", "--help"])
     assert e.value.code == 0
     assert "--dry-run" in capsys.readouterr().out
+
+
+def test_the_command_signs_and_verifies_with_key_files(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from shape.cli import migrate as cli
+
+    old_key, old_pub = signing.write_keypair(tmp_path / "old", unencrypted=True)
+    new_key, new_pub = signing.write_keypair(tmp_path / "new", unencrypted=True)
+    src = make_v1(tmp_path / "a.shape")
+    signing.sign_artifact(src, signing.load_private_key(old_key))
+    dst = tmp_path / "b.shape"
+    # a signed source with no key for the receipt is refused (exit 2) and writes nothing
+    assert cli.main([str(src), str(dst), "--verify", str(old_pub)]) == 2
+    assert "--sign-key" in capsys.readouterr().err and not dst.exists()
+    # the wrong verification key stops it
+    assert cli.main([str(src), str(dst), "--verify", str(new_pub), "--sign-key", str(new_key)]) == 1
+    assert not dst.exists()
+    capsys.readouterr()
+    assert cli.main([str(src), str(dst), "--verify", str(old_pub), "--sign-key", str(new_key)]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["written"] is True and out["receipt"].endswith("b.shape.receipt.json")
+    signing.verify_artifact(dst, signing.load_public_key(new_pub))
+    migrate.verify_receipt(
+        Path(out["receipt"]), signing.load_public_key(new_pub), source=src, result=dst
+    )

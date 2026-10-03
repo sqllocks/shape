@@ -2,7 +2,8 @@
 persisted file to the current form. See ``shape.migrate`` and
 ``docs/specs/STATE_AND_COMPATIBILITY.md``.
 
-Exit codes: 0 migrated (or nothing to do, or a dry run), 2 refused or bad input.
+Exit codes: 0 migrated (or nothing to do, or a dry run), 1 the source's signature failed
+``--verify``, 2 refused or bad input.
 """
 
 from __future__ import annotations
@@ -90,11 +91,24 @@ def run(a: argparse.Namespace) -> int:
     return 0
 
 
+def _run(a: argparse.Namespace) -> int:
+    from shape.artifact.io import ArtifactSignatureError
+    from shape.cli import errors
+
+    try:
+        return run(a)
+    except ArtifactSignatureError as exc:
+        if errors.debug_enabled():
+            raise
+        print(f"shape: signature check failed: {exc}", file=sys.stderr)
+        return 1
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     a = _parser().parse_args(list(sys.argv[1:] if argv is None else argv))
     from shape.cli import errors
 
-    return errors.guarded(lambda: run(a))
+    return errors.guarded(lambda: _run(a))
 
 
 def main_entry() -> None:  # pragma: no cover - the console script

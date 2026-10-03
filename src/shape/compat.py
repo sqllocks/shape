@@ -309,7 +309,7 @@ def declared_version(
         if k.implicit_version is None:
             raise fe(f"{k.label} declares no version")
         return k.implicit_version
-    if is_strict() and VERSION_KEY not in found:
+    if is_strict() and k.unified_in_body and VERSION_KEY not in found:
         old = next(iter(found))
         raise fe(
             f"{k.label}: strict mode: the version is under the old key {old!r}; the key is "

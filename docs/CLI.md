@@ -46,7 +46,7 @@ It never rewrites in place or overwrites a file, records `migrated_from` and `so
 refuses a downgrade (`--to N` below the file's version), reads its result back and checks the
 content id before publishing it, and migrates a file that is already current to nothing. `--kind
 KIND` names a JSON file that is not recognised by itself. Exit codes: 0 migrated, no-op or dry run;
-2 refused or bad input. Strict reading of every format (`SHAPE_STRICT_FORMATS=1`) is described in
+1 the source failed `--verify`; 2 refused or bad input. Strict reading of every format (`SHAPE_STRICT_FORMATS=1`) is described in
 the policy.
 
 ## What each command expects
