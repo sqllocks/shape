@@ -192,7 +192,18 @@ class InferenceDemoMode:
             )
         if not p.is_file():
             raise DemoError(f"file not found: {path}")
-        return profile(p)
+        try:
+            return profile(p)
+        except UnicodeDecodeError:
+            raise DemoError(
+                f"{path} is not UTF-8 text: save it as UTF-8 (a UTF-16 export is the usual cause)"
+            ) from None
+        except KeyError as exc:
+            if "exists" in str(exc) and "times" in str(exc):  # pyarrow: a name used twice
+                raise DemoError(
+                    f"{path} uses a column name more than once ({exc.args[0]}): rename one"
+                ) from None
+            raise
 
     def _profile_domain_defaults(self) -> Any:
         """A small reference dataset generated from the domain, then profiled."""
