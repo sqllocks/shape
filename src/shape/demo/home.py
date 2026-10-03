@@ -10,6 +10,8 @@ import os
 import re
 from pathlib import Path
 
+from shape.demo.errors import DemoError
+
 HOME_ENV = "SHAPE_HOME"
 _NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 
@@ -30,9 +32,10 @@ def sessions_dir() -> Path:
 
 def check_name(value: str, what: str) -> str:
     """``value`` when it is a plain name (letters, digits, ``.``, ``_``, ``-``): a name is used in
-    a file name, so it must not hold a path separator or start with a dot."""
-    if not _NAME.match(value):
-        raise ValueError(
+    a file name, so it must not hold a path separator or a line break, or start with a dot. A
+    :class:`~shape.demo.errors.DemoError` (a ``ValueError``) otherwise."""
+    if not isinstance(value, str) or not _NAME.fullmatch(value):
+        raise DemoError(
             f"{what} {value!r} is not a plain name: use letters, digits, '.', '_' and '-' "
             "(at most 64 characters, starting with a letter or digit)"
         )
