@@ -5,6 +5,17 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+### Fixed
+
+- Test suite (AUD-tests): tests no longer depend on the order they run in (shared Spark session
+  and JVM, shared generation case schemas, a cached test module, the process-wide `sys.modules`
+  and `PYSPARK_PYTHON`; #77, #328, #329, #330, #335); the Python-kernel Spark executor test now
+  runs the Python kernel (#328); the suite passes on pyarrow 19.0.1 (#333); a benchmark-harness
+  test no longer writes `$BENCH_OUT_DIR` (#332); only the delta-fallback tests that read through
+  DuckDB need its downloaded extension (#331). New tests cover `shape.quality.evaluate`,
+  `shape.privacy.assess_summary`, contract save/load, the GeoNames and Gazetteer loaders and
+  `DatetimeProfile` merge.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
