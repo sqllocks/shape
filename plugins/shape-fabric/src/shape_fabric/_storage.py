@@ -17,11 +17,12 @@ import tempfile
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, BinaryIO
+from urllib.parse import urlsplit
 
 from shape.errors import ShapeError
 
 from ._auth import as_credential
-from .onelake import is_remote, to_abfss
+from .onelake import is_remote, path_segments, to_abfss
 
 
 class Storage:
@@ -36,6 +37,7 @@ class Storage:
 
     def _remote(self, path: str) -> tuple[Any, str]:
         uri = to_abfss(path) if path.startswith("onelake://") else path
+        path_segments(urlsplit(uri).path, path)  # no '.' or '..': a write stays where it is aimed
         try:
             from shape.builtins.sources import azure
         except ImportError as exc:  # pragma: no cover - the core wheel always has it

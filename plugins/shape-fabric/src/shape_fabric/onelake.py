@@ -46,6 +46,15 @@ def segment(name: str, what: str = "name") -> str:
     return name
 
 
+def path_segments(path: str, uri: str) -> list[str]:
+    """The decoded segments of a URI's ``path``; a ``.`` or ``..`` (also written ``%2e%2e``)
+    would step out of the item, so it is a :class:`ShapeError`."""
+    segs = [unquote(s) for s in path.split("/") if s]
+    if any(s in (".", "..") for s in segs):
+        raise ShapeError(f"a path cannot contain '.' or '..' segments: {uri!r}")
+    return segs
+
+
 def is_remote(path: str) -> bool:
     return path.startswith(("abfss://", "abfs://", "onelake://"))
 
@@ -99,12 +108,12 @@ def parse(uri: str) -> OneLakePath:
             raise ShapeError(
                 f"not a OneLake URI: {uri!r} (abfss://<workspace>@{ONELAKE_HOST}/<item>/...)"
             )
-        segs = [unquote(s) for s in parts.path.split("/") if s]
+        segs = path_segments(parts.path, uri)
         if not segs:
             raise ShapeError(f"a OneLake URI needs an item after the host: {uri!r}")
         return OneLakePath(workspace, segs[0], "/".join(segs[1:]))
     if parts.scheme == "onelake":
-        segs = [unquote(s) for s in parts.path.split("/") if s]
+        segs = path_segments(parts.path, uri)
         if not parts.netloc or not segs:
             raise ShapeError(f"not a OneLake URI: {uri!r} (onelake://<workspace>/<lakehouse>/...)")
         return OneLakePath(parts.netloc, item_name(segs[0]), "/".join(segs[1:]))
