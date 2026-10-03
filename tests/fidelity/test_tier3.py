@@ -269,3 +269,36 @@ class TestBootstrap:
         assert bootstrap_table(src, 0)[0].num_rows == 0
         with pytest.raises(ValueError, match="empty"):
             bootstrap_table(src.slice(0, 0))
+
+
+# -- HUNT2-quality ----------------------------------------------------------------------------
+
+
+def test_psi_ignores_infinite_values_and_stays_a_number():
+    """#577: an infinite value made the PSI NaN."""
+    import numpy as np
+
+    from shape.fidelity.tier3 import population_stability_index
+
+    x = np.random.default_rng(0).normal(size=100)
+    y = x.copy()
+    y[0] = np.inf
+    assert np.isfinite(population_stability_index(x, y))
+    assert population_stability_index(x, x) == 0.0
+    assert population_stability_index(np.array([np.inf]), x) == 0.0  # nothing finite to bin
+
+
+def test_psi_report_flags_a_column_that_gained_infinite_values():
+    import numpy as np
+    import pyarrow as pa
+
+    from shape.fidelity.tier3 import psi_report
+
+    x = np.random.default_rng(0).normal(size=100)
+    y = x.copy()
+    y[0] = np.inf
+    rep = psi_report(pa.table({"a": x}), pa.table({"a": y}))
+    assert rep.columns["a"].is_drifted
+    assert rep.drifted_columns == ["a"]
+    same = psi_report(pa.table({"a": x}), pa.table({"a": x}))
+    assert not same.columns["a"].is_drifted
