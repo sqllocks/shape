@@ -131,7 +131,6 @@ module=[
     "shape.streaming.failure",
     "shape.streaming.monitor",
     "shape.streaming.online",
-    "shape.types",
     "shape.validation",
     "shape.validation.adversarial",
     "shape.validation.fuzz",
