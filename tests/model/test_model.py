@@ -32,3 +32,11 @@ def test_sensitivity_join_is_conservative():
     c = a.join(b)
     assert c.dominates(a)
     assert c.dominates(b)
+
+
+def test_join_sensitivity_accumulates_every_label():
+    a = Sensitivity(classifications=frozenset({"PII"}))
+    b = Sensitivity(categories=frozenset({"health"}))
+    shape = ShapeBuilder().join_sensitivity(a).join_sensitivity(b).finalize()
+    assert shape.sensitivity.dominates(a) and shape.sensitivity.dominates(b)
+    assert shape.sensitivity == a.join(b)
