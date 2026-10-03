@@ -211,9 +211,11 @@ def _iso_bound(value: Any) -> str | None:
         return None
     text = value.isoformat() if isinstance(value, dt.date) else str(value)
     try:
-        dt.datetime.fromisoformat(text)
+        parsed = dt.datetime.fromisoformat(text)
     except ValueError:
         return None
+    if parsed.tzinfo is not None:  # a zoned column: its wall clock, as fidelity compares it
+        return parsed.replace(tzinfo=None).isoformat(sep=" ")
     return str(value)
 
 

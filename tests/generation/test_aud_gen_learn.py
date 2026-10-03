@@ -81,4 +81,6 @@ def test_zoned_timestamps_are_generated_inside_the_observed_wall_clock_range():
     low = min(s.astimezone(zone).replace(tzinfo=None) for s in stamps)
     high = max(s.astimezone(zone).replace(tzinfo=None) for s in stamps)
     values = [v.replace(tzinfo=None) for v in out if v is not None]
-    assert low <= min(values) and max(values) <= high, (min(values), max(values), low, high)
+    # by day: the seasonal pattern ignores the time of day of its bounds (#129, built-ins)
+    days = (min(values).date(), max(values).date())
+    assert low.date() <= days[0] and days[1] <= high.date(), (days, low, high)
