@@ -55,6 +55,13 @@ shape --version
 shape inspect customers.shape                        # what a .shape file holds
 ```
 
+## A project file
+
+`shape init` writes a `shape.yml` that keeps a setup reviewable in git: named sources, a baseline
+per source, thresholds and ignore lists per column, gates (observe or enforce) and column owners.
+`shape profile`, `diff`, `check` and `verify` read it and every flag overrides it
+(`docs/PROJECT.md`).
+
 ## Version-controlling shapes
 
 A shape can live in git like code: re-profiling unchanged data gives a **byte-identical**

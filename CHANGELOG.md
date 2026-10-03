@@ -5,6 +5,15 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `shape.yml` project file and `shape init` (`docs/PROJECT.md`): named sources, a baseline per
+  source (previous run, same weekday, rolling window, month end or a pinned artifact, resolved
+  against the registry), drift thresholds and ignore lists per column, gates with `observe` or
+  `enforce` modes, and column owners and annotations. Versioned (`format`, integer `version`,
+  JSON Schema `shape-project-v1.schema.json`, a frozen version 1 file in the tests).
+  `shape profile`, `diff`, `check` and `verify` read it when present and every flag overrides it;
+  `shape init` scaffolds `shape.yml`, folders, `.gitattributes` and an example CI workflow;
+  `shape project validate` reports every problem with its key path. PyYAML stays an optional
+  extra (`yaml`).
 - `shape generate --scale-mode local_single|local_mp|fabric_spark` and `shape jobs list|status|cancel|resume`
   (`docs/SCALE.md`): the scale router with sinks (memory, Parquet part files, Lakehouse, Warehouse,
   SQL Database, KQL), a durable job store (submit, status, cancel, resume), the `fabric_spark` router

@@ -81,6 +81,13 @@ example when a date column's minimum is a string tag in one and a date in the ot
 `shape diff` finds no drift between them. Compare profiles with `shape diff`, not by id, when the
 sources differ in format.
 
+## The project file
+
+`shape init` scaffolds a project and `shape project validate` checks its `shape.yml`; `profile`,
+`diff`, `check` and `verify` read it when it is present, and their flags override it
+(`--project FILE`, `--no-project`, `--source NAME`, `diff --baseline-date`). See
+`docs/PROJECT.md`.
+
 ## Registries
 
 `shape registry` (content-addressed artifacts) and `shape profile registry` (named profiles) are
