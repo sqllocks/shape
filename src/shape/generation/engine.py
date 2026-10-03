@@ -18,8 +18,8 @@ What the engine decides, and what it leaves to strategies:
   whatever the chunk size; the engine's own draws always do. :meth:`Engine.generate_chunk` is
   therefore a random-access read, and the output of :meth:`Engine.generate` is identical for any
   ``chunk_rows``.
-* **Post-passes**, in this order, on whole tables: the compute phase (``compute.py``), business
-  rule repair (``rules.py``) and the correlation copula (``correlation.py``). They need every
+* **Post-passes**, in this order, on whole tables: the correlation copula (``correlation.py``),
+  the compute phase (``compute.py``) and business rule repair (``rules.py``). They need every
   row, so :meth:`Engine.iter_chunks` yields chunks *before* them and :meth:`Engine.generate`
   returns tables after them.
 
@@ -916,8 +916,8 @@ class Engine:
         on_table: Callable[[str, pa.Table], None] | None = None,
         on_batch: Callable[[str, pa.RecordBatch | None], None] | None = None,
     ) -> GenerationResult:
-        """Validate, generate every table, then run the post-passes (compute, rule repair,
-        copula). The result does not depend on ``chunk_rows``.
+        """Validate, generate every table, then run the post-passes (copula, compute, rule
+        repair). The result does not depend on ``chunk_rows``.
 
         A table is *final* once no post-pass can change it: right after its level for a table
         without ``computed`` columns, rule repairs or correlated columns, after the post-passes for
@@ -947,13 +947,22 @@ class Engine:
         flat = [n for level in levels for n in level]
         touched = self._post_pass_tables()
         final_early = [n for n in flat if n not in touched]
+        # The copula reorders whole columns, so it runs first among the post-passes: the compute
+        # phase and the rule repair then see its values, and keep them (#169). Early rules and
+        # streamed aggregates read tables before the post-passes, so they are left out for the
+        # tables it reorders.
+        copula = {t for t, pairs in self.schema.correlated_columns.items() if t in flat and pairs}
         early = (
             EarlyRules(self.schema, self.seed, self._built)
-            if self._early_rules and self.schema.business_rules
+            if self._early_rules and self.schema.business_rules and not copula
             else None
         )
         aggregates = (
-            plan_streamed_aggregates(self.schema, self.row_counts)
+            [
+                a
+                for a in plan_streamed_aggregates(self.schema, self.row_counts)
+                if a.child not in copula and a.parent not in copula
+            ]
             if self._stream_aggregates
             else []
         )
@@ -980,6 +989,18 @@ class Engine:
             if early is not None:
                 early.advance()
         tables = {name: self.generate_table(name) for name in flat}
+        for tname in self.schema.correlated_columns:
+            if tname in copula:
+                tables[tname] = apply_copula(
+                    tables[tname],
+                    self.schema.correlated_columns[tname],
+                    self.seed,
+                    tname,
+                    threshold=float(
+                        self.schema.generation.output.get("copula_threshold", THRESHOLD)
+                    ),
+                    nulls=str(self.schema.generation.output.get("copula_nulls", "skip")),
+                )
         rules_done = 0
         if early is not None:
             rules_done, repaired = early.finish()
@@ -993,14 +1014,13 @@ class Engine:
         }
         tables = apply_compute_phase(tables, self.schema, precomputed)
         rules = self.schema.business_rules
-        copula = {t for t, pairs in self.schema.correlated_columns.items() if t in tables and pairs}
         emitted: set[str] = set()
 
         def release(after_rule: int) -> None:
-            """Hand over the touched tables that no later rule repair or copula changes."""
+            """Hand over the touched tables that no later rule repair changes."""
             if on_table is None:
                 return
-            later = {repair_target(r) for r in rules[after_rule + 1 :]} | copula
+            later = {repair_target(r) for r in rules[after_rule + 1 :]}
             for name in flat:
                 if name in touched and name not in later and name not in emitted:
                     emitted.add(name)
@@ -1012,18 +1032,6 @@ class Engine:
                 tables = fix_rule(rule, tables, self.seed)
             release(i)
         remaining = validate_rules(tables, self.schema) if rules else []
-        for tname in self.schema.correlated_columns:
-            if tname in copula:
-                tables[tname] = apply_copula(
-                    tables[tname],
-                    self.schema.correlated_columns[tname],
-                    self.seed,
-                    tname,
-                    threshold=float(
-                        self.schema.generation.output.get("copula_threshold", THRESHOLD)
-                    ),
-                    nulls=str(self.schema.generation.output.get("copula_nulls", "skip")),
-                )
         release(len(rules))
         tables = {name: self.finalize(name, t) for name, t in tables.items()}
         lineage = [

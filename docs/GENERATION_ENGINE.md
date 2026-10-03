@@ -100,19 +100,23 @@ a generator is all null; a `computed` column is a null placeholder until the com
 
 They need whole tables, so `generate()` runs them and `iter_chunks()` does not. In order:
 
-1. **Compute phase** (`compute.py`): fills `computed` columns from another table: `sum_children`,
-   `count_children`, `avg_children`, `min_children`, `max_children` (rows without children get 0;
-   decimals are rounded to 2 places), or `lookup_parent`.
-2. **Business rules** (`rules.py`): `validate_rules` lists the rules the data breaks;
-   `fix_rules` repairs `cross_column` (`<`, `>`) and `cross_table` (`>=`, `>`, `<=`) rules and
-   returns what still violates. Repairs draw from the `fix:<rule>` stream.
-3. **Correlation** (`correlation.py`): a Gaussian copula reorders the values of the numeric columns
+1. **Correlation** (`correlation.py`): a Gaussian copula reorders the values of the numeric columns
    named in `correlated_columns` to match the target correlations, leaving every column's values
    unchanged. Key-like columns and columns with nulls are not reordered, unless the schema's
    `generation.output.copula_nulls` is `"rank"` (what `shape generate --from` writes): then the
    non-null values are reordered among the non-null rows and the nulls stay where they are.
    Pairs with `|r|` below 0.5 are ignored, unless `generation.output.copula_threshold` lowers
-   that (`shape generate --from` writes 0 and lists only the pairs it wants).
+   that (`shape generate --from` writes 0 and lists only the pairs it wants). It runs first, so
+   the passes after it see the reordered rows and keep their results: a `computed` sum matches its
+   child rows and a repaired rule holds (a `computed` column is still empty when it runs, so it is
+   never reordered).
+2. **Compute phase** (`compute.py`): fills `computed` columns from another table: `sum_children`,
+   `count_children`, `avg_children`, `min_children`, `max_children` (rows without children get 0;
+   decimals are rounded to 2 places), or `lookup_parent`.
+3. **Business rules** (`rules.py`): `validate_rules` lists the rules the data breaks;
+   `fix_rules` repairs `cross_column` (`<`, `>`) and `cross_table` (`>=`, `>`, `<=`) rules and
+   returns what still violates. Repairs draw from the `fix:<rule>` stream. `remaining_violations`
+   is what the finished tables break.
 
 ## From data: `learn`, `generate --from` and `plan`
 
@@ -315,7 +319,7 @@ engine.generate(on_table=..., on_batch=...)
 A table is *final* once no post-pass can change it. A table with no computed column, rule repair or
 correlated column is final as soon as it is generated; `on_batch(name, batch)` receives its chunks in
 row order as they are made and `on_batch(name, None)` when it is whole. Any other table is final after
-the last rule repair that can change it and the copula, and `on_table(name, table)` receives it then
+the copula and the last rule repair that can change it, and `on_table(name, table)` receives it then
 (and receives every table when there is no `on_batch`). Both callbacks run on the calling thread:
 hand the data to a writer. `write_engine` does exactly that.
 
