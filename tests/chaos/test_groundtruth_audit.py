@@ -2,11 +2,19 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import numpy as np
 import pyarrow as pa
 import pytest
 
-from shape.chaos.groundtruth import Corruption, corrupt_tables
+from shape.chaos.groundtruth import (
+    Corruption,
+    corrupt_tables,
+    read_ground_truth,
+    write_ground_truth,
+)
 
 
 def test_orphan_keys_match_no_parent_row_without_declared_references() -> None:
@@ -148,3 +156,29 @@ def test_corruption_parse_names_the_bad_option(text: str, message: str) -> None:
     """#408: a bad option names itself; duplicates refuses a column."""
     with pytest.raises(ValueError, match=message):
         Corruption.parse(text)
+
+
+def test_read_ground_truth_refuses_an_unknown_log_version(tmp_path: Path) -> None:
+    """#410: a log of a version this release does not know is refused, naming the version."""
+    log = tmp_path / "log.jsonl"
+    log.write_text(json.dumps({"record": "run", "log_version": 2}) + "\n", encoding="utf-8")
+    with pytest.raises(ValueError, match=r"log_version 2.*reads version 1"):
+        read_ground_truth(log)
+
+
+def test_read_ground_truth_names_a_malformed_line(tmp_path: Path) -> None:
+    """#410: a line that is not JSON is reported with its number."""
+    log = tmp_path / "log.jsonl"
+    log.write_text(
+        json.dumps({"record": "run", "log_version": 1}) + "\n{not json\n", encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match=r"log\.jsonl line 2 is not JSON"):
+        read_ground_truth(log)
+
+
+def test_read_ground_truth_round_trips_a_written_log(tmp_path: Path) -> None:
+    tables = {"t": pa.table({"id": [1, 2, 3, 4]})}
+    out = corrupt_tables(tables, [Corruption("duplicates", 0.5, "t")], seed=1)
+    run, changes = read_ground_truth(write_ground_truth(tmp_path / "g.jsonl", out))
+    assert run["log_version"] == 1
+    assert len(changes) == 2
