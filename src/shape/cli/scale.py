@@ -213,10 +213,6 @@ def run_scale(a: argparse.Namespace) -> int:
     normalize(request)  # raises ValueError for anything it rejects, before any work
     if a.dry_run:
         return _dry_run(a, request)
-    if request["scale_mode"] != "fabric_spark" and request["sinks"] == ["memory"]:
-        print(
-            "shape: no -o and no --sink: generating into memory (nothing is kept)", file=sys.stderr
-        )
     jobs = Jobs(_store(a))
     if request["scale_mode"] == "fabric_spark":
         result = scale_generate(
