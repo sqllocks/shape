@@ -120,3 +120,41 @@ Final tree, after merging `origin/build/main-plan` (merge commit, no rebase):
 4. **Azure blob CSV source** (`builtins/sources/azure.py`) reads a non-seekable stream, so the identifier rule is not applied there.
 5. #41 on the emulator: run `pytest -m emulator plugins/shape-eventhubs/tests` in the nightly job and, if wanted, add a
    skewed-delivery case there.
+
+## Round 2 — merge of `origin/build/main-plan` (26dc2e9, INT-12)
+
+Merge commit `ac43659` plus two follow-up commits (`34d0d27`, `dddfb0c`); no rebase, no force-push. No gate, tolerance, D-xx or T-xx
+decision, §11 or §2.3 was touched; `$SPINDLE_ROOT` was only read (its working tree already showed line-ending noise before this lane).
+
+### What conflicted and how it was resolved
+
+| File | Resolution |
+|---|---|
+| `src/shape/streaming/cli.py` | **One duration parser**: `shape.streaming.runtime.parse_duration` (ISS-stream #34). My `_DURATION` regex and `_UNIT_US` table are gone; `duration_us = parse_duration`, `_duration() -> timedelta` for window sizes. Kept `DEFAULT_IDLE_TIMEOUT`, `LATE_WARN_SHARE`, `_idle_timeout`, `_late_report`, `--partition-idle-timeout`, `--max-partition-skew` (parsed with `duration_us`), `--allowed-lateness` reporting. |
+| `docs/plugins/streaming.md` | One rule documented (below) in the `--size/--slide/--gap` row; `--allowed-lateness` and `--max-partition-skew` say "a duration"; `--partition-idle-timeout` says it is a plain number of seconds. All of #33's rows kept (`--start`, `--order`). |
+| `src/shape/builtins/sinks/files.py` | Both imports (`render_path`, `require_scheme`); `write()` calls `require_scheme(self, uri)` then `self._target(uri, table, options)`. |
+| `src/shape/cli/generation.py` | Kept `DEFAULT_TEMPLATE` (landing); dropped the static `FORMATS` tuple (formats now come from installed sinks, round 1). |
+| `src/shape/cli/main.py` | `profile` passes `version`/`as_of` (#36) and the CSV/identifier options (#46); both sets of arguments kept; `_warn_empty` kept. |
+| `src/shape/profile/reference/profile.py` | `profile()` takes both option sets; `_profile` runs the Delta version/as-of path (#36) and the CSV format and delimiter warning (#46). |
+| `src/shape/profile/reference/sources.py` | `load_columns` keeps the CSV format argument and the row-dicts source. |
+| `src/shape/generation/engine.py` | Merged without a textual conflict. Checked: HEAD's `release()` is the round-1 version with `copula_applied`; `release(len(rules), copula_applied=True)` is correct (the branch's side had the older `release(after_rule)` that kept copula tables back, which is the bug round 1 fixed). |
+
+**Semantic conflicts found by `mypy` / tests, not by git:**
+
+* `generation/landing.py` (new on main-plan) imported `EXTENSIONS`/`FORMATS`, which round 1 had replaced by the installed `shape.sinks`. It now uses
+  `available_formats()` and a new `output.file_extension(fmt)`; `LANDING_FORMATS` became `landing_formats()` (no other user).
+* `tests/streaming/test_partition_watermark.py` (round 1) built profilers with bare-integer durations (`2 * SEC`), which #34 refuses; they now pass `timedelta`. No assertion changed.
+
+### The duration rule (one parser, one rule)
+
+A duration is a string with a unit (`500ms`, `30s`, `5m`, `1h`, `2d`, `250us`), where a bare numeric **string** means seconds, or a `timedelta` (Python API
+only). A bare `int`/`float` is refused in the Python API (`0` allowed). The CLI always passes strings, so `--size 60` is 60 s; that is the same string rule, not a
+split. `--partition-idle-timeout` is not a window duration: a plain number of seconds (default 30, 0 off). Internal attributes (`max_partition_skew`, snapshots) stay integer microseconds.
+
+### Commands and results (final tree, `source scripts/env.sh`, venv with `.[dev,advanced]` and the domains, kafka and eventhubs plugins editable)
+
+* `ruff check` and `ruff format --check` on `src tests plugins benchmarks/vs_spindle`: clean (872 files). `mypy`: no issues (349 files). `vulture`, `lint-imports`, `check_user_facing`: clean.
+* `pytest -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric`: **5,367 passed, 1 skipped** under `SHAPE_KERNEL=rust`; **5,367 passed, 1 skipped** under `SHAPE_KERNEL=python`. The skip is `tests/profile/test_identifier_columns.py:363` (`faker` not installed here).
+* `pytest tests/streaming` (includes the heavy-marked tests): 367 passed. `pytest plugins/shape-kafka plugins/shape-eventhubs -m "not emulator and not live"`: 86 passed.
+* `benchmarks/vs_spindle/stream_1to1/verify.py --scale small` (baseline built with `benchmarks/vs_spindle/setup_spindle.sh`; `scripts/setup_spindle.sh` does not exist): **VERDICT PASS**, exit 0.
+* Deviations from the task text: the full run excluded `heavy` (as `make check` does, and as round 1 did); heavy was run for `tests/streaming` only. `pytest tests/demo/fabric`, the emulator tests (Docker), the cargo checks (no Rust file changed), `profile_1to1` and `stream_prof` verifiers were not re-run in round 2.
