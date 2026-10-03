@@ -24,6 +24,13 @@ def _is_profile(obj: Any) -> bool:
     return False
 
 
+def _refuse(form: str, **given: Any) -> None:
+    """``TypeError`` naming every argument in ``given`` that was passed (is not ``None``)."""
+    passed = [name for name, value in given.items() if value is not None]
+    if passed:
+        raise TypeError(f"generate() from {form} does not take {', '.join(passed)}")
+
+
 def generate(
     shape: Any,
     n: Any = None,
@@ -43,10 +50,14 @@ def generate(
 
     The earlier form, ``generate(shape_model, n, seed, relationships)``, still generates rows from
     a Shape model.
+
+    An argument the form cannot use (``n`` or ``relationships`` for a domain or a schema, ``mode``
+    for anything but a domain, ``scale`` for the earlier form) raises ``TypeError``.
     """
     from shape.generation.schema import GenSchema
 
     if _is_profile(shape):
+        _refuse("a profile", relationships=relationships, mode=mode)
         from shape.generation.engine import Engine
         from shape.generation.fit import PRESET, fit_schema
 
@@ -54,15 +65,18 @@ def generate(
         fitted = fit_schema(shape, rows=rows)
         return Engine(fitted.schema, scale=scale or PRESET, seed=seed).generate()
     if isinstance(shape, str):
+        _refuse("a domain", n=n, relationships=relationships)
         from shape.generation.domains import load_domain
         from shape.generation.engine import Engine
 
         return Engine(load_domain(shape, mode=mode).schema, scale=scale, seed=seed).generate()
     if isinstance(shape, GenSchema) or (isinstance(shape, dict) and "tables" in shape):
+        _refuse("a generation schema", n=n, relationships=relationships, mode=mode)
         from shape.generation.engine import Engine
 
         schema = shape if isinstance(shape, GenSchema) else GenSchema.from_dict(shape)
         return Engine(schema, scale=scale, seed=seed).generate()
+    _refuse("an evidence document", scale=scale, mode=mode)
     from shape.generation import generate_from_shape
 
     return generate_from_shape(shape, n, 0 if seed is None else seed, relationships)
