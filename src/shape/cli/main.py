@@ -626,6 +626,14 @@ def _cmd_verify_gates(a):
         raise ValueError(f"no {a.format} data files found in {a.shape}")
     schema = load_gate_schema(a.schema) if a.schema else None
     config = load_verify_config(a.config) if a.config else None
+    if config is not None and config.needs_source and not a.source:
+        raise ValueError(
+            "the verify configuration asks for the memorization or utility gate, which compare "
+            "with the source data: give --source"
+        )
+    source = load_tables(a.source, a.format) if a.source else None
+    if a.source and not source:
+        raise ValueError(f"no {a.format} data files found in {a.source}")
     result = VerifyRunner(
         schema,
         a.statistical,
@@ -634,6 +642,8 @@ def _cmd_verify_gates(a):
         config,
         a.config,
         data_files(a.shape, a.format),
+        source=source,
+        source_path=a.source,
     ).run(tables)
     print(f"Shape {_version()} - Verify\n")
     print(f"Data path:   {a.shape}")
@@ -641,6 +651,8 @@ def _cmd_verify_gates(a):
         print(f"Schema:      {a.schema}")
     if a.config:
         print(f"Config:      {a.config}")
+    if a.source:
+        print(f"Source:      {a.source}")
     print(f"Statistical: {'yes' if a.statistical else 'no'}\n")
     if result.gate_results:
         print(f"{'Gate':<28} {'Status':<8} {'Errors':>6} {'Warnings':>8}")
@@ -1081,6 +1093,13 @@ def _build_parser(plugin_commands=()):
         metavar="CONFIG.json",
         help="verify configuration (format shape-verify-config): ranges, date_range, no_future, "
         "ordering, baseline, file_paths; runs the range, temporal, drift and file gates",
+    )
+    vf.add_argument(
+        "--source",
+        metavar="DATA",
+        help="the real data the generated data was made from (same layout as DATA, same "
+        "--format): runs the memorization gate, and the utility gate when the configuration "
+        "has a utility section",
     )
     vf.add_argument("--statistical", action="store_true", help="add KS and chi-squared tests")
     vf.add_argument("-o", "--output", metavar="REPORT", help="write a .json or .md report")

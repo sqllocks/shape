@@ -304,6 +304,7 @@ source_modules = [
     "shape.query",
     "shape.registry",
     "shape.relations",
+    "shape.repro",
     "shape.report",
     "shape.schemacheck",
     "shape.security",

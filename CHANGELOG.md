@@ -38,6 +38,15 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `roll_rows`/`roll_seconds`/`commit_rows` so readers see rows while a stream runs. `shape emit`
   gains `--speed 60x` (virtual clock), `--max-rate`, `--duplicate-fraction`, `--poison-fraction`,
   `--answer-key` and the synthetic marker (`--synthetic-header`).
+- `shape verify --source DATA`: the memorization gate (exact-match rate and nearest-neighbour
+  distance between generated and source rows; fails on a reproduced row in a column classified
+  `CONFIDENTIAL` or above, reporting row indices, never values) and the utility gate (train on
+  generated data, test on held-out real data, fail below a minimum retention; needs the `[advanced]`
+  extra). The verify configuration gains `classifications`, `memorization` and `utility`
+  (`docs/VERIFY.md`).
+- Run manifest: `format`, `version`, the reproducibility tuple (`reproducibility`) and a
+  content-addressed `dataset_id`; `shape pack replay MANIFEST TARGET` regenerates a run and checks
+  the id (`docs/REPRODUCIBILITY.md`).
 - `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
   the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
   clearing cover every month of a multi-month table. `duration_hours` still overrides it

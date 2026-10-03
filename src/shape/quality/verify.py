@@ -29,6 +29,8 @@ from .gates import (
     ValidationContext,
 )
 from .gatespec import GateSchema
+from .memorization import MemorizationGate
+from .utility import UtilityGate
 from .verifyconfig import VerifyConfig
 
 FORMATS = ("csv", "parquet", "jsonl")
@@ -118,6 +120,7 @@ class VerifyResult:
     statistical: bool
     shape_version: str
     config_path: str | None = None
+    source_path: str | None = None
 
 
 class VerifyRunner:
@@ -132,7 +135,12 @@ class VerifyRunner:
         config: VerifyConfig | None = None,
         config_path: str | None = None,
         files: list[Path] | None = None,
+        *,
+        source: dict[str, pa.Table] | None = None,
+        source_path: str | None = None,
     ) -> None:
+        self._source = source or {}
+        self._source_path = source_path
         self._config = config
         self._config_path = config_path
         self._files = files or []
@@ -150,6 +158,7 @@ class VerifyRunner:
             schema=self._schema,
             file_paths=[Path(f) for f in cfg.file_paths] if cfg else [],
             config=dict(cfg.rules) if cfg else {},
+            source_tables=self._source,
         )
         if cfg and cfg.check_data_files:
             ctx.file_paths.extend(self._files)
@@ -170,6 +179,10 @@ class VerifyRunner:
                 results.append(FileFormatGate().check(ctx))
         if self._statistical:
             results.append(DistributionGate().check(ctx))
+        if self._source:
+            results.append(MemorizationGate().check(ctx))
+            if "utility" in ctx.config:
+                results.append(UtilityGate().check(ctx))
         return VerifyResult(
             passed=all(r.passed for r in results),
             gate_results=results,
@@ -180,6 +193,7 @@ class VerifyRunner:
             statistical=self._statistical,
             shape_version=__version__,
             config_path=self._config_path,
+            source_path=self._source_path,
         )
 
 
@@ -195,6 +209,14 @@ _GATE_DESCRIPTIONS = {
     ),
     "schema_drift": "Tables and column types compared with the configured baseline.",
     "file_format": "Data files checked to exist, be non-empty and read in full.",
+    "memorization": (
+        "Generated rows compared with the source rows: exact matches in columns classified "
+        "CONFIDENTIAL or above fail; nearest-neighbour distance is reported."
+    ),
+    "utility": (
+        "A model trained on the generated data is tested on held-out real data and compared "
+        "with a model trained on real data; fails below the minimum retention."
+    ),
     "distribution": (
         "KS test (numeric) and chi-squared test (enum) comparing observed "
         "distributions to schema-declared parameters (α=0.05)."
@@ -216,6 +238,7 @@ class VerifyReport:
             "data_path": r.data_path,
             "schema_path": r.schema_path,
             "config_path": r.config_path,
+            "source_path": r.source_path,
             "statistical": r.statistical,
             "passed": r.passed,
             "row_counts": r.row_counts,
@@ -241,6 +264,7 @@ class VerifyReport:
             f"**Data path:** {r.data_path}  ",
             f"**Schema:** {r.schema_path or '(none)'}  ",
             f"**Config:** {r.config_path or '(none)'}  ",
+            f"**Source:** {r.source_path or '(none)'}  ",
             f"**Statistical tests:** {'Yes' if r.statistical else 'No'}  ",
             f"**Shape version:** {r.shape_version}  ",
             "",
@@ -284,6 +308,8 @@ class VerifyReport:
             reproduce += f" --schema {r.schema_path}"
         if r.config_path:
             reproduce += f" --config {r.config_path}"
+        if r.source_path:
+            reproduce += f" --source {r.source_path}"
         if r.statistical:
             reproduce += " --statistical"
         lines += [

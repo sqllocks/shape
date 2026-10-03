@@ -2,7 +2,8 @@
 
 ``shape verify --config FILE.json`` reads a document of Shape's own (``format:
 shape-verify-config``) and runs ``range_constraint``, ``temporal_consistency``,
-``schema_drift`` and ``file_format`` next to the schema gates, with the same settings that
+``schema_drift`` and ``file_format`` next to the schema gates, and, with ``--source``, the
+``memorization`` and ``utility`` gates, with the same settings that
 ``ValidationContext.config`` takes from Python. A key that Shape does not know is an error, so
 a misspelt rule can never be skipped without notice.
 """
@@ -19,16 +20,21 @@ from typing import Any
 FORMAT = "shape-verify-config"
 VERSION = 1
 
-_KEYS = (
+_RULE_KEYS = (
     "ranges",
     "date_range",
     "no_future",
     "ordering",
     "baseline",
     "distribution_alpha",
-    "file_paths",
-    "check_data_files",
+    "classifications",
+    "memorization",
+    "utility",
 )
+_KEYS = (*_RULE_KEYS, "file_paths", "check_data_files")
+
+_MEMORIZATION_KEYS = ("fail_at", "min_nn_distance", "max_rows")
+_UTILITY_KEYS = ("table", "target", "task", "min_retention", "test_fraction", "seed", "max_rows")
 
 
 class VerifyConfigError(ValueError):
@@ -123,6 +129,71 @@ def _check_bool(value: Any) -> None:
         raise VerifyConfigError('"check_data_files" must be true or false')
 
 
+def _level(where: str, value: Any) -> None:
+    from shape.privacy.classification import DEFAULT_TAXONOMY
+
+    try:
+        DEFAULT_TAXONOMY.canonical(value)
+    except ValueError as exc:
+        raise VerifyConfigError(f"{where}: {exc}") from exc
+
+
+def _check_classifications(value: Any) -> None:
+    if not isinstance(value, Mapping):
+        raise VerifyConfigError('"classifications" must be an object of "table.column": LEVEL')
+    for key, level in value.items():
+        if not _is_name(key):
+            raise VerifyConfigError(f'classifications: key "{key}" must be "table.column"')
+        _level(f'classifications["{key}"]', level)
+
+
+def _positive_int(where: str, value: Any) -> None:
+    if not isinstance(value, int) or isinstance(value, bool) or value < 1:
+        raise VerifyConfigError(f"{where} must be a whole number of 1 or more, not {value!r}")
+
+
+def _check_memorization(value: Any) -> None:
+    if not isinstance(value, Mapping):
+        raise VerifyConfigError('"memorization" must be an object (it may be empty)')
+    for key, v in value.items():
+        if key not in _MEMORIZATION_KEYS:
+            raise VerifyConfigError(
+                f'memorization: unknown key "{key}" (use {", ".join(_MEMORIZATION_KEYS)})'
+            )
+        if key == "fail_at":
+            _level('memorization["fail_at"]', v)
+        elif key == "min_nn_distance":
+            if not _number(v) or v < 0:
+                raise VerifyConfigError('memorization["min_nn_distance"] must be 0 or more')
+        else:
+            _positive_int('memorization["max_rows"]', v)
+
+
+def _check_utility(value: Any) -> None:
+    if not isinstance(value, Mapping):
+        raise VerifyConfigError('"utility" must be an object with "table" and "target"')
+    for key in ("table", "target"):
+        if not isinstance(value.get(key), str) or not value[key]:
+            raise VerifyConfigError(f'utility: missing required key "{key}"')
+    for key, v in value.items():
+        if key not in _UTILITY_KEYS:
+            raise VerifyConfigError(
+                f'utility: unknown key "{key}" (use {", ".join(_UTILITY_KEYS)})'
+            )
+        if key == "task" and v not in ("auto", "classification", "regression"):
+            raise VerifyConfigError(
+                'utility["task"] must be "auto", "classification" or "regression"'
+            )
+        if key == "min_retention" and not (_number(v) and 0 < v <= 1):
+            raise VerifyConfigError('utility["min_retention"] must be a number in (0, 1]')
+        if key == "test_fraction" and not (_number(v) and 0 < v < 1):
+            raise VerifyConfigError('utility["test_fraction"] must be a number between 0 and 1')
+        if key == "seed" and (not isinstance(v, int) or isinstance(v, bool)):
+            raise VerifyConfigError('utility["seed"] must be a whole number')
+        if key == "max_rows":
+            _positive_int('utility["max_rows"]', v)
+
+
 _CHECKS = {
     "ranges": _check_ranges,
     "date_range": _check_date_range,
@@ -132,6 +203,9 @@ _CHECKS = {
     "distribution_alpha": _check_alpha,
     "file_paths": _check_file_paths,
     "check_data_files": _check_bool,
+    "classifications": _check_classifications,
+    "memorization": _check_memorization,
+    "utility": _check_utility,
 }
 
 
@@ -140,7 +214,8 @@ class VerifyConfig:
     """The settings of the four config-driven gates.
 
     ``rules`` holds the ``ValidationContext.config`` keys (``ranges``, ``date_range``,
-    ``no_future``, ``ordering``, ``baseline``, ``distribution_alpha``); ``file_paths`` are the
+    ``no_future``, ``ordering``, ``baseline``, ``distribution_alpha``, ``classifications``,
+    ``memorization``, ``utility``); ``file_paths`` are the
     files the ``file_format`` gate reads, and ``check_data_files`` adds every data file that
     ``shape verify`` loaded."""
 
@@ -167,12 +242,17 @@ class VerifyConfig:
         for key in _KEYS:
             if key in doc:
                 _CHECKS[key](doc[key])
-        rules = {k: doc[k] for k in _KEYS[:6] if k in doc}
+        rules = {k: doc[k] for k in _RULE_KEYS if k in doc}
         return cls(
             rules,
             tuple(doc.get("file_paths") or ()),
             bool(doc.get("check_data_files", False)),
         )
+
+    @property
+    def needs_source(self) -> bool:
+        """True when the configuration asks for a gate that compares with the source data."""
+        return "memorization" in self.rules or "utility" in self.rules
 
     @property
     def temporal(self) -> bool:
