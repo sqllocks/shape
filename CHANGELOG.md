@@ -511,3 +511,17 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   cannot be imported with numpy 2, Shape's own code needs `pyarrow.concat_batches` (pyarrow 19), Delta reads need pyarrow 19.0.1 (19.0.0 raises "Repetition level histogram size mismatch"), and
   Rust-vs-numpy bitwise equality holds from numpy 2.3. The core floors are now `numpy>=2.3` and
   `pyarrow>=19.0.1`; `ci/constraints-min.txt` pins them for the minimum-versions check.
+
+- Second audit of the scenario area (`HUNT2-scenario`, `docs/plans/lane_status/HUNT2-scenario.md`):
+  pack chaos runs the referential category once over the mutated tables, not once per table, and the
+  manifest's `volume` count is the rows added or removed (#659, #660); the `referential_integrity`
+  gate fails, instead of raising, when chaos retyped a key (#673); value chaos works on integer
+  columns above 2**53 (#661); a stream pack writes its events in batches of 50,000 rows (#712);
+  `shape pack run --json` of an invalid spec has the keys of a failed run, `pack list` survives a
+  folder or broken link named `*.yaml`, `pack validate`, `run` and `replay` of a spec use the domain
+  `--domain` names (#665, #666, #705); a run manifest field of the wrong type is refused with its
+  name (#667); `shape demo` records the absolute session folder so a cleanup from another directory
+  finds it, `cleanup --dry-run` applies the safety rules to local files, the comparison page
+  withholds the values of personal-data columns, a connection profile refuses a secret in any
+  field, and an unreadable input file is a message that names the file (#662, #701, #663, #664,
+  #716).

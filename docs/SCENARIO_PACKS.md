@@ -70,8 +70,9 @@ chaos:
 
 The run is one day (`day`, else the later of the chaos start and the breaking-change day).
 `shape.chaos` mutates every generated table (schema, value, temporal, volume), then the tables
-together (referential), deterministically for a seed (`seed`, default 42). The manifest's `chaos`
-counts what changed per category. Gates run on the mutated tables, so a failing gate is the
+together (referential, once), deterministically for a seed (`seed`, default 42). The manifest's
+`chaos` counts what changed per category (for `volume`, the rows added or removed; a category that
+changed nothing is not listed). Gates run on the mutated tables, so a failing gate is the
 result chaos is for: the run still exits 0 and the summary shows the gate as FAIL.
 
 ### Gates
@@ -147,8 +148,9 @@ A pack is data, not code, but it names paths. Validation and the runner refuse a
 `lakehouse_files_root` or a spec landing root that is absolute, has a drive or contains `..`, a
 topic or event type that is not one plain file name, and a landing directory that resolves
 (through a symbolic link) outside the output directory. A pack file that is empty, not a mapping or
-has a value of the wrong type is an error that names the key. Keys no field takes are warned
-about, so a mistyped key does not silently change nothing.
+has a value of the wrong type or a key twice in one mapping is an error that names the key. Keys no
+field takes are warned about, so a mistyped key does not silently change nothing. A run manifest
+with a field of the wrong type is refused the same way when `replay` reads it.
 
 ## From Python
 

@@ -43,7 +43,7 @@ preset.
   and compares the two column by column. A column passes when its null rate is within five points
   and, unless it is a key, a date, a float or a unique pattern, its cardinality is close. The
   score is the share of columns that pass. `--output` takes `terminal` (the report, the
-  default), `charts` (one self-contained HTML page), `semantic_model` (a Power BI `.bim` of
+  default), `charts` (one self-contained HTML page; the values of a column that holds personal data are withheld, as in the safe profile), `semantic_model` (a Power BI `.bim` of
   the learned schema) or `all`; files go to `--output-dir` (the working folder).
 * **seeding**: generates the scenario and writes it to the targets of a connection profile
   (below). With no profile the rows are generated and counted and nothing is written.
@@ -92,7 +92,7 @@ exactly those:
 * a table by its recorded `schema.table`, quoted; a KQL table by name; OneLake files by path.
 
 It lists what it removed, what it left alone and why, and what it could not remove (exit 1).
-`--dry-run` lists what it would remove.
+`--dry-run` lists what it would remove, and what it would leave alone and why.
 
 ## From Python
 
