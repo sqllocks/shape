@@ -1,6 +1,79 @@
 {
   "api_version": "1.2",
   "commands": {
+    "bisect": {
+      "args": {
+        "bad": "1.2",
+        "coarse": "1.2",
+        "column": "1.2",
+        "contract": "1.2",
+        "good": "1.2",
+        "kind": "1.2",
+        "name": "1.2",
+        "project": "1.2",
+        "registry": "1.2",
+        "source": "1.2",
+        "verify_all": "1.2"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "optional",
+      "pending": null,
+      "request": "commands/bisect.request.schema.json",
+      "result": "commands/bisect.result.schema.json",
+      "since": "1.2",
+      "summary": "Find the first committed version of a name that changed: a binary search over a registry's history (job-capable)."
+    },
+    "bisect_layers": {
+      "args": {
+        "bad_date": "1.2",
+        "column": "1.2",
+        "good_date": "1.2",
+        "layers": "1.2",
+        "map": "1.2",
+        "project": "1.2"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "optional",
+      "pending": null,
+      "request": "commands/bisect_layers.request.schema.json",
+      "result": "commands/bisect_layers.result.schema.json",
+      "since": "1.2",
+      "summary": "Find the layer of a pipeline where a change first appears (job-capable)."
+    },
+    "chaos": {
+      "args": {
+        "allow_real_input": "1.2",
+        "batch": "1.2",
+        "corrupt": "1.2",
+        "domain": "1.2",
+        "format": "1.2",
+        "ground_truth": "1.2",
+        "input": "1.2",
+        "mode": "1.2",
+        "output_dir": "1.2",
+        "scale": "1.2",
+        "seed": "1.2",
+        "start_date": "1.2"
+      },
+      "cancellable": true,
+      "effects": [
+        "reads_files",
+        "writes_files",
+        "cancels"
+      ],
+      "job": "optional",
+      "pending": null,
+      "request": "commands/chaos.request.schema.json",
+      "result": "commands/chaos.result.schema.json",
+      "since": "1.2",
+      "summary": "Corrupt tables on purpose and write the ground-truth log (job-capable, cancellable before the files are written)."
+    },
     "check": {
       "args": {
         "contract": "1.0",
@@ -475,6 +548,107 @@
       "since": "1.1",
       "summary": "Find proposals for a profile and merge them into a decision file."
     },
+    "registry_diff": {
+      "args": {
+        "name": "1.2",
+        "policy": "1.2",
+        "ref1": "1.2",
+        "ref2": "1.2",
+        "root": "1.2",
+        "thresholds": "1.2"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/registry_diff.request.schema.json",
+      "result": "commands/registry_diff.result.schema.json",
+      "since": "1.2",
+      "summary": "Drift between two versions of a name in a registry: two raw profiles, or two share-safe profiles (with the metrics a safe form withholds listed apart)."
+    },
+    "report_card": {
+      "args": {
+        "config": "1.2",
+        "holdout": "1.2",
+        "manifest": "1.2",
+        "output": "1.2",
+        "real": "1.2",
+        "require": "1.2",
+        "synthetic": "1.2",
+        "tiers": "1.2"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files",
+        "writes_files"
+      ],
+      "job": "optional",
+      "pending": null,
+      "request": "commands/report_card.request.schema.json",
+      "result": "commands/report_card.result.schema.json",
+      "since": "1.2",
+      "summary": "One report card for a synthetic dataset: fidelity, utility and privacy (job-capable)."
+    },
+    "report_card_read": {
+      "args": {
+        "path": "1.2"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/report_card_read.request.schema.json",
+      "result": "commands/report_card_read.result.schema.json",
+      "since": "1.2",
+      "summary": "Read a stored report card after checking its format and version."
+    },
+    "rules_backtest": {
+      "args": {
+        "compare": "1.2",
+        "contract": "1.2",
+        "incidents": "1.2",
+        "name": "1.2",
+        "registry": "1.2",
+        "since": "1.2",
+        "until": "1.2",
+        "window": "1.2"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "optional",
+      "pending": null,
+      "request": "commands/rules_backtest.request.schema.json",
+      "result": "commands/rules_backtest.result.schema.json",
+      "since": "1.2",
+      "summary": "Replay a contract over every committed version of a registry name (job-capable)."
+    },
+    "rules_mutate": {
+      "args": {
+        "contract": "1.2",
+        "data": "1.2",
+        "min_score": "1.2",
+        "plan": "1.2",
+        "rate": "1.2",
+        "seed": "1.2"
+      },
+      "cancellable": true,
+      "effects": [
+        "reads_files",
+        "cancels"
+      ],
+      "job": "optional",
+      "pending": null,
+      "request": "commands/rules_mutate.request.schema.json",
+      "result": "commands/rules_mutate.result.schema.json",
+      "since": "1.2",
+      "summary": "Plant known faults in data and report which rules of a contract catch them (job-capable, cancellable between mutants)."
+    },
     "safe_scan": {
       "args": {
         "path": "1.1",
@@ -605,6 +779,27 @@
       "result": "commands/stream_stop.result.schema.json",
       "since": "1.0",
       "summary": "Stop a stream."
+    },
+    "timelapse": {
+      "args": {
+        "column": "1.2",
+        "name": "1.2",
+        "registry": "1.2",
+        "since": "1.2",
+        "table": "1.2",
+        "until": "1.2",
+        "window": "1.2"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "optional",
+      "pending": null,
+      "request": "commands/timelapse.request.schema.json",
+      "result": "commands/timelapse.result.schema.json",
+      "since": "1.2",
+      "summary": "One column's statistics across the committed versions of a name (job-capable)."
     },
     "validate": {
       "args": {

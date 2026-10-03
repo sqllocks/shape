@@ -7,56 +7,22 @@
       "type": "string"
     },
     "args": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "the report card file (format shape-report-card)",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.2"
+        }
+      },
+      "required": [
+        "path"
+      ],
       "type": "object"
     },
     "command": {
-      "enum": [
-        "bisect",
-        "bisect_layers",
-        "chaos",
-        "check",
-        "contract_validate",
-        "demo_cleanup",
-        "demo_list",
-        "demo_run",
-        "demo_status",
-        "describe",
-        "design",
-        "design_from_data",
-        "diff",
-        "dry_run",
-        "format_schema",
-        "generate",
-        "job_cancel",
-        "job_list",
-        "job_status",
-        "list",
-        "preview",
-        "profile",
-        "profile_info",
-        "profile_show",
-        "project_show",
-        "project_validate",
-        "proposals_contract",
-        "proposals_decide",
-        "proposals_list",
-        "proposals_propose",
-        "registry_diff",
-        "report_card",
-        "report_card_read",
-        "rules_backtest",
-        "rules_mutate",
-        "safe_scan",
-        "scale_cancel",
-        "scale_generate",
-        "scale_status",
-        "stream",
-        "stream_status",
-        "stream_stop",
-        "timelapse",
-        "validate",
-        "verify"
-      ]
+      "const": "report_card_read"
     },
     "id": {
       "maxLength": 128,
@@ -93,9 +59,11 @@
     }
   },
   "required": [
-    "command"
+    "command",
+    "args"
   ],
-  "title": "bridge request",
+  "title": "report_card_read request",
   "type": "object",
-  "x-api-version": "1.2"
+  "x-api-version": "1.2",
+  "x-since": "1.2"
 }

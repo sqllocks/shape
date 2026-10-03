@@ -188,7 +188,7 @@ def test_what_1_2_adds_to_a_1_1_command_is_marked_and_nothing_else_changed():
         assert set(now) == set(before), f"{name} gained or lost an argument in 1.2"
 
 
-# ---- jobs written by the 1.1 bridge are read by the 1.2 bridge ------------------------------------
+# ---- jobs written by the 1.1 bridge are read by the 1.2 bridge ---
 
 
 def test_a_job_file_the_1_1_bridge_wrote_is_read_by_the_1_2_bridge(tmp_path):

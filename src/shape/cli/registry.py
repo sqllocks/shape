@@ -94,7 +94,10 @@ def add_arguments(sub: Any) -> None:
     sw.add_argument("name", metavar="NAME")
     sw.add_argument("ref", metavar="REF", nargs="?", default="latest", help="default: latest")
 
-    d = acts.add_parser("diff", help="what changed between two versions of NAME")
+    d = acts.add_parser(
+        "diff",
+        help="what changed between two versions of NAME (drift with severity for two profiles)",
+    )
     d.add_argument("name", metavar="NAME")
     d.add_argument("ref1", metavar="REF1")
     d.add_argument("ref2", metavar="REF2")
@@ -262,53 +265,10 @@ def _list(r: Any) -> int:
     return 0
 
 
-def _changed(a: Any, b: Any, prefix: str = "") -> dict[str, dict[str, Any]]:
-    """The paths at which two JSON documents differ (objects are walked, lists compared whole)."""
-    if isinstance(a, dict) and isinstance(b, dict):
-        out: dict[str, dict[str, Any]] = {}
-        for key in sorted(set(a) | set(b)):
-            out.update(_changed(a.get(key), b.get(key), f"{prefix}.{key}" if prefix else key))
-        return out
-    return {} if a == b else {prefix or "<root>": {"from": a, "to": b}}
-
-
-def _drift(first: bytes, second: bytes) -> dict[str, Any]:
-    """``shape diff`` of two raw profile artifacts."""
-    import tempfile
-
-    import shape
-
-    with tempfile.TemporaryDirectory() as tmp:
-        paths = []
-        for i, blob in enumerate((first, second)):
-            path = Path(tmp) / f"{i}.shape"
-            path.write_bytes(blob)
-            paths.append(path)
-        result: dict[str, Any] = shape.diff(shape.load(paths[0]), shape.load(paths[1])).to_dict()
-        return result
-
-
 def _diff(r: Any, a: argparse.Namespace) -> int:
-    id1, id2 = r.resolve(a.name, a.ref1), r.resolve(a.name, a.ref2)
-    out: dict[str, Any] = {"name": a.name, "from": id1, "to": id2, "same": id1 == id2}
-    if id1 != id2:
-        first, second = r.checkout(a.name, id1), r.checkout(a.name, id2)
-        from shape.registry.local import is_raw_profile
+    from shape.registry.drift import diff_versions
 
-        if is_raw_profile(first) and is_raw_profile(second) and first[:2] == b"PK":
-            out["drift"] = _drift(first, second)
-        else:
-            try:
-                docs = [json.loads(x) for x in (first, second)]
-            except ValueError:
-                docs = []
-            if len(docs) == 2 and all(isinstance(d, dict) for d in docs):
-                out["changed"] = _changed(docs[0], docs[1])
-            else:
-                out["changed"] = None  # binary or text: only the content ids can be compared
-    else:
-        out["changed"] = {}
-    _dump(out)
+    _dump(diff_versions(r, a.name, a.ref1, a.ref2))
     return 0
 
 

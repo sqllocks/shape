@@ -55,6 +55,16 @@ ADDED_1_1 = {
 #: The commands bridge 1.2 adds (their vectors, schemas and tests are in the 1.2 test files).
 ADDED_1_2 = {
     "proposals_contract",
+    "report_card",
+    "report_card_read",
+    "rules_mutate",
+    "rules_backtest",
+    "bisect",
+    "bisect_layers",
+    "timelapse",
+    "registry_diff",
+    "chaos",
+    # still to come when W5-05 lands: suite_list, suite_run
 }
 
 
@@ -80,7 +90,11 @@ def test_every_command_has_a_published_request_and_result_schema(name):
     required = [k for k, a in COMMANDS[name].args.items() if a.required]
     assert request["properties"]["args"].get("required", []) == required
     assert ("args" in request["required"]) == bool(required)
-    sample = {k: (COMMANDS[name].args[k].enum or ("x",))[0] for k in required}
+    kinds = {"array": ["x"], "object": {}, "integer": 1, "number": 1, "boolean": True}
+    sample = {
+        k: (COMMANDS[name].args[k].enum or (kinds.get(COMMANDS[name].args[k].type, "x"),))[0]
+        for k in required
+    }
     assert not validate({"command": name, "args": sample}, request) or name in ("demo_run",)
 
 

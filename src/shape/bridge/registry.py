@@ -9,13 +9,18 @@ from shape.bridge.spec import Command
 def _build() -> dict[str, Command]:
     from shape.bridge.handlers import (
         catalog,
+        chaos,
         demo,
         design,
         flow,
         formats,
         generate,
+        history,
         project,
         proposals,
+        registrydiff,
+        reportcard,
+        rules,
         scale,
         stored,
         workflow11,
@@ -33,6 +38,11 @@ def _build() -> dict[str, Command]:
         design,
         formats,
         stored,
+        reportcard,
+        rules,
+        history,
+        registrydiff,
+        chaos,
     ):
         for command in module.COMMANDS:
             if command.name in table:

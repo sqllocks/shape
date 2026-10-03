@@ -10,7 +10,7 @@ ground-truth log is empty changed nothing, so it is ``not_applicable`` and outsi
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -26,6 +26,15 @@ DEFAULT_RATE = 0.05
 
 class MutationError(ShapeError, ValueError):
     """The data, the contract or the plan cannot be used for mutation testing."""
+
+
+class MutationCancelled(Exception):
+    """Raised by :func:`mutation_test` between mutants when ``should_stop`` says so. ``result`` is
+    the :class:`MutationResult` of the mutants run until then."""
+
+    def __init__(self, result: MutationResult) -> None:
+        super().__init__("mutation testing was cancelled")
+        self.result = result
 
 
 @dataclass(frozen=True)
@@ -253,6 +262,9 @@ def mutation_test(
     seed: int = 0,
     rate: float = DEFAULT_RATE,
     diff: bool = False,
+    *,
+    should_stop: Callable[[], bool] | None = None,
+    on_mutant: Callable[[int, int], None] | None = None,
 ) -> MutationResult:
     """Score ``contract`` by planting faults in ``data``.
 
@@ -261,6 +273,10 @@ def mutation_test(
     table and column is a mutant, at ``rate``. ``diff`` also compares each mutant with the
     unmutated profile under the contract's drift policy (always done when the contract has a
     ``drift`` section). The same ``seed`` gives the same result.
+
+    ``should_stop`` is asked before each mutant: when it returns true the run ends with
+    :class:`MutationCancelled`, which holds the result so far. ``on_mutant(done, total)`` is told
+    how many mutants have been run. Neither changes what a finished run returns.
     """
     import shape
     from shape.chaos.groundtruth import Corruption, corrupt_tables
@@ -291,6 +307,12 @@ def mutation_test(
     mutants: list[dict[str, Any]] = []
     killers: dict[str, list[str]] = {}
     for spec in specs:
+        if on_mutant is not None:
+            on_mutant(len(mutants), len(specs))
+        if should_stop is not None and should_stop():
+            raise MutationCancelled(
+                MutationResult(seed, rate, compare, mutants, rules, killers, base_failed)
+            )
         mid = _mutant_id(spec)
         corruption = Corruption(spec.kind, rate=spec.rate, table=spec.table, column=spec.column)
         try:

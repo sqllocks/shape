@@ -49,6 +49,12 @@ NOT_A_PATH = {
     ("contract_validate", "text"): "the contract's text, not its path",
     ("safe_scan", "text"): "the profile's text, not its path",
     ("design_from_data", "name"): "the design's name",
+    ("bisect", "source"): "the name of a source of the project file",
+    ("chaos", "format"): "the name of a file format",
+    ("chaos", "allow_real_input"): "a flag",
+    ("bisect", "column"): "a column name",
+    ("rules_backtest", "since"): "a date",
+    ("bisect_layers", "layers"): "names of sources of the project file",
 }
 #: Objects with paths inside them: no argument-level annotation can say which, so the command's
 #: effects say what it does (writes files, reaches the network).
@@ -128,17 +134,18 @@ def test_write_paths_are_the_ones_a_command_writes():
         ("proposals_contract", "output"),
         ("report_card", "output"),
         ("chaos", "output_dir"),
-        ("suite_run", "output_dir"),
+        ("chaos", "ground_truth"),
     }
 
 
 def test_domain_is_a_name_or_a_path_resolved_as_an_installed_name_first():
     domains = {n for n, k, a in all_args() if k == "domain" and a.name_or_path}
     assert (
-        domains
+        domains - {"chaos"}  # bridge 1.2's `chaos` takes a domain or a schema file too
         == set(NAME_OR_PATH)
-        == {n for n, k, a in all_args() if k == "domain" and n in COMMANDS} - {"demo_run"}
+        == {n for n, k, a in all_args() if k == "domain" and n in COMMANDS} - {"demo_run", "chaos"}
     )
+    assert "chaos" in domains
     schemas = all_schemas()
     for name in domains:
         domain = schemas[f"commands/{name}.request.schema.json"]["properties"]["args"][
@@ -204,11 +211,10 @@ def test_the_commands_that_write_say_so():
         "proposals_decide",
         "demo_run",
         "demo_cleanup",
-        # bridge 1.2: chaos, suite_run, proposals_contract and report_card (with output)
+        # bridge 1.2: chaos, proposals_contract and report_card (with output)
         "proposals_contract",
         "report_card",
         "chaos",
-        "suite_run",
     }
     assert {n for n, c in COMMANDS.items() if "cancels" in c.effects} == {
         "scale_generate",
@@ -216,6 +222,8 @@ def test_the_commands_that_write_say_so():
         "stream_stop",
         "scale_cancel",
         "job_cancel",
+        "rules_mutate",  # bridge 1.2: cancellable between mutants
+        "chaos",  # bridge 1.2: cancellable before the files are written
     }
     assert {n for n, c in COMMANDS.items() if "network" in c.effects} >= {
         "scale_generate",
