@@ -30,14 +30,14 @@ week.content_id         # the content id of the merged profile itself
 
 | Statistic | Merged from | Result against profiling the union |
 |---|---|---|
-| `row_count`, `null_count`, `min_value`, `max_value` | the profiles | **exact** |
+| `row_count`, `null_count`, `nan_count`, `inf_count`, `min_value`, `max_value` | the profiles | **exact** |
 | `null_rate` | the merged counts | **exact** (rounded to 6 places as in any profile) |
-| `mean`, `std` | the pairwise (Chan) update of each profile's count, mean and variance | equal up to floating-point rounding (relative 1e-9); NaN and infinite values propagate as in the union |
+| `mean`, `std` | the pairwise (Chan) update of each profile's count, mean and variance | equal up to floating-point rounding (relative 1e-9); as in any profile, NaN and infinite values are left out of both, and `std` is unknown with fewer than two numbers |
 | `cardinality`, `cardinality_ratio` | HyperLogLog sketches | within the sketch's error (below) |
 | `quantiles` (`p1`, `p5`, `p25`, `p50`, `p75`, `p95`, `p99`) | KLL sketches | within the sketch's rank error (below) |
 | top values (`merge.sketch_columns.<column>.top`) | SpaceSaving sketches | counts within the sketch's error (below) |
 | `is_unique` | not mergeable from sketches | unknown (`null`) |
-| distribution fits, enum and pattern detection, string lengths, hour/day/year histograms, correlations, keys and relationships | depend on the whole data | unknown (`null`, empty) in a merged profile |
+| distribution fits, enum and pattern detection, string lengths, pattern rates, hour/day/year histograms, correlations, keys and relationships | depend on the whole data | unknown (`null`, empty) in a merged profile |
 
 Unknown means `None`: a merged profile never carries a number it could not compute. The names of
 the unknown fields are listed in `merge.unavailable` of the merged profile.
@@ -56,7 +56,7 @@ error models in `merge.sketch_columns.<column>.error_models`.
 maximum, so the merged sketch is *identical* to the sketch of the union: merging adds no error,
 and merging is exactly associative and order free. The standard error of the estimate is
 1.04 / sqrt(16384) = 0.81%, so about 95% of estimates are within 1.6% of the true distinct count
-(small counts are close to exact). The estimate is clamped to the number of non-null values.
+(small counts are close to exact). The estimate is clamped to the number of finite values, and the infinite values the sketch counted are subtracted.
 
 **KLL** (quantiles, k = 200). The rank error is at most 2 / k = 1.0%, with 99% confidence:
 the value returned for quantile `q` has a true rank within `q ± 0.01` of the data. Merging keeps

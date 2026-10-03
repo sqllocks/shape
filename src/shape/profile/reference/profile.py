@@ -400,6 +400,13 @@ def _profile(
             raise SourceError("version and as_of read one Delta table, not a dict of tables")
         if not source:
             raise SourceError("an empty dict of tables cannot be profiled")
+        named = {str(k): v for k, v in source.items()}
+        cols_by_t = _load_tables(named, csv)
+        return Profile(
+            dataset_to_dict(profile_dataset_columns(cols_by_t)),
+            name=name,
+            sketches=_sketch_state(named, csv) if sketches else None,
+        )
     delta = delta_dir(source)
     if delta is None:
         if asked:

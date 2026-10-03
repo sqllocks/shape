@@ -29,7 +29,7 @@ from shape.profile import MergeError, merge_profiles
 from shape.profile.error import hll_error, kll_error, space_saving_error
 
 ROOT = Path(__file__).resolve().parents[2]
-EXACT_FIELDS = ("null_count", "null_rate", "min_value", "max_value")
+EXACT_FIELDS = ("null_count", "null_rate", "min_value", "max_value", "nan_count", "inf_count")
 DROPPED = (
     "is_enum",
     "enum_values",
@@ -179,7 +179,7 @@ def test_merged_exact_statistics_equal_the_whole(sketched, whole):
         c = m["columns"][name]
         assert c["dtype"] == w["dtype"], name
         for f in EXACT_FIELDS:
-            assert c[f] == w[f], (name, f)
+            assert c.get(f) == w.get(f), (name, f)
         for f in ("mean", "std"):
             if w[f] is None:
                 assert c[f] is None
@@ -240,23 +240,26 @@ def test_empty_and_single_row_partitions(table, rows):
     for name, w in expect["columns"].items():
         c = merged["columns"][name]
         for f in EXACT_FIELDS:
-            assert c[f] == w[f], (name, f, rows)
+            assert c.get(f) == w.get(f), (name, f, rows)
         for f in ("mean", "std"):
-            if isinstance(w[f], float) and math.isfinite(w[f]):
-                assert _close(c[f], w[f]), (name, f)
+            if w[f] is None:
+                assert c[f] is None, (name, f, rows)  # no values, or one: unknown
             else:
-                assert c[f] == w[f], (name, f, rows)  # None, or the NaN of one value
+                assert _close(c[f], w[f]), (name, f)
 
 
-def test_non_finite_values_propagate_like_the_whole(table):
+def test_non_finite_values_are_counted_and_left_out_of_the_moments_like_the_whole():
     x = pa.table({"x": pa.array([1.0, float("nan"), 3.0, float("inf"), 5.0, -2.0, 8.0])})
-    parts = [x.slice(0, 2), x.slice(2, 2), x.slice(4, 3)]
+    parts = [x.slice(0, 2), x.slice(2, 2), x.slice(4, 3), x.slice(1, 0)]
     merged = merge_profiles(_profiles(parts), name="x").to_dict()["columns"]["x"]
     whole = shape.profile(x, name="x").to_dict()["columns"]["x"]
-    for f in ("mean", "std", "min_value", "max_value", "null_count"):
-        a, b = merged[f], whole[f]
-        same = a == b or (isinstance(a, float) and isinstance(b, float) and a != a and b != b)
-        assert same, (f, a, b)
+    assert (merged["nan_count"], merged["inf_count"]) == (1, 1)
+    for f in ("nan_count", "inf_count", "min_value", "max_value", "null_count", "cardinality"):
+        assert merged[f] == whole[f], f
+    assert _close(merged["mean"], whole["mean"]) and _close(merged["std"], whole["std"])
+    only_nan = pa.table({"x": pa.array([float("nan"), float("nan")])})
+    one = merge_profiles(_profiles([only_nan, only_nan]), name="n").to_dict()["columns"]["x"]
+    assert one["mean"] is None and one["std"] is None and one["nan_count"] == 4
 
 
 def test_dtype_promotion_and_conflicts():
@@ -390,7 +393,7 @@ def test_merge_is_associative_and_order_free(table):
         for name, fc in flat["columns"].items():
             oc = other["columns"][name]
             for f in EXACT_FIELDS:
-                assert oc[f] == fc[f], (name, f)
+                assert oc.get(f) == fc.get(f), (name, f)
             if fc["mean"] is not None:
                 assert _close(oc["mean"], fc["mean"]) and _close(oc["std"], fc["std"], 1e-9)
             assert oc["cardinality"] == fc["cardinality"], name  # HLL merge is exact
@@ -593,3 +596,14 @@ def test_error_bounds_are_documented_for_each_sketch():
         assert needle in doc, needle
     for needle in ("exact", "cardinality", "quantiles", "content id"):
         assert needle in doc.lower(), needle
+
+
+def test_sketches_read_the_csv_with_the_profiles_format(tmp_path):
+    path = tmp_path / "semi.csv"
+    path.write_text("a;b\n" + "\n".join(f"{i};w{i % 3}" for i in range(50)) + "\n")
+    plain = shape.profile(str(path), delimiter=";", sketches=True)
+    assert list(plain.to_dict()["columns"]) == ["a", "b"]
+    state = plain.sketches["tables"]
+    assert next(iter(state.values()))["rows"] == 50
+    both = merge_profiles([plain, shape.profile(str(path), delimiter=";", sketches=True)])
+    assert both.to_dict()["row_count"] == 100

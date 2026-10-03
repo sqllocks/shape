@@ -31,7 +31,17 @@ from shape.errors import ShapeError
 MERGE_FORMAT = "shape-profile-merge"
 MERGE_VERSION = 1
 
-EXACT_STATISTICS = ("row_count", "null_count", "null_rate", "min_value", "max_value", "mean", "std")
+EXACT_STATISTICS = (
+    "row_count",
+    "null_count",
+    "null_rate",
+    "nan_count",
+    "inf_count",
+    "min_value",
+    "max_value",
+    "mean",
+    "std",
+)
 SKETCH_STATISTICS = ("cardinality", "cardinality_ratio", "is_unique", "quantiles")
 _WHOLE_DATA_FIELDS = (
     "is_enum",
@@ -44,6 +54,8 @@ _WHOLE_DATA_FIELDS = (
     "value_counts_ext",
     "value_counts_ext_order",
     "string_length",
+    "pattern_rates",
+    "pattern_contains_rates",
     "hour_histogram",
     "dow_histogram",
     "temporal_histogram",
@@ -249,6 +261,7 @@ def _sketch_columns(state: Any) -> dict[str, Any]:
             models["top"] = space_saving_error(_BOUNDED_TOP).to_dict()
         if kind in ("int", "float"):
             entry["finite_count"] = col["finite_count"]
+            entry["inf_distinct"] = int(col["pos_inf_count"] > 0) + int(col["neg_inf_count"] > 0)
             entry["quantiles"] = {
                 str(q): v for q, v in (col.get("quantiles") or {}).items() if q in _QUANTILE_KEYS
             }
@@ -344,7 +357,10 @@ def _merge_column(
 
     where = f"table {tname!r} column {cname!r}" if tname else f"column {cname!r}"
     nulls = [int(c["null_count"]) for c in cols]
+    nans = [int(c.get("nan_count") or 0) for c in cols]
+    infs = [int(c.get("inf_count") or 0) for c in cols]
     nn = [r - n for r, n in zip(rows, nulls, strict=True)]
+    finite = [v - a - b for v, a, b in zip(nn, nans, infs, strict=True)]
     dtype = _unify_dtype(where, cols, nn)
     null_count = sum(nulls)
     unknown_rates = any(c.get("null_rate") is None for c in cols)
@@ -353,7 +369,7 @@ def _merge_column(
     )
     mean = std = None
     if dtype in _NUMERIC:
-        mean, std = _moments(where, cols, nn)
+        mean, std = _moments(where, cols, finite)
     out: dict[str, Any] = {
         "name": cname,
         "dtype": dtype,
@@ -371,6 +387,10 @@ def _merge_column(
         "distribution": None,
         "distribution_params": None,
         "pattern": None,
+        "pattern_rates": None,
+        "pattern_contains_rates": None,
+        "precision": _shared(cols, "precision"),
+        "scale": _shared(cols, "scale"),
         "is_primary_key": False,
         "is_foreign_key": False,
         "fk_ref_table": None,
@@ -384,9 +404,20 @@ def _merge_column(
         "value_counts_ext": None,
         "value_counts_ext_order": None,
     }
+    for field, counts in (("nan_count", nans), ("inf_count", infs)):
+        if sum(counts):  # absent when zero, as in any profile
+            out[field] = sum(counts)
     if sketch is not None:
-        _apply_sketch(out, sketch, dtype, sum(nn), total_rows, unknown_rates)
+        _apply_sketch(out, sketch, dtype, sum(finite), total_rows, unknown_rates)
     return out
+
+
+def _shared(cols: list[dict[str, Any]], field: str) -> Any:
+    """A value every profile that has one agrees on (a decimal's precision), else unknown."""
+    values = {repr(c.get(field)) for c in cols if c.get(field) is not None}
+    if len(values) != 1:
+        return None
+    return next(c[field] for c in cols if c.get(field) is not None)
 
 
 def _apply_sketch(
@@ -399,7 +430,9 @@ def _apply_sketch(
 ) -> None:
     distinct = sketch.get("distinct")
     if distinct is not None:
-        card = min(int(round(distinct)), non_null)
+        # the sketch counts +inf and -inf as values; a profile's cardinality does not
+        distinct -= sketch.get("inf_distinct", 0)
+        card = max(0, min(int(round(distinct)), non_null))
         out["cardinality"] = card
         if not unknown_rates:
             out["cardinality_ratio"] = round(card / total_rows, 6) if total_rows else 0.0
@@ -430,25 +463,19 @@ def _num(v: Any) -> float:
     return float(v)  # accepts the "NaN" / "inf" / "-inf" strings of a saved profile
 
 
-def _moments(where: str, cols: list[dict[str, Any]], nn: list[int]) -> tuple[Any, Any]:
-    """Mean and sample standard deviation of the union, from each part's count, mean and std."""
+def _moments(where: str, cols: list[dict[str, Any]], finite: list[int]) -> tuple[Any, Any]:
+    """Mean and sample standard deviation of the union, from each part's count of finite values,
+    mean and std. As in a profile, NaN and infinite values are not part of either; the std of
+    fewer than two values is unknown."""
     n = 0
     mean = m2 = 0.0
-    weighted = 0.0
-    nonfinite = False
-    for col, ni in zip(cols, nn, strict=True):
+    for col, ni in zip(cols, finite, strict=True):
         if ni == 0:
             continue
-        if col.get("mean") is None:
-            raise MergeError(f"{where}: a profile has {ni} values but no mean")
-        mi = _num(col["mean"])
-        si = 0.0 if ni == 1 else _num(col["std"]) if col.get("std") is not None else math.nan
-        weighted += ni * mi
-        if not math.isfinite(mi) or not math.isfinite(si):
-            nonfinite = True
-            n += ni
-            continue
-        part_m2 = si * si * (ni - 1)
+        if col.get("mean") is None or (ni > 1 and col.get("std") is None):
+            raise MergeError(f"{where}: a profile has {ni} numbers but no mean or std")
+        mi = float(col["mean"])
+        part_m2 = 0.0 if ni == 1 else float(col["std"]) ** 2 * (ni - 1)
         delta = mi - mean
         total = n + ni
         m2 += part_m2 + delta * delta * n * ni / total
@@ -456,10 +483,7 @@ def _moments(where: str, cols: list[dict[str, Any]], nn: list[int]) -> tuple[Any
         n = total
     if n == 0:
         return None, None
-    if nonfinite:  # a NaN or infinite value is in the data: the union's mean and std say so
-        n_all = sum(nn)
-        return weighted / n_all, math.nan
-    return mean, (math.sqrt(m2 / (n - 1)) if n > 1 else math.nan)
+    return mean, (math.sqrt(m2 / (n - 1)) if n > 1 else None)
 
 
 def _key(where: str, tagged: Any) -> tuple[str, Any]:
