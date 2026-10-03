@@ -138,5 +138,7 @@ def test_domains_distribution_carries_the_geonames_attribution(plugin_wheels: di
     ]
     assert notices, "the domains wheel has no THIRD_PARTY_NOTICES.md"
     assert b"GeoNames" in notices[0] and b"CC-BY-4.0" in notices[0]
+    # one notices text for the repository: the plugin copy may not drift from the root file
+    assert notices[0] == (ROOT / "THIRD_PARTY_NOTICES.md").read_bytes()
     pyproject = tomllib.loads((ROOT / "plugins/shape-domains/pyproject.toml").read_text("utf-8"))
     assert "THIRD_PARTY_NOTICES.md" in pyproject["project"]["license-files"]  # so the sdist has it
