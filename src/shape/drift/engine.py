@@ -546,7 +546,8 @@ def _change(
 
 
 def _ratio_score(ratio: float) -> float:
-    return 0.0 if ratio <= 0 else 1.0 - min(ratio, 1.0 / ratio)
+    """``1 - min(r, 1/r)``: 0 for no change, 1 for a drop to zero (the limit as r -> 0)."""
+    return 1.0 if ratio <= 0 else 1.0 - min(ratio, 1.0 / ratio)
 
 
 def _tvd(a: Mapping[Any, float], b: Mapping[Any, float]) -> float:
