@@ -34,6 +34,7 @@ script is the regression test named in each fix commit.
 | 17 | low | `calendars/effects.py:233-235` | `Trend(annual_growth=nan)` is accepted and gives NaN factors |
 | 18 | low | `calendars/composite.py:95-99` | `RuleCalendar.factors(start, end)` with `end < start` raises numpy's "negative dimensions" (only `lift` checks the range) |
 | 19 | low | `strategies/temporal.py:60-71` | unknown `month`/`day_of_week` profile keys (`January`) are ignored silently: the profile becomes uniform |
+| 20 | medium | `strategies/_relational.py:44-58` | found while fixing 10: a `foreign_key` into a column of its own table that has no primary key recurses until `RecursionError` (building the column needs the foreign-key column first) |
 
 Details:
 
@@ -89,7 +90,52 @@ Details:
 | 15 | none (dead code: an improvement, not a defect) |
 | 16 | #148 |
 | 17, 18, 19 | #149 |
+| 20 | #201 |
 
 ## Phase 3: fixes
 
-(filled in below)
+Every fix has a regression test in `tests/generation/test_aud_builtins.py`, committed first
+with its failing output in the commit message; then the fix. In severity order:
+
+| Issue | Test commit | Fix commit | Fix |
+|---|---|---|---|
+| #129 | e44bf93 | dad22f3 | the partial first and last days of a day-weighted range weigh their share of the day and their values are mapped into the part inside the range; date ranges unchanged |
+| #130 | 19af04e | 0dc301a | rows keep drawing (up to 4096 candidates, the last few rows one by one); the share check is a fixed probe of the base (at least 5%), not the share of the chunk |
+| #131 | 8fac9ae | 31c4edd | the cache entry holds its dataset and is used only for the same object |
+| #201 | c720b32 | 8dc973b | a whole column that needs itself is a circular-reference `StrategyError` |
+| #132 | f347287 | 76b8c3b | cubic interpolation clipped to the outermost anchors |
+| #133 | 97c4871 | a84823e | widths over 15 take their last nine digits from a second stream; widths up to 15 unchanged |
+| #134 | 797265b | 8373ca0 | hour keys parsed as numbers |
+| #135 | edde0dc | bcbd2b7 | `NthWeekday` has no date when the month lacks the weekday; `n` must be 1..5 or -1 |
+| #136 | fcbff45 | f0bacb9 | monthly default `days` is (28,) |
+| #137 | 40dabf8 | 25b88dc | function name as value and too-deep nesting are `StrategyError`s (no depth cap: expressions that worked still work) |
+| #138 | 776f852 | 6f5dcaf | `StrategyError` naming the column for every spec in the issue (the test's fan_out case moved to a parent table in the fix commit, see #201) |
+| #140 | d55ab78 | d9e043d | only methods of the locale's provider classes; never the Faker API or private names |
+| #144 | 761e140 | cb0a855 | `fit_family` checks the sample and wraps arithmetic failures in `FamilyError` |
+| #146 | 96486ad | da5d10a | docs and docstring corrected |
+| #147 | be082ba | d30bcb2 | offsets converted to UTC explicitly, documented |
+| #148 | 54c84b1 | 4736dbc | values past int64 are a `StrategyError` |
+| #149 | 4afb53d | 93e1d3d | NaN growth, reversed `RuleCalendar.factors` range and unknown seasonal keys are errors |
+| (15) | - | 6e0373a | dead `shape.builtins._rng` removed (test: the import raises `ModuleNotFoundError`) |
+
+### Outputs the equivalence verifiers compare
+
+No fix changes bytes those verifiers compare: every `strategy_1to1` and domain temporal case
+uses date-only bounds (#129 leaves those untouched), no verifier case uses `truncated`, cubic
+`empirical`, `digits` wider than 15, a monthly payday or a fifth weekday, and the hour-key
+change gives the same weights for `"0"`..`"23"`. The in-repo strategy equivalence tests
+(`tests/generation/test_strategies_p404{a,b,c,d}.py`, which apply T-21 (b)-(e) to the committed
+baseline fixtures) pass. The verifiers that run the pinned baseline (`$SPINDLE_ROOT`) were not
+run: there is no baseline checkout in this session.
+
+## Left open
+
+- `FastAddressPack.generate_columns` (`strategies/address.py:136-140`) indexes `searchsorted` of
+  the cumulative scope weights without a bound: a draw above a cumulative sum that rounds below
+  1 (probability about 1e-16 per row) raises `IndexError`. Not filed: practically unreachable;
+  the engine's `address` strategy (`address_rows.py`) already bounds it.
+- `sinks/`, `sources/`, `transforms/`, `reports/` were not audited in depth (see Scope).
+
+## Commands and results
+
+(filled in at the end)
