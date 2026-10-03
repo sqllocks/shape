@@ -94,7 +94,7 @@ mod tests {
                 ]);
             }
             for i in 0..20_000 {
-                us.push(unit(i as u64 * 0x9E37_79B9_7F4A_7C15));
+                us.push(unit((i as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15)));
             }
             for u in us.into_iter().filter(|u| (0.0..1.0).contains(u)) {
                 assert_eq!(search(&cum, &g, u), binary(&cum, u), "n={n} u={u}");
