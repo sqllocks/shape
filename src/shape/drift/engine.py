@@ -28,7 +28,7 @@ import json
 import math
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -342,9 +342,12 @@ def _days(value: Any) -> float | None:
         return float(value) / 86_400_000_000.0
     if isinstance(value, str):
         try:
-            return datetime.fromisoformat(value).timestamp() / 86_400.0
+            parsed = datetime.fromisoformat(value)
         except ValueError:
             return None
+        if parsed.tzinfo is None:  # a naive value is read as UTC, not as the machine's zone
+            parsed = parsed.replace(tzinfo=UTC)
+        return parsed.timestamp() / 86_400.0
     return None
 
 
