@@ -110,6 +110,9 @@ _indexes: weakref.WeakKeyDictionary[Engine, dict[tuple[str, str], KeyIndex]] = (
     weakref.WeakKeyDictionary()
 )
 _index_lock = threading.Lock()
+_building: weakref.WeakKeyDictionary[Engine, dict[tuple[str, str], threading.Lock]] = (
+    weakref.WeakKeyDictionary()
+)
 _active = threading.local()
 
 
@@ -119,11 +122,17 @@ def key_index(engine: Engine, table: str, column: str) -> KeyIndex:
     with _index_lock:
         per_engine = _indexes.setdefault(engine, {})
         found = per_engine.get((table, column))
+        building = _building.setdefault(engine, {}).setdefault((table, column), threading.Lock())
     if found is not None:
         return found
-    built = KeyIndex(engine.generate_table(table)[column].combine_chunks())
-    with _index_lock:
-        return _indexes.setdefault(engine, {}).setdefault((table, column), built)
+    with building:  # another thread building the same index: wait for it, do not build twice
+        with _index_lock:
+            found = _indexes.setdefault(engine, {}).get((table, column))
+        if found is not None:
+            return found
+        built = KeyIndex(engine.generate_table(table)[column].combine_chunks())
+        with _index_lock:
+            return _indexes.setdefault(engine, {}).setdefault((table, column), built)
 
 
 def _key_column(

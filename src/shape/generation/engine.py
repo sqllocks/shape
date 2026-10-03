@@ -247,12 +247,31 @@ def resolve_order(schema: GenSchema) -> list[str]:
     return order
 
 
+# Generator keys that name a table a strategy reads in full while it generates (``lookup`` and
+# ``linked`` read ``source_table``, ``composite_foreign_key`` ``ref_table``).
+_SOURCE_TABLE_KEYS = ("source_table", "ref_table")
+
+
+def _strategy_sources(table: Table) -> set[str]:
+    return {
+        str(col.generator[key])
+        for col in table.columns.values()
+        for key in _SOURCE_TABLE_KEYS
+        if col.generator.get(key)
+    }
+
+
 def dependency_levels(schema: GenSchema, order: list[str] | None = None) -> list[list[str]]:
-    """``order`` grouped into levels: a level holds every remaining table whose foreign-key
-    parents are all in earlier levels. Tables of one level do not depend on each other."""
+    """``order`` grouped into levels: a level holds every remaining table whose parents (foreign
+    keys, relationships, and the tables a ``lookup`` or ``composite_foreign_key`` reads) are all in
+    earlier levels. Tables of one level do not depend on each other."""
     order = resolve_order(schema) if order is None else order
     known = set(schema.tables)
-    deps = {name: set(t.fk_dependencies) & known for name, t in schema.tables.items()}
+    graph = _dependency_graph(schema)
+    deps = {
+        name: (graph[name] | _strategy_sources(t)) & known - {name}
+        for name, t in schema.tables.items()
+    }
     assigned: set[str] = set()
     levels: list[list[str]] = []
     remaining = [t for t in order if t in known]
@@ -590,6 +609,7 @@ class Engine:
         self._lock = threading.RLock()
         self._tables: dict[str, pa.Table] = {}
         self._pools: dict[str, KeyPool] = {}
+        self._table_locks: dict[str, Any] = {}  # an RLock per table: one build at a time
         self._building: set[str] = set()
         self._memo: dict[Hashable, Any] = {}
         # Both are on unless a test turns them off to compare with the plain order of the passes:
@@ -855,18 +875,28 @@ class Engine:
             return self._tables.get(table)
 
     def generate_table(self, table: str, chunk_rows: int | None = None) -> pa.Table:
-        """All of ``table`` before the post-passes (memoised for the default chunk size)."""
-        if chunk_rows is None:
+        """All of ``table`` before the post-passes (memoised for the default chunk size, and built
+        once: a thread that asks while another builds it waits for that build)."""
+        if chunk_rows is not None:
+            return self._build_table(table, chunk_rows)
+        with self._lock:
+            cached = self._tables.get(table)
+            building = self._table_locks.setdefault(table, threading.RLock())
+        if cached is not None:
+            return cached
+        with building:
             with self._lock:
                 cached = self._tables.get(table)
             if cached is not None:
                 return cached
-        batches = list(self._raw_chunks(table, chunk_rows))
-        built = pa.Table.from_batches(batches, schema=batches[0].schema)
-        if chunk_rows is None:
+            built = self._build_table(table, None)
             with self._lock:
                 self._tables[table] = built
-        return built
+            return built
+
+    def _build_table(self, table: str, chunk_rows: int | None) -> pa.Table:
+        batches = list(self._raw_chunks(table, chunk_rows))
+        return pa.Table.from_batches(batches, schema=batches[0].schema)
 
     def _generate_level(
         self,
