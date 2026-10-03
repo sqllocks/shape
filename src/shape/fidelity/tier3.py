@@ -419,6 +419,8 @@ def bootstrap_table(
     if source.num_rows == 0:
         raise ValueError("cannot bootstrap an empty table")
     n = source.num_rows if n_rows is None else int(n_rows)
+    if n < 0:
+        raise ValueError(f"n_rows is 0 or more, got {n}")
     rng = np.random.default_rng(seed)
     idx = rng.integers(0, source.num_rows, size=n)
     sampled = source.take(pa.array(idx))
