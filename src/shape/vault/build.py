@@ -94,13 +94,13 @@ def _categories(col: Mapping[str, Any], surface: str, base: int) -> list[list[An
     shares = col.get(surface)
     if not isinstance(shares, Mapping) or not shares:
         return None
-    rows = [
-        [str(value), int(round(float(share) * base))]
+    pairs = [
+        (str(value), int(round(float(share) * base)))
         for value, share in shares.items()
         if value != OTHER_BUCKET
     ]
-    rows.sort(key=lambda r: (-r[1], r[0]))
-    return rows
+    pairs.sort(key=lambda r: (-r[1], r[0]))
+    return [[value, count] for value, count in pairs]
 
 
 def _tagged(tag: Any) -> list[Any] | None:

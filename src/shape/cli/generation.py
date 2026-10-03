@@ -90,6 +90,21 @@ def add_arguments(sub: Any) -> None:
         help="with --from: apply a decision file (`shape proposals`)",
     )
     ge.add_argument(
+        "--vault",
+        metavar="VAULT",
+        help="with --from: shape plus vault, categories and bounds from a value vault (needs "
+        "--kek); the output contains real values, treat it like the source data",
+    )
+    ge.add_argument(
+        "--kek", metavar="REF", help="with --vault: the key-encryption key, env://NAME or a file"
+    )
+    ge.add_argument(
+        "--verify",
+        metavar="PUBKEY",
+        help="with --from: the profile (and the vault hash it records) must carry a valid "
+        "signature by this public key",
+    )
+    ge.add_argument(
         "--rows",
         action="append",
         metavar="N|TABLE=N",
@@ -267,6 +282,10 @@ def cmd_generate(a: argparse.Namespace) -> int:
         raise ValueError("--scale-mode does not combine with --from")
     if a.decisions and not a.from_profile:
         raise ValueError("--decisions goes with --from PROFILE.shape")
+    if (a.vault or a.kek or a.verify) and not a.from_profile:
+        raise ValueError("--vault, --kek and --verify go with --from PROFILE.shape")
+    if bool(a.vault) != bool(a.kek):
+        raise ValueError("--vault needs --kek REF, and --kek needs --vault VAULT")
     if a.to and a.scale_mode:
         raise ValueError("--to does not combine with --scale-mode (use --sink there)")
     if a.from_profile:
@@ -340,8 +359,26 @@ def _generate_from_profile(a: argparse.Namespace, rows: int | None) -> int:
     run = current()
     from shape.cli.proposals import load_decisions
 
+    vault_run, overlay = (None, None)
+    if a.vault:
+        try:
+            vault_run, overlay = open_vault_run(a, a.from_profile)
+        except VaultRefused:
+            return 1
+    if a.verify and not a.vault:
+        from shape.artifact.io import ArtifactSignatureError
+        from shape.artifact.signing import load_public_key, verify_artifact
+
+        try:
+            verify_artifact(a.from_profile, load_public_key(a.verify))
+        except ArtifactSignatureError as exc:
+            print(f"shape: signature check failed: {exc}", file=sys.stderr)
+            return 1
     fitted = fit_schema(
-        shape.load(a.from_profile), rows=rows, decisions=load_decisions(a.decisions)
+        shape.load(a.from_profile),
+        rows=rows,
+        decisions=load_decisions(a.decisions),
+        vault=overlay,
     )
     schema = fitted.schema
     _check_scale(schema, a.scale)
@@ -356,25 +393,87 @@ def _generate_from_profile(a: argparse.Namespace, rows: int | None) -> int:
     if a.chunk_rows:
         kwargs["chunk_rows"] = a.chunk_rows
     engine = Engine(schema, scale=a.scale or PRESET, seed=a.seed, **kwargs)
+    mode = _generation_mode(vault_run)
     run.set(
         domain=schema.model.domain,
         mode=schema.model.schema_mode,
         scale=engine.schema.generation.scale,
         seed=engine.seed,
         format=a.format,
+        **mode,
     )
     if a.dry_run:
         plan = engine.dry_run()
         run.set(rows=plan.total_rows, tables=len(plan.order))
         if a.json:
-            _dump(plan.to_dict())
+            _dump({**plan.to_dict(), **_mark_vault(plan, mode)})
         else:
             print(plan.render())
+            if vault_run is not None:
+                print(f"vault columns: {', '.join(mode['vaulted_columns'])}")
         return 0 if plan.ok else 1
-    return _generate(a, engine)
+    if vault_run is not None:
+        from shape.vault.generate import WARNING
+
+        print(WARNING.format(vault=a.vault), file=sys.stderr)
+    return _generate(a, engine, mode)
 
 
-def _generate(a: argparse.Namespace, engine: Any) -> int:
+class VaultRefused(Exception):
+    """The vault does not match the profile or the key: reported on stderr, exit code 1."""
+
+
+def open_vault_run(a: argparse.Namespace, profile: str | None = None) -> tuple[Any, Any]:
+    """Check ``--vault`` against the profile and open it: the run and the schema overlay. A vault
+    that does not match prints why and raises :class:`VaultRefused` (exit 1). ``shape plan`` calls
+    it too (``profile`` defaults to its path)."""
+    from shape.artifact.io import ArtifactSignatureError
+    from shape.vault.errors import VaultMismatchError
+    from shape.vault.generate import open_for_generation, overlay
+
+    if bool(a.vault) != bool(a.kek):
+        raise ValueError("--vault needs --kek REF, and --kek needs --vault VAULT")
+    verify_key = None
+    if getattr(a, "verify", None):
+        from shape.artifact.signing import load_public_key
+
+        verify_key = load_public_key(a.verify)
+    shape_path = profile or getattr(a, "shape", None) or a.from_profile
+    try:
+        run = open_for_generation(a.vault, shape_path, a.kek, verify_key=verify_key)
+    except (VaultMismatchError, ArtifactSignatureError) as exc:
+        from shape.cli import errors
+
+        if errors.debug_enabled():
+            raise
+        print(f"shape: vault check failed: {errors.describe(exc)}", file=sys.stderr)
+        raise VaultRefused from None
+    return run, overlay(run)
+
+
+def _generation_mode(vault_run: Any) -> dict[str, Any]:
+    """What a run records about where its values came from: ``shape`` (statistical, from the
+    profile) or ``shape+vault`` with the vault id and the columns drawn from it."""
+    if vault_run is None:
+        return {"generation_mode": "shape"}
+    return {
+        "generation_mode": "shape+vault",
+        "vault_id": vault_run.vault_id,
+        "vaulted_columns": vault_run.vaulted_columns,
+    }
+
+
+def _mark_vault(plan: Any, mode: dict[str, Any]) -> dict[str, Any]:
+    """Mark the vaulted columns of a dry run's tables ``vault`` (in place) and return the mode."""
+    for column in mode.get("vaulted_columns", ()):
+        table, _, name = column.rpartition(".")
+        for col in plan.tables.get(table, {}).get("columns", ()):
+            if col["name"] == name:
+                col["source"] = "vault"
+    return mode
+
+
+def _generate(a: argparse.Namespace, engine: Any, mode: dict[str, Any] | None = None) -> int:
     from shape.generation.output import format_summary, write_engine
     from shape.runlog import current
 
@@ -396,7 +495,14 @@ def _generate(a: argparse.Namespace, engine: Any) -> int:
         counts = {n: result.tables[n].num_rows for n in result.generation_order}
         run.set(rows=sum(counts.values()), tables=len(counts))
         if a.json:
-            _dump({"counts": counts, "seconds": round(seconds, 3), "seed": engine.seed})
+            _dump(
+                {
+                    "counts": counts,
+                    "seconds": round(seconds, 3),
+                    "seed": engine.seed,
+                    **(mode or {}),
+                }
+            )
         else:
             print(format_summary(result))
         return 0
@@ -418,6 +524,7 @@ def _generate(a: argparse.Namespace, engine: Any) -> int:
                 "counts": counts,
                 "seconds": round(seconds, 3),
                 "seed": engine.seed,
+                **(mode or {}),
             }
         )
     else:

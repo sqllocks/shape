@@ -14,6 +14,7 @@ An explicit ``columns`` entry wins over ``by_classification`` (the ordered taxon
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Collection, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -112,7 +113,7 @@ def parse_policy(doc: Any) -> VaultPolicy:
     return VaultPolicy(default, by_class, columns)
 
 
-def load_policy(path: str | Path) -> VaultPolicy:
+def load_policy(path: str | os.PathLike[str]) -> VaultPolicy:
     p = Path(path)
     try:
         if p.stat().st_size > MAX_POLICY_BYTES:

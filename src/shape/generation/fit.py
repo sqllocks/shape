@@ -25,7 +25,7 @@ Stable interface: :func:`fit_schema`, :class:`Fit`, :func:`calibrate_correlation
 from __future__ import annotations
 
 import copy
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -597,13 +597,17 @@ def fit_schema(
     copula_threshold: float = COPULA_THRESHOLD,
     rows: int | None = None,
     decisions: Any = None,
+    vault: Callable[[dict[str, Any]], list[PlanItem]] | None = None,
 ) -> Fit:
     """The generation schema that reproduces ``profile``, and what it preserves.
 
     The schema's ``profile`` scale preset has the profile's row counts; ``rows`` replaces the row
     count of a single-table profile (the plan then reports the row-count dependent fields as
     approximate). ``decisions`` is a :class:`shape.proposals.DecisionFile`: the relationships a
-    person accepted are kept and the ones they rejected are left out (``docs/PROPOSALS.md``)."""
+    person accepted are kept and the ones they rejected are left out (``docs/PROPOSALS.md``).
+    ``vault`` (W5-03) is a function that puts a value vault's contents into the schema document
+    and returns the plan items (status ``vault``) that replace the profile's own for those
+    fields; without it nothing changes."""
     if decisions is not None:
         from shape.proposals import apply_decisions
 
@@ -666,6 +670,10 @@ def fit_schema(
     doc["generation"]["scales"][PRESET] = dict(parent_scale)
     doc["generation"]["scale"] = PRESET
     items.extend(_dataset_items(dataset))
+    if vault is not None:
+        replaced = vault(doc)
+        taken = {x.evidence for x in replaced}
+        items = [x for x in items if x.evidence not in taken] + replaced
     return Fit(GenSchema.from_dict(doc), ReconstructionPlan(tuple(items)))
 
 

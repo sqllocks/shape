@@ -528,23 +528,45 @@ def save(
         raise ValueError(
             "a vault needs capture safe: with capture full the values are already in the clear"
         )
+    return save_with_vault(p, out, path, vault, vault_policy, kek, classifications)
+
+
+def save_with_vault(
+    full: Profile,
+    captured: Profile,
+    path: str | Path,
+    vault: str | Path,
+    vault_policy: Any,
+    kek: Any,
+    classifications: Mapping[str, str] | None = None,
+) -> str:
+    """Write the safe capture ``captured`` of ``full`` and the value vault of what it withheld
+    (:mod:`shape.vault`): the vault first, then the artifact whose manifest names it by
+    ``vault_id`` and SHA-256. Returns the content id. Nothing is written when the policy, the key
+    or a path is refused."""
     if vault_policy is None:
         raise ValueError("a vault needs vault_policy")
     if kek is None:
         raise ValueError("a vault needs kek (32 bytes or a credential reference)")
-    if p.capture_declared and p.capture["mode"] == "safe":
+    if full.capture_declared and full.capture["mode"] == "safe":
         raise ValueError(
             "this profile was captured safe: its values are gone, so there is nothing for a "
             "vault; profile the data again"
         )
     from shape.vault.build import write_profile_vault
 
-    body = _encode(out._data)
+    body = _encode(captured._data)
     written = write_profile_vault(
-        p, out, hashlib.sha256(body).hexdigest(), vault, vault_policy, kek, classifications
+        full,
+        captured,
+        hashlib.sha256(body).hexdigest(),
+        vault,
+        vault_policy,
+        kek,
+        classifications,
     )
     try:
-        return save_captured(out, path, vault=written["reference"])
+        return save_captured(captured, path, vault=written["reference"])
     except BaseException:
         Path(vault).unlink(missing_ok=True)
         raise

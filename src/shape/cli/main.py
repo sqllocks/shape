@@ -332,6 +332,29 @@ def _warn_empty(a, prof):
     print(f"shape: warning: {msg}", file=sys.stderr)
 
 
+def _vault_args(a):
+    """The vault options of ``shape profile``, checked before any work; ``{}`` without --vault."""
+    given = [f for f in ("vault_policy", "kek") if getattr(a, f, None)]
+    if not getattr(a, "vault", None):
+        if given:
+            raise ValueError("--vault-policy and --kek go with --vault OUT.shapevault")
+        return {}
+    if a.capture != "safe":
+        raise ValueError(
+            "--vault needs --capture safe: with --capture full the values would already be in "
+            "the clear in the .shape"
+        )
+    if not a.vault_policy:
+        raise ValueError("--vault needs --vault-policy POLICY.json")
+    if not a.kek:
+        raise ValueError(
+            "--vault needs --kek REF (env://NAME or a key file; see `shape vault keygen`)"
+        )
+    from shape.vault.policy import load_policy
+
+    return {"policy": load_policy(a.vault_policy)}
+
+
 def _cmd_profile(a):
     import shape
 
@@ -341,6 +364,7 @@ def _cmd_profile(a):
     from shape.cli import capture as capture_args
 
     capture_config = capture_args.config_from_args(a)  # a bad setting fails before any work
+    vault_args = _vault_args(a)
 
     settings = auth.settings_from_args(a)
     if settings and "://" not in a.src:
@@ -370,7 +394,20 @@ def _cmd_profile(a):
     from shape.profile.reference.profile import save_captured
 
     captured = redact_profile(prof, capture_config)  # what is written or printed below
-    content_id = save_captured(captured, a.output)
+    if vault_args:
+        from shape.profile.reference.profile import save_with_vault
+
+        content_id = save_with_vault(
+            prof,
+            captured,
+            a.output,
+            a.vault,
+            vault_args["policy"],
+            a.kek,
+            capture_config.classifications,
+        )
+    else:
+        content_id = save_captured(captured, a.output)
     key_id = _sign_output(a, a.output)
     if captured.capture["mode"] == "full":
         capture_args.warn_full(a.output)
@@ -380,6 +417,8 @@ def _cmd_profile(a):
     if a.json:
         _write_json(a.json, captured.summary())
     out = {"written": a.output, "shape_content_id": content_id}
+    if vault_args:
+        out["vault"] = a.vault
     if prof.provenance is not None:
         out["provenance"] = prof.provenance
     if key_id:
@@ -447,7 +486,20 @@ def _cmd_plan_profile(a):
     from shape.cli.proposals import load_decisions
     from shape.generation.fit import fit_schema
 
-    plan = fit_schema(shape.load(a.shape), rows=a.rows, decisions=load_decisions(a.decisions)).plan
+    overlay = None
+    if a.vault or a.kek:
+        from shape.cli.generation import VaultRefused, open_vault_run
+
+        try:
+            overlay = open_vault_run(a)[1]
+        except VaultRefused:
+            return 1
+    plan = fit_schema(
+        shape.load(a.shape),
+        rows=a.rows,
+        decisions=load_decisions(a.decisions),
+        vault=overlay,
+    ).plan
     out = plan.to_dict()
     if a.status:
         out["items"] = [x for x in out["items"] if x["status"] in a.status]
@@ -943,6 +995,18 @@ def _build_parser(plugin_commands=()):
 
     add_capture_args(pr)
     pr.add_argument(
+        "--vault",
+        metavar="OUT.shapevault",
+        help="also write a value vault: an encrypted file of the values the safe capture withheld, "
+        "chosen by --vault-policy (needs --kek; see docs/VAULT.md)",
+    )
+    pr.add_argument("--vault-policy", metavar="POLICY.json", help="with --vault: what to keep")
+    pr.add_argument(
+        "--kek",
+        metavar="REF",
+        help="with --vault: the key-encryption key, env://NAME or a key file (never the key)",
+    )
+    pr.add_argument(
         "--dataset",
         action="store_true",
         help="SRC is a folder of table files: profile one table per file, named by the file name "
@@ -1252,10 +1316,12 @@ def _build_parser(plugin_commands=()):
     gp.add_argument("shape", metavar="PROFILE.shape")
     gp.add_argument(
         "--status",
-        choices=("preserved", "approximate", "not_modelled", "unavailable"),
+        choices=("preserved", "approximate", "not_modelled", "unavailable", "vault"),
         action="append",
         help="list only items with this status (repeatable)",
     )
+    gp.add_argument("--vault", metavar="VAULT", help="mark what a vault run would take from it")
+    gp.add_argument("--kek", metavar="REF", help="with --vault: the key-encryption key")
     gp.add_argument("--rows", type=int, metavar="N", help="plan for N rows (a one-table profile)")
     gp.add_argument(
         "--decisions",
