@@ -137,3 +137,7 @@ exists.
 
 Its version always equals core's (`sqllocks-shape`), and it is released together with core.
 How plugins are written: `docs/plugins/authoring.md` in the repository.
+
+## Which Fabric surfaces this plugin calls
+
+[`docs/FABRIC_PLATFORM.md`](../../docs/FABRIC_PLATFORM.md) lists every Fabric and OneLake API, item type and Spark runtime that Shape calls, with its release stage, and describes the live Git sync check (`tests/test_live_git_sync.py`). A test keeps preview APIs out of the code.
