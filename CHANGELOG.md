@@ -5,6 +5,36 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+### Fixed
+
+- Kafka and Event Hubs stream sources (#351, #353, #354, #355): a bounded read stops at the end
+  each partition had when the read began (messages written during the read are left for the next
+  run); Event Hubs `max_messages` counts each read on its own; an Event Hubs body that is not
+  UTF-8 is counted as undecodable instead of ending the read.
+- Event Hubs emitter (#356): an event too large for a batch is a `ShapeError` naming it, wherever it
+  falls in the batch.
+- Fabric tapes (#411, #442, #455): the scrubber redacts braced ODBC passwords holding `}`, JSON and
+  quoted secrets; recording keeps the exception the code under test sees, records a failing
+  commit, and gives real values from `fetchone`; a malformed tape is a `RecordingError`.
+- Fabric SQL sinks (#415, #443, #446, #449, #456, #458): `sql-database://` and `warehouse://` build
+  `Server=host,port` and refuse a user or password in the URI; `mssql://` honours the URI's write
+  options with `connection_string`; declared string lengths and decimal scales always give valid
+  T-SQL; `Encrypt=Strict` is kept; a zero-column table and a missing table in `order` are refused
+  before anything is written; a long table name gets a primary-key name within 128 characters.
+- Eventhouse (#419, #444, #445): emitting several tables into one KQL table re-sends each table's
+  JSON mapping when another replaced it; each emit's token, credential, retries and timeout apply;
+  `uint64` columns are `decimal`.
+- OneLake paths and storage (#432, #440, #447, #454, #459): `.` and `..` segments are refused; the
+  workspace is decoded and checked and URLs encode each segment once; one filesystem per storage
+  account; landing-zone dates and hours are checked; local files get the usual file mode.
+- Fabric API and sign-in (#434, #436, #438, #450, #451, #452, #453, #460): the token is sent only to
+  the Fabric API; a cancelled operation fails at once and `Retry-After` is honoured; an unexpected
+  answer is a `FabricApiError` (exit 1); paging stops on a repeated token; ids are quoted; the token
+  is fetched for each request; an empty token is an `AuthError` and a fallback sign-in names both
+  failures; `kv://` names cannot end in a newline.
+- Fabric notebooks (#448): `generate_notebook` takes only a plain domain name, an integer seed and a
+  version string into the code it writes.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

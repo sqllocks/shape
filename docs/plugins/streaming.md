@@ -122,8 +122,8 @@ Passed as `--option KEY=VALUE` or in `--options-file`; the first five are also s
 | Option | Meaning |
 |---|---|
 | `start_at` | `earliest` (default) or `latest`, for partitions without a stored position. |
-| `stop_at_end` | `true` (default): stop at the end the stream had when the read began. |
-| `idle_timeout`, `max_messages` | Stop after this many seconds without a message, or after this many messages. |
+| `stop_at_end` | `true` (default): stop at the end the stream had when the read began; messages written during the read are left for the next run. |
+| `idle_timeout`, `max_messages` | Stop after this many seconds without a message, or after this many messages (counted for each read: a reconnect starts the count again). |
 | `batch_size` | Messages per micro-batch, at most. A batch never mixes partitions. |
 | `schema` | The column types to read into (an Arrow schema; library use). |
 | `on_error` | `skip` (default) counts undecodable messages; `raise` fails on the first. |
