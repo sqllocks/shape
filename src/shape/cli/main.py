@@ -43,9 +43,17 @@ def _is_profile_or_missing(path):
 
 
 def _write_json(path, obj):
+    """Write ``obj`` as JSON. The text is made first, so a report that cannot be JSON (a number
+    that is not finite) fails before the file is opened and an existing file is left as it is."""
+    try:
+        text = json.dumps(obj, indent=2, allow_nan=False)
+    except ValueError as exc:
+        raise ValueError(
+            f"{path} was not written: the report holds a number that is not a finite number "
+            f"(nan or infinity), which JSON cannot carry ({exc})"
+        ) from None
     with open(path, "w", encoding="utf-8") as fh:
-        json.dump(obj, fh, indent=2, allow_nan=False)
-        fh.write("\n")
+        fh.write(text + "\n")
 
 
 _VERIFIED = set()  # inputs ``--verify`` has checked in this run
@@ -106,6 +114,18 @@ def _load_json(path):
         raise ValueError(f"{path} is not valid JSON: {exc}") from exc
     except UnicodeDecodeError as exc:
         raise ValueError(f"{path} is not a text file: {exc}") from exc
+
+
+def _load_document(path):
+    """A JSON file whose top level must be an object (a capture, a model, evidence, a contract)."""
+    doc = _load_json(path)
+    if not isinstance(doc, dict):
+        found = {type(None): "null", list: "a list", str: "a string"}.get(type(doc), "a value")
+        raise ValueError(
+            f"{path} is not a Shape document: expected a JSON object (a capture, a model, "
+            f"evidence or a contract), got {found}"
+        )
+    return doc
 
 
 def _sign_output(a, path):
@@ -352,7 +372,7 @@ def _cmd_profile(a):
 
     if not a.output:
         raise ValueError("profile needs -o OUT.shape")
-    ctx = project_cli.context(a)
+    ctx = project_cli.context(a, a.src if isinstance(a.src, str) else None)
     named = project_cli.use_source_path(a, "src", ctx)
     if named is not None:  # `shape profile orders`: the source of shape.yml, not a path
         a.src, a.dataset, a.name = named.path, a.dataset or named.dataset, a.name or named.name
@@ -559,10 +579,10 @@ def _cmd_fidelity(a):
 
 
 _DIFF_THRESHOLD_FLAGS = (
-    ("--null-rate", "null_rate", float),
-    ("--cardinality-ratio-max", "cardinality_ratio_max", float),
-    ("--cardinality-ratio-min", "cardinality_ratio_min", float),
-    ("--mean-shift-std", "mean_shift_std", float),
+    ("--null-rate", "null_rate", "number"),
+    ("--cardinality-ratio-max", "cardinality_ratio_max", "number"),
+    ("--cardinality-ratio-min", "cardinality_ratio_min", "number"),
+    ("--mean-shift-std", "mean_shift_std", "number"),
     ("--min-severity", "min_severity", str),
 )
 
@@ -571,7 +591,12 @@ def _diff_policy_arguments(d):
     """The ``shape diff`` flags that set thresholds, ignore columns and read a policy file."""
     g = d.add_argument_group("drift thresholds (defaults: docs/DRIFT.md)")
     for flag, key, kind in _DIFF_THRESHOLD_FLAGS:
-        g.add_argument(flag, dest=f"th_{key}", type=kind, metavar=key.upper())
+        g.add_argument(
+            flag,
+            dest=f"th_{key}",
+            type=_threshold_float if kind == "number" else kind,
+            metavar=key.upper(),
+        )
     g.add_argument(
         "--threshold",
         action="append",
@@ -596,8 +621,25 @@ def _diff_policy_arguments(d):
     )
 
 
+def _threshold_float(raw):
+    """A drift threshold given as a number: ``nan`` would make every comparison false and so
+    switch the check off without a word."""
+    try:
+        value = float(raw)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"must be a number, not {raw!r}") from None
+    if value != value:
+        raise argparse.ArgumentTypeError("must be a number of 0 or more, not nan")
+    return value
+
+
 def _threshold_value(key, raw):
-    return raw if key == "min_severity" else float(raw)
+    if key == "min_severity":
+        return raw
+    try:
+        return _threshold_float(raw)
+    except argparse.ArgumentTypeError as exc:
+        raise ValueError(f"threshold {key!r} {exc}") from None
 
 
 def _diff_options(a):
@@ -736,7 +778,7 @@ def _cmd_verify_gates(a):
     )
     from shape.quality.verify import data_files
 
-    ctx = project_cli.context(a, source_flag=False)
+    ctx = project_cli.context(a, a.shape, source_flag=False)
     named = project_cli.use_source_path(a, "shape", ctx)
     if named is not None:  # `shape verify orders`: the source of shape.yml, not a path
         a.shape = named.path
@@ -831,6 +873,24 @@ _VERIFY_HELP = (
 )
 
 
+def _read_script(path):
+    """The text of a SQL script: UTF-8, or UTF-16 or UTF-32 when the file starts with a byte
+    order mark (a script saved as "Unicode" by a SQL editor is UTF-16)."""
+    import codecs
+
+    data = path.read_bytes()
+    if data.startswith((codecs.BOM_UTF32_LE, codecs.BOM_UTF32_BE)):
+        encoding = "utf-32"
+    elif data.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)):
+        encoding = "utf-16"
+    else:
+        encoding = "utf-8-sig"
+    try:
+        return data.decode(encoding)
+    except UnicodeDecodeError as exc:
+        raise ValueError(f"{path} is not a UTF-8, UTF-16 or UTF-32 text file ({exc})") from None
+
+
 def _cmd_from_ddl(a):
     """``shape from-ddl FILE``: read ``CREATE TABLE`` DDL, write a generation schema."""
     from pathlib import Path
@@ -838,9 +898,9 @@ def _cmd_from_ddl(a):
     from shape.generation.ddl import from_ddl
 
     src = Path(a.input_file)
-    schema, notes = from_ddl(
-        src.read_text(encoding="utf-8"), domain=a.domain, smart=a.smart, scale=a.scale
-    )
+    schema, notes = from_ddl(_read_script(src), domain=a.domain, smart=a.smart, scale=a.scale)
+    if not schema.tables:
+        raise ValueError(f"no CREATE TABLE statements found in {src}")
     out = Path(a.output) if a.output else src.with_suffix(".gen.json")
     _write_json(out, schema.to_dict())
     print(f"Shape DDL import{' (smart)' if a.smart else ''}")
@@ -1707,7 +1767,7 @@ def _cmd_evidence(a):
     takes a generation schema and then prints the plan of its run, as ``generate --dry-run``."""
     from shape.artifact import read_shape
 
-    _, s = read_shape(a.shape) if str(a.shape).endswith(".shape") else ({}, _load_json(a.shape))
+    _, s = read_shape(a.shape) if str(a.shape).endswith(".shape") else ({}, _load_document(a.shape))
     if a.cmd == "query":
         from shape.query import query as shape_query
 
@@ -1728,7 +1788,7 @@ def _cmd_evidence(a):
 
     if a.contract is None:
         raise ValueError("shape check needs CONTRACT.json")
-    contract = _load_json(a.contract)
+    contract = _load_document(a.contract)
     r = evaluate_contract(s, contract)
     _dump(r.to_dict())
     return 0 if r.passed else 4
@@ -1919,7 +1979,7 @@ def _dispatch(argv):
 
         if a.after is None:
             raise ValueError("shape diff needs BASE.shape and CURRENT.shape")
-        _dump([asdict(v) for v in compare(_load_json(a.before), _load_json(a.after))])
+        _dump([asdict(v) for v in compare(_load_document(a.before), _load_document(a.after))])
         return 0
     if a.cmd in ("show", "inspect"):
         return _run(_cmd_inspect, a)
