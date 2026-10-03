@@ -17,10 +17,12 @@ created as needed.
 
 from __future__ import annotations
 
+import base64
 import contextlib
 import datetime as dt
 import io
 import json
+import math
 import os
 import shutil
 import uuid
@@ -252,10 +254,39 @@ class IpcSink(_FileSink):
 
 
 def _json_default(value: Any) -> str:
-    """Dates and times as ISO 8601; decimals as exact strings (a JSON number would round)."""
+    """Dates and times as ISO 8601; decimals as exact strings (a JSON number would round);
+    binary as base64 (as the stream formats write it)."""
     if isinstance(value, (dt.datetime, dt.date, dt.time)):
         return value.isoformat()
+    if isinstance(value, (bytes, bytearray, memoryview)):
+        return base64.b64encode(bytes(value)).decode("ascii")
     return str(value)
+
+
+def _finite(value: Any) -> Any:
+    """``value`` with every non-finite float (NaN, Infinity: not JSON) replaced by ``None``."""
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    if isinstance(value, dict):
+        return {k: _finite(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_finite(v) for v in value]
+    return value
+
+
+def _json_line(row: dict[str, Any]) -> str:
+    try:
+        return json.dumps(
+            row, separators=(",", ":"), ensure_ascii=False, allow_nan=False, default=_json_default
+        )
+    except ValueError:  # a NaN or an infinity somewhere in the row
+        return json.dumps(
+            _finite(row),
+            separators=(",", ":"),
+            ensure_ascii=False,
+            allow_nan=False,
+            default=_json_default,
+        )
 
 
 class _JsonlWriter:
@@ -268,9 +299,7 @@ class _JsonlWriter:
 
     def write_batch(self, batch: pa.RecordBatch) -> None:
         for row in batch.to_pylist():
-            self._f.write(
-                json.dumps(row, separators=(",", ":"), ensure_ascii=False, default=_json_default)
-            )
+            self._f.write(_json_line(row))
             self._f.write("\n")
 
     def close(self) -> None:
