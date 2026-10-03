@@ -359,3 +359,23 @@ def test_scorecard_classified_must_name_a_column_of_the_data(scored, capsys, val
 def test_scorecard_classified_real_column_still_works(scored) -> None:
     d, g = scored
     assert main(["scorecard", str(d), "--schema", str(g), "--classified", "customer.name"]) == 0
+
+
+# -- diff --only that matches no column ----------------------------------------------------
+
+
+def test_diff_only_naming_no_column_is_refused(tmp_path: Path, capsys) -> None:
+    a, b = _profile(tmp_path, "a", BASE), _profile(tmp_path, "b", LATER)
+    capsys.readouterr()
+    assert main(["diff", str(a), str(b), "--no-project", "--only", "nosuch"]) == 2
+    err = capsys.readouterr().err
+    assert "--only" in err and "nosuch" in err and "amount" in err
+    assert main(["diff", str(a), str(b), "--no-project", "--only", "amount,nosuch"]) == 2
+
+
+def test_diff_only_with_a_glob_or_real_column_still_works(tmp_path: Path, capsys) -> None:
+    a, b = _profile(tmp_path, "a", BASE), _profile(tmp_path, "b", LATER)
+    capsys.readouterr()
+    for only in ("amount", "am*", "id,amount"):
+        assert main(["diff", str(a), str(b), "--no-project", "--only", only]) == 0
+        assert capsys.readouterr().out
