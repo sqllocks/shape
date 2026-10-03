@@ -274,6 +274,11 @@ def test_executors_on_the_python_kernel_give_the_same_profile(
         .getOrCreate()
     )
     try:
+        # the executors really run the Python twin (#328)
+        probe = session.sparkContext.parallelize([0], 1).map(
+            lambda _: __import__("os").environ.get("SHAPE_KERNEL")
+        )
+        assert probe.collect() == ["python"]
         # the same partitioning as the module fixture: repartition(5) of the same file
         doc = profile_distributed(session.read.parquet(str(path)).repartition(5), name="d3")
     finally:
