@@ -32,6 +32,7 @@ SDIST_TOP_LEVEL = {
     "README.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
+    "THIRD_PARTY_NOTICES_RUST.md",
     "src",
     "rust",
 }
