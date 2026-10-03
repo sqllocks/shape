@@ -27,6 +27,7 @@ from shape.chaos.categories import (
     _datetime_values,
     _is_number,
     _is_text,
+    extreme_range,
 )
 from shape.plugins.api.v1 import ChaosReport
 
@@ -91,7 +92,7 @@ def _out_of_range(
     values, valid = _numeric_values(arr)
     peak = pc.max(pc.abs(arr)).as_py()
     baseline = float(peak) if peak and np.isfinite(peak) else 1000.0
-    extreme = rng.uniform(baseline * 100, baseline * 1000, size=len(pos))
+    extreme = rng.uniform(*extreme_range(baseline), size=len(pos))
     if pa.types.is_integer(arr.type):
         info = np.iinfo(values.dtype)
         top = np.nextafter(float(info.max), 0.0)

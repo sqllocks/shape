@@ -140,6 +140,16 @@ def _datetime_array(arr: np.ndarray, valid: np.ndarray, typ: pa.DataType) -> pa.
     return pa.array(arr, type=typ, mask=~valid)
 
 
+_MAX_BASELINE = float(np.finfo(np.float64).max) / 1000
+
+
+def extreme_range(baseline: float) -> tuple[float, float]:
+    """100 to 1000 times ``baseline``; a baseline so large (or infinite) that this would
+    overflow is capped, so the values stay finite floats."""
+    baseline = min(baseline, _MAX_BASELINE)
+    return baseline * 100, baseline * 1000
+
+
 class Mutator(ABC):
     """Base class of the category mutators."""
 
@@ -365,7 +375,7 @@ class ValueChaosMutator(Mutator):
         col = _col(table, i)
         peak = pc.max(pc.abs(col)).as_py()
         baseline = float(peak) if peak and not math.isnan(peak) else 1000.0
-        extreme = rng.uniform(baseline * 100, baseline * 1000, size=len(idx))
+        extreme = rng.uniform(*extreme_range(baseline), size=len(idx))
         return _put(table, i, _set_float(col, idx, extreme)), self._event(
             "out_of_range", table, i, idx
         )
