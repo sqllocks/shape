@@ -101,4 +101,36 @@ the matrix confirms (`plugins doctor` passes on the pure wheel).
 
 ## Commands and results
 
-In progress: the full suite (rust and python kernels) and the install matrix are running.
+Final run (resumed session, 2026-10-03). `origin/build/main-plan` had not moved since 5c91ea5, so
+no merge was needed. Pinned Spindle set up with `benchmarks/vs_spindle/setup_spindle.sh` (needed by
+`tests/demo/content`); `$SPINDLE_ROOT` was not modified. unixODBC installed for the Fabric tests.
+
+Environment, the same as CI: `$SHAPE_VENV` (Python 3.11.15) with
+`pip install -e '.[dev,streaming,advanced]'` plus `-e` of all seven plugins (pyarrow 25.0.1,
+numpy 2.4.6). `tests/demo/fabric` runs in a second venv with
+`pip install -e '.[dev]' -r tests/demo/fabric/requirements.txt`, as the CI fabric job does, because
+that file's `fabric-user-data-functions` pins pyarrow 19.0.1 and installs `azure-functions`.
+Editable plugin installs (pip and uv alike) leave ignored `plugins/*/build/` directories, which
+`test_every_skeleton_builds_a_pure_wheel` reports as build leftovers, so they were removed after
+installing (`rm -rf plugins/*/build`).
+
+| Command | Result |
+|---|---|
+| `make check PYTHON=python` (every step: ruff check, ruff format --check, mypy, compileall, vulture, lint-imports, check_requirements, check_secrets, check_user_facing, check_shipped_data, check_plugin_skeletons, check_conformance_coverage, coverage run, heavy run, python-kernel kernel tests, cargo fmt, clippy, cargo test) | exit 0: 6815 passed (coverage gate 86 met); heavy 42 passed; `SHAPE_KERNEL=python pytest tests/kernel` 265 passed; cargo test 34 passed |
+| `python scripts/check_user_facing.py` | exit 0, clean |
+| `SHAPE_KERNEL=rust pytest -m "not emulator and not live" --ignore=tests/demo/fabric` | exit 0: 6895 passed, 13 deselected |
+| `SHAPE_KERNEL=python pytest -m "not emulator and not live" --ignore=tests/demo/fabric` | running (slow heavy tests on the pure-Python kernel); result to follow in the next commit |
+| `SHAPE_KERNEL=rust pytest -m "not emulator and not live" tests/demo/fabric` (fabric venv) | exit 0: 216 passed |
+| `SHAPE_KERNEL=python pytest -m "not emulator and not live" tests/demo/fabric` (fabric venv) | exit 0: 216 passed |
+
+No test was skipped, deselected beyond the markers, or xfailed.
+
+First attempt, recorded for the lead: in a single venv that also held
+`tests/demo/fabric/requirements.txt`, `make check` had 5 failures
+(`test_to_postgresql_routes_to_the_database_sink`, `test_file_sinks_take_path_template_and_batch_date`,
+`test_one_and_one_point_zero_hash_equal`, `test_every_skeleton_builds_a_pure_wheel`,
+`test_core_imports_no_cloud_sdk_to_resolve_references`). Causes: pyarrow 19.0.1 (float16 hashing,
+hive partition column on `read_table`), `azure-functions` on the path, and the `build/` directories
+above. All five passed (153 passed in those files) once the venv matched CI, and in the full runs
+above. None touches files this lane changed. The pyarrow 19 pin is worth a note for whoever owns
+`tests/demo/fabric/requirements.txt`: installing it next to `[dev]` breaks core tests.
