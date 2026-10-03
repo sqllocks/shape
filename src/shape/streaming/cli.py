@@ -14,7 +14,8 @@ Output:
 * ``tumbling``, ``sliding`` and ``session`` windows are written to ``--windows`` as JSON lines,
   one closed window per line, as they close. A window is identified by ``(kind, start, end)``;
   a restarted run reads the file and does not write a window it already holds, so the file has
-  each window once even though the consumer hands windows out at least once.
+  each window once even though the consumer hands windows out at least once (a half-written
+  last line, left by a run killed mid-write, is cut first).
   Ctrl-C writes the windows still open with ``"partial": true``; a restart drops those lines
   and writes the windows complete.
 
@@ -149,6 +150,9 @@ class _WindowFile:
         self.seen: set[tuple[Any, ...]] = set()
         self.written = 0
         if path.exists():
+            from .emit.sinks import repair_tail
+
+            repair_tail(path)  # a run killed mid-line left half a window: it is written again
             kept: list[str] = []
             dropped = False
             with path.open(encoding="utf-8") as fh:
