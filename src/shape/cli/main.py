@@ -1218,7 +1218,8 @@ def _build_parser(plugin_commands=()):
         action="append",
         default=[],
         metavar="REPORT",
-        help="write a report; .json, .md or .html by extension (repeatable)",
+        help="write a report; .json, .md or .html by extension (repeatable; a --tier report "
+        "is .json only)",
     )
     fi.add_argument(
         "--format",
