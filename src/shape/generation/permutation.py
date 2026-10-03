@@ -39,6 +39,10 @@ def permute(index: npt.NDArray[np.integer], n: int, key: int) -> npt.NDArray[np.
     selects. Every ``index`` must be in ``0 .. n - 1``."""
     if n < 1:
         raise ValueError("n must be at least 1")
+    index = np.asarray(index)
+    if index.size and (int(index.min()) < 0 or int(index.max()) >= n):
+        # outside the domain the cycle walk may never come back into it
+        raise ValueError(f"every index must be in 0 .. {n - 1}")
     bits = max(2, (n - 1).bit_length())
     bits += bits % 2
     half = bits // 2

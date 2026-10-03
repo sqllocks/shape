@@ -24,6 +24,8 @@ class ShapeTimeline:
             raise ValueError("timestamps must increase")
 
     def shape_at(self, t, mode="interpolate"):
+        if mode not in ("interpolate", "previous", "next"):
+            raise ValueError(f"mode must be interpolate, previous or next, not {mode!r}")
         if t <= self.versions[0].at:
             return self.versions[0].shape
         if t >= self.versions[-1].at:
@@ -45,13 +47,12 @@ class ShapeTimeline:
         if step <= 0 or end < start:
             raise ValueError("range")
         out = []
-        i = 0
-        t = start
-        while t <= end:
+        # count the steps once: adding step to t accumulates float error (0.1 * 3 > 0.3)
+        steps = int((end - start) / step + 1e-9) + 1
+        for i in range(steps):
+            t = start + i * step
             data, report = self.generate_at(t, rows_per_step, seed + i, mode)
             out.append((t, data, report))
-            i += 1
-            t += step
         return out
 
     def changes(self):

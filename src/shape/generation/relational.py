@@ -67,11 +67,12 @@ def generate_fk_indices(parent_count: int, child_count: int, seed: int = 0, skew
     # search.
     a = float(skew)
     u = rng.random(child_count)
+    top = float(parent_count) + 1.0  # x in [1, parent_count + 1): every parent can be drawn
     if abs(a - 1.0) < 1e-12:
-        x = np.exp(u * np.log(float(parent_count)))
+        x = np.exp(u * np.log(top))
     else:
         q = 1.0 - a
-        x = (1.0 + u * (float(parent_count) ** q - 1.0)) ** (1.0 / q)
+        x = (1.0 + u * (top**q - 1.0)) ** (1.0 / q)
     return np.minimum(parent_count - 1, np.maximum(0, x.astype(np.int64) - 1))
 
 

@@ -37,7 +37,13 @@ def _check(n: int, top_fraction: float, top_share: float) -> int:
         raise ValueError("top_fraction must be strictly between 0 and 1")
     if not top_fraction <= top_share < 1.0:
         raise ValueError("top_share must be at least top_fraction and below 1")
-    return max(1, min(n - 1, round(n * top_fraction))) if n > 1 else 1
+    k = max(1, min(n - 1, round(n * top_fraction))) if n > 1 else 1
+    if n > 1 and top_share < k / n:  # equal weights already give the top k parents k / n
+        raise ValueError(
+            f"top_share {top_share} is out of reach: the top {k} of {n} parents "
+            f"(top_fraction {top_fraction}, rounded) hold at least {k / n:.4g} of the total"
+        )
+    return k
 
 
 def concentration_weights(
