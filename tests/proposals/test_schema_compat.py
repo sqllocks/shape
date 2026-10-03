@@ -114,7 +114,7 @@ def test_files_the_writer_produces_validate_against_the_schema(schema):
 @pytest.mark.parametrize(
     "mutate",
     [
-        lambda d: d.update(version=2),
+        lambda d: d.update(version=3),  # version 2 is valid since W3-02; 3 is newer
         lambda d: d.update(format="x"),
         lambda d: d["proposals"][0].update(confidence=2),
         lambda d: d["decisions"][0].update(status="maybe"),

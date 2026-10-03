@@ -1,10 +1,11 @@
-"""``shape proposals propose|list|decide``: proposals and decision files (W1-02).
+"""``shape proposals propose|list|decide|contract``: proposals and decision files (W1-02, W3-02).
 
 ``propose`` profiles nothing: it reads a profile (and optionally the data it came from, for value
-evidence) and merges what it finds into a decision file. ``list`` shows proposals and their
-decisions; ``decide`` records accept, reject or defer with the actor and a note. Nothing is
-accepted automatically unless ``propose --auto-accept THRESHOLD`` is given. Nothing heavy loads at
-import time (T-18).
+evidence) and merges what it finds into a decision file; with ``--kinds rule`` it reads several
+profiles and proposes contract rules. ``list`` shows proposals and their decisions; ``decide``
+records accept, reject or defer with the actor and a note; ``contract`` writes the accepted rules
+as a contract v1. Nothing is accepted automatically unless ``propose --auto-accept THRESHOLD`` is
+given. Nothing heavy loads at import time (T-18).
 """
 
 from __future__ import annotations
@@ -17,7 +18,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
-_KINDS = ("relationship", "pii", "semantic")  # shape.proposals.KINDS; a test keeps them equal
+# shape.proposals.KINDS and DEFAULT_KINDS; a test keeps them equal
+_KINDS = ("relationship", "pii", "semantic", "rule")
+_DEFAULT_KINDS = ("relationship", "pii", "semantic")
+_LIST_STATUSES = ("pending", "accepted", "rejected", "deferred", "stale")
 _VERBS = {"accept": "accepted", "reject": "rejected", "defer": "deferred"}
 
 
@@ -41,7 +45,12 @@ def add_arguments(sub: Any) -> None:
         parents=[decisions],
         help="find proposals for a profile and merge them into the decision file",
     )
-    pr.add_argument("profile", metavar="PROFILE.shape")
+    pr.add_argument(
+        "profiles",
+        nargs="+",
+        metavar="PROFILE.shape",
+        help="the profile; with --kinds rule several (for example a week of daily captures)",
+    )
     pr.add_argument(
         "--data",
         action="append",
@@ -52,8 +61,9 @@ def add_arguments(sub: Any) -> None:
     )
     pr.add_argument(
         "--kinds",
-        default=",".join(KINDS),
-        help=f"comma-separated kinds to propose (default {','.join(KINDS)})",
+        default=",".join(_DEFAULT_KINDS),
+        help=f"comma-separated kinds to propose, of {','.join(KINDS)} "
+        f"(default {','.join(_DEFAULT_KINDS)}; rule proposes contract rules)",
     )
     pr.add_argument("--min-confidence", type=float, default=0.5, metavar="C")
     pr.add_argument(
@@ -64,7 +74,7 @@ def add_arguments(sub: Any) -> None:
     )
 
     ls = cmds.add_parser("list", parents=[decisions], help="list proposals and their decisions")
-    ls.add_argument("--status", choices=("pending", "accepted", "rejected", "deferred"))
+    ls.add_argument("--status", choices=_LIST_STATUSES)
     ls.add_argument("--kind", choices=KINDS)
     ls.add_argument("--min-confidence", type=float, metavar="C")
     ls.add_argument("--json", action="store_true", help="print JSON")
@@ -74,6 +84,18 @@ def add_arguments(sub: Any) -> None:
     dc.add_argument("verb", choices=sorted(_VERBS))
     dc.add_argument("--actor", help="who decides (default: $SHAPE_ACTOR, else the login name)")
     dc.add_argument("--note", default="", help="why")
+
+    ct = cmds.add_parser(
+        "contract",
+        parents=[decisions],
+        help="write the accepted rule proposals as a contract v1 that `shape check` reads",
+    )
+    ct.add_argument("-o", "--output", required=True, metavar="CONTRACT.json")
+    ct.add_argument(
+        "--merge",
+        metavar="EXISTING.json",
+        help="add the rules to this contract; exit 2 if an accepted rule conflicts with one there",
+    )
 
 
 def _data_arg(items: list[str]) -> Any:
@@ -128,9 +150,16 @@ def run(a: argparse.Namespace) -> int:
         for k in kinds:
             if k not in KINDS:
                 raise DecisionError(f"unknown kind {k!r}")
+        if len(a.profiles) > 1 and kinds != ["rule"]:
+            raise DecisionError("several profiles are for --kinds rule only")
         file = _load_or_new(a.decisions, create=True)
+        loaded = [shape.load(p) for p in a.profiles]
         found = propose(
-            shape.load(a.profile), _data_arg(a.data), kinds=kinds, min_confidence=a.min_confidence
+            loaded if len(loaded) > 1 else loaded[0],
+            _data_arg(a.data),
+            kinds=kinds,
+            min_confidence=a.min_confidence,
+            decisions=file,
         )
         result = file.update(found, kinds=kinds, auto_accept=a.auto_accept)
         file.write(a.decisions)
@@ -142,6 +171,8 @@ def run(a: argparse.Namespace) -> int:
         print()
         return 0
     file = _load_or_new(a.decisions, create=False)
+    if cmd == "contract":
+        return _contract(a, file)
     if cmd == "list":
         rows = file.list(status=a.status, kind=a.kind, min_confidence=a.min_confidence)
         if a.json:
@@ -158,6 +189,25 @@ def run(a: argparse.Namespace) -> int:
     d = file.decide(a.proposal, status, actor=_actor(a.actor), note=a.note)
     file.write(a.decisions)
     json.dump(d.to_dict(), sys.stdout, indent=2)
+    print()
+    return 0
+
+
+def _contract(a: argparse.Namespace, file: Any) -> int:
+    from shape.proposals import DecisionError, dump_contract
+
+    existing = None
+    if a.merge:
+        try:
+            existing = json.loads(Path(a.merge).read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            raise FileNotFoundError(f"contract to merge into not found: {a.merge}") from None
+        except ValueError as exc:
+            raise DecisionError(f"{a.merge} is not valid JSON: {exc}") from exc
+    contract = file.to_contract(existing, merge_source=a.merge or "the existing contract")
+    Path(a.output).write_bytes(dump_contract(contract).encode("utf-8"))
+    rules = len(file.accepted("rule"))
+    json.dump({"written": a.output, "rules": rules}, sys.stdout, indent=2)
     print()
     return 0
 

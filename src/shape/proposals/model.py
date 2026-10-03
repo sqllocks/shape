@@ -5,6 +5,10 @@ A decision file is JSON text meant to be committed. It declares ``format`` and a
 (``2026-10-03T12:00:00Z``) and confidences are rounded to four places, so a re-profile that finds
 the same things changes no line and one decision changes only its own lines.
 
+A file that holds no contract rule is written as version 1; a file with a ``rule`` proposal is
+written as version 2, which adds the decision status ``stale`` (an accepted rule whose evidence no
+longer holds after a re-profile). Both versions are read.
+
 Rules the file keeps (``docs/PROPOSALS.md``):
 
 * a proposal is identified by ``KIND:SUBJECT`` and not by its evidence, so a re-profile updates
@@ -16,6 +20,7 @@ Rules the file keeps (``docs/PROPOSALS.md``):
 from __future__ import annotations
 
 import builtins
+import copy
 import json
 import math
 import re
@@ -28,11 +33,16 @@ from typing import Any
 from shape.errors import ShapeError
 
 FORMAT = "shape-decisions"
-VERSION = 1
+VERSION = 1  # written for a file with no rule proposal, byte for byte as before W3-02
+RULES_VERSION = 2  # written for a file with a rule proposal; adds the status "stale"
+MAX_VERSION = RULES_VERSION  # the newest version this Shape reads
 
-KINDS = ("relationship", "pii", "semantic")
-STATUSES = ("accepted", "rejected", "deferred")
+DEFAULT_KINDS = ("relationship", "pii", "semantic")  # what a run proposes unless asked otherwise
+KINDS = (*DEFAULT_KINDS, "rule")
+STATUSES = ("accepted", "rejected", "deferred")  # what a person decides
+STALE = "stale"  # set by a re-profile, never by a person (version 2)
 PENDING = "pending"
+RULE = "rule"
 AUTO_ACCEPT_ACTOR = "auto-accept"
 
 _TIME = re.compile(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$")
@@ -43,6 +53,10 @@ _DECISION_KEYS = {"proposal", "status", "actor", "at", "note"}
 
 class DecisionError(ShapeError, ValueError):
     """A decision file or a decision that Shape cannot use."""
+
+
+class RuleConflictError(DecisionError):
+    """An accepted rule disagrees with a rule already in the contract it is merged into."""
 
 
 @dataclass(frozen=True, eq=True)
@@ -117,6 +131,7 @@ class UpdateResult:
     withdrawn: tuple[str, ...] = ()
     skipped_rejected: tuple[str, ...] = ()
     auto_accepted: tuple[str, ...] = ()
+    stale: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -125,6 +140,7 @@ class UpdateResult:
             "withdrawn": len(self.withdrawn),
             "skipped_rejected": list(self.skipped_rejected),
             "auto_accepted": list(self.auto_accepted),
+            "stale": list(self.stale),
         }
 
 
@@ -200,10 +216,10 @@ class DecisionFile:
         version = doc.get("version")
         if isinstance(version, bool) or not isinstance(version, int) or version < 1:
             raise DecisionError(f"the version must be an integer of 1 or more, got {version!r}")
-        if version > VERSION:
+        if version > MAX_VERSION:
             raise DecisionError(
                 f"this decision file is version {version}, which is newer than the version "
-                f"{VERSION} this Shape reads; upgrade Shape to read it"
+                f"{MAX_VERSION} this Shape reads; upgrade Shape to read it"
             )
         unknown = sorted(set(doc) - _TOP_KEYS)
         if unknown:
@@ -213,12 +229,12 @@ class DecisionFile:
                 raise DecisionError(f"missing key {key!r} (a list)")
         out = cls()
         for i, raw in enumerate(doc["proposals"]):
-            p = cls._read_proposal(raw, f"proposals[{i}]")
+            p = cls._read_proposal(raw, f"proposals[{i}]", version)
             if p.id in out._proposals:
                 raise DecisionError(f"duplicate proposal {p.id!r}")
             out._proposals[p.id] = p
         for i, raw in enumerate(doc["decisions"]):
-            d = cls._read_decision(raw, f"decisions[{i}]")
+            d = cls._read_decision(raw, f"decisions[{i}]", version)
             if d.proposal not in out._proposals:
                 raise DecisionError(f"decisions[{i}]: no proposal {d.proposal!r} to decide")
             if d.proposal in out._decisions:
@@ -227,7 +243,7 @@ class DecisionFile:
         return out
 
     @staticmethod
-    def _read_proposal(raw: Any, where: str) -> Proposal:
+    def _read_proposal(raw: Any, where: str, version: int = MAX_VERSION) -> Proposal:
         if not isinstance(raw, dict):
             raise DecisionError(f"{where}: must be an object")
         unknown = sorted(set(raw) - _PROPOSAL_KEYS)
@@ -237,8 +253,12 @@ class DecisionFile:
             if key not in raw:
                 raise DecisionError(f"{where}: missing key {key!r}")
         pid, kind, subject = raw["id"], raw["kind"], raw["subject"]
-        if kind not in KINDS:
-            raise DecisionError(f"{where}: kind must be one of {', '.join(KINDS)}, got {kind!r}")
+        allowed_kinds = KINDS if version >= RULES_VERSION else DEFAULT_KINDS
+        if kind not in allowed_kinds:
+            hint = " (rule proposals need version 2)" if kind == RULE else ""
+            raise DecisionError(
+                f"{where}: kind must be one of {', '.join(allowed_kinds)}, got {kind!r}{hint}"
+            )
         if not isinstance(subject, str) or not subject:
             raise DecisionError(f"{where}: subject must be a non-empty string")
         if pid != f"{kind}:{subject}":
@@ -254,7 +274,7 @@ class DecisionFile:
         )  # fmt: skip
 
     @staticmethod
-    def _read_decision(raw: Any, where: str) -> Decision:
+    def _read_decision(raw: Any, where: str, version: int = MAX_VERSION) -> Decision:
         if not isinstance(raw, dict):
             raise DecisionError(f"{where}: must be an object")
         unknown = sorted(set(raw) - _DECISION_KEYS)
@@ -263,9 +283,10 @@ class DecisionFile:
         for key in ("proposal", "status", "actor", "at", "note"):
             if not isinstance(raw.get(key), str):
                 raise DecisionError(f"{where}: {key!r} must be a string")
-        if raw["status"] not in STATUSES:
+        allowed = STATUSES if version < RULES_VERSION else (*STATUSES, STALE)
+        if raw["status"] not in allowed:
             raise DecisionError(
-                f"{where}: status must be one of {', '.join(STATUSES)}, got {raw['status']!r}"
+                f"{where}: status must be one of {', '.join(allowed)}, got {raw['status']!r}"
             )
         if not raw["actor"].strip():
             raise DecisionError(f"{where}: actor must not be empty")
@@ -289,10 +310,16 @@ class DecisionFile:
         except DecisionError as exc:
             raise DecisionError(f"{p}: {exc}") from exc
 
+    @property
+    def version(self) -> int:
+        """The version this file is written as: 2 when it holds a rule proposal, else 1."""
+        has_rule = any(p.kind == RULE for p in self._proposals.values())
+        return RULES_VERSION if has_rule else VERSION
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "format": FORMAT,
-            "version": VERSION,
+            "version": self.version,
             "proposals": [self._proposals[i].to_dict() for i in sorted(self._proposals)],
             "decisions": [self._decisions[i].to_dict() for i in sorted(self._decisions)],
         }
@@ -320,8 +347,8 @@ class DecisionFile:
     ) -> list[Entry]:
         """Entries filtered by ``status`` (``pending`` or a decision), ``kind`` and confidence,
         the most confident first."""
-        if status is not None and status not in (PENDING, *STATUSES):
-            raise DecisionError(f"status must be pending or one of {', '.join(STATUSES)}")
+        if status is not None and status not in (PENDING, *STATUSES, STALE):
+            raise DecisionError(f"status must be pending or one of {', '.join((*STATUSES, STALE))}")
         if kind is not None and kind not in KINDS:
             raise DecisionError(f"kind must be one of {', '.join(KINDS)}")
         rows = [
@@ -339,6 +366,29 @@ class DecisionFile:
     def rejected(self, kind: str | None = None) -> builtins.list[Entry]:
         return self.list(status="rejected", kind=kind)
 
+    # ---- the contract ---------------------------------------------------------------------
+
+    def to_contract(
+        self, merge: Mapping[str, Any] | None = None, merge_source: str = "the existing contract"
+    ) -> dict[str, Any]:
+        """A contract v1 from the accepted, non-stale ``rule`` proposals, in proposal id order.
+
+        With ``merge`` (an existing contract, left unchanged) the rules are added to a copy of it.
+        An accepted rule that disagrees with a rule already there raises
+        :class:`RuleConflictError`, naming both (``merge_source`` is how the message calls the
+        existing contract). A rule that agrees is not a conflict. Written with sorted keys (see
+        :func:`dump_contract`), the same decisions give the same bytes.
+        """
+        entries = sorted(self.accepted(RULE), key=lambda e: e.proposal.id)
+        if not entries:
+            raise DecisionError("no accepted, non-stale rule proposal in the decision file")
+        if merge is not None and not isinstance(merge, Mapping):
+            raise DecisionError("the contract to merge into must be a JSON object")
+        out: dict[str, Any] = copy.deepcopy(dict(merge)) if merge is not None else {}
+        for e in entries:
+            _place(out, e.proposal, merge_source)
+        return out
+
     # ---- changing -----------------------------------------------------------------------
 
     def decide(
@@ -351,7 +401,7 @@ class DecisionFile:
         now: datetime | str | None = None,
     ) -> Decision:
         """Record that ``actor`` accepted, rejected or deferred a proposal. A second decision on
-        the same proposal replaces the first."""
+        the same proposal replaces the first (a stale rule is accepted again this way)."""
         if status not in STATUSES:
             raise DecisionError(f"status must be one of {', '.join(STATUSES)}, got {status!r}")
         if proposal_id not in self._proposals:
@@ -374,7 +424,10 @@ class DecisionFile:
 
         New proposals are added; a known one has its claim, confidence and evidence updated when
         they changed (its first ``proposed_at`` and its decision stay); a rejected one is skipped;
-        an undecided proposal of ``kinds`` (default all) that the run no longer finds is withdrawn.
+        an undecided proposal of ``kinds`` (default: all but ``rule``, which is proposed only when
+        asked for) that the run no longer finds is withdrawn. An *accepted* rule that the run no
+        longer finds, or finds with a different claim, is marked ``stale`` and keeps its claim
+        and evidence; it is never dropped and never changed under the person who accepted it.
         With ``auto_accept`` a threshold from 0 to 1, undecided proposals at or above it are
         accepted by the actor ``auto-accept``; without it nothing is accepted automatically.
         """
@@ -384,7 +437,7 @@ class DecisionFile:
             or not 0.0 <= auto_accept <= 1.0
         ):
             raise DecisionError("the auto-accept threshold must be a number from 0 to 1")
-        run_kinds = set(KINDS if kinds is None else kinds)
+        run_kinds = set(DEFAULT_KINDS if kinds is None else kinds)
         bad = run_kinds - set(KINDS)
         if bad:
             raise DecisionError(f"unknown kind {sorted(bad)[0]!r}")
@@ -393,6 +446,7 @@ class DecisionFile:
         updated: list[str] = []
         skipped: list[str] = []
         auto: list[str] = []
+        stale: list[str] = []
         seen: set[str] = set()
         for raw in proposals:
             p = Proposal(
@@ -408,6 +462,14 @@ class DecisionFile:
             if known is not None and self._decisions.get(p.id, None) is not None:
                 if self._decisions[p.id].status == "rejected":
                     skipped.append(p.id)
+                    continue
+                if (
+                    p.kind == RULE
+                    and self._decisions[p.id].status == "accepted"
+                    and known.claim != p.claim
+                ):
+                    self._go_stale(p.id, at, "the rule proposed from the new evidence differs")
+                    stale.append(p.id)
                     continue
             if known is None:
                 self._proposals[p.id] = Proposal(
@@ -437,6 +499,12 @@ class DecisionFile:
                     f"{auto_accept}",
                 )
                 auto.append(p.id)
+        for i, p in self._proposals.items():
+            d = self._decisions.get(i)
+            if p.kind == RULE and RULE in run_kinds and i not in seen and d is not None:
+                if d.status == "accepted":
+                    self._go_stale(i, at, "the new evidence no longer supports the rule")
+                    stale.append(i)
         withdrawn = sorted(
             i
             for i, p in self._proposals.items()
@@ -450,4 +518,101 @@ class DecisionFile:
             tuple(withdrawn),
             tuple(sorted(skipped)),
             tuple(sorted(auto)),
+            tuple(sorted(stale)),
         )
+
+    def _go_stale(self, proposal_id: str, at: str, reason: str) -> None:
+        """Replace an accepted decision by a ``stale`` one that remembers who accepted it, when,
+        and why it went stale."""
+        old = self._decisions[proposal_id]
+        note = f"{reason}; accepted by {old.actor} at {old.at}"
+        if old.note:
+            note += f" ({old.note})"
+        self._decisions[proposal_id] = Decision(proposal_id, STALE, old.actor, at, note)
+
+
+def dump_contract(contract: Mapping[str, Any]) -> str:
+    """The contract as text: keys sorted, two-space indent, one final newline."""
+    return json.dumps(contract, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+
+
+def _split(p: Proposal) -> tuple[str, dict[str, Any]]:
+    """(table, the table-level contract body) of a rule proposal's claim."""
+    claim = p.claim
+    if "tables" in claim:
+        ((table, body),) = claim["tables"].items()
+        return table, body
+    body = claim
+    if "row_count" in body:
+        suffix = ".row_count"
+    elif "fd" in body:
+        rule = body["fd"][0]
+        det = rule["determinant"]
+        det = [det] if isinstance(det, str) else det
+        suffix = f".fd.{','.join(det)}->{rule['dependent']}"
+    elif "reference_pair" in body:
+        rule = body["reference_pair"][0]
+        suffix = f".reference_pair.{','.join(rule['columns'])}->{rule['reference']}"
+    else:
+        (column,) = body["columns"]
+        suffix = f".{column}.{p.subject.rsplit('.', 1)[1]}"
+    return p.subject[: len(p.subject) - len(suffix)], body
+
+
+def _need_object(value: Any, where: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise DecisionError(f"{where} in the contract to merge into must be an object")
+    return value
+
+
+def _place(out: dict[str, Any], p: Proposal, source: str) -> None:
+    """Add the rule ``p`` to the contract ``out``; a rule that differs from one there conflicts."""
+    table, body = _split(p)
+
+    def conflict(location: str) -> RuleConflictError:
+        return RuleConflictError(f"{p.id} conflicts with {location} in {source}")
+
+    if "tables" in p.claim:
+        if "columns" in out or "row_count" in out:
+            raise DecisionError(
+                f"{p.id} is for a multi-table profile but the contract to merge into holds one "
+                "table's rules"
+            )
+        tables = _need_object(out.setdefault("tables", {}), "'tables'")
+        target = _need_object(tables.setdefault(table, {}), f"table {table!r}")
+    else:
+        if "tables" in out:
+            raise DecisionError(
+                f"{p.id} is for a single-table profile but the contract to merge into has 'tables'"
+            )
+        target = out
+    if "row_count" in body:
+        band = _need_object(target.setdefault("row_count", {}), "'row_count'")
+        for key, value in body["row_count"].items():
+            if key in band and band[key] != value:
+                raise conflict(f"{table}.row_count.{key}")
+            band[key] = value
+    for column, rules in body.get("columns", {}).items():
+        columns = _need_object(target.setdefault("columns", {}), "'columns'")
+        have = _need_object(columns.setdefault(column, {}), f"column {column!r}")
+        for name, value in rules.items():
+            if name in have and have[name] != value:
+                raise conflict(f"{table}.{column}.{name}")
+            have[name] = value
+    for key, same in (
+        ("fd", ("determinant", "dependent")),
+        ("reference_pair", ("columns", "reference")),
+    ):
+        for rule in body.get(key, ()):
+            listed = target.setdefault(key, [])
+            if not isinstance(listed, list):
+                raise DecisionError(f"{key!r} in the contract to merge into must be a list")
+            for old in listed:
+                if all(old.get(k) == rule[k] for k in same):
+                    if old != rule:
+                        first = rule[same[0]]
+                        label = ",".join(first if isinstance(first, list) else [first])
+                        raise conflict(f"{table}.{key}.{label}->{rule[same[1]]}")
+                    break
+            else:
+                listed.append(rule)

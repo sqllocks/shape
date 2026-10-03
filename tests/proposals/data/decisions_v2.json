@@ -1,0 +1,456 @@
+{
+  "format": "shape-decisions",
+  "version": 2,
+  "proposals": [
+    {
+      "claim": {
+        "pii": "email"
+      },
+      "confidence": 1.0,
+      "evidence": {
+        "name": {
+          "confidence": 0.6,
+          "hint": "email"
+        },
+        "values": {
+          "detector": "email",
+          "matched": 40,
+          "sampled": 40
+        }
+      },
+      "id": "pii:orders.email",
+      "kind": "pii",
+      "proposed_at": "2026-10-03T12:00:00Z",
+      "subject": "orders.email"
+    },
+    {
+      "claim": {
+        "tables": {
+          "orders": {
+            "columns": {
+              "email": {
+                "dtype": "string"
+              }
+            }
+          }
+        }
+      },
+      "confidence": 0.792,
+      "evidence": {
+        "distinct": 40,
+        "nulls": 0,
+        "profiles": 1,
+        "rows": 40
+      },
+      "id": "rule:orders.email.dtype",
+      "kind": "rule",
+      "proposed_at": "2026-10-03T12:00:00Z",
+      "subject": "orders.email.dtype"
+    },
+    {
+      "claim": {
+        "tables": {
+          "orders": {
+            "columns": {
+              "email": {
+                "no_placeholder": true
+              }
+            }
+          }
+        }
+      },
+      "confidence": 0.56,
+      "evidence": {
+        "distinct": 40,
+        "nulls": 0,
+        "profiles": 1,
+        "rows": 40
+      },
+      "id": "rule:orders.email.no_placeholder",
+      "kind": "rule",
+      "proposed_at": "2026-10-03T12:00:00Z",
+      "subject": "orders.email.no_placeholder"
+    },
+    {
+      "claim": {
+        "tables": {
+          "orders": {
+            "columns": {
+              "email": {
+                "nullable": false
+              }
+            }
+          }
+        }
+      },
+      "confidence": 0.72,
+      "evidence": {
+        "distinct": 40,
+        "nulls": 0,
+        "profiles": 1,
+        "rows": 40
+      },
+      "id": "rule:orders.email.nullable",
+      "kind": "rule",
+      "proposed_at": "2026-10-03T12:00:00Z",
+      "subject": "orders.email.nullable"
+    },
+    {
+      "claim": {
+        "tables": {
+          "orders": {
+            "columns": {
+              "email": {
+                "pattern": "email"
+              }
+            }
+          }
+        }
+      },
+      "confidence": 0.76,
+      "evidence": {
+        "distinct": 40,
+        "match_rate": 1.0,
+        "nulls": 0,
+        "profiles": 1,
+        "rows": 40
+      },
+      "id": "rule:orders.email.pattern",
+      "kind": "rule",
+      "proposed_at": "2026-10-03T12:00:00Z",
+      "subject": "orders.email.pattern"
+    },
+    {
+      "claim": {
+        "tables": {
+          "orders": {
+            "columns": {
+              "email": {
+                "unique": true
+              }
+            }
+          }
+        }
+      },
+      "confidence": 0.72,
+      "evidence": {
+        "distinct": 40,
+        "nulls": 0,
+        "profiles": 1,
+        "rows": 40
+      },
+      "id": "rule:orders.email.unique",
+      "kind": "rule",
+      "proposed_at": "2026-10-03T12:00:00Z",
+      "subject": "orders.email.unique"
+    },
+    {
+      "claim": {
+        "tables": {
+          "orders": {
+            "columns": {
+              "order_id": {
+                "allowed_values": [
+                  1
+                ]
+              }
+            }
+          }
+        }
+      },
+      "confidence": 0.68,
+      "evidence": {
+        "distinct": 1,
+        "nulls": 0,
+        "profiles": 1,
+        "rows": 40
+      },
+      "id": "rule:orders.order_id.allowed_values",
+      "kind": "rule",
+      "proposed_at": "2026-10-05T09:00:00Z",
+      "subject": "orders.order_id.allowed_values"
+    },
+    {
+      "claim": {
+        "tables": {
+          "orders": {
+            "columns": {
+              "order_id": {
+                "dtype": "integer"
+              }
+            }
+          }
+        }
+      },
+      "confidence": 0.792,
+      "evidence": {
+        "distinct": 1,
+        "nulls": 0,
+        "profiles": 1,
+        "rows": 40
+      },
+      "id": "rule:orders.order_id.dtype",
+      "kind": "rule",
+      "proposed_at": "2026-10-03T12:00:00Z",
+      "subject": "orders.order_id.dtype"
+    },
+    {
+      "claim": {
+        "tables": {
+          "orders": {
+            "columns": {
+              "order_id": {
+                "no_placeholder": true
+              }
+            }
+          }
+        }
+      },
+      "confidence": 0.56,
+      "evidence": {
+        "distinct": 1,
+        "nulls": 0,
+        "profiles": 1,
+        "rows": 40
+      },
+      "id": "rule:orders.order_id.no_placeholder",
+      "kind": "rule",
+      "proposed_at": "2026-10-03T12:00:00Z",
+      "subject": "orders.order_id.no_placeholder"
+    },
+    {
+      "claim": {
+        "tables": {
+          "orders": {
+            "columns": {
+              "order_id": {
+                "nullable": false
+              }
+            }
+          }
+        }
+      },
+      "confidence": 0.72,
+      "evidence": {
+        "distinct": 1,
+        "nulls": 0,
+        "profiles": 1,
+        "rows": 40
+      },
+      "id": "rule:orders.order_id.nullable",
+      "kind": "rule",
+      "proposed_at": "2026-10-03T12:00:00Z",
+      "subject": "orders.order_id.nullable"
+    },
+    {
+      "claim": {
+        "tables": {
+          "orders": {
+            "columns": {
+              "order_id": {
+                "max": 2,
+                "min": 0
+              }
+            }
+          }
+        }
+      },
+      "confidence": 0.64,
+      "evidence": {
+        "distinct": 1,
+        "nulls": 0,
+        "observed_max": 1,
+        "observed_min": 1,
+        "profiles": 1,
+        "rows": 40
+      },
+      "id": "rule:orders.order_id.range",
+      "kind": "rule",
+      "proposed_at": "2026-10-05T09:00:00Z",
+      "subject": "orders.order_id.range"
+    },
+    {
+      "claim": {
+        "tables": {
+          "orders": {
+            "columns": {
+              "order_id": {
+                "unique": true
+              }
+            }
+          }
+        }
+      },
+      "confidence": 0.72,
+      "evidence": {
+        "distinct": 40,
+        "nulls": 0,
+        "profiles": 1,
+        "rows": 40
+      },
+      "id": "rule:orders.order_id.unique",
+      "kind": "rule",
+      "proposed_at": "2026-10-03T12:00:00Z",
+      "subject": "orders.order_id.unique"
+    },
+    {
+      "claim": {
+        "tables": {
+          "orders": {
+            "row_count": {
+              "max": 60,
+              "min": 20
+            }
+          }
+        }
+      },
+      "confidence": 0.56,
+      "evidence": {
+        "observed_max": 40,
+        "observed_min": 40,
+        "profiles": 1,
+        "rows": 40
+      },
+      "id": "rule:orders.row_count",
+      "kind": "rule",
+      "proposed_at": "2026-10-03T12:00:00Z",
+      "subject": "orders.row_count"
+    },
+    {
+      "claim": {
+        "tables": {
+          "orders": {
+            "columns": {
+              "status": {
+                "allowed_values": [
+                  "new",
+                  "paid"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "confidence": 0.5667,
+      "evidence": {
+        "distinct": 2,
+        "nulls": 0,
+        "profiles": 1,
+        "rows": 40
+      },
+      "id": "rule:orders.status.allowed_values",
+      "kind": "rule",
+      "proposed_at": "2026-10-03T12:00:00Z",
+      "subject": "orders.status.allowed_values"
+    },
+    {
+      "claim": {
+        "tables": {
+          "orders": {
+            "columns": {
+              "status": {
+                "dtype": "string"
+              }
+            }
+          }
+        }
+      },
+      "confidence": 0.792,
+      "evidence": {
+        "distinct": 2,
+        "nulls": 0,
+        "profiles": 1,
+        "rows": 40
+      },
+      "id": "rule:orders.status.dtype",
+      "kind": "rule",
+      "proposed_at": "2026-10-03T12:00:00Z",
+      "subject": "orders.status.dtype"
+    },
+    {
+      "claim": {
+        "tables": {
+          "orders": {
+            "columns": {
+              "status": {
+                "no_placeholder": true
+              }
+            }
+          }
+        }
+      },
+      "confidence": 0.56,
+      "evidence": {
+        "distinct": 2,
+        "nulls": 0,
+        "profiles": 1,
+        "rows": 40
+      },
+      "id": "rule:orders.status.no_placeholder",
+      "kind": "rule",
+      "proposed_at": "2026-10-03T12:00:00Z",
+      "subject": "orders.status.no_placeholder"
+    },
+    {
+      "claim": {
+        "tables": {
+          "orders": {
+            "columns": {
+              "status": {
+                "nullable": false
+              }
+            }
+          }
+        }
+      },
+      "confidence": 0.72,
+      "evidence": {
+        "distinct": 2,
+        "nulls": 0,
+        "profiles": 1,
+        "rows": 40
+      },
+      "id": "rule:orders.status.nullable",
+      "kind": "rule",
+      "proposed_at": "2026-10-03T12:00:00Z",
+      "subject": "orders.status.nullable"
+    }
+  ],
+  "decisions": [
+    {
+      "actor": "ana",
+      "at": "2026-10-04T08:30:00Z",
+      "note": "format is not a promise",
+      "proposal": "rule:orders.email.pattern",
+      "status": "rejected"
+    },
+    {
+      "actor": "ana",
+      "at": "2026-10-05T09:00:00Z",
+      "note": "the new evidence no longer supports the rule; accepted by ana at 2026-10-04T08:30:00Z (reviewed)",
+      "proposal": "rule:orders.order_id.unique",
+      "status": "stale"
+    },
+    {
+      "actor": "ana",
+      "at": "2026-10-04T08:30:00Z",
+      "note": "reviewed",
+      "proposal": "rule:orders.row_count",
+      "status": "accepted"
+    },
+    {
+      "actor": "ana",
+      "at": "2026-10-04T08:30:00Z",
+      "note": "reviewed",
+      "proposal": "rule:orders.status.allowed_values",
+      "status": "accepted"
+    },
+    {
+      "actor": "ana",
+      "at": "2026-10-04T08:30:00Z",
+      "note": "later",
+      "proposal": "rule:orders.status.dtype",
+      "status": "deferred"
+    }
+  ]
+}
