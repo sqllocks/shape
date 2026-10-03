@@ -39,7 +39,7 @@ def test_propose_list_decide_and_generate_through_the_cli(workdir, capsys):
     assert code == 0 and json.loads(out)["added"] > 0 and dec.exists()
 
     code, out, _ = run(capsys, "proposals", "list", "-d", str(dec), "--status", "pending", "--json")
-    rows = json.loads(out)
+    rows = json.loads(out)["payload"]
     ids = {r["id"] for r in rows}
     assert CUST in ids and all(r["status"] == "pending" for r in rows)
     assert all({"kind", "confidence", "evidence", "id", "status"} <= set(r) for r in rows)
@@ -65,7 +65,7 @@ def test_propose_list_decide_and_generate_through_the_cli(workdir, capsys):
     code, out, _ = run(
         capsys, "proposals", "list", "-d", str(dec), "--status", "accepted", "--json"
     )
-    (row,) = json.loads(out)
+    (row,) = json.loads(out)["payload"]
     assert row["decision"]["actor"] == "ana" and row["decision"]["note"].startswith("orders")
 
     # generation keeps the accepted relationship
@@ -88,7 +88,7 @@ def test_a_rejected_proposal_is_not_proposed_again_by_the_cli(workdir, capsys):
     )
     assert code == 0 and CUST in json.loads(out)["skipped_rejected"]
     code, out, _ = run(capsys, "proposals", "list", "-d", str(dec), "--status", "pending", "--json")
-    assert CUST not in {r["id"] for r in json.loads(out)}
+    assert CUST not in {r["id"] for r in json.loads(out)["payload"]}
 
 
 def test_cli_auto_accept_is_off_unless_asked(workdir, capsys):

@@ -22,7 +22,7 @@ def cli_json(capsys, *argv):
 
 def test_list_names_the_installed_domains_like_the_cli(api, capsys):
     result = api.ok("list")
-    cli = cli_json(capsys, "list", "--json")
+    cli = cli_json(capsys, "list", "--json")["payload"]
     assert [d["name"] for d in result["domains"]] == [d["name"] for d in cli]
     assert [d["modes"] for d in result["domains"]] == [d["modes"] for d in cli]
     assert result["count"] == len(cli)

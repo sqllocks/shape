@@ -5,6 +5,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+<<<<<<< ours
 - Starter scenarios, suites, a pytest plugin and database seeding (W5-05, #81). `DriftPlan` has a
   `rename_column` event (`{"kind": "rename_column", "column": "orders.status", "to":
   "order_status", "start": ...}`; the answer key records the dropped and added column as one
@@ -19,6 +20,21 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   formats `shape-scenario-expect`, `shape-scenario-library` and `shape-suite` (and
   `shape-scenario`) at version 1. `docs/SCENARIO_LIBRARY.md`, `docs/TESTING_WITH_SHAPE.md`.
 
+=======
+- CI outputs (W1-14, `docs/CI.md`, `docs/EXIT_CODES.md`). `--junit FILE` and `--sarif FILE` on
+  `shape diff`, `check`, `verify`, `fidelity` and `profile validate --safe` write JUnit XML (one
+  test case per evaluated check; an observe-mode gate is skipped; a planned change passes) and
+  SARIF 2.1.0 (rules per drift kind or contract rule, `TABLE.COLUMN` logical locations, stable
+  `shapeFinding/v1` fingerprints); messages never carry a value from the data. `shape.yml` gets an
+  optional `ci:` block for the report paths. One exit-code registry, `shape.cli.exitcodes`,
+  generates `docs/EXIT_CODES.md` (`python scripts/gen_exit_codes.py --check` runs in `make check`)
+  and the end of every `--help`; no command's codes changed. `--json` on every core command prints
+  one `shape-result` document (envelope keys `format`, `version`, `command`, `exit_code`; the
+  command's own keys are kept; a list or text is under `payload` or `output`), and `--dry-run` on
+  every command that writes prints a `shape-dry-run` plan of `write`, `create`, `delete` and `send`
+  actions (secrets removed) without writing or opening a connection. Commands whose `--json` was
+  a switch that printed a list now print it under `payload`; a coverage test walks the parser.
+>>>>>>> theirs
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
@@ -92,6 +108,15 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `docs/bridge/schema/` (`shape bridge schema --out|--check`) with test vectors in
   `docs/bridge/vectors/`; a compatibility test per command keeps them from changing silently.
   Harness: `benchmarks/vs_spindle/bridge_1to1/`.
+- `shape.yml` project file and `shape init` (`docs/PROJECT.md`): named sources, a baseline per
+  source (previous run, same weekday, rolling window, month end or a pinned artifact, resolved
+  against the registry), drift thresholds and ignore lists per column, gates with `observe` or
+  `enforce` modes, and column owners and annotations. Versioned (`format`, integer `version`,
+  JSON Schema `shape-project-v1.schema.json`, a frozen version 1 file in the tests).
+  `shape profile`, `diff`, `check` and `verify` read it when present and every flag overrides it;
+  `shape init` scaffolds `shape.yml`, folders, `.gitattributes` and an example CI workflow;
+  `shape project validate` reports every problem with its key path. PyYAML stays an optional
+  extra (`yaml`).
 - `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
   the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
   clearing cover every month of a multi-month table. `duration_hours` still overrides it

@@ -55,6 +55,15 @@ def _parser() -> argparse.ArgumentParser:
     va.add_argument("artifact", metavar="ARTIFACT")
     va.add_argument("--safe", action="store_true", help="run the safe-profile leak scanner")
     va.add_argument("--json", action="store_true", help="machine-readable output")
+    from shape.cli import ci
+    from shape.cli.project import add_project_flags
+
+    ci.add_flags(va)
+    add_project_flags(va, source=False)
+    from shape.cli import exitcodes, machine
+
+    machine.install(p, ("profile",))
+    exitcodes.apply(p, ("profile",))
     return p
 
 
@@ -83,7 +92,13 @@ def _validate(a: argparse.Namespace) -> int:
     if not a.safe:
         print("shape: error: specify --safe to run the safe-profile leak scanner", file=sys.stderr)
         return 2
+    from shape.cli import ci
+
+    t0 = ci.started()
     result = _scan(a.artifact)
+    ci.write_reports(
+        a, "profile validate", ci.checks_from_leaks(a.artifact, result.findings), a.artifact, t0
+    )
     if a.json:
         print(json.dumps(result.to_dict(), indent=2))
     elif result.is_clean:
@@ -109,12 +124,19 @@ def _safe(a: argparse.Namespace) -> int:
 
 def main(argv: Sequence[str]) -> int:
     """Run a ``profile safe|validate`` command: 0 ok, 1 leak found, 2 input error."""
-    a = _parser().parse_args(list(argv))
-    try:
-        return _validate(a) if a.cmd == "validate" else _safe(a)
-    except (OSError, ValueError, KeyError, ImportError, zipfile.BadZipFile) as exc:
-        from shape.cli import errors
+    from shape.cli import machine
 
-        if errors.debug_enabled():
-            raise
-        return errors.fail(exc)
+    parser = _parser()
+    a = parser.parse_args(list(argv))
+
+    def run() -> int:
+        try:
+            return _validate(a) if a.cmd == "validate" else _safe(a)
+        except (OSError, ValueError, KeyError, ImportError, zipfile.BadZipFile) as exc:
+            from shape.cli import errors
+
+            if errors.debug_enabled():
+                raise
+            return errors.fail(exc)
+
+    return machine.run(f"profile {a.cmd}", a, run)

@@ -13,6 +13,7 @@ check:
 	$(PYTHON) scripts/check_requirements.py
 	$(PYTHON) scripts/check_secrets.py
 	$(PYTHON) scripts/check_user_facing.py
+	$(PYTHON) scripts/gen_exit_codes.py --check
 	$(PYTHON) scripts/check_shipped_data.py
 	$(PYTHON) scripts/check_plugin_skeletons.py
 	$(PYTHON) scripts/check_conformance_coverage.py

@@ -122,6 +122,10 @@ def _parser() -> argparse.ArgumentParser:
     rv.add_argument("--tolerance", type=float, default=0.05, help="null-rate drift (default 0.05)")
     rv.add_argument("--json", action="store_true")
     _root(rv)
+    from shape.cli import exitcodes, machine
+
+    machine.install(p, ("profile",))
+    exitcodes.apply(p, ("profile",))
     return p
 
 
@@ -485,13 +489,20 @@ _REGISTRY = {
 def main(argv: Sequence[str]) -> int:
     """Run one of these commands; ``argv`` starts after ``profile``. 0 ok, 1 a check failed,
     2 bad input."""
-    a = _parser().parse_args(list(argv))
-    handler = _REGISTRY[a.registry_cmd] if a.cmd == "registry" else _HANDLERS[a.cmd]
-    try:
-        return handler(a)
-    except _INPUT_ERRORS as e:
-        from shape.cli import errors
+    from shape.cli import machine
 
-        if errors.debug_enabled():
-            raise
-        return errors.fail(e)
+    parser = _parser()
+    a = parser.parse_args(list(argv))
+    handler = _REGISTRY[a.registry_cmd] if a.cmd == "registry" else _HANDLERS[a.cmd]
+
+    def run() -> int:
+        try:
+            return handler(a)
+        except _INPUT_ERRORS as e:
+            from shape.cli import errors
+
+            if errors.debug_enabled():
+                raise
+            return errors.fail(e)
+
+    return machine.run(f"profile {machine.command_path(parser, a)}", a, run)

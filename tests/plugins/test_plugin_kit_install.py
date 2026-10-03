@@ -96,7 +96,7 @@ def test_example_own_tests_pass_against_the_installation(outside):
 def test_g2_plugin_adds_source_detector_command_next_to_every_builtin(outside):
     r = shape(outside, "plugins", "list", "--json")
     assert r.returncode == 0, r.stderr
-    rows = {(x["group"], x["name"]): x for x in json.loads(r.stdout)}
+    rows = {(x["group"], x["name"]): x for x in json.loads(r.stdout)["payload"]}
     for key in (
         ("shape.sources", "lines"),
         ("shape.detectors", "iban"),

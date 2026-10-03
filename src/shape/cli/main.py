@@ -334,9 +334,14 @@ def _warn_empty(a, prof):
 
 def _cmd_profile(a):
     import shape
+    from shape.cli import project as project_cli
 
     if not a.output:
         raise ValueError("profile needs -o OUT.shape")
+    ctx = project_cli.context(a)
+    named = project_cli.use_source_path(a, "src", ctx)
+    if named is not None:  # `shape profile orders`: the source of shape.yml, not a path
+        a.src, a.dataset, a.name = named.path, a.dataset or named.dataset, a.name or named.name
     from shape.cli import auth
 
     settings = auth.settings_from_args(a)
@@ -479,12 +484,33 @@ def _cmd_inspect(a):
 
 def _cmd_check(a):
     import shape
+    from shape.cli import ci
+    from shape.cli import project as project_cli
 
-    result = shape.check(shape.load(a.shape), a.contract)
+    t0 = ci.started()
+    profile = shape.load(a.shape)
+    ctx = project_cli.context(a, profile.name)
+    source = ctx.source if ctx else None
+    contract = a.contract or (source.contract if source else None)
+    if contract is None:
+        raise ValueError(
+            "shape check needs CONTRACT.json: pass one, or set `contract` on the source in "
+            "shape.yml"
+        )
+    result = shape.check(profile, contract)
     out = result.to_dict()
+    if ctx:
+        out["violations"] = [project_cli.annotate(source, v) for v in out["violations"]]
+        out["project"] = ctx.block()
     if a.json:
         _write_json(a.json, out)
     _dump(out)
+    if ci.requested(a) or ci.project_ci(a)[0]:
+        table = next(iter(profile.tables), profile.name)
+        checks = ci.checks_from_contract(
+            _load_json(contract), result.violations, table, dataset=profile.is_dataset
+        )
+        ci.write_reports(a, "check", checks, contract, t0)
     return 0 if result.passed else 1
 
 
@@ -492,13 +518,18 @@ def _cmd_fidelity(a):
     """``shape fidelity REFERENCE SYNTHETIC``: 0 when every pass mark is met, 1 when not."""
     from pathlib import Path
 
+    from shape.cli import ci
+
     if a.tier:
+        if ci.requested(a):
+            raise ValueError("--junit and --sarif are not available with --tier")
         from shape.cli.tiers import run_fidelity
 
         return run_fidelity(a)
     from shape.generation.report import Thresholds, compare_tables, render_report
     from shape.quality import load_tables
 
+    t0 = ci.started()
     real = load_tables(a.reference, a.input_format)
     synth = load_tables(a.csv, a.input_format)
     if not real:
@@ -514,6 +545,7 @@ def _cmd_fidelity(a):
             raise ValueError(f"cannot tell the report format of {out}: use .json, .md or .html")
         Path(out).write_bytes(render_report(report, fmt))
     sys.stdout.write(render_report(report, a.format).decode())
+    ci.write_reports(a, "fidelity", ci.checks_from_fidelity(report), a.csv, t0)
     return 0 if report["passed"] else 1
 
 
@@ -592,19 +624,82 @@ def _diff_options(a):
 
 def _cmd_diff(a):
     import shape
+    from shape.cli import ci
+    from shape.cli import project as project_cli
 
-    result = shape.diff(shape.load(a.before), shape.load(a.after), **_diff_options(a))
-    out = result.to_dict()
+    t0 = ci.started()
+    current_path = a.after if a.after is not None else a.before
+    current = shape.load(current_path)
+    ctx = project_cli.context(a, current.name)
+    source = ctx.source if ctx else None
+    options = project_cli.merge_diff_options(source, _diff_options(a), a.ignore is not None)
+    as_of = project_cli.baseline_date(a)
+    baseline = None
+    if a.after is not None:  # BASE and CURRENT given: no baseline is looked up
+        changes = shape.diff(shape.load(a.before), current, **options).changes
+    else:
+        if source is None:
+            raise ValueError(
+                "shape diff needs BASE.shape and CURRENT.shape (or one CURRENT.shape when "
+                "shape.yml declares the source's baseline)"
+            )
+        changes, baseline = _diff_against_baseline(ctx, source, current, options, as_of)
+    out = {"drifted": bool(changes), "changes": changes}
+    if ctx:
+        out["changes"] = [project_cli.annotate(source, c) for c in changes]
+        out["project"] = ctx.block()
+        if baseline is not None:
+            out["project"]["baseline"] = baseline.to_dict()
     if a.json:
         _write_json(a.json, out)
     _dump(out)
-    return 1 if (a.fail_on_drift and result.drifted) else 0
+    columns = {name: list(t["columns"]) for name, t in current.tables.items()}
+    ci.write_reports(a, "diff", ci.checks_from_diff(out["changes"], columns), current_path, t0)
+    return 1 if (a.fail_on_drift and out["drifted"]) else 0
+
+
+def _diff_against_baseline(ctx, source, current, options, as_of):
+    """Compare ``current`` with the source's declared baseline. A rolling window reports only
+    the changes that show up against every run in the window: data inside the range of the
+    recent runs is not drift."""
+    import tempfile
+
+    import shape
+    from shape.project import resolve_baseline
+
+    def key(change):
+        return (change.get("table"), change.get("column"), change["kind"])
+
+    with tempfile.TemporaryDirectory(prefix="shape-baseline-") as work:
+        resolved = resolve_baseline(ctx.project, source.name, as_of=as_of, workdir=work)
+        kept, found = [], None
+        for entry in resolved.entries:
+            if _artifact_kind(entry.path) != "profile":
+                raise ValueError(
+                    f"baseline {entry.artifact or entry.content_id} is not a .shape profile "
+                    "(a share-safe profile cannot be diffed: commit the full profile with "
+                    "`shape registry ROOT commit NAME FILE.shape --allow-raw`)"
+                )
+            changes = shape.diff(shape.load(entry.path), current, **options).changes
+            if found is None:
+                kept, found = changes, {key(c) for c in changes}
+            else:
+                found &= {key(c) for c in changes}
+        kept = [c for c in kept if key(c) in (found or set())]
+    return kept, resolved
 
 
 def _cmd_verify(a):
     """``shape verify``: a ``.shape`` artifact is checked for its signature, anything else is
     data for the validation gates."""
     if str(a.shape).endswith(".shape"):
+        from shape.cli import ci
+
+        if ci.requested(a):
+            raise ValueError(
+                "--junit and --sarif report the validation gates of data; a .shape file is "
+                "only checked for its signature"
+            )
         return _cmd_verify_signature(a)
     return _cmd_verify_gates(a)
 
@@ -612,6 +707,8 @@ def _cmd_verify(a):
 def _cmd_verify_gates(a):
     """Load tables, run the gates, print the gate table; 0 pass, 1 a gate failed (or a warning
     under --strict), 2 input error."""
+    from shape.cli import ci
+    from shape.cli import project as project_cli
     from shape.quality import (
         VerifyReport,
         VerifyRunner,
@@ -621,6 +718,13 @@ def _cmd_verify_gates(a):
     )
     from shape.quality.verify import data_files
 
+    t0 = ci.started()
+    # verify's own --source is the data a generator copied from, not a source of shape.yml
+    ctx = project_cli.context(argparse.Namespace(**{**vars(a), "source": None}))
+    named = project_cli.use_source_path(a, "shape", ctx)
+    if named is not None:  # `shape verify orders`: the source of shape.yml, not a path
+        a.shape = named.path
+    modes = ctx.project.gates if ctx else {}
     tables = load_tables(a.shape, a.format)
     if not tables:
         raise ValueError(f"no {a.format} data files found in {a.shape}")
@@ -655,11 +759,13 @@ def _cmd_verify_gates(a):
         print(f"Source:      {a.source}")
     print(f"Statistical: {'yes' if a.statistical else 'no'}\n")
     if result.gate_results:
-        print(f"{'Gate':<28} {'Status':<8} {'Errors':>6} {'Warnings':>8}")
-        print("-" * 55)
+        mode_head = f" {'Mode':<8}" if modes else ""
+        print(f"{'Gate':<28} {'Status':<8} {'Errors':>6} {'Warnings':>8}{mode_head}")
+        print("-" * (55 + len(mode_head)))
         for g in result.gate_results:
             status = "PASS" if g.passed else "FAIL"
-            print(f"{g.gate_name:<28} {status:<8} {len(g.errors):>6} {len(g.warnings):>8}")
+            mode = f" {ctx.project.gate_mode(g.gate_name):<8}" if modes else ""
+            print(f"{g.gate_name:<28} {status:<8} {len(g.errors):>6} {len(g.warnings):>8}{mode}")
         print()
     print("Row counts:")
     for name, n in sorted(result.row_counts.items()):
@@ -670,15 +776,39 @@ def _cmd_verify_gates(a):
             print(f"  ERROR [{g.gate_name}]: {e}", file=sys.stderr)
         for w in g.warnings:
             print(f"  WARN  [{g.gate_name}]: {w}")
-    print(f"\nResult: {'PASS' if result.passed else 'FAIL'}")
+
+    def enforced(g):
+        return not ctx or ctx.project.gate_mode(g.gate_name) == "enforce"
+
+    observed = [g.gate_name for g in result.gate_results if not g.passed and not enforced(g)]
+    enforced_passed = all(g.passed for g in result.gate_results if enforced(g))
+    note = f" (observed failures: {', '.join(observed)})" if observed and enforced_passed else ""
+    print(f"\nResult: {'PASS' if enforced_passed else 'FAIL'}{note}")
     if a.output:
         report = VerifyReport(result)
-        text = report.to_json() if str(a.output).endswith(".json") else report.to_markdown()
+        if str(a.output).endswith(".json"):
+            doc = json.loads(report.to_json())
+            if ctx:
+                for g in doc["gates"]:
+                    g["mode"] = ctx.project.gate_mode(g["gate"])
+                doc["enforced_passed"] = enforced_passed
+                doc["project"] = ctx.block()
+            text = json.dumps(doc, indent=2, default=str)
+        else:
+            text = report.to_markdown()
+            if ctx:
+                modes_text = ", ".join(
+                    f"{g.gate_name}: {ctx.project.gate_mode(g.gate_name)}"
+                    for g in result.gate_results
+                )
+                text += f"\n## Project\n\n- File: {ctx.project.path}\n- Gate modes: {modes_text}\n"
         with open(a.output, "w", encoding="utf-8") as fh:
             fh.write(text)
         print(f"Report written to {a.output}")
-    has_warnings = any(g.warnings for g in result.gate_results)
-    return 1 if (not result.passed or (a.strict and has_warnings)) else 0
+    has_warnings = any(g.warnings for g in result.gate_results if enforced(g))
+    checks = ci.checks_from_gates(result.gate_results, modes, strict=a.strict)
+    ci.write_reports(a, "verify", checks, a.shape, t0)
+    return 1 if (not enforced_passed or (a.strict and has_warnings)) else 0
 
 
 _VERIFY_HELP = (
@@ -850,7 +980,9 @@ def _stream_profile_arguments(parser):
 
 
 def _build_parser(plugin_commands=()):
-    from shape.cli import gitcmds
+    from shape.cli import ci, gitcmds
+    from shape.cli.project import add_arguments as add_project_arguments
+    from shape.cli.project import add_project_flags
 
     p = argparse.ArgumentParser(prog="shape", description="Shape as Code")
     p.add_argument("--version", "-V", action="store_true", help="print the version and exit")
@@ -998,6 +1130,7 @@ def _build_parser(plugin_commands=()):
     )
     pr.add_argument("--html", metavar="REPORT.html")
     pr.add_argument("--json", metavar="SUMMARY.json")
+    add_project_flags(pr, source=False)
     from shape.cli.auth import add_arguments as add_auth_arguments
 
     add_auth_arguments(pr, connection_string=False)
@@ -1008,8 +1141,22 @@ def _build_parser(plugin_commands=()):
     _stream_profile_arguments(sp)
     d = sub.add_parser("diff", help="compare two profiles")
     d.add_argument("before", metavar="BASE.shape")
-    d.add_argument("after", metavar="CURRENT.shape")
+    d.add_argument(
+        "after",
+        metavar="CURRENT.shape",
+        nargs="?",
+        help="omit it (and give only CURRENT.shape) to compare with the baseline that "
+        "shape.yml declares for the source",
+    )
+    d.add_argument(
+        "--baseline-date",
+        metavar="YYYY-MM-DD",
+        help="the date baselines are resolved for (same weekday, rolling window, month end); "
+        "default: today (UTC)",
+    )
+    add_project_flags(d)
     d.add_argument("--json", metavar="RESULT.json")
+    ci.add_flags(d)
     d.add_argument("--fail-on-drift", action="store_true")
     d.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     _diff_policy_arguments(d)
@@ -1104,6 +1251,8 @@ def _build_parser(plugin_commands=()):
     vf.add_argument("--statistical", action="store_true", help="add KS and chi-squared tests")
     vf.add_argument("-o", "--output", metavar="REPORT", help="write a .json or .md report")
     vf.add_argument("--strict", action="store_true", help="exit 1 on warnings too")
+    ci.add_flags(vf)
+    add_project_flags(vf, source=False)
     qu = sub.add_parser("quality")
     qu.add_argument("csv")
     qu.add_argument("--reference")
@@ -1190,6 +1339,8 @@ def _build_parser(plugin_commands=()):
         default="json",
         help="what to print: a shape.reports format such as json, md or html (default json)",
     )
+    ci.add_flags(fi)
+    add_project_flags(fi, source=False)
     k = sub.add_parser("key")
     k.add_argument("csv")
     k.add_argument("fields", nargs="+")
@@ -1206,8 +1357,15 @@ def _build_parser(plugin_commands=()):
     cq.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     ck = sub.add_parser("check", help="check a profile against a contract")
     ck.add_argument("shape", metavar="PROFILE.shape")
-    ck.add_argument("contract", metavar="CONTRACT.json")
+    ck.add_argument(
+        "contract",
+        metavar="CONTRACT.json",
+        nargs="?",
+        help="default: the `contract` of the source in shape.yml",
+    )
     ck.add_argument("--json", metavar="RESULT.json")
+    ci.add_flags(ck)
+    add_project_flags(ck)
     ck.add_argument("--verify", metavar="PUBKEY", help=_VERIFY_HELP)
     co = sub.add_parser(
         "compatibility",
@@ -1257,8 +1415,13 @@ def _build_parser(plugin_commands=()):
     from shape.cli.registry import add_arguments as add_registry_arguments
 
     add_registry_arguments(sub)
+    add_project_arguments(sub)
     for rec in plugin_commands:  # listed in --help only; the plugin loads when it is run
         sub.add_parser(rec.name, help=f"(plugin {rec.source})", add_help=False)
+    from shape.cli import exitcodes, machine
+
+    machine.install(p)
+    exitcodes.apply(p)
     return p
 
 
@@ -1392,6 +1555,7 @@ def _cmd_evidence(a):
     """``shape query|check|plan`` on an evidence document (JSON or ``.shape``). ``plan`` also
     takes a generation schema and then prints the plan of its run, as ``generate --dry-run``."""
     from shape.artifact import read_shape
+    from shape.cli import ci
 
     _, s = read_shape(a.shape) if str(a.shape).endswith(".shape") else ({}, _load_json(a.shape))
     if a.cmd == "query":
@@ -1412,9 +1576,13 @@ def _cmd_evidence(a):
         return 0
     from shape.contracts import evaluate_contract
 
+    if a.contract is None:
+        raise ValueError("shape check needs CONTRACT.json")
     contract = _load_json(a.contract)
+    t0 = ci.started()
     r = evaluate_contract(s, contract)
     _dump(r.to_dict())
+    ci.write_reports(a, "check", ci.checks_from_report(r.to_dict()), a.contract, t0)
     return 0 if r.passed else 4
 
 
@@ -1453,16 +1621,27 @@ def _dispatch(argv):
         from shape.plugins.host import default_host
 
         return run_command(default_host(), argv[0], argv[1:])
-    a = (_build_parser(plugin_cmds.values()) if plugin_cmds else parser).parse_args(argv)
+    used = _build_parser(plugin_cmds.values()) if plugin_cmds else parser
+    a = used.parse_args(argv)
     if a.version:
         print(f"shape {_version()}")
         return 0
+    from shape.cli import machine
+
+    return machine.run(machine.command_path(used, a), a, lambda: _route(a))
+
+
+def _route(a):
     if a.cmd in ("keygen", "sign", "verify"):
         return _run({"keygen": _cmd_keygen, "sign": _cmd_sign, "verify": _cmd_verify}[a.cmd], a)
     if getattr(a, "verify", None):
         rc = _run(_verify_inputs, a)
         if rc:
             return rc
+    if a.cmd in ("init", "project"):
+        from shape.cli.project import run as run_project
+
+        return _run(run_project, a)
     if a.cmd in ("generate", "describe", "list", "presets"):
         from shape.cli.generation import run as run_generation
 
@@ -1565,6 +1744,8 @@ def _dispatch(argv):
     if a.cmd == "diff":
         from shape.drift import compare
 
+        if a.after is None:
+            raise ValueError("shape diff needs BASE.shape and CURRENT.shape")
         _dump([asdict(v) for v in compare(_load_json(a.before), _load_json(a.after))])
         return 0
     if a.cmd in ("show", "inspect"):
@@ -1597,7 +1778,13 @@ def _dispatch(argv):
     if a.cmd in ("fidelity", "compare") and (a.tier or not str(a.reference).endswith(".json")):
         return _run(_cmd_fidelity, a)
     if a.cmd in ("fidelity", "compare"):
+        from shape.cli import ci
         from shape.generation import certify
+
+        if ci.requested(a):
+            raise ValueError(
+                "--junit and --sarif need data as REFERENCE, not a REFERENCE.json profile"
+            )
 
         ref = _load_json(a.reference)
         cert = certify(ref, list(_rows(a.csv)), tolerance=a.tolerance)
