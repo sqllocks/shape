@@ -38,6 +38,7 @@ class CapturedShape:
 
 
 _TOP = 10
+_MODES = ("exact", "bounded")
 _EXACT_CARD = ErrorModel("exact-hash-table", True)
 _EXACT_QUANTILE = ErrorModel("exact-sort", True)
 
@@ -166,6 +167,8 @@ def _as_arrow(values: Any) -> Any:
 def capture_columns(columns: dict[str, Any], mode: str = "exact") -> dict[str, Any]:
     """Profile equal-length column arrays. ``mode`` is ``"exact"`` (default) or ``"bounded"``
     (sketches for distinct counts, top values and quantiles)."""
+    if mode not in _MODES:
+        raise ValueError(f"mode must be 'exact' or 'bounded', got {mode!r}")
     if not columns:
         return {"rows": 0, "columns": {}}
     if len({len(v) for v in columns.values()}) != 1:
@@ -199,7 +202,7 @@ def capture_columns(columns: dict[str, Any], mode: str = "exact") -> dict[str, A
             continue
         # correctness fallback: the row path is the schema reference for the other kinds
         items = arrays[name].to_pylist() if arrays[name] is not None else list(values)
-        out[name] = capture_rows({name: x} for x in items).to_dict()["columns"][name]
+        out[name] = _capture_rows(({name: x} for x in items), 10000, mode).columns[name]
     return {"rows": n, "columns": {name: out[name] for name in columns}}
 
 
@@ -252,6 +255,10 @@ class _ColumnState:
 
 def capture_rows(rows: Iterable[Mapping[str, Any]], batch_size: int = 10000) -> CapturedShape:
     """One bounded pass over row dicts, ``batch_size`` rows per kernel call."""
+    return _capture_rows(rows, batch_size, "bounded")
+
+
+def _capture_rows(rows: Iterable[Mapping[str, Any]], batch_size: int, mode: str) -> CapturedShape:
     if batch_size < 1:
         raise ValueError("batch_size must be positive")
     columns: dict[str, _ColumnState] = {}
@@ -263,7 +270,7 @@ def capture_rows(rows: Iterable[Mapping[str, Any]], batch_size: int = 10000) -> 
         for row in batch:
             for key in row:
                 if key not in columns:
-                    col = columns[key] = _ColumnState(key, "bounded")
+                    col = columns[key] = _ColumnState(key, mode)
                     for start in range(0, seen, batch_size):  # rows before it first appeared
                         col.feed_nulls(min(batch_size, seen - start))
         for name, col in columns.items():
