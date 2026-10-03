@@ -4,8 +4,10 @@ with the Fabric plugin; here core is checked on its own, with no cloud SDK."""
 
 from __future__ import annotations
 
+import json
 import os
 import stat
+import subprocess
 import sys
 import types
 
@@ -119,14 +121,33 @@ def test_without_a_package_kv_says_what_to_install(no_providers):
         credrefs.resolve_reference("kv://v/n")
 
 
-def test_core_imports_no_cloud_sdk_to_resolve_references(tmp_path, monkeypatch, no_providers):
+_RESOLVE_IN_A_FRESH_INTERPRETER = """
+import json, os, sys
+from shape.security import credrefs
+credrefs._PROVIDERS.clear()  # no installed package provides a resolver
+credrefs._LOADED.clear()
+credrefs.resolve_reference("file://" + os.environ["SHAPE_T_FILE"])
+credrefs.resolve_reference("env://SHAPE_T_ENV")
+print(json.dumps(sorted(m for m in sys.modules
+                        if m.startswith(("azure", "boto", "google.cloud")))))
+"""
+
+
+def test_core_imports_no_cloud_sdk_to_resolve_references(tmp_path, monkeypatch):
+    # A fresh interpreter, so what other tests left in sys.modules cannot matter.
     f = tmp_path / "s"
     f.write_text("x")
     f.chmod(0o600)
+    monkeypatch.setenv("SHAPE_T_FILE", str(f))
     monkeypatch.setenv("SHAPE_T_ENV", "y")
-    credrefs.resolve_reference(f"file://{f}")
-    credrefs.resolve_reference("env://SHAPE_T_ENV")
-    assert not [m for m in sys.modules if m.startswith(("azure", "boto", "google.cloud"))]
+    done = subprocess.run(
+        [sys.executable, "-c", _RESOLVE_IN_A_FRESH_INTERPRETER],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert done.returncode == 0, done.stderr[-800:]
+    assert json.loads(done.stdout.strip().splitlines()[-1]) == []
 
 
 def test_recognising_a_reference_imports_nothing():
