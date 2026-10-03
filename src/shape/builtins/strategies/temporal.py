@@ -279,9 +279,11 @@ class Temporal:
             )
         if profile and all(str(k).isdigit() for k in profile):
             # one weight per hour of the day (a profile's hour histogram): "0" .. "23"
-            w = np.array([float(profile.get(str(h), 0.0)) for h in range(24)], dtype=np.float64)
             if any(int(k) > 23 for k in profile):
                 raise StrategyError(f"temporal hour_of_day keys are hours 0..23 ({where(ctx)})")
+            w = np.zeros(24, dtype=np.float64)
+            for key, weight in profile.items():  # "7" and "07" are both hour 7 (#134)
+                w[int(key)] += float(weight)
             if (w < 0).any() or not np.isfinite(w).all() or w.sum() <= 0:
                 raise StrategyError("temporal hour_of_day weights must be non-negative, not all 0")
             return w
