@@ -46,7 +46,8 @@ def _csv(directory: Path) -> Path:
     lines = ["id,status,amount,email,placed"]
     for i in range(60):
         lines.append(
-            f"{i},{'paid' if i % 3 else 'new'},{i * 1.5:.2f},user{i}@example.com,2024-01-{1 + i % 28:02d}"
+            f"{i},{'paid' if i % 3 else 'new'},{i * 1.5:.2f},user{i}@example.com,"
+            f"2024-01-{1 + i % 28:02d}"
         )
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return path
@@ -69,8 +70,7 @@ def generate(out: Path) -> list[dict[str, Any]]:
     from shape.registry.profiles import ProfileRegistry
     from shape.scenario.manifest import ManifestBuilder
     from shape.spec.migrate import to_model
-    from shape.spec.model import ShapeContract
-    from shape.spec.model import FieldContract
+    from shape.spec.model import FieldContract, ShapeContract
 
     if out.exists():
         raise SystemExit(f"{out} exists: a generation is written once")
