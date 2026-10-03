@@ -66,15 +66,29 @@ def local_path(uri: str | Path) -> Path:
     return Path(uri)
 
 
+# Query parameters whose value is a credential (case-insensitive): a SAS signature, a password,
+# an account or shared-access key, a token or a client secret.
+_SECRET_PARAM = re.compile(
+    r"(^|[&;])((?:sig|signature|password|passwd|pwd|accountkey|sharedaccesskey|"
+    r"sharedaccesssignature|token|access_token|sas_token|client_secret|secret|api_key|apikey)=)"
+    r"[^&;]*",
+    re.IGNORECASE,
+)
+
+
 def redact(uri: str) -> str:
-    """``uri`` without a password in its user information."""
+    """``uri`` without a password in its user information or a credential in its query string
+    (``sig``, ``password``, ``AccountKey``, ``SharedAccessKey``, tokens and secrets)."""
     try:
         parts = urlsplit(str(uri))
-        if parts.password is None:
-            return str(uri)
-        host = parts.netloc.rpartition("@")[2]
-        user = parts.username or ""
-        return parts._replace(netloc=f"{user}:***@{host}").geturl()
+        if parts.password is not None:
+            host = parts.netloc.rpartition("@")[2]
+            user = parts.username or ""
+            parts = parts._replace(netloc=f"{user}:***@{host}")
+        if parts.query:
+            parts = parts._replace(query=_SECRET_PARAM.sub(r"\1\2***", parts.query))
+        out = parts.geturl()
+        return str(uri) if out == urlsplit(str(uri)).geturl() else out
     except ValueError:
         return str(uri)
 
