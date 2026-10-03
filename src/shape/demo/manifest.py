@@ -7,7 +7,7 @@ import json
 import os
 import tempfile
 import uuid
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -93,10 +93,15 @@ class DemoManifest:
             raise SessionNotFoundError(f"no session {session_id!r} found in {dir_}")
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
-            artifacts = [ArtifactRecord(**a) for a in data.pop("artifacts", [])]
-            data.pop("_path", None)
-            manifest = cls(**data)
-        except (ValueError, TypeError) as exc:
+            # a field a later release added is ignored (docs/specs/STATE_AND_COMPATIBILITY.md)
+            artifact_fields = {f.name for f in fields(ArtifactRecord)}
+            artifacts = [
+                ArtifactRecord(**{k: v for k, v in a.items() if k in artifact_fields})
+                for a in data.pop("artifacts", [])
+            ]
+            known = {f.name for f in fields(cls) if not f.name.startswith("_")}
+            manifest = cls(**{k: v for k, v in data.items() if k in known})
+        except (ValueError, TypeError, AttributeError) as exc:
             raise DemoError(f"{path} is not a demo session record: {exc}") from exc
         manifest.artifacts = artifacts
         manifest._path = path

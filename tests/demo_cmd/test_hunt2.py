@@ -286,3 +286,6 @@ def test_728_a_record_that_misses_a_field_or_holds_the_wrong_type_is_still_refus
     )
     code, _, err = run("demo", "status", "bad00001")
     assert code == 2 and "is not a demo session record" in err
+    (home / "sessions" / "demo-bad00002.json").write_text(json.dumps({"artifacts": [5]}))
+    code, _, err = run("demo", "status", "bad00002")
+    assert code == 2 and "is not a demo session record" in err
