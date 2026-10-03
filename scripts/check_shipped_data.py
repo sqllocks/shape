@@ -34,6 +34,7 @@ NETWORK_IMPORTS = {
     "pooch",
     "ftplib",
     "aiohttp",
+    "urllib3",
 }
 
 
@@ -99,6 +100,12 @@ def _network_imports(tree: ast.AST) -> set[str]:
         elif isinstance(node, ast.ImportFrom) and node.module:
             if _is_network(node.module):
                 found.add(node.module)
+            # `from urllib import request` imports the client module itself
+            found |= {
+                f"{node.module}.{a.name}"
+                for a in node.names
+                if f"{node.module}.{a.name}" in NETWORK_IMPORTS
+            }
     return found
 
 
