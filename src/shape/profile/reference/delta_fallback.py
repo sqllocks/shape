@@ -179,7 +179,9 @@ def read_via_duckdb(
             "*" if not columns else ", ".join('"' + c.replace('"', '""') + '"' for c in columns)
         )
         args = _quote(target) + ("" if version is None else f", version={int(version)}")
-        result = con.execute(f"SELECT {select} FROM delta_scan({args})")
+        # Every spliced value is escaped: identifiers doubled-quoted, the location a doubled-quote
+        # string literal (_quote), the version an int.
+        result = con.execute(f"SELECT {select} FROM delta_scan({args})")  # nosec B608
         fetch = getattr(result, "to_arrow_table", None) or result.fetch_arrow_table
         table = fetch()
     finally:
