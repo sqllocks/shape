@@ -167,7 +167,8 @@ def sign_artifact(
         separators=(",", ":"),
     ).encode()
     _, components = read_artifact(path, notice=False)
-    target = Path(out if out is not None else path)
+    # in place: the file a symbolic link points at is signed, and the link stays a link
+    target = Path(out) if out is not None else Path(os.path.realpath(path))
     fd, tmp_name = tempfile.mkstemp(dir=target.parent or ".", suffix=".tmp")
     os.close(fd)
     try:
