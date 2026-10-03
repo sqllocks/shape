@@ -229,7 +229,7 @@ This job keeps the badge in a branch named `badges`, which a README can link to 
 (the job needs `contents: write`, and it runs on `push` to the default branch and on a schedule, not
 on pull requests):
 
-```yaml
+```yml
 name: shape-badge
 on:
   push: {branches: [main]}

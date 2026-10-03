@@ -25,7 +25,9 @@ SKIP_PARTS = {"__pycache__"}
 DATA_NAME = re.compile(r"[\w.\- /]*\w\.(txt|json|csv|tsv|ipynb|ya?ml|parquet|xml|toml)$")
 LOADS_DATA = re.compile(r"\bresources\b|\bfiles\(|\b__file__\b")
 # Modules whose job is an explicit network call (a transport the caller injects and enables).
-FETCH_MODULES = {"shape/scale/http.py"}
+#: the modules that open a connection, each on purpose: the scale HTTP source, and the two that
+#: send a result out when asked (`shape ci post-comment`, webhook notifications; HTTPS or loopback)
+FETCH_MODULES = {"shape/scale/http.py", "shape/cli/prbot.py", "shape/cli/notify.py"}
 NETWORK_IMPORTS = {
     "urllib.request",
     "http.client",
