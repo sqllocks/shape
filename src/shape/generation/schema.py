@@ -228,8 +228,8 @@ class GenSchema:
         """The JSON document (``generation-schema-v1.json``). Round-trips through
         :meth:`from_dict`. It is written without ``format``, ``version``, ``shape_version`` and
         ``min_shape_version``: ``shape from-ddl`` and the schema dumps are pinned equal to the
-        baseline's file by the parity harnesses (``benchmarks/vs_spindle/ddl_1to1``,
-        ``schema_import``), so the declaration waits for the owner's decision recorded in
+        baseline's file by the parity harnesses (``ddl_1to1`` and ``schema_import`` under
+        ``benchmarks/``), so the declaration waits for the owner's decision recorded in
         ``docs/plans/lane_status/W1-01.md``. Readers already accept it."""
         document = {
             "schema_version": SCHEMA_VERSION,

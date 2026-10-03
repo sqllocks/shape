@@ -30,6 +30,25 @@ shape --debug registry reg checkout orders nope
 SHAPE_DEBUG=1 shape check missing.shape contract.json
 ```
 
+## `shape migrate`
+
+`shape migrate SRC DST` (also installed as `shape-migrate`) writes a migrated copy of a persisted
+file, offline: a `.shape` artifact, or a safe profile, model, run manifest, contract or any other
+JSON kind in [the state and compatibility policy](specs/STATE_AND_COMPATIBILITY.md).
+
+```bash
+shape migrate old.shape new.shape --dry-run   # print the plan, write nothing
+shape migrate old.shape new.shape             # new file + new.shape.receipt.json; old.shape kept
+shape migrate old.shape new.shape --verify old.pub --sign-key release.key   # a signed source
+```
+
+It never rewrites in place or overwrites a file, records `migrated_from` and `source_content_id`,
+refuses a downgrade (`--to N` below the file's version), reads its result back and checks the
+content id before publishing it, and migrates a file that is already current to nothing. `--kind
+KIND` names a JSON file that is not recognised by itself. Exit codes: 0 migrated, no-op or dry run;
+2 refused or bad input. Strict reading of every format (`SHAPE_STRICT_FORMATS=1`) is described in
+the policy.
+
 ## What each command expects
 
 - `shape profile SRC -o OUT.shape` reads CSV, Parquet, JSONL, a folder or glob of them, or a Delta

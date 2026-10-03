@@ -482,6 +482,27 @@ def support_rows() -> list[dict[str, Any]]:
     return rows
 
 
+SUPPORT_TABLE_HEADER = (
+    "| Kind | Format | Version | First release that reads it | Status |",
+    "|---|---|---|---|---|",
+)
+
+
+def render_support_table() -> str:
+    """The published support window as a Markdown table (``docs/specs/STATE_AND_COMPATIBILITY.md``
+    holds exactly this text; a test keeps them equal)."""
+    lines = list(SUPPORT_TABLE_HEADER)
+    for r in support_rows():
+        status = (
+            r["status"]
+            if r["status"] == "supported"
+            else f"deprecated, removed in {r['removed_in']}"
+        )
+        cells = (f"`{r['kind']}`", f"`{r['format']}`", r["version"], r["first_release"], status)
+        lines.append("| " + " | ".join(str(c) for c in cells) + " |")
+    return "\n".join(lines)
+
+
 # --- dates, decimals ------------------------------------------------------------------------------
 
 _UTC_ISO = re.compile(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d{1,6})?(Z|[+-]\d\d:\d\d)$")
