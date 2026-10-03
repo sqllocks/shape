@@ -54,9 +54,23 @@ fn check_slot(per_row: usize, slot: usize, width: usize) -> PyResult<()> {
     Ok(())
 }
 
+/// The most rows, words or days one call makes (2**31): beyond it a call would allocate tens of
+/// GiB at once, so the caller splits the work into chunks, as the engine does.
+pub(crate) const MAX_PER_CALL: u128 = 1 << 31;
+
+pub(crate) fn check_size(what: &str, n: u128) -> PyResult<()> {
+    if n > MAX_PER_CALL {
+        return Err(err(format!(
+            "{what} is {n}, more than one call makes (2**31): use smaller chunks"
+        )));
+    }
+    Ok(())
+}
+
 /// The stream has 2**64 words: rows `row_start .. row_start + n_rows` at `per_row` words each must
 /// end inside it (a wrapped word address would alias rows near 0).
 fn check_stream(row_start: u64, n_rows: usize, per_row: usize) -> PyResult<()> {
+    check_size("n_rows * words per row", n_rows as u128 * per_row as u128)?;
     let end = (u128::from(row_start) + n_rows as u128) * per_row as u128;
     if end > 1u128 << 64 {
         return Err(err(format!(
@@ -206,6 +220,9 @@ fn alias_sample(
     Ok(out(Arc::new(Int64Array::from(v))))
 }
 
+/// The widest zero padding a template slot may ask for.
+const MAX_PAD: usize = 1024;
+
 fn cols_of<'a>(arrays: &'a [ArrayRef]) -> PyResult<Vec<strings::Col<'a>>> {
     arrays
         .iter()
@@ -236,6 +253,12 @@ fn template_strings(
     columns: Vec<PyArray>,
     n_rows: usize,
 ) -> PyResult<PyArray> {
+    check_size("n_rows", n_rows as u128)?;
+    if let Some((_, w)) = slots.iter().find(|(_, w)| *w > MAX_PAD) {
+        return Err(err(format!(
+            "template pad width {w} is more than {MAX_PAD}"
+        )));
+    }
     let arrays = into_arrays(columns);
     let cols = cols_of(&arrays)?;
     let r = py
@@ -281,6 +304,9 @@ fn uuid4_strings(
     n_rows: usize,
 ) -> PyResult<PyArray> {
     check_stream(row_start, n_rows, 2)?;
+    if n_rows as u128 * 36 > i32::MAX as u128 {
+        return Err(err("string output exceeds 2 GiB: use smaller chunks".into()));
+    }
     let r = py
         .detach(|| strings::uuid4([k0, k1], row_start, n_rows))
         .map_err(err)?;
@@ -299,6 +325,7 @@ fn random_strings(
     alphabet: &str,
 ) -> PyResult<PyArray> {
     let chars: Vec<char> = alphabet.chars().collect();
+    check_size("n_rows", n_rows as u128)?;
     check_stream(row_start, n_rows, length)?;
     let r = py
         .detach(|| strings::random_chars([k0, k1], row_start, n_rows, length, &chars))
@@ -319,6 +346,7 @@ fn day_weights(
     if month_weights.len() != 12 || dow_weights.len() != 7 {
         return Err(err("need 12 month weights and 7 day-of-week weights".into()));
     }
+    check_size("n_days", n_days as u128)?;
     let w = temporal::day_weights(start_day, n_days, &month_weights, &dow_weights, per_bucket);
     Ok(out(Arc::new(Float64Array::from(w))))
 }

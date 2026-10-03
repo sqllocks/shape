@@ -178,7 +178,7 @@ def test_a_slot_whose_end_overflows_is_rejected():
 @pytest.mark.parametrize(
     "call",
     [
-        lambda m: m.philox_words(1, 2, 1, 2**62, 4),
+        lambda m: m.philox_words(1, 2, 2**62, 1, 4),
         lambda m: m.philox_words(1, 2, 2**63, 2, 2),
         lambda m: m.philox_uniform(1, 2, 2**64 - 1, 2),
         lambda m: m.uuid4_strings(1, 2, 2**64 - 1, 2),

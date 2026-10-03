@@ -342,6 +342,7 @@ fn cap_per_parent_py(
     k0: u64,
     k1: u64,
 ) -> PyResult<PyArray> {
+    super::check_size("pool", pool.max(0) as u128)?;
     let indices = values(indices, "indices")?;
     let v = py
         .detach(|| cap_per_parent(&indices, pool, max_per_parent, [k0, k1]))
@@ -372,6 +373,7 @@ fn group_sums_py(
     if size < 0 {
         return Err(err("size must not be negative".into()));
     }
+    super::check_size("size", size as u128)?;
     let keys = i64_array(keys, "keys")?;
     let (column, _) = values.into_inner();
     if column.len() != keys.len() {

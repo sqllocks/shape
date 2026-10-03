@@ -23,7 +23,10 @@ Every function below that draws numbers takes `(k0, k1, row_start, n_rows)` and,
 several words, `per_row` and `slot` (the first of the row's words the function reads). A result
 depends on `(key, row)` alone, so it is the same however the rows are split into calls, chunks
 or threads. The stream has 2**64 words: a call whose rows end past it (`(row_start +
-n_rows) * per_row > 2**64`) is a `ValueError` in both implementations, never a wrapped address. Calls with at least 32,768 rows run on all cores (`SHAPE_THREADS` / `set_threads`).
+n_rows) * per_row > 2**64`) is a `ValueError` in both implementations, never a wrapped address. One call makes at most 2**31 rows,
+words or days (and a `string` result at most 2 GiB); a larger call is a `ValueError` that says to
+use smaller chunks, so it never exhausts memory or aborts the interpreter. Template pad widths are at
+most 1024. Calls with at least 32,768 rows run on all cores (`SHAPE_THREADS` / `set_threads`).
 
 Conversions (shared by both implementations):
 

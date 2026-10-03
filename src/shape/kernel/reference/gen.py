@@ -33,11 +33,21 @@ _FRAC_2_SQRT_PI = 1.1283791670955126
 _SQRT_2 = 1.4142135623730951
 
 
+_MAX_PER_CALL = 2**31  # as the native kernel: rows, words or days one call makes
+_MAX_PAD = 1024
+
+
+def _size(what: str, n: int) -> None:
+    if n > _MAX_PER_CALL:
+        raise ValueError(f"{what} is {n}, more than one call makes (2**31): use smaller chunks")
+
+
 def _words(k0: int, k1: int, row_start: int, n_rows: int, per_row: int) -> npt.NDArray[np.uint64]:
     if per_row < 1:
         raise ValueError("per_row must be positive")
     if row_start < 0 or n_rows < 0:
         raise ValueError("row_start and n_rows must be non-negative")
+    _size("n_rows * words per row", n_rows * per_row)
     if (row_start + n_rows) * per_row > 2**64:
         raise ValueError(
             f"rows {row_start}..{row_start + n_rows} at {per_row} words per row pass the end of "
@@ -219,6 +229,10 @@ def template_strings(
     columns: Sequence[Any],
     n_rows: int,
 ) -> pa.Array:
+    _size("n_rows", n_rows)
+    wide = [w for _, w in slots if w > _MAX_PAD]
+    if wide:
+        raise ValueError(f"template pad width {wide[0]} is more than {_MAX_PAD}")
     if len(literals) != len(slots) + 1:
         raise ValueError("template needs one more literal than slots")
     if any(c >= len(columns) for c, _ in slots):
@@ -275,6 +289,8 @@ def string_case(array: Any, mode: str) -> pa.Array:
 
 
 def uuid4_strings(k0: int, k1: int, row_start: int, n_rows: int) -> pa.Array:
+    if n_rows * 36 > 2**31 - 1:
+        raise ValueError("string output exceeds 2 GiB: use smaller chunks")
     w = _words(k0, k1, row_start, n_rows, 2).astype("<u8")
     raw = w.view(np.uint8).reshape(n_rows, 16).copy()
     raw[:, 6] = (raw[:, 6] & 0x0F) | 0x40
@@ -291,6 +307,7 @@ def random_strings(
 ) -> pa.Array:
     if not alphabet:
         raise ValueError("random_chars needs a non-empty alphabet")
+    _size("n_rows", n_rows)
     if length == 0:
         return arrow_array([""] * n_rows, type=pa.string())
     chars = np.array(list(alphabet), dtype=object)
@@ -311,6 +328,7 @@ def day_weights(
 ) -> pa.Array:
     if len(month_weights) != 12 or len(dow_weights) != 7:
         raise ValueError("need 12 month weights and 7 day-of-week weights")
+    _size("n_days", n_days)
     days = np.arange(start_day, start_day + n_days, dtype=np.int64)
     months = days.astype("datetime64[D]").astype("datetime64[M]").astype(np.int64) % 12
     dows = (days + 3) % 7

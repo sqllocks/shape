@@ -18,7 +18,7 @@ from shape.generation.arrowkit import array as arrow_array
 from shape.generation.arrowkit import fill_null as arrow_fill_null
 from shape.generation.arrowkit import to_numpy as arrow_numpy
 
-from .gen import _below, _words
+from .gen import _below, _size, _words
 
 _MASK = (1 << 64) - 1
 _CAP_ATTEMPTS = 64
@@ -110,6 +110,7 @@ def scd2_offsets(codes: Any, total_days: int, min_gap: int, k0: int, k1: int) ->
 
 
 def cap_per_parent(indices: Any, pool: int, max_per_parent: int, k0: int, k1: int) -> pa.Array:
+    _size("pool", pool)
     if pool < 1 or max_per_parent < 1:
         raise ValueError("pool and max_per_parent must be positive")
     idx = _ints(indices, "indices")
@@ -178,6 +179,7 @@ def dense_rows(keys: Any, start: int, size: int) -> pa.Array:
 def group_sums(keys: Any, values: Any, start: int, size: int) -> tuple[pa.Array, pa.Array]:
     if size < 0:
         raise ValueError("size must not be negative")
+    _size("size", size)
     k = _nullable_ints(keys, "keys")
     v = values if isinstance(values, pa.Array) else arrow_array(values)
     if not (pa.types.is_int64(v.type) or pa.types.is_float64(v.type)):
