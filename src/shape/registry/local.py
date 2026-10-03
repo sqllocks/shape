@@ -39,13 +39,22 @@ def is_raw_profile(data: bytes) -> bool:
                 return bool(json.loads(z.read("manifest.json")).get("kind") == "profile")
         except (OSError, ValueError, KeyError, zipfile.BadZipFile):
             return False
-    if data.lstrip()[:1] == b"{":
-        try:
-            doc = json.loads(data)
-        except ValueError:
-            return False
-        return isinstance(doc, dict) and doc.get("format") == "shape-profile"
-    return False
+    doc = json_object(data)
+    return doc is not None and doc.get("format") == "shape-profile"
+
+
+def json_object(data: bytes) -> dict[str, Any] | None:
+    """The parsed JSON object in ``data``, or None when it is not one.
+
+    Reads the bytes the way ``json.loads`` does, so a UTF-8 byte-order mark or a UTF-16 encoding
+    cannot hide a document from the checks that look at its content."""
+    if data[:4] == b"PK\x03\x04":
+        return None
+    try:
+        doc = json.loads(data)
+    except ValueError:
+        return None
+    return doc if isinstance(doc, dict) else None
 
 
 def _check(kind: str, value: object) -> str:

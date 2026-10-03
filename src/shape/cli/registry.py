@@ -156,13 +156,10 @@ def _leaks(doc: Any, label: str) -> list[str]:
 
 def _safe_document(data: bytes) -> dict[str, Any] | None:
     """The parsed JSON when ``data`` claims to be a safe profile, else None."""
-    if data.lstrip()[:1] != b"{":
-        return None
-    try:
-        doc = json.loads(data)
-    except ValueError:
-        return None
-    if isinstance(doc, dict) and "tables" in doc and "redaction_manifest" in doc:
+    from shape.registry.local import json_object
+
+    doc = json_object(data)
+    if doc is not None and "tables" in doc and "redaction_manifest" in doc:
         return doc
     return None
 
