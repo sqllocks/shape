@@ -1054,9 +1054,10 @@ def _fit_decimal_range(col: Column) -> None:
 
 def declare_types(schema: GenSchema) -> None:
     """Keep the declared SQL type of every column: a ``DECIMAL(p,s)`` is generated as
-    ``decimal128(p,s)``, and a ``DATETIME`` / ``DATETIME2(n)`` value has no more fractional
-    digits than the type holds (``output_type`` ``decimal`` / ``timestamp``, applied by the
-    engine to the finished table)."""
+    ``decimal128(p,s)``, a ``DATETIME`` / ``DATETIME2(n)`` value has no more fractional digits
+    than the type holds (``output_type`` ``decimal`` / ``timestamp``, applied by the engine to
+    the finished table), a ``DATE`` is a day and a ``TIME`` a time of day (``date``, ``time``),
+    and a ``BIT`` or ``BOOLEAN`` value set is boolean (``bool``)."""
     for table in schema.tables.values():
         for col in table.columns.values():
             if col.generator.get("strategy") in _UNTYPED_STRATEGIES:
@@ -1066,6 +1067,10 @@ def declare_types(schema: GenSchema) -> None:
                 _fit_decimal_range(col)
             elif col.type == "timestamp" and col.precision is not None and col.precision < 6:
                 col.generator["output_type"] = "timestamp"
+            elif col.type in ("date", "time") and col.generator.get("strategy") == "temporal":
+                col.generator["output_type"] = col.type
+            elif col.type == "boolean" and col.generator.get("strategy") == "weighted_enum":
+                col.generator["output_type"] = "bool"
 
 
 def from_ddl(

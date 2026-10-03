@@ -47,8 +47,9 @@ schema, `row_counts`, `key_pool(table)`) and `column_def` (the column: `type`, `
    work on numbers: `"output_type": "decimal"` is `decimal128(precision, scale)` (rounded to
    `scale`; a value that does not fit `precision` is an error naming the column) and
    `"output_type": "timestamp"` is `timestamp[us]` cut to the column's `precision` fractional
-   digits. `shape from-ddl` writes them for `DECIMAL(p,s)`, `DATETIME` (3 digits) and
-   `DATETIME2(n)` columns.
+   digits. `"output_type": "date"` is the day of a temporal value (`date32`) and `"time"` its time
+   of day (`time64[us]`). `shape from-ddl` writes them for `DECIMAL(p,s)`, `DATETIME` (3 digits),
+   `DATETIME2(n)`, `DATE` and `TIME` columns, and `bool` for `BIT` and `BOOLEAN` value sets.
 
 ### Unknown keys
 

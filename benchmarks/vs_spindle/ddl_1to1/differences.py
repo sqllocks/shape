@@ -99,6 +99,12 @@ FIXES: dict[str, str] = {
         "baseline keeps the derived count, which takes precedence over the preset, so the "
         "override has no effect on any table inference gave a count."
     ),
+    "F14": (
+        "A DATE column is generated as dates, a TIME column as times of day and a BIT or BOOLEAN "
+        "value set as booleans (AUD-gen, issue #202): the generator has output_type `date`, "
+        "`time` or `bool`. The baseline writes no such key, so a DATE came out as timestamps "
+        "with a time of day, BIT as 1.0/0.0 and BOOLEAN as the strings 'true'/'false'."
+    ),
 }
 
 
@@ -476,6 +482,36 @@ ALLOWED: list[Field | Note] = [
             ("smart_retail", "orders", "shipping_address_id"),
         )
         for where in ("generator.null_rate", "null_rate")
+    ),
+    # F14 entries: DATE, TIME, BIT and BOOLEAN keep their type (output_type)
+    *(
+        Field("F14", case, f"tables.{table}.columns.{column}.generator.output_type", modes)
+        for case, table, column, modes in (
+            ("adventureworks_sample", "persons", "birth_date", BOTH),
+            ("adventureworks_sample", "product_reviews", "review_date", BOTH),
+            ("adventureworks_sample", "products", "is_active", BOTH),
+            ("adventureworks_sample", "products", "sell_end_date", PLAIN),
+            ("adventureworks_sample", "products", "sell_start_date", BOTH),
+            ("adventureworks_sample", "sales_orders", "due_date", BOTH),
+            ("adventureworks_sample", "sales_orders", "order_date", BOTH),
+            ("adventureworks_sample", "sales_orders", "ship_date", BOTH),
+            ("ddl_parser__mysql_ddl", "order", "order_date", BOTH),
+            ("ddl_parser__postgres_ddl", "order", "order_date", BOTH),
+            ("ddl_parser__sql_server_ddl", "customer", "is_active", BOTH),
+            ("ddl_parser__sql_server_ddl", "order", "order_date", BOTH),
+            ("e2e_ddl_pipeline__postgres_ddl", "order", "order_date", BOTH),
+            ("e2e_ddl_pipeline__sql_server_ddl", "customer", "is_active", BOTH),
+            ("e2e_ddl_pipeline__sql_server_ddl", "order", "order_date", BOTH),
+            ("fix_cases", "invoice", "invoice_date", BOTH),
+            ("smart_inference__ddl_plural", "orders", "order_date", BOTH),
+            ("smart_retail", "customers", "date_of_birth", BOTH),
+            ("smart_retail", "employees", "hire_date", BOTH),
+            ("smart_retail", "employees", "termination_date", PLAIN),
+            ("smart_retail", "fact_sales", "sale_date", BOTH),
+            ("smart_retail", "order_items", "order_date", BOTH),
+            ("smart_retail", "orders", "order_date", BOTH),
+            ("smart_retail", "orders", "ship_date", BOTH),
+        )
     ),
     # F13 entries: a scale override drops the table's derived count
     *(

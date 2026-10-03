@@ -315,7 +315,7 @@ _OUTPUT_TYPES: dict[str, pa.DataType] = {
 }
 
 
-DECLARED_TYPES = ("decimal", "timestamp")
+DECLARED_TYPES = ("decimal", "timestamp", "date", "time")
 
 
 def cast_output(value: Any, name: str, where: str, column: Column | None = None) -> pa.Array:
@@ -326,7 +326,8 @@ def cast_output(value: Any, name: str, where: str, column: Column | None = None)
     (:meth:`Engine.finalize`), so the generation passes still see numbers: ``decimal`` is
     ``decimal128(precision, scale)`` (values rounded to ``scale``; one that does not fit
     ``precision`` is an error) and ``timestamp`` is ``timestamp[us]`` cut to ``precision``
-    fractional digits (0 to 6)."""
+    fractional digits (0 to 6). ``date`` is the day of a temporal value (``date32``) and
+    ``time`` its time of day (``time64[us]``)."""
     arr = value.combine_chunks() if isinstance(value, pa.ChunkedArray) else value
     if not isinstance(arr, pa.Array):
         arr = pa.array(arr)
@@ -334,6 +335,12 @@ def cast_output(value: Any, name: str, where: str, column: Column | None = None)
         return _cast_decimal(arr, where, column)
     if name == "timestamp":
         return _cut_timestamp(arr, where, column)
+    if name in ("date", "time"):
+        if not (pa.types.is_timestamp(arr.type) or pa.types.is_date(arr.type)):
+            raise ValueError(f"{where}: output_type {name} needs a temporal strategy")
+        if name == "date":
+            return arr.cast(pa.date32())
+        return arr.cast(pa.timestamp("us")).cast(pa.time64("us"))
     target = _OUTPUT_TYPES.get(name)
     if target is None:
         raise ValueError(
@@ -820,8 +827,9 @@ class Engine:
 
     def finalize(self, table: str, data: pa.Table | pa.RecordBatch) -> Any:
         """``data`` (rows of ``table``) with the columns whose generator has an ``output_type`` of
-        ``decimal`` or ``timestamp`` in their declared Arrow type. Applied where data leaves the
-        engine (``generate``, ``iter_chunks``); the passes in between work on numbers."""
+        ``decimal``, ``timestamp``, ``date`` or ``time`` in their declared Arrow type. Applied
+        where data leaves the engine (``generate``, ``iter_chunks``); the passes in between work
+        on numbers."""
         names = self._declared.get(table)
         if names is None:
             tdef = self.schema.tables[table]
