@@ -707,4 +707,32 @@ def test_primary_key_as_one_string_is_one_column(tmp_path: Path) -> None:
     assert "PRIMARY KEY ([key])" in script
 
 
+# ---- #625 (continued): the script and workbook sinks replace their file whole -----------------
+
+
+def test_sql_and_excel_sinks_keep_the_previous_file_when_a_write_fails(tmp_path: Path) -> None:
+    pytest.importorskip("openpyxl")
+    from shape.builtins.sinks.excel import ExcelSink
+    from shape.builtins.sinks.sql import SqlSink
+
+    for sink, name in ((SqlSink(), "keep.sql"), (ExcelSink(), "keep.xlsx")):
+        target = tmp_path / name
+        sink.write(str(target), "keep", _batches(7))
+        before = target.read_bytes()
+        with pytest.raises(RuntimeError):
+            sink.write(str(target), "keep", _failing())
+        assert target.read_bytes() == before
+    assert sorted(os.listdir(tmp_path)) == ["keep.sql", "keep.xlsx"]  # no temporary files
+
+
+def test_sql_sink_refusing_a_primary_key_leaves_no_file(tmp_path: Path) -> None:
+    from shape.builtins.sinks.sql import SqlSink
+
+    with pytest.raises(ValueError, match="primary_key"):
+        SqlSink().write(
+            str(tmp_path / "o.sql"), "t", pa.table({"k": [1]}).to_batches(), primary_key=["zz"]
+        )
+    assert os.listdir(tmp_path) == []
+
+
 _ = dt
