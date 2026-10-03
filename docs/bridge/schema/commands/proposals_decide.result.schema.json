@@ -47,7 +47,8 @@
             "pending",
             "accepted",
             "rejected",
-            "deferred"
+            "deferred",
+            "stale"
           ]
         }
       },
@@ -77,7 +78,8 @@
       "enum": [
         "relationship",
         "pii",
-        "semantic"
+        "semantic",
+        "rule"
       ]
     },
     "proposed_at": {
@@ -107,6 +109,6 @@
   ],
   "title": "proposals_decide result",
   "type": "object",
-  "x-api-version": "1.1",
+  "x-api-version": "1.2",
   "x-since": "1.1"
 }

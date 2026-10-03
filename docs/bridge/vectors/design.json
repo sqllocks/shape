@@ -1,5 +1,5 @@
 {
-  "api_version": "1.1",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "star",
@@ -13,7 +13,7 @@
         "id": "star"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "design",
         "id": "star",
         "ok": true,
@@ -451,7 +451,7 @@
         "id": "postgres-3nf"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "design",
         "id": "postgres-3nf",
         "ok": true,
@@ -536,7 +536,7 @@
         "id": "lint-errors"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "design",
         "id": "lint-errors",
         "ok": true,
@@ -567,7 +567,7 @@
         "id": "missing-file"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "design",
         "error": {
           "code": "input.not_found",
@@ -592,7 +592,7 @@
         "id": "unknown-mode"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "design",
         "error": {
           "code": "usage.invalid_argument",

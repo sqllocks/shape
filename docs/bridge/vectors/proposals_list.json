@@ -1,5 +1,5 @@
 {
-  "api_version": "1.1",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "all",
@@ -12,7 +12,7 @@
         "id": "all"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "proposals_list",
         "id": "all",
         "ok": true,
@@ -183,7 +183,7 @@
         "id": "relationships-only"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "proposals_list",
         "id": "relationships-only",
         "ok": true,
@@ -257,7 +257,7 @@
         "id": "missing-file"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "proposals_list",
         "error": {
           "code": "input.not_found",
@@ -282,7 +282,7 @@
         "id": "bad-status"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "proposals_list",
         "error": {
           "code": "usage.invalid_argument",

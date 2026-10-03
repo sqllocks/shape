@@ -1,5 +1,5 @@
 {
-  "api_version": "1.1",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "passes",
@@ -13,7 +13,7 @@
         "id": "passes"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "check",
         "id": "passes",
         "ok": true,
@@ -42,7 +42,7 @@
         "id": "fails"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "check",
         "id": "fails",
         "ok": true,
@@ -78,7 +78,7 @@
         "id": "missing-contract"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "check",
         "error": {
           "code": "input.not_found",
@@ -110,7 +110,7 @@
         "id": "project-owner"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "check",
         "id": "project-owner",
         "ok": true,
@@ -153,7 +153,7 @@
         "id": "source-needs-a-project"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "check",
         "error": {
           "code": "usage.invalid_argument",

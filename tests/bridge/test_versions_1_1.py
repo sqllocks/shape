@@ -28,42 +28,43 @@ def handle(bridge: Bridge, command: str, args=None, version="1.1", **extra):
     return bridge.handle(json.dumps(request))
 
 
-def test_the_bridge_speaks_1_1_and_serves_1_0_to_1_1():
-    assert (API_MINOR, API_VERSION, SUPPORTED_RANGE) == (1, "1.1", "1.0 to 1.1")
+def test_the_bridge_speaks_1_2_and_serves_1_0_to_1_2():
+    assert (API_MINOR, API_VERSION, SUPPORTED_RANGE) == (2, "1.2", "1.0 to 1.2")
 
 
 def test_the_response_carries_the_bridges_own_version_whatever_the_request_declared(bridge):
-    for version in ("1.0", "1.1", "1.7", None):
-        assert handle(bridge, "list", version=version)["api_version"] == "1.1"
+    for version in ("1.0", "1.1", "1.2", "1.7", None):
+        assert handle(bridge, "list", version=version)["api_version"] == "1.2"
 
 
-def test_a_request_with_no_version_is_served_as_1_1_with_the_assumed_warning(bridge):
+def test_a_request_with_no_version_is_served_as_1_2_with_the_assumed_warning(bridge):
     r = handle(bridge, "list", version=None)
     assert r["ok"] and [w["code"] for w in r["warnings"]] == ["api_version_assumed"]
-    assert "1.1" in r["warnings"][0]["message"]
-    assert parse_request({"command": "list"}).minor == 1
+    assert "1.2" in r["warnings"][0]["message"]
+    assert parse_request({"command": "list"}).minor == 2
 
 
 def test_a_declared_minor_is_the_one_served_at_most_the_bridges(bridge):
     assert parse_request({"api_version": "1.0", "command": "list"}).minor == 0
     assert parse_request({"api_version": "1.1", "command": "list"}).minor == 1
+    assert parse_request({"api_version": "1.2", "command": "list"}).minor == 2
     r = parse_request({"api_version": "1.9", "command": "list"})
-    assert r.minor == 1 and [w["code"] for w in r.warnings] == ["newer_minor_version"]
+    assert r.minor == 2 and [w["code"] for w in r.warnings] == ["newer_minor_version"]
 
 
 def test_the_supported_range_is_named_in_the_refusal_of_another_major(bridge):
     r = handle(bridge, "list", version="2.0")
     assert r["error"]["code"] == "usage.unsupported_version"
-    assert "1.0 to 1.1" in r["error"]["message"] and r["error"]["hint"] == "send api_version 1.1"
+    assert "1.0 to 1.2" in r["error"]["message"] and r["error"]["hint"] == "send api_version 1.2"
 
 
-def test_every_command_and_argument_records_since_1_0_or_1_1():
+def test_every_command_and_argument_records_since_1_0_1_1_or_1_2():
     for name, command in COMMANDS.items():
-        assert command.since in ("1.0", "1.1"), name
+        assert command.since in ("1.0", "1.1", "1.2"), name
         for arg_name, arg in command.args.items():
-            assert arg.since in ("1.0", "1.1"), (name, arg_name)
-            if command.since == "1.1":
-                assert arg.since == "1.1", (name, arg_name)  # a new command has only new args
+            assert arg.since in ("1.0", "1.1", "1.2"), (name, arg_name)
+            if command.since != "1.0":
+                assert arg.since == command.since, (name, arg_name)  # a new command: only new args
 
 
 def test_since_is_validated():

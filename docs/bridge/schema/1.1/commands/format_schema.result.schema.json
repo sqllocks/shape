@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "format": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "name": {
+      "type": "string"
+    },
+    "names": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "schema": {
+      "additionalProperties": {},
+      "type": "object"
+    },
+    "version": {
+      "type": "integer"
+    }
+  },
+  "title": "format_schema result",
+  "type": "object",
+  "x-api-version": "1.1",
+  "x-since": "1.1"
+}

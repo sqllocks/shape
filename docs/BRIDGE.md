@@ -86,7 +86,7 @@ The full list, with a sentence for each, is `error_codes` in
 
 ## Versions and the stability promise
 
-`api_version` is `MAJOR.MINOR`; this bridge speaks **1.1** and serves **1.0 to 1.1**.
+`api_version` is `MAJOR.MINOR`; this bridge speaks **1.2** and serves **1.0 to 1.2**.
 
 - **Minor versions only add:** a command, an optional argument, an option, a result field, an error
   code, a warning code. A client written for 1.0 keeps working on 1.7, so **a client ignores result
@@ -95,7 +95,7 @@ The full list, with a sentence for each, is `error_codes` in
   result field, error code or the meaning of any of them.
 - **A major version may break.** A bridge serves one major version. A request for another is refused
   with `usage.unsupported_version`, and the message names the supported range
-  (`... this bridge serves 1.0 to 1.1`). The response always carries the bridge's own
+  (`... this bridge serves 1.0 to 1.2`). The response always carries the bridge's own
   `api_version`, so a client can read it from the refusal.
 - A request with a newer *minor* than the bridge's is served, with the warning
   `newer_minor_version`: what the newer minor added is not available.

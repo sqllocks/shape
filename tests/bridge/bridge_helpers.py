@@ -57,6 +57,12 @@ class Caller11(Caller):
     version = "1.1"
 
 
+class Caller12(Caller):
+    """The same, declaring api_version 1.2: for the commands and arguments added in 1.2."""
+
+    version = "1.2"
+
+
 def write_csv(path: Path, shift: int = 0, rows: int = 500) -> Path:
     rng = random.Random(1)
     with open(path, "w", newline="") as handle:

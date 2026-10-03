@@ -1,5 +1,5 @@
 {
-  "api_version": "1.1",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "a-csv",
@@ -13,7 +13,7 @@
         "id": "a-csv"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "design_from_data",
         "id": "a-csv",
         "ok": true,
@@ -80,7 +80,7 @@
         "id": "missing-file"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "design_from_data",
         "error": {
           "code": "input.not_found",

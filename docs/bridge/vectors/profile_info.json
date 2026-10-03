@@ -1,5 +1,5 @@
 {
-  "api_version": "1.1",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "retail",
@@ -12,7 +12,7 @@
         "id": "retail"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "profile_info",
         "id": "retail",
         "ok": true,
@@ -205,7 +205,7 @@
         "id": "unknown-profile"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "profile_info",
         "error": {
           "code": "input.invalid_value",

@@ -1,5 +1,5 @@
 {
-  "api_version": "1.1",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "csv",
@@ -12,7 +12,7 @@
         "id": "csv"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "verify",
         "id": "csv",
         "ok": true,
@@ -38,7 +38,7 @@
         "id": "missing-data"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "verify",
         "error": {
           "code": "input.not_found",
@@ -64,7 +64,7 @@
         "id": "observed-gate"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "verify",
         "id": "observed-gate",
         "ok": true,
@@ -113,7 +113,7 @@
         "id": "bad-project"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "verify",
         "error": {
           "code": "input.not_found",
@@ -139,7 +139,7 @@
         "id": "memorization-fails"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "verify",
         "id": "memorization-fails",
         "ok": true,
@@ -224,7 +224,7 @@
         "id": "memorization-passes"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "verify",
         "id": "memorization-passes",
         "ok": true,
@@ -285,7 +285,7 @@
         "id": "needs-the-source"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "verify",
         "error": {
           "code": "input.invalid_value",
@@ -311,7 +311,7 @@
         "id": "missing-source"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "verify",
         "error": {
           "code": "input.not_found",

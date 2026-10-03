@@ -1,5 +1,5 @@
 {
-  "api_version": "1.1",
+  "api_version": "1.2",
   "commands": {
     "check": {
       "args": {
@@ -398,6 +398,24 @@
       "since": "1.1",
       "summary": "Check the text or the file of a shape.yml and report every problem with its key path."
     },
+    "proposals_contract": {
+      "args": {
+        "decisions": "1.2",
+        "merge": "1.2",
+        "output": "1.2"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files",
+        "writes_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/proposals_contract.request.schema.json",
+      "result": "commands/proposals_contract.result.schema.json",
+      "since": "1.2",
+      "summary": "Write the accepted rule proposals of a decision file as a contract that `check` reads."
+    },
     "proposals_decide": {
       "args": {
         "actor": "1.1",
@@ -629,6 +647,7 @@
   "error_codes": {
     "auth.missing_credentials": "a command needs a token or credential that was not given",
     "auth.rejected": "a remote service rejected the credential",
+    "input.contract_conflict": "an accepted rule disagrees with a rule already in the contract",
     "input.invalid_schema": "a schema, profile, contract or data file is not valid",
     "input.invalid_value": "the data or settings given cannot be used",
     "input.job_interrupted": "the process that ran a job ended before the job finished",
@@ -647,6 +666,7 @@
     "policy.capability_unavailable": "the operation needs something that is not installed here",
     "policy.not_permitted": "a security or trust policy refuses the operation",
     "policy.signature_invalid": "an artifact's signature does not verify",
+    "policy.unverified_input": "the input is not marked as Shape-generated, so it is not corrupted",
     "privacy.raw_values_withheld": "the operation would return raw values and was not asked to",
     "usage.invalid_argument": "an argument or option has the wrong type or an impossible value",
     "usage.invalid_json": "the request is not valid JSON",
@@ -668,6 +688,7 @@
     "output_dir_ignored": "output_dir was given but nothing is written for this format",
     "profile_file_holds_values": "the profile file written holds real values from the data",
     "project_source_not_selected": "the project file has several sources and none was selected",
+    "real_input_corrupted": "chaos ran on input not marked as Shape-generated (allow_real_input)",
     "result_in_file": "a result part was larger than max_inline_bytes and is in a file"
   }
 }

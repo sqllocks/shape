@@ -34,6 +34,7 @@
         "profile_show",
         "project_show",
         "project_validate",
+        "proposals_contract",
         "proposals_decide",
         "proposals_list",
         "proposals_propose",
@@ -87,5 +88,5 @@
   ],
   "title": "bridge request",
   "type": "object",
-  "x-api-version": "1.1"
+  "x-api-version": "1.2"
 }

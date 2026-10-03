@@ -29,7 +29,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 API_MAJOR = 1
-API_MINOR = 1
+API_MINOR = 2
 API_VERSION = f"{API_MAJOR}.{API_MINOR}"
 SUPPORTED_RANGE = f"{API_MAJOR}.0 to {API_VERSION}"
 
@@ -61,9 +61,11 @@ ERROR_CODES: dict[str, str] = {
     "input.unknown_proposal": "the decision file has no proposal with this id",
     "input.unknown_source": "the project file has no source with this name",
     "input.unknown_format": "Shape has no published schema with this name",
+    "input.contract_conflict": "an accepted rule disagrees with a rule already in the contract",
     "policy.capability_unavailable": "the operation needs something that is not installed here",
     "policy.signature_invalid": "an artifact's signature does not verify",
     "policy.not_permitted": "a security or trust policy refuses the operation",
+    "policy.unverified_input": "the input is not marked as Shape-generated, so it is not corrupted",
     "privacy.raw_values_withheld": "the operation would return raw values and was not asked to",
     "io.read_failed": "a file could not be read",
     "io.write_failed": "a file could not be written",
@@ -85,6 +87,7 @@ WARNING_CODES: dict[str, str] = {
     "output_dir_ignored": "output_dir was given but nothing is written for this format",
     "result_in_file": "a result part was larger than max_inline_bytes and is in a file",
     "project_source_not_selected": "the project file has several sources and none was selected",
+    "real_input_corrupted": "chaos ran on input not marked as Shape-generated (allow_real_input)",
 }
 
 _ID_TYPES = (str, int)

@@ -1,5 +1,5 @@
 {
-  "api_version": "1.1",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "finished-stream",
@@ -12,7 +12,7 @@
         "id": "finished-stream"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "stream_stop",
         "id": "finished-stream",
         "ok": true,
@@ -34,7 +34,7 @@
         "id": "not-a-stream"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "stream_stop",
         "error": {
           "code": "input.unknown_job",

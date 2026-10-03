@@ -57,6 +57,8 @@ def to_bridge_error(exc: BaseException) -> BridgeError:
         return BridgeError(
             "privacy.raw_values_withheld", message, "pass options.include_raw_values to allow it"
         )
+    if _is(exc, "shape.proposals.model", "RuleConflictError"):
+        return BridgeError("input.contract_conflict", message)
     if _is(exc, "shape.errors", "ShapeSecurityError") or _is(
         exc, "shape.security.hardening", "SecurityError"
     ):

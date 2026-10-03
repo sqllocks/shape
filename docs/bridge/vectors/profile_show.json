@@ -1,5 +1,5 @@
 {
-  "api_version": "1.1",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "a-profile",
@@ -12,7 +12,7 @@
         "id": "a-profile"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "profile_show",
         "id": "a-profile",
         "ok": true,
@@ -47,7 +47,7 @@
         "id": "missing-file"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "profile_show",
         "error": {
           "code": "input.not_found",
@@ -69,7 +69,7 @@
         "id": "needs-a-path"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "profile_show",
         "error": {
           "code": "usage.missing_argument",

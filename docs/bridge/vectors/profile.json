@@ -1,5 +1,5 @@
 {
-  "api_version": "1.1",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "a-csv",
@@ -13,7 +13,7 @@
         "id": "a-csv"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "profile",
         "id": "a-csv",
         "ok": true,
@@ -49,7 +49,7 @@
         "id": "missing-source"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "profile",
         "error": {
           "code": "input.not_found",
@@ -75,7 +75,7 @@
         "id": "source-name"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "profile",
         "id": "source-name",
         "ok": true,
@@ -112,7 +112,7 @@
         "id": "bad-project"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "profile",
         "error": {
           "code": "input.not_found",

@@ -50,7 +50,7 @@ def worked(value):
 
 
 def test_the_document_says_what_the_bridge_speaks():
-    assert "this bridge speaks **1.1** and serves **1.0 to 1.1**" in DOC
+    assert "this bridge speaks **1.2** and serves **1.0 to 1.2**" in DOC
     assert "the 1.0 promise" in DOC.lower() and "What's new in 1.1" in DOC
     assert "## Annotations for clients" in DOC and "x-path" in DOC and "effects" in DOC
 

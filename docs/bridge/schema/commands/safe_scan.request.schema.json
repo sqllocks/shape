@@ -65,6 +65,6 @@
   ],
   "title": "safe_scan request",
   "type": "object",
-  "x-api-version": "1.1",
+  "x-api-version": "1.2",
   "x-since": "1.1"
 }

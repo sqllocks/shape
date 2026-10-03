@@ -1,5 +1,5 @@
 {
-  "api_version": "1.1",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "drift",
@@ -13,7 +13,7 @@
         "id": "drift"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "diff",
         "id": "drift",
         "ok": true,
@@ -109,7 +109,7 @@
         "id": "no-drift"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "diff",
         "id": "no-drift",
         "ok": true,
@@ -142,7 +142,7 @@
         "id": "missing-profile"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "diff",
         "error": {
           "code": "input.not_found",
@@ -168,7 +168,7 @@
         "id": "project-policy"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "diff",
         "id": "project-policy",
         "ok": true,
@@ -240,7 +240,7 @@
         "id": "unknown-source"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "diff",
         "error": {
           "code": "input.unknown_source",

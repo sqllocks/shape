@@ -1,7 +1,8 @@
-"""Bridge 1.1 keeps the 1.0 promise (W7-04, items 1 and 2).
+"""The bridge keeps the 1.0 promise (W7-04, items 1 and 2; still true of 1.2, W7-05).
 
 ``docs/bridge/schema/1.0/`` and ``docs/bridge/vectors/1.0/`` are the 1.0 contract, frozen: this
-file replays every 1.0 vector against the 1.1 bridge and holds the 1.1 schemas to the 1.0 ones. A
+file replays every 1.0 vector against the current bridge and holds the current schemas to the
+1.0 ones. A
 change that removes, renames, retypes or tightens something of 1.0 fails here; the deliberate
 negative tests at the end show that it does.
 """
@@ -19,7 +20,7 @@ import pytest
 from fakes import FakeFabric
 
 from shape.bridge.core import Bridge
-from shape.bridge.protocol import ERROR_CODES, WARNING_CODES
+from shape.bridge.protocol import API_VERSION, ERROR_CODES, WARNING_CODES
 from shape.bridge.schemas import all_schemas
 
 DOCS = Path(__file__).resolve().parents[2] / "docs" / "bridge"
@@ -107,11 +108,11 @@ def test_the_frozen_schemas_name_no_1_1_command():
     assert not [n for n in index["commands"] if current["commands"][n]["since"] != "1.0"]
 
 
-# ---- every 1.0 vector, replayed against the 1.1 bridge ---------------------------------------
+# ---- every 1.0 vector, replayed against the current bridge ---------------------------------------
 
 
 @pytest.mark.parametrize("path", frozen_vector_files(), ids=lambda p: p.stem)
-def test_every_1_0_vector_gets_the_recorded_response_from_the_1_1_bridge(
+def test_every_1_0_vector_gets_the_recorded_response_from_the_current_bridge(
     path, tmp_path, monkeypatch
 ):
     doc = json.loads(path.read_text())
@@ -132,7 +133,7 @@ def test_every_1_0_vector_gets_the_recorded_response_from_the_1_1_bridge(
             monkeypatch.setattr("shape.scale.http.urllib_transport", FakeFabric())
         actual = bridge.handle(substitute(one["request"], str(directory)))
         expected = substitute(one["response"], str(directory))
-        assert actual["api_version"] == "1.1"  # the one field that differs
+        assert actual["api_version"] == API_VERSION  # the one field that differs
         assert differences(without_version(expected), without_version(actual)) == [], (
             path.stem,
             one["name"],
@@ -213,7 +214,7 @@ def schema_losses(old: Any, new: Any, path: str, *, request: bool) -> list[str]:
 
 
 def contract_losses(current: dict[str, dict[str, Any]]) -> list[str]:
-    """Everything 1.0 promised that ``current`` (the generated 1.1 schemas) no longer does."""
+    """Everything 1.0 promised that ``current`` (the generated current schemas) no longer does."""
     losses: list[str] = []
     old_index, new_index = frozen_index(), current["index.json"]
     for name, entry in old_index["commands"].items():
@@ -244,7 +245,7 @@ def contract_losses(current: dict[str, dict[str, Any]]) -> list[str]:
     return losses
 
 
-def test_the_1_1_schemas_keep_everything_1_0_promised():
+def test_the_current_schemas_keep_everything_1_0_promised():
     assert contract_losses(all_schemas()) == []
 
 
@@ -265,13 +266,14 @@ def test_the_1_0_commands_and_arguments_are_published_as_since_1_0():
         assert all(index["commands"][name]["args"][a] == "1.0" for a in request)
 
 
-def test_the_new_commands_and_arguments_are_published_as_since_1_1():
+def test_the_new_commands_and_arguments_are_published_as_since_1_1_or_later():
     index = all_schemas()["index.json"]
     old = frozen_index()
     new = set(index["commands"]) - set(old["commands"])
-    assert new and all(index["commands"][n]["since"] == "1.1" for n in new)
+    assert new and all(index["commands"][n]["since"] in ("1.1", "1.2") for n in new)
     for name in new:
-        assert set(index["commands"][name]["args"].values()) <= {"1.1"}
+        since = index["commands"][name]["since"]
+        assert set(index["commands"][name]["args"].values()) <= {since}
     added = [
         (n, a)
         for n in old["commands"]

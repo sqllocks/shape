@@ -36,17 +36,30 @@ from shape.bridge.handlers.flow import _load_profile
 from shape.bridge.protocol import BridgeError
 from shape.bridge.spec import Arg, Command
 
-_KINDS = ("relationship", "pii", "semantic")  # shape.proposals.KINDS; a test keeps them equal
-_STATUSES = ("pending", "accepted", "rejected", "deferred")
+_KINDS = (
+    "relationship",
+    "pii",
+    "semantic",
+    "rule",
+)  # shape.proposals.KINDS; a test keeps them equal
+_DEFAULT_KINDS = _KINDS[:3]  # shape.proposals.DEFAULT_KINDS: what a run proposes unless asked
+_STATUSES = ("pending", "accepted", "rejected", "deferred", "stale")
+#: What 1.2 added to the enumerations above (a request served as 1.1 does not know them).
+_KINDS_SINCE = {"rule": "1.2"}
+_STATUSES_SINCE = {"stale": "1.2"}
 _VERBS = ("accept", "reject", "defer")
 _STATUS_OF = {"accept": "accepted", "reject": "rejected", "defer": "deferred"}
 
 
-def read_decisions(path: str) -> Any:
+def read_decisions(path: str, minor: int = 2) -> Any:
     """The decision file at ``path``, with the errors of the bridge: ``input.not_found``,
     ``input.invalid_schema`` for a file that is not a decision file, and
-    ``input.unsupported_format_version`` for one a newer Shape wrote."""
-    from shape.proposals import FORMAT, VERSION, DecisionError, DecisionFile
+    ``input.unsupported_format_version`` for one a newer Shape wrote. A request served as 1.1
+    reads version 1 only, as 1.1 did (version 2 holds rule proposals, which 1.2 added)."""
+    import shape.proposals as engine
+    from shape.proposals import FORMAT, DecisionError, DecisionFile
+
+    VERSION = engine.MAX_VERSION if minor >= 2 else engine.VERSION  # noqa: N806
 
     text = Path(path).read_text(encoding="utf-8")  # a missing file is input.not_found
     try:
@@ -162,7 +175,7 @@ def prepare_propose(args: dict[str, Any], ctx: Context) -> None:
     _data(args.get("data"))
     decisions = str(args["decisions"])
     if Path(decisions).exists():
-        read_decisions(decisions)
+        read_decisions(decisions, ctx.minor)
 
 
 def cmd_propose(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
@@ -170,17 +183,25 @@ def cmd_propose(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
 
     profile = _load_profile(str(args["profile"]), ctx)
     data = _data(args.get("data"))
-    kinds = list(args.get("kinds") or _KINDS)
+    kinds = list(args.get("kinds") or _DEFAULT_KINDS)
     decisions = str(args["decisions"])
-    file = read_decisions(decisions) if Path(decisions).exists() else DecisionFile.empty()
+    file = (
+        read_decisions(decisions, ctx.minor) if Path(decisions).exists() else DecisionFile.empty()
+    )
+    with_rules = "rule" in kinds  # only a request served as 1.2 can ask for it
     found = propose(
-        profile, data, kinds=kinds, min_confidence=float(args.get("min_confidence", 0.5))
+        profile,
+        data,
+        kinds=kinds,
+        min_confidence=float(args.get("min_confidence", 0.5)),
+        **({"decisions": file} if with_rules else {}),
     )
     result = file.update(found, kinds=kinds, auto_accept=args.get("auto_accept"))
     with writing():
         file.write(decisions)
     changed = {*result.added, *result.updated, *result.skipped_rejected}
     return {
+        **({"stale": list(result.stale)} if with_rules else {}),
         "decisions": decisions,
         "proposals": len(found),
         "proposal_ids": [p.id for p in found],
@@ -198,7 +219,7 @@ def cmd_propose(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
 
 
 def cmd_list(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
-    file = read_decisions(str(args["decisions"]))
+    file = read_decisions(str(args["decisions"]), ctx.minor)
     rows = file.list(
         status=args.get("status"), kind=args.get("kind"), min_confidence=args.get("min_confidence")
     )
@@ -217,7 +238,7 @@ def cmd_decide(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
     from shape.proposals import Entry
 
     path = str(args["decisions"])
-    file = read_decisions(path)
+    file = read_decisions(path, ctx.minor)
     proposal_id = str(args["proposal"])
     known = {e.proposal.id for e in file.entries()}
     if proposal_id not in known:
@@ -236,6 +257,39 @@ def cmd_decide(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
         file.write(path)
     proposal = next(e.proposal for e in file.entries() if e.proposal.id == proposal_id)
     return entry_dict(Entry(proposal, decision), ctx)
+
+
+# ---- proposals_contract -------------------------------------------------------------------
+
+
+def prepare_contract(args: dict[str, Any], ctx: Context) -> None:
+    _require_file(str(args["decisions"]), "decision file")
+    if args.get("merge"):
+        _require_file(str(args["merge"]), "contract to merge into")
+
+
+def cmd_contract(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
+    """What ``shape proposals contract`` does: the accepted, non-stale rule proposals as a
+    contract v1, added to ``merge`` when given. An accepted rule that disagrees with one there is
+    ``input.contract_conflict``, which names both."""
+    from shape.proposals import dump_contract
+
+    file = read_decisions(str(args["decisions"]), ctx.minor)
+    existing = None
+    merge = args.get("merge")
+    if merge:
+        text = Path(str(merge)).read_text(encoding="utf-8")
+        try:
+            existing = json.loads(text)
+        except ValueError as exc:
+            raise BridgeError("input.invalid_schema", f"{merge} is not valid JSON: {exc}") from exc
+    contract = file.to_contract(
+        existing, merge_source=str(merge) if merge else "the existing contract"
+    )
+    output = str(args["output"])
+    with writing():
+        Path(output).write_bytes(dump_contract(contract).encode("utf-8"))
+    return {"written": output, "rules": len(file.accepted("rule"))}
 
 
 # ---- schemas ------------------------------------------------------------------------------
@@ -283,9 +337,11 @@ COMMANDS = [
             ),
             "kinds": Arg(
                 "array",
-                "the kinds to propose (default: all)",
+                "the kinds to propose (default: relationship, pii and semantic; `rule`, added in "
+                "1.2, proposes contract rules)",
                 items="string",
                 items_enum=_KINDS,
+                enum_since=_KINDS_SINCE,
             ),
             "min_confidence": Arg(
                 "number", "the lowest confidence proposed (default 0.5)", minimum=0, maximum=1
@@ -312,6 +368,7 @@ COMMANDS = [
                 "withdrawn": INT,
                 "skipped_rejected": STRS,
                 "auto_accepted": STRS,
+                "stale": STRS,
             },
         ),
         cmd_propose,
@@ -325,8 +382,12 @@ COMMANDS = [
         "List the proposals of a decision file and the decisions on them.",
         {
             "decisions": Arg("string", _DECISIONS_ARG, True, path="read"),
-            "status": Arg("string", "only proposals in this state", enum=_STATUSES),
-            "kind": Arg("string", "only proposals of this kind", enum=_KINDS),
+            "status": Arg(
+                "string", "only proposals in this state", enum=_STATUSES, enum_since=_STATUSES_SINCE
+            ),
+            "kind": Arg(
+                "string", "only proposals of this kind", enum=_KINDS, enum_since=_KINDS_SINCE
+            ),
             "min_confidence": Arg(
                 "number", "only proposals at or above this", minimum=0, maximum=1
             ),
@@ -349,6 +410,27 @@ COMMANDS = [
         _PROPOSAL,
         cmd_decide,
         since="1.1",
+        effects=("reads_files", "writes_files"),
+    ),
+    Command(
+        "proposals_contract",
+        "Write the accepted rule proposals of a decision file as a contract that `check` reads.",
+        {
+            "decisions": Arg("string", _DECISIONS_ARG, True, path="read"),
+            "output": Arg(
+                "string", "the contract file to write (format contract v1)", True, path="write"
+            ),
+            "merge": Arg(
+                "string",
+                "an existing contract file to add the rules to (left unchanged); an accepted rule "
+                "that disagrees with one there is `input.contract_conflict`",
+                path="read",
+            ),
+        },
+        obj({"written": STR, "rules": INT}),
+        cmd_contract,
+        prepare=prepare_contract,
+        since="1.2",
         effects=("reads_files", "writes_files"),
     ),
 ]

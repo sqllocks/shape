@@ -20,9 +20,13 @@
           "enum": [
             "relationship",
             "pii",
-            "semantic"
+            "semantic",
+            "rule"
           ],
           "type": "string",
+          "x-enum-since": {
+            "rule": "1.2"
+          },
           "x-since": "1.1"
         },
         "min_confidence": {
@@ -38,9 +42,13 @@
             "pending",
             "accepted",
             "rejected",
-            "deferred"
+            "deferred",
+            "stale"
           ],
           "type": "string",
+          "x-enum-since": {
+            "stale": "1.2"
+          },
           "x-since": "1.1"
         }
       },
@@ -92,6 +100,6 @@
   ],
   "title": "proposals_list request",
   "type": "object",
-  "x-api-version": "1.1",
+  "x-api-version": "1.2",
   "x-since": "1.1"
 }

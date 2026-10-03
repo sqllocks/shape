@@ -1,0 +1,66 @@
+{
+  "api_version": "1.1",
+  "cases": [
+    {
+      "name": "domains",
+      "request": {
+        "api_version": "1.0",
+        "args": {},
+        "command": "list",
+        "id": "domains"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "list",
+        "id": "domains",
+        "ok": true,
+        "result": {
+          "count": 1,
+          "domains": [
+            {
+              "description": "Retail domain \u2014 3nf schema",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "retail",
+              "profiles": [
+                "default"
+              ]
+            }
+          ],
+          "version": "0.9.0"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "takes-no-arguments",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "x": 1
+        },
+        "command": "list",
+        "id": "takes-no-arguments"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "list",
+        "error": {
+          "code": "usage.unknown_argument",
+          "group": "usage",
+          "hint": "it takes: no arguments",
+          "message": "list does not take argument(s): x"
+        },
+        "id": "takes-no-arguments",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "list",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

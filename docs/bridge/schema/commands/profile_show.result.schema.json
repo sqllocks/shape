@@ -82,6 +82,6 @@
   ],
   "title": "profile_show result",
   "type": "object",
-  "x-api-version": "1.1",
+  "x-api-version": "1.2",
   "x-since": "1.1"
 }

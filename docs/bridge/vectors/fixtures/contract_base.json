@@ -1,0 +1,9 @@
+{
+  "tables": {
+    "orders": {
+      "row_count": {
+        "min": 1
+      }
+    }
+  }
+}

@@ -22,7 +22,7 @@ Handler = Callable[[dict[str, Any], "Context"], dict[str, Any]]
 _TYPES = ("string", "integer", "number", "boolean", "object", "array")
 
 #: The versions a command or argument can have been added in, with their minor number.
-SINCE = {"1.0": 0, "1.1": 1}
+SINCE = {"1.0": 0, "1.1": 1, "1.2": 2}
 #: What a command can do to the system outside the bridge's own job files (published as
 #: ``effects`` in ``index.json``).
 EFFECTS = ("reads_files", "writes_files", "cancels", "network")
@@ -47,6 +47,9 @@ class Arg:
     items: str | None = None
     #: The values an element of an array may take (``enum`` is for a scalar).
     items_enum: tuple[str, ...] | None = None
+    #: Values of ``enum`` or ``items_enum`` that a later version added (value to version): a
+    #: request served as an older one does not know them, and gets the refusal it always got.
+    enum_since: dict[str, str] | None = None
     secret: bool = False
     #: The version that added the argument; a request for an older one does not know it.
     since: str = "1.0"
@@ -75,6 +78,8 @@ class Arg:
             out["x-name-or-path"] = True
         if self.enum is not None:
             out["enum"] = list(self.enum)
+        if self.enum_since and self.items is None:
+            out["x-enum-since"] = dict(sorted(self.enum_since.items()))
         if self.minimum is not None:
             out["minimum"] = self.minimum
         if self.maximum is not None:
@@ -83,6 +88,8 @@ class Arg:
             out["items"] = {"type": self.items}
             if self.items_enum is not None:
                 out["items"]["enum"] = list(self.items_enum)
+            if self.enum_since:
+                out["items"]["x-enum-since"] = dict(sorted(self.enum_since.items()))
         if self.default is not None:
             out["default"] = self.default
         return out
@@ -160,6 +167,12 @@ def _type_ok(arg: Arg, value: Any) -> bool:
     )
 
 
+def _enum_at(arg: Arg, values: tuple[str, ...], minor: int) -> tuple[str, ...]:
+    """The values of an enumeration a request served as ``1.<minor>`` knows."""
+    since = arg.enum_since or {}
+    return tuple(v for v in values if minor_of(since.get(v, "1.0")) <= minor)
+
+
 def check_args(command: Command, args: dict[str, Any], minor: int = API_MINOR) -> dict[str, Any]:
     """The arguments of a request, checked against the command: unknown names, missing required
     ones, wrong types and values outside ``enum`` or ``minimum`` are errors. ``null`` is the same
@@ -191,11 +204,13 @@ def check_args(command: Command, args: dict[str, Any], minor: int = API_MINOR) -
                 + (f" of {arg.items}" if arg.items else "")
                 + f", got {type(value).__name__}",
             )
-        if arg.enum is not None and value not in arg.enum:
-            raise BridgeError(
-                "usage.invalid_argument",
-                f"argument {name!r} must be one of {', '.join(arg.enum)}, got {value!r}",
-            )
+        if arg.enum is not None:
+            allowed_enum = _enum_at(arg, arg.enum, minor)
+            if value not in allowed_enum:
+                raise BridgeError(
+                    "usage.invalid_argument",
+                    f"argument {name!r} must be one of {', '.join(allowed_enum)}, got {value!r}",
+                )
         if arg.minimum is not None and value < arg.minimum:
             raise BridgeError(
                 "usage.invalid_argument",
@@ -207,11 +222,12 @@ def check_args(command: Command, args: dict[str, Any], minor: int = API_MINOR) -
                 f"argument {name!r} must be at most {arg.maximum}, got {value!r}",
             )
         if arg.items_enum is not None:
-            bad = [v for v in value if v not in arg.items_enum]
+            allowed = _enum_at(arg, arg.items_enum, minor)
+            bad = [v for v in value if v not in allowed]
             if bad:
                 raise BridgeError(
                     "usage.invalid_argument",
-                    f"argument {name!r} may only hold {', '.join(arg.items_enum)}, got {bad[0]!r}",
+                    f"argument {name!r} may only hold {', '.join(allowed)}, got {bad[0]!r}",
                 )
         if arg.type == "string" and name in ("domain", "schema_path", "session_id") and not value:
             raise BridgeError("usage.invalid_argument", f"argument {name!r} must not be empty")

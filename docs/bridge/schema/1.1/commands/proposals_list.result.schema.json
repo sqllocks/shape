@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "count": {
+      "type": "integer"
+    },
+    "decisions": {
+      "type": "string"
+    },
+    "proposals": {
+      "anyOf": [
+        {
+          "items": {
+            "additionalProperties": true,
+            "properties": {
+              "claim": {
+                "additionalProperties": {},
+                "type": "object"
+              },
+              "confidence": {
+                "type": "number"
+              },
+              "decision": {
+                "additionalProperties": true,
+                "properties": {
+                  "actor": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "decided_at": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "note": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "enum": [
+                      "pending",
+                      "accepted",
+                      "rejected",
+                      "deferred"
+                    ]
+                  }
+                },
+                "required": [
+                  "status",
+                  "actor",
+                  "note",
+                  "decided_at"
+                ],
+                "type": "object"
+              },
+              "evidence": {
+                "anyOf": [
+                  {
+                    "additionalProperties": {},
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "relationship",
+                  "pii",
+                  "semantic"
+                ]
+              },
+              "proposed_at": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "redacted": {
+                "type": "boolean"
+              },
+              "subject": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "claim",
+              "confidence",
+              "evidence",
+              "decision"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        {
+          "properties": {
+            "bytes": {
+              "type": "integer"
+            },
+            "content_id": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "spilled": {
+              "const": true
+            }
+          },
+          "required": [
+            "spilled",
+            "content_id",
+            "path",
+            "bytes"
+          ],
+          "type": "object"
+        }
+      ]
+    }
+  },
+  "required": [
+    "count",
+    "proposals"
+  ],
+  "title": "proposals_list result",
+  "type": "object",
+  "x-api-version": "1.1",
+  "x-since": "1.1"
+}

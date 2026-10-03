@@ -124,6 +124,11 @@ def test_write_paths_are_the_ones_a_command_writes():
         ("profile", "output"),
         ("proposals_propose", "decisions"),
         ("proposals_decide", "decisions"),
+        # bridge 1.2
+        ("proposals_contract", "output"),
+        ("report_card", "output"),
+        ("chaos", "output_dir"),
+        ("suite_run", "output_dir"),
     }
 
 
@@ -199,6 +204,11 @@ def test_the_commands_that_write_say_so():
         "proposals_decide",
         "demo_run",
         "demo_cleanup",
+        # bridge 1.2: chaos, suite_run, proposals_contract and report_card (with output)
+        "proposals_contract",
+        "report_card",
+        "chaos",
+        "suite_run",
     }
     assert {n for n, c in COMMANDS.items() if "cancels" in c.effects} == {
         "scale_generate",

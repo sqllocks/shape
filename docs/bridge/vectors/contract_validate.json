@@ -1,5 +1,5 @@
 {
-  "api_version": "1.1",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "good-file",
@@ -12,7 +12,7 @@
         "id": "good-file"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "contract_validate",
         "id": "good-file",
         "ok": true,
@@ -36,7 +36,7 @@
         "id": "good-text"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "contract_validate",
         "id": "good-text",
         "ok": true,
@@ -60,7 +60,7 @@
         "id": "bad-rule"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "contract_validate",
         "id": "bad-rule",
         "ok": true,
@@ -89,7 +89,7 @@
         "id": "missing-file"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "contract_validate",
         "error": {
           "code": "input.not_found",
@@ -114,7 +114,7 @@
         "id": "text-and-path"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "contract_validate",
         "error": {
           "code": "usage.invalid_argument",

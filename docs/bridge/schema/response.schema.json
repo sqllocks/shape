@@ -76,6 +76,7 @@
               "enum": [
                 "auth.missing_credentials",
                 "auth.rejected",
+                "input.contract_conflict",
                 "input.invalid_schema",
                 "input.invalid_value",
                 "input.job_interrupted",
@@ -94,6 +95,7 @@
                 "policy.capability_unavailable",
                 "policy.not_permitted",
                 "policy.signature_invalid",
+                "policy.unverified_input",
                 "privacy.raw_values_withheld",
                 "usage.invalid_argument",
                 "usage.invalid_json",
@@ -177,5 +179,5 @@
     }
   ],
   "title": "bridge response",
-  "x-api-version": "1.1"
+  "x-api-version": "1.2"
 }

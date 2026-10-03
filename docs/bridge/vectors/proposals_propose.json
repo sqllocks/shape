@@ -1,5 +1,5 @@
 {
-  "api_version": "1.1",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "shop",
@@ -16,7 +16,7 @@
         "id": "shop"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "proposals_propose",
         "id": "shop",
         "ok": true,
@@ -58,7 +58,7 @@
         "id": "missing-profile"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "proposals_propose",
         "error": {
           "code": "input.not_found",
@@ -86,7 +86,7 @@
         "id": "unknown-kind"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "proposals_propose",
         "error": {
           "code": "usage.invalid_argument",
@@ -99,6 +99,80 @@
         "warnings": []
       },
       "valid_request": false
+    },
+    {
+      "name": "rules",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "data": [
+            "${DIR}/shop"
+          ],
+          "decisions": "${DIR}/rules.json",
+          "kinds": [
+            "rule"
+          ],
+          "profile": "${DIR}/shop.shape"
+        },
+        "command": "proposals_propose",
+        "id": "rules"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "proposals_propose",
+        "id": "rules",
+        "ok": true,
+        "result": {
+          "added": 30,
+          "auto_accepted": [],
+          "decisions": "${DIR}/rules.json",
+          "proposal_ids": [
+            "rule:orders.amount.dtype",
+            "rule:orders.customer_id.dtype",
+            "rule:orders.order_id.dtype",
+            "rule:orders.status_code.dtype",
+            "rule:orders.amount.nullable",
+            "rule:orders.customer_id.nullable",
+            "rule:orders.order_id.nullable",
+            "rule:orders.order_id.unique",
+            "rule:orders.status_code.nullable",
+            "rule:customers.customer_id.dtype",
+            "rule:customers.email.dtype",
+            "rule:customers.full_name.dtype",
+            "rule:customers.email.pattern",
+            "rule:orders.customer_id.range",
+            "rule:orders.status_code.range",
+            "rule:customers.customer_id.nullable",
+            "rule:customers.customer_id.unique",
+            "rule:customers.email.nullable",
+            "rule:customers.email.unique",
+            "rule:customers.full_name.nullable",
+            "rule:customers.full_name.unique",
+            "rule:orders.status_code.allowed_values",
+            "rule:orders.amount.no_placeholder",
+            "rule:orders.customer_id.no_placeholder",
+            "rule:orders.row_count",
+            "rule:orders.status_code.no_placeholder",
+            "rule:customers.customer_id.no_placeholder",
+            "rule:customers.email.no_placeholder",
+            "rule:customers.full_name.no_placeholder",
+            "rule:customers.row_count"
+          ],
+          "proposals": 30,
+          "skipped": [],
+          "skipped_rejected": [],
+          "stale": [],
+          "unchanged": 0,
+          "updated": 0,
+          "withdrawn": 0
+        },
+        "warnings": [
+          {
+            "code": "artifact_not_verified",
+            "message": "${DIR}/shop.shape is not signed: its origin is not verified (check it with --verify PUBKEY)"
+          }
+        ]
+      }
     }
   ],
   "command": "proposals_propose",

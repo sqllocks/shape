@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "added": {
+      "type": "integer"
+    },
+    "auto_accepted": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "decisions": {
+      "type": "string"
+    },
+    "proposal_ids": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "proposals": {
+      "type": "integer"
+    },
+    "skipped": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "skipped_rejected": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "unchanged": {
+      "type": "integer"
+    },
+    "updated": {
+      "type": "integer"
+    },
+    "withdrawn": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "decisions",
+    "proposal_ids",
+    "added",
+    "unchanged",
+    "skipped"
+  ],
+  "title": "proposals_propose result",
+  "type": "object",
+  "x-api-version": "1.1",
+  "x-since": "1.1"
+}

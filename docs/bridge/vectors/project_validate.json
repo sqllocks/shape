@@ -1,5 +1,5 @@
 {
-  "api_version": "1.1",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "good-file",
@@ -12,7 +12,7 @@
         "id": "good-file"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "project_validate",
         "id": "good-file",
         "ok": true,
@@ -34,7 +34,7 @@
         "id": "problems"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "project_validate",
         "id": "problems",
         "ok": true,
@@ -67,7 +67,7 @@
         "id": "newer-version"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "project_validate",
         "error": {
           "code": "input.unsupported_format_version",
@@ -91,7 +91,7 @@
         "id": "missing-file"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "project_validate",
         "error": {
           "code": "input.not_found",
@@ -116,7 +116,7 @@
         "id": "text-and-path"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "project_validate",
         "error": {
           "code": "usage.invalid_argument",

@@ -1,5 +1,5 @@
 {
-  "api_version": "1.1",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "accept",
@@ -16,7 +16,7 @@
         "id": "accept"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "proposals_decide",
         "id": "accept",
         "ok": true,
@@ -87,7 +87,7 @@
         "id": "unknown-proposal"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "proposals_decide",
         "error": {
           "code": "input.unknown_proposal",
@@ -113,7 +113,7 @@
         "id": "bad-verb"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "proposals_decide",
         "error": {
           "code": "usage.invalid_argument",

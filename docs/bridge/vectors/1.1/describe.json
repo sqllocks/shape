@@ -1,0 +1,897 @@
+{
+  "api_version": "1.1",
+  "cases": [
+    {
+      "name": "retail-small",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "domain": "retail",
+          "scale": "small"
+        },
+        "command": "describe",
+        "id": "retail-small"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "describe",
+        "id": "retail-small",
+        "ok": true,
+        "result": {
+          "business_rules": [
+            {
+              "name": "order_date_after_signup",
+              "rule": "order.order_date >= customer.signup_date",
+              "type": "cross_table"
+            },
+            {
+              "name": "return_after_order",
+              "rule": "return.return_date > order.order_date",
+              "type": "cross_table"
+            },
+            {
+              "name": "cost_less_than_price",
+              "rule": "cost < unit_price",
+              "type": "cross_column"
+            },
+            {
+              "name": "refund_leq_order_total",
+              "rule": "return.refund_amount <= order.order_total",
+              "type": "cross_table"
+            },
+            {
+              "name": "line_total_positive",
+              "rule": "line_total > 0",
+              "type": "constraint"
+            }
+          ],
+          "description": "Retail domain \u2014 3nf schema",
+          "domain": "retail",
+          "generation_order": [
+            "customer",
+            "address",
+            "product_category",
+            "product",
+            "promotion",
+            "store",
+            "order",
+            "order_line",
+            "return"
+          ],
+          "mode": "3nf",
+          "name": "retail_3nf",
+          "relationships": [
+            {
+              "child": "address",
+              "child_columns": [
+                "customer_id"
+              ],
+              "name": "customer_addresses",
+              "parent": "customer",
+              "parent_columns": [
+                "customer_id"
+              ]
+            },
+            {
+              "child": "product",
+              "child_columns": [
+                "category_id"
+              ],
+              "name": "product_in_category",
+              "parent": "product_category",
+              "parent_columns": [
+                "category_id"
+              ]
+            },
+            {
+              "child": "order",
+              "child_columns": [
+                "customer_id"
+              ],
+              "name": "customer_orders",
+              "parent": "customer",
+              "parent_columns": [
+                "customer_id"
+              ]
+            },
+            {
+              "child": "order",
+              "child_columns": [
+                "store_id"
+              ],
+              "name": "order_store",
+              "parent": "store",
+              "parent_columns": [
+                "store_id"
+              ]
+            },
+            {
+              "child": "order",
+              "child_columns": [
+                "shipping_address_id"
+              ],
+              "name": "order_address",
+              "parent": "address",
+              "parent_columns": [
+                "address_id"
+              ]
+            },
+            {
+              "child": "order",
+              "child_columns": [
+                "promotion_id"
+              ],
+              "name": "order_promotion",
+              "parent": "promotion",
+              "parent_columns": [
+                "promotion_id"
+              ]
+            },
+            {
+              "child": "order_line",
+              "child_columns": [
+                "order_id"
+              ],
+              "name": "order_lines",
+              "parent": "order",
+              "parent_columns": [
+                "order_id"
+              ]
+            },
+            {
+              "child": "order_line",
+              "child_columns": [
+                "product_id"
+              ],
+              "name": "order_line_product",
+              "parent": "product",
+              "parent_columns": [
+                "product_id"
+              ]
+            },
+            {
+              "child": "return",
+              "child_columns": [
+                "order_id"
+              ],
+              "name": "order_returns",
+              "parent": "order",
+              "parent_columns": [
+                "order_id"
+              ]
+            }
+          ],
+          "scale": "small",
+          "scales": {
+            "fabric_demo": {
+              "customer": 200,
+              "order": 1000,
+              "product": 100
+            },
+            "large": {
+              "customer": 500000,
+              "order": 5000000,
+              "product": 25000
+            },
+            "medium": {
+              "customer": 50000,
+              "order": 500000,
+              "product": 5000
+            },
+            "small": {
+              "customer": 1000,
+              "order": 5000,
+              "product": 500
+            },
+            "warehouse": {
+              "customer": 1000000,
+              "order": 10000000,
+              "product": 50000
+            },
+            "xlarge": {
+              "customer": 5000000,
+              "order": 100000000,
+              "product": 100000
+            },
+            "xxl": {
+              "customer": 20000000,
+              "order": 1000000000,
+              "product": 200000
+            },
+            "xxxl": {
+              "customer": 100000000,
+              "order": 10000000000,
+              "product": 500000
+            }
+          },
+          "table_count": 9,
+          "tables": {
+            "address": {
+              "column_count": 10,
+              "columns": [
+                {
+                  "name": "address_id",
+                  "nullable": false,
+                  "strategy": "sequence",
+                  "type": "integer"
+                },
+                {
+                  "name": "customer_id",
+                  "nullable": false,
+                  "strategy": "foreign_key",
+                  "type": "integer"
+                },
+                {
+                  "name": "address_type",
+                  "nullable": false,
+                  "strategy": "weighted_enum",
+                  "type": "string"
+                },
+                {
+                  "name": "street",
+                  "nullable": false,
+                  "strategy": "faker",
+                  "type": "string"
+                },
+                {
+                  "name": "city",
+                  "nullable": false,
+                  "strategy": "record_sample",
+                  "type": "string"
+                },
+                {
+                  "name": "state",
+                  "nullable": false,
+                  "strategy": "record_field",
+                  "type": "string"
+                },
+                {
+                  "name": "zip_code",
+                  "nullable": false,
+                  "strategy": "record_field",
+                  "type": "string"
+                },
+                {
+                  "name": "lat",
+                  "nullable": false,
+                  "strategy": "record_field",
+                  "type": "decimal"
+                },
+                {
+                  "name": "lng",
+                  "nullable": false,
+                  "strategy": "record_field",
+                  "type": "decimal"
+                },
+                {
+                  "name": "is_primary",
+                  "nullable": false,
+                  "strategy": "first_per_parent",
+                  "type": "boolean"
+                }
+              ],
+              "dependencies": [
+                "customer"
+              ],
+              "description": "Customer addresses \u2014 one customer can have multiple (billing, shipping)",
+              "primary_key": [
+                "address_id"
+              ],
+              "rows": 1500
+            },
+            "customer": {
+              "column_count": 8,
+              "columns": [
+                {
+                  "name": "customer_id",
+                  "nullable": false,
+                  "strategy": "sequence",
+                  "type": "integer"
+                },
+                {
+                  "name": "first_name",
+                  "nullable": false,
+                  "strategy": "faker",
+                  "type": "string"
+                },
+                {
+                  "name": "last_name",
+                  "nullable": false,
+                  "strategy": "faker",
+                  "type": "string"
+                },
+                {
+                  "name": "email",
+                  "nullable": true,
+                  "strategy": "faker",
+                  "type": "string"
+                },
+                {
+                  "name": "gender",
+                  "nullable": false,
+                  "strategy": "weighted_enum",
+                  "type": "string"
+                },
+                {
+                  "name": "loyalty_tier",
+                  "nullable": false,
+                  "strategy": "weighted_enum",
+                  "type": "string"
+                },
+                {
+                  "name": "signup_date",
+                  "nullable": false,
+                  "strategy": "temporal",
+                  "type": "timestamp"
+                },
+                {
+                  "name": "is_active",
+                  "nullable": false,
+                  "strategy": "weighted_enum",
+                  "type": "string"
+                }
+              ],
+              "dependencies": [],
+              "description": "Individual customers",
+              "primary_key": [
+                "customer_id"
+              ],
+              "rows": 1000
+            },
+            "order": {
+              "column_count": 8,
+              "columns": [
+                {
+                  "name": "order_id",
+                  "nullable": false,
+                  "strategy": "sequence",
+                  "type": "integer"
+                },
+                {
+                  "name": "customer_id",
+                  "nullable": false,
+                  "strategy": "foreign_key",
+                  "type": "integer"
+                },
+                {
+                  "name": "store_id",
+                  "nullable": false,
+                  "strategy": "foreign_key",
+                  "type": "integer"
+                },
+                {
+                  "name": "shipping_address_id",
+                  "nullable": true,
+                  "strategy": "foreign_key",
+                  "type": "integer"
+                },
+                {
+                  "name": "promotion_id",
+                  "nullable": true,
+                  "strategy": "foreign_key",
+                  "type": "integer"
+                },
+                {
+                  "name": "order_date",
+                  "nullable": false,
+                  "strategy": "temporal",
+                  "type": "timestamp"
+                },
+                {
+                  "name": "status",
+                  "nullable": false,
+                  "strategy": "weighted_enum",
+                  "type": "string"
+                },
+                {
+                  "name": "order_total",
+                  "nullable": false,
+                  "strategy": "computed",
+                  "type": "decimal"
+                }
+              ],
+              "dependencies": [
+                "customer",
+                "store",
+                "address",
+                "promotion"
+              ],
+              "description": "Customer orders (header)",
+              "primary_key": [
+                "order_id"
+              ],
+              "rows": 5000
+            },
+            "order_line": {
+              "column_count": 8,
+              "columns": [
+                {
+                  "name": "order_line_id",
+                  "nullable": false,
+                  "strategy": "sequence",
+                  "type": "integer"
+                },
+                {
+                  "name": "order_id",
+                  "nullable": false,
+                  "strategy": "foreign_key",
+                  "type": "integer"
+                },
+                {
+                  "name": "product_id",
+                  "nullable": false,
+                  "strategy": "foreign_key",
+                  "type": "integer"
+                },
+                {
+                  "name": "promotion_id",
+                  "nullable": true,
+                  "strategy": "lookup",
+                  "type": "integer"
+                },
+                {
+                  "name": "quantity",
+                  "nullable": false,
+                  "strategy": "distribution",
+                  "type": "integer"
+                },
+                {
+                  "name": "unit_price",
+                  "nullable": false,
+                  "strategy": "lookup",
+                  "type": "decimal"
+                },
+                {
+                  "name": "discount_percent",
+                  "nullable": false,
+                  "strategy": "conditional",
+                  "type": "decimal"
+                },
+                {
+                  "name": "line_total",
+                  "nullable": false,
+                  "strategy": "formula",
+                  "type": "decimal"
+                }
+              ],
+              "dependencies": [
+                "order",
+                "product"
+              ],
+              "description": "Individual line items within an order",
+              "primary_key": [
+                "order_line_id"
+              ],
+              "rows": 12500
+            },
+            "product": {
+              "column_count": 6,
+              "columns": [
+                {
+                  "name": "product_id",
+                  "nullable": false,
+                  "strategy": "sequence",
+                  "type": "integer"
+                },
+                {
+                  "name": "product_name",
+                  "nullable": false,
+                  "strategy": "reference_data",
+                  "type": "string"
+                },
+                {
+                  "name": "category_id",
+                  "nullable": false,
+                  "strategy": "foreign_key",
+                  "type": "integer"
+                },
+                {
+                  "name": "unit_price",
+                  "nullable": false,
+                  "strategy": "distribution",
+                  "type": "decimal"
+                },
+                {
+                  "name": "cost",
+                  "nullable": false,
+                  "strategy": "correlated",
+                  "type": "decimal"
+                },
+                {
+                  "name": "product_status",
+                  "nullable": false,
+                  "strategy": "lifecycle",
+                  "type": "string"
+                }
+              ],
+              "dependencies": [
+                "product_category"
+              ],
+              "description": "Individual products (SKUs)",
+              "primary_key": [
+                "product_id"
+              ],
+              "rows": 500
+            },
+            "product_category": {
+              "column_count": 4,
+              "columns": [
+                {
+                  "name": "category_id",
+                  "nullable": false,
+                  "strategy": "sequence",
+                  "type": "integer"
+                },
+                {
+                  "name": "category_name",
+                  "nullable": false,
+                  "strategy": "reference_data",
+                  "type": "string"
+                },
+                {
+                  "name": "parent_category_id",
+                  "nullable": true,
+                  "strategy": "self_referencing",
+                  "type": "integer"
+                },
+                {
+                  "name": "level",
+                  "nullable": false,
+                  "strategy": "self_ref_field",
+                  "type": "integer"
+                }
+              ],
+              "dependencies": [],
+              "description": "Product category hierarchy \u2014 3 levels",
+              "primary_key": [
+                "category_id"
+              ],
+              "rows": 50
+            },
+            "promotion": {
+              "column_count": 6,
+              "columns": [
+                {
+                  "name": "promotion_id",
+                  "nullable": false,
+                  "strategy": "sequence",
+                  "type": "integer"
+                },
+                {
+                  "name": "promo_name",
+                  "nullable": false,
+                  "strategy": "reference_data",
+                  "type": "string"
+                },
+                {
+                  "name": "promo_type",
+                  "nullable": false,
+                  "strategy": "weighted_enum",
+                  "type": "string"
+                },
+                {
+                  "name": "discount_pct",
+                  "nullable": false,
+                  "strategy": "weighted_enum",
+                  "type": "decimal"
+                },
+                {
+                  "name": "start_date",
+                  "nullable": false,
+                  "strategy": "temporal",
+                  "type": "timestamp"
+                },
+                {
+                  "name": "end_date",
+                  "nullable": false,
+                  "strategy": "derived",
+                  "type": "timestamp"
+                }
+              ],
+              "dependencies": [],
+              "description": "Marketing promotions",
+              "primary_key": [
+                "promotion_id"
+              ],
+              "rows": 200
+            },
+            "return": {
+              "column_count": 5,
+              "columns": [
+                {
+                  "name": "return_id",
+                  "nullable": false,
+                  "strategy": "sequence",
+                  "type": "integer"
+                },
+                {
+                  "name": "order_id",
+                  "nullable": false,
+                  "strategy": "foreign_key",
+                  "type": "integer"
+                },
+                {
+                  "name": "return_date",
+                  "nullable": false,
+                  "strategy": "derived",
+                  "type": "timestamp"
+                },
+                {
+                  "name": "reason",
+                  "nullable": false,
+                  "strategy": "weighted_enum",
+                  "type": "string"
+                },
+                {
+                  "name": "refund_amount",
+                  "nullable": false,
+                  "strategy": "distribution",
+                  "type": "decimal"
+                }
+              ],
+              "dependencies": [
+                "order"
+              ],
+              "description": "Return transactions",
+              "primary_key": [
+                "return_id"
+              ],
+              "rows": 850
+            },
+            "store": {
+              "column_count": 5,
+              "columns": [
+                {
+                  "name": "store_id",
+                  "nullable": false,
+                  "strategy": "sequence",
+                  "type": "integer"
+                },
+                {
+                  "name": "store_name",
+                  "nullable": false,
+                  "strategy": "pattern",
+                  "type": "string"
+                },
+                {
+                  "name": "store_type",
+                  "nullable": false,
+                  "strategy": "weighted_enum",
+                  "type": "string"
+                },
+                {
+                  "name": "city",
+                  "nullable": false,
+                  "strategy": "faker",
+                  "type": "string"
+                },
+                {
+                  "name": "state",
+                  "nullable": false,
+                  "strategy": "faker",
+                  "type": "string"
+                }
+              ],
+              "dependencies": [],
+              "description": "Physical and online store locations",
+              "primary_key": [
+                "store_id"
+              ],
+              "rows": 150
+            }
+          }
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "schema-file",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "domain": "${DIR}/schema.json"
+        },
+        "command": "describe",
+        "id": "schema-file"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "describe",
+        "id": "schema-file",
+        "ok": true,
+        "result": {
+          "business_rules": [],
+          "description": "",
+          "domain": "${DIR}/schema.json",
+          "generation_order": [
+            "customer",
+            "order",
+            "order_line"
+          ],
+          "mode": "3nf",
+          "name": "scale_t",
+          "relationships": [
+            {
+              "child": "order",
+              "child_columns": [
+                "customer_id"
+              ],
+              "name": "o_c",
+              "parent": "customer",
+              "parent_columns": [
+                "customer_id"
+              ]
+            },
+            {
+              "child": "order_line",
+              "child_columns": [
+                "order_id"
+              ],
+              "name": "l_o",
+              "parent": "order",
+              "parent_columns": [
+                "order_id"
+              ]
+            }
+          ],
+          "scale": "small",
+          "scales": {
+            "small": {
+              "customer": 40,
+              "order": 1200,
+              "order_line": 3100
+            }
+          },
+          "table_count": 3,
+          "tables": {
+            "customer": {
+              "column_count": 3,
+              "columns": [
+                {
+                  "name": "customer_id",
+                  "nullable": false,
+                  "strategy": "sequence",
+                  "type": "integer"
+                },
+                {
+                  "name": "name",
+                  "nullable": false,
+                  "strategy": "weighted_enum",
+                  "type": "string"
+                },
+                {
+                  "name": "score",
+                  "nullable": false,
+                  "strategy": "distribution",
+                  "type": "float"
+                }
+              ],
+              "dependencies": [],
+              "description": "",
+              "primary_key": [
+                "customer_id"
+              ],
+              "rows": 40
+            },
+            "order": {
+              "column_count": 3,
+              "columns": [
+                {
+                  "name": "customer_id",
+                  "nullable": false,
+                  "strategy": "foreign_key",
+                  "type": "integer"
+                },
+                {
+                  "name": "order_id",
+                  "nullable": false,
+                  "strategy": "sequence",
+                  "type": "integer"
+                },
+                {
+                  "name": "score",
+                  "nullable": false,
+                  "strategy": "distribution",
+                  "type": "float"
+                }
+              ],
+              "dependencies": [
+                "customer"
+              ],
+              "description": "",
+              "primary_key": [
+                "order_id"
+              ],
+              "rows": 1200
+            },
+            "order_line": {
+              "column_count": 3,
+              "columns": [
+                {
+                  "name": "amount",
+                  "nullable": false,
+                  "strategy": "distribution",
+                  "type": "float"
+                },
+                {
+                  "name": "line_id",
+                  "nullable": false,
+                  "strategy": "sequence",
+                  "type": "integer"
+                },
+                {
+                  "name": "order_id",
+                  "nullable": false,
+                  "strategy": "foreign_key",
+                  "type": "integer"
+                }
+              ],
+              "dependencies": [
+                "order"
+              ],
+              "description": "",
+              "primary_key": [
+                "line_id"
+              ],
+              "rows": 3100
+            }
+          }
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-domain",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "domain": "nope"
+        },
+        "command": "describe",
+        "id": "unknown-domain"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "describe",
+        "error": {
+          "code": "input.unknown_domain",
+          "group": "input",
+          "hint": "run the `list` command",
+          "message": "no domain named 'nope' (installed: retail); domains come from the 'sqllocks-shape-domains' package"
+        },
+        "id": "unknown-domain",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-argument",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "colour": "red",
+          "domain": "retail"
+        },
+        "command": "describe",
+        "id": "unknown-argument"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "describe",
+        "error": {
+          "code": "usage.unknown_argument",
+          "group": "usage",
+          "hint": "it takes: domain, mode, profile, scale",
+          "message": "describe does not take argument(s): colour"
+        },
+        "id": "unknown-argument",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "describe",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

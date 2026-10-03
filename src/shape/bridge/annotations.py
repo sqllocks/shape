@@ -72,7 +72,10 @@ def annotate(commands: dict[str, Command]) -> dict[str, Command]:
     for name, command in commands.items():
         if name not in EFFECTS:
             # a 1.1 command carries its own annotations; all its arguments are new with it
-            args = {k: replace(a, since=command.since) for k, a in command.args.items()}
+            args = {
+                k: replace(a, since=command.since) if a.since == "1.0" else a
+                for k, a in command.args.items()
+            }
             out[name] = replace(command, args=args)
             continue
         args = dict(command.args)

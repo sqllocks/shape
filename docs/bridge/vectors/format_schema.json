@@ -1,5 +1,5 @@
 {
-  "api_version": "1.1",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "names",
@@ -10,7 +10,7 @@
         "id": "names"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "format_schema",
         "id": "names",
         "ok": true,
@@ -40,7 +40,7 @@
         "id": "design-input"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "format_schema",
         "id": "design-input",
         "ok": true,
@@ -342,7 +342,7 @@
         "id": "unknown-format"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "format_schema",
         "error": {
           "code": "input.unknown_format",
@@ -366,7 +366,7 @@
         "id": "name-must-be-text"
       },
       "response": {
-        "api_version": "1.1",
+        "api_version": "1.2",
         "command": "format_schema",
         "error": {
           "code": "usage.invalid_argument",

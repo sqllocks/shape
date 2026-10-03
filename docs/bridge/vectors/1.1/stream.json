@@ -1,0 +1,59 @@
+{
+  "api_version": "1.1",
+  "cases": [
+    {
+      "name": "start",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "chunk_size": 20,
+          "domain": "retail",
+          "interval_seconds": 0,
+          "max_chunks": 1,
+          "scale": "small"
+        },
+        "command": "stream",
+        "id": "start"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "stream",
+        "id": "start",
+        "ok": true,
+        "result": {
+          "job_id": "<any>",
+          "status": "started",
+          "stream_id": "<any>"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-domain",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "domain": "nope"
+        },
+        "command": "stream",
+        "id": "unknown-domain"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "stream",
+        "error": {
+          "code": "input.unknown_domain",
+          "group": "input",
+          "hint": "run the `list` command",
+          "message": "no domain named 'nope' (installed: retail); domains come from the 'sqllocks-shape-domains' package"
+        },
+        "id": "unknown-domain",
+        "ok": false,
+        "warnings": []
+      }
+    }
+  ],
+  "command": "stream",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

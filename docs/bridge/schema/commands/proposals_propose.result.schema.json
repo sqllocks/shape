@@ -35,6 +35,12 @@
       },
       "type": "array"
     },
+    "stale": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
     "unchanged": {
       "type": "integer"
     },
@@ -54,6 +60,6 @@
   ],
   "title": "proposals_propose result",
   "type": "object",
-  "x-api-version": "1.1",
+  "x-api-version": "1.2",
   "x-since": "1.1"
 }

@@ -19,6 +19,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent / "scale"))
 
 import vectors_1_1 as v11  # noqa: E402
+import vectors_1_2 as v12  # noqa: E402
 import vectors_lib as lib  # noqa: E402
 from fakes import LH, WS, FakeFabric  # noqa: E402
 from scale_schemas import plain_doc  # noqa: E402
@@ -359,6 +360,15 @@ def merge_1_1() -> None:
         FILES[command]["cases"] = [*FILES[command]["cases"], *extra["cases"]]
 
 
+def merge_1_2() -> None:
+    """Add the vectors of the 1.2 commands, and the 1.2 cases of earlier commands."""
+    for command, doc in v12.FILES.items():
+        FILES[command] = doc
+    for command, extra in v12.EXTENDS.items():
+        FILES[command]["setup"] = [*FILES[command].get("setup", []), *extra.get("setup", [])]
+        FILES[command]["cases"] = [*FILES[command]["cases"], *extra["cases"]]
+
+
 def write_fixtures() -> None:
     folder = lib.VECTOR_DIR / "fixtures"
     folder.mkdir(parents=True, exist_ok=True)
@@ -389,6 +399,7 @@ def write_fixtures() -> None:
                     [i, f"user{i}@example.com", status, round(rng.gauss(100 + shift * 50, 20))]
                 )
     v11.write_fixtures(folder)
+    v12.write_fixtures(folder)
 
 
 def run_case(
@@ -403,6 +414,7 @@ def main() -> None:
     from unittest import mock
 
     merge_1_1()
+    merge_1_2()
     write_fixtures()
     for command, doc in FILES.items():
         with tempfile.TemporaryDirectory() as tmp:
