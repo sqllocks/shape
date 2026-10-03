@@ -1,0 +1,56 @@
+{
+  "format": "shape-scenario-library",
+  "version": 1,
+  "scenarios": [
+    {
+      "id": "clean_baseline",
+      "domain": "retail",
+      "description": "Retail generated as is: every validation gate passes. The control the other scenarios are read against."
+    },
+    {
+      "id": "nulls_injected",
+      "domain": "retail",
+      "description": "About 8% of customer last names are null although the column is not nullable: the null check must fail and nothing else may."
+    },
+    {
+      "id": "duplicate_rows",
+      "domain": "retail",
+      "description": "Return rows take over the primary key of another return, so keys repeat: the uniqueness gate must fail; the references into the table stay intact."
+    },
+    {
+      "id": "orphaned_foreign_keys",
+      "domain": "retail",
+      "description": "About 3% of orders point at a customer that does not exist: the referential integrity gate must fail."
+    },
+    {
+      "id": "late_arriving_data",
+      "domain": "retail",
+      "description": "About 10% of orders carry an order date 45 days before the rest of the batch, as when a late feed lands behind newer data. No gate is meant to catch it: the scenario checks that the late rows are planted and that the batch is otherwise sound."
+    },
+    {
+      "id": "schema_add_column",
+      "domain": "retail",
+      "description": "A column appears on a schedule: orders gain a channel on day 5. The diff of day 0 and day 10 must report it as added, and nothing else structural."
+    },
+    {
+      "id": "schema_rename_column",
+      "domain": "retail",
+      "description": "A column is renamed on a schedule: order status becomes order_status on day 5. The diff sees one column dropped and one added; the answer key records the pair as one rename."
+    },
+    {
+      "id": "schema_drop_column",
+      "domain": "retail",
+      "description": "A column disappears on a schedule: stores lose their state on day 5. The diff of day 0 and day 10 must report it as removed."
+    },
+    {
+      "id": "schema_retype_column",
+      "domain": "retail",
+      "description": "A column changes type on a schedule: the customer active flag turns from the text true or false into an integer on day 5. The diff must report a type change."
+    },
+    {
+      "id": "schema_evolution_schedule",
+      "domain": "retail",
+      "description": "All four schema changes on one schedule: a column is added on day 5, one renamed on day 10, one dropped on day 15 and one retyped on day 20. Four diffs, each against day 0, must report exactly the changes that have happened by then."
+    }
+  ]
+}

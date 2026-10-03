@@ -193,11 +193,12 @@ like, and it writes the answer key.
 | `add_column` | `{"definition": {"type": "string", "generator": {...}}}` |
 | `drop_column` | none |
 | `type_change` | `{"to": {"type": "string", "generator": {...}}}` |
+| `rename_column` | `{"to": "order_status"}` |
 
-Every event names `table` and `column`, and `start` (an ISO date or a day number, day 0 being the
+Every event names `table` and `column` (or one `column` of the form `"table.column"`), and `start` (an ISO date or a day number, day 0 being the
 plan's start). `end` (exclusive) makes a window: the schema reverts. `ramp_days: N` builds the
-change up in a straight line over N days, then holds (`add_column`, `drop_column` and `type_change`
-are on or off). A parameter is a bare number (set), `{"set": v}`, `{"add": v}` or `{"factor": v}`.
+change up in a straight line over N days, then holds (`add_column`, `drop_column`, `type_change` and
+`rename_column` are on or off). A parameter is a bare number (set), `{"set": v}`, `{"add": v}` or `{"factor": v}`.
 `scale` multiplies the values: `log_normal` adds `ln(factor)` to `mean` (x1.4 is `mean += ln 1.4`),
 `normal` scales `mean` and `std_dev`, `uniform` its `min` and `max`, `pareto` its `min`. A boolean
 or 0/1 column is a `bernoulli` distribution, so its rate can drift too. A `new_category` is not in
@@ -215,6 +216,15 @@ the schema before its day.
    "generator": {"strategy": "weighted_enum", "values": {"yes": 1, "no": 1}}}}
 ]}
 ```
+
+`rename_column` gives the column its new name from the start day, in its place among the columns:
+`{"kind": "rename_column", "column": "orders.status", "to": "order_status", "start": 5}`. The
+primary key, relationships, foreign keys that point at the column and correlations follow the
+rename. A column that a rule or another column's generator names cannot be renamed (the rename
+would break it): the plan raises an error that says which. An unknown column, and a rename onto a
+name the table already has, raise `ShapeError` naming both the column and the new name, on every
+day (not only from the start day). Events on a renamed column must use the name it has on their
+days. With `end` the rename is a window and the old name returns.
 
 ```
 shape generate-drift orders.gen.json plan.json -o feed/ --rows orders=4000 --format parquet
@@ -240,3 +250,17 @@ The answer key (`ground_truth.json`, version 1) lists every event (`id`, `kind`,
 which events had taken effect and how far (0 to 1). `expected_changes(a, b)` turns it into the
 changes to expect between two days, so a test can plant drift, profile two days and check the diff:
 small steps of a ramp stay under the thresholds, so compare days far enough apart.
+
+A rename is one record in the answer key's `expected_changes`: `kinds` is `["column_removed"]` for
+the old name, and `rename` holds the new name and the kind that finds it:
+
+```python
+plan.expected_changes(0, 10)
+# [{"event": "e1", "column": "status", "kinds": ["column_removed"], "size": 1.0,
+#   "rename": {"from": "status", "to": "order_status", "added_kinds": ["column_added"]}}]
+```
+
+`shape.diff` itself cannot tell a rename from a dropped and an added column: it reports both
+(`column_removed` on the old name, `column_added` on the new one), and the key says they are one
+change. The starter scenarios (`docs/SCENARIO_LIBRARY.md`) plant add, rename, drop and retype on a
+schedule and check the diff against a written answer key.

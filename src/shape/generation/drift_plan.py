@@ -29,16 +29,23 @@ Events (``DriftEvent.kind``), each aimed at ``table.column``:
     the column is missing from the start day.
 ``type_change``
     ``{"to": {"type": "string", "generator": {...}}}``: the column is generated as this instead.
+``rename_column``
+    ``{"column": "orders.status", "to": "order_status"}`` (the column may also be given as
+    ``table`` and ``column``): the column has the new name from the start day, in its place among
+    the columns. Keys, relationships, foreign-key references and correlations that name it follow
+    the rename. A column that a rule or another column's generator names is refused, since the
+    rename would break it. Events on the renamed column must use the name it has on their days.
 
 Timing: ``start`` (an ISO date or a day number, day 0 being the plan's start), ``end`` (exclusive:
 the event is over and the schema reverts) and ``ramp_days`` (the change builds up over this many
 days, then holds). A ramp moves the value in a straight line from the original to the target; a
-step is a ramp of 0 days; a window has an ``end``. ``add_column``, ``drop_column`` and
-``type_change`` are on or off, so they take no ramp.
+step is a ramp of 0 days; a window has an ``end``. ``add_column``, ``drop_column``,
+``type_change`` and ``rename_column`` are on or off, so they take no ramp.
 
 ``DriftPlan.expected_changes(day_a, day_b)`` says which ``shape.diff`` changes the events
 that differ between two days should produce, so a test can plant drift, profile two days and check
-that the diff finds it.
+that the diff finds it. A rename is one record: ``kinds`` is the dropped old name and ``rename``
+holds the new name and the kinds that find it (``column_added``).
 """
 
 from __future__ import annotations
@@ -47,6 +54,7 @@ import copy
 import datetime as dt
 import json
 import math
+import re
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -66,8 +74,9 @@ KINDS = (
     "add_column",
     "drop_column",
     "type_change",
+    "rename_column",
 )
-_ON_OFF = ("add_column", "drop_column", "type_change")
+_ON_OFF = ("add_column", "drop_column", "type_change", "rename_column")
 GROUND_TRUTH_VERSION = 1
 
 # the shape.diff change kinds each event produces (any one of them satisfies the event)
@@ -79,6 +88,7 @@ _DETECTED_AS = {
     "add_column": ("column_added",),
     "drop_column": ("column_removed",),
     "type_change": ("dtype_change",),
+    "rename_column": ("column_removed",),  # plus column_added, under the new name
 }
 
 
@@ -114,13 +124,22 @@ class DriftEvent:
     def from_dict(cls, doc: Mapping[str, Any]) -> DriftEvent:
         known = {"id", "kind", "table", "column", "start", "end", "ramp_days"}
         spec = {k: v for k, v in doc.items() if k not in known}
-        missing = [k for k in ("kind", "table", "column", "start") if k not in doc]
+        table, column = doc.get("table"), doc.get("column")
+        if table is None and isinstance(column, str) and "." in column:
+            table, _, column = column.partition(".")  # "orders.status" names both
+        present = {
+            "kind": doc.get("kind"),
+            "table": table,
+            "column": column,
+            "start": doc.get("start"),
+        }
+        missing = [k for k, v in present.items() if v is None]
         if missing:
             raise DriftPlanError(f"a drift event needs {missing}: {dict(doc)}")
         return cls(
             kind=str(doc["kind"]),
-            table=str(doc["table"]),
-            column=str(doc["column"]),
+            table=str(table),
+            column=str(column),
             start=doc["start"],
             spec=spec,
             end=doc.get("end"),
@@ -223,6 +242,7 @@ class DriftPlan:
             "add_column": "definition",
             "drop_column": None,
             "type_change": "to",
+            "rename_column": "to",
         }[kind]
         if need and need not in spec:
             raise DriftPlanError(f"a {kind} event needs {need!r}: {event.table}.{event.column}")
@@ -232,6 +252,17 @@ class DriftPlan:
             raise DriftPlanError("a null_rate event's 'to' must be between 0 and 1")
         if kind == "new_category" and not 0 < float(spec.get("share", 0.05)) < 1:
             raise DriftPlanError("a new_category event's 'share' must be between 0 and 1")
+        if kind == "rename_column":
+            new = spec["to"]
+            if not isinstance(new, str) or not new.strip():
+                raise DriftPlanError(
+                    f"a rename_column event's 'to' must be a column name: "
+                    f"{event.table}.{event.column}"
+                )
+            if new == event.column:
+                raise DriftPlanError(
+                    f"rename_column: {event.table}.{event.column} is renamed to the same name"
+                )
 
     @property
     def events(self) -> list[DriftEvent]:
@@ -384,14 +415,21 @@ class DriftPlan:
             if size == 0:
                 continue
             e = r.event
-            out.append(
-                {
-                    "event": r.id,
-                    "column": f"{e.table}.{e.column}" if multi else e.column,
-                    "kinds": list(_DETECTED_AS[e.kind]),
-                    "size": size,
+            record: dict[str, Any] = {
+                "event": r.id,
+                "column": f"{e.table}.{e.column}" if multi else e.column,
+                "kinds": list(_DETECTED_AS[e.kind]),
+                "size": size,
+            }
+            if e.kind == "rename_column":
+                # the diff sees a dropped column and an added one; the key records one rename
+                new = str(e.spec["to"])
+                record["rename"] = {
+                    "from": record["column"],
+                    "to": f"{e.table}.{new}" if multi else new,
+                    "added_kinds": ["column_added"],
                 }
-            )
+            out.append(record)
         return out
 
 
@@ -449,6 +487,11 @@ def _apply(schema: GenSchema, r: _Resolved, w: float) -> None:
                 scale=doc.get("scale"),
             )
         return
+    if e.kind == "rename_column":
+        _check_rename(schema, e)  # an unusable rename is an error on every day, not only after it
+        if w > 0:
+            _rename(schema, e)
+        return
     col = _column(schema, e)
     if w <= 0:
         return
@@ -470,6 +513,68 @@ def _apply(schema: GenSchema, r: _Resolved, w: float) -> None:
         for key in ("nullable", "null_rate", "max_length", "precision", "scale"):
             if key in doc:
                 setattr(col, key, doc[key])
+
+
+def _check_rename(schema: GenSchema, e: DriftEvent) -> None:
+    new = str(e.spec["to"])
+    table = schema.tables.get(e.table)
+    if table is None:
+        raise DriftPlanError(
+            f"rename_column: cannot rename {e.table}.{e.column} to {new!r}: "
+            f"the schema has no table {e.table!r}"
+        )
+    if e.column not in table.columns:
+        raise DriftPlanError(
+            f"rename_column: cannot rename {e.table}.{e.column} to {new!r}: "
+            f"there is no column {e.table}.{e.column}"
+        )
+    if new in table.columns:
+        raise DriftPlanError(
+            f"rename_column: cannot rename {e.table}.{e.column} to {new!r}: "
+            f"{e.table}.{new} already exists"
+        )
+
+
+def _names(value: Any, name: str) -> bool:
+    """Whether ``name`` appears as a whole word in a generator or rule (any nesting)."""
+    pattern = re.compile(rf"(?<![\w.]){re.escape(name)}(?![\w])")
+    return bool(pattern.search(json.dumps(value, default=str)))
+
+
+def _rename(schema: GenSchema, e: DriftEvent) -> None:
+    old, new, tname = e.column, str(e.spec["to"]), e.table
+    table = schema.tables[tname]
+    for other in table.columns.values():
+        if other.name != old and _names(other.generator, old):
+            raise DriftPlanError(
+                f"rename_column: {tname}.{old} is named by the generator of {tname}.{other.name}"
+            )
+    for rule in schema.business_rules:
+        if _names([rule.rule, rule.via, rule.when], old) and rule.table in (None, tname):
+            raise DriftPlanError(f"rename_column: {tname}.{old} is named by rule {rule.name}")
+    table.columns = {
+        (new if key == old else key): _renamed(col, new) if key == old else col
+        for key, col in table.columns.items()
+    }
+    table.primary_key = [new if c == old else c for c in table.primary_key]
+    for rel in schema.relationships:
+        if rel.parent == tname:
+            rel.parent_columns = [new if c == old else c for c in rel.parent_columns]
+        if rel.child == tname:
+            rel.child_columns = [new if c == old else c for c in rel.child_columns]
+    for other_table in schema.tables.values():  # foreign keys that point at the column
+        for col in other_table.columns.values():
+            if col.fk_ref_table == tname and col.fk_ref_column == old:
+                col.generator["ref"] = f"{tname}.{new}"
+    for triple in schema.correlated_columns.get(tname, []):
+        for i in (0, 1):
+            if triple[i] == old:
+                triple[i] = new
+
+
+def _renamed(col: Column, new: str) -> Column:
+    col.name = new
+    return col
 
 
 def _check_droppable(schema: GenSchema, e: DriftEvent) -> None:

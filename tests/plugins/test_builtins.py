@@ -27,8 +27,12 @@ def _fresh_host() -> PluginHost:
 def test_catalog_matches_pyproject_entry_points():
     declared = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     table = declared["project"]["entry-points"]
-    from_pyproject = sorted((g, n, t) for g, items in table.items() for n, t in items.items())
+    # `pytest11` is pytest's own entry-point group (W5-05, the Shape pytest plugin), not a Shape one
+    from_pyproject = sorted(
+        (g, n, t) for g, items in table.items() if g != "pytest11" for n, t in items.items()
+    )
     assert from_pyproject == sorted(BUILTINS)
+    assert table["pytest11"] == {"shape": "shape.testdata.pytest_plugin"}
     assert {g for g, _, _ in BUILTINS} <= set(v1.GROUPS)
 
 

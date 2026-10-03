@@ -5,6 +5,20 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Starter scenarios, suites, a pytest plugin and database seeding (W5-05, #81). `DriftPlan` has a
+  `rename_column` event (`{"kind": "rename_column", "column": "orders.status", "to":
+  "order_status", "start": ...}`; the answer key records the dropped and added column as one
+  rename). `shape pack list --library` and `shape pack run library:NAME` run ten starter scenarios
+  on the retail domain (clean baseline, nulls, duplicates, orphaned foreign keys, late data, and
+  add, rename, drop and retype of a column on a schedule), each against a written answer key.
+  `shape suite run NAME|FILE` runs the `smoke` and `schema-evolution` suites (or your own) and exits
+  1 when a scenario missed its key. The `pytest11` plugin (`pip install 'sqllocks-shape[pytest]'`)
+  adds a `shape_dataset` fixture, a `shape_scenario` marker with fixture and `--shape-seed`.
+  `shape seed SPEC --target URI` writes the tables in foreign-key order through the `sqlserver`,
+  `postgres` and `mysql` sinks, or as ordered INSERT scripts with `sql://DIR`. New persisted
+  formats `shape-scenario-expect`, `shape-scenario-library` and `shape-suite` (and
+  `shape-scenario`) at version 1. `docs/SCENARIO_LIBRARY.md`, `docs/TESTING_WITH_SHAPE.md`.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

@@ -1,0 +1,23 @@
+{
+  "format": "shape-scenario",
+  "version": 1,
+  "id": "nulls_injected",
+  "domain": "retail",
+  "scale": "small",
+  "seed": 42,
+  "gates": [
+    "schema_conformance",
+    "referential_integrity",
+    "row_count",
+    "null_check",
+    "uniqueness"
+  ],
+  "defects": [
+    {
+      "kind": "inject_nulls",
+      "table": "customer",
+      "column": "last_name",
+      "fraction": 0.08
+    }
+  ]
+}
