@@ -503,6 +503,31 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ### Fixed
 
+- Mergeable profiles (HUNT2-profile): profiles with decimal, time-of-day, binary or duration columns
+  merge, including with `--exact-only` (#592); the sketched merge matches columns by name, so
+  partitions listing them in another order merge (#593), and an empty or all-null CSV partition
+  merges, its null-typed column taking the type of the partitions with values (#594); a newer
+  `snapshot_version` in `sketches.json` or a newer `merge` block version is refused with an
+  upgrade message (#595); promoted extremes are tagged like the profile of the union (#599).
+- Drift (HUNT2-profile): a constant float column no longer shows `mean_shift`/`spread_change` from
+  floating-point rounding (#616); a drop to zero (an empty table, no distinct values, no spread)
+  scores 1 as documented, so score gates fail (#617); a merged profile's unknown pattern and
+  distribution are not read as changes (#618); the joint kinds follow per-column thresholds,
+  `min_severity` and the ignore/only lists (#619); `only` keeps table-level changes matched by
+  `*`, the table's name or `table.*`, `table.column` matches in a single-table profile, and `*`
+  thresholds treat single tables and datasets alike (#620); a dataset's `row_count_change`,
+  `table_added` and `table_removed` carry a `table` field (#621).
+- Contract emission (HUNT2-profile): a column with no rules is emitted as a required column instead
+  of being dropped (#641); DDL constraint names are unique within a script and PostgreSQL names
+  respect its 63-byte limit (#642); NaN or infinite numbers, and rates outside 0..1, are refused
+  (exit 2) instead of written into JSON Schema/GX output as non-JSON (#644).
+- Rule proposals (HUNT2-profile): `shape proposals contract --merge` validates the contract it
+  merges into, refusing a newer version or unknown keys (#645); CSV date columns get a `range`
+  proposal (#646); a range clamped at zero is `0.0`, never `-0.0` (#647).
+- Capture (HUNT2-profile): `capture_rows`, `capture_arrow` and `shape capture` keep integers exact
+  past 2**53 (#685); `capture_columns` describes an empty column of any type instead of raising
+  `KeyError` (#687); binary values are captured as their UTF-8 text, and bytes that are not UTF-8
+  are refused naming the column, instead of storing `b'...'` reprs (#688).
 - `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references` no longer depends on test order (#77): it resolves the references in a fresh interpreter and reports which cloud SDK modules got imported, so `azure*` modules left in `sys.modules` by `tests/demo/fabric` cannot fail it.
 - Issue #76. The three tests that failed were not numpy-dependent: they called pyarrow in ways older
   releases reject (float16 from Python floats, `if_else` on half-float, hive partition inference on a
