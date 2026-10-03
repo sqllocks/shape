@@ -1,0 +1,390 @@
+{
+ "format": "shape-stable-api-baseline",
+ "modules": {
+  "shape.generation.spec_edit": {
+   "missing": [],
+   "names": {
+    "Position": {
+     "kind": "alias",
+     "value": "tuple[int, int]"
+    },
+    "SpecDocument": {
+     "bases": [],
+     "kind": "class",
+     "members": {
+      "__init__": {
+       "kind": "method",
+       "params": [
+        {
+         "annotation": "dict[str, Any]",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "doc"
+        },
+        {
+         "annotation": "str | None",
+         "default": "None",
+         "kind": "KEYWORD_ONLY",
+         "name": "text"
+        },
+        {
+         "annotation": "dict[str, Position] | None",
+         "default": "None",
+         "kind": "KEYWORD_ONLY",
+         "name": "positions"
+        }
+       ],
+       "returns": "None"
+      },
+      "add_column": {
+       "kind": "method",
+       "params": [
+        {
+         "annotation": "str",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "table"
+        },
+        {
+         "annotation": "str",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "name"
+        },
+        {
+         "annotation": "str",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "type"
+        },
+        {
+         "annotation": "dict[str, Any]",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "generator"
+        },
+        {
+         "annotation": "Any",
+         "default": null,
+         "kind": "VAR_KEYWORD",
+         "name": "properties"
+        }
+       ],
+       "returns": "None"
+      },
+      "add_table": {
+       "kind": "method",
+       "params": [
+        {
+         "annotation": "str",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "name"
+        },
+        {
+         "annotation": "list[str] | tuple[str, ...]",
+         "default": "()",
+         "kind": "KEYWORD_ONLY",
+         "name": "primary_key"
+        },
+        {
+         "annotation": "str",
+         "default": "''",
+         "kind": "KEYWORD_ONLY",
+         "name": "description"
+        },
+        {
+         "annotation": "Any",
+         "default": null,
+         "kind": "VAR_KEYWORD",
+         "name": "extra"
+        }
+       ],
+       "returns": "None"
+      },
+      "column_names": {
+       "kind": "method",
+       "params": [
+        {
+         "annotation": "str",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "table"
+        }
+       ],
+       "returns": "list[str]"
+      },
+      "dumps": {
+       "kind": "method",
+       "params": [],
+       "returns": "str"
+      },
+      "from_dict": {
+       "kind": "classmethod",
+       "params": [
+        {
+         "annotation": "Any",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "doc"
+        }
+       ],
+       "returns": "SpecDocument"
+      },
+      "get": {
+       "kind": "method",
+       "params": [
+        {
+         "annotation": "str",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "pointer"
+        }
+       ],
+       "returns": "Any"
+      },
+      "load": {
+       "kind": "classmethod",
+       "params": [
+        {
+         "annotation": "str | os.PathLike[str]",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "path"
+        }
+       ],
+       "returns": "SpecDocument"
+      },
+      "loads": {
+       "kind": "classmethod",
+       "params": [
+        {
+         "annotation": "str",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "text"
+        }
+       ],
+       "returns": "SpecDocument"
+      },
+      "raise_for_errors": {
+       "kind": "method",
+       "params": [],
+       "returns": "None"
+      },
+      "remove": {
+       "kind": "method",
+       "params": [
+        {
+         "annotation": "str",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "pointer"
+        }
+       ],
+       "returns": "None"
+      },
+      "remove_column": {
+       "kind": "method",
+       "params": [
+        {
+         "annotation": "str",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "table"
+        },
+        {
+         "annotation": "str",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "name"
+        }
+       ],
+       "returns": "None"
+      },
+      "remove_table": {
+       "kind": "method",
+       "params": [
+        {
+         "annotation": "str",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "name"
+        }
+       ],
+       "returns": "None"
+      },
+      "save": {
+       "kind": "method",
+       "params": [
+        {
+         "annotation": "str | os.PathLike[str]",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "path"
+        }
+       ],
+       "returns": "None"
+      },
+      "set": {
+       "kind": "method",
+       "params": [
+        {
+         "annotation": "str",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "pointer"
+        },
+        {
+         "annotation": "Any",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "value"
+        }
+       ],
+       "returns": "None"
+      },
+      "set_generator": {
+       "kind": "method",
+       "params": [
+        {
+         "annotation": "str",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "table"
+        },
+        {
+         "annotation": "str",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "column"
+        },
+        {
+         "annotation": "dict[str, Any]",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "generator"
+        }
+       ],
+       "returns": "None"
+      },
+      "table_names": {
+       "kind": "property",
+       "returns": "list[str]"
+      },
+      "to_dict": {
+       "kind": "method",
+       "params": [],
+       "returns": "dict[str, Any]"
+      },
+      "to_schema": {
+       "kind": "method",
+       "params": [],
+       "returns": "GenSchema"
+      },
+      "validate": {
+       "kind": "method",
+       "params": [],
+       "returns": "list[SpecProblem]"
+      }
+     }
+    },
+    "SpecError": {
+     "bases": [
+      "shape.errors.ShapeSchemaError"
+     ],
+     "kind": "exception",
+     "members": {
+      "__init__": {
+       "kind": "method",
+       "params": [
+        {
+         "annotation": "list[SpecProblem]",
+         "default": null,
+         "kind": "POSITIONAL_OR_KEYWORD",
+         "name": "problems"
+        }
+       ],
+       "returns": "None"
+      }
+     }
+    },
+    "SpecProblem": {
+     "fields": [
+      {
+       "has_default": false,
+       "name": "level",
+       "type": "str"
+      },
+      {
+       "has_default": false,
+       "name": "pointer",
+       "type": "str"
+      },
+      {
+       "has_default": false,
+       "name": "message",
+       "type": "str"
+      },
+      {
+       "has_default": true,
+       "name": "line",
+       "type": "int | None"
+      },
+      {
+       "has_default": true,
+       "name": "column",
+       "type": "int | None"
+      }
+     ],
+     "frozen": true,
+     "kind": "dataclass",
+     "members": {
+      "path": {
+       "kind": "property",
+       "returns": "str"
+      }
+     }
+    },
+    "validate_text": {
+     "kind": "function",
+     "params": [
+      {
+       "annotation": "str",
+       "default": null,
+       "kind": "POSITIONAL_OR_KEYWORD",
+       "name": "text"
+      }
+     ],
+     "returns": "list[SpecProblem]"
+    }
+   }
+  },
+  "shape.generation.spec_schema": {
+   "missing": [],
+   "names": {
+    "build_schema": {
+     "kind": "function",
+     "params": [],
+     "returns": "dict[str, Any]"
+    },
+    "published_schema": {
+     "kind": "function",
+     "params": [],
+     "returns": "dict[str, Any]"
+    },
+    "render": {
+     "kind": "function",
+     "params": [],
+     "returns": "str"
+    },
+    "strategy_names": {
+     "kind": "function",
+     "params": [],
+     "returns": "list[str]"
+    }
+   }
+  }
+ },
+ "version": 1
+}

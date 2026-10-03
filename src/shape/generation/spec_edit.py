@@ -34,6 +34,8 @@ from shape.security.names import is_safe_name
 
 Position = tuple[int, int]
 
+__all__ = ["Position", "SpecDocument", "SpecError", "SpecProblem", "validate_text"]
+
 
 @dataclass(frozen=True, slots=True)
 class SpecProblem:
