@@ -5,7 +5,7 @@ The keys are ``run_id``, ``spec_hash``, ``pack_id``, ``domain``, ``scale``, ``se
 ``validation``, ``chaos``, ``timestamps`` (``started``, ``finished``, ``elapsed_seconds``),
 ``workspace_id``, ``lakehouse_id``, ``sbom``, and, from manifest version 1, ``format``
 (``shape-run-manifest``), ``version``, ``reproducibility`` (the tuple of
-``shape.reproducibility``) and ``dataset_id`` (the content address of the output tables). The run
+``shape.repro``) and ``dataset_id`` (the content address of the output tables). The run
 id is ``YYYYMMDD_HHMMSS_{domain}_{scale}_s{seed}``. A manifest written before ``format`` and
 ``version`` existed loads with an empty ``reproducibility`` and ``dataset_id``.
 """
@@ -21,7 +21,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from shape.reproducibility import dataset_id, reproducibility_tuple
+from shape.repro import dataset_id, reproducibility_tuple
 
 MANIFEST_FORMAT = "shape-run-manifest"
 MANIFEST_VERSION = 1

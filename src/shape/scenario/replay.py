@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from shape.reproducibility import reproducibility_tuple
+from shape.repro import reproducibility_tuple
 from shape.scenario.manifest import RunManifest, hash_file
 
 

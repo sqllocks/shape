@@ -25,7 +25,7 @@ apart from one made before it.
 
 `dataset_id` is `sha256:` plus 64 hex digits: a content address of the run's output tables, taken
 over **every generated table after chaos was applied**, not only the files that were written.
-Equal ids mean equal content. Calling `shape.reproducibility.dataset_id(tables)` gives the id of
+Equal ids mean equal content. Calling `shape.repro.dataset_id(tables)` gives the id of
 any `{name: pyarrow.Table}`.
 
 ### The canonical form

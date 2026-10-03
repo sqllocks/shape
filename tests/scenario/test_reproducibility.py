@@ -14,7 +14,7 @@ import pytest
 
 from shape.cli.main import main
 from shape.kernel.dispatch import kernel_name
-from shape.reproducibility import (
+from shape.repro import (
     DATASET_ID_PREFIX,
     REPRODUCIBILITY_KEYS,
     dataset_id,
