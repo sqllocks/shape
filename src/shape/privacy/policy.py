@@ -30,8 +30,54 @@ VALUE_KEYS = frozenset(
         "value_counts_ext",
         "pattern_examples",
         "distribution_params",
+        "placeholders",
     }
 )
+
+
+def _release_joint(
+    joint: dict[str, Any], hidden: set[str], k: int, removed: list[str]
+) -> dict[str, Any]:
+    """The ``joint`` block of a profile under the policy.
+
+    Its conditional tables and dependency violations carry real labels with counts: an entry that
+    names a column above the target is dropped, and a cohort or cell of fewer than ``k`` rows is
+    withheld, as for a column's own value counts. Associations hold names and measures only."""
+    out = dict(joint)
+    conditionals: list[Any] = []
+    for c in joint.get("conditionals") or []:
+        if not isinstance(c, dict):
+            continue
+        if c.get("given") in hidden or c.get("target") in hidden:
+            removed.append(f"joint.conditionals.{c.get('given')}->{c.get('target')}")
+            continue
+        table: dict[str, Any] = {}
+        for label, row in (c.get("table") or {}).items():
+            n = int(row.get("n", 0) or 0)
+            p = {t: v for t, v in (row.get("p") or {}).items() if round(float(v) * n) >= k}
+            if n >= k and p:
+                table[label] = {**row, "p": p}
+        if table:
+            conditionals.append({**c, "table": table})
+    dependencies: list[Any] = []
+    for d in joint.get("dependencies") or []:
+        if not isinstance(d, dict):
+            continue
+        entry = dict(d)
+        touches = hidden & {*(d.get("determinant") or []), d.get("dependent")}
+        groups: list[Any] = []
+        for v in d.get("violations") or []:
+            if touches or int(v.get("rows", 0) or 0) < k:
+                continue
+            counts = {a: b for a, b in (v.get("dependent_values") or {}).items() if b >= k}
+            if counts:
+                groups.append({**v, "dependent_values": counts})
+        if d.get("violations"):
+            entry["violations"] = groups
+        dependencies.append(entry)
+    out["conditionals"] = conditionals
+    out["dependencies"] = dependencies
+    return out
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,11 +112,17 @@ def release_for(
     rows = shape.get("rows")
     if isinstance(rows, int) and not isinstance(rows, bool) and rows < minimum_cohort:
         return ReleaseDecision(False, {}, ("shape",), "cohort_below_minimum")
-    removed = []
+    removed: list[str] = []
     out = {
         k: v for k, v in shape.items() if k not in {"columns", "raw_values", "samples", "examples"}
     }
     out["columns"] = {}
+    hidden = {
+        name
+        for name, c in shape.get("columns", {}).items()
+        if LEVELS.get(str(classifications.get(name, c.get("classification", "PUBLIC"))).upper(), 0)
+        > LEVELS[target]
+    }
     for name, c in shape.get("columns", {}).items():
         label = str(classifications.get(name, c.get("classification", "PUBLIC"))).upper()
         if label not in LEVELS:
@@ -97,6 +149,8 @@ def release_for(
             x, _, gone = suppress_column_cells(x, minimum_cohort, count)
             removed.extend(f"columns.{name}.{k}" for k in gone)
         out["columns"][name] = x
+    if isinstance(out.get("joint"), dict):
+        out["joint"] = _release_joint(out["joint"], hidden, minimum_cohort, removed)
     out["release_policy"] = {
         "target": target,
         "minimum_cohort": minimum_cohort,
