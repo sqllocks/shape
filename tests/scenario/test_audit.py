@@ -133,3 +133,26 @@ def test_510_a_spec_run_validates_the_spec_chaos(tmp_path, retail):
     result = PackRunner().run(pack, retail, "small", 1, tmp_path / "out", spec=spec)
     assert not result.is_success and not result.chaos_applied
     assert any("chaos.seed" in e or "chaos.config.seed" in e for e in result.errors), result.errors
+
+
+# ---- #513: an unknown file format is reported --------------------------------------------------
+
+
+@pytest.mark.parametrize("fmt", ["delta", "Parquet", "avro"])
+def test_513_an_unknown_file_format_is_warned_about(retail, fmt):
+    pack = PackLoader().parse({**FILE_DROP, "file_drop": {"formats": [fmt], "entities": []}})
+    warnings = PackValidator().validate(pack, retail).warnings
+    assert any(f"'{fmt}'" in w and "csv" in w for w in warnings), warnings
+
+
+def test_513_an_unknown_micro_batch_format_is_warned_about(retail):
+    hybrid = {"micro_batch": {"formats": ["orc"], "entities": ["customer"]}}
+    pack = PackLoader().parse({**FILE_DROP, "kind": "hybrid", "hybrid": hybrid})
+    warnings = PackValidator().validate(pack, retail).warnings
+    assert any("hybrid.micro_batch.formats" in w and "'orc'" in w for w in warnings), warnings
+
+
+def test_513_a_known_format_is_not_warned_about(retail):
+    for fmt in ("parquet", "csv", "jsonl", "json"):
+        pack = PackLoader().parse({**FILE_DROP, "file_drop": {"formats": [fmt], "entities": []}})
+        assert not any("format" in w for w in PackValidator().validate(pack, retail).warnings)
