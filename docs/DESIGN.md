@@ -29,10 +29,10 @@ this Shape supports is refused with an error that says so.
 | `entities[].history` | slowly changing dimension types: `default` and per-`attributes`; 0 retain, 1 overwrite (the default), 2 new row, 3 previous-value column |
 | `hierarchies[]` | `name`, `entity`, `levels` from the finest to the coarsest; each level determines the next |
 | `facts[]` | `name`, `source` (the entity the fact is measured on), `grain` (attributes of the source that identify one fact row), `measures[]`, `dimensions[]`, `dates`, `degenerate`, `junk`, `many_to_many` |
-| `facts[].measures[]` | `name`, `attribute`, `additivity` (`additive`, `semi_additive`, `non_additive`), `not_additive_over` |
+| `facts[].measures[]` | `name`, `attribute`, `additivity` (`additive`, `semi_additive`, `non_additive`), `not_additive_over` (dimension entities or roles, `date` for the date dimension, or attributes of the source) |
 | `facts[].dimensions[]` | `entity`, `via` (the source attribute that holds the key), optional `role` |
 
-A name may appear once in a key, a dependency side, a hierarchy or a fact's attribute lists, and a
+Names may not be empty. A name may appear once in a key, a dependency side, a hierarchy or a fact's attribute lists, and a
 decimal's `scale` may not exceed its `precision`; either is refused with the path of the problem.
 
 Declared keys count as dependencies (`key -> every other attribute`). An entity with no key gets

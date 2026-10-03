@@ -185,6 +185,7 @@ class DesignInput:
         return design
 
     def _check(self) -> None:
+        _nonempty_names(self)
         _unique([e.name for e in self.entities], "entity")
         _unique([h.name for h in self.hierarchies], "hierarchy")
         _unique([f.name for f in self.facts], "fact")
@@ -227,8 +228,21 @@ class DesignInput:
             src = _known_entity(by_name, f.source, where)
             have = set(src.attribute_names)
             _names_exist(f.grain, have, f"{where} grain")
+            # a semi-additive measure is not additive over a dimension (its entity or role), the
+            # date dimension (``date``) or an attribute of the source, such as a date
+            over = (
+                have | {d.entity for d in f.dimensions} | {d.role for d in f.dimensions if d.role}
+            )
+            if f.dates:
+                over.add("date")
             for m in f.measures:
                 _names_exist((m.attribute,), have, f"{where} measure {m.name!r}")
+                for n in m.not_additive_over:
+                    if n not in over:
+                        raise DesignError(
+                            f"{where} measure {m.name!r}: not_additive_over names {n!r}, which is "
+                            "no dimension, role, date or attribute of the fact's source"
+                        )
             _unique([m.name for m in f.measures], f"measure in {where}")
             for fd in f.dimensions:
                 _known_entity(by_name, fd.entity, f"{where} dimension")
@@ -268,6 +282,25 @@ def load_design(path: str | Path) -> DesignInput:
 
 
 # ---- helpers ---------------------------------------------------------------------------------
+
+
+def _nonempty_names(design: DesignInput) -> None:
+    named: list[tuple[str, str]] = []
+    for i, e in enumerate(design.entities):
+        named.append((e.name, f"entities[{i}]"))
+        named += [(a.name, f"entities[{i}].attributes[{j}]") for j, a in enumerate(e.attributes)]
+    named += [(h.name, f"hierarchies[{i}]") for i, h in enumerate(design.hierarchies)]
+    for i, f in enumerate(design.facts):
+        named.append((f.name, f"facts[{i}]"))
+        named += [(m.name, f"facts[{i}].measures[{j}]") for j, m in enumerate(f.measures)]
+        named += [
+            (d.role, f"facts[{i}].dimensions[{j}].role")
+            for j, d in enumerate(f.dimensions)
+            if d.role is not None
+        ]
+    for name, path in named:
+        if not name.strip():
+            raise DesignError(f"{path}: empty name; every table and column needs a name")
 
 
 def _unique(names: Sequence[str], what: str) -> None:
