@@ -235,9 +235,10 @@ pub fn dense_rows(keys: &Int64Array, start: i64, size: i64) -> Int64Array {
     let mut rows = Vec::with_capacity(values.len());
     let mut valid = Vec::with_capacity(values.len());
     for &k in values.iter() {
-        let row = k.wrapping_sub(start);
-        let inside = k >= start && row < size;
-        rows.push(if inside { row } else { 0 });
+        // In i128: `k - start` overflows i64 when the two are far apart.
+        let row = i128::from(k) - i128::from(start);
+        let inside = (0..i128::from(size)).contains(&row);
+        rows.push(if inside { row as i64 } else { 0 });
         valid.push(inside);
     }
     if let Some(nulls) = keys.nulls() {
@@ -267,8 +268,8 @@ fn group_sums<T: Copy + Default>(
     let mut counts = vec![0i64; size];
     let key_valid = keys.nulls();
     for (i, (&k, &v)) in keys.values().iter().zip(values).enumerate() {
-        let row = k.wrapping_sub(start);
-        if k < start || row >= size as i64 {
+        let row = i128::from(k) - i128::from(start); // no i64 overflow
+        if !(0..size as i128).contains(&row) {
             continue;
         }
         if key_valid.is_some_and(|n| n.is_null(i)) || value_valid.is_some_and(|n| n.is_null(i)) {

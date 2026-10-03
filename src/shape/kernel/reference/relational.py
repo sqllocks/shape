@@ -155,10 +155,20 @@ def _nullable_ints(a: Any, what: str) -> pa.Array:
     return arr
 
 
+def _in_sequence(values: npt.NDArray[np.int64], start: int, size: int) -> npt.NDArray[np.bool_]:
+    """``start <= value < start + size``, compared as Python ints at the bounds (``value - start``
+    overflows int64 when the two are far apart)."""
+    lo = max(int(start), -(2**63))
+    hi = min(int(start) + int(size) - 1, 2**63 - 1)
+    if hi < lo:
+        return np.zeros(values.shape, dtype=bool)
+    return (values >= np.int64(lo)) & (values <= np.int64(hi))
+
+
 def dense_rows(keys: Any, start: int, size: int) -> pa.Array:
     arr = _nullable_ints(keys, "keys")
     values = np.asarray(arrow_numpy(arrow_fill_null(arr, 0)), dtype=np.int64)
-    valid = (values >= start) & (values - start < size)
+    valid = _in_sequence(values, start, size)
     if arr.null_count:
         valid &= np.asarray(arrow_numpy(arr.is_valid()), dtype=bool)
     rows = np.where(valid, values - start, 0)
@@ -175,7 +185,7 @@ def group_sums(keys: Any, values: Any, start: int, size: int) -> tuple[pa.Array,
     if len(v) != len(k):
         raise ValueError("keys and values must have the same length")
     key_values = np.asarray(arrow_numpy(arrow_fill_null(k, 0)), dtype=np.int64)
-    keep = (key_values >= start) & (key_values - start < size)
+    keep = _in_sequence(key_values, start, size)
     if k.null_count:
         keep &= np.asarray(arrow_numpy(k.is_valid()), dtype=bool)
     if v.null_count:

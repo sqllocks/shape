@@ -22,7 +22,8 @@ A row owns `per_row` consecutive words, so row `r` reads words `r * per_row .. (
 Every function below that draws numbers takes `(k0, k1, row_start, n_rows)` and, where a row uses
 several words, `per_row` and `slot` (the first of the row's words the function reads). A result
 depends on `(key, row)` alone, so it is the same however the rows are split into calls, chunks
-or threads. Calls with at least 32,768 rows run on all cores (`SHAPE_THREADS` / `set_threads`).
+or threads. The stream has 2**64 words: a call whose rows end past it (`(row_start +
+n_rows) * per_row > 2**64`) is a `ValueError` in both implementations, never a wrapped address. Calls with at least 32,768 rows run on all cores (`SHAPE_THREADS` / `set_threads`).
 
 Conversions (shared by both implementations):
 
@@ -50,7 +51,7 @@ Conversions (shared by both implementations):
 | `temporal_sample(day_weights, hour_weights, start_day, k0, k1, row_start, n_rows, whole_seconds=False)` | 5 | `timestamp[us]`: a day, an hour, and an offset inside the hour; words 0-1 day, 2-3 hour, 4 offset |
 | `first_flags(codes)` | | `bool`: true on the first row of each non-negative group code (`0 <= code < len`); a negative code is never first |
 | `group_order(codes, keys)` | | `(rank, size, next)`, all int64: the 0-based place of each row in its group sorted by `keys` (ties keep row order), the group's size, and the row that follows it (-1 for the last); a negative code gives `(-1, 0, -1)` |
-| `dense_rows(keys, start, size)` | | `int64` row of the sequence key `start, start + 1, ...` (`size` rows) that holds each key; null for a null key or one outside the sequence |
+| `dense_rows(keys, start, size)` | | `int64` row of the sequence key `start, start + 1, ...` (`size` rows) that holds each key; null for a null key or one outside the sequence (compared without int64 overflow) |
 | `group_sums(keys, values, start, size)` | | `(sums, counts)`: per row of that sequence, the sum (the type of `values`, int64 or float64) and the count of the non-null `values` of the child rows whose key it is; added in row order (a float sum is the sequential one), a null or unknown key is skipped, an integer sum wraps |
 | `scd2_offsets(codes, total_days, min_gap, k0, k1)` | per group | int64 day offsets of SCD type 2 effective dates (see below); -1 for a negative code |
 | `cap_per_parent(indices, pool, max_per_parent, k0, k1)` | up to 64 per moved row | int64 parent indices with at most `max_per_parent` rows each (see below) |

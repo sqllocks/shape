@@ -38,6 +38,11 @@ def _words(k0: int, k1: int, row_start: int, n_rows: int, per_row: int) -> npt.N
         raise ValueError("per_row must be positive")
     if row_start < 0 or n_rows < 0:
         raise ValueError("row_start and n_rows must be non-negative")
+    if (row_start + n_rows) * per_row > 2**64:
+        raise ValueError(
+            f"rows {row_start}..{row_start + n_rows} at {per_row} words per row pass the end of "
+            "the stream (2**64 words)"
+        )
     count = n_rows * per_row
     if count == 0:
         return np.empty(0, dtype=np.uint64)

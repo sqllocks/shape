@@ -151,7 +151,7 @@ def _both():
 
 @pytest.mark.parametrize(
     ("keys", "start", "size"),
-    [([1, 5], I64_MIN, 10), ([I64_MAX, 0], -2, I64_MAX), ([I64_MIN, 7], 1, 5)],
+    [([1, 5], I64_MIN, 10), ([I64_MAX, -3], -2, I64_MAX), ([I64_MIN, 7], 1, 5)],
 )
 def test_keys_outside_the_sequence_are_null_even_when_the_difference_overflows(keys, start, size):
     # Regression #549: key - start wrapped, giving a negative row (dense_rows) or a panic
@@ -178,7 +178,7 @@ def test_a_slot_whose_end_overflows_is_rejected():
 @pytest.mark.parametrize(
     "call",
     [
-        lambda m: m.philox_words(1, 2, 0, 2**62, 4),
+        lambda m: m.philox_words(1, 2, 1, 2**62, 4),
         lambda m: m.philox_words(1, 2, 2**63, 2, 2),
         lambda m: m.philox_uniform(1, 2, 2**64 - 1, 2),
         lambda m: m.uuid4_strings(1, 2, 2**64 - 1, 2),

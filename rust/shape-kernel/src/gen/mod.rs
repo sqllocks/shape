@@ -46,9 +46,23 @@ fn i64_array(a: PyArray, what: &str) -> PyResult<Int64Array> {
 }
 
 fn check_slot(per_row: usize, slot: usize, width: usize) -> PyResult<()> {
-    if per_row == 0 || slot + width > per_row {
+    if per_row == 0 || slot.checked_add(width).is_none_or(|end| end > per_row) {
         return Err(err(format!(
             "slot {slot} (+{width} words) does not fit in {per_row} words per row"
+        )));
+    }
+    Ok(())
+}
+
+/// The stream has 2**64 words: rows `row_start .. row_start + n_rows` at `per_row` words each must
+/// end inside it (a wrapped word address would alias rows near 0).
+fn check_stream(row_start: u64, n_rows: usize, per_row: usize) -> PyResult<()> {
+    let end = (u128::from(row_start) + n_rows as u128) * per_row as u128;
+    if end > 1u128 << 64 {
+        return Err(err(format!(
+            "rows {row_start}..{} at {per_row} words per row pass the end of the stream \
+             (2**64 words)",
+            u128::from(row_start) + n_rows as u128
         )));
     }
     Ok(())
@@ -69,6 +83,7 @@ fn philox_words(
     if per_row == 0 {
         return Err(err("per_row must be positive".into()));
     }
+    check_stream(row_start, n_rows, per_row)?;
     let v = py.detach(|| {
         let mut words = vec![0u64; n_rows * per_row];
         fill_flat([k0, k1], row_start * per_row as u64, &mut words);
@@ -104,6 +119,7 @@ fn philox_uniform(
     slot: usize,
 ) -> PyResult<PyArray> {
     check_slot(per_row, slot, 1)?;
+    check_stream(row_start, n_rows, per_row)?;
     let v = py.detach(|| {
         let mut o = vec![0f64; n_rows];
         rng::for_row_chunks([k0, k1], row_start, per_row, &mut o, true, &|w, c| {
@@ -130,6 +146,7 @@ fn philox_normal(
     slot: usize,
 ) -> PyResult<PyArray> {
     check_slot(per_row, slot, 2)?;
+    check_stream(row_start, n_rows, per_row)?;
     let v = py.detach(|| {
         let mut o = vec![0f64; n_rows];
         rng::for_row_chunks([k0, k1], row_start, per_row, &mut o, true, &|w, c| {
@@ -172,6 +189,7 @@ fn alias_sample(
     slot: usize,
 ) -> PyResult<PyArray> {
     check_slot(per_row, slot, 2)?;
+    check_stream(row_start, n_rows, per_row)?;
     let prob = f64_values(prob, "prob")?;
     let alias_a = i64_array(alias, "alias")?;
     let alias_v = alias_a.values().to_vec();
@@ -262,6 +280,7 @@ fn uuid4_strings(
     row_start: u64,
     n_rows: usize,
 ) -> PyResult<PyArray> {
+    check_stream(row_start, n_rows, 2)?;
     let r = py
         .detach(|| strings::uuid4([k0, k1], row_start, n_rows))
         .map_err(err)?;
@@ -280,6 +299,7 @@ fn random_strings(
     alphabet: &str,
 ) -> PyResult<PyArray> {
     let chars: Vec<char> = alphabet.chars().collect();
+    check_stream(row_start, n_rows, length)?;
     let r = py
         .detach(|| strings::random_chars([k0, k1], row_start, n_rows, length, &chars))
         .map_err(err)?;
@@ -327,6 +347,7 @@ fn temporal_sample(
 ) -> PyResult<PyArray> {
     let dw = f64_values(day_weights, "day_weights")?;
     let hw = f64_values(hour_weights, "hour_weights")?;
+    check_stream(row_start, n_rows, 5)?;
     let v = py
         .detach(|| {
             temporal::sample(
