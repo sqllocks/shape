@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from data_1_1 import mail_tables, shop_tables, write_dataset  # noqa: F401
+from data_1_1 import shop_tables, write_dataset, write_design
 
 D = "${DIR}"
 V11 = "1.1"
@@ -170,6 +170,31 @@ FILES["project_show"] = {
     ]
 }
 
+FILES["design"] = {
+    "cases": [
+        case("star", "design", {"input": f"{D}/retail.design.json", "mode": "star"}),
+        case(
+            "postgres-3nf",
+            "design",
+            {"input": f"{D}/tiny.design.json", "dialect": "postgres", "schema_name": "dw"},
+        ),
+        case("lint-errors", "design", {"input": f"{D}/failing.design.json", "mode": "star"}),
+        case("missing-file", "design", {"input": f"{D}/none.design.json"}),
+        case(
+            "unknown-mode",
+            "design",
+            {"input": f"{D}/retail.design.json", "mode": "galaxy"},
+            valid_request=False,
+        ),
+    ]
+}
+FILES["design_from_data"] = {
+    "cases": [
+        case("a-csv", "design_from_data", {"source": f"{D}/a.csv", "name": "orders"}),
+        case("missing-file", "design_from_data", {"source": f"{D}/none.csv"}),
+    ]
+}
+
 #: Setup and cases added to the vector files of 1.0 commands.
 EXTENDS: dict[str, dict[str, Any]] = {
     "profile": {
@@ -243,6 +268,8 @@ EXTENDS: dict[str, dict[str, Any]] = {
 
 def write_fixtures(folder: Path) -> None:
     write_dataset(folder / "shop", shop_tables())
+    for name in ("retail", "tiny", "failing"):
+        write_design(folder, name)
     (folder / "shape.yml").write_text(PROJECT_YML)
     (folder / "ranges.json").write_text(
         json.dumps(

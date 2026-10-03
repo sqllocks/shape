@@ -107,6 +107,41 @@
       "since": "1.0",
       "summary": "A domain's or schema's tables, columns, relationships, rules and scale presets."
     },
+    "design": {
+      "args": {
+        "dialect": "1.1",
+        "drop": "1.1",
+        "input": "1.1",
+        "mode": "1.1",
+        "schema_name": "1.1"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/design.request.schema.json",
+      "result": "commands/design.result.schema.json",
+      "since": "1.1",
+      "summary": "Design a 3NF, star or snowflake schema from a design input: lint report, tables and DDL."
+    },
+    "design_from_data": {
+      "args": {
+        "name": "1.1",
+        "source": "1.1"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/design_from_data.request.schema.json",
+      "result": "commands/design_from_data.result.schema.json",
+      "since": "1.1",
+      "summary": "Build a design input from a data file: its types, keys and exact functional dependencies."
+    },
     "diff": {
       "args": {
         "after": "1.0",

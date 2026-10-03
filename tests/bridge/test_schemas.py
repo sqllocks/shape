@@ -43,6 +43,8 @@ ADDED_1_1 = {
     "proposals_decide",
     "project_validate",
     "project_show",
+    "design",
+    "design_from_data",
 }
 
 

@@ -7,42 +7,53 @@
       "type": "string"
     },
     "args": {
+      "additionalProperties": false,
+      "properties": {
+        "dialect": {
+          "description": "the SQL dialect of the DDL (default tsql)",
+          "enum": [
+            "tsql",
+            "tsql-fabric-warehouse",
+            "postgres",
+            "mysql"
+          ],
+          "type": "string",
+          "x-since": "1.1"
+        },
+        "drop": {
+          "description": "drop each table before creating it",
+          "type": "boolean",
+          "x-since": "1.1"
+        },
+        "input": {
+          "description": "a design input file (JSON, format shape-design)",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.1"
+        },
+        "mode": {
+          "description": "the schema to derive (default 3nf)",
+          "enum": [
+            "3nf",
+            "star",
+            "snowflake"
+          ],
+          "type": "string",
+          "x-since": "1.1"
+        },
+        "schema_name": {
+          "description": "qualify every table with this schema",
+          "type": "string",
+          "x-since": "1.1"
+        }
+      },
+      "required": [
+        "input"
+      ],
       "type": "object"
     },
     "command": {
-      "enum": [
-        "check",
-        "demo_cleanup",
-        "demo_list",
-        "demo_run",
-        "demo_status",
-        "describe",
-        "design",
-        "design_from_data",
-        "diff",
-        "dry_run",
-        "generate",
-        "job_cancel",
-        "job_list",
-        "job_status",
-        "list",
-        "preview",
-        "profile",
-        "profile_info",
-        "project_show",
-        "project_validate",
-        "proposals_decide",
-        "proposals_list",
-        "proposals_propose",
-        "scale_cancel",
-        "scale_generate",
-        "scale_status",
-        "stream",
-        "stream_status",
-        "stream_stop",
-        "validate",
-        "verify"
-      ]
+      "const": "design"
     },
     "id": {
       "maxLength": 128,
@@ -79,9 +90,11 @@
     }
   },
   "required": [
-    "command"
+    "command",
+    "args"
   ],
-  "title": "bridge request",
+  "title": "design request",
   "type": "object",
-  "x-api-version": "1.1"
+  "x-api-version": "1.1",
+  "x-since": "1.1"
 }

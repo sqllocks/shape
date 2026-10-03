@@ -10,6 +10,7 @@ def _build() -> dict[str, Command]:
     from shape.bridge.handlers import (
         catalog,
         demo,
+        design,
         flow,
         generate,
         project,
@@ -19,7 +20,7 @@ def _build() -> dict[str, Command]:
     )
 
     table: dict[str, Command] = {}
-    for module in (catalog, generate, flow, scale, demo, proposals, project):
+    for module in (catalog, generate, flow, scale, demo, proposals, project, design):
         for command in module.COMMANDS:
             if command.name in table:
                 raise AssertionError(f"duplicate bridge command {command.name!r}")
