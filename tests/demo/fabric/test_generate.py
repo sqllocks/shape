@@ -199,10 +199,10 @@ def test_delta_tables_have_no_nanosecond_timestamps(lh):
 
 def test_the_notebook_writes_the_contract_and_a_manifest(lh):
     out = _generate(lh)
-    contract = json.loads((lh / "Files" / out["contractPath"]).read_text())
+    contract = json.loads((lh / "Files" / out["contractPath"]).read_text(encoding="utf-8"))
     assert out["contractPath"] == "shape/retail/contract.json"
     assert set(contract["tables"]) == {t["table"] for t in out["tables"]}
-    manifest = json.loads((lh / "Files" / "shape" / "retail" / "generation.json").read_text())
+    manifest = json.loads((lh / "Files" / "shape" / "retail" / "generation.json").read_text(encoding="utf-8"))
     assert manifest["seed"] == 42 and len(manifest["tables"]) == RETAIL_TABLES
 
 
@@ -412,7 +412,7 @@ def test_the_pipeline_is_schema_valid_and_generates_then_profiles_then_checks():
     assert gate["typeProperties"]["ifTrueActivities"] == []
     (fail,) = gate["typeProperties"]["ifFalseActivities"]
     assert fail["type"] == "Fail" and fail["typeProperties"]["errorCode"] == "ShapeContractFailed"
-    platform = json.loads((PIPELINE.parent / ".platform").read_text())
+    platform = json.loads((PIPELINE.parent / ".platform").read_text(encoding="utf-8"))
     assert platform["metadata"] == {"type": "DataPipeline", "displayName": "shape_generate_gate"}
 
 
@@ -532,7 +532,7 @@ def test_bind_replaces_every_placeholder_of_the_new_pipeline(tmp_path):
         check=True, capture_output=True,
     )  # fmt: skip
     bound = json.loads(
-        (out / "shape_generate_gate.DataPipeline" / "pipeline-content.json").read_text()
+        (out / "shape_generate_gate.DataPipeline" / "pipeline-content.json").read_text(encoding="utf-8")
     )
     assert "<<" not in json.dumps(bound)
     ids = {a["typeProperties"].get("notebookId") for a in bound["properties"]["activities"]}

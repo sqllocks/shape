@@ -332,7 +332,7 @@ def _settings(out: Path, name: str = "run-1", **kw) -> dict:
 
 def _run(settings: dict, cli=None) -> tuple[int, dict]:
     code = script.run(settings, cli or SHAPE_CLI)
-    gate = json.loads((Path(settings["outputUrl"]) / "gate.json").read_text())
+    gate = json.loads((Path(settings["outputUrl"]) / "gate.json").read_text(encoding="utf-8"))
     return code, gate
 
 
@@ -361,7 +361,7 @@ def test_a_passing_gate_exits_0_and_publishes_the_data_the_contract_and_the_arti
     assert {p.stem for p in (run / "data").glob("*.parquet")} == set(RETAIL_ROWS)
     assert gate["artifactUrl"] == str(run / "profile.shape")
     assert gate["contractUrl"] == str(run / "contract.json")
-    contract = json.loads((run / "contract.json").read_text())
+    contract = json.loads((run / "contract.json").read_text(encoding="utf-8"))
     assert set(contract["tables"]) == set(RETAIL_ROWS)
     assert contract["tables"]["customer"]["row_count"] == {"min": 1000, "max": 1000}
     assert set(shape.load(str(run / "profile.shape")).tables) == set(RETAIL_ROWS)

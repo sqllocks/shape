@@ -120,11 +120,19 @@ def _download(url: str, dest: Path, client_id: str) -> None:
         raise GateError(f"cannot read {url}: {type(exc).__name__}: {exc}") from exc
 
 
+def join_location(base: str, name: str) -> str:
+    """``name`` under ``base``. The one separator rule: a URL (``scheme://``) joins with ``/``;
+    a local path joins with the platform's own separator, so the result never mixes the two."""
+    if "://" in base:
+        return base.rstrip("/") + "/" + name
+    return str(Path(base) / name)
+
+
 def _upload(src: Path, base_url: str, name: str, client_id: str) -> str:
-    target = base_url.rstrip("/") + "/" + name
+    target = join_location(base_url, name)
     fs, path = _filesystem(target, client_id)
     try:
-        parent = path.rsplit("/", 1)[0]
+        parent = path.rsplit("/", 1)[0] if _ABFS.match(target) else os.path.dirname(path)
         fs.makedirs(parent, exist_ok=True)
         with open(src, "rb") as data, fs.open(path, "wb") as out:
             out.write(data.read())

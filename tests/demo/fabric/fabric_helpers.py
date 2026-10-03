@@ -12,7 +12,7 @@ import contextlib
 import sys
 import types
 from collections.abc import Iterator
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Any
 
 import nbformat
@@ -100,6 +100,11 @@ def _strip_magics(src: str) -> str | None:
     return "\n".join(ln for ln in src.splitlines() if not ln.lstrip().startswith("%"))
 
 
+def fabric_source(src: str, lakehouse: PurePath) -> str:
+    """Point a notebook cell at ``lakehouse``; Fabric paths use forward slashes everywhere."""
+    return src.replace("/lakehouse/default", lakehouse.as_posix())
+
+
 def run_notebook(
     path: Path,
     lakehouse: Path,
@@ -115,7 +120,7 @@ def run_notebook(
         src = _strip_magics(cell.source)
         if src is None:
             continue
-        src = src.replace("/lakehouse/default", str(lakehouse))
+        src = fabric_source(src, lakehouse)
         for old, new in (replacements or {}).items():
             src = src.replace(old, new)
         try:

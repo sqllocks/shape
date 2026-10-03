@@ -267,7 +267,7 @@ def test_dataset_and_linked_services_are_schema_valid_and_hold_no_secrets():
         doc = load(f"linkedService/{name}.json")
         assert doc["name"] == name and doc["properties"]["type"] == kind
         assert set(required) <= set(doc["properties"]["typeProperties"]), name
-    text = "".join(p.read_text() for p in FACTORY.rglob("*.json"))
+    text = "".join(p.read_text(encoding="utf-8") for p in FACTORY.rglob("*.json"))
     assert "<<BATCH_KEY_SECRET_NAME>>" in text  # a Key Vault secret name, never a key
     assert not re.search(
         r"(?i)(accountkey|sharedkey|sas|password|secret)\s*\"\s*:\s*\"[A-Za-z0-9+/=]{20,}", text
@@ -351,7 +351,7 @@ def _settings(data: dict, day: int = 1, **kw) -> dict:
 
 def _run(settings: dict) -> tuple[int, dict]:
     code = gate_script.run(settings, SHAPE_CLI)
-    gate = json.loads((Path(settings["outputUrl"]) / "gate.json").read_text())
+    gate = json.loads((Path(settings["outputUrl"]) / "gate.json").read_text(encoding="utf-8"))
     return code, gate
 
 
@@ -371,7 +371,7 @@ def test_a_passing_gate_exits_0_and_publishes_the_artifacts(data):
     out = Path(data["out"]) / "run-1"
     assert {p.name for p in out.iterdir()} == {"gate.json", "profile.shape", "summary.json"}
     assert gate["artifactUrl"] == str(out / "profile.shape")
-    assert json.loads((out / "summary.json").read_text())["row_count"] == 2000
+    assert json.loads((out / "summary.json").read_text(encoding="utf-8"))["row_count"] == 2000
 
 
 def test_a_failing_contract_exits_1_but_still_writes_the_gate_for_the_lookup(data):

@@ -259,7 +259,7 @@ def spark(tmp_path_factory):
     builder = (
         SparkSession.builder.master("local[1]")
         .appName("shape-l2-tests")
-        .config("spark.sql.warehouse.dir", str(wh))
+        .config("spark.sql.warehouse.dir", wh.as_uri())
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
         .config(
             "spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog"
