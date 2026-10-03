@@ -107,4 +107,55 @@ No duplicates found (searched open issues; #5, #27 and #4 are related but differ
 
 ## Phase 3 — fixes
 
-(filled in below)
+Every fix has a regression test in `tests/regressions/test_aud_cli.py` that was committed failing
+first (the failing output is in the test commits: 9399734 for #107, c3e968a for #108-#114,
+133bca2 for #115-#125). The "not verified" tests (#109) and the closed-pipe test (#120) run
+`python -m shape` as a subprocess, because pytest records warnings instead of printing them.
+
+| Issue | Finding | Fix commit | What changed |
+|---|---|---|---|
+| #107 | 1 | b5e68f6 | `diff` of captures: `--fail-on-drift` exits 1 on any change, `--json` written, profile-only flags refused (docs/CLI.md) |
+| #108 | 2 | d74ed7c | `check` of an evidence document writes `--json` |
+| #109 | 3 | df988eb, ff85ce5 | notices routed for the whole dispatch; `registry diff` and `conformance` read with notices off (`errors.quiet_notices`) |
+| #110 | 4 | 539fbc5 | `fidelity --format` checked against the installed report formats first; `errors.describe` shows a `KeyError` that carries a sentence as it is |
+| #111 | 5 | fb694b9 | a `--tier` report goes to every `-o`; a non-`.json` name is refused before the run (help says so) |
+| #112 | 6 | 4f1a9b6 | `load_target` reads `.yaml`/`.yml` with the safe loader `validate` uses (`validate.load_document`; `_load` kept for the bridge) |
+| #113 | 7 | efb9957 | `learn` refuses to write a non-finite number, naming the path and column; the overflow itself is in `shape.generation.learn` (outside the area): **#113 stays open for it** |
+| #114 | 8 | 76b7741 | `quality` exits 1 for a failed check |
+| #115 | 9 | 1b0044c | help for `conformance`, `version`, `quality`, `key`, `fd`, `privacy-k`, `query`, `certify-shapes`; `check` and `compatibility` name exit 4 and 5 |
+| #116 | 10 | 2a6beda | JSON and text decode errors name the file; they keep their exception types, so the bridge's error codes are unchanged |
+| #117 | 11 | e1856fa | the into-memory note printed once |
+| #118 | 12 | 164f1cf | `--duplicate-fraction`/`--poison-fraction` 0-1, `--retries` >= 0, `--checkpoint-every` >= 1, checked before any work |
+| #119 | 13 | 164f1cf | `--live-report` extension checked before streaming |
+| #120 | 14 | 276f2d4, f429fb4 | a closed standard output: exit 141, nothing printed (docs/CLI.md exit table) |
+| #121 | 15 | ca052ca | `demo notebook` and `demo report` take `-o` |
+| #123 | 17, 18 | a8b4986 | an unknown `--log-level` (with `--log-json`) and a `--metrics` path in a missing folder are refused before the command |
+| #124 | 19 | c1c8274 | `--chunk-rows 0` reaches the engine, which refuses it |
+| #125 | 20 | 0aee269 | `learn`, `mask`, `profile registry save`: `file not found: PATH` |
+
+CHANGELOG.md: "Fixed (command line)" (586175f).
+
+## Left open, and why
+
+- **#122** (finding 16), for the lead: `tests/cli/test_profile_registry_cli.py::test_registry_delete`
+  asserts that deleting a missing profile exits **1**. Making it 2 like `tag`/`diff` would change an
+  existing test's expectation, which this lane may not do. My own regression test for it was
+  removed (f158930). Decide: keep 1 (and document it), or change the test and the code to 2.
+- **#126** (finding 21): `shape cat` as a git textconv prints a "not signed" note on every
+  `git diff`. docs/SIGNING.md says every CLI read prints the note, so silencing it for `cat` is the
+  owner's call.
+- **#127** (finding 22, `shape.demo.api`) and **#152** (`shape quality` crashes with `TypeError` on a
+  text value in a numeric column, `shape.quality.policy`): outside this area, filed only.
+- **#113**: the CLI side is fixed. The overflowing `std_dev` in `shape.generation.learn` is not.
+- `verify`/`drift`/`fidelity` still say `Path not found:` (pinned by `tests/quality/test_verify.py`,
+  as ISS-cli recorded).
+
+## Pre-existing failures (not this lane's)
+
+On unmodified INT-15 (f99563e), in this container: `tests/demo/fabric/test_udf.py` and
+`test_generate_udf.py` cannot import (`libodbc.so.2` missing: no unixODBC here);
+`tests/demo_cmd/test_notebook_and_outputs.py::test_the_semantic_model_is_a_bim_of_the_learned_schema`
+and `::test_all_writes_the_page_and_the_model` need the `shape-fabric` plugin, which the main CI
+job does not install. With the fabric test requirements installed, pip pulled pyarrow down to
+19.0.1, which failed three more tests (float16 hashing, landing, ...); with pyarrow 25.0.1 (the
+version the plan pins) they pass.
