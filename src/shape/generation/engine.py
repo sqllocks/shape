@@ -647,17 +647,7 @@ class Engine:
         index = row_start // self.chunk_rows if chunk is None else chunk
         built: dict[str, pa.Array] = {}
         for cname in order_columns(tdef):
-            col = tdef.columns[cname]
-            produced = self._column(table, col, index, row_start, n_rows, built)
-            if isinstance(produced, Mapping):
-                for key, arr in produced.items():
-                    built[key] = self._as_array(arr, f"{table}.{cname}", n_rows)
-                built.setdefault(cname, built[next(iter(produced))])
-                continue
-            arr = self._as_array(produced, f"{table}.{cname}", n_rows)
-            if col.nullable and col.null_rate > 0:
-                arr = self._mask_nulls(arr, table, col, row_start, n_rows)
-            built[cname] = arr
+            self._build_column(table, tdef, cname, index, row_start, n_rows, built)
         # Output: the table's own columns in generation order (internal names are dropped).
         out_names = [c for c in order_columns(tdef) if c in built]
         return pa.RecordBatch.from_arrays([built[c] for c in out_names], names=out_names)
@@ -678,20 +668,41 @@ class Engine:
         index = row_start // self.chunk_rows
         built: dict[str, pa.Array] = {}
         for cname in order_columns(tdef):
-            col = tdef.columns[cname]
-            produced = self._column(table, col, index, row_start, n_rows, built)
-            if isinstance(produced, Mapping):
-                for key, arr in produced.items():
-                    built[key] = self._as_array(arr, f"{table}.{cname}", n_rows)
-                built.setdefault(cname, built[next(iter(produced))])
-            else:
-                arr = self._as_array(produced, f"{table}.{cname}", n_rows)
-                if col.nullable and col.null_rate > 0:
-                    arr = self._mask_nulls(arr, table, col, row_start, n_rows)
-                built[cname] = arr
+            self._build_column(table, tdef, cname, index, row_start, n_rows, built)
             if cname == column:
                 return built[cname]
         raise KeyError(f"column '{table}.{column}' is not generated")
+
+    def _build_column(
+        self,
+        table: str,
+        tdef: Table,
+        cname: str,
+        chunk: int,
+        row_start: int,
+        n_rows: int,
+        built: dict[str, pa.Array],
+    ) -> None:
+        """Add column ``cname`` of a chunk (and any internal names its strategy makes) to
+        ``built``, with its null rate applied. A strategy that makes several arrays at once has the
+        same rows null in every one of them that is not a column of the table, so the values read
+        from it later (``composite_fk_field``, ``record_field``) are missing together."""
+        col = tdef.columns[cname]
+        where = f"{table}.{cname}"
+        produced = self._column(table, col, chunk, row_start, n_rows, built)
+        nulls = col.nullable and col.null_rate > 0
+        if isinstance(produced, Mapping):
+            if not produced:
+                raise ValueError(f"strategy for {where} returned no arrays")
+            arrays = {key: self._as_array(arr, where, n_rows) for key, arr in produced.items()}
+            arrays.setdefault(cname, next(iter(arrays.values())))
+            for key, arr in arrays.items():
+                if nulls and (key == cname or key not in tdef.columns):
+                    arr = self._mask_nulls(arr, table, col, row_start, n_rows)
+                built[key] = arr
+            return
+        arr = self._as_array(produced, where, n_rows)
+        built[cname] = self._mask_nulls(arr, table, col, row_start, n_rows) if nulls else arr
 
     def cached(self, key: Hashable, build: Callable[[], _T]) -> _T:
         """``build()`` once per engine and ``key``: strategies keep whole-table results (the
