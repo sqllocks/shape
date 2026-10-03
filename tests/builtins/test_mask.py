@@ -326,3 +326,11 @@ def test_empty_and_all_null_columns_are_left_alone():
     assert res.tables["t"].equals(t)
     empty = pa.table({"email": pa.array([], pa.string())})
     assert mask_tables({"t": empty}).tables["t"].num_rows == 0
+
+
+def test_replacement_emails_use_reserved_example_domains():
+    # ISS-gen (lead decision 2026-10-02): a masked address can never reach a real mailbox.
+    t = pa.table({"email": [f"p{i}@gmail.com" for i in range(2000)] + [None]})
+    out = [v for v in mask_tables({"t": t}).tables["t"]["email"].to_pylist() if v is not None]
+    assert len(out) == 2000 and all(EMAIL.match(v) for v in out)
+    assert {v.rsplit("@", 1)[1] for v in out} <= {"example.com", "example.org", "example.net"}

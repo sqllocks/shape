@@ -33,10 +33,51 @@ def _microseconds(text: Any, what: str, ctx: GenerationContext) -> int:
     return int(np.datetime64(parsed, "us").astype(np.int64))
 
 
-def _range(spec: Mapping[str, Any], ctx: GenerationContext) -> tuple[int, int]:
-    """``(start, end)`` in microseconds. ``range_ref: model.date_range`` takes the model's range;
-    otherwise a nested ``date_range`` (or ``range``), then top-level ``start``/``end``, then
-    2022-01-01 .. 2025-12-31."""
+def _date_only(text: Any) -> bool:
+    """Whether ``text`` names a day (``2026-05-01``), not an instant."""
+    raw = str(text).strip()
+    return len(raw) <= 10 and "T" not in raw and ":" not in raw
+
+
+class _Range:
+    """The microsecond range of a column. ``end`` is the bound as written; ``inclusive`` says it
+    was a date, which stands for the whole day, so the end day is a possible day (a one-day range
+    has ``start == end``)."""
+
+    __slots__ = ("end", "end_text", "inclusive", "start", "start_text")
+
+    def __init__(self, start: int, end: int, start_text: Any, end_text: Any) -> None:
+        self.start, self.end = start, end
+        self.start_text, self.end_text = start_text, end_text
+        self.inclusive = _date_only(end_text)
+
+    @property
+    def stop(self) -> int:
+        """The exclusive upper bound in microseconds."""
+        return self.end + _DAY_US if self.inclusive else self.end
+
+    def check_days(self, n_days: int, ctx: GenerationContext) -> None:
+        """A day-weighted range needs at least one day (the end day counts)."""
+        if n_days < 1:
+            self.check(ctx)
+            raise StrategyError(f"temporal range has no day ({where(ctx)})")
+
+    def check(self, ctx: GenerationContext) -> None:
+        if self.end < self.start:
+            raise StrategyError(
+                f"temporal end {self.end_text} is before the start {self.start_text} ({where(ctx)})"
+            )
+        if self.stop <= self.start:
+            raise StrategyError(
+                f"temporal end equals the start {self.start_text} and the end is an exclusive "
+                f"time: give dates (end {str(self.end_text)[:10]} is then a possible day) "
+                f"({where(ctx)})"
+            )
+
+
+def _range(spec: Mapping[str, Any], ctx: GenerationContext) -> _Range:
+    """``range_ref: model.date_range`` takes the model's range; otherwise a nested ``date_range``
+    (or ``range``), then top-level ``start``/``end``, then 2022-01-01 .. 2025-12-31."""
     if spec.get("range_ref") == "model.date_range":
         engine = getattr(ctx, "engine", None)
         window: Mapping[str, Any] = engine.schema.model.date_range if engine is not None else {}
@@ -46,16 +87,16 @@ def _range(spec: Mapping[str, Any], ctx: GenerationContext) -> tuple[int, int]:
     end = window.get("end")
     start = spec.get("start", "2022-01-01") if start is None else start
     end = spec.get("end", "2025-12-31") if end is None else end
-    return _microseconds(start, "start", ctx), _microseconds(end, "end", ctx)
+    return _Range(_microseconds(start, "start", ctx), _microseconds(end, "end", ctx), start, end)
 
 
 _UNITS = ("s", "ms", "us", "ns")
 
 
-def _uniform(start: int, end: int, ctx: GenerationContext) -> npt.NDArray[np.int64]:
-    """Microsecond timestamps uniform on ``[start, end)``."""
-    if end <= start:
-        raise StrategyError(f"temporal range must end after it starts ({where(ctx)})")
+def _uniform(window: _Range, ctx: GenerationContext) -> npt.NDArray[np.int64]:
+    """Microsecond timestamps uniform on ``[start, stop)``: a date end is a possible day."""
+    window.check(ctx)
+    start, end = window.start, window.stop
     u = stream(ctx, "v").uniform(ctx.row_start, ctx.n_rows)
     offsets = np.minimum((u * (end - start)).astype(np.int64), end - start - 1)
     return start + offsets
@@ -99,7 +140,10 @@ class Temporal:
     The range is ``date_range`` (or ``range``) ``{"start", "end"}``, or top-level ``start`` and
     ``end``, or ``range_ref: "model.date_range"``; the default is 2022-01-01 .. 2025-12-31.
     ``pattern: "uniform"`` (the default, and what any unknown pattern means) draws uniformly on
-    ``[start, end)``. ``pattern: "seasonal"`` weights days by ``profiles.month`` (``Jan`` ..
+    ``[start, end)``. An ``end`` that is a date (``2026-05-01``) stands for the whole day, so the
+    end day is a possible day for every pattern and ``start == end`` is one single day; an ``end``
+    with a time of day is the exact, exclusive bound. ``pattern: "seasonal"`` weights days by
+    ``profiles.month`` (``Jan`` ..
     ``Dec``) and ``profiles.day_of_week`` (``Mon`` .. ``Sun``; missing names weigh 1/12 and 1/7,
     and ``month_weights`` / ``day_of_week_weights`` at the top level are accepted too); the end
     date itself is a possible day. ``profiles.hour_of_day`` replaces the time of day by a whole
@@ -136,10 +180,11 @@ class Temporal:
             raise StrategyError(f"temporal values do not fit unit {unit!r} ({where(ctx)})") from exc
 
     def _microseconds(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
-        start, end = _range(spec, ctx)
+        window = _range(spec, ctx)
+        start, end = window.start, window.end
         if spec.get("pattern", "uniform") != "seasonal":
             return arrow_array(
-                _uniform(start, end, ctx).astype("datetime64[us]"), type=pa.timestamp("us")
+                _uniform(window, ctx).astype("datetime64[us]"), type=pa.timestamp("us")
             )
         profiles = dict(spec.get("profiles") or {})
         if not profiles.get("month") and spec.get("month_weights"):
@@ -152,18 +197,16 @@ class Temporal:
         if not month_w and not dow_w:
             if not hour_profile:
                 return arrow_array(
-                    _uniform(start, end, ctx).astype("datetime64[us]"), type=pa.timestamp("us")
+                    _uniform(window, ctx).astype("datetime64[us]"), type=pa.timestamp("us")
                 )
             first = start // _DAY_US
-            n_days = -(-end // _DAY_US) - first
-            if n_days < 1:
-                raise StrategyError(f"temporal range must end after it starts ({where(ctx)})")
+            n_days = -(-window.stop // _DAY_US) - first
+            window.check_days(n_days, ctx)
             days = np.ones(n_days)
         else:
             first = start // _DAY_US
             n_days = end // _DAY_US - first + 1
-            if n_days < 1:
-                raise StrategyError(f"temporal range must end after it starts ({where(ctx)})")
+            window.check_days(n_days, ctx)
             days = _day_weights(first, n_days, _weights(month_w, _MONTHS), _weights(dow_w, _DOW))
         return kernel_ops.temporal_sample(
             arrow_array(days),

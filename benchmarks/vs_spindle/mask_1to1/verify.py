@@ -69,6 +69,12 @@ ALLOWED: dict[str, dict[str, dict[str, str]]] = {
             "last_login": "MASK-A1 (the timestamps became user names).",
         },
         "baseline_keeps_original": {},
+        # MASK-A6 (lead decision 2026-10-02): Shape writes every replacement e-mail at a reserved
+        # example domain (RFC 2606), as generation does (owner issue 11); `judge` checks that with
+        # no allowance. The pinned baseline's faker already draws example.com/.org/.net, so this
+        # is not a difference from it; a column listed here would be one where the baseline
+        # writes other domains, and the probe fails if the list and the output disagree.
+        "baseline_real_email_domains": {},
     },
     "cat": {
         "masked_only_by_baseline": {},
@@ -84,8 +90,11 @@ ALLOWED: dict[str, dict[str, dict[str, str]]] = {
                 "value, so about 1 cell in 50 keeps its state; Shape draws until it differs."
             ),
         },
+        "baseline_real_email_domains": {},  # MASK-A6, as for d2
     },
 }
+
+RESERVED_DOMAINS = ("example.com", "example.org", "example.net")
 
 
 # ---- data ----------------------------------------------------------------------------------
@@ -244,7 +253,18 @@ def evaluate(case: str, original: dict, masked: dict, reported: set[str], tool: 
         "structure": structure,
         "format": checks.check_format(original, masked, changed),
         "no_original": checks.check_no_original(original, masked, changed),
+        "email_reserved": _email_domain_probe(original, masked, changed),
     }
+
+
+def _email_domain_probe(original: dict, masked: dict, changed: set[str]) -> dict[str, bool]:
+    """For each masked e-mail column: does every replacement sit at a reserved example domain?"""
+    out: dict[str, bool] = {}
+    for c in sorted(changed):
+        values = [v for v in masked[c] if v is not None]
+        if values and all(checks.EMAIL.match(v) for v in values):
+            out[c] = all(v.rsplit("@", 1)[1].lower() in RESERVED_DOMAINS for v in values)
+    return out
 
 
 def _failing(problems: list[str]) -> set[str]:
@@ -265,6 +285,19 @@ def judge(case: str, shape: dict, base: dict) -> list[str]:
     if base["structure"]:
         fails += [f"baseline structure: {p}" for p in base["structure"]]
 
+    # Shape's replacement e-mails are all reserved example addresses, with no allowance (MASK-A6);
+    # the baseline's differ only where the allow-list says so, and the list may not go stale.
+    unreserved = {c for c, ok in shape["email_reserved"].items() if not ok}
+    if unreserved:
+        fails.append(
+            f"shape e-mail replacements outside the reserved domains: {sorted(unreserved)}"
+        )
+    base_real = {c for c, ok in base["email_reserved"].items() if not ok}
+    if base_real != set(allow["baseline_real_email_domains"]):
+        fails.append(
+            f"baseline e-mail columns with non-reserved domains {sorted(base_real)} != "
+            f"allow-list {sorted(allow['baseline_real_email_domains'])}"
+        )
     # 1. the same masked columns, up to the named differences
     only_base = set(base["changed"]) - set(shape["changed"])
     only_shape = set(shape["changed"]) - set(base["changed"])

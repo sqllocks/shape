@@ -66,6 +66,7 @@ def test_batch_size(retail_engine) -> None:
     assert len(sink.batches) == 50
 
 
+@pytest.mark.realtime
 def test_duration_stops_a_realtime_run(retail_engine, tmp_path: Path) -> None:
     sink = MemorySink()
     cfg = EmitConfig(realtime=True, rate=1000, duration=1.0, checkpoint_path=str(tmp_path / "c"))
@@ -76,6 +77,7 @@ def test_duration_stops_a_realtime_run(retail_engine, tmp_path: Path) -> None:
     assert doc["offset"] == report.events == report.end_offset and doc["complete"] is False
 
 
+@pytest.mark.realtime
 def test_duration_also_bounds_a_fast_run(retail_engine) -> None:
     class Slow(MemorySink):
         def send(self, batch: pa.RecordBatch) -> None:
@@ -99,6 +101,7 @@ def _assert_rate_holds(
     assert report.max_lag < max_lag, report.max_lag
 
 
+@pytest.mark.realtime
 def test_realtime_rate_within_five_percent(retail_engine) -> None:
     sink = MemorySink()
     cfg = EmitConfig(realtime=True, rate=2000, max_events=12000)
@@ -121,6 +124,7 @@ class _CollectNearSecondBoundary(MemorySink):
         super().send(batch)
 
 
+@pytest.mark.realtime
 def test_realtime_rate_holds_through_a_full_collection_of_a_large_heap(retail_engine) -> None:
     """A full collection scans every tracked object the process holds, and holds the GIL while it
     does. The pacing must not pay for the heap the host built before the run (the P5-01b cause of
@@ -148,6 +152,7 @@ def test_realtime_rate_holds_through_a_full_collection_of_a_large_heap(retail_en
         gc.collect()
 
 
+@pytest.mark.realtime
 def test_realtime_rate_holds_while_the_checkpoint_write_is_slow(
     retail_engine, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -176,6 +181,7 @@ def test_realtime_rate_holds_while_the_checkpoint_write_is_slow(
     assert saved[-1] == 8000 and sink.num_events == 8000
 
 
+@pytest.mark.realtime
 def test_bursts(retail_engine) -> None:
     sink = MemorySink()
     cfg = EmitConfig(realtime=True, rate=1000, bursts=(Burst(1, 1, 3),), max_events=5000)
@@ -185,6 +191,7 @@ def test_bursts(retail_engine) -> None:
     assert abs(ps[2] / 1000 - 1) < 0.1, ps
 
 
+@pytest.mark.realtime
 def test_realtime_resume_starts_its_own_clock(retail_engine, tmp_path: Path) -> None:
     cfg = EmitConfig(realtime=True, rate=2000, max_events=4000, checkpoint_path=str(tmp_path / "c"))
     EmitRunner(_plan(retail_engine), MemorySink(), cfg).run()
@@ -212,6 +219,7 @@ def test_backpressure_blocks_the_generator(retail_engine) -> None:
     assert report.max_queue_depth == 3  # the queue filled, so the generator had to wait
 
 
+@pytest.mark.realtime
 def test_slow_sink_in_realtime_falls_behind_without_dropping(retail_engine) -> None:
     class Slow(MemorySink):
         def send(self, batch: pa.RecordBatch) -> None:

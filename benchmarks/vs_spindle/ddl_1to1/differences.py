@@ -2,8 +2,8 @@
 
 P4-01b made Shape's ``from-ddl`` equal the baseline's in every field. The owner then decided
 (2026-10-01) to fix five behaviours that would harm users' trust (F1 to F5), and the lead three
-more (F6 to F8, round 2). Each fix changes a known, small set of fields, listed here by input,
-mode and field. ``verify.py`` accepts a difference **only**
+more (F6 to F8, round 2); ISS-gen added F9 to F11. Each fix changes a known, small set of
+fields, listed here by input, mode and field. ``verify.py`` accepts a difference **only**
 when it is listed: every other field must still equal the baseline, and an entry that no longer
 matches a difference fails the run (so the list cannot go stale).
 
@@ -18,6 +18,7 @@ from dataclasses import dataclass
 
 BOTH = ("smart", "plain")
 SMART = ("smart",)
+PLAIN = ("plain",)
 
 FIXES: dict[str, str] = {
     "F1": (
@@ -67,6 +68,24 @@ FIXES: dict[str, str] = {
         "A CamelCase key (CustomerId, CustomerID: the SQL Server convention) is recognised like "
         "customer_id, with the same rule for the parent key as F6, and so is a child in the "
         "row-count and key-distribution rules. The baseline needs the underscore."
+    ),
+    "F9": (
+        "A column declared DECIMAL(p,s) or NUMERIC(p,s) is generated as decimal128(p,s) "
+        "(ISS-gen, owner issue 24): its generator has output_type `decimal`. The baseline "
+        "generates a double and the schema carries no such key. A distribution's `max` is cut "
+        "to what the type holds (DECIMAL(3,1) never gets 100), where the baseline's default "
+        "bound does not fit."
+    ),
+    "F10": (
+        "A text column's `faker` generator passes max_nb_chars to the provider as `args` "
+        "(ISS-gen, owner issue 9). The baseline writes it as a top-level key, which the "
+        "strategy ignores, so the provider's own default length (200) was used."
+    ),
+    "F11": (
+        "A nullable foreign key's 0.15 null rate (annotation FK-04) is written on the column "
+        "(`null_rate`), where the engine reads it, not in the generator (ISS-gen, lead decision "
+        "2026-10-02). The baseline puts it in the generator, where it is ignored, so the declared "
+        "rate never took effect: a foreign key that was documented as nullable had no nulls."
     ),
 }
 
@@ -360,5 +379,140 @@ ALLOWED: list[Field | Note] = [
         ("TC-TRANSACTION_DETAIL", "line", None),
         ("TC-UNKNOWN", "Customer", None),
         ("TC-UNKNOWN", "line", None),
+    ),
+    # ---- F9: the declared DECIMAL type is kept ----------------------------------------------
+    *(
+        Field("F9", case, f"tables.{table}.columns.{column}.generator.output_type", modes)
+        for case, table, column, modes in (
+            ("adventureworks_sample", "order_details", "discount_pct", PLAIN),
+            ("adventureworks_sample", "order_details", "line_total", BOTH),
+            ("adventureworks_sample", "order_details", "unit_cost", BOTH),
+            ("adventureworks_sample", "order_details", "unit_price", BOTH),
+            ("adventureworks_sample", "products", "unit_cost", BOTH),
+            ("adventureworks_sample", "products", "unit_price", BOTH),
+            ("adventureworks_sample", "products", "weight_kg", BOTH),
+            ("adventureworks_sample", "sales_orders", "freight", BOTH),
+            ("adventureworks_sample", "sales_orders", "subtotal", SMART),
+            ("ddl_parser__postgres_ddl", "order", "total", BOTH),
+            ("ddl_parser__sql_server_ddl", "order", "total", BOTH),
+            ("e2e_ddl_pipeline__postgres_ddl", "order", "total", BOTH),
+            ("e2e_ddl_pipeline__sql_server_ddl", "order", "total", PLAIN),
+            ("e2e_ddl_pipeline__sql_server_ddl", "order_line", "line_total", BOTH),
+            ("e2e_ddl_pipeline__sql_server_ddl", "product", "price", BOTH),
+            ("fix_cases", "invoice", "current_value", PLAIN),
+            ("fix_cases", "invoice", "discount_pct", PLAIN),
+            ("fix_cases", "invoice", "feedback_score", PLAIN),
+            ("fix_cases", "invoice", "margin_pct", PLAIN),
+            ("fix_cases", "invoice", "tax_rate", PLAIN),
+            ("fix_cases", "invoice", "total", PLAIN),
+            ("fix_cases", "invoice_line", "line_total", BOTH),
+            ("fix_cases_round2", "sale", "amount", BOTH),
+            ("smart_inference__ddl_plural", "order_lines", "line_total", BOTH),
+            ("smart_inference__ddl_plural", "order_lines", "unit_price", BOTH),
+            ("smart_inference__ddl_plural", "orders", "total_amount", PLAIN),
+            ("smart_inference__ddl_plural", "products", "unit_cost", BOTH),
+            ("smart_inference__ddl_plural", "products", "unit_price", BOTH),
+            ("smart_inference__ddl_plural", "products", "weight_kg", BOTH),
+            ("smart_retail", "fact_sales", "amount", BOTH),
+            ("smart_retail", "order_items", "line_total", BOTH),
+            ("smart_retail", "order_items", "unit_price", BOTH),
+            ("smart_retail", "order_returns", "refund_amount", BOTH),
+            ("smart_retail", "orders", "defect_pct", BOTH),
+            ("smart_retail", "orders", "discount", PLAIN),
+            ("smart_retail", "orders", "discount_pct", PLAIN),
+            ("smart_retail", "orders", "gross_amount", BOTH),
+            ("smart_retail", "orders", "net_amount", SMART),
+            ("smart_retail", "orders", "subtotal", SMART),
+            ("adventureworks_sample", "sales_orders", "subtotal", PLAIN),
+            ("adventureworks_sample", "sales_orders", "tax_amount", BOTH),
+            ("adventureworks_sample", "sales_orders", "total_amount", PLAIN),
+            ("smart_retail", "orders", "net_amount", PLAIN),
+            ("smart_retail", "orders", "subtotal", PLAIN),
+            ("smart_retail", "orders", "tax", BOTH),
+            ("smart_retail", "orders", "total", PLAIN),
+            ("smart_retail", "products", "cost", BOTH),
+            ("smart_retail", "products", "margin", BOTH),
+            ("smart_retail", "products", "price", BOTH),
+            ("smart_retail", "products", "rating", BOTH),
+            ("smart_retail", "products", "weight", SMART),
+            ("smart_retail", "shipment_lines", "amount", SMART),
+            ("smart_retail", "products", "weight", PLAIN),
+            ("smart_retail", "shipment_lines", "amount", PLAIN),
+        )
+    ),
+    *(
+        Field("F9", "fix_cases", f"tables.invoice.columns.{c}.generator.max", PLAIN)
+        for c in ("feedback_score", "tax_rate")
+    ),
+    Field("F9", "smart_retail", "tables.products.columns.rating.generator.max", PLAIN),
+    # F11 entries: a nullable FK's null rate moves from the generator to the column
+    *(
+        Field("F11", case, f"tables.{table}.columns.{column}.{where}", SMART)
+        for case, table, column in (
+            ("adventureworks_sample", "products", "category_id"),
+            ("e2e_cli__inline", "orders", "customer_id"),
+            ("fix_cases", "ansi_order", "customer_id"),
+            ("fix_cases", "catalog_item", "invoice_id"),
+            ("fix_cases", "my_order", "customer_id"),
+            ("plural_fks", "item", "box_id"),
+            ("plural_fks", "item", "bus_id"),
+            ("plural_fks", "item", "category_id"),
+            ("plural_fks", "item", "company_id"),
+            ("plural_fks", "item", "status_id"),
+            ("smart_retail", "audit_log", "customer_id"),
+            ("smart_retail", "orders", "approved_by"),
+            ("smart_retail", "orders", "shipping_address_id"),
+        )
+        for where in ("generator.null_rate", "null_rate")
+    ),
+    # F10 entries
+    *(
+        Field("F10", case, f"tables.{table}.columns.{column}.generator.{key}", modes)
+        for case, table, column, modes in (
+            ("adventureworks_sample", "addresses", "address_line1", BOTH),
+            ("adventureworks_sample", "customers", "account_number", BOTH),
+            ("adventureworks_sample", "customers", "territory", PLAIN),
+            ("adventureworks_sample", "inventory_log", "reason", PLAIN),
+            ("adventureworks_sample", "product_categories", "name", SMART),
+            ("adventureworks_sample", "products", "color", SMART),
+            ("ddl_parser__comment_ddl", "dim_branch", "region", PLAIN),
+            ("ddl_parser__comment_ddl", "dim_product", "default_note", BOTH),
+            ("e2e_cli__inline", "customer", "name", BOTH),
+            ("e2e_ddl_pipeline__sql_server_ddl", "product", "category", PLAIN),
+            ("fix_cases", "catalog_item", "title", BOTH),
+            ("fix_cases", "invoice", "model", PLAIN),
+            ("fix_cases_round2", "Receipt", "Memo", BOTH),
+            ("fix_cases_round2", "Vendor", "Name", BOTH),
+            ("fix_cases_round2", "client", "name", BOTH),
+            ("plural_fks", "boxes", "label", BOTH),
+            ("plural_fks", "bus", "label", BOTH),
+            ("quoted_and_exotic", "Customer", "AccountNumber", BOTH),
+            ("quoted_and_exotic", "Customer", "Flag", BOTH),
+            ("quoted_and_exotic", "Customer", "ModifiedDate", BOTH),
+            ("quoted_and_exotic", "Customer", "Rate", BOTH),
+            ("smart_inference__ddl_plural", "categories", "name", BOTH),
+            ("smart_inference__ddl_plural", "orders", "payment_method", PLAIN),
+            ("smart_inference__ddl_plural", "products", "category", PLAIN),
+            ("smart_inference__ddl_plural", "products", "name", BOTH),
+            ("smart_retail", "addresses", "street", BOTH),
+            ("smart_retail", "audit_log", "action", BOTH),
+            ("smart_retail", "customers", "loyalty_tier", BOTH),
+            ("smart_retail", "dim_store", "region", PLAIN),
+            ("smart_retail", "products", "sku", SMART),
+            ("adventureworks_sample", "product_categories", "name", PLAIN),
+            ("adventureworks_sample", "products", "color", PLAIN),
+            ("adventureworks_sample", "products", "name", BOTH),
+            ("adventureworks_sample", "products", "product_number", BOTH),
+            ("quoted_and_exotic", "Customer", "Score", BOTH),
+            ("quoted_and_exotic", "Sales Order", "Payload", BOTH),
+            ("quoted_and_exotic", "line", "long_text", BOTH),
+            ("smart_retail", "order_returns", "reason", PLAIN),
+            ("smart_retail", "orders", "payment_method", PLAIN),
+            ("smart_retail", "products", "category", PLAIN),
+            ("smart_retail", "products", "sku", PLAIN),
+            ("adventureworks_sample", "sales_orders", "payment_method", PLAIN),
+            ("adventureworks_sample", "sales_orders", "territory", PLAIN),
+        )
+        for key in ("args", "max_nb_chars")
     ),
 ]
