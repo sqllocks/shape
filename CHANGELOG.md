@@ -5,6 +5,18 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Plugin allow-list and opt-in signature check (W1-18, #94; `docs/plugins/trust-model.md`).
+  `SHAPE_PLUGIN_ALLOWLIST=PATH` (or `plugins.allowlist` in a `shape.yml` passed to `PluginHost`)
+  turns on a `shape-plugin-allowlist` v1 file (JSON or YAML, `src/shape/schemas/plugin-allowlist-v1.schema.json`):
+  `PluginHost` blocks, before importing, any plugin whose distribution, version (PEP 440
+  specifier) or name is not listed (`status: blocked`; the CLI exits 2), checks the installed
+  `RECORD` hash and every file hash when `record_sha256` is given, and with `require_signature`
+  needs a `shape-plugin.sig` (Ed25519, `shape-plugin-signature` v1) by a trusted key. New:
+  `shape plugins sign`, `verify` and `allowlist init`; `shape plugins list` shows
+  allowed/blocked and `doctor` lists blocked plugins separately. The trust model now states what
+  each first-party plugin can reach (checked against the source by a test). There is still no
+  sandbox (D-09).
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

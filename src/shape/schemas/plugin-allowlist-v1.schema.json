@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sqllocks/shape/schemas/plugin-allowlist-v1.schema.json",
+  "title": "Shape plugin allow-list, version 1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "version", "plugins"],
+  "properties": {
+    "format": {"const": "shape-plugin-allowlist"},
+    "version": {"const": 1},
+    "plugins": {"type": "array", "items": {"$ref": "#/$defs/plugin"}},
+    "require_signature": {"type": "boolean", "default": false},
+    "trusted_keys": {"type": "array", "items": {"$ref": "#/$defs/key"}}
+  },
+  "$defs": {
+    "plugin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["distribution"],
+      "properties": {
+        "distribution": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1, "description": "A PEP 440 version specifier, e.g. ==0.9.0"},
+        "record_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "names": {"type": "array", "items": {"type": "string", "pattern": "^[a-z_.]+:.+$"}}
+      }
+    },
+    "key": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key_id", "public_key"],
+      "properties": {
+        "key_id": {"type": "string", "minLength": 1},
+        "public_key": {"type": "string", "minLength": 1, "description": "Path to the public key file, relative to this file"}
+      }
+    }
+  }
+}
