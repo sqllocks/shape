@@ -250,3 +250,75 @@ def test_the_repeated_hour_keeps_first_seen_order_and_wall_clock_hours(kernel):
     assert c["min_value"] == ["timestamp", "2021-11-07 00:50:00-04:00"]
     assert c["max_value"] == ["timestamp", "2021-11-07 01:30:00-05:00"]
     assert c["hour_histogram"][0] == 0.25 and c["hour_histogram"][1] == 0.75  # wall clock
+
+
+# ---- #228: pandas object columns of mixed types -------------------------------------------
+
+# (values, dtype, cardinality, null_count, value_counts_ext): the pinned baseline's profile
+_MIXED = [
+    ([1, "x", 2.5, None] * 8, "string", 3, 8, {"1": 0.333333, "x": 0.333333, "2.5": 0.333333}),
+    ([True, 1, 0] * 10, "boolean", 2, 0, {"True": 0.666667, "0": 0.333333}),
+    ([1, "2"] * 15, "integer", 2, 0, {"1": 0.5, "2": 0.5}),
+    (
+        [1, 2.5, "a", "b", None, True] * 5,
+        "string",
+        4,
+        5,
+        {"1": 0.4, "2.5": 0.2, "a": 0.2, "b": 0.2},
+    ),
+    ([1, "x", float("nan"), None] * 8, "string", 2, 16, {"1": 0.5, "x": 0.5}),
+    (
+        [np.int64(3), "x", np.float64(1.5)] * 10,
+        "string",
+        3,
+        0,
+        {"3": 0.333333, "x": 0.333333, "1.5": 0.333333},
+    ),
+    (
+        [2**64, 2**70, 1] * 10,
+        "float",
+        3,
+        0,
+        {"18446744073709551616": 0.333333, "1180591620717411303424": 0.333333, "1": 0.333333},
+    ),
+    (
+        [-(2**64), 2**63, 5] * 10,
+        "float",
+        3,
+        0,
+        {"-18446744073709551616": 0.333333, "9223372036854775808": 0.333333, "5": 0.333333},
+    ),
+]
+
+
+@pytest.mark.parametrize(("values", "dtype", "card", "nulls", "counts"), _MIXED)
+def test_mixed_object_columns_profile_as_the_baseline_does(
+    kernel, values, dtype, card, nulls, counts
+):
+    import pandas as pd
+
+    df = pd.DataFrame({"c": pd.Series(values, dtype=object), "n": range(len(values))})
+    c = shape.profile(df).to_dict()["columns"]["c"]
+    assert (c["dtype"], c["cardinality"], c["null_count"]) == (dtype, card, nulls)
+    assert c["value_counts_ext"] == counts
+
+
+def test_an_object_column_of_types_that_cannot_mix_says_what_to_do():
+    import pandas as pd
+
+    df = pd.DataFrame({"c": pd.Series([dt.date(2020, 1, 1), "2020-01-02"] * 3, dtype=object)})
+    with pytest.raises(ValueError, match=r"column 'c'.*astype\(str\)"):
+        shape.profile(df)
+
+
+# ---- #229: duplicate column names in a table or DataFrame ---------------------------------
+
+
+def test_duplicate_column_names_in_a_table_or_dataframe_are_refused():
+    import pandas as pd
+
+    t = pa.Table.from_arrays([pa.array([1, 3]), pa.array([2, 4])], names=["a", "a"])
+    df = pd.DataFrame([[1, 2], [3, 4]], columns=["a", "a"])
+    for source in (t, df):
+        with pytest.raises(ValueError, match=r"duplicate column names \['a'\].*rename"):
+            shape.profile(source)
