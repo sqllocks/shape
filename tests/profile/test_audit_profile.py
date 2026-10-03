@@ -322,3 +322,15 @@ def test_duplicate_column_names_in_a_table_or_dataframe_are_refused():
     for source in (t, df):
         with pytest.raises(ValueError, match=r"duplicate column names \['a'\].*rename"):
             shape.profile(source)
+
+
+# ---- #236: integers wider than 64 bits are float, as in the baseline -----------------------
+
+
+@pytest.mark.parametrize("values", [[2**64, 2**70, 1] * 10, [-(2**64), 2**63, 5] * 10])
+def test_integers_wider_than_64_bits_are_float_as_in_the_baseline(kernel, tmp_path, values):
+    path = tmp_path / "big.csv"
+    path.write_text("a\n" + "\n".join(map(str, values)) + "\n")
+    c = shape.profile(str(path)).to_dict()["columns"]["a"]
+    assert c["dtype"] == "float"
+    assert c["min_value"] == ["int", min(values)] and c["max_value"] == ["int", max(values)]
