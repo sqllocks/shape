@@ -120,6 +120,7 @@ class DeltaTableWriter:
             mode=self._mode,
             partition_by=self._partition_by,
             storage_options=self._storage,
+            **_schema_mode(self._mode),
         )
         self.rows += self._pending_rows
         self.commits += 1
@@ -133,6 +134,12 @@ class DeltaTableWriter:
 
     def abort(self) -> None:
         self._pending, self._pending_rows = [], 0
+
+
+def _schema_mode(mode: str) -> dict[str, str]:
+    """Overwriting a table replaces its schema too (a regenerated model may have other columns);
+    appending keeps the table's schema and refuses data that does not fit."""
+    return {"schema_mode": "overwrite"} if mode == "overwrite" else {}
 
 
 def _utc_timestamps(schema: pa.Schema) -> pa.Schema:
@@ -226,12 +233,14 @@ class DeltaSink:
                     kept.append(cast)
                 yield cast
 
+        mode = options.get("mode", "overwrite")
         write_deltalake(
             location,
             pa.RecordBatchReader.from_batches(schema, counted()),
-            mode=options.get("mode", "overwrite"),
+            mode=mode,
             partition_by=options.get("partition_by") or None,
             storage_options=storage,
+            **_schema_mode(mode),
         )
         if stamp:
             from shape.fingerprint import KEY, dump, for_sink, set_delta_property
