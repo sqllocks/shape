@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._columns import rows_to_columns
+
 
 class EventHubsBatchAdapter:
     def __init__(self, decoder):
@@ -9,11 +11,7 @@ class EventHubsBatchAdapter:
 
     def decode_events(self, events):
         rows = [self.decoder(e.body_as_str() if hasattr(e, "body_as_str") else e) for e in events]
-        if not rows:
-            return {}
-        import numpy as np
-
-        return {k: np.asarray([r.get(k) for r in rows]) for k in rows[0]}
+        return rows_to_columns(rows)
 
     @staticmethod
     def live_available():

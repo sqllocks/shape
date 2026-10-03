@@ -5,6 +5,8 @@ broker.
 
 from __future__ import annotations
 
+from ._columns import rows_to_columns
+
 
 class KafkaBatchAdapter:
     def __init__(self, decoder):
@@ -12,12 +14,7 @@ class KafkaBatchAdapter:
 
     def decode_messages(self, messages):
         rows = [self.decoder(m.value() if hasattr(m, "value") else m) for m in messages]
-        if not rows:
-            return {}
-        import numpy as np
-
-        keys = rows[0].keys()
-        return {k: np.asarray([r.get(k) for r in rows]) for k in keys}
+        return rows_to_columns(rows)
 
     @staticmethod
     def live_available():
