@@ -5,6 +5,14 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Streaming II (W2-09, #97), in progress. `shape emit` and `shape stream` take `--event-format
+  json|avro|protobuf|json-schema` for `kafka://` targets: the schema is derived from the table's
+  Arrow schema, registered with a Confluent-compatible registry (`--sink-config
+  kafka.schema_registry_url=URL`, credentials as references, `kafka.subject_strategy`
+  `topic|record|topic_record`) and messages are written in the Confluent wire format; the message key
+  stays `<table>/<seq>`. Encoders are the extras `sqllocks-shape-kafka[avro]` and `[protobuf]`
+  (`docs/EMIT.md`, the plugin README).
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

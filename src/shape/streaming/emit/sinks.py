@@ -183,17 +183,34 @@ def open_sink(
     synthetic: bool = True,
     table_options: Mapping[str, Any] | None = None,
     choices: str = "console, file, or the URI of an emitter plugin (kafka://, eventhubs://, ...)",
+    event_format: str = "json",
+    sink_config: Mapping[str, Mapping[str, Any]] | None = None,
     **options: Any,
 ) -> EventSink:
     """The sink a name or URI stands for: ``console``, ``file`` (JSON lines in ``output``), or
     the URI of a ``shape.emitters`` plugin (``kafka://``, ``eventhubs://``, ...). Shared by
     ``shape emit`` and ``shape stream`` and by the simulation plugin's stream emitter. Extra
-    ``options`` (sign-in settings from ``--auth``) go to the emitter plugin's sink."""
+    ``options`` (sign-in settings from ``--auth``) go to the emitter plugin's sink.
+
+    ``event_format`` (``--event-format``) other than ``json`` is for an emitter that declares it
+    in ``event_formats`` (``kafka://``); ``sink_config`` (``--sink-config NAME.KEY=VALUE``, secrets
+    already resolved) gives an emitter the keys it lists in ``sink_config_keys``, under its own
+    name."""
     from shape.errors import ShapeError
 
+    def not_for(what: str) -> ShapeError:
+        return ShapeError(
+            f"--event-format {event_format} applies to kafka:// targets only; {what} does not "
+            "take it"
+        )
+
     if sink == "console":
+        if event_format != "json":
+            raise not_for("--sink console")
         return StdoutSink(envelope=envelope)
     if sink == "file":
+        if event_format != "json":
+            raise not_for("--sink file")
         if not output:
             raise ShapeError("--sink file needs --output FILE")
         return FileSink(output, envelope=envelope, append=resuming)
@@ -204,6 +221,14 @@ def open_sink(
     for name in host.names("shape.emitters"):
         emitter = host.try_get("shape.emitters", name)
         if emitter is not None and scheme and scheme in getattr(emitter, "schemes", ()):
+            if event_format != "json":
+                if event_format not in getattr(emitter, "event_formats", ()):
+                    raise not_for(f"{scheme}://")
+                options["event_format"] = event_format
+            for key in getattr(emitter, "sink_config_keys", ()):
+                given = (sink_config or {}).get(emitter.name, {})
+                if key in given:
+                    options[key] = given[key]
             return EmitterSink(
                 emitter,
                 sink,
@@ -216,6 +241,8 @@ def open_sink(
         from shape.io.targets import sink_names_by_scheme
 
         if scheme in sink_names_by_scheme():
+            if event_format != "json":
+                raise not_for(f"{scheme}://")
             from shape.streaming.emit.tables import TableEventSink
 
             return TableEventSink(

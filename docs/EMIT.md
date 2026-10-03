@@ -177,7 +177,7 @@ new rows. Secrets are never command-line values: see `docs/SINKS.md`.
 | `console://` | core | JSON lines on standard output |
 | `file:///path.jsonl` | core | JSON lines in one file (appended to after a resume) |
 | `jsonl:///dir` | core | JSON lines, one `<table>.jsonl` per table |
-| `kafka://host:9092/topic` | `sqllocks-shape-kafka` | one message per event, **message key = `<table>/<seq>`**, header `shape-table`; `acks=all`, idempotent producer |
+| `kafka://host:9092/topic` | `sqllocks-shape-kafka` | one message per event, **message key = `<table>/<seq>`**, header `shape-table`; `acks=all`, idempotent producer; `--event-format avro\|protobuf\|json-schema` through a schema registry |
 | `eventhubs://namespace/hub` | `sqllocks-shape-eventhubs` | one message per event, property `shape_key` = `<table>/<seq>`; one table per service batch, partition key = table |
 | `eventstream://name[/entity]` | `sqllocks-shape-fabric` | a Fabric Eventstream custom endpoint (Event Hubs protocol; connection string in `FABRIC_EVENTSTREAM_CONNECTION_STRING`-style option or `SHAPE_EVENTSTREAM_CONNECTION_STRING`) |
 | `eventhouse://query-host/database[/table]` | `sqllocks-shape-fabric` | a KQL database by streaming ingestion; each Shape table becomes a KQL table (created from the schema) unless `table` is given |
@@ -203,6 +203,47 @@ What every emitter owes the runtime (and what `shape.streaming.emit.contract` te
 Options of an emitter (a Kafka `config`, a connection string, a token) are keyword options of its
 `emit`; see each plugin's README. Sign-in material belongs in environment variables or an options
 file, never in the URI.
+
+## Schema registry formats (`--event-format`)
+
+`--event-format json|avro|protobuf|json-schema` (default `json`: the flat event's JSON, byte for
+byte what it always was) chooses the message format of a `kafka://` target. For the other three
+the Kafka emitter derives a schema from the table's Arrow schema, registers it with a
+Confluent-compatible registry, and sends the Confluent wire format: byte `0`, the 4-byte
+big-endian schema id, then the payload (Protobuf adds the message-index list `[0]`, one zero byte,
+as Confluent's serializers do). The message key stays `<table>/<seq>` (D-12) and the headers are
+unchanged. Only `kafka://` takes a registry format: any other target refuses it (exit 2).
+
+```
+pip install 'sqllocks-shape-kafka[avro]'        # or [protobuf]; json-schema needs no extra
+shape emit retail --table order_line --sink kafka://broker:9092/orders \
+    --event-format avro \
+    --sink-config kafka.schema_registry_url=https://registry.example:8081 \
+    --sink-config kafka.schema_registry_username=svc \
+    --sink-config kafka.schema_registry_password=env://REGISTRY_PASSWORD
+```
+
+| `--sink-config` key | meaning |
+|---|---|
+| `kafka.schema_registry_url` | the registry's `http(s)` URL (required; it may not carry credentials) |
+| `kafka.subject_strategy` | `topic` (default; subject `<topic>-value`), `record` (the record's full name, `shape.events.<table>`) or `topic_record` (`<topic>-shape.events.<table>`) |
+| `kafka.schema_registry_username`, `kafka.schema_registry_password` | basic authentication; the password is a credential reference (`env://NAME`, `file://PATH`, `kv://VAULT/NAME`), never a literal |
+
+* One schema per table, registered on the table's first batch of the run; a second run registers
+  it again and gets the same id. Tables of different shape on one topic need `record` or
+  `topic_record`: under `topic` they share one subject, and the registry's compatibility rule
+  decides (it usually refuses the second).
+* A registry that refuses the schema stops the run with exit 2 and `schema registry refused the
+  schema for subject <subject>: <registry message>`. A registry that cannot be reached, or answers
+  5xx, is a retryable delivery failure (`--retries`); nothing is sent without a schema id.
+* `--envelope cloudevents` with a non-JSON format is refused (exit 2). A missing encoder extra
+  stops with exit 2 and the `pip install` command that provides it. An event with a value the
+  format cannot hold (a `uint64` above 2**63-1 in Avro, a table or column name that is not a valid
+  Avro or Protobuf identifier) stops the run naming the event.
+* `--poison-fraction` cuts the payload of a chosen message short, as it does for JSON.
+* The type mapping (decimal, date, timestamp with and without zone, uuid, binary, nullable) is in
+  the `sqllocks-shape-kafka` README. A nullable column is a nullable field; a float column is
+  always nullable because a non-finite float is sent as `null` in every format.
 
 ## Live fidelity
 

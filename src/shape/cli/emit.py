@@ -73,6 +73,14 @@ def add_options(em: Any, *, stream: bool = False) -> None:
         default="flat",
         help="flat rows (default) or CloudEvents 1.0 structured JSON",
     )
+    em.add_argument(
+        "--event-format",
+        choices=("json", "avro", "protobuf", "json-schema"),
+        default="json",
+        help="the message format of a kafka:// target: json (default: the flat event's JSON), or "
+        "avro, protobuf or json-schema through a schema registry (--sink-config "
+        "kafka.schema_registry_url=URL; see docs/EMIT.md)",
+    )
     rate = em.add_argument_group("rate")
     rate.add_argument(
         "--realtime",
@@ -436,6 +444,8 @@ def _sink(a: argparse.Namespace, envelope: str, resuming: bool) -> Any:
                 synthetic=a.synthetic_header,
                 table_options={"options": options},
                 choices=SINKS_HELP,
+                event_format=a.event_format,
+                sink_config=options.extra,
                 # --auth for an event sink; a table sink got it in `options`
                 **(_auth_options(a, scheme) if scheme not in sink_names_by_scheme() else {}),
             )
@@ -494,6 +504,11 @@ def run(a: argparse.Namespace) -> int:
         raise ShapeError("--out-of-order must be between 0 and 1")
     if a.anomaly_fraction < 0 or a.anomaly_fraction > 1:
         raise ShapeError("--anomaly-fraction must be between 0 and 1")
+    if a.event_format != "json" and a.envelope != "flat":
+        raise ShapeError(
+            f"--envelope {a.envelope} is JSON only: it cannot be combined with "
+            f"--event-format {a.event_format}"
+        )
     if a.burst and not a.realtime:
         raise ShapeError("--burst needs --realtime")
     if a.max_rate is not None and a.max_rate <= 0:

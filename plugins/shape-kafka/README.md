@@ -31,6 +31,51 @@ runtime's checkpoint never passes an undelivered event; a failed delivery is ret
 (a message may arrive twice: keep the first of each key). A full local queue is waited for.
 See `docs/EMIT.md`.
 
+### Registry formats: Avro, Protobuf, JSON Schema
+
+```
+pip install 'sqllocks-shape-kafka[avro]'      # fastavro; or [protobuf]; json-schema needs nothing
+shape emit retail --sink kafka://broker:9092/orders --event-format avro \
+    --sink-config kafka.schema_registry_url=https://registry:8081
+```
+
+`--event-format json|avro|protobuf|json-schema` (default `json`, today's bytes). The emitter
+derives the schema from the table's Arrow schema, registers it with a Confluent-compatible registry
+(`kafka.schema_registry_url`; `kafka.schema_registry_username` and
+`kafka.schema_registry_password=env://NAME`, a credential reference; `kafka.subject_strategy` =
+`topic` (default, `<topic>-value`), `record` or `topic_record`) and writes the Confluent wire format:
+byte 0, the 4-byte big-endian schema id, the payload (Protobuf: a zero byte for the message index
+`[0]` first). The record (message) name is the table name in the namespace/package `shape.events`;
+the table and its columns must be valid identifiers for Avro and Protobuf. The key stays
+`<table>/<seq>`. The encoders are imported on first use; a missing one stops the run (exit 2) with the
+`pip install` command above.
+
+Type mapping (a nullable Arrow field is a nullable field: an Avro union with `null`, a Protobuf
+`optional`, a JSON `null`; `_shape_table` and `_shape_seq` are never null; a float is always nullable
+because NaN and infinities are sent as `null`, as in the flat JSON event):
+
+| Arrow | Avro | Protobuf | JSON Schema |
+|---|---|---|---|
+| bool | `boolean` | `bool` | `boolean` |
+| int8, int16, int32 | `int` | `int32` | `integer` |
+| uint8, uint16 | `int` | `uint32` | `integer` |
+| int64, uint32 | `long` | `int64`, `uint32` | `integer` |
+| uint64 | `long` (a value above 2^63-1 cannot be encoded) | `uint64` | `integer` |
+| float32, float64 | `float`, `double` | `float`, `double` | `number` |
+| string | `string` | `string` | `string` |
+| uuid (the Arrow extension type) | `string`, logical type `uuid` | `string` | `string`, format `uuid` |
+| binary | `bytes` | `bytes` | `string`, `contentEncoding: base64` |
+| decimal(p, s) | `bytes`, logical type `decimal(p, s)` | `string` (canonical text) | `string` (canonical text) |
+| date | `int`, logical type `date` | `int32` (days since 1970-01-01) | `string`, format `date` |
+| time | `time-millis` (s, ms) or `time-micros` | `int64` (microseconds) | `string` |
+| timestamp, no time zone | `local-timestamp-millis` (s, ms) or `-micros` (us, ns) | `int64` (wall-clock microseconds since the epoch) | `string`, "timestamp without time zone" |
+| timestamp with time zone | `timestamp-millis` (s, ms) or `-micros` (us, ns) | `int64` (UTC microseconds since the epoch) | `string`, format `date-time` |
+
+A nanosecond value is cut to microseconds. A dictionary column is its value type. Lists, structs and
+maps are not mapped (the table is refused with exit 2; use `json`). Protobuf field numbers follow the
+column order. Tests decode every message back from the registry's copy of the schema and compare it
+with the flat event (`shape_kafka.testing.FakeRegistry`, `decode_messages`).
+
 Tests: contract tests run on every PR against in-memory fakes
 (`shape_kafka.testing.FakeBroker`, `FakeProducer`; the emitter contract is
 `shape.streaming.emit.contract`); `pytest -m emulator plugins/shape-kafka/tests` runs the

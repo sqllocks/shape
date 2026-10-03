@@ -13,6 +13,10 @@ license = "MIT"
 license-files = ["LICENSE"]
 dependencies = ["sqllocks-shape==0.9.0", "confluent-kafka>=2.5,<4"]
 
+[project.optional-dependencies]
+avro = ["fastavro>=1.9"]
+protobuf = ["protobuf>=5"]
+
 [project.entry-points."shape.stream_sources"]
 kafka = "shape_kafka:KafkaStreamSource"
 

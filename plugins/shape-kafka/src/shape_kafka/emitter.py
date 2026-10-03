@@ -14,7 +14,15 @@ runtime passes back to the generator. A message the broker did not acknowledge w
 
 Options of :meth:`KafkaEmitter.emit`:
 
-``envelope``       ``"flat"`` (default) or ``"cloudevents"``.
+``envelope``       ``"flat"`` (default) or ``"cloudevents"`` (JSON only).
+``event_format``   ``"json"`` (default: the event's JSON, unchanged), ``"avro"``, ``"protobuf"`` or
+                   ``"json-schema"``: the schema is derived from the table's Arrow schema,
+                   registered with the registry at ``schema_registry_url``, and the message value
+                   is the Confluent wire format (see :mod:`shape_kafka.formats`).
+``schema_registry_url``, ``subject_strategy`` (``topic``, ``record``, ``topic_record``),
+``schema_registry_username`` and ``schema_registry_password``
+                   the registry (``--sink-config kafka.KEY=VALUE``; the password is a credential
+                   reference resolved before it reaches the emitter).
 ``config``         extra ``confluent-kafka`` producer settings (security, SASL, compression, ...);
                    ``bootstrap.servers`` comes from the URI. Defaults: ``acks=all``,
                    ``enable.idempotence=true``, ``linger.ms=5``.
@@ -34,7 +42,18 @@ from urllib.parse import unquote, urlsplit
 import pyarrow as pa
 
 from shape.errors import ShapeError
-from shape.streaming.emit.formats import ENVELOPES, encode_events
+from shape.streaming.emit.formats import (
+    ENVELOPES,
+    FIELD_POISON,
+    FIELD_SEQ,
+    FIELD_TABLE,
+    EncodedEvent,
+    encode_events,
+    poison_body,
+)
+
+from .formats import EVENT_FORMATS, EncodeError, TableCodec, make_codec, wire
+from .registry import SUBJECT_STRATEGIES, RegistryClient, Transport, subject_name
 
 DEFAULT_CONFIG: dict[str, Any] = {"acks": "all", "enable.idempotence": True, "linger.ms": 5}
 HEADER_TABLE = "shape-table"
@@ -73,10 +92,98 @@ class KafkaEmitter:
     accepts_poison = True  # one JSON text per message: a cut-off body is a poison message
     supports_synthetic = True  # the `synthetic` option marks every message with a header
     schemes = ("kafka",)
+    event_formats = EVENT_FORMATS  # `--event-format`
+    sink_config_keys = (  # `--sink-config kafka.KEY=VALUE`
+        "schema_registry_url",
+        "subject_strategy",
+        "schema_registry_username",
+        "schema_registry_password",
+    )
 
-    def __init__(self, producer_factory: Callable[[dict[str, Any]], Any] | None = None) -> None:
+    def __init__(
+        self,
+        producer_factory: Callable[[dict[str, Any]], Any] | None = None,
+        registry_transport: Transport | None = None,
+    ) -> None:
         self._factory = producer_factory or _confluent_producer
+        self._registry_transport = registry_transport
         self._producers: dict[str, Any] = {}
+        self._registries: dict[tuple[Any, ...], RegistryClient] = {}
+        self._codecs: dict[tuple[str, str, str, str], tuple[TableCodec, int]] = {}
+
+    def _registry(self, url: str, user: str | None, password: str | None) -> RegistryClient:
+        key = (url, user, password)
+        client = self._registries.get(key)
+        if client is None:
+            client = self._registries[key] = RegistryClient(
+                url, username=user, password=password, transport=self._registry_transport
+            )
+        return client
+
+    def _codec(
+        self,
+        fmt: str,
+        topic: str,
+        table: str,
+        schema: pa.Schema,
+        strategy: str,
+        registry: RegistryClient,
+    ) -> tuple[TableCodec, int]:
+        """The codec of ``table`` and the id its schema got from the registry (registered on
+        the table's first batch, once per run)."""
+        key = (fmt, topic, strategy, table)
+        hit = self._codecs.get(key)
+        if hit is None:
+            codec = make_codec(fmt, table, schema)
+            subject = subject_name(strategy, topic, codec.record)
+            hit = self._codecs[key] = (
+                codec,
+                registry.register(subject, codec.schema_text, codec.schema_type),
+            )
+        return hit
+
+    def _registry_events(
+        self,
+        batch: pa.RecordBatch,
+        fmt: str,
+        topic: str,
+        strategy: str,
+        registry: RegistryClient,
+    ) -> list[EncodedEvent]:
+        """``batch`` as wire-format events (one per row, in order) for ``fmt``."""
+        marks = (
+            [bool(v) for v in batch.column(FIELD_POISON).to_pylist()]
+            if FIELD_POISON in batch.schema.names
+            else None
+        )
+        if marks is not None:
+            batch = batch.select([n for n in batch.schema.names if n != FIELD_POISON])
+        tables = batch.column(FIELD_TABLE).to_pylist()
+        seqs = batch.column(FIELD_SEQ).to_pylist()
+        times = (
+            batch.column("_shape_event_time").cast(pa.string()).to_pylist()
+            if "_shape_event_time" in batch.schema.names
+            else [None] * len(tables)
+        )
+        bodies: list[bytes | EncodeError | None] = [None] * len(tables)
+        for table in dict.fromkeys(tables):
+            idx = [i for i, t in enumerate(tables) if t == table]
+            part = batch if len(idx) == len(tables) else batch.take(pa.array(idx))
+            codec, schema_id = self._codec(fmt, topic, table, part.schema, strategy, registry)
+            for i, payload in zip(idx, codec.encode_batch(part), strict=True):
+                bodies[i] = (
+                    payload if isinstance(payload, EncodeError) else wire(schema_id, payload, fmt)
+                )
+        events = []
+        for i, body in enumerate(bodies):
+            key = f"{tables[i]}/{seqs[i]}"
+            if isinstance(body, EncodeError):
+                raise ShapeError(f"cannot encode event {key} as {fmt}: {body}")
+            assert body is not None
+            if marks is not None and marks[i]:
+                body = poison_body(body)
+            events.append(EncodedEvent(key, tables[i], seqs[i], times[i], body))
+        return events
 
     def _producer(self, servers: str, extra: Mapping[str, Any] | None) -> Any:
         config = {**DEFAULT_CONFIG, **(extra or {}), "bootstrap.servers": servers}
@@ -96,6 +203,11 @@ class KafkaEmitter:
         config: Mapping[str, Any] | None = None,
         flush_timeout: float = 60.0,
         synthetic: bool = False,
+        event_format: str = "json",
+        schema_registry_url: str | None = None,
+        subject_strategy: str = "topic",
+        schema_registry_username: str | None = None,
+        schema_registry_password: str | None = None,
         **options: Any,
     ) -> int:
         """Send every batch; return the number of events, after the broker acknowledged them."""
@@ -103,6 +215,30 @@ class KafkaEmitter:
             raise ShapeError(f"unknown kafka emitter options: {sorted(options)}")
         if envelope not in ENVELOPES:
             raise ShapeError(f"unknown envelope {envelope!r}; choose from {', '.join(ENVELOPES)}")
+        if event_format not in EVENT_FORMATS:
+            raise ShapeError(
+                f"unknown event format {event_format!r}; choose from {', '.join(EVENT_FORMATS)}"
+            )
+        registry: RegistryClient | None = None
+        if event_format != "json":
+            if envelope != "flat":
+                raise ShapeError(
+                    f"--envelope {envelope} is JSON only: it cannot be combined with "
+                    f"--event-format {event_format}"
+                )
+            if subject_strategy not in SUBJECT_STRATEGIES:
+                raise ShapeError(
+                    f"unknown subject strategy {subject_strategy!r}; "
+                    f"choose from {', '.join(SUBJECT_STRATEGIES)}"
+                )
+            if not schema_registry_url:
+                raise ShapeError(
+                    f"--event-format {event_format} needs a schema registry: "
+                    "--sink-config kafka.schema_registry_url=URL"
+                )
+            registry = self._registry(
+                schema_registry_url, schema_registry_username, schema_registry_password
+            )
         servers, topic = parse_uri(uri)
         producer = self._producer(servers, config)
         failures: list[Any] = []
@@ -114,7 +250,12 @@ class KafkaEmitter:
         sent = 0
         marker = [(HEADER_SYNTHETIC, b"true")] if synthetic else []
         for batch in batches:
-            for event in encode_events(batch, envelope):
+            events = (
+                encode_events(batch, envelope)
+                if registry is None
+                else self._registry_events(batch, event_format, topic, subject_strategy, registry)
+            )
+            for event in events:
                 while True:
                     try:
                         producer.produce(
@@ -149,3 +290,5 @@ class KafkaEmitter:
     def close(self) -> None:
         self.flush()
         self._producers.clear()
+        self._codecs.clear()
+        self._registries.clear()
