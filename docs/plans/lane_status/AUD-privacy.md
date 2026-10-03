@@ -4,7 +4,7 @@ Area: `src/shape/privacy/**`, `src/shape/security/**`, `src/shape/artifact/**`,
 `src/shape/registry/**`, their tests, `security/**` and the area's docs. Branch
 `lane/AUD-privacy`, from `origin/build/main-plan`.
 
-Status: **in progress** (phase 3, fixing).
+Status: **done**: every defect in the area is fixed and pushed, except the items under "Left open".
 
 ## Phase 1: findings
 
@@ -50,3 +50,93 @@ Not defects, or bound by a fixed decision (for the lead, not changed):
   It is an explicit caller decision, not an implicit downgrade; left as is.
 - `artifact/canonical.canonical_json` (rejects floats) and `artifact/io.canonical_json`
   (allows finite floats) share a name with different rules; both are used, kept.
+
+## Left open
+
+- F20 (low, #554): `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references`
+  checks the whole of `sys.modules`, so it fails when an earlier test imported the Azure SDK
+  (plugins installed). Pre-existing (fails on `origin/build/main-plan` in the same order). It is an
+  existing test, so it is **not** changed here: for the lead (suggested fix: compare `sys.modules`
+  before and after the two `resolve_reference` calls, as the next test in that file does).
+- #237: registry writers on Windows, being fixed on the AUD-portability lane (see Phase 3 notes).
+- D1 to D3 above: decisions for the lead, not defects.
+
+## Phase 3: fixes
+
+Each fix has a regression test that failed first (the failing output is in the test commit's
+message), then the fix commit, pushed after each.
+
+| Finding | Issue | Failing test commit | Fix commit |
+|---|---|---|---|
+| F15 JSON depth guard | #273 | 83a92ca | 84e9df7 |
+| F1 redact_sensitive | #394 | 7644023 | 6952429 |
+| F2 small-column value statistics | #395 | 7644023 | 5e9b5c7 (+ cb75cc2 docs) |
+| F3 raw-profile sniff | #396, #283 | f9b6c75 | 8984366 |
+| F4 validator fail-open | #398 | 0add5a5 | 264d2eb |
+| F5 dates as phones | #400 | 0add5a5 | d92be1a |
+| F6 plain-path private key | #402 | 9ec8e6c | f8abb08 (docs/SIGNING.md too) |
+| F19 Windows-unsafe names | #243 (names part) | e6839cc | 67409e9 |
+| F16 redact_text | #291 | 9b24be7 | a41d2b1 |
+| F17 secret scanner | #292 | 27f76f3 | 95b1697 |
+| F7 signing file mode | #405 | 5ad4239 | f5293c4 |
+| F8 reserved members | #407 | 5ad4239 | 7341295 |
+| F14 secure envelope | #428 | 5ad4239 | e7ab559 |
+| F9 local registry errors | #409 | 5ad4239 | 675e50d |
+| F12 profile-registry index | #420 | 5ad4239 | 86e2977 |
+| F10 non-finite enum keys | #412 | 5ad4239 | 8ac806a |
+| F11 DP non-finite | #416 | 5ad4239 | 03a2151 |
+| F13 suppress_shape / redact_at | #424 | 5ad4239 | fadc396 |
+| F18 privacy CLI notice | #109 (privacy part) | 5ad4239 | 007a408 |
+| improvement: `privacy.core` tests (60% → 100%) | n/a | n/a | 9d83b02 |
+
+Notes on scope:
+
+- #243: only `shape.security.names` is in this lane; `shape.io.store._clean` (same issue) is not.
+  `<>"|?*` stay allowed (on Windows they only fail the write); an existing Fabric-plugin test
+  (`test_a_hostile_table_name_cannot_break_out_of_the_m_expression`) relies on a table name with
+  `"`, and is unchanged.
+- #109: only the privacy commands (`shape profile safe`, `shape profile validate --safe`).
+- #237 (registry writers on Windows) is in this lane's paths but is being fixed on the
+  AUD-portability lane (said in the issue); not touched here, to avoid two fixes of one line.
+
+## Filed outside the area (not fixed here)
+
+- #529 `benchmarks/vs_spindle/safe_profile_1to1/verify.py`: `pattern_rates` and
+  `pattern_contains_rates` (added by ISS-profile #2) are not in `ADDED_KEYS`, so the verifier
+  prints PARITY FAILED on the base branch. With those two keys added in a scratch copy (not
+  committed) it prints `PARITY OK`, exit 0, on this branch. Exact diff for the lead:
+
+  ```diff
+  -ADDED_KEYS = {"cells_suppressed"}
+  +ADDED_KEYS = {"cells_suppressed", "pattern_rates", "pattern_contains_rates"}
+  ```
+- #530 `src/shape/cli/registry.py` `_safe_document`: a safe-profile JSON with a byte-order mark
+  skips the commit-time leak scan.
+
+## Equivalence (outputs the verifiers compare)
+
+- Safe profile (#395, #398, #412): `to_safe_profile` JSON for all six verifier configurations on D2
+  plus the validator findings on every fixture hash to `3ac9586f...` on the base branch and after
+  each change. `safe_profile_1to1/verify.py` exits 1 on base and on this branch with byte-identical
+  output (the #529 keys); with #529's two keys added in a scratch copy: `PARITY OK`, exit 0.
+- Differential privacy (#416): `benchmarks/vs_spindle/fidelity_tiers_1to1/run.py` (retail medium,
+  the documented scale) `PASS`, exit 0. At `--scale small` it exits 1 on four tier-1
+  `autocorrelation_lag1/7` fields of `return` (relative 3e-9 to 9e-9 against 1e-9); the base
+  branch gives the same four mismatches with `--reuse`, and no DP field differs. A hash of DP output
+  (Laplace/Gaussian, clip on/off, nulls and NaN) is `0625e85a...` before and after.
+  `tests/benchmarks/test_fidelity_tiers_1to1.py`: 18 passed.
+
+## Checks run (this session)
+
+- `ruff check src tests plugins benchmarks/vs_spindle`: all checks passed.
+- `ruff format --check src tests plugins benchmarks/vs_spindle`: 1091 files already formatted.
+- `mypy`: success, no issues in 436 source files.
+- `python scripts/check_user_facing.py`: clean.
+- `SHAPE_KERNEL=rust pytest -m "not emulator and not live"`: 7199 passed, 4 failed. All four fail
+  on `origin/build/main-plan` too: #554 (above), and three that need pyarrow newer than 19.0.1
+  (`tests/iss_gaps/test_landing_and_batches.py::test_file_sinks_take_path_template_and_batch_date`,
+  `tests/kernel/test_hashing.py::test_rust_equals_reference_on_a_million_values[float16]`,
+  `::test_one_and_one_point_zero_hash_equal`; #333): `tests/demo/fabric/requirements.txt`
+  installs pyarrow 19.0.1 in this venv.
+- `plugins/shape-fabric/tests/test_lakehouse.py::test_parquet_to_a_local_folder_round_trips`
+  fails the same way on base (dictionary index width under pyarrow 19.0.1).
