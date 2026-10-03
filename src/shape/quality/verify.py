@@ -127,6 +127,7 @@ class VerifyResult:
     shape_version: str
     config_path: str | None = None
     source_path: str | None = None
+    distribution_alpha: float = 0.05
 
 
 class VerifyRunner:
@@ -200,6 +201,7 @@ class VerifyRunner:
             shape_version=__version__,
             config_path=self._config_path,
             source_path=self._source_path,
+            distribution_alpha=float(ctx.config.get("distribution_alpha", 0.05)),
         )
 
 
@@ -225,7 +227,7 @@ _GATE_DESCRIPTIONS = {
     ),
     "distribution": (
         "KS test (numeric) and chi-squared test (enum) comparing observed "
-        "distributions to schema-declared parameters (α=0.05)."
+        "distributions to schema-declared parameters (α={alpha:g})."
     ),
 }
 
@@ -325,7 +327,10 @@ class VerifyReport:
             "Gates applied:",
         ]
         lines += [
-            f"- **{g.gate_name}:** {_GATE_DESCRIPTIONS.get(g.gate_name, 'Custom gate.')}"
+            f"- **{g.gate_name}:** "
+            + _GATE_DESCRIPTIONS.get(g.gate_name, "Custom gate.").replace(
+                "{alpha:g}", format(r.distribution_alpha, "g")
+            )
             for g in r.gate_results
         ]
         lines += ["", "**Reproduce this report:**", "", "```", reproduce, "```"]
