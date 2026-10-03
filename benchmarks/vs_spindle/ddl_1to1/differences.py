@@ -2,10 +2,10 @@
 
 P4-01b made Shape's ``from-ddl`` equal the baseline's in every field. The owner then decided
 (2026-10-01) to fix five behaviours that would harm users' trust (F1 to F5), and the lead three
-more (F6 to F8, round 2); ISS-gen added F9 to F11. Each fix changes a known, small set of
-fields, listed here by input, mode and field. ``verify.py`` accepts a difference **only**
-when it is listed: every other field must still equal the baseline, and an entry that no longer
-matches a difference fails the run (so the list cannot go stale).
+more (F6 to F8, round 2); ISS-gen added F9 to F11, AUD-gen F12 and on. Each fix changes a
+known, small set of fields, listed here by input, mode and field. ``verify.py`` accepts a
+difference **only** when it is listed: every other field must still equal the baseline, and an
+entry that no longer matches a difference fails the run (so the list cannot go stale).
 
 Schema paths are dotted keys of ``GenSchema.to_dict()``; a list of relationships or rules is
 keyed by name. A path allows itself and everything below it. An annotation key is
@@ -86,6 +86,12 @@ FIXES: dict[str, str] = {
         "(`null_rate`), where the engine reads it, not in the generator (ISS-gen, lead decision "
         "2026-10-02). The baseline puts it in the generator, where it is ignored, so the declared "
         "rate never took effect: a foreign key that was documented as nullable had no nulls."
+    ),
+    "F12": (
+        "A type written in brackets, as SQL Server scripts write it ([int], [varchar](10), "
+        "[bit], [smallmoney]), is read as that type (AUD-gen, issue #173). The baseline reads "
+        "it as an unknown type and generates free text: [varchar](10) lost its length and "
+        "[bit] its value set."
     ),
 }
 
@@ -465,6 +471,19 @@ ALLOWED: list[Field | Note] = [
         )
         for where in ("generator.null_rate", "null_rate")
     ),
+    # F12 entries: bracket-quoted types
+    *(
+        Field("F12", "quoted_and_exotic", f"tables.Customer.columns.{column}")
+        for column in ("AccountNumber", "ModifiedDate", "Rate", "Score", "Flag")
+    ),
+    *(
+        Field("F12", "quoted_and_exotic", f"business_rules.{rule}", SMART)
+        for rule in ("Customer_Rate_positive", "Customer_Score_range")
+    ),
+    *(
+        Note("F12", "quoted_and_exotic", rule, "Customer", column)
+        for rule, column in (("ND-RATING", "Score"), ("BR-05", "Rate"), ("BR-08", "Score"))
+    ),
     # F10 entries
     *(
         Field("F10", case, f"tables.{table}.columns.{column}.generator.{key}", modes)
@@ -486,10 +505,6 @@ ALLOWED: list[Field | Note] = [
             ("fix_cases_round2", "client", "name", BOTH),
             ("plural_fks", "boxes", "label", BOTH),
             ("plural_fks", "bus", "label", BOTH),
-            ("quoted_and_exotic", "Customer", "AccountNumber", BOTH),
-            ("quoted_and_exotic", "Customer", "Flag", BOTH),
-            ("quoted_and_exotic", "Customer", "ModifiedDate", BOTH),
-            ("quoted_and_exotic", "Customer", "Rate", BOTH),
             ("smart_inference__ddl_plural", "categories", "name", BOTH),
             ("smart_inference__ddl_plural", "orders", "payment_method", PLAIN),
             ("smart_inference__ddl_plural", "products", "category", PLAIN),
@@ -503,7 +518,6 @@ ALLOWED: list[Field | Note] = [
             ("adventureworks_sample", "products", "color", PLAIN),
             ("adventureworks_sample", "products", "name", BOTH),
             ("adventureworks_sample", "products", "product_number", BOTH),
-            ("quoted_and_exotic", "Customer", "Score", BOTH),
             ("quoted_and_exotic", "Sales Order", "Payload", BOTH),
             ("quoted_and_exotic", "line", "long_text", BOTH),
             ("smart_retail", "order_returns", "reason", PLAIN),

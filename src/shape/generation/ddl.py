@@ -508,8 +508,9 @@ class DdlParser:
 
     @staticmethod
     def _parse_type(type_str: str) -> tuple[str, int | None, int | None, int | None]:
-        """``(base_type, max_length, precision, scale)`` of ``NVARCHAR(50)``, ``DECIMAL(18,2)``."""
-        type_str = type_str.strip()
+        """``(base_type, max_length, precision, scale)`` of ``NVARCHAR(50)``, ``DECIMAL(18,2)``
+        (also quoted, as SQL Server scripts write them: ``[decimal](18, 2)``)."""
+        type_str = _unquote(type_str)
         match = _TYPE_SPEC.match(type_str)
         if not match:
             return type_str.lower(), None, None, None
