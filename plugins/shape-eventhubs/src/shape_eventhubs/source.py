@@ -126,6 +126,23 @@ def _enqueued_us(when: datetime | None) -> int | None:
     return (delta.days * 86_400 + delta.seconds) * 1_000_000 + delta.microseconds
 
 
+def _body(event: Any) -> str | bytes | None:
+    """The event's body as text or, when it is not UTF-8 text, as bytes: ``decode_messages``
+    counts an undecodable body instead of the receive failing on it."""
+    if hasattr(event, "body_as_str"):
+        try:
+            return str(event.body_as_str())
+        except TypeError:  # azure-eventhub: "Message data is not compatible with string type"
+            pass
+    body = event.body
+    if body is None or isinstance(body, str | bytes):
+        return body
+    try:
+        return b"".join(body)  # a data body is a sequence of byte sections
+    except TypeError:
+        return None  # not bytes at all: an empty message to the decoder
+
+
 class _Failure:
     """A worker-thread error, handed to the reader."""
 
@@ -298,7 +315,7 @@ class EventHubsStreamSource:
                         StreamMessage(
                             pid,
                             int(e.sequence_number),
-                            e.body_as_str() if hasattr(e, "body_as_str") else e.body,
+                            _body(e),
                             _enqueued_us(e.enqueued_time),
                         )
                         for e in events
