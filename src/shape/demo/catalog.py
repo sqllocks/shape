@@ -35,8 +35,8 @@ class ScenarioCatalog:
             ScenarioMeta(
                 name="adventureworks",
                 description=(
-                    "AdventureWorks-compatible schema — DimCustomer, DimProduct, "
-                    "FactSalesOrder, FactSalesOrderLine. Conference 'Retire AdventureWorks' demo."
+                    "Conference 'Retire AdventureWorks' demo: the retail domain's customers, "
+                    "products, orders and order lines in place of AdventureWorks."
                 ),
                 domains=["retail"],
                 supported_modes=["inference", "seeding"],

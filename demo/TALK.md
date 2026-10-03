@@ -47,7 +47,12 @@ The pipeline on stage gates the `orders` table, so beat 6 shows the `orders` row
 Caveat if you show `shape.diff` live: the default mean-shift threshold (0.5 standard
 deviations) does not flag the +40% `order_total` shift, which is 0.39 standard deviations (0.3876).
 The demo diff uses `thresholds={"mean_shift_std": 0.25}`; the contract gate is unaffected.
-See `DRIFT.md`.
+See `DRIFT.md`. On the command line, do not run a plain `shape diff` of the two days: it prints
+about 1.1 MB of JSON, because every day-2 `order_total` value is a new categorical value. Run
+`shape diff o1.shape o2.shape --mean-shift-std 0.25 --min-severity medium`, which prints the
+`mean_shift` and `category_shift` changes only (`status`'s new value `lost` is low severity,
+so the contract check shows it). `shape check` and `shape diff` also print a note on standard
+error that the `.shape` file is not signed; that is expected for the demo files.
 
 ## Benchmark sheet (beat 8)
 
@@ -90,7 +95,7 @@ data sizes or core counts; any speed or memory figure for bounded mode or the Ru
 | Pipeline run queued or slow | Show the last completed run for day 1 and day 2 in the run history, then explain the gate. |
 | Pipeline expression error (`exitValue`) | The exact expression is flagged in the runbook to verify on first run; open the notebook activity output and read `passed` and `violations` there. |
 | UDF cold start or timeout (240 s limit) | Show the saved result from a prior run; the UDF only profiles small files by design, so choose the small file, not `orders_day2`, if you rerun. |
-| Nothing works | Run locally: `shape profile orders.parquet -o o.shape --html o.html`, then `shape check o.shape demo/contracts/orders.json` (exit 1 on day 2), from the data written by `demo/make_data.py`. |
+| Nothing works | Run locally, from the data written by `demo/make_data.py`: `shape profile day1/orders.parquet -o o1.shape --html o1.html`, `shape check o1.shape demo/contracts/orders.json` (exit 0), then the same for `day2/orders.parquet` as `o2.shape` (exit 1, the `status` and `order_total` violations), and the diff command above. |
 
 ## Wording
 

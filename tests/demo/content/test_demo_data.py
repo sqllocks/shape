@@ -216,6 +216,26 @@ def test_diff_of_day1_with_itself_is_clean(profiles):
     assert not d.drifted
 
 
+def test_talk_stage_diff_command_fits_a_screen_and_shows_the_mean_shift(profiles, tmp_path, capsys):
+    """DEMO-REHEARSAL: a plain ``shape diff`` of day 1 and day 2 prints about 1.1 MB of JSON (every
+    day-2 ``order_total`` value is a new categorical value). TALK.md gives the command to run on
+    stage instead; it must stay short and still show the documented +40% shift."""
+    from shape.cli.main import main
+
+    talk = (DEMO / "TALK.md").read_text(encoding="utf-8")
+    found = re.search(r"`(shape diff o1\.shape o2\.shape [^`]+)`", talk)
+    assert found is not None, "TALK.md gives no stage diff command"
+    for day in ("day1", "day2"):
+        shape.save(profiles["orders", day], tmp_path / f"o{day[-1]}.shape")
+    argv = found.group(1).split()[1:]
+    code = main([str(tmp_path / a) if a.endswith(".shape") else a for a in argv])
+    out = capsys.readouterr().out
+    assert code == 0
+    assert len(out) < 4000
+    kinds = {(c["column"], c["kind"]) for c in json.loads(out)["changes"]}
+    assert ("order_total", "mean_shift") in kinds
+
+
 def test_contracts_are_valid_json_and_named_after_tables():
     files = sorted(CONTRACTS.glob("*.json"))
     assert {f.stem for f in files} == {"customers", "orders", "products", "d2"}

@@ -27,8 +27,10 @@ from shape.demo.estimator import CostEstimator
 from shape.demo.manifest import DemoManifest
 from shape.demo.modes.common import (
     check_scale,
+    describe_size,
     domain_label,
     load_schema,
+    planned_rows,
     resolve_domains,
     rows_to_scale,
 )
@@ -106,24 +108,27 @@ class SeedingDemoMode:
             return {"success": False, "error": str(exc)}
         self._manifest.scale_mode = scale_mode
         targets = self._available_targets()
+        # --rows picks a scale preset; what the run says and estimates is the preset's rows.
+        scale = rows_to_scale(params.rows)
+        rows = planned_rows(self._domains, scale)
+        size = describe_size(scale, rows, params.rows)
 
         if params.estimate_only or params.dry_run:
-            estimate = CostEstimator().estimate(params.rows, targets)
-            print(
-                f"\nCost estimate for {params.scenario} ({params.rows:,} rows):", file=self._rt.out
-            )
+            estimate = CostEstimator().estimate(rows if rows is not None else params.rows, targets)
+            print(f"\nCost estimate for {params.scenario} ({size}):", file=self._rt.out)
             print(str(estimate), file=self._rt.out)
             if params.estimate_only:
                 return {"success": True, "estimate_only": True}
+            what = size if rows is None else f"{rows:,} rows ({scale} scale preset)"
             print(
-                f"[dry-run] Would write {params.rows:,} rows to: "
-                f"{', '.join(targets)} via scale_mode={scale_mode}",
+                f"[dry-run] Would write {what} to: {', '.join(targets)} "
+                f"via scale_mode={scale_mode}",
                 file=self._rt.out,
             )
             return {"success": True, "dry_run": True}
 
         dashboard.start()
-        dashboard.step(DemoStep.GENERATING, f"{params.rows:,} rows ({scale_mode})")
+        dashboard.step(DemoStep.GENERATING, f"{size} ({scale_mode})")
         try:
             stats = self._run_local(targets) if scale_mode == "local" else self._run_spark()
         except Exception as exc:

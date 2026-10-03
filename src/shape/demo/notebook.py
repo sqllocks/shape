@@ -1,8 +1,9 @@
 """``NotebookGenerator``: a Fabric notebook (``.ipynb``) that runs one demo scenario.
 
 The notebook installs Shape (the same ``%pip`` line as the other Shape notebooks, with the Fabric
-plugin) and runs the scenario through :func:`shape.demo.demo_run`. Cell ids are derived from the
-scenario, mode and position, so generating the same notebook twice gives identical files.
+plugin, from the wheels uploaded to ``builtin``) and runs the scenario through
+:func:`shape.demo.demo_run`. Cell ids are derived from the scenario, mode and position, so
+generating the same notebook twice gives identical files.
 """
 
 from __future__ import annotations
@@ -26,10 +27,15 @@ def _version() -> str:
 
 
 def install_line(version: str) -> str:
-    """The ``%pip`` line: the same packages as the other Shape notebooks, plus the Fabric plugin."""
+    """The ``%pip`` cell: the same packages as the other Shape notebooks, plus the Fabric plugin,
+    found in the wheels uploaded to the notebook's built-in resources first (the plugins are not
+    on PyPI; the Fabric plugin also needs the Event Hubs and SQL Server plugin wheels)."""
     return (
-        f'%pip install "sqllocks-shape=={version}" "sqllocks-shape-domains=={version}" '
-        f'"sqllocks-shape-fabric=={version}" -q'
+        "# Upload the wheels to this notebook's built-in resources folder (Resources > builtin):\n"
+        f"# sqllocks_shape-{version}-py3-none-any.whl and the plugin wheels of the same version\n"
+        "# (domains, fabric, eventhubs, sqlserver). Once they are on PyPI the line works without.\n"
+        f'%pip install --find-links builtin "sqllocks-shape=={version}" '
+        f'"sqllocks-shape-domains=={version}" "sqllocks-shape-fabric=={version}" -q'
     )
 
 

@@ -64,6 +64,35 @@ def load_schema(domain: str) -> GenSchema:
         raise DemoError(str(exc)) from exc
 
 
+def schema_rows(schema: GenSchema, scale: str) -> int:
+    """The rows the engine generates for a schema at a scale preset (every table added up)."""
+    from shape.generation.engine import Engine
+
+    return sum(Engine(schema, scale=scale).row_counts.values())
+
+
+def planned_rows(domains: list[str], scale: str) -> int | None:
+    """The rows a run of these domains generates at a scale preset, or ``None`` when a domain
+    cannot be loaded or lacks the preset (the run itself then fails and says why)."""
+    total = 0
+    for domain in domains:
+        try:
+            schema = load_schema(domain)
+            check_scale(schema, scale, domain)
+        except DemoError:
+            return None
+        total += schema_rows(schema, scale)
+    return total
+
+
+def describe_size(scale: str, rows: int | None, asked: int) -> str:
+    """``large scale preset: 19,625,400 rows``, or with no count ``large scale preset (--rows
+    100,000)``: the size a run makes, never the ``--rows`` it was given as if it were a count."""
+    if rows is None:
+        return f"{scale} scale preset (--rows {asked:,})"
+    return f"{scale} scale preset: {rows:,} rows"
+
+
 def check_scale(schema: GenSchema, scale: str, domain: str) -> None:
     presets = schema.generation.scales
     if presets and scale not in presets:

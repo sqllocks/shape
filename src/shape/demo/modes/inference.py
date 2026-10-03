@@ -16,10 +16,12 @@ from shape.demo.fidelity import FidelityReport
 from shape.demo.manifest import DemoManifest
 from shape.demo.modes.common import (
     check_scale,
+    describe_size,
     domain_label,
     load_schema,
     resolve_domains,
     rows_to_scale,
+    schema_rows,
 )
 from shape.demo.params import DemoParams
 from shape.demo.runtime import DemoRuntime
@@ -75,7 +77,8 @@ class InferenceDemoMode:
 
             scale = rows_to_scale(params.rows)
             check_scale(schema, scale, self._domain)
-            dashboard.step(DemoStep.GENERATING, f"{params.rows:,} rows (approx)")
+            size = describe_size(scale, schema_rows(schema, scale), params.rows)
+            dashboard.step(DemoStep.GENERATING, size)
             tables = Engine(schema, scale=scale, seed=params.seed).generate().tables
             total = sum(t.num_rows for t in tables.values())
             dashboard.info(f"Generated {total:,} total rows")
@@ -118,16 +121,37 @@ class InferenceDemoMode:
         from shape.demo.estimator import CostEstimator
 
         p = self._params
-        print(f"\nCost estimate for {p.scenario} ({p.rows:,} rows):", file=self._rt.out)
-        print(str(CostEstimator().estimate(p.rows, ["generated"])), file=self._rt.out)
+        scale = rows_to_scale(p.rows)
+        rows = self._planned_rows(scale)
+        size = describe_size(scale, rows, p.rows)
+        print(f"\nCost estimate for {p.scenario} ({size}):", file=self._rt.out)
+        estimate = CostEstimator().estimate(rows if rows is not None else p.rows, ["generated"])
+        print(str(estimate), file=self._rt.out)
         if p.estimate_only:
             return {"success": True, "estimate_only": True}
         print(
             f"[dry-run] Would profile {self._describe_input()}, learn a schema and generate "
-            f"{rows_to_scale(p.rows)} scale data, then compare",
+            f"{size}, then compare",
             file=self._rt.out,
         )
         return {"success": True, "dry_run": True}
+
+    def _planned_rows(self, scale: str) -> int | None:
+        """The rows the run generates: learned from the source as the run learns it (profiling
+        is not generating), so the count is the run's own. ``None`` for a live database, which
+        a plan does not connect to, and for a source or scale the run would refuse."""
+        from shape.generation.learn import as_dataset, learn
+
+        if self._params.input_file == "live-db":
+            return None
+        try:
+            schema = learn(as_dataset(self._profile_source()), domain_label(self._domain))
+            check_scale(schema, scale, self._domain)
+        except Exception as exc:
+            if not is_expected(exc):
+                raise
+            return None
+        return schema_rows(schema, scale)
 
     # ---- the source -------------------------------------------------------------------------
 

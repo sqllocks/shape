@@ -15,7 +15,13 @@ from shape.demo.connections import ConnectionProfile
 from shape.demo.dashboard import DemoStep, ProgressDashboard
 from shape.demo.errors import is_expected
 from shape.demo.manifest import DemoManifest
-from shape.demo.modes.common import check_scale, load_schema, resolve_domains
+from shape.demo.modes.common import (
+    check_scale,
+    describe_size,
+    load_schema,
+    planned_rows,
+    resolve_domains,
+)
 from shape.demo.params import DemoParams
 from shape.demo.runtime import DemoRuntime
 
@@ -70,8 +76,14 @@ class StreamingDemoMode:
         if params.estimate_only or params.dry_run:
             from shape.demo.estimator import CostEstimator
 
-            print(f"\nCost estimate for {params.scenario}:", file=self._rt.out)
-            print(str(CostEstimator().estimate(params.rows, ["generated"])), file=self._rt.out)
+            # Streaming always generates the small preset, whatever --rows says.
+            rows = planned_rows([self._domain], "small")
+            size = describe_size("small", rows, params.rows)
+            print(f"\nCost estimate for {params.scenario} ({size}):", file=self._rt.out)
+            estimate = CostEstimator().estimate(
+                rows if rows is not None else params.rows, ["generated"]
+            )
+            print(str(estimate), file=self._rt.out)
             if params.estimate_only:
                 return {"success": True, "estimate_only": True}
             print(
@@ -85,7 +97,8 @@ class StreamingDemoMode:
             schema = load_schema(self._domain)
             check_scale(schema, "small", self._domain)
             engine = Engine(schema, scale="small", seed=params.seed)
-            dashboard.step(DemoStep.GENERATING, "Seeding small scale data")
+            size = describe_size("small", sum(engine.row_counts.values()), params.rows)
+            dashboard.step(DemoStep.GENERATING, size)
             for name in engine.order:
                 self._manifest.add_artifact("generated", name, engine.row_counts.get(name, 0))
             table = engine.order[0]
