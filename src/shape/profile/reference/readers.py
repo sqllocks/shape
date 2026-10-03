@@ -143,6 +143,61 @@ def _csv_cols(t: pa.Table) -> list[_Col]:
     return out
 
 
+def _plain(v: Any) -> Any:
+    """A pandas object-column value as the Python int, float, bool or str it stands for (numpy
+    scalars included); None for a missing value (None, NaN, pd.NA); the value itself otherwise."""
+    if v is None or isinstance(v, (bool, int, str)):
+        return v
+    if isinstance(v, float):  # np.float64 too
+        return None if v != v else float(v)
+    if isinstance(v, np.bool_):
+        return bool(v)
+    if isinstance(v, np.integer):
+        return int(v)
+    if isinstance(v, np.floating):
+        return None if np.isnan(v) else float(v)
+    if type(v).__name__ in ("NAType", "NaTType"):
+        return None
+    return v
+
+
+def object_column(name: str, values: list[Any]) -> _Col:
+    """A pandas object column Arrow cannot convert (#228): Python ints, floats, bools and strings
+    mixed become the ``objmix`` column the CSV reader makes for mixed chunks, and ints too wide
+    for int64 the ``objint`` column; anything else is refused with the conversion to make."""
+    vals = [_plain(v) for v in values]
+    kinds = {type(v) for v in vals if v is not None}
+    if kinds == {int} and all(-_DEC_MAX < v < _DEC_MAX for v in vals if v is not None):
+        import decimal
+
+        dec = [None if v is None else decimal.Decimal(v) for v in vals]
+        return _Col(name, "objint", pa.chunked_array([pa.array(dec, pa.decimal128(38, 0))]))
+    if kinds <= {int, float, bool, str} and all(
+        _I64[0] <= v <= _I64[1] for v in vals if type(v) is int
+    ):
+        tags = {int: 0, float: 1, bool: 2, str: 3}
+        children: list[list[Any]] = [[], [], [], []]
+        types = np.empty(len(vals), np.int8)
+        offsets = np.empty(len(vals), np.int32)
+        for i, v in enumerate(vals):
+            t = 1 if v is None else tags[type(v)]  # a missing value is a null float, as in a CSV
+            types[i], offsets[i] = t, len(children[t])
+            children[t].append(v)
+        kids = [
+            pa.array(children[t], ty)
+            for t, ty in enumerate((pa.int64(), pa.float64(), pa.bool_(), pa.string()))
+        ]
+        union = pa.UnionArray.from_dense(
+            pa.array(types), pa.array(offsets), kids, ["i", "f", "b", "s"]
+        )
+        return _Col(name, "objmix", pa.chunked_array([union]))
+    found = ", ".join(sorted(k.__name__ for k in kinds))
+    raise ValueError(
+        f"column {name!r} holds values of types that cannot be profiled together ({found}); "
+        f"convert it first, for example df[{name!r}] = df[{name!r}].astype(str)"
+    )
+
+
 def _arrow_cols(t: pa.Table) -> list[_Col]:
     """pa.Table -> pandas semantics of Table.to_pandas() / pd.read_parquet()."""
     out = []

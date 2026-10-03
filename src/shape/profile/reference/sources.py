@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import glob as _glob
+from collections import Counter
 from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
@@ -19,7 +20,15 @@ from shape.io.excel import is_workbook_spec
 from shape.security.jsondepth import check_json_file
 
 from . import delta_fallback
-from .readers import CsvFormat, _arrow_cols, _Col, _csv_cols, _csv_options, read_csv
+from .readers import (
+    CsvFormat,
+    _arrow_cols,
+    _Col,
+    _csv_cols,
+    _csv_options,
+    object_column,
+    read_csv,
+)
 
 _SUFFIXES = (".csv", ".parquet", ".jsonl", ".ndjson")
 
@@ -202,10 +211,11 @@ def load_columns(
 ) -> tuple[str, list[_Col], int]:
     """-> (table name, columns, row count) for one table-shaped source."""
     if isinstance(source, pa.Table):
+        _check_unique_names(source.column_names)
         return name or "table", _arrow_cols(source), source.num_rows
     if _is_pandas(source):
-        table = pa.Table.from_pandas(source, preserve_index=False)
-        return name or "table", _arrow_cols(table), table.num_rows
+        _check_unique_names([str(c) for c in source.columns])
+        return name or "table", _pandas_cols(source), len(source)
     if isinstance(source, (str, Path)):
         return _load_path(str(source), name, threads, csv)
     if _is_row_dicts(source):
@@ -215,6 +225,37 @@ def load_columns(
         f"unsupported source type {type(source).__name__}; expected a path, glob, "
         "pyarrow.Table, pandas.DataFrame, a list of row dicts or a dict of those"
     )
+
+
+def _check_unique_names(names: list[str]) -> None:
+    """A table keeps one column per name: two columns of one name would lose one (#229)."""
+    counts = Counter(names)
+    dupes = sorted(n for n, k in counts.items() if k > 1)
+    if dupes:
+        raise SourceError(
+            f"duplicate column names {dupes}: rename the columns so that every name is unique"
+        )
+
+
+def _pandas_cols(df: Any) -> list[_Col]:
+    """The columns of a DataFrame. An object column Arrow cannot convert (mixed Python types,
+    ints wider than int64) is built by ``object_column`` instead (#228)."""
+    try:
+        return _arrow_cols(pa.Table.from_pandas(df, preserve_index=False))
+    except (pa.ArrowInvalid, pa.ArrowTypeError, OverflowError):
+        pass
+    cols: list[_Col] = []
+    for i, label in enumerate(df.columns):
+        series = df.iloc[:, i]
+        try:
+            one = pa.Table.from_pandas(series.to_frame(name=str(label)), preserve_index=False)
+        except (pa.ArrowInvalid, pa.ArrowTypeError, OverflowError):
+            if series.dtype != object:
+                raise
+            cols.append(object_column(str(label), series.tolist()))
+        else:
+            cols.extend(_arrow_cols(one))
+    return cols
 
 
 def _is_row_dicts(obj: Any) -> bool:
