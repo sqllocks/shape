@@ -106,3 +106,22 @@ def test_a_contract_kind_is_a_v2_kind_or_the_numeric_family():
     assert evaluate_contract(model, ok).passed
     bad = evaluate_contract(model, {"columns": {"a": {"kind": "text"}}})
     assert bad.violations[0].code == "type"
+
+
+# ---- AUD-quality #477: errors that say what is wrong
+
+
+def test_evaluate_contract_refuses_columns_that_are_not_an_object():
+    import pytest
+
+    with pytest.raises(ValueError, match="columns"):
+        evaluate_contract(S, {"columns": ["id"]})
+    with pytest.raises(ValueError, match="email"):
+        evaluate_contract(S, {"columns": {"email": "required"}})
+
+
+def test_compatibility_names_the_modes():
+    import pytest
+
+    with pytest.raises(ValueError, match="backward, forward or full"):
+        compatibility(S, S, "sideways")
