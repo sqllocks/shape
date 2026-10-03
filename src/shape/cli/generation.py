@@ -72,6 +72,11 @@ def add_arguments(sub: Any) -> None:
         help="generate from a profile (a .shape file): fits strategies to it",
     )
     ge.add_argument(
+        "--decisions",
+        metavar="DECISIONS.json",
+        help="with --from: apply a decision file (`shape proposals`)",
+    )
+    ge.add_argument(
         "--rows",
         action="append",
         metavar="N|TABLE=N",
@@ -244,6 +249,8 @@ def cmd_generate(a: argparse.Namespace) -> int:
     bare, per_table = _rows_arg(a)
     if a.scale_mode and a.from_profile:
         raise ValueError("--scale-mode does not combine with --from")
+    if a.decisions and not a.from_profile:
+        raise ValueError("--decisions goes with --from PROFILE.shape")
     if a.from_profile:
         if per_table:
             raise ValueError("--rows TABLE=N is for a schema; with --from give --rows N")
@@ -313,7 +320,11 @@ def _generate_from_profile(a: argparse.Namespace, rows: int | None) -> int:
     from shape.runlog import current
 
     run = current()
-    fitted = fit_schema(shape.load(a.from_profile), rows=rows)
+    from shape.cli.proposals import load_decisions
+
+    fitted = fit_schema(
+        shape.load(a.from_profile), rows=rows, decisions=load_decisions(a.decisions)
+    )
     schema = fitted.schema
     _check_scale(schema, a.scale)
     counts = fitted.plan.counts()

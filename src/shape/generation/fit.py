@@ -563,12 +563,18 @@ def fit_schema(
     domain: str = "profile",
     copula_threshold: float = COPULA_THRESHOLD,
     rows: int | None = None,
+    decisions: Any = None,
 ) -> Fit:
     """The generation schema that reproduces ``profile``, and what it preserves.
 
     The schema's ``profile`` scale preset has the profile's row counts; ``rows`` replaces the row
     count of a single-table profile (the plan then reports the row-count dependent fields as
-    approximate)."""
+    approximate). ``decisions`` is a :class:`shape.proposals.DecisionFile`: the relationships a
+    person accepted are kept and the ones they rejected are left out (``docs/PROPOSALS.md``)."""
+    if decisions is not None:
+        from shape.proposals import apply_decisions
+
+        profile = apply_decisions(profile, decisions)
     dataset: DatasetProfile = as_dataset(profile)
     base = SchemaBuilder().build(dataset, domain_name=domain, correlation_threshold=2.0)
     doc = copy.deepcopy(base.to_dict())
