@@ -77,3 +77,9 @@ A `REF` is `latest`, a tag, a promoted ref or a content id recorded for that nam
 | `shape registry` | safe forms by default; raw only with `--allow-raw` | sharing, backup, git |
 | `shape profile registry` | full profiles by default; the safe form with `save --safe` | a local catalog; `--safe` for a shared one |
 | `shape profile safe` output (`*.safe.json`) | no raw values | anywhere |
+
+## Searching the history
+
+`shape bisect` finds the first committed version of a name that changed, `shape bisect layers`
+the layer of a pipeline where a change appears, and `shape timelapse` follows one column across
+the versions; see `docs/HISTORY.md`. They need raw profiles (`--allow-raw`).
