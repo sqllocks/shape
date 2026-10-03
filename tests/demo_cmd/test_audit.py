@@ -51,3 +51,21 @@ def test_511_an_interrupted_seeding_run_is_recorded_and_can_be_cleaned_up(
     assert any(landing.iterdir())
     outcome = demo_cleanup(record["session_id"])
     assert outcome["ok"] and not any(landing.iterdir())
+
+
+# ---- #517: a name with a final line break is not a plain name ----------------------------------
+
+
+@pytest.mark.parametrize("name", ["abc\n", "abc\r\n", "a\nb"])
+def test_517_check_name_refuses_a_line_break(name):
+    from shape.demo.home import check_name
+
+    with pytest.raises(ValueError, match="not a plain name"):
+        check_name(name, "session id")
+
+
+def test_517_a_profile_name_with_a_line_break_is_refused(home):
+    from shape.demo.errors import DemoError
+
+    with pytest.raises(DemoError):
+        demo_init("here\n", local_path="x")
