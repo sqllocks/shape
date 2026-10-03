@@ -120,3 +120,20 @@ def test_redact_text_is_linear_on_adversarial_text(text):
     start = time.monotonic()
     redact_text(text)
     assert time.monotonic() - start < 1.0
+
+
+# --- #292: the secret scanner is linear -------------------------------------------------------
+
+from shape.security.hardening import scan_secrets  # noqa: E402
+
+
+@pytest.mark.parametrize("text", ["Endpoint=sb://" * 20_000, "AccountKey=" * 20_000])
+def test_secret_scan_is_linear_on_adversarial_text(text):
+    start = time.monotonic()
+    scan_secrets({"v": text})
+    assert time.monotonic() - start < 1.0
+
+
+def test_the_event_hubs_connection_string_is_still_found():
+    cs = "Endpoint=sb://ns.servicebus.windows.net/;SharedAccessKeyName=root;SharedAccessKey=abc"
+    assert "azure_connection" in scan_secrets({"v": cs})
