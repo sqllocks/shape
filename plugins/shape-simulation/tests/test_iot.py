@@ -192,3 +192,27 @@ def test_arguments_are_checked(iot_tables):
     with pytest.raises(ValueError, match="'device_id' or 'sensor_id'"):
         IoTTelemetrySimulator(iot_tables["reading"].drop(["sensor_id"]), iot_tables["device"])
     assert "IoTTelemetryResult(readings=1200" in repr(sim(iot_tables).run())
+
+
+@pytest.mark.parametrize("hours", [1.0, 4.0, 12.0])
+def test_baseline_alerts_are_about_one_per_device_per_eight_hours(hours):
+    # Issue #439: the rate was max(1, int(hours / 8)), at least one alert per device for any
+    # window under 16 hours.
+    import datetime as dt
+
+    n = 4000
+    devices = pa.table({"device_id": list(range(n))})
+    readings = pa.table(
+        {
+            "reading_id": [1],
+            "device_id": [0],
+            "value": [1.0],
+            "reading_time": [dt.datetime(2024, 1, 1)],
+        }
+    )
+    r = IoTTelemetrySimulator(
+        tables={"reading": readings, "device": devices},
+        config=IoTTelemetryConfig(duration_hours=hours, alert_storm_enabled=False, seed=3),
+    ).run()
+    per_device = r.alerts.num_rows / n
+    assert per_device == pytest.approx(hours / 8, rel=0.1)
