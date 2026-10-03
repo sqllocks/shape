@@ -113,6 +113,13 @@ sources differ in format.
 workshops and cleans up after them; see `docs/DEMO.md`. Exit 0 done, 1 a run failed, a cleanup could not
 remove something or a preflight check failed, 2 bad input.
 
+## The project file
+
+`shape init` scaffolds a project and `shape project validate` checks its `shape.yml`; `profile`,
+`diff`, `check` and `verify` read it when it is present, and their flags override it
+(`--project FILE`, `--no-project`, `--source NAME`, `diff --baseline-date`). See
+`docs/PROJECT.md`.
+
 ## Registries
 
 `shape registry` (content-addressed artifacts) and `shape profile registry` (named profiles) are
