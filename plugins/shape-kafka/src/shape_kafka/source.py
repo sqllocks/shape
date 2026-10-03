@@ -218,6 +218,8 @@ class KafkaStreamSource:
                     err = raw.error()
                     if err is not None:
                         self._raise(err)
+                    if stop_at_end and int(raw.offset()) >= ends[str(raw.partition())]:
+                        continue  # produced after the read began: past this read's end
                     _kind, ts = raw.timestamp()
                     messages.append(
                         StreamMessage(
