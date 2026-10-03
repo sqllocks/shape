@@ -308,6 +308,27 @@ def _load_workbook_sheet(text: str, name: str | None) -> tuple[str, list[_Col], 
     return src.name, _to_cols("xlsx", table), table.num_rows
 
 
+def _folder_files(root: Path) -> list[Path]:
+    """The files of a folder read as one table, in order: everything below it except files and
+    folders whose names start with ``.`` or ``_`` (``.ipynb_checkpoints``, ``_temporary``, a Delta
+    log). A Delta table inside the folder is refused: its files are every version it ever wrote,
+    not its current rows (#271)."""
+    files: list[Path] = []
+    for p in sorted(root.rglob("*")):
+        rel = p.relative_to(root).parts
+        if any(part.startswith((".", "_")) for part in rel):
+            visible_parent = not any(part.startswith((".", "_")) for part in rel[:-1])
+            if p.name == "_delta_log" and visible_parent and p.is_dir():
+                raise SourceError(
+                    f"{root} holds a Delta table at {p.parent}: profile that table's folder on "
+                    "its own (its files include rows the table has removed)"
+                )
+            continue
+        if p.is_file():
+            files.append(p)
+    return files
+
+
 def _path_table(
     text: str, name: str | None, threads: int | None, csv: CsvFormat | None = None
 ) -> tuple[str, str, pa.Table]:
@@ -315,7 +336,7 @@ def _path_table(
     if _is_url(text):
         table_name, table = _remote_table(text, name)
         return table_name, "remote", table
-    if any(ch in text for ch in "*?["):
+    if any(ch in text for ch in "*?[") and not Path(text).exists():  # x[1].csv is a file (#272)
         matches = sorted(Path(m) for m in _glob.glob(text, recursive=True) if Path(m).is_file())
         if not matches:
             raise FileNotFoundError(f"no files match {text!r}")
@@ -328,11 +349,7 @@ def _path_table(
     if path.is_dir():
         if (path / "_delta_log").is_dir():
             return name or path.name, "delta", _read_delta(path)
-        files = sorted(
-            p
-            for p in path.rglob("*")
-            if p.is_file() and p.suffix.lower() in _SUFFIXES and not p.name.startswith((".", "_"))
-        )
+        files = [p for p in _folder_files(path) if p.suffix.lower() in _SUFFIXES]
         if not files:
             raise SourceError(f"directory {text} holds no {'/'.join(_SUFFIXES)} files")
         kind, table = _read_files(files, threads, csv)
@@ -424,9 +441,7 @@ def folder_is_one_table(folder: str | Path, csv: CsvFormat | None = None) -> boo
     if (root / "_delta_log").is_dir():
         return True
     seen: set[tuple[str, ...]] = set()
-    for p in sorted(root.rglob("*")):
-        if not p.is_file() or p.name.startswith((".", "_")):
-            continue
+    for p in _folder_files(root):
         suffix = p.suffix.lower()
         if suffix == ".parquet":
             seen.add(tuple(pq.read_schema(p).names))
