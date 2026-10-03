@@ -5,6 +5,16 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Fixed (benchmark harness, AUD-perf): `run.py --only profile|generate|stream` keeps the other
+  families' records in `results.json` instead of dropping them (#357); STREAM-PROF refuses a ratio
+  when the replay and the batch profiled different row counts (#358); a failing timed baseline run
+  in `run.py --full` leaves that record empty instead of ending the job, and waits for the load
+  gate (#359); `measure_product.py` holds the benchmark lock and writes nothing when the output
+  differs between runs or has the wrong rows (#360); `kernel_bench.py` compares the timed output
+  itself with the reference twin (#361); the live-fidelity overhead and realtime timings hold the
+  benchmark lock (#362); peak RSS is megabytes on macOS too (#363); `datasets.py` rejects unknown
+  names and row counts below 1 (#364); `bench_cli.py` names `verify.py --cli` (#365).
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
