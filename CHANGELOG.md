@@ -503,6 +503,18 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ### Fixed
 
+- Generation (second bug hunt): a generation schema written by `shape migrate` loads and
+  validates (#651); `ShapeTimeline` interpolation gives the same data in every process (#652);
+  a `conditional` fixed text such as `"02134"` stays text (#653); `SpecDocument.save` keeps the
+  file mode and a deeply nested spec is a `SpecError` (#654); the locale strategy names the real
+  `sqllocks-shape-domains` package (#655); `validate()` reports a NaN `null_rate` and a negative
+  `max_length` (#656); `generate --from` a merged profile draws the value sets the merge lists
+  exactly (#682); `conditional_table` keeps `output_type: "string"` labels as text (#693); drift
+  plans may declare `format`/`version` and their answer key declares its format (#703); an
+  unknown scale preset is an error instead of 100 rows a table (#717); a foreign-key cycle is a
+  validation error that the dry run reports (#733); a drift plan that fails on a later day writes
+  nothing (#737); a changed domain definition no longer changes later loads (#343); an empty child
+  of an empty parent generates (#220).
 - `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references` no longer depends on test order (#77): it resolves the references in a fresh interpreter and reports which cloud SDK modules got imported, so `azure*` modules left in `sys.modules` by `tests/demo/fabric` cannot fail it.
 - Issue #76. The three tests that failed were not numpy-dependent: they called pyarrow in ways older
   releases reject (float16 from Python floats, `if_else` on half-float, hive partition inference on a
