@@ -29,7 +29,10 @@ ANOMALY_COLUMN = "_shape_is_anomaly"
 INTERNAL_PREFIX = "_shape_"
 
 FORMAT_PATTERNS: dict[str, re.Pattern[str]] = {
-    "email": re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$"),
+    # local@domain, the domain holding a dot that is neither its first nor its last character.
+    # The possessive run finds the first dot after the domain's first character without
+    # backtracking (the plain form was quadratic on long dotted values).
+    "email": re.compile(r"^[^@\s]+@[^@\s][^@\s.]*+\.[^@\s]+$"),
     "phone_us": re.compile(r"^\+?1?\s*[\-.]?\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}$"),
     "uuid": re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.I),
     "url": re.compile(r"^https?://\S+"),
