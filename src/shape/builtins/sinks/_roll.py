@@ -30,6 +30,7 @@ from shape.io.landing import check_template, render_path, uses_date
 from shape.io.store import Store
 
 MODES = ("overwrite", "append", "fail")
+_PART_MARK = "\ue000"  # stands for {part} while a name pattern is built (a private-use character)
 ROLL_OPTIONS = ("roll_rows", "roll_seconds")
 
 
@@ -97,17 +98,34 @@ class RollingTableWriter:
     # ---- naming ---------------------------------------------------------------------------
 
     def _render(self, part: int, now: dt.datetime) -> str:
+        return self._render_template(self._template, part, now)
+
+    def _render_template(self, template: str, part: int | None, now: dt.datetime) -> str:
         date = self._batch_date
-        if date is None and uses_date(self._template):
+        if date is None and uses_date(template):
             date = now.date()
         return render_path(
-            self._template,
+            template,
             self._table,
             self._encoder.extension,
             date,
-            part=part if "{part}" in self._template else None,
+            part=part if "{part}" in template else None,
             now=now,
         )
+
+    def _part_pattern(self, now: dt.datetime) -> tuple[str, re.Pattern[str]]:
+        """The folder of the first file and a pattern for the names of the files of this table
+        there, with the part number as a group. The path is rendered with a marker where
+        ``{part}`` stands, so a ``00001`` in the table name, the date or the time is never taken
+        for the part, and a part number of six or more digits is read in full."""
+        rendered = self._render_template(self._template.replace("{part}", _PART_MARK), None, now)
+        path = PurePosixPath(rendered)
+        folder = "" if str(path.parent) == "." else str(path.parent)
+        pieces = path.name.split(_PART_MARK)
+        regex = re.escape(pieces[0])
+        for i, tail in enumerate(pieces[1:]):
+            regex += (r"(?P<part>\d{5,})" if i == 0 else r"(?P=part)") + re.escape(tail)
+        return folder, re.compile(regex)
 
     def _next_part(self, now: dt.datetime) -> int:
         part = self._part + 1
@@ -121,11 +139,11 @@ class RollingTableWriter:
                         f"{self._store.location(first)} already exists (mode=fail)"
                     )
             else:
-                pattern = re.escape(PurePosixPath(first).name).replace("00001", r"(\d{5})")
+                folder, pattern = self._part_pattern(now)
                 found = [
-                    int(m.group(1))
+                    int(m.group("part"))
                     for n in self._store.names(folder)
-                    if (m := re.fullmatch(pattern, n))
+                    if (m := pattern.fullmatch(n))
                 ]
                 part = max(found, default=0) + 1
         return part
