@@ -907,6 +907,9 @@ def diff_records(
     when neither side is a dataset)."""
     b_tables, b_dataset = tables_of(baseline)
     c_tables, c_dataset = tables_of(current)
+    for side, found in (("baseline", b_tables), ("current", c_tables)):
+        if not found:
+            raise ValueError(f"the {side} holds no table to compare")
     dataset = b_dataset or c_dataset
     changes: list[tuple[str | None, str | None, dict[str, Any]]] = []
     if dataset:
