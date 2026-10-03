@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 
 CONTINUE_FORMATS = ("csv", "parquet", "jsonl")
 TIME_TRAVEL_FORMATS = ("csv", "parquet")
+DAILY_TEMPLATE = "{table}/ingest_date={date}/{table}_{yyyymmdd}.{ext}"
 _READ_PATTERNS = (("*.csv", "csv"), ("*.parquet", "parquet"), ("*.jsonl", "jsonl"))
 _TARGET_HELP = (
     "an installed domain (see `shape list`) or a generation schema file "
@@ -29,6 +30,8 @@ _TARGET_HELP = (
 
 def add_arguments(sub: Any) -> None:
     """Register ``continue`` and ``time-travel`` on the subparsers."""
+    from shape.cli.landing import add_landing_arguments
+
     co = sub.add_parser(
         "continue",
         help="generate the next batch of changes (inserts, updates, deletes) for existing data",
@@ -41,7 +44,7 @@ def add_arguments(sub: Any) -> None:
     co.add_argument("target", metavar="DOMAIN|SCHEMA.json", help=_TARGET_HELP)
     co.add_argument("--mode", choices=("3nf", "star"), help="the schema mode of a domain")
     co.add_argument(
-        "--input", required=True, metavar="DIR", help="the existing data, one file per table"
+        "--input", metavar="DIR", help="the existing data, one file per table (change mode)"
     )
     co.add_argument("-o", "--output", required=True, metavar="DIR", help="where the delta files go")
     co.add_argument("--format", "-f", choices=CONTINUE_FORMATS, default="csv", help="default: csv")
@@ -68,6 +71,32 @@ def add_arguments(sub: Any) -> None:
         "--as-of", metavar="ISO", help="the change time on every row (default: now, UTC)"
     )
     co.add_argument("--json", action="store_true", help="print the result as JSON")
+    daily = co.add_argument_group(
+        "daily batches (instead of --input)",
+        "Generate one day's new rows, referencing the keys of every earlier day, with no input "
+        "files: a day is regenerable alone and the same bytes every time (docs/INCREMENTAL.md). "
+        "Needs --daily-rows, --start-date and --batch-date.",
+    )
+    daily.add_argument(
+        "--daily-rows",
+        metavar="TABLE=N",
+        action="append",
+        help="new rows of TABLE per day (repeatable), e.g. customer=300 order=4000",
+    )
+    daily.add_argument("--start-date", metavar="YYYY-MM-DD", help="the date of day 0")
+    daily.add_argument(
+        "--end-date",
+        metavar="YYYY-MM-DD",
+        help="with --batch-date: write every day from --batch-date to this one (a backfill)",
+    )
+    daily.add_argument(
+        "--date-column",
+        metavar="TABLE.COLUMN",
+        action="append",
+        help="a date or timestamp column set to the day (repeatable)",
+    )
+    daily.add_argument("--scale", "-s", metavar="PRESET", help="the scale of tables not in a batch")
+    add_landing_arguments(co, default_template=DAILY_TEMPLATE)
 
     tt = sub.add_parser(
         "time-travel",
@@ -158,10 +187,81 @@ def _as_of(text: str | None) -> dt.datetime | None:
     return parsed.astimezone(dt.UTC) if parsed.tzinfo else parsed
 
 
+def _daily(a: argparse.Namespace) -> int:
+    """``continue --daily-rows``: one day's batch, or a range of days, from the schema alone."""
+    from shape.cli.generation import _check_scale, load_target
+    from shape.cli.landing import landing_options
+    from shape.generation.batches import BatchGenerator
+    from shape.generation.landing import write_landing
+    from shape.io.landing import parse_date, parse_pairs
+
+    for flag, value in (("--start-date", a.start_date), ("--batch-date", a.batch_date)):
+        if not value:
+            raise ValueError(f"daily batches need {flag} YYYY-MM-DD")
+    schema = load_target(a.target, a.mode)
+    _check_scale(schema, a.scale)
+    date_columns: dict[str, str] = {}
+    for item in a.date_column or []:
+        table, dot, column = item.partition(".")
+        if not dot or not table or not column:
+            raise ValueError(f"--date-column is TABLE.COLUMN, got {item!r}")
+        date_columns[table] = column
+    generator = BatchGenerator(
+        schema,
+        parse_pairs(a.daily_rows, "--daily-rows"),
+        start_date=a.start_date,
+        seed=a.seed,
+        scale=a.scale,
+        date_columns=date_columns,
+    )
+    first = parse_date(a.batch_date)
+    last = parse_date(a.end_date) if a.end_date else first
+    if last < first:
+        raise ValueError("--end-date is before --batch-date")
+    options = landing_options(a, DAILY_TEMPLATE)
+    days: list[dict[str, Any]] = []
+    for offset in range((last - first).days + 1):
+        batch = generator.generate(first + dt.timedelta(days=offset))
+        landed = write_landing(
+            batch.tables,
+            a.output,
+            default_format=a.format,
+            template=options["template"],
+            batch_date=batch.batch_date,
+            formats=options["formats"],
+        )
+        days.append(
+            {
+                "batch_date": batch.batch_date.isoformat(),
+                "batch_index": batch.batch_index,
+                "row_ranges": {t: list(r) for t, r in batch.row_ranges.items()},
+                "files": [
+                    {"table": f.table, "format": f.format, "path": str(f.path), "rows": f.rows}
+                    for f in landed
+                ],
+            }
+        )
+    seed = a.seed if a.seed is not None else schema.model.seed
+    if a.json:
+        _dump({"output": str(a.output), "seed": seed, "start_date": a.start_date, "days": days})
+        return 0
+    files = sum(len(d["files"]) for d in days)
+    print(f"Wrote {len(days)} day(s), {files} files to {a.output}/ (seed {seed})")
+    return 0
+
+
 def cmd_continue(a: argparse.Namespace) -> int:
     from shape.cli.generation import load_target
     from shape.generation.incremental import ContinueConfig, ContinueEngine
 
+    if a.daily_rows:
+        if a.input:
+            raise ValueError("--daily-rows generates from the schema: drop --input")
+        return _daily(a)
+    if not a.input:
+        raise ValueError("give --input DIR (change mode) or --daily-rows TABLE=N (daily batches)")
+    if a.start_date or a.end_date or a.date_column or a.scale:
+        raise ValueError("--start-date, --end-date, --date-column and --scale are for --daily-rows")
     schema = load_target(a.target, a.mode)
     tables = read_tables(a.input)
     transitions: dict[str, dict[str, dict[str, float]]] = {}
@@ -177,9 +277,18 @@ def cmd_continue(a: argparse.Namespace) -> int:
         as_of=_as_of(a.as_of),
     )
     delta = ContinueEngine().continue_from(tables, schema=schema, config=config)
-    files = write_tables(
-        {n: t for n, t in delta.combined.items() if t.num_rows > 0}, a.format, Path(a.output)
-    )
+    changed = {n: t for n, t in delta.combined.items() if t.num_rows > 0}
+    from shape.cli.landing import landing_options, landing_requested
+
+    if landing_requested(a):
+        from shape.generation.landing import write_landing
+
+        options = landing_options(a, DAILY_TEMPLATE)
+        files = [
+            f.path for f in write_landing(changed, a.output, default_format=a.format, **options)
+        ]
+    else:
+        files = write_tables(changed, a.format, Path(a.output))
     if a.json:
         _dump(
             {

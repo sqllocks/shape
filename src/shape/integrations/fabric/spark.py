@@ -17,7 +17,8 @@ partitioning. First-appearance ordering follows that order, which is not the sou
 once Spark has shuffled the data. The bounded statistics (counts, min/max, mean, variance,
 null and distinct counts, quantiles, top values) agree with the single-process bounded profile
 within the sketches' error bounds (``error_models`` records them). Shape must be installed on
-the executors too (a Fabric Environment library, or ``%pip install`` on Synapse).
+the executors too (a Fabric Environment library, or the pool or workspace packages of a
+Synapse Spark pool).
 
 Spark is imported lazily; this module imports without ``pyspark``.
 """

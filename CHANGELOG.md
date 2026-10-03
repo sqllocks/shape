@@ -27,6 +27,79 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   with its `shape_spark_worker` notebook, a per-chunk-file process option, `ChunkedGenerator` and
   `MultiStoreWriter`. Row counts are exact in every mode. Harness: `benchmarks/vs_spindle/scale_1to1/`
   (T-21 for retail at medium, with negative controls).
+- `sqllocks-shape-simulation`: file-drop, SCD2-drop, stream, hybrid and workflow simulators and
+  `shape simulate file-drop|scd2|stream|hybrid|workflow` (`docs/SIMULATION_FILES_EVENTS.md`). The
+  stream emitter runs on the emit runtime (its pacing, sinks and encoders); the runtime accepts any
+  counted, resumable sequence of event blocks (`EventSequence`), and sink selection moved from the
+  `shape emit` command to `shape.streaming.emit.open_sink`. Harness:
+  `benchmarks/vs_spindle/simulation_1to1/` (mechanism parity and T-21 per simulator, an allow-list
+  of the defects fixed, negative controls).
+- `shape-simulation` (`docs/plugins/simulation.md`): the pattern simulators (clickstream, financial
+  reversals / fraud bursts / settlements, IoT drift / missing readings / alert storms / fleet status,
+  operational logs with distributed traces, pulse rideshare telemetry and marts) as Arrow/numpy
+  modules, and `shape simulate clickstream|financial|iot|operational-log|pulse`. A run is
+  reproducible from its seed (ids come from the seed; the clickstream window starts at
+  `start_time`); the financial `transactions` columns follow the configuration; log events that
+  start a trace carry its ids; `latency_spike_enabled` and `outage_enabled` are honoured and a run
+  without tracing has no trace ids; fractional durations count; IoT alerts do not depend on the
+  storm switch; readings per sensor and the domains' own column names are understood. Harness:
+  `benchmarks/vs_spindle/simulation_1to1/verify_patterns.py` (parity verifier, negative controls,
+  allow-list probes).
+- Landing layout (`docs/LANDING.md`): `--path-template`, `--batch-date` and `--table-format` on
+  `shape generate`, `shape continue` and `shape chaos` write one file per table per business date
+  (`{table}/ingest_date={date}/{table}_{yyyymmdd}.{ext}`) with a format per table; the file sinks
+  take `path_template` and `batch_date`. Output without the options is unchanged.
+- Daily batches (`docs/INCREMENTAL.md`): `shape continue --daily-rows TABLE=N --start-date D
+  --batch-date D [--end-date D]` and `shape.generation.batches.BatchGenerator` write one day's new
+  rows with stable keys and foreign keys into earlier days, regenerable alone byte for byte.
+- `shape chaos` and `shape.chaos.groundtruth` (`docs/CHAOS.md`): named corruptions (`duplicates`,
+  `orphan_keys`, `date_shift`, `negative_amounts`, `case_whitespace`, `pii_fill`, `type_change`,
+  `null_creep`) with a rate and a seed, and a JSON Lines ground-truth log of every change.
+- `shape stream-profile` reads files (issue #33): a path or `file://` URI, a folder, a glob or `-`
+  (standard input), as JSON lines (what `shape emit` / `shape stream` write, flat or CloudEvents),
+  CSV or Parquet, with the same windows, lateness, event time and checkpoints as a broker;
+  `--order event-time` replays a file in time order. `docs/plugins/streaming.md`.
+- Delta time travel (issue #36): `shape.profile(path, version=N)` / `as_of=...` and
+  `shape profile DIR --version N | --as-of TIMESTAMP` profile an earlier state of a Delta table;
+  `as_of` before the first commit is an error, not version 0. The Delta version and commit time
+  are recorded as `Profile.provenance` in the `.shape` manifest (not in the profile body).
+- Stream API durations (`TumblingProfiler`, `SlidingProfiler`, `SessionProfiler`; issue #34):
+  a duration is a `timedelta` or a string with a unit (`"60s"`, `"5m"`). **Breaking:** a bare
+  `int` or `float` other than `0` now raises `ValueError` instead of being read as microseconds
+  (`60_000` was 60 ms and gave 360 windows for 6 minutes of events instead of 6). Snapshots and
+  checkpoints are unchanged and still restore. Spec: `docs/specs/STREAMING_SEMANTICS.md` §2.
+- CLI fixes (ISS-cli, `docs/CLI.md`, `docs/REGISTRY.md`): `python -m shape` works; `shape.profile`
+  accepts a list of row dicts and `examples/shape_as_code.py` runs (a test runs every example);
+  one error policy for the whole CLI: an expected error is `shape: error: MESSAGE` with exit
+  code 2 and no traceback (`--debug` or `SHAPE_DEBUG=1` shows it; a bug still raises), and a
+  missing file reads the same everywhere. `shape doctor` prints a readable report (Shape version,
+  kernel, each package with what needs it; `--json` for scripts; exit 1 when a required package is
+  missing). `shape profile` warns on a table with 0 rows (`--fail-on-empty` exits 2). `show` is
+  documented as the alias of `inspect`, and `capture` as the model-writing command.
+  `shape compatibility` and `shape fidelity` say what they expect instead of failing in a decoder.
+- **Registries no longer commit raw values by default.** `shape registry ROOT commit` refuses a raw
+  profile (`LocalRegistry.commit(..., allow_raw=False)` raises); `--safe` commits its share-safe
+  form, the output of `shape profile safe` commits as it is (leak-scanned first), and `--allow-raw`
+  keeps the old behaviour with a warning. `shape profile registry save --safe` stores the safe form
+  (`<name>.safe.json`) and a full save says on stderr that it holds real values. `shape registry`
+  also gained named arguments, `--meta KEY=VALUE` and `--business-date`, a readable `created` time in
+  `log`, `list`, `show`, `diff`, and `checkout -o OUT` (it no longer writes binary to a terminal).
+  **Behaviour change:** committing a raw profile to `shape registry` now exits 2.
+
+- Drift (`docs/DRIFT.md`): one engine, `shape.drift.engine`, behind `shape.diff`, `shape.drift.compare`,
+  `ShapeMonitor`, `ShapeTimeline.changes` and the stream profiler's windows; `shape.diff` takes
+  window profiles. New comparisons with documented defaults: category proportions (`category_shift`),
+  pattern, spread, KS distance from the quantiles (`distribution_shift`), min/max (`range_change`),
+  string length, outlier rate, boolean true rate (`true_rate_change`; contract rules
+  `min_true_rate` / `max_true_rate`), uniqueness, hour of day and day of week. No false drift on
+  keys, unique columns of different sizes or date strings. `shape.diff` takes `ignore_columns`,
+  `column_thresholds`, `only_columns` and `policy`; `shape diff` takes `--ignore`, `--only`,
+  `--policy`, `--threshold` and a flag per global threshold. Change records have a `score`;
+  `MonitorEvent.drifts` carry column, kind, severity and score.
+- `shape generate-drift` and `shape.generation.drift_plan`: planted drift over time (step, ramp and
+  window events on null rates, category weights and new values, distribution parameters, added and
+  dropped columns, type changes), one folder of tables per day, each day's schema and an answer key
+  (`ground_truth.json`).
 - `shape stream` (`docs/EMIT.md`): one table's rows as events in event-time order, on the `shape emit`
   runtime (same options, sinks, formats and delivery guarantees; `--table` required, `-t -s -m`,
   `--rate` 10, `--max-events` is the earliest N events). The flat-event encoder is vectorised

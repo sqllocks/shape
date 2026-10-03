@@ -204,6 +204,10 @@ and is deliberately outside any `try`/`except`.
 # pip takes the platform wheel when builtin/ holds one that fits this kernel and falls back to
 # the pure-Python wheel otherwise, so one cell works either way. The exit value reports which.
 # Once the package is on PyPI the same line works without the upload.
+# In a pipeline run inline %pip is off by default; the notebook activity must pass the Boolean
+# parameter _inlineInstallationEnabled = true (the shipped pipelines do). A Python notebook
+# cannot attach an Environment, and %pip is not supported in High Concurrency mode or in a
+# reference run (notebookutils.notebook.run).
 %pip install --find-links builtin "sqllocks-shape=={VERSION}"
 """,
     ),
@@ -493,6 +497,9 @@ INSTALL_CELL = (
 # sqllocks_shape_domains-{VERSION}-py3-none-any.whl. pip takes the platform wheel when one
 # fits and falls back to the pure wheel; the exit value reports the kernel.
 # Once the packages are on PyPI the same line works without the upload.
+# In a pipeline run inline %pip is off by default; the notebook activity must pass the Boolean
+# parameter _inlineInstallationEnabled = true (the shipped pipelines do). Not supported in High
+# Concurrency mode or in a reference run (notebookutils.notebook.run).
 %pip install --find-links builtin "sqllocks-shape=={VERSION}" "sqllocks-shape-domains=={VERSION}"
 """,
 )

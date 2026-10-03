@@ -161,3 +161,33 @@ class EmitterSink:
         close = getattr(self.emitter, "close", None)
         if callable(close):
             close()
+
+
+def open_sink(
+    sink: str,
+    *,
+    output: str | os.PathLike[str] | None = None,
+    envelope: str = "flat",
+    resuming: bool = False,
+    choices: str = "console, file, or the URI of an emitter plugin (kafka://, eventhubs://, ...)",
+) -> EventSink:
+    """The sink a name or URI stands for: ``console``, ``file`` (JSON lines in ``output``), or
+    the URI of a ``shape.emitters`` plugin (``kafka://``, ``eventhubs://``, ...). Shared by
+    ``shape emit`` and ``shape stream`` and by the simulation plugin's stream emitter."""
+    from shape.errors import ShapeError
+
+    if sink == "console":
+        return StdoutSink(envelope=envelope)
+    if sink == "file":
+        if not output:
+            raise ShapeError("--sink file needs --output FILE")
+        return FileSink(output, envelope=envelope, append=resuming)
+    scheme = sink.split("://", 1)[0] if "://" in sink else ""
+    from shape.plugins.host import default_host
+
+    host = default_host()
+    for name in host.names("shape.emitters"):
+        emitter = host.try_get("shape.emitters", name)
+        if emitter is not None and scheme and scheme in getattr(emitter, "schemes", ()):
+            return EmitterSink(emitter, sink, envelope=envelope, resuming=resuming)
+    raise ShapeError(f"unknown sink {sink!r}: {choices}")

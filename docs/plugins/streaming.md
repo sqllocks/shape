@@ -1,4 +1,4 @@
-# Stream sources and `shape stream-profile` (`shape-kafka`, `shape-eventhubs`)
+# Stream sources and `shape stream-profile` (`shape-kafka`, `shape-eventhubs`, files)
 
 Shape profiles streams it consumes. A **stream source** is a `shape.stream_sources` plugin that
 turns a Kafka topic or an Event Hubs hub into Arrow micro-batches with an offset after each one;
@@ -36,16 +36,17 @@ message says what).
 
 | Option | Meaning |
 |---|---|
-| `URI` | `kafka://host1:9092,host2:9092/TOPIC`, or `eventhubs://NAMESPACE/HUB[?consumer_group=NAME]`. |
+| `URI` | `kafka://host1:9092,host2:9092/TOPIC`, `eventhubs://NAMESPACE/HUB[?consumer_group=NAME]`, or, with no broker, a file, folder, glob or `-` (see [Files and standard input](#files-and-standard-input)). |
 | `-o OUT.json` | The `global` window: one profile of everything read, the profile engine's document with `mode: "bounded"`. |
 | `--window` | `global` (default), `tumbling`, `sliding` or `session`. Windowed runs write `--windows`. |
 | `--windows OUT.jsonl` | One closed window per line (`kind`, `start`, `end`, `rows`, `profile`), written as it closes. A window is identified by `(kind, start, end)`; a restarted run reads the file and does not write a window it already has. |
-| `--size`, `--slide`, `--gap` | Durations: `500ms`, `30s`, `5m`, `1h`, `1d`, or a number of seconds. |
-| `--allowed-lateness` | How far behind the watermark a row may arrive and still count (default `0s`). The watermark is kept per partition, so partitions read at different speeds lose nothing by default; rows that are still late are counted, and a line on stderr gives the count and the `--allowed-lateness` that would have kept them. |
-| `--max-partition-skew` | How far (event time) a partition may trail the newest event before windows stop waiting for it (default `10m`). Bounds the number of open windows. |
-| `--partition-idle-timeout` | With `--follow`: seconds without a delivery before a partition stops holding windows open (default `30`; `0` is off). |
+| `--size`, `--slide`, `--gap` | Durations: `500ms`, `30s`, `5m`, `1h`, `1d`, or a number of seconds. One rule everywhere (one parser, `shape.streaming.runtime.parse_duration`): a string with a unit, where a bare numeric *string* means seconds. In the Python API a duration is a `timedelta` or such a string; a bare integer or float is refused (`docs/specs/STREAMING_SEMANTICS.md` section 2). |
+| `--allowed-lateness` | How far behind the watermark a row may arrive and still count (default `0s`; a duration as above). The watermark is kept per partition, so partitions read at different speeds lose nothing by default; rows that are still late are counted, and a line on stderr gives the count and the `--allowed-lateness` that would have kept them. |
+| `--max-partition-skew` | How far (event time) a partition may trail the newest event before windows stop waiting for it (a duration, default `10m`). Bounds the number of open windows. |
+| `--partition-idle-timeout` | With `--follow`: seconds without a delivery before a partition stops holding windows open (default `30`; `0` is off). A plain number of seconds, not a duration string. |
 | `--event-time FIELD` | The payload field holding the event time (default `_shape_event_time`); `--event-time-unit s|ms|us` for numbers. An event without one uses the broker's timestamp. |
-| `--start earliest\|latest` | Where to begin when there is no checkpoint. |
+| `--start earliest\|latest` | Where to begin when there is no checkpoint (brokers only; a file is read from its start). |
+| `--order file\|event-time` | Files only: replay in file order (default), or sorted by event time. |
 | `--follow` | Keep reading as events arrive. Without it the run stops at the end the stream had when it began. `--max-events N` and `--idle-timeout SECONDS` stop a followed read; Ctrl-C finishes the profile from what was read and keeps the checkpoint resumable. |
 | `--checkpoint FILE`, `--checkpoint-every N` | Commit the offsets and profile state every N batches and at the end, and resume from the file when it exists. |
 | `--batch-size N` | Events per micro-batch (default 65,536). The first batch fixes the schema. |
@@ -54,6 +55,40 @@ message says what).
 The schema is that of the first batch (or of the checkpoint). An event whose value cannot take
 its column's type is *rejected*, not coerced; a message that is not a JSON object is
 *undecodable*. Both are counted in the summary the command prints, and neither stops the run.
+
+## Files and standard input
+
+No broker is needed to try, test or replay a stream. The same command, with the same windows,
+lateness, event time, `--max-events` and checkpoints, reads:
+
+```bash
+shape stream retail -t order --max-events 5000 --sink file -o orders.jsonl   # a stream to replay
+shape stream-profile orders.jsonl --window tumbling --size 30d --windows orders.windows.jsonl
+shape stream-profile file:///data/landed/2026-06-02/ --window tumbling --size 5m --windows day.jsonl
+shape stream-profile 'landed/*.parquet' --event-time ts --window sliding --size 1h --slide 15m \
+    --windows history.jsonl
+cat events.jsonl | shape stream-profile - -o events.json
+```
+
+* **Sources:** a path or `file://` URI, a folder (its `.jsonl`, `.ndjson`, `.json`, `.csv`,
+  `.parquet` files in name order; names starting with `.` or `_` are skipped), a glob (matches in
+  name order), or `-` for standard input. All files must be of one format.
+* **Formats:** JSON lines (what `shape emit` and `shape stream` write, flat or as CloudEvents,
+  whose `data` is read), CSV and Parquet (one event per row). Standard input is JSON lines unless
+  `--option format=csv|parquet` says otherwise; `--option format=...` also names a file whose
+  suffix does not.
+* **Decoding** is the broker sources': a column of a CSV or Parquet file is read as a JSON event's
+  would be (nested values as text, a timestamp as ISO text), so a timestamp column is a timestamp
+  only as the event time (`--event-time ts`, the field name in the file). There is no broker
+  timestamp: a row without a valid event time has none and is counted (`null_event_time`).
+* **Order:** by default file by file, line by line, at full speed, so rows that are out of order
+  in the file are out of order in the stream and count as late once their window has closed.
+  `--order event-time` sorts every row by event time first (rows without one last, ties in file
+  order), so a file written out of order replays in time order and nothing is late; it holds the
+  rows in memory.
+* **Checkpoints:** the offset is the number of rows consumed. A resumed run reads the same files
+  in the same order (or the same piped input) and skips what its checkpoint covers.
+* **Not for files:** `--follow` (a file is read to its end) and `--start latest` are refused.
 
 ## Messages
 

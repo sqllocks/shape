@@ -176,6 +176,8 @@ def test_notebook_parameters_match_the_notebook_parameters_cell(name):
     }
     p = load(name)
     passed = by_name(p)["ProfileTable"]["typeProperties"]["parameters"]
+    # `_inlineInstallationEnabled` is read by Fabric, not by the notebook (test_inline_install.py)
+    passed = {k: v for k, v in passed.items() if k != "_inlineInstallationEnabled"}
     assert set(passed) == set(defaults)
     for pname, spec in passed.items():
         assert spec["value"]["value"] == f"@pipeline().parameters.{pname}"

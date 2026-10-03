@@ -258,13 +258,18 @@ def _encode_parallel(batch: pa.RecordBatch, size: int) -> bytes:
     return b"".join(_pool.map(_encode_flat, parts))
 
 
+SMALL_BATCH_ROWS = 32
+"""A batch this small is cheaper through the row encoder (the column kernels cost about the same
+for 3 rows as for 3,000); the output is byte-identical."""
+
+
 def encode_batch(batch: pa.RecordBatch, envelope: str = "flat", source: str = "shape") -> bytes:
     """``batch`` of flat events as UTF-8 JSON lines, one per line, each ending in a newline."""
     if envelope not in ENVELOPES:
         raise ValueError(f"unknown envelope {envelope!r}; choose from {', '.join(ENVELOPES)}")
     if batch.num_rows == 0:
         return b""
-    if envelope == "flat":
+    if envelope == "flat" and batch.num_rows > SMALL_BATCH_ROWS:
         try:
             threads = encoder_threads() if batch.num_rows >= PARALLEL_ROWS else 1
             return _encode_parallel(batch, threads) if threads > 1 else _encode_flat(batch)

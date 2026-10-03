@@ -53,6 +53,7 @@ def test_wheel_metadata_declares_the_demo_dependencies(wheel: Path):
     assert "Name: sqllocks-shape" in header
     assert "Requires-Dist: numpy>=2.0,<3" in header
     assert "Requires-Dist: pyarrow>=14" in header
+    assert "Requires-Dist: tzdata; sys_platform == 'win32'" in header
     assert "cryptography" not in header and "pydantic" not in header
     assert "Tag: py3-none-any" in wheel_meta and "Root-Is-Purelib: true" in wheel_meta
 

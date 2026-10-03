@@ -253,7 +253,7 @@ def test_sliding_geometry_is_validated():
     with pytest.raises(ValueError, match="positive"):
         TumblingProfiler(SCHEMA, timedelta(0))
     with pytest.raises(ValueError, match="zero or more"):
-        TumblingProfiler(SCHEMA, timedelta(seconds=1), allowed_lateness=-1)
+        TumblingProfiler(SCHEMA, timedelta(seconds=1), allowed_lateness=timedelta(seconds=-1))
     with pytest.raises(ValueError, match="no event-time column"):
         TumblingProfiler(SCHEMA, timedelta(seconds=1), event_time="nope")
     with pytest.raises(TypeError, match="timestamp or a date"):
