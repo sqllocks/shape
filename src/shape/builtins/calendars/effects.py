@@ -108,15 +108,15 @@ def _previous_business_day(d: date) -> date:
 
 @dataclass(frozen=True, slots=True)
 class Payday:
-    """Pay days: ``semimonthly`` (``days=(1, 15)``), ``monthly`` (``days=(28,)``; ``-1`` is the
-    last day of the month) or ``biweekly`` (every 14 days from ``anchor``). With
+    """Pay days: ``semimonthly`` (default ``days=(1, 15)``), ``monthly`` (default ``days=(28,)``;
+    ``-1`` is the last day of the month) or ``biweekly`` (every 14 days from ``anchor``). With
     ``adjust="previous_business_day"`` a weekend pay day moves to the Friday before. The day's
     factor is ``lift``, fading in and out over ``ramp_up_days`` and ``decay_days`` like an
     :class:`Event`."""
 
     lift: float
     kind: str = "semimonthly"
-    days: tuple[int, ...] = (1, 15)
+    days: tuple[int, ...] | None = None  # (28,) for monthly, (1, 15) otherwise (#136)
     anchor: date = date(2000, 1, 7)  # a Friday
     adjust: str = "previous_business_day"
     ramp_up_days: int = 0
@@ -128,6 +128,13 @@ class Payday:
             raise ValueError("payday kind must be semimonthly, monthly or biweekly")
         if self.adjust not in ("previous_business_day", "none"):
             raise ValueError("payday adjust must be previous_business_day or none")
+
+    @property
+    def pay_days(self) -> tuple[int, ...]:
+        """The days of the month it pays on (``days``, else the kind's default)."""
+        if self.days is not None:
+            return self.days
+        return (28,) if self.kind == "monthly" else (1, 15)
 
     def _dates(self, start: date, end: date) -> list[date]:
         found: set[date] = set()
@@ -141,7 +148,7 @@ class Payday:
                 year, month0 = divmod(ym, 12)
                 month = month0 + 1
                 last = (date(year + (month == 12), month % 12 + 1, 1) - timedelta(days=1)).day
-                for day in self.days:
+                for day in self.pay_days:
                     found.add(date(year, month, last if day == -1 else min(day, last)))
         if self.adjust == "previous_business_day":
             found = {_previous_business_day(d) for d in found}

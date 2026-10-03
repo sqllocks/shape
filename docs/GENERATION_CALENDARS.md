@@ -29,8 +29,8 @@ slice of a longer one. Effects combine by multiplication.
   `1 + (lift - 1) * weight`. Custom events are events with your own dates or rule.
 * **Payday** (`{"kind": "semimonthly" | "monthly" | "biweekly", "days": [1, 15], "anchor":
   "2024-01-05", "adjust": "previous_business_day" | "none", "lift", "ramp_up_days",
-  "decay_days"}`): semimonthly is the 1st and 15th, monthly takes `days` (`-1` is the last day),
-  biweekly is every 14 days from the anchor. A weekend payday moves to the Friday before.
+  "decay_days"}`): semimonthly is the 1st and 15th, monthly takes `days` (the 28th without it;
+  `-1` is the last day), biweekly is every 14 days from the anchor. A weekend payday moves to the Friday before.
 * **Month end / quarter end** (`"month_end": {"lift": 1.2, "days": 3}`, `"quarter_end": {...}`):
   the last `days` days of every month, or of March, June, September and December.
 * **Trend** (`{"annual_growth": 0.1, "origin": "2020-01-01", "steps": [{"date", "factor"}],
