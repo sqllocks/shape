@@ -1640,7 +1640,7 @@ def _dispatch_command(argv):
         ref = _load_json(a.reference) if a.reference else capture_rows(rows).to_dict()
         result = validate_rows(rows, infer_rules(ref))
         _dump({"passed": result.passed, "violations": [asdict(v) for v in result.violations]})
-        return 0 if result.passed else 2
+        return 0 if result.passed else 1
     if a.cmd == "drift":
         from shape.cli.tiers import run_drift
 
