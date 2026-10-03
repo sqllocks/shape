@@ -204,3 +204,21 @@ def test_a_table_over_the_cell_limit_is_refused_before_it_is_read(monkeypatch):
     with pytest.raises(udf.UserThrownError, match="cell"):
         udf.profile_lakehouse_table(lakehouse, "wide", max_rows=1_000_000)
     assert cursor.fetched <= 20_000
+
+
+def test_the_row_past_max_rows_does_not_count_against_the_cell_limit(monkeypatch):
+    """#367: exactly MAX_TABLE_CELLS cells in the first maxRows rows is allowed."""
+    monkeypatch.setattr(udf, "MAX_TABLE_CELLS", 100)
+    conn = types.SimpleNamespace(
+        cursor=lambda: _WideCursor(n_rows=20, n_cols=2), close=lambda: None
+    )
+    lakehouse = types.SimpleNamespace(connectToSql=lambda: conn)
+    out = udf.profile_lakehouse_table(lakehouse, "t", max_rows=50)
+    assert out["rows"] == 20 and out["sampled"] is False
+    monkeypatch.setattr(udf, "MAX_TABLE_CELLS", 40)
+    out = udf.profile_lakehouse_table(lakehouse, "t", max_rows=20)
+    assert out["rows"] == 20
+    assert out["sampled"] is False  # the fake ignores TOP: 20 rows are not more than 20
+    monkeypatch.setattr(udf, "MAX_TABLE_CELLS", 39)
+    with pytest.raises(udf.UserThrownError, match="cell"):
+        udf.profile_lakehouse_table(lakehouse, "t", max_rows=20)

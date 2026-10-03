@@ -230,6 +230,31 @@ def _profile_result(
     )
 
 
+_FETCH_ROWS = 10_000  # rows per fetchmany() while reading a table
+
+
+class _CellLimitError(Exception):
+    def __init__(self, rows: int) -> None:
+        super().__init__(rows)
+        self.rows = rows
+
+
+def _fetch_within_limit(cursor: Any, n_columns: int, max_rows: int) -> list[tuple[Any, ...]]:
+    """Every row of ``cursor``, read in batches, raising :class:`_CellLimitError` as soon as the
+    first ``max_rows`` rows read pass MAX_TABLE_CELLS: a table too large is refused without being
+    read in full. (The row after ``max_rows`` only tells that the table has more.)"""
+    if not hasattr(cursor, "fetchmany"):
+        return [tuple(r) for r in cursor.fetchall()]
+    rows: list[tuple[Any, ...]] = []
+    while True:
+        batch = cursor.fetchmany(_FETCH_ROWS)
+        if not batch:
+            return rows
+        rows.extend(tuple(r) for r in batch)
+        if min(len(rows), max_rows) * n_columns > MAX_TABLE_CELLS:
+            raise _CellLimitError(len(rows))
+
+
 # ----------------------------------------------------------------------- functions
 
 
@@ -285,7 +310,12 @@ def profile_lakehouse_table(
         # beyond those is in the statement. Endpoints take no parameters for identifiers.
         cursor.execute(f"SELECT TOP ({max_rows + 1}) * FROM {quoted}")  # nosec B608
         columns = [d[0] for d in cursor.description]
-        rows = [tuple(r) for r in cursor.fetchall()]
+        rows = _fetch_within_limit(cursor, max(len(columns), 1), max_rows)
+    except _CellLimitError as e:
+        raise _fail(
+            f"{e.rows:,}+ rows x {len(columns)} columns exceeds the {MAX_TABLE_CELLS:,}-cell "
+            f"limit for User Data Functions. Lower maxRows. {NOTEBOOK_HINT}"
+        ) from None
     except Exception as e:
         raise _fail(f"Could not read table {table_name!r} through the SQL endpoint: {e}") from e
     finally:
