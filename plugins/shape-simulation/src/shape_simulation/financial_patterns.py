@@ -403,9 +403,9 @@ class FinancialStreamSimulator:
             count = right - left
             total = running[right] - running[left]
         else:
-            chunk = max(1, n // n_batches)
-            start = np.minimum(np.arange(n_batches) * chunk, n)
-            end = np.minimum(start + chunk, n)
+            # near-equal consecutive batches that together hold every transaction
+            bounds = (np.arange(n_batches + 1, dtype=np.int64) * n) // n_batches
+            start, end = bounds[:-1], bounds[1:]
             running = np.concatenate([[0.0], np.cumsum(amount)])
             count = end - start
             total = running[end] - running[start]
