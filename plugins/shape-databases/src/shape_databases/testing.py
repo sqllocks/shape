@@ -6,6 +6,9 @@ that keep a transaction model (``commit`` / ``rollback``; DDL is transactional f
 ``postgres`` and commits implicitly for ``mysql``), answer the sinks' existence query, and
 record every interaction in ``server.events`` so a test can assert the exact statements, the
 ``COPY`` data and the parameters of each ``INSERT``. Standard library only.
+
+The server is shared by every connection and the CLI writes tables on several threads, so all
+of its state is guarded by one re-entrant lock.
 """
 
 from __future__ import annotations
@@ -13,6 +16,7 @@ from __future__ import annotations
 import copy
 import datetime as dt
 import re
+import threading
 from collections.abc import Callable, Sequence
 from decimal import Decimal
 from typing import Any
@@ -102,10 +106,12 @@ class FakeServer:
         self.on_row = on_row
         self.rows_seen = 0
         self._snapshot: tuple[dict[Key, list[tuple[Any, ...]]], dict[Key, list[str]]] | None = None
+        self.lock = threading.RLock()
 
     # the connect function ---------------------------------------------------------------
     def connect(self, **params: Any) -> FakeConnection:
-        self.events.append(("connect", dict(params)))
+        with self.lock:
+            self.events.append(("connect", dict(params)))
         if self.fail_connect is not None:
             raise FakeDriverError(self.fail_connect)
         return FakeConnection(self)
@@ -116,35 +122,43 @@ class FakeServer:
 
     def rows(self, table: str, schema: str | None = None) -> list[tuple[Any, ...]]:
         """Rows including uncommitted ones."""
-        return list(self.tables.get(self.key(schema, table), []))
+        with self.lock:
+            return list(self.tables.get(self.key(schema, table), []))
 
     def committed_rows(self, table: str, schema: str | None = None) -> list[tuple[Any, ...]]:
         """What another connection would see: the state at the last commit."""
-        state = self._snapshot[0] if self._snapshot else self.tables
-        return list(state.get(self.key(schema, table), []))
+        with self.lock:
+            state = self._snapshot[0] if self._snapshot else self.tables
+            return list(state.get(self.key(schema, table), []))
 
     def statements(self, kind: str = "execute") -> list[str]:
-        return [e[1] for e in self.events if e[0] == kind]
+        with self.lock:
+            return [e[1] for e in self.events if e[0] == kind]
 
     def copies(self) -> list[tuple[str, list[tuple[Any, ...]]]]:
-        return [(e[1], e[2]) for e in self.events if e[0] == "copy"]
+        with self.lock:
+            return [(e[1], e[2]) for e in self.events if e[0] == "copy"]
 
     def text(self) -> str:
         """Everything recorded, as one string (for 'a secret appears nowhere' assertions)."""
-        return repr(self.events)
+        with self.lock:
+            return repr(self.events)
 
     # transaction model --------------------------------------------------------------------
     def begin(self) -> None:
-        if self._snapshot is None:
-            self._snapshot = (copy.deepcopy(self.tables), copy.deepcopy(self.columns))
+        with self.lock:
+            if self._snapshot is None:
+                self._snapshot = (copy.deepcopy(self.tables), copy.deepcopy(self.columns))
 
     def commit(self) -> None:
-        self._snapshot = None
+        with self.lock:
+            self._snapshot = None
 
     def rollback(self) -> None:
-        if self._snapshot is not None:
-            self.tables, self.columns = self._snapshot
-            self._snapshot = None
+        with self.lock:
+            if self._snapshot is not None:
+                self.tables, self.columns = self._snapshot
+                self._snapshot = None
 
     def ddl(self) -> None:
         if self.dialect == "mysql":
@@ -153,11 +167,12 @@ class FakeServer:
             self.begin()
 
     def count_row(self) -> None:
-        self.rows_seen += 1
-        if self.on_row is not None:
-            self.on_row()
-        if self.fail_after_rows is not None and self.rows_seen > self.fail_after_rows:
-            raise FakeDriverError(self.fail_message)
+        with self.lock:
+            self.rows_seen += 1
+            if self.on_row is not None:
+                self.on_row()
+            if self.fail_after_rows is not None and self.rows_seen > self.fail_after_rows:
+                raise FakeDriverError(self.fail_message)
 
 
 class FakeCopy:
@@ -177,8 +192,9 @@ class FakeCopy:
 
     def __exit__(self, exc_type: Any, *_: object) -> None:
         if exc_type is None:
-            self.server.tables[self.key].extend(self.rows)
-            self.server.events.append(("copy", self.statement, list(self.rows)))
+            with self.server.lock:
+                self.server.tables[self.key].extend(self.rows)
+                self.server.events.append(("copy", self.statement, list(self.rows)))
 
 
 class FakeCursor:
@@ -187,6 +203,10 @@ class FakeCursor:
         self._result: list[tuple[Any, ...]] = []
 
     def execute(self, sql: str, params: Sequence[Any] | None = None) -> None:
+        with self.server.lock:
+            self._execute(sql, params)
+
+    def _execute(self, sql: str, params: Sequence[Any] | None) -> None:
         s = self.server
         s.events.append(("execute", sql, tuple(params) if params is not None else None))
         if sql.startswith("SELECT 1 FROM information_schema.tables"):
@@ -224,6 +244,10 @@ class FakeCursor:
         raise FakeDriverError(f"the fake server does not understand: {sql[:60]}")
 
     def executemany(self, sql: str, rows: Sequence[Sequence[Any]]) -> None:
+        with self.server.lock:
+            self._executemany(sql, rows)
+
+    def _executemany(self, sql: str, rows: Sequence[Sequence[Any]]) -> None:
         s = self.server
         s.events.append(("executemany", sql, [tuple(r) for r in rows]))
         m = _INSERT.match(sql)
@@ -240,8 +264,9 @@ class FakeCursor:
         if not m:
             raise FakeDriverError(f"the fake server does not understand: {statement[:60]}")
         key = self.server.key(_unquote(m[1]) if m[1] else None, _unquote(m[2]))
-        if key not in self.server.tables:
-            raise FakeDriverError("relation does not exist")
+        with self.server.lock:
+            if key not in self.server.tables:
+                raise FakeDriverError("relation does not exist")
         return FakeCopy(self.server, key, statement)
 
     def fetchone(self) -> tuple[Any, ...] | None:
@@ -260,13 +285,16 @@ class FakeConnection:
         return FakeCursor(self.server)
 
     def commit(self) -> None:
-        self.server.events.append(("commit",))
-        self.server.commit()
+        with self.server.lock:
+            self.server.events.append(("commit",))
+            self.server.commit()
 
     def rollback(self) -> None:
-        self.server.events.append(("rollback",))
-        self.server.rollback()
+        with self.server.lock:
+            self.server.events.append(("rollback",))
+            self.server.rollback()
 
     def close(self) -> None:
         self.closed = True
-        self.server.events.append(("close",))
+        with self.server.lock:
+            self.server.events.append(("close",))
