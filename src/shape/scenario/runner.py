@@ -333,12 +333,16 @@ def _apply_chaos(
                 table = engine.inject_temporal_chaos(table, cols, day)
                 builder.record_chaos("temporal", sum(e.rows for e in engine.last_events))
         if engine.should_inject(day, ChaosCategory.VOLUME.value):
+            rows_before = table.num_rows
             table = engine.inject_volume_chaos(table, day)
-            builder.record_chaos("volume", sum(e.rows for e in engine.last_events))
+            # the rows added or removed: an emptied table counts what it lost, not what is left
+            changed = abs(table.num_rows - rows_before)
+            if changed:
+                builder.record_chaos("volume", changed)
         tables[name] = table
-        if engine.should_inject(day, ChaosCategory.REFERENTIAL.value):
-            tables = engine.inject_referential_chaos(tables, day)
-            builder.record_chaos("referential", sum(e.rows for e in engine.last_events))
+    if engine.should_inject(day, ChaosCategory.REFERENTIAL.value):  # across the tables, once
+        tables = engine.inject_referential_chaos(tables, day)
+        builder.record_chaos("referential", sum(e.rows for e in engine.last_events))
     return replace(
         generated,
         tables=tables,
