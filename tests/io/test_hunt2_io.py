@@ -962,4 +962,41 @@ def test_dot_still_names_the_current_directory(
     assert read_table(".").num_rows == 1
 
 
+# ---- #745: an empty output location is an error -----------------------------------------------
+
+
+def test_sinks_refuse_an_empty_location(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from shape.builtins import sinks
+
+    monkeypatch.chdir(tmp_path)
+    calls = {
+        "csv": lambda: sinks.CsvSink().write("", "t", _batches(1)),
+        "jsonl": lambda: sinks.JsonlSink().write("", "t", _batches(1)),
+        "parquet": lambda: sinks.ParquetSink().write("", "t", _batches(1)),
+        "rolling": lambda: sinks.ParquetSink().write("", "t", _batches(1), roll_rows=1),
+        "open_table": lambda: sinks.CsvSink().open_table("", "t", roll_rows=1),
+        "sql": lambda: sinks.SqlSink().write("", "t", _batches(1)),
+        "excel": lambda: sinks.ExcelSink().write("", "t", _batches(1)),
+        "workbook": lambda: sinks.ExcelSink().write_workbook("", {"t": pa.table({"a": [1]})}),
+        "mirror": lambda: sinks.FabricMirrorSink().write("", "t", _batches(1)),
+    }
+    if __import__("importlib").util.find_spec("deltalake"):
+        calls["delta"] = lambda: sinks.DeltaSink().write("", "t", _batches(1))
+    for name, call in calls.items():
+        with pytest.raises(ValueError, match="output location is empty"):
+            call()
+        assert os.listdir(tmp_path) == [], name
+
+
+def test_sinks_still_write_to_dot_and_to_a_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from shape.builtins import sinks
+
+    monkeypatch.chdir(tmp_path)
+    assert sinks.CsvSink().write(".", "t", _batches(1)) == 1
+    assert sinks.CsvSink().write("./", "u", _batches(1)) == 1
+    assert sorted(os.listdir(tmp_path)) == ["t.csv", "u.csv"]
+
+
 _ = dt
