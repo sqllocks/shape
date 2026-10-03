@@ -60,6 +60,7 @@ def normalize(params: Mapping[str, Any]) -> dict[str, Any]:
         )
     request.setdefault("sinks", list(DEFAULT_SINKS))
     request.setdefault("sink_config", {})
+    request["sink_config"] = _absolute_paths(request["sink_config"])
     request.setdefault("chunk_size", DEFAULT_CHUNK_SIZE)
     request.setdefault("processes", 0)
     if not isinstance(request["sinks"], list) or not request["sinks"]:
@@ -79,6 +80,25 @@ def normalize(params: Mapping[str, Any]) -> dict[str, Any]:
         )
     _engine(request)  # an unknown domain, schema file or scale fails here, not inside a job
     return request
+
+
+_LOCAL_PATH_SETTINGS = {"parquet": "output_dir", "lakehouse": "base_path"}
+
+
+def _absolute_paths(config: Any) -> Any:
+    """``config`` (a copy) with the local folder settings made absolute: a job record that holds
+    ``out`` would resume into the ``out`` of whatever folder the resume runs in."""
+    import os
+
+    if not isinstance(config, Mapping):
+        return config
+    out = {k: dict(v) if isinstance(v, Mapping) else v for k, v in config.items()}
+    for sink, key in _LOCAL_PATH_SETTINGS.items():
+        cfg = out.get(sink)
+        value = cfg.get(key) if isinstance(cfg, dict) else None
+        if isinstance(value, str) and value and "://" not in value:
+            cfg[key] = os.path.abspath(value)  # type: ignore[index]
+    return out
 
 
 def _engine(request: Mapping[str, Any]) -> Any:
