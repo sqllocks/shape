@@ -82,3 +82,31 @@ def test_negative_amounts_skips_unsigned_columns_it_picks_itself() -> None:
     out = corrupt_tables({"t": t}, [Corruption("negative_amounts", 0.5, "t")], seed=1)
     assert {r["column"] for r in out.records} == {"amount"}
     assert all(r["after"] < 0 for r in out.records)
+
+
+def test_a_corruption_aimed_at_a_table_with_no_fitting_column_is_an_error() -> None:
+    """#403: CHAOS.md: a corruption that cannot apply to what it is aimed at is an error."""
+    import pytest
+
+    tables = {"t": pa.table({"id": [1, 2, 3]})}
+    for kind in ("date_shift", "negative_amounts", "case_whitespace", "orphan_keys"):
+        with pytest.raises(ValueError, match=rf"{kind}: table 't' has no column"):
+            corrupt_tables(tables, [Corruption(kind, 0.5, "t")], seed=1)
+
+
+def test_an_untargeted_corruption_that_fits_no_table_is_an_error() -> None:
+    """#403: without @TABLE it applies to every table it fits, and fitting none is an error."""
+    import pytest
+
+    tables = {"a": pa.table({"id": [1, 2, 3]}), "b": pa.table({"id": [4, 5, 6]})}
+    with pytest.raises(ValueError, match=r"date_shift: no table has a column it applies to"):
+        corrupt_tables(tables, [Corruption("date_shift", 0.5)], seed=1)
+
+
+def test_an_untargeted_corruption_still_skips_the_tables_it_does_not_fit() -> None:
+    tables = {
+        "a": pa.table({"id": [1, 2, 3, 4]}),
+        "b": pa.table({"id": [1, 2, 3, 4], "amount": [1.0, 2.0, 3.0, 4.0]}),
+    }
+    out = corrupt_tables(tables, [Corruption("negative_amounts", 0.5)], seed=1)
+    assert {r["table"] for r in out.records} == {"b"}
