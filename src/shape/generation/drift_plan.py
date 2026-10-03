@@ -449,9 +449,9 @@ def _apply(schema: GenSchema, r: _Resolved, w: float) -> None:
                 scale=doc.get("scale"),
             )
         return
-    col = _column(schema, e)
-    if w <= 0:
+    if w <= 0:  # not in effect on this day: its column may not exist yet, or any more
         return
+    col = _column(schema, e)
     if e.kind == "drop_column":
         _check_droppable(schema, e)
         del schema.tables[e.table].columns[e.column]
