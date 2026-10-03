@@ -467,6 +467,8 @@ def _valid(p: _Prepared) -> int:
 def _distinct(p: _Prepared) -> int:
     if p.distinct is not None:
         return p.distinct
+    if pa.types.is_null(p.non_null.type):  # a column with no values (Arrow has no kernel for it)
+        return 0
     return int(pc.count_distinct(p.non_null, mode="only_valid").as_py())
 
 

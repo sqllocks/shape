@@ -15,4 +15,4 @@ def test_an_all_empty_column_is_scored_like_any_all_null_column():
     text = pa.array([None] * 100, pa.string())
     assert compare_column("c", empty, empty).score == compare_column("c", text, text).score
     report = compare_tables({"t": pa.table({"e": empty})}, {"t": pa.table({"e": empty})})
-    assert report.tables[0].columns[0].cardinality_ratio == 0.0
+    assert report.tables["t"].columns["e"].cardinality_ratio == 0.0
