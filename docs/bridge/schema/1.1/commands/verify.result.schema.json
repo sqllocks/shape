@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "enforced_passed": {
+      "type": "boolean"
+    },
+    "gates": {
+      "anyOf": [
+        {
+          "items": {
+            "additionalProperties": true,
+            "properties": {
+              "details": {
+                "additionalProperties": {},
+                "type": "object"
+              },
+              "errors": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "mode": {
+                "enum": [
+                  "observe",
+                  "enforce"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "passed": {
+                "type": "boolean"
+              },
+              "warnings": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "passed",
+              "errors",
+              "warnings"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        {
+          "properties": {
+            "bytes": {
+              "type": "integer"
+            },
+            "content_id": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "spilled": {
+              "const": true
+            }
+          },
+          "required": [
+            "spilled",
+            "content_id",
+            "path",
+            "bytes"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "passed": {
+      "type": "boolean"
+    },
+    "project": {
+      "additionalProperties": true,
+      "properties": {
+        "baseline": {
+          "additionalProperties": {},
+          "type": "object"
+        },
+        "file": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "file",
+        "format",
+        "version"
+      ],
+      "type": "object"
+    },
+    "row_counts": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "type": "object"
+    },
+    "statistical": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "passed",
+    "gates",
+    "row_counts"
+  ],
+  "title": "verify result",
+  "type": "object",
+  "x-api-version": "1.1",
+  "x-since": "1.0"
+}

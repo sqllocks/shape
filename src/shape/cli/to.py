@@ -80,6 +80,12 @@ def add_to_arguments(
         action="store_true",
         help="files: write a _SUCCESS file in each folder after its files",
     )
+    g.add_argument(
+        "--yes",
+        action="store_true",
+        help="confirm writing to a non-local target (not a path, file://, console, localhost); "
+        "SHAPE_CONFIRM_REMOTE=1 does the same for scripts and notebooks",
+    )
 
 
 def _value(raw: str) -> Any:
@@ -174,8 +180,26 @@ def target_options(a: argparse.Namespace, fmt: str, targets: list[str] | None = 
     )
 
 
-def run_to(a: argparse.Namespace, engine: Any, started: float) -> int:
-    """Write the generated tables to every ``--to`` target."""
+def confirm_targets(
+    a: argparse.Namespace, targets: list[str], *, confirm_remote: bool = False
+) -> bool:
+    """The non-local confirmation for ``targets`` (``--yes``, ``confirm_remote``,
+    ``SHAPE_CONFIRM_REMOTE=1`` or a ``y`` at the terminal); a ``ShapeError`` otherwise. Runs
+    before any connection or sign-in; a dry run needs none."""
+    from shape.io.targets import confirm_remote_targets
+
+    return confirm_remote_targets(
+        targets,
+        confirm=confirm_remote or bool(getattr(a, "yes", False)),
+        dry_run=bool(getattr(a, "dry_run", False)),
+    )
+
+
+def run_to(
+    a: argparse.Namespace, engine: Any, started: float, *, confirm_remote: bool = False
+) -> int:
+    """Write the generated tables to every ``--to`` target. A target that is not on this machine
+    needs ``confirm_remote=True`` (``--yes``) or ``SHAPE_CONFIRM_REMOTE=1``."""
     import json
 
     from shape.generation.output import write_targets
@@ -183,6 +207,7 @@ def run_to(a: argparse.Namespace, engine: Any, started: float) -> int:
 
     if a.output:
         raise ValueError("-o DIR and --to are two ways to say where: use one")
+    confirm_targets(a, list(a.to), confirm_remote=confirm_remote)
     options = target_options(a, "parquet" if a.format == "summary" else a.format, list(a.to))
     written = write_targets(engine, list(a.to), options, chunk_rows=a.chunk_rows)
     seconds = time.perf_counter() - started

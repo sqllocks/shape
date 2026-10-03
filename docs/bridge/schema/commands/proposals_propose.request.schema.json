@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "api_version": {
+      "pattern": "^(0|[1-9][0-9]{0,3})\\.(0|[1-9][0-9]{0,3})$",
+      "type": "string"
+    },
+    "args": {
+      "additionalProperties": false,
+      "properties": {
+        "auto_accept": {
+          "description": "accept undecided proposals at or above this confidence, as actor `auto-accept` (off unless given; a decision already made is never overridden)",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number",
+          "x-since": "1.1"
+        },
+        "data": {
+          "description": "the profiled data, for value evidence: one directory with a NAME.csv or NAME.parquet per table, or NAME=PATH pairs",
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "x-path": "read",
+          "x-since": "1.1"
+        },
+        "decisions": {
+          "description": "the decision file (format shape-decisions); created when it does not exist, otherwise updated",
+          "type": "string",
+          "x-path": "write",
+          "x-since": "1.1"
+        },
+        "kinds": {
+          "description": "the kinds to propose (default: relationship, pii and semantic; `rule`, added in 1.2, proposes contract rules)",
+          "items": {
+            "enum": [
+              "relationship",
+              "pii",
+              "semantic",
+              "rule"
+            ],
+            "type": "string",
+            "x-enum-since": {
+              "rule": "1.2"
+            }
+          },
+          "type": "array",
+          "x-since": "1.1"
+        },
+        "min_confidence": {
+          "description": "the lowest confidence proposed (default 0.5)",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number",
+          "x-since": "1.1"
+        },
+        "profile": {
+          "description": "the .shape profile to propose for",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.1"
+        }
+      },
+      "required": [
+        "profile",
+        "decisions"
+      ],
+      "type": "object"
+    },
+    "command": {
+      "const": "proposals_propose"
+    },
+    "id": {
+      "maxLength": 128,
+      "type": [
+        "string",
+        "integer",
+        "null"
+      ]
+    },
+    "options": {
+      "additionalProperties": false,
+      "properties": {
+        "async": {
+          "default": false,
+          "description": "for a command that can run as a job: return a job id at once and run in the background",
+          "type": "boolean",
+          "x-since": "1.0"
+        },
+        "include_raw_values": {
+          "default": false,
+          "description": "return raw values (minimum, maximum, category values, offending values) even for classified columns; off by default",
+          "type": "boolean",
+          "x-since": "1.0"
+        },
+        "max_inline_bytes": {
+          "default": 262144,
+          "description": "a result part larger than this is written to a file and returned as a reference",
+          "minimum": 1024,
+          "type": "integer",
+          "x-since": "1.0"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "command",
+    "args"
+  ],
+  "title": "proposals_propose request",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.1"
+}

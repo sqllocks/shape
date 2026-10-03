@@ -1,0 +1,189 @@
+{
+  "api_version": "1.1",
+  "cases": [
+    {
+      "name": "passes",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "contract": "${DIR}/contract.json",
+          "profile": "${DIR}/a.shape"
+        },
+        "command": "check",
+        "id": "passes"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "check",
+        "id": "passes",
+        "ok": true,
+        "result": {
+          "passed": true,
+          "violation_count": 0,
+          "violations": []
+        },
+        "warnings": [
+          {
+            "code": "artifact_not_verified",
+            "message": "${DIR}/a.shape is not signed: its origin is not verified (check it with --verify PUBKEY)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "fails",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "contract": "${DIR}/contract_bad.json",
+          "profile": "${DIR}/a.shape"
+        },
+        "command": "check",
+        "id": "fails"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "check",
+        "id": "fails",
+        "ok": true,
+        "result": {
+          "passed": false,
+          "violation_count": 1,
+          "violations": [
+            {
+              "column": null,
+              "expected": 1000,
+              "observed": 40,
+              "rule": "row_count.min"
+            }
+          ]
+        },
+        "warnings": [
+          {
+            "code": "artifact_not_verified",
+            "message": "${DIR}/a.shape is not signed: its origin is not verified (check it with --verify PUBKEY)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "missing-contract",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "contract": "${DIR}/none.json",
+          "profile": "${DIR}/a.shape"
+        },
+        "command": "check",
+        "id": "missing-contract"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "check",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "file not found: ${DIR}/none.json"
+        },
+        "id": "missing-contract",
+        "ok": false,
+        "warnings": [
+          {
+            "code": "artifact_not_verified",
+            "message": "${DIR}/a.shape is not signed: its origin is not verified (check it with --verify PUBKEY)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "project-owner",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "contract": "${DIR}/contract_bad.json",
+          "profile": "${DIR}/a.shape",
+          "project": "${DIR}/shape.yml",
+          "source": "orders"
+        },
+        "command": "check",
+        "id": "project-owner"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "check",
+        "id": "project-owner",
+        "ok": true,
+        "result": {
+          "passed": false,
+          "project": {
+            "file": "${DIR}/shape.yml",
+            "format": "shape-project",
+            "source": "orders",
+            "version": 1
+          },
+          "violation_count": 1,
+          "violations": [
+            {
+              "column": null,
+              "expected": 1000,
+              "observed": 40,
+              "rule": "row_count.min"
+            }
+          ]
+        },
+        "warnings": [
+          {
+            "code": "artifact_not_verified",
+            "message": "${DIR}/a.shape is not signed: its origin is not verified (check it with --verify PUBKEY)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "source-needs-a-project",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "contract": "${DIR}/contract.json",
+          "profile": "${DIR}/a.shape",
+          "source": "orders"
+        },
+        "command": "check",
+        "id": "source-needs-a-project"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "check",
+        "error": {
+          "code": "usage.invalid_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "source names a source of a project file: give project too"
+        },
+        "id": "source-needs-a-project",
+        "ok": false,
+        "warnings": [
+          {
+            "code": "artifact_not_verified",
+            "message": "${DIR}/a.shape is not signed: its origin is not verified (check it with --verify PUBKEY)"
+          }
+        ]
+      }
+    }
+  ],
+  "command": "check",
+  "format": "shape-bridge-vectors",
+  "setup": [
+    {
+      "api_version": "1.0",
+      "args": {
+        "output": "${DIR}/a.shape",
+        "source": "${DIR}/a.csv"
+      },
+      "command": "profile",
+      "id": "setup"
+    }
+  ],
+  "version": 1
+}

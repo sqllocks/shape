@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sqllocks/shape/schemas/shape-mutation-plan-v1.schema.json",
+  "title": "Shape mutation plan, version 1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "version", "corruptions"],
+  "properties": {
+    "format": {"const": "shape-mutation-plan"},
+    "version": {"const": 1},
+    "corruptions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind"],
+        "properties": {
+          "kind": {
+            "enum": [
+              "duplicates", "orphan_keys", "date_shift", "negative_amounts",
+              "case_whitespace", "pii_fill", "type_change", "null_creep"
+            ]
+          },
+          "table": {"type": "string", "minLength": 1},
+          "column": {"type": "string", "minLength": 1},
+          "rate": {"type": "number", "minimum": 0, "maximum": 1}
+        }
+      }
+    }
+  }
+}

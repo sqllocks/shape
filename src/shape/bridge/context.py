@@ -14,7 +14,7 @@ from typing import Any
 
 from shape.bridge.errors import writing
 from shape.bridge.jobs import Jobs
-from shape.bridge.protocol import DEFAULT_MAX_INLINE_BYTES, warning
+from shape.bridge.protocol import API_MINOR, DEFAULT_MAX_INLINE_BYTES, warning
 
 
 def _noop(_info: dict[str, Any]) -> None:
@@ -33,6 +33,8 @@ class Context:
     cancel: threading.Event = field(default_factory=threading.Event)
     progress: Callable[[dict[str, Any]], None] = _noop
     in_job: bool = False
+    #: The minor version the request is served as (a ``1.0`` request gets 1.0's results).
+    minor: int = API_MINOR
 
     @property
     def jobs_dir(self) -> Path:

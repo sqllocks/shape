@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "claim": {
+      "additionalProperties": {},
+      "type": "object"
+    },
+    "confidence": {
+      "type": "number"
+    },
+    "decision": {
+      "additionalProperties": true,
+      "properties": {
+        "actor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "decided_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "accepted",
+            "rejected",
+            "deferred",
+            "stale"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "actor",
+        "note",
+        "decided_at"
+      ],
+      "type": "object"
+    },
+    "evidence": {
+      "anyOf": [
+        {
+          "additionalProperties": {},
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "id": {
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "relationship",
+        "pii",
+        "semantic",
+        "rule"
+      ]
+    },
+    "proposed_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "redacted": {
+      "type": "boolean"
+    },
+    "subject": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "kind",
+    "claim",
+    "confidence",
+    "evidence",
+    "decision"
+  ],
+  "title": "proposals_decide result",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.1"
+}

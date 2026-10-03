@@ -1,5 +1,5 @@
 {
-  "api_version": "1.0",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "finished-job",
@@ -12,7 +12,7 @@
         "id": "finished-job"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.2",
         "command": "job_cancel",
         "id": "finished-job",
         "ok": true,
@@ -44,7 +44,7 @@
         "id": "unknown-job"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.2",
         "command": "job_cancel",
         "error": {
           "code": "input.unknown_job",

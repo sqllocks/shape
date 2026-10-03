@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "dry_run": {
+      "type": "boolean"
+    },
+    "removed": {
+      "items": {},
+      "type": "array"
+    },
+    "session_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "session_id"
+  ],
+  "title": "demo_cleanup result",
+  "type": "object",
+  "x-api-version": "1.1",
+  "x-since": "1.0"
+}

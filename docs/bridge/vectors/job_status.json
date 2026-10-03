@@ -1,5 +1,5 @@
 {
-  "api_version": "1.0",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "failed-job",
@@ -12,7 +12,7 @@
         "id": "failed-job"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.2",
         "command": "job_status",
         "id": "failed-job",
         "ok": true,
@@ -46,7 +46,7 @@
         "id": "unknown-job"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.2",
         "command": "job_status",
         "error": {
           "code": "input.unknown_job",

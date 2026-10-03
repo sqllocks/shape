@@ -1,0 +1,642 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "synthetic-against-real",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "real": "${DIR}/report_real",
+          "synthetic": "${DIR}/report_synthetic"
+        },
+        "command": "report_card",
+        "id": "synthetic-against-real"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "report_card",
+        "id": "synthetic-against-real",
+        "ok": true,
+        "result": {
+          "format": "shape-report-card",
+          "inputs": {
+            "holdout": null,
+            "manifest": null,
+            "real": {
+              "dataset_id": "sha256:927845dbf2ecb6bdf1cb07b93ee1ee11068d33191df4afcf9055864dbcc07f53",
+              "tables": {
+                "customers": 120
+              }
+            },
+            "synthetic": {
+              "dataset_id": "sha256:8f05650b7387206b60a4b0ebb4203176f533b1994b953334a76aa057cacef64f",
+              "tables": {
+                "customers": 120
+              }
+            }
+          },
+          "overall": "fail",
+          "overall_reasons": [
+            "fidelity: failed (overall_score, table_score (customers))"
+          ],
+          "require": [],
+          "sections": {
+            "fidelity": {
+              "gates": [
+                {
+                  "name": "overall_score",
+                  "relation": ">=",
+                  "status": "fail",
+                  "threshold": 85.0,
+                  "value": 65.2940258744698
+                },
+                {
+                  "name": "table_score",
+                  "relation": ">=",
+                  "status": "fail",
+                  "table": "customers",
+                  "threshold": 70.0,
+                  "value": 65.2940258744698
+                },
+                {
+                  "name": "coverage",
+                  "status": "pass"
+                },
+                {
+                  "name": "tier1_adversarial_auc",
+                  "reason": "adversarial test skipped: scikit-learn is not installed (pip install 'sqllocks-shape[advanced]')",
+                  "status": "not_run",
+                  "table": "customers"
+                },
+                {
+                  "name": "tier2_pass_rate",
+                  "relation": ">=",
+                  "status": "pass",
+                  "table": "customers",
+                  "threshold": 1.0,
+                  "value": 1.0
+                }
+              ],
+              "metrics": {
+                "extra_tables": [],
+                "issues": [],
+                "missing_tables": [],
+                "overall_score": 65.2940258744698,
+                "tables": {
+                  "customers": {
+                    "columns": {
+                      "amount": {
+                        "cardinality_ratio": 1.0,
+                        "chi2_pvalue": null,
+                        "chi2_statistic": null,
+                        "dtype_match": true,
+                        "ks_statistic": 0.10833333333333335,
+                        "mean_delta": 0.00690209511738474,
+                        "null_rate_delta": 0.0,
+                        "present": true,
+                        "score": 95.85788447438982,
+                        "std_ratio": 1.16781056322461,
+                        "value_overlap": null
+                      },
+                      "customer_id": {
+                        "cardinality_ratio": 1.0,
+                        "chi2_pvalue": null,
+                        "chi2_statistic": null,
+                        "dtype_match": true,
+                        "ks_statistic": 1.0,
+                        "mean_delta": 22794.095739341778,
+                        "null_rate_delta": 0.0,
+                        "present": true,
+                        "score": 44.89795918367348,
+                        "std_ratio": 0.14285714285714288,
+                        "value_overlap": null
+                      },
+                      "email": {
+                        "cardinality_ratio": 1.0,
+                        "chi2_pvalue": 0.0,
+                        "chi2_statistic": 1199999999880.0,
+                        "dtype_match": true,
+                        "ks_statistic": null,
+                        "mean_delta": null,
+                        "null_rate_delta": 0.0,
+                        "present": true,
+                        "score": 42.857142857142854,
+                        "std_ratio": null,
+                        "value_overlap": 0.0
+                      },
+                      "full_name": {
+                        "cardinality_ratio": 1.0,
+                        "chi2_pvalue": 0.0,
+                        "chi2_statistic": 1199999999880.0,
+                        "dtype_match": true,
+                        "ks_statistic": null,
+                        "mean_delta": null,
+                        "null_rate_delta": 0.0,
+                        "present": true,
+                        "score": 42.857142857142854,
+                        "std_ratio": null,
+                        "value_overlap": 0.0
+                      },
+                      "tier": {
+                        "cardinality_ratio": 1.0,
+                        "chi2_pvalue": 0.8394570207692074,
+                        "chi2_statistic": 0.35,
+                        "dtype_match": true,
+                        "ks_statistic": null,
+                        "mean_delta": null,
+                        "null_rate_delta": 0.0,
+                        "present": true,
+                        "score": 100.0,
+                        "std_ratio": null,
+                        "value_overlap": 1.0
+                      }
+                    },
+                    "extra_columns": [],
+                    "issues": [],
+                    "missing_columns": [],
+                    "present": true,
+                    "row_count_real": 120,
+                    "row_count_synth": 120,
+                    "score": 65.2940258744698
+                  }
+                },
+                "thresholds": {
+                  "min_column": null,
+                  "min_overall": 85.0,
+                  "min_table": 70.0
+                },
+                "tier1": {
+                  "customers": {
+                    "adversarial": null,
+                    "adversarial_reason": "adversarial test skipped: scikit-learn is not installed (pip install 'sqllocks-shape[advanced]')",
+                    "conditional_profiles": 2,
+                    "mixture_fit_columns": [],
+                    "periodic_columns": [
+                      "amount",
+                      "customer_id"
+                    ],
+                    "temporal_columns": []
+                  }
+                },
+                "tier2": {
+                  "customers": {
+                    "anomaly_rate": null,
+                    "cardinality": {
+                      "amount": {
+                        "column": "amount",
+                        "deviation": 0.0,
+                        "passed": true,
+                        "ratio": 1.0,
+                        "real_cardinality": 120,
+                        "synth_cardinality": 120
+                      },
+                      "customer_id": {
+                        "column": "customer_id",
+                        "deviation": 0.0,
+                        "passed": true,
+                        "ratio": 1.0,
+                        "real_cardinality": 120,
+                        "synth_cardinality": 120
+                      },
+                      "email": {
+                        "column": "email",
+                        "deviation": 0.0,
+                        "passed": true,
+                        "ratio": 1.0,
+                        "real_cardinality": 120,
+                        "synth_cardinality": 120
+                      },
+                      "full_name": {
+                        "column": "full_name",
+                        "deviation": 0.0,
+                        "passed": true,
+                        "ratio": 1.0,
+                        "real_cardinality": 120,
+                        "synth_cardinality": 120
+                      },
+                      "tier": {
+                        "column": "tier",
+                        "deviation": 0.0,
+                        "passed": true,
+                        "ratio": 1.0,
+                        "real_cardinality": 3,
+                        "synth_cardinality": 3
+                      }
+                    },
+                    "format_preservation": {
+                      "email": {
+                        "column": "email",
+                        "delta": 0.0,
+                        "detected_format": "email",
+                        "passed": true,
+                        "real_format_rate": 1.0,
+                        "synth_format_rate": 1.0
+                      }
+                    },
+                    "passing_rate": 1.0,
+                    "string_similarity": {
+                      "email": {
+                        "column": "email",
+                        "cosine_similarity": 0.35661379234708135,
+                        "ngram_n": 3,
+                        "score": 35.66
+                      },
+                      "full_name": {
+                        "column": "full_name",
+                        "cosine_similarity": 0.0008334831433326548,
+                        "ngram_n": 3,
+                        "score": 0.08
+                      },
+                      "tier": {
+                        "column": "tier",
+                        "cosine_similarity": 0.9417932051409833,
+                        "ngram_n": 3,
+                        "score": 94.18
+                      }
+                    }
+                  }
+                }
+              },
+              "notes": [],
+              "status": "fail"
+            },
+            "privacy": {
+              "gates": [
+                {
+                  "name": "memorization",
+                  "status": "pass",
+                  "value": 0.0
+                },
+                {
+                  "name": "membership_inference",
+                  "reason": "no holdout was given (--holdout): membership inference needs real rows that were not given to the generator",
+                  "status": "not_run"
+                }
+              ],
+              "metrics": {
+                "membership_inference": {
+                  "reason": "no holdout was given (--holdout): membership inference needs real rows that were not given to the generator",
+                  "status": "not_run"
+                },
+                "memorization": {
+                  "fail_at": "CONFIDENTIAL",
+                  "min_nn_distance": null,
+                  "tables": {
+                    "customers": {
+                      "columns": [
+                        "email",
+                        "full_name",
+                        "tier"
+                      ],
+                      "exact_match_rate": 0.0,
+                      "nn_distance": {
+                        "columns": [
+                          "customer_id",
+                          "amount"
+                        ],
+                        "median": 22887.951286148826,
+                        "min": 22887.705888113585,
+                        "p05": 22887.73039819422,
+                        "rows_checked": 120
+                      },
+                      "reproduced_row_indices": [],
+                      "reproduced_rows": 0,
+                      "restricted": false,
+                      "rows": 120,
+                      "source_rows": 120
+                    }
+                  }
+                }
+              },
+              "notes": [
+                "customers: no column is classified CONFIDENTIAL or above, so reproduced rows are reported but cannot fail the gate (set \"classifications\" in the verify configuration)"
+              ],
+              "status": "pass"
+            },
+            "utility": {
+              "gates": [
+                {
+                  "name": "utility_retention",
+                  "reason": "no verify configuration was given (--config), so there is no `utility` section",
+                  "status": "not_run"
+                }
+              ],
+              "metrics": {},
+              "notes": [],
+              "reason": "no verify configuration was given (--config), so there is no `utility` section",
+              "status": "not_run"
+            }
+          },
+          "shape_version": "0.9.0",
+          "version": 1
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "written-too",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "output": "${DIR}/card_written.json",
+          "real": "${DIR}/report_real",
+          "synthetic": "${DIR}/report_synthetic",
+          "tiers": [
+            1
+          ]
+        },
+        "command": "report_card",
+        "id": "written-too"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "report_card",
+        "id": "written-too",
+        "ok": true,
+        "result": {
+          "format": "shape-report-card",
+          "inputs": {
+            "holdout": null,
+            "manifest": null,
+            "real": {
+              "dataset_id": "sha256:927845dbf2ecb6bdf1cb07b93ee1ee11068d33191df4afcf9055864dbcc07f53",
+              "tables": {
+                "customers": 120
+              }
+            },
+            "synthetic": {
+              "dataset_id": "sha256:8f05650b7387206b60a4b0ebb4203176f533b1994b953334a76aa057cacef64f",
+              "tables": {
+                "customers": 120
+              }
+            }
+          },
+          "overall": "fail",
+          "overall_reasons": [
+            "fidelity: failed (overall_score, table_score (customers))"
+          ],
+          "require": [],
+          "sections": {
+            "fidelity": {
+              "gates": [
+                {
+                  "name": "overall_score",
+                  "relation": ">=",
+                  "status": "fail",
+                  "threshold": 85.0,
+                  "value": 65.2940258744698
+                },
+                {
+                  "name": "table_score",
+                  "relation": ">=",
+                  "status": "fail",
+                  "table": "customers",
+                  "threshold": 70.0,
+                  "value": 65.2940258744698
+                },
+                {
+                  "name": "coverage",
+                  "status": "pass"
+                },
+                {
+                  "name": "tier1_adversarial_auc",
+                  "reason": "adversarial test skipped: scikit-learn is not installed (pip install 'sqllocks-shape[advanced]')",
+                  "status": "not_run",
+                  "table": "customers"
+                }
+              ],
+              "metrics": {
+                "extra_tables": [],
+                "issues": [],
+                "missing_tables": [],
+                "overall_score": 65.2940258744698,
+                "tables": {
+                  "customers": {
+                    "columns": {
+                      "amount": {
+                        "cardinality_ratio": 1.0,
+                        "chi2_pvalue": null,
+                        "chi2_statistic": null,
+                        "dtype_match": true,
+                        "ks_statistic": 0.10833333333333335,
+                        "mean_delta": 0.00690209511738474,
+                        "null_rate_delta": 0.0,
+                        "present": true,
+                        "score": 95.85788447438982,
+                        "std_ratio": 1.16781056322461,
+                        "value_overlap": null
+                      },
+                      "customer_id": {
+                        "cardinality_ratio": 1.0,
+                        "chi2_pvalue": null,
+                        "chi2_statistic": null,
+                        "dtype_match": true,
+                        "ks_statistic": 1.0,
+                        "mean_delta": 22794.095739341778,
+                        "null_rate_delta": 0.0,
+                        "present": true,
+                        "score": 44.89795918367348,
+                        "std_ratio": 0.14285714285714288,
+                        "value_overlap": null
+                      },
+                      "email": {
+                        "cardinality_ratio": 1.0,
+                        "chi2_pvalue": 0.0,
+                        "chi2_statistic": 1199999999880.0,
+                        "dtype_match": true,
+                        "ks_statistic": null,
+                        "mean_delta": null,
+                        "null_rate_delta": 0.0,
+                        "present": true,
+                        "score": 42.857142857142854,
+                        "std_ratio": null,
+                        "value_overlap": 0.0
+                      },
+                      "full_name": {
+                        "cardinality_ratio": 1.0,
+                        "chi2_pvalue": 0.0,
+                        "chi2_statistic": 1199999999880.0,
+                        "dtype_match": true,
+                        "ks_statistic": null,
+                        "mean_delta": null,
+                        "null_rate_delta": 0.0,
+                        "present": true,
+                        "score": 42.857142857142854,
+                        "std_ratio": null,
+                        "value_overlap": 0.0
+                      },
+                      "tier": {
+                        "cardinality_ratio": 1.0,
+                        "chi2_pvalue": 0.8394570207692074,
+                        "chi2_statistic": 0.35,
+                        "dtype_match": true,
+                        "ks_statistic": null,
+                        "mean_delta": null,
+                        "null_rate_delta": 0.0,
+                        "present": true,
+                        "score": 100.0,
+                        "std_ratio": null,
+                        "value_overlap": 1.0
+                      }
+                    },
+                    "extra_columns": [],
+                    "issues": [],
+                    "missing_columns": [],
+                    "present": true,
+                    "row_count_real": 120,
+                    "row_count_synth": 120,
+                    "score": 65.2940258744698
+                  }
+                },
+                "thresholds": {
+                  "min_column": null,
+                  "min_overall": 85.0,
+                  "min_table": 70.0
+                },
+                "tier1": {
+                  "customers": {
+                    "adversarial": null,
+                    "adversarial_reason": "adversarial test skipped: scikit-learn is not installed (pip install 'sqllocks-shape[advanced]')",
+                    "conditional_profiles": 2,
+                    "mixture_fit_columns": [],
+                    "periodic_columns": [
+                      "amount",
+                      "customer_id"
+                    ],
+                    "temporal_columns": []
+                  }
+                }
+              },
+              "notes": [],
+              "status": "fail"
+            },
+            "privacy": {
+              "gates": [
+                {
+                  "name": "memorization",
+                  "status": "pass",
+                  "value": 0.0
+                },
+                {
+                  "name": "membership_inference",
+                  "reason": "no holdout was given (--holdout): membership inference needs real rows that were not given to the generator",
+                  "status": "not_run"
+                }
+              ],
+              "metrics": {
+                "membership_inference": {
+                  "reason": "no holdout was given (--holdout): membership inference needs real rows that were not given to the generator",
+                  "status": "not_run"
+                },
+                "memorization": {
+                  "fail_at": "CONFIDENTIAL",
+                  "min_nn_distance": null,
+                  "tables": {
+                    "customers": {
+                      "columns": [
+                        "email",
+                        "full_name",
+                        "tier"
+                      ],
+                      "exact_match_rate": 0.0,
+                      "nn_distance": {
+                        "columns": [
+                          "customer_id",
+                          "amount"
+                        ],
+                        "median": 22887.951286148826,
+                        "min": 22887.705888113585,
+                        "p05": 22887.73039819422,
+                        "rows_checked": 120
+                      },
+                      "reproduced_row_indices": [],
+                      "reproduced_rows": 0,
+                      "restricted": false,
+                      "rows": 120,
+                      "source_rows": 120
+                    }
+                  }
+                }
+              },
+              "notes": [
+                "customers: no column is classified CONFIDENTIAL or above, so reproduced rows are reported but cannot fail the gate (set \"classifications\" in the verify configuration)"
+              ],
+              "status": "pass"
+            },
+            "utility": {
+              "gates": [
+                {
+                  "name": "utility_retention",
+                  "reason": "no verify configuration was given (--config), so there is no `utility` section",
+                  "status": "not_run"
+                }
+              ],
+              "metrics": {},
+              "notes": [],
+              "reason": "no verify configuration was given (--config), so there is no `utility` section",
+              "status": "not_run"
+            }
+          },
+          "shape_version": "0.9.0",
+          "version": 1
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "missing-real-data",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "real": "${DIR}/none",
+          "synthetic": "${DIR}/report_synthetic"
+        },
+        "command": "report_card",
+        "id": "missing-real-data"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "report_card",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "Path not found: ${DIR}/none"
+        },
+        "id": "missing-real-data",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "tiers-is-an-array",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "real": "a",
+          "synthetic": "b",
+          "tiers": "1"
+        },
+        "command": "report_card",
+        "id": "tiers-is-an-array"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "report_card",
+        "error": {
+          "code": "usage.invalid_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "argument 'tiers' must be of type array of integer, got str"
+        },
+        "id": "tiers-is-an-array",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "report_card",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

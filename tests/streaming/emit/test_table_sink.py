@@ -21,6 +21,12 @@ URI = "abfss://landing@acct.dfs.core.windows.net/stream"
 BASE = ["emit", "retail", "--scale", "small", "--seed", "3", "--table", "customer"]
 
 
+@pytest.fixture(autouse=True)
+def _confirm_remote(monkeypatch):
+    # These tests are about the sinks, not the confirmation (tests/cli/test_remote_confirmation.py).
+    monkeypatch.setenv("SHAPE_CONFIRM_REMOTE", "1")
+
+
 @pytest.fixture
 def memfs(monkeypatch: pytest.MonkeyPatch) -> Any:
     fs = fsspec.filesystem("memory")

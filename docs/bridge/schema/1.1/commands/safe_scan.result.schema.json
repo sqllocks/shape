@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "clean": {
+      "type": "boolean"
+    },
+    "findings": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "pointer": {
+            "type": "string"
+          },
+          "rule": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule",
+          "pointer",
+          "message"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "clean",
+    "findings"
+  ],
+  "title": "safe_scan result",
+  "type": "object",
+  "x-api-version": "1.1",
+  "x-since": "1.1"
+}

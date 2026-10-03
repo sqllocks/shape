@@ -66,6 +66,13 @@ the policy.
   (`docs/VERIFY.md`).
 - `shape explain DIFF.json` explains a `shape diff --json` or `shape drift` result in plain
   English, deterministically (`docs/EXPLAIN.md`).
+- `shape rules mutate DATA CONTRACT.json` plants the corruptions of `shape chaos` one at a time and
+  reports which rules of the contract catch them (`--plan`, `--seed`, `--rate`, `--diff`,
+  `--min-score S`: exit 1 below S, `-o REPORT.json`, `--json`). `shape rules backtest REGISTRY NAME
+  CONTRACT.json` replays a contract over every committed version of a registry name (`--since`,
+  `--until`, `--window day|week|month`, `--incidents FILE`, `--fail-on-miss`: exit 1 on a missed
+  incident, `--compare OLD_CONTRACT.json`, `-o`, `--json`). Exit 2 for unusable input. See
+  `docs/RULES_TESTING.md`.
 - `shape inspect ARTIFACT.shape` prints what an artifact holds, a profile or a model. `shape show`
   is an alias of `shape inspect`.
 - `shape capture SRC` reads everything `shape profile` reads (CSV, Parquet, JSONL, a folder or
@@ -103,6 +110,14 @@ the policy.
   evidence no longer holds after a re-profile, and `contract -d DECISIONS.json -o CONTRACT.json
   [--merge EXISTING.json]` writes the accepted rules as a contract `shape check` reads (exit 2 on a
   conflict with a rule in the file merged into). See [PROPOSALS.md](PROPOSALS.md#rules).
+- `shape report-card REAL SYNTHETIC` runs the fidelity scores and tiers, the utility gate, the
+  memorization gate and (with `--holdout`) a membership-inference test, and writes one card as
+  JSON, Markdown or HTML (`-o`, by extension). Exit 0 when every section that ran passed, 1 when
+  one failed or a `--require`d one did not run, 2 for unusable input. See
+  [REPORT_CARD.md](REPORT_CARD.md).
+- `shape proposals propose|list|decide` keeps the answers to what a profile cannot settle alone
+  (foreign keys, personal data, meaning) in a decision file; `shape generate --from` and
+  `shape plan` take it with `--decisions`. See [PROPOSALS.md](PROPOSALS.md).
 
 - `shape fingerprint embed|show|verify` writes, reads and checks a signed statement inside a Parquet
   file or Delta table that the data is synthetic and which run made it; `shape generate
@@ -126,6 +141,20 @@ the policy.
 - `shape resolve run FILE` finds duplicate entities in a CSV, Parquet or JSONL file and writes
   golden records; `shape resolve synth FILE -o OUT` plants seeded duplicates and writes the true
   clusters. See [RESOLVE.md](RESOLVE.md). Bad options or an unreadable file exit 2.
+
+## Non-local targets and chaos input
+
+- Commands that write to a non-local target (`generate --to`, `emit`, `stream`,
+  `generate --scale-mode --sink`) need `--yes`, or `SHAPE_CONFIRM_REMOTE=1` (exactly `1`), or `y` at
+  the prompt on a terminal; otherwise they exit 2 with
+  `shape: error: refusing to write to non-local target URI without confirmation; pass --yes or set
+  SHAPE_CONFIRM_REMOTE=1`. Paths, `file://`, `console` and `localhost`/`127.0.0.1`/`::1` are local,
+  and `--dry-run` needs no confirmation. See `docs/SINKS.md`.
+- `shape chaos --input DIR` corrupts only tables listed in `DIR/_shape_provenance.json` (matching
+  sha256) or Parquet files with the `shape_synthetic` marker; `--allow-real-input` overrides, and
+  `-o` may not be the input folder. See `docs/CHAOS.md`.
+- `shape generate -o`, `continue`, `time-travel`, `pack run` and `chaos` write
+  `_shape_provenance.json` beside the tables (`format: shape-provenance`, `version: 1`).
 
 ## `shape doctor`
 
@@ -228,3 +257,20 @@ See `editors/vscode/README.md`.
 
 `shape registry` (content-addressed artifacts) and `shape profile registry` (named profiles) are
 different stores. See `docs/REGISTRY.md` and `docs/PROFILE_REGISTRY.md`.
+
+## History: `shape bisect` and `shape timelapse`
+
+```
+shape bisect REGISTRY NAME --good REF --bad REF [--column COL] [--kind KIND] [--contract FILE]
+             [--verify-all] [--coarse week|month] [--json] [--source NAME] [threshold flags]
+shape bisect layers --layers SOURCE[,SOURCE...] --good-date D1 --bad-date D2 [--column COL]
+             [--map LAYER.COL=COL]... [--project shape.yml] [--json]
+shape timelapse REGISTRY NAME --column COL [--table T] [--since DATE] [--until DATE]
+             [--window day|week|month] [-o OUT.json|OUT.html] [--format json|text]
+```
+
+`bisect` finds the first committed version of `NAME` that changed (exit 0; exit 2 when `--good`
+tests bad, `--bad` tests good, or a version cannot be tested, for example a share-safe profile).
+`bisect layers` finds the layer of a pipeline where a change appears (exit 0 a layer shows it, 1
+none does, 2 unusable input). `timelapse` follows one column across the versions (`-o OUT.html` is
+one offline page). See `docs/HISTORY.md`.

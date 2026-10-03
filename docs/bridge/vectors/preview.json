@@ -1,5 +1,5 @@
 {
-  "api_version": "1.0",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "two-stores",
@@ -17,7 +17,7 @@
         "id": "two-stores"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.2",
         "command": "preview",
         "id": "two-stores",
         "ok": true,
@@ -71,7 +71,7 @@
         "id": "unknown-table"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.2",
         "command": "preview",
         "error": {
           "code": "input.invalid_value",

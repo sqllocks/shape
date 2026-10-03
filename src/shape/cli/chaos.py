@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -56,6 +57,13 @@ def add_arguments(sub: Any) -> None:
     ch.add_argument("--format", "-f", choices=CHAOS_FORMATS, default="csv", help="default: csv")
     ch.add_argument(
         "--ground-truth", metavar="FILE", help="the log (default: -o/_chaos_ground_truth.jsonl)"
+    )
+    ch.add_argument(
+        "--allow-real-input",
+        action="store_true",
+        help="corrupt --input tables that are not marked as Shape-generated (listed with a "
+        "matching sha256 in _shape_provenance.json, or Parquet with the shape_synthetic marker); "
+        "the ground-truth log records input_provenance: unverified",
     )
     ch.add_argument("--json", action="store_true", help="print the result as JSON")
     add_landing_arguments(ch)
@@ -105,7 +113,18 @@ def cmd_chaos(a: argparse.Namespace) -> int:
     if schema is not None:
         keys, refs = _schema_maps(schema)
     seed = a.seed if a.seed is not None else (schema.model.seed if schema is not None else 42)
+    input_provenance: str | None = None
     if a.input:
+        from shape.chaos.input_check import (
+            OVERRIDE_WARNING,
+            check_output_folder,
+            verify_chaos_input,
+        )
+
+        check_output_folder(a.input, a.output)  # before anything is read or written
+        input_provenance = verify_chaos_input(a.input, allow_real_input=a.allow_real_input)
+        if input_provenance == "unverified":
+            print(OVERRIDE_WARNING, file=sys.stderr)
         tables = read_tables(a.input)
     elif schema is not None:
         from shape.generation.engine import Engine
@@ -117,6 +136,7 @@ def cmd_chaos(a: argparse.Namespace) -> int:
     outcome = corrupt_tables(
         tables, corruptions, seed=seed, batch=batch, keys=keys, references=refs
     )
+    outcome.input_provenance = input_provenance
     out = Path(a.output)
     if landing_requested(a):
         from shape.generation.landing import write_landing
@@ -130,6 +150,15 @@ def cmd_chaos(a: argparse.Namespace) -> int:
     suffix = f"_{a.batch_date.replace('-', '')}" if a.batch_date else ""
     log = Path(a.ground_truth) if a.ground_truth else out / f"_chaos_ground_truth{suffix}.jsonl"
     write_ground_truth(log, outcome)
+    from shape.io.provenance import record_tables
+
+    record_tables(
+        out,
+        [*files, *([log] if log.parent.resolve() == out.resolve() else [])],
+        {n: t.num_rows for n, t in outcome.tables.items()},
+        seed=seed,
+        domain=schema.model.domain or schema.model.name if schema is not None else None,
+    )
     if a.json:
         print(
             json.dumps(

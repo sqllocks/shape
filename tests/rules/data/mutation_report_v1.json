@@ -1,0 +1,92 @@
+{
+  "format": "shape-mutation-report",
+  "version": 1,
+  "seed": 3,
+  "rate": 0.05,
+  "diff": false,
+  "mutants": [
+    {
+      "id": "duplicates.orders",
+      "kind": "duplicates",
+      "table": "orders",
+      "column": null,
+      "rate": 0.05,
+      "seed": 3,
+      "cells_changed": 3,
+      "status": "killed",
+      "killed": true,
+      "killed_by": [
+        "orders.order_id.unique"
+      ]
+    },
+    {
+      "id": "null_creep.orders.status",
+      "kind": "null_creep",
+      "table": "orders",
+      "column": "status",
+      "rate": 0.2,
+      "seed": 3,
+      "cells_changed": 12,
+      "status": "survived",
+      "killed": false,
+      "killed_by": []
+    },
+    {
+      "id": "negative_amounts.orders.amount",
+      "kind": "negative_amounts",
+      "table": "orders",
+      "column": "amount",
+      "rate": 0.05,
+      "seed": 3,
+      "cells_changed": 3,
+      "status": "survived",
+      "killed": false,
+      "killed_by": []
+    }
+  ],
+  "score": {
+    "overall": {
+      "killed": 1,
+      "applicable": 3,
+      "score": 0.333333
+    },
+    "by_kind": {
+      "duplicates": {
+        "killed": 1,
+        "applicable": 1,
+        "score": 1.0
+      },
+      "negative_amounts": {
+        "killed": 0,
+        "applicable": 1,
+        "score": 0.0
+      },
+      "null_creep": {
+        "killed": 0,
+        "applicable": 1,
+        "score": 0.0
+      }
+    },
+    "by_table": {
+      "orders": {
+        "killed": 1,
+        "applicable": 3,
+        "score": 0.333333
+      }
+    }
+  },
+  "rules": {
+    "orders.order_id.unique": {
+      "killed": [
+        "duplicates.orders"
+      ]
+    },
+    "orders.status.allowed_values": {
+      "killed": []
+    }
+  },
+  "rules_killed_none": [
+    "orders.status.allowed_values"
+  ],
+  "baseline_failed_rules": []
+}

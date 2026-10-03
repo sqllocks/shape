@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "ddl": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "properties": {
+                "bytes": {
+                  "type": "integer"
+                },
+                "content_id": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "spilled": {
+                  "const": true
+                }
+              },
+              "required": [
+                "spilled",
+                "content_id",
+                "path",
+                "bytes"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "lint": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "error",
+              "warning",
+              "info"
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "severity",
+          "path",
+          "message"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "passed": {
+      "type": "boolean"
+    },
+    "tables": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "properties": {
+            "format": {
+              "type": "string"
+            },
+            "mode": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "tables": {
+              "items": {
+                "additionalProperties": true,
+                "properties": {
+                  "columns": {
+                    "items": {
+                      "additionalProperties": true,
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "type"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "kind": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "kind",
+                  "columns"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "version": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "format",
+            "version",
+            "name",
+            "mode",
+            "tables"
+          ],
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "lint",
+    "tables",
+    "ddl",
+    "passed"
+  ],
+  "title": "design result",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.1"
+}

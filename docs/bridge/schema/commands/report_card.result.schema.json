@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "additionalProperties": true,
+      "properties": {
+        "format": {
+          "const": "shape-report-card"
+        },
+        "inputs": {
+          "additionalProperties": {},
+          "type": "object"
+        },
+        "overall": {
+          "enum": [
+            "pass",
+            "fail"
+          ]
+        },
+        "overall_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "require": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "sections": {
+          "additionalProperties": {},
+          "type": "object"
+        },
+        "shape_version": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "format",
+        "version",
+        "inputs",
+        "sections",
+        "overall",
+        "overall_reasons"
+      ],
+      "type": "object"
+    },
+    {
+      "properties": {
+        "bytes": {
+          "type": "integer"
+        },
+        "content_id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "spilled": {
+          "const": true
+        }
+      },
+      "required": [
+        "spilled",
+        "content_id",
+        "path",
+        "bytes"
+      ],
+      "type": "object"
+    }
+  ],
+  "title": "report_card result",
+  "x-api-version": "1.2",
+  "x-since": "1.2"
+}

@@ -1,7 +1,7 @@
 """A small JSON Schema checker for the subset the bridge schemas use (so the tests need no extra
 package): type (a name or a list), enum, const, properties, required, additionalProperties (bool
-or schema), items, minimum, maxLength, pattern, anyOf, oneOf, allOf. ``validate`` returns the list
-of problems, each prefixed by the path."""
+or schema), items, minimum, maximum, maxLength, pattern, anyOf, oneOf, allOf. ``validate`` returns
+the list of problems, each prefixed by the path."""
 
 from __future__ import annotations
 
@@ -60,6 +60,8 @@ def validate(
     if isinstance(value, int | float) and not isinstance(value, bool):
         if "minimum" in schema and value < schema["minimum"]:
             problems.append(f"{path}: below {schema['minimum']}")
+        if "maximum" in schema and value > schema["maximum"]:
+            problems.append(f"{path}: above {schema['maximum']}")
     if isinstance(value, dict):
         props = schema.get("properties", {})
         for name in schema.get("required", []):

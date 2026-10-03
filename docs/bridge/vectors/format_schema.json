@@ -1,0 +1,387 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "names",
+      "request": {
+        "api_version": "1.1",
+        "args": {},
+        "command": "format_schema",
+        "id": "names"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "format_schema",
+        "id": "names",
+        "ok": true,
+        "result": {
+          "names": [
+            "decisions",
+            "design-input",
+            "generation-schema",
+            "model",
+            "model-v1",
+            "model-v1-ga",
+            "profile-engine",
+            "project"
+          ]
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "design-input",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "name": "design-input"
+        },
+        "command": "format_schema",
+        "id": "design-input"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "format_schema",
+        "id": "design-input",
+        "ok": true,
+        "result": {
+          "format": "shape-design",
+          "name": "design-input",
+          "schema": {
+            "$defs": {
+              "attribute": {
+                "additionalProperties": false,
+                "properties": {
+                  "max_length": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean"
+                  },
+                  "precision": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "references": {
+                    "type": "string"
+                  },
+                  "scale": {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "type": {
+                    "enum": [
+                      "integer",
+                      "string",
+                      "decimal",
+                      "timestamp",
+                      "boolean",
+                      "uuid",
+                      "float",
+                      "date",
+                      "time",
+                      "binary"
+                    ]
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              },
+              "dependency": {
+                "additionalProperties": false,
+                "properties": {
+                  "dependent": {
+                    "$ref": "#/$defs/names"
+                  },
+                  "determinant": {
+                    "$ref": "#/$defs/names"
+                  }
+                },
+                "required": [
+                  "determinant",
+                  "dependent"
+                ],
+                "type": "object"
+              },
+              "entity": {
+                "additionalProperties": false,
+                "properties": {
+                  "attributes": {
+                    "items": {
+                      "$ref": "#/$defs/attribute"
+                    },
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "dependencies": {
+                    "items": {
+                      "$ref": "#/$defs/dependency"
+                    },
+                    "type": "array"
+                  },
+                  "history": {
+                    "$ref": "#/$defs/history"
+                  },
+                  "keys": {
+                    "items": {
+                      "$ref": "#/$defs/names"
+                    },
+                    "type": "array"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "attributes"
+                ],
+                "type": "object"
+              },
+              "fact": {
+                "additionalProperties": false,
+                "properties": {
+                  "dates": {
+                    "$ref": "#/$defs/names"
+                  },
+                  "degenerate": {
+                    "$ref": "#/$defs/names"
+                  },
+                  "dimensions": {
+                    "items": {
+                      "$ref": "#/$defs/fact_dimension"
+                    },
+                    "type": "array"
+                  },
+                  "grain": {
+                    "$ref": "#/$defs/names"
+                  },
+                  "junk": {
+                    "$ref": "#/$defs/names"
+                  },
+                  "many_to_many": {
+                    "$ref": "#/$defs/names"
+                  },
+                  "measures": {
+                    "items": {
+                      "$ref": "#/$defs/measure"
+                    },
+                    "type": "array"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "source"
+                ],
+                "type": "object"
+              },
+              "fact_dimension": {
+                "additionalProperties": false,
+                "properties": {
+                  "entity": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "via": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "entity",
+                  "via"
+                ],
+                "type": "object"
+              },
+              "hierarchy": {
+                "additionalProperties": false,
+                "properties": {
+                  "entity": {
+                    "type": "string"
+                  },
+                  "levels": {
+                    "$ref": "#/$defs/names"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "entity",
+                  "levels"
+                ],
+                "type": "object"
+              },
+              "history": {
+                "additionalProperties": false,
+                "properties": {
+                  "attributes": {
+                    "additionalProperties": {
+                      "enum": [
+                        0,
+                        1,
+                        2,
+                        3
+                      ]
+                    },
+                    "type": "object"
+                  },
+                  "default": {
+                    "enum": [
+                      0,
+                      1,
+                      2,
+                      3
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "measure": {
+                "additionalProperties": false,
+                "properties": {
+                  "additivity": {
+                    "enum": [
+                      "additive",
+                      "semi_additive",
+                      "non_additive"
+                    ]
+                  },
+                  "attribute": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "not_additive_over": {
+                    "$ref": "#/$defs/names"
+                  }
+                },
+                "required": [
+                  "name",
+                  "attribute"
+                ],
+                "type": "object"
+              },
+              "names": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "$id": "https://sqllocks.github.io/shape/schemas/design-input-v1.json",
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "additionalProperties": false,
+            "properties": {
+              "entities": {
+                "items": {
+                  "$ref": "#/$defs/entity"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              "facts": {
+                "items": {
+                  "$ref": "#/$defs/fact"
+                },
+                "type": "array"
+              },
+              "format": {
+                "const": "shape-design"
+              },
+              "hierarchies": {
+                "items": {
+                  "$ref": "#/$defs/hierarchy"
+                },
+                "type": "array"
+              },
+              "name": {
+                "type": "string"
+              },
+              "version": {
+                "const": 1
+              }
+            },
+            "required": [
+              "format",
+              "version",
+              "name",
+              "entities"
+            ],
+            "title": "Shape schema design input, version 1",
+            "type": "object"
+          },
+          "version": 1
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-format",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "name": "nope"
+        },
+        "command": "format_schema",
+        "id": "unknown-format"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "format_schema",
+        "error": {
+          "code": "input.unknown_format",
+          "group": "input",
+          "hint": "call format_schema without a name for the list",
+          "message": "no published format named 'nope' (formats: decisions, design-input, generation-schema, model, model-v1, model-v1-ga, profile-engine, project)"
+        },
+        "id": "unknown-format",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "name-must-be-text",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "name": 3
+        },
+        "command": "format_schema",
+        "id": "name-must-be-text"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "format_schema",
+        "error": {
+          "code": "usage.invalid_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "argument 'name' must be of type string, got int"
+        },
+        "id": "name-must-be-text",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "format_schema",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

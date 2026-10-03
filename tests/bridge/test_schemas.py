@@ -36,10 +36,40 @@ PLAN_COMMANDS = {
 }
 ADDED = {"profile", "diff", "check", "verify"}
 JOBS = {"job_status", "job_cancel", "job_list"}
+#: The commands bridge 1.1 adds (their vectors, schemas and tests are in the 1.1 test files).
+ADDED_1_1 = {
+    "proposals_propose",
+    "proposals_list",
+    "proposals_decide",
+    "project_validate",
+    "project_show",
+    "design",
+    "design_from_data",
+    "format_schema",
+    "profile_show",
+    "contract_validate",
+    "safe_scan",
+}
+
+
+#: The commands bridge 1.2 adds (their vectors, schemas and tests are in the 1.2 test files).
+ADDED_1_2 = {
+    "proposals_contract",
+    "report_card",
+    "report_card_read",
+    "rules_mutate",
+    "rules_backtest",
+    "bisect",
+    "bisect_layers",
+    "timelapse",
+    "registry_diff",
+    "chaos",
+    # still to come when W5-05 lands: suite_list, suite_run
+}
 
 
 def test_the_command_set_is_the_plans_plus_the_core_workflow_and_the_job_commands():
-    assert set(COMMANDS) == PLAN_COMMANDS | ADDED | JOBS
+    assert set(COMMANDS) == PLAN_COMMANDS | ADDED | JOBS | ADDED_1_1 | ADDED_1_2
     assert set(PARITY_COMMANDS) == PLAN_COMMANDS and len(PARITY_COMMANDS) == 17
 
 
@@ -60,9 +90,12 @@ def test_every_command_has_a_published_request_and_result_schema(name):
     required = [k for k, a in COMMANDS[name].args.items() if a.required]
     assert request["properties"]["args"].get("required", []) == required
     assert ("args" in request["required"]) == bool(required)
-    assert not validate({"command": name, "args": {k: "x" for k in required}}, request) or name in (
-        "demo_run",
-    )
+    kinds = {"array": ["x"], "object": {}, "integer": 1, "number": 1, "boolean": True}
+    sample = {
+        k: (COMMANDS[name].args[k].enum or (kinds.get(COMMANDS[name].args[k].type, "x"),))[0]
+        for k in required
+    }
+    assert not validate({"command": name, "args": sample}, request) or name in ("demo_run",)
 
 
 def test_the_index_lists_every_command_and_error_code():

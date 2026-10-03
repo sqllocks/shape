@@ -1,0 +1,183 @@
+{
+  "api_version": "1.1",
+  "cases": [
+    {
+      "name": "summary",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "domain": "retail",
+          "scale": "small",
+          "seed": 1
+        },
+        "command": "generate",
+        "id": "summary"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "generate",
+        "id": "summary",
+        "ok": true,
+        "result": {
+          "domain": "retail",
+          "elapsed_seconds": "<any>",
+          "integrity_errors": [],
+          "integrity_pass": true,
+          "scale": "small",
+          "seed": 1,
+          "tables": {
+            "address": {
+              "columns": 10,
+              "rows": 1500
+            },
+            "customer": {
+              "columns": 8,
+              "rows": 1000
+            },
+            "order": {
+              "columns": 8,
+              "rows": 5000
+            },
+            "order_line": {
+              "columns": 8,
+              "rows": 12500
+            },
+            "product": {
+              "columns": 6,
+              "rows": 500
+            },
+            "product_category": {
+              "columns": 4,
+              "rows": 50
+            },
+            "promotion": {
+              "columns": 6,
+              "rows": 200
+            },
+            "return": {
+              "columns": 5,
+              "rows": 850
+            },
+            "store": {
+              "columns": 5,
+              "rows": 150
+            }
+          },
+          "total_rows": 21750
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "csv-files",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "domain": "retail",
+          "format": "csv",
+          "output_dir": "${DIR}/out",
+          "scale": "small",
+          "seed": 1
+        },
+        "command": "generate",
+        "id": "csv-files"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "generate",
+        "id": "csv-files",
+        "ok": true,
+        "result": {
+          "domain": "retail",
+          "elapsed_seconds": "<any>",
+          "files": [
+            "${DIR}/out/customer.csv",
+            "${DIR}/out/address.csv",
+            "${DIR}/out/product_category.csv",
+            "${DIR}/out/product.csv",
+            "${DIR}/out/promotion.csv",
+            "${DIR}/out/store.csv",
+            "${DIR}/out/order.csv",
+            "${DIR}/out/order_line.csv",
+            "${DIR}/out/return.csv"
+          ],
+          "integrity_errors": [],
+          "integrity_pass": true,
+          "output_dir": "${DIR}/out",
+          "output_format": "csv",
+          "scale": "small",
+          "seed": 1,
+          "tables": {
+            "address": {
+              "columns": 10,
+              "rows": 1500
+            },
+            "customer": {
+              "columns": 8,
+              "rows": 1000
+            },
+            "order": {
+              "columns": 8,
+              "rows": 5000
+            },
+            "order_line": {
+              "columns": 8,
+              "rows": 12500
+            },
+            "product": {
+              "columns": 6,
+              "rows": 500
+            },
+            "product_category": {
+              "columns": 4,
+              "rows": 50
+            },
+            "promotion": {
+              "columns": 6,
+              "rows": 200
+            },
+            "return": {
+              "columns": 5,
+              "rows": 850
+            },
+            "store": {
+              "columns": 5,
+              "rows": 150
+            }
+          },
+          "total_rows": 21750
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "format-needs-a-directory",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "domain": "retail",
+          "format": "csv",
+          "scale": "small"
+        },
+        "command": "generate",
+        "id": "format-needs-a-directory"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "generate",
+        "error": {
+          "code": "usage.missing_argument",
+          "group": "usage",
+          "hint": "or use format 'summary' to generate without writing",
+          "message": "format 'csv' writes files: give output_dir"
+        },
+        "id": "format-needs-a-directory",
+        "ok": false,
+        "warnings": []
+      }
+    }
+  ],
+  "command": "generate",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

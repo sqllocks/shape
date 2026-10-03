@@ -1,0 +1,101 @@
+{
+  "api_version": "1.1",
+  "cases": [
+    {
+      "name": "a-profile",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "path": "${DIR}/a.shape"
+        },
+        "command": "profile_show",
+        "id": "a-profile"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "profile_show",
+        "id": "a-profile",
+        "ok": true,
+        "result": {
+          "content_id": "<any>",
+          "name": "a",
+          "signed": false,
+          "summary": "<any>",
+          "tables": {
+            "a": {
+              "columns": 4,
+              "rows": 40
+            }
+          }
+        },
+        "warnings": [
+          {
+            "code": "artifact_not_verified",
+            "message": "${DIR}/a.shape is not signed: its origin is not verified (check it with --verify PUBKEY)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "missing-file",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "path": "${DIR}/none.shape"
+        },
+        "command": "profile_show",
+        "id": "missing-file"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "profile_show",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "file not found: ${DIR}/none.shape"
+        },
+        "id": "missing-file",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "needs-a-path",
+      "request": {
+        "api_version": "1.1",
+        "args": {},
+        "command": "profile_show",
+        "id": "needs-a-path"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "profile_show",
+        "error": {
+          "code": "usage.missing_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "profile_show needs the argument 'path'"
+        },
+        "id": "needs-a-path",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "profile_show",
+  "format": "shape-bridge-vectors",
+  "setup": [
+    {
+      "api_version": "1.1",
+      "args": {
+        "output": "${DIR}/a.shape",
+        "source": "${DIR}/a.csv"
+      },
+      "command": "profile",
+      "id": "setup"
+    }
+  ],
+  "version": 1
+}

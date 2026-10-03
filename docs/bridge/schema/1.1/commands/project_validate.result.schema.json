@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "problems": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "line": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "message",
+          "line"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "valid": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "valid",
+    "problems"
+  ],
+  "title": "project_validate result",
+  "type": "object",
+  "x-api-version": "1.1",
+  "x-since": "1.1"
+}

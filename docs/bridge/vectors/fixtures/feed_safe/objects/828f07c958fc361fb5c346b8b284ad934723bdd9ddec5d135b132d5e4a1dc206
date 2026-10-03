@@ -1,0 +1,198 @@
+{
+  "redaction_manifest": {
+    "k_default": 5,
+    "tables": {
+      "orders": {
+        "amount": {
+          "bounds_winsorized": true,
+          "categories_dropped": 0,
+          "cells_suppressed": 0,
+          "k": 5,
+          "pattern_only": true,
+          "sensitive": false
+        },
+        "note": {
+          "bounds_winsorized": false,
+          "categories_dropped": 0,
+          "cells_suppressed": 0,
+          "k": 5,
+          "pattern_only": false,
+          "sensitive": false
+        },
+        "order_id": {
+          "bounds_winsorized": false,
+          "categories_dropped": 0,
+          "cells_suppressed": 0,
+          "k": 5,
+          "pattern_only": true,
+          "sensitive": false
+        },
+        "status": {
+          "bounds_winsorized": false,
+          "categories_dropped": 0,
+          "cells_suppressed": 0,
+          "k": 5,
+          "pattern_only": false,
+          "sensitive": false
+        }
+      }
+    },
+    "unsafe": false
+  },
+  "relationships": [],
+  "schema_version": 1,
+  "tables": {
+    "orders": {
+      "columns": {
+        "amount": {
+          "bounds": {
+            "hi": 8714.5931,
+            "lo": 1151.1167
+          },
+          "cardinality": 200,
+          "categorical_histogram": null,
+          "categorical_weights": null,
+          "cells_suppressed": 0,
+          "distribution": "uniform",
+          "distribution_params": {
+            "loc": 1036.52,
+            "scale": 7870.77
+          },
+          "dow_histogram": null,
+          "dtype": "float",
+          "hour_histogram": null,
+          "length_dist": null,
+          "mean": 4801.646100000001,
+          "name": "amount",
+          "null_rate": 0.0,
+          "pattern": null,
+          "pattern_contains_rates": null,
+          "pattern_rates": null,
+          "quantiles": {
+            "p0_5": 1108.84655,
+            "p1": 1151.1167,
+            "p10": 1818.088,
+            "p25": 2858.2925,
+            "p5": 1482.612,
+            "p50": 4743.145,
+            "p75": 6562.87,
+            "p90": 8097.789,
+            "p95": 8446.795,
+            "p99": 8714.5931,
+            "p99_5": 8739.50315
+          },
+          "std": 2227.58931394113,
+          "string_length": null,
+          "suppressed_category_count": null,
+          "temporal_histogram": null
+        },
+        "note": {
+          "bounds": null,
+          "cardinality": 3,
+          "categorical_histogram": null,
+          "categorical_weights": {
+            "a": 0.321608,
+            "b": 0.316583,
+            "c": 0.361809
+          },
+          "cells_suppressed": 0,
+          "distribution": null,
+          "distribution_params": null,
+          "dow_histogram": null,
+          "dtype": "string",
+          "hour_histogram": null,
+          "length_dist": null,
+          "mean": null,
+          "name": "note",
+          "null_rate": 0.005,
+          "pattern": null,
+          "pattern_contains_rates": null,
+          "pattern_rates": null,
+          "quantiles": null,
+          "std": null,
+          "string_length": {
+            "max": 1.0,
+            "mean": 1.0,
+            "min": 1.0,
+            "p95": 1.0
+          },
+          "suppressed_category_count": 0,
+          "temporal_histogram": null
+        },
+        "order_id": {
+          "bounds": null,
+          "cardinality": 200,
+          "categorical_histogram": null,
+          "categorical_weights": null,
+          "cells_suppressed": 0,
+          "distribution": null,
+          "distribution_params": null,
+          "dow_histogram": null,
+          "dtype": "string",
+          "hour_histogram": null,
+          "length_dist": {
+            "max": 12.0,
+            "mean": 12.0,
+            "min": 12.0,
+            "p95": 12.0
+          },
+          "mean": null,
+          "name": "order_id",
+          "null_rate": 0.0,
+          "pattern": null,
+          "pattern_contains_rates": null,
+          "pattern_rates": null,
+          "quantiles": null,
+          "std": null,
+          "string_length": {
+            "max": 12.0,
+            "mean": 12.0,
+            "min": 12.0,
+            "p95": 12.0
+          },
+          "suppressed_category_count": null,
+          "temporal_histogram": null
+        },
+        "status": {
+          "bounds": null,
+          "cardinality": 3,
+          "categorical_histogram": null,
+          "categorical_weights": {
+            "new": 0.36,
+            "paid": 0.305,
+            "shipped": 0.335
+          },
+          "cells_suppressed": 0,
+          "distribution": null,
+          "distribution_params": null,
+          "dow_histogram": null,
+          "dtype": "string",
+          "hour_histogram": null,
+          "length_dist": null,
+          "mean": null,
+          "name": "status",
+          "null_rate": 0.0,
+          "pattern": null,
+          "pattern_contains_rates": null,
+          "pattern_rates": null,
+          "quantiles": null,
+          "std": null,
+          "string_length": {
+            "max": 7.0,
+            "mean": 4.64,
+            "min": 3.0,
+            "p95": 7.0
+          },
+          "suppressed_category_count": 0,
+          "temporal_histogram": null
+        }
+      },
+      "correlation_matrix": null,
+      "detected_fks": {},
+      "name": "orders",
+      "primary_key": [],
+      "row_count": 200
+    }
+  },
+  "unsafe": false
+}

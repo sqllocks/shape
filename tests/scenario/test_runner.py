@@ -33,7 +33,8 @@ def test_file_drop_writes_the_listed_entities_under_the_landing_root(tmp_path, r
     result = run(tmp_path, retail, PACK.format(fmt="parquet"))
     assert result.is_success, result.errors
     landing = tmp_path / "out" / "Files" / "landing"
-    assert sorted(p.name for p in landing.iterdir()) == ["customer.parquet", "order.parquet"]
+    names = sorted(p.name for p in landing.iterdir() if p.name != "_shape_provenance.json")
+    assert names == ["customer.parquet", "order.parquet"]
     assert pq.read_table(landing / "customer.parquet").num_rows == 200
     assert pq.read_table(landing / "order.parquet").num_rows == 1000
     assert result.validation_results == {"schema_conformance": True}

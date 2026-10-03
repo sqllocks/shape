@@ -1,0 +1,136 @@
+{
+  "bad_date": "2026-03-03",
+  "column": null,
+  "disappears": [],
+  "first_layer": "clean",
+  "format": "shape-bisect-layers",
+  "found": true,
+  "good_date": "2026-03-01",
+  "layers": [
+    {
+      "bad": {
+        "business_date": "2026-03-03",
+        "content_id": "4f85368be9843d89623cd4d237dc64b452d43e0540d16b03c766ec6f6a577aa4",
+        "ref": "4f85368be9843d89623cd4d237dc64b452d43e0540d16b03c766ec6f6a577aa4"
+      },
+      "changed": false,
+      "changes": [],
+      "columns": [],
+      "good": {
+        "business_date": "2026-03-01",
+        "content_id": "2069e9dfeb9daccdbd37db1dd26b2893157a5edbff86fd05ce27c3d709f7420f",
+        "ref": "2069e9dfeb9daccdbd37db1dd26b2893157a5edbff86fd05ce27c3d709f7420f"
+      },
+      "name": "layer_raw",
+      "registry": "/tmp/tmp25acdj7b/reg",
+      "source": "raw",
+      "status": "unchanged"
+    },
+    {
+      "bad": {
+        "business_date": "2026-03-03",
+        "content_id": "b7b48d5ee3284d78911828c49ce41c7476082f9f36a44894b133af3fd709ccda",
+        "ref": "b7b48d5ee3284d78911828c49ce41c7476082f9f36a44894b133af3fd709ccda"
+      },
+      "changed": true,
+      "changes": [
+        {
+          "after": 85.4323569134235,
+          "before": 62.5929718948033,
+          "column": "total",
+          "kind": "mean_shift",
+          "score": 0.4074,
+          "severity": "medium"
+        },
+        {
+          "after": {
+            "p05": 33.480259,
+            "p25": 53.161243,
+            "p50": 74.501099,
+            "p75": 104.715869,
+            "p95": 171.928632
+          },
+          "before": {
+            "p05": 25.231159,
+            "p25": 39.110008,
+            "p50": 54.934479,
+            "p75": 76.693743,
+            "p95": 127.221332
+          },
+          "column": "total",
+          "kind": "distribution_shift",
+          "score": 0.2319,
+          "severity": "medium"
+        }
+      ],
+      "columns": [
+        "total"
+      ],
+      "good": {
+        "business_date": "2026-03-01",
+        "content_id": "97aa597b0e9f0e09d5fbef58c350051f9c9b91a80b9ed4e86ecd2c37c811e4b6",
+        "ref": "97aa597b0e9f0e09d5fbef58c350051f9c9b91a80b9ed4e86ecd2c37c811e4b6"
+      },
+      "name": "layer_clean",
+      "registry": "/tmp/tmp25acdj7b/reg",
+      "source": "clean",
+      "status": "origin"
+    },
+    {
+      "bad": {
+        "business_date": "2026-03-03",
+        "content_id": "0a66ea0d76f2cfe740e756e6d31736b7db96de8693308c218a68d35848c85084",
+        "ref": "0a66ea0d76f2cfe740e756e6d31736b7db96de8693308c218a68d35848c85084"
+      },
+      "changed": true,
+      "changes": [
+        {
+          "after": 85.4323569134235,
+          "before": 62.5929718948033,
+          "column": "total",
+          "kind": "mean_shift",
+          "score": 0.4074,
+          "severity": "medium"
+        },
+        {
+          "after": {
+            "p05": 33.480259,
+            "p25": 53.161243,
+            "p50": 74.501099,
+            "p75": 104.715869,
+            "p95": 171.928632
+          },
+          "before": {
+            "p05": 25.231159,
+            "p25": 39.110008,
+            "p50": 54.934479,
+            "p75": 76.693743,
+            "p95": 127.221332
+          },
+          "column": "total",
+          "kind": "distribution_shift",
+          "score": 0.2319,
+          "severity": "medium"
+        }
+      ],
+      "columns": [
+        "total"
+      ],
+      "good": {
+        "business_date": "2026-03-01",
+        "content_id": "2af9400722e303f798f1d1e6a52289e4247bf7cf8de68fe64c4564778065aa29",
+        "ref": "2af9400722e303f798f1d1e6a52289e4247bf7cf8de68fe64c4564778065aa29"
+      },
+      "name": "layer_pub",
+      "registry": "/tmp/tmp25acdj7b/reg",
+      "source": "pub",
+      "status": "persists"
+    }
+  ],
+  "persists": [
+    "pub"
+  ],
+  "project": "/tmp/tmp25acdj7b/shape.yml",
+  "version": 1,
+  "warnings": []
+}

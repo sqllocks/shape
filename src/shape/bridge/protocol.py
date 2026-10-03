@@ -16,6 +16,9 @@ Versioning: ``api_version`` is ``MAJOR.MINOR``. A minor version only ever adds (
 optional argument, a result field); a major version may break. The server serves one major
 version and every minor of it up to its own. Nothing here imports numpy, pyarrow or the engine
 (T-18).
+
+A request that declares an older minor is answered exactly as that minor answered: a command or
+argument added later is unknown to it (``Request.minor`` says which minor a request is served as).
 """
 
 from __future__ import annotations
@@ -26,7 +29,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 API_MAJOR = 1
-API_MINOR = 0
+API_MINOR = 2
 API_VERSION = f"{API_MAJOR}.{API_MINOR}"
 SUPPORTED_RANGE = f"{API_MAJOR}.0 to {API_VERSION}"
 
@@ -55,9 +58,14 @@ ERROR_CODES: dict[str, str] = {
     "input.job_state": "the job is not in a state the command needs",
     "input.job_interrupted": "the process that ran a job ended before the job finished",
     "input.unsupported_format_version": "a stored file was written by a newer Shape",
+    "input.unknown_proposal": "the decision file has no proposal with this id",
+    "input.unknown_source": "the project file has no source with this name",
+    "input.unknown_format": "Shape has no published schema with this name",
+    "input.contract_conflict": "an accepted rule disagrees with a rule already in the contract",
     "policy.capability_unavailable": "the operation needs something that is not installed here",
     "policy.signature_invalid": "an artifact's signature does not verify",
     "policy.not_permitted": "a security or trust policy refuses the operation",
+    "policy.unverified_input": "the input is not marked as Shape-generated, so it is not corrupted",
     "privacy.raw_values_withheld": "the operation would return raw values and was not asked to",
     "io.read_failed": "a file could not be read",
     "io.write_failed": "a file could not be written",
@@ -65,6 +73,21 @@ ERROR_CODES: dict[str, str] = {
     "auth.missing_credentials": "a command needs a token or credential that was not given",
     "auth.rejected": "a remote service rejected the credential",
     "internal.error": "a bug in Shape: the message names the exception",
+}
+
+#: Every warning code a response carries in ``warnings``, with what it means. Like an error code, a
+#: warning code is never renamed or removed within a major version.
+WARNING_CODES: dict[str, str] = {
+    "api_version_assumed": "the request declared no api_version: the bridge's own was assumed",
+    "newer_minor_version": "the request declared a newer minor version than the bridge serves",
+    "artifact_not_verified": "a .shape file was read and it is not signed",
+    "empty_table": "a profiled table has 0 rows",
+    "profile_file_holds_values": "the profile file written holds real values from the data",
+    "domain_load_failed": "an installed domain did not load and is left out of the list",
+    "output_dir_ignored": "output_dir was given but nothing is written for this format",
+    "result_in_file": "a result part was larger than max_inline_bytes and is in a file",
+    "project_source_not_selected": "the project file has several sources and none was selected",
+    "real_input_corrupted": "chaos ran on input not marked as Shape-generated (allow_real_input)",
 }
 
 _ID_TYPES = (str, int)
@@ -111,9 +134,13 @@ class Request:
     id: str | int | None = None
     api_version: str | None = None
     warnings: list[dict[str, str]] = field(default_factory=list)
+    #: The minor version the request is served as: its declared one, at most this bridge's.
+    minor: int = API_MINOR
 
 
 def warning(code: str, message: str) -> dict[str, str]:
+    if code not in WARNING_CODES:
+        raise AssertionError(f"unregistered bridge warning code {code!r}")
     return {"code": code, "message": message}
 
 
@@ -187,6 +214,7 @@ def parse_request(raw: str | bytes | Any) -> Request:
         )
     warnings: list[dict[str, str]] = []
     version = doc.get("api_version")
+    minor = API_MINOR
     try:
         if version is None:
             warnings.append(
@@ -196,6 +224,7 @@ def parse_request(raw: str | bytes | Any) -> Request:
             )
         else:
             warnings.extend(check_version(version))
+            minor = min(parse_version(version)[1], API_MINOR)
         command = doc.get("command")
         if not isinstance(command, str) or not command:
             raise BridgeError("usage.invalid_request", "command must be a non-empty string")
@@ -211,7 +240,7 @@ def parse_request(raw: str | bytes | Any) -> Request:
             raise BridgeError("usage.invalid_request", "options must be an object")
     except BridgeError as exc:
         raise _with_id(exc, request_id) from None
-    return Request(command, args, options, request_id, version, warnings)
+    return Request(command, args, options, request_id, version, warnings, minor)
 
 
 def _with_id(exc: BridgeError, request_id: str | int | None) -> BridgeError:

@@ -1,5 +1,5 @@
 {
-  "api_version": "1.0",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "start",
@@ -16,7 +16,7 @@
         "id": "start"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.2",
         "command": "stream",
         "id": "start",
         "ok": true,
@@ -39,7 +39,7 @@
         "id": "unknown-domain"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.2",
         "command": "stream",
         "error": {
           "code": "input.unknown_domain",

@@ -1,0 +1,408 @@
+{
+  "format": "shape-report-card",
+  "version": 1,
+  "shape_version": "0.9.0",
+  "inputs": {
+    "real": {
+      "dataset_id": "sha256:91c2bdbf8d4675ef6196f0f90a1647b73c07433455965dd0065f68721c315217",
+      "tables": {
+        "customers": 150
+      }
+    },
+    "synthetic": {
+      "dataset_id": "sha256:20d1675206a945c81d3bb299ee892a9e0fba134dd47228d160879c7ef81dc5d1",
+      "tables": {
+        "customers": 150
+      }
+    },
+    "holdout": {
+      "dataset_id": "sha256:7ec6347fea37628e2b74d7586acbcdaa88ad9d228fb14ef1fa515c308d25830e",
+      "tables": {
+        "customers": 150
+      }
+    },
+    "manifest": null
+  },
+  "sections": {
+    "fidelity": {
+      "status": "pass",
+      "metrics": {
+        "overall_score": 89.14777297376904,
+        "thresholds": {
+          "min_overall": 85.0,
+          "min_table": 70.0,
+          "min_column": null
+        },
+        "missing_tables": [],
+        "extra_tables": [],
+        "issues": [],
+        "tables": {
+          "customers": {
+            "score": 89.14777297376904,
+            "present": true,
+            "row_count_real": 150,
+            "row_count_synth": 150,
+            "missing_columns": [],
+            "extra_columns": [],
+            "issues": [],
+            "columns": {
+              "name": {
+                "score": 42.857142857142854,
+                "present": true,
+                "dtype_match": true,
+                "null_rate_delta": 0.0,
+                "cardinality_ratio": 1.0,
+                "mean_delta": null,
+                "std_ratio": null,
+                "ks_statistic": null,
+                "chi2_statistic": 1499999999850.0,
+                "chi2_pvalue": 0.0,
+                "value_overlap": 0.0
+              },
+              "age": {
+                "score": 95.81866917253356,
+                "present": true,
+                "dtype_match": true,
+                "null_rate_delta": 0.0,
+                "cardinality_ratio": 1.0655737704918034,
+                "mean_delta": 0.03642880767385693,
+                "std_ratio": 0.9390715612502005,
+                "ks_statistic": 0.09333333333333338,
+                "chi2_statistic": null,
+                "chi2_pvalue": null,
+                "value_overlap": null
+              },
+              "income": {
+                "score": 97.07032770873847,
+                "present": true,
+                "dtype_match": true,
+                "null_rate_delta": 0.0,
+                "cardinality_ratio": 1.0,
+                "mean_delta": 0.056824751574057634,
+                "std_ratio": 1.0114275572401912,
+                "ks_statistic": 0.08000000000000007,
+                "chi2_statistic": null,
+                "chi2_pvalue": null,
+                "value_overlap": null
+              },
+              "visits": {
+                "score": 95.68906006468845,
+                "present": true,
+                "dtype_match": true,
+                "null_rate_delta": 0.0,
+                "cardinality_ratio": 1.1538461538461537,
+                "mean_delta": 0.012786073380035878,
+                "std_ratio": 0.9443191718010836,
+                "ks_statistic": 0.06666666666666665,
+                "chi2_statistic": null,
+                "chi2_pvalue": null,
+                "value_overlap": null
+              },
+              "score": {
+                "score": 92.59921101327986,
+                "present": true,
+                "dtype_match": true,
+                "null_rate_delta": 0.0,
+                "cardinality_ratio": 1.0067114093959733,
+                "mean_delta": 0.17031143077726782,
+                "std_ratio": 0.9426123752134331,
+                "ks_statistic": 0.11333333333333334,
+                "chi2_statistic": null,
+                "chi2_pvalue": null,
+                "value_overlap": null
+              },
+              "city": {
+                "score": 100.0,
+                "present": true,
+                "dtype_match": true,
+                "null_rate_delta": 0.0,
+                "cardinality_ratio": 1.0,
+                "mean_delta": null,
+                "std_ratio": null,
+                "ks_statistic": null,
+                "chi2_statistic": 3.5496481562738698,
+                "chi2_pvalue": 0.16951326796644783,
+                "value_overlap": 1.0
+              },
+              "churned": {
+                "score": 100.0,
+                "present": true,
+                "dtype_match": true,
+                "null_rate_delta": 0.0,
+                "cardinality_ratio": 1.0,
+                "mean_delta": null,
+                "std_ratio": null,
+                "ks_statistic": null,
+                "chi2_statistic": 0.0,
+                "chi2_pvalue": 1.0,
+                "value_overlap": 1.0
+              }
+            }
+          }
+        },
+        "tier1": {
+          "customers": {
+            "adversarial": {
+              "auc_roc": 0.5465333333333334,
+              "accuracy": 0.5366666666666666,
+              "top_features": [
+                [
+                  "income",
+                  0.2973689241219656
+                ],
+                [
+                  "score",
+                  0.2251436735724328
+                ],
+                [
+                  "visits",
+                  0.19833154598934208
+                ],
+                [
+                  "age",
+                  0.14390905753462185
+                ],
+                [
+                  "name",
+                  0.08952562999254139
+                ],
+                [
+                  "city",
+                  0.03483164535791434
+                ],
+                [
+                  "churned",
+                  0.010889523431181998
+                ]
+              ],
+              "n_samples": 300,
+              "passed": true,
+              "distinguishability_score": 9.31
+            },
+            "mixture_fit_columns": [
+              "age",
+              "income",
+              "score",
+              "visits"
+            ],
+            "conditional_profiles": 4,
+            "temporal_columns": [],
+            "periodic_columns": []
+          }
+        },
+        "tier2": {
+          "customers": {
+            "format_preservation": {},
+            "string_similarity": {
+              "name": {
+                "column": "name",
+                "ngram_n": 3,
+                "cosine_similarity": 0.00552529652224578,
+                "score": 0.55
+              },
+              "city": {
+                "column": "city",
+                "ngram_n": 3,
+                "cosine_similarity": 0.984759310543526,
+                "score": 98.48
+              }
+            },
+            "cardinality": {
+              "name": {
+                "column": "name",
+                "real_cardinality": 150,
+                "synth_cardinality": 150,
+                "ratio": 1.0,
+                "deviation": 0.0,
+                "passed": true
+              },
+              "age": {
+                "column": "age",
+                "real_cardinality": 61,
+                "synth_cardinality": 65,
+                "ratio": 1.0656,
+                "deviation": 0.0656,
+                "passed": true
+              },
+              "income": {
+                "column": "income",
+                "real_cardinality": 150,
+                "synth_cardinality": 150,
+                "ratio": 1.0,
+                "deviation": 0.0,
+                "passed": true
+              },
+              "visits": {
+                "column": "visits",
+                "real_cardinality": 13,
+                "synth_cardinality": 15,
+                "ratio": 1.1538,
+                "deviation": 0.1538,
+                "passed": true
+              },
+              "score": {
+                "column": "score",
+                "real_cardinality": 149,
+                "synth_cardinality": 150,
+                "ratio": 1.0067,
+                "deviation": 0.0067,
+                "passed": true
+              },
+              "city": {
+                "column": "city",
+                "real_cardinality": 3,
+                "synth_cardinality": 3,
+                "ratio": 1.0,
+                "deviation": 0.0,
+                "passed": true
+              },
+              "churned": {
+                "column": "churned",
+                "real_cardinality": 2,
+                "synth_cardinality": 2,
+                "ratio": 1.0,
+                "deviation": 0.0,
+                "passed": true
+              }
+            },
+            "anomaly_rate": null,
+            "passing_rate": 1.0
+          }
+        }
+      },
+      "gates": [
+        {
+          "name": "overall_score",
+          "status": "pass",
+          "value": 89.14777297376904,
+          "threshold": 85.0,
+          "relation": ">="
+        },
+        {
+          "name": "table_score",
+          "status": "pass",
+          "table": "customers",
+          "value": 89.14777297376904,
+          "threshold": 70.0,
+          "relation": ">="
+        },
+        {
+          "name": "coverage",
+          "status": "pass"
+        },
+        {
+          "name": "tier1_adversarial_auc",
+          "status": "pass",
+          "table": "customers",
+          "value": 0.5465333333333334,
+          "threshold": 0.75,
+          "relation": "<"
+        },
+        {
+          "name": "tier2_pass_rate",
+          "status": "pass",
+          "table": "customers",
+          "value": 1.0,
+          "threshold": 1.0,
+          "relation": ">="
+        }
+      ],
+      "notes": []
+    },
+    "utility": {
+      "status": "not_run",
+      "metrics": {},
+      "gates": [
+        {
+          "name": "utility_retention",
+          "status": "not_run",
+          "reason": "the verify configuration has no `utility` section"
+        }
+      ],
+      "notes": [],
+      "reason": "the verify configuration has no `utility` section"
+    },
+    "privacy": {
+      "status": "pass",
+      "metrics": {
+        "memorization": {
+          "fail_at": "CONFIDENTIAL",
+          "min_nn_distance": null,
+          "tables": {
+            "customers": {
+              "rows": 150,
+              "source_rows": 150,
+              "columns": [
+                "name"
+              ],
+              "restricted": true,
+              "reproduced_rows": 0,
+              "exact_match_rate": 0.0,
+              "reproduced_row_indices": [],
+              "nn_distance": {
+                "columns": [
+                  "age",
+                  "income",
+                  "visits",
+                  "score"
+                ],
+                "rows_checked": 150,
+                "min": 0.09155967509804798,
+                "p05": 0.2860686490059098,
+                "median": 0.6497557968739769
+              }
+            }
+          }
+        },
+        "membership_inference": {
+          "status": "pass",
+          "max_membership_auc": 0.6,
+          "seed": 0,
+          "max_rows": 5000,
+          "tables": {
+            "customers": {
+              "auc": 0.43066666666666664,
+              "members": 150,
+              "non_members": 150,
+              "synthetic_rows": 150,
+              "columns": [
+                "age",
+                "income",
+                "visits",
+                "score"
+              ],
+              "member_distance": {
+                "p05": 0.2847272274605004,
+                "median": 0.6643142709426277
+              },
+              "non_member_distance": {
+                "p05": 0.2551444132249046,
+                "median": 0.6103751173058221
+              },
+              "status": "pass"
+            }
+          }
+        }
+      },
+      "gates": [
+        {
+          "name": "memorization",
+          "status": "pass",
+          "value": 0.0
+        },
+        {
+          "name": "membership_inference",
+          "status": "pass",
+          "table": "customers",
+          "value": 0.43066666666666664,
+          "threshold": 0.6,
+          "relation": "<="
+        }
+      ],
+      "notes": []
+    }
+  },
+  "require": [],
+  "overall": "pass",
+  "overall_reasons": []
+}

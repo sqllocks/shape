@@ -11,7 +11,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scale"))
 
-from bridge_helpers import ROWS, Caller, write_csv  # noqa: E402
+from bridge_helpers import ROWS, Caller, Caller11, Caller12, write_csv  # noqa: E402
 
 from shape.bridge.core import Bridge  # noqa: E402
 
@@ -36,6 +36,16 @@ def bridge(jobs_dir) -> Bridge:
 @pytest.fixture
 def api(bridge) -> Caller:
     return Caller(bridge)
+
+
+@pytest.fixture
+def api11(bridge) -> Caller11:
+    return Caller11(bridge)
+
+
+@pytest.fixture
+def api12(bridge) -> Caller12:
+    return Caller12(bridge)
 
 
 @pytest.fixture

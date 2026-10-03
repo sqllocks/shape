@@ -17,13 +17,20 @@ ROWS = {"customer": 40, "order": 1200, "order_line": 3100}
 class Caller:
     """``call("generate", domain=...)`` returns the response; ``ok(...)`` the result."""
 
+    #: The api_version the requests declare. The 1.0 tests keep "1.0"; see ``Caller11``.
+    version = "1.0"
+
     def __init__(self, bridge: Bridge) -> None:
         self.bridge = bridge
 
     def call(
         self, command: str, options: dict[str, Any] | None = None, **args: Any
     ) -> dict[str, Any]:
-        request: dict[str, Any] = {"api_version": "1.0", "command": command, "args": args}
+        request: dict[str, Any] = {
+            "api_version": self.version,
+            "command": command,
+            "args": args,
+        }
         if options:
             request["options"] = options
         response = self.bridge.handle(json.dumps(request))
@@ -42,6 +49,18 @@ class Caller:
         assert not response["ok"], response
         assert response["error"]["code"] == code, response["error"]
         return response["error"]
+
+
+class Caller11(Caller):
+    """The same, declaring api_version 1.1: for the commands and arguments added in 1.1."""
+
+    version = "1.1"
+
+
+class Caller12(Caller):
+    """The same, declaring api_version 1.2: for the commands and arguments added in 1.2."""
+
+    version = "1.2"
 
 
 def write_csv(path: Path, shift: int = 0, rows: int = 500) -> Path:

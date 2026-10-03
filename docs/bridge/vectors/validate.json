@@ -1,5 +1,5 @@
 {
-  "api_version": "1.0",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "good-schema",
@@ -12,7 +12,7 @@
         "id": "good-schema"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.2",
         "command": "validate",
         "id": "good-schema",
         "ok": true,
@@ -53,7 +53,7 @@
         "id": "missing-file"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.2",
         "command": "validate",
         "error": {
           "code": "input.not_found",

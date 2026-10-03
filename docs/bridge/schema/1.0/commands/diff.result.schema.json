@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "change_count": {
+      "type": "integer"
+    },
+    "changes": {
+      "anyOf": [
+        {
+          "items": {
+            "additionalProperties": true,
+            "properties": {
+              "column": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "kind": {
+                "type": "string"
+              },
+              "redacted": {
+                "type": "boolean"
+              },
+              "severity": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "column",
+              "kind"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        {
+          "properties": {
+            "bytes": {
+              "type": "integer"
+            },
+            "content_id": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "spilled": {
+              "const": true
+            }
+          },
+          "required": [
+            "spilled",
+            "content_id",
+            "path",
+            "bytes"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "drifted": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "drifted",
+    "change_count",
+    "changes"
+  ],
+  "title": "diff result",
+  "type": "object",
+  "x-api-version": "1.0"
+}

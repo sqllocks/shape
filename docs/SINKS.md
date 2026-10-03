@@ -83,6 +83,36 @@ Synapse dedicated SQL pool loads Parquet staged in ADLS Gen2 (`--sink-config syn
 each checks the loaded row count against the rows sent. See `docs/plugins/fabric-writers.md` and the
 README of `sqllocks-shape-databases`.
 
+## Confirming a non-local target
+
+Writing to a database, OneLake, Event Hubs or Kafka is harmless on synthetic data and harmful on
+the wrong target, so Shape asks first. Every command that writes to a **non-local** target needs a
+confirmation, before it connects or signs in:
+
+- `--yes` on `shape generate`, `shape emit`, `shape stream` (and `generate --scale-mode`);
+- `SHAPE_CONFIRM_REMOTE=1` in the environment, for notebooks and pipelines (any other value, such
+  as `0` or `true`, does not confirm);
+- or, when stdin and stderr are a terminal, `y` at the prompt
+  `Write to 2 non-local targets: postgresql://db.example/shape, abfss://...? [y/N]` (passwords in
+  the URIs are hidden).
+
+Without one the command exits 2:
+
+```
+shape: error: refusing to write to non-local target postgresql://db.example/shape without confirmation; pass --yes or set SHAPE_CONFIRM_REMOTE=1
+```
+
+Local is a path, `file://`, `jsonl://`, `console`, and a URI whose host is `localhost`,
+`127.0.0.1` or `::1` (emulators). It applies to each `--to URI`, to `emit --sink URI` other than
+`console`, `file` and `file://`/`jsonl://`, and to a `--scale-mode` `--sink` that is not `memory`,
+`parquet` or a `lakehouse` with a local `base_path` (`warehouse`, `sql_database` and `kql` always
+need it). `--dry-run` needs none. Reading from a remote source never asks.
+
+From Python, `shape.cli.to.run_to(args, engine, started, confirm_remote=True)` and
+`shape.io.targets.confirm_remote_targets(targets, confirm=True)` give a notebook the same
+refusal unless it passes `True` or sets the variable. Plugin commands such as
+`shape fabric publish` do not use this check yet.
+
 ## Secrets
 
 A secret is never a command-line value (it would be in the process list and the shell history).

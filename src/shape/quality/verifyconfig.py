@@ -34,10 +34,12 @@ _RULE_KEYS = (
     "classifications",
     "memorization",
     "utility",
+    "privacy",
 )
 _KEYS = (*_RULE_KEYS, "file_paths", "check_data_files")
 
 _MEMORIZATION_KEYS = ("fail_at", "min_nn_distance", "max_rows")
+_PRIVACY_KEYS = ("max_membership_auc", "seed")
 _UTILITY_KEYS = ("table", "target", "task", "min_retention", "test_fraction", "seed", "max_rows")
 
 
@@ -191,6 +193,20 @@ def _check_memorization(value: Any) -> None:
             _positive_int('memorization["max_rows"]', v)
 
 
+def _check_privacy(value: Any) -> None:
+    if not isinstance(value, Mapping):
+        raise VerifyConfigError('"privacy" must be an object (it may be empty)')
+    for key, v in value.items():
+        if key not in _PRIVACY_KEYS:
+            raise VerifyConfigError(
+                f'privacy: unknown key "{key}" (use {", ".join(_PRIVACY_KEYS)})'
+            )
+        if key == "max_membership_auc" and not (_number(v) and 0 <= v <= 1):
+            raise VerifyConfigError('privacy["max_membership_auc"] must be a number from 0 to 1')
+        if key == "seed" and (not isinstance(v, int) or isinstance(v, bool)):
+            raise VerifyConfigError('privacy["seed"] must be a whole number')
+
+
 def _check_utility(value: Any) -> None:
     if not isinstance(value, Mapping):
         raise VerifyConfigError('"utility" must be an object with "table" and "target"')
@@ -230,6 +246,7 @@ _CHECKS = {
     "classifications": _check_classifications,
     "memorization": _check_memorization,
     "utility": _check_utility,
+    "privacy": _check_privacy,
 }
 
 
@@ -239,7 +256,8 @@ class VerifyConfig:
 
     ``rules`` holds the ``ValidationContext.config`` keys (``ranges``, ``date_range``,
     ``no_future``, ``ordering``, ``baseline``, ``distribution_alpha``, ``timeseries``,
-    ``reconcile``, ``classifications``, ``memorization``, ``utility``); ``file_paths`` are the
+    ``reconcile``, ``classifications``, ``memorization``, ``utility``, ``privacy``);
+    ``file_paths`` are the
     files the ``file_format`` gate reads, and ``check_data_files`` adds every data file that
     ``shape verify`` loaded."""
 

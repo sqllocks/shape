@@ -1,0 +1,9 @@
+{
+  "tables": {
+    "customers": {
+      "row_count": {
+        "min": 1
+      }
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "fabric": {
+      "additionalProperties": {},
+      "type": "object"
+    },
+    "manifest": {
+      "additionalProperties": {},
+      "type": "object"
+    },
+    "session_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "session_id",
+    "manifest"
+  ],
+  "title": "demo_status result",
+  "type": "object",
+  "x-api-version": "1.1",
+  "x-since": "1.0"
+}

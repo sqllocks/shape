@@ -1,5 +1,5 @@
 {
-  "api_version": "1.0",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "summary",
@@ -14,7 +14,7 @@
         "id": "summary"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.2",
         "command": "generate",
         "id": "summary",
         "ok": true,
@@ -83,7 +83,7 @@
         "id": "csv-files"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.2",
         "command": "generate",
         "id": "csv-files",
         "ok": true,
@@ -163,7 +163,7 @@
         "id": "format-needs-a-directory"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.2",
         "command": "generate",
         "error": {
           "code": "usage.missing_argument",

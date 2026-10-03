@@ -1,0 +1,270 @@
+{
+  "format": "shape-design",
+  "version": 1,
+  "name": "failing",
+  "entities": [
+    {
+      "name": "Customer",
+      "attributes": [
+        {
+          "name": "customer_id",
+          "type": "integer",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "max_length": 80
+        },
+        {
+          "name": "city",
+          "type": "string",
+          "max_length": 60
+        },
+        {
+          "name": "region",
+          "type": "string",
+          "max_length": 60
+        },
+        {
+          "name": "country",
+          "type": "string",
+          "max_length": 60
+        }
+      ],
+      "keys": [
+        [
+          "customer_id"
+        ]
+      ],
+      "dependencies": [
+        {
+          "determinant": [
+            "city"
+          ],
+          "dependent": [
+            "region"
+          ]
+        },
+        {
+          "determinant": [
+            "region"
+          ],
+          "dependent": [
+            "country"
+          ]
+        }
+      ],
+      "history": {
+        "default": 1,
+        "attributes": {
+          "city": 2,
+          "name": 3
+        }
+      }
+    },
+    {
+      "name": "Product",
+      "attributes": [
+        {
+          "name": "product_id",
+          "type": "integer",
+          "nullable": false
+        },
+        {
+          "name": "sku",
+          "type": "string",
+          "max_length": 20
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "max_length": 40
+        },
+        {
+          "name": "department",
+          "type": "string",
+          "max_length": 40
+        }
+      ],
+      "keys": [
+        [
+          "product_id"
+        ]
+      ],
+      "dependencies": [
+        {
+          "determinant": [
+            "category"
+          ],
+          "dependent": [
+            "department"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Promotion",
+      "attributes": [
+        {
+          "name": "promotion_id",
+          "type": "integer",
+          "nullable": false
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "max_length": 40
+        }
+      ],
+      "keys": [
+        [
+          "promotion_id"
+        ]
+      ]
+    },
+    {
+      "name": "OrderLine",
+      "attributes": [
+        {
+          "name": "order_id",
+          "type": "integer",
+          "nullable": false
+        },
+        {
+          "name": "line_no",
+          "type": "integer",
+          "nullable": false
+        },
+        {
+          "name": "customer_id",
+          "type": "integer",
+          "nullable": false,
+          "references": "Customer"
+        },
+        {
+          "name": "product_id",
+          "type": "integer",
+          "nullable": false,
+          "references": "Product"
+        },
+        {
+          "name": "order_date",
+          "type": "date",
+          "nullable": false
+        },
+        {
+          "name": "ship_date",
+          "type": "date"
+        },
+        {
+          "name": "quantity",
+          "type": "integer",
+          "nullable": false
+        },
+        {
+          "name": "amount",
+          "type": "decimal",
+          "precision": 18,
+          "scale": 2,
+          "nullable": false
+        },
+        {
+          "name": "discount_pct",
+          "type": "decimal",
+          "precision": 5,
+          "scale": 2
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "max_length": 12
+        },
+        {
+          "name": "priority",
+          "type": "string",
+          "max_length": 8
+        },
+        {
+          "name": "is_gift",
+          "type": "boolean"
+        }
+      ],
+      "keys": [
+        [
+          "order_id",
+          "line_no"
+        ]
+      ]
+    }
+  ],
+  "hierarchies": [
+    {
+      "name": "geography",
+      "entity": "Customer",
+      "levels": [
+        "city",
+        "region",
+        "country"
+      ]
+    },
+    {
+      "name": "merchandise",
+      "entity": "Product",
+      "levels": [
+        "category",
+        "department"
+      ]
+    }
+  ],
+  "facts": [
+    {
+      "name": "sales",
+      "source": "OrderLine",
+      "grain": [],
+      "measures": [
+        {
+          "name": "quantity",
+          "attribute": "quantity",
+          "additivity": "additive"
+        },
+        {
+          "name": "amount",
+          "attribute": "amount",
+          "additivity": "additive"
+        },
+        {
+          "name": "discount_pct",
+          "attribute": "discount_pct",
+          "additivity": "non_additive"
+        }
+      ],
+      "dimensions": [
+        {
+          "entity": "Customer",
+          "via": "customer_id"
+        },
+        {
+          "entity": "Product",
+          "via": "product_id"
+        }
+      ],
+      "dates": [
+        "order_date",
+        "ship_date"
+      ],
+      "degenerate": [
+        "order_id",
+        "line_no"
+      ],
+      "junk": [
+        "status",
+        "priority",
+        "is_gift"
+      ],
+      "many_to_many": [
+        "Promotion"
+      ]
+    }
+  ]
+}

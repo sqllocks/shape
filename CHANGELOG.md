@@ -59,6 +59,60 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   the staged rows, and the staged files are deleted also when a step fails. Table options
   `distribution` (`ROUND_ROBIN`, `HASH(column)`, `REPLICATE`) and `index` (`CLUSTERED COLUMNSTORE INDEX`,
   `HEAP`). Sign-in is the plugin's `--auth` modes.
+- Bridge API 1.2 (`docs/BRIDGE.md`, W7-05): the analysis commands of the open engine reach the JSON
+  bridge, and the registry gives drift with severity between two share-safe versions. New commands:
+  `report_card` and `report_card_read` (`shape report-card`; the card holds no value of the real
+  data), `rules_mutate` (cancellable between mutants), `rules_backtest`, `proposals_contract` and the
+  kind `rule` of `proposals_propose` (with `rule` and `stale` in `proposals_list`), `bisect`,
+  `bisect_layers` and `timelapse` (the values of a classified column are withheld unless
+  `options.include_raw_values`), `registry_diff` and `chaos` (the input check of `shape chaos`
+  unchanged: an input not marked as Shape-generated is `policy.unverified_input` before anything is
+  written, `allow_real_input` adds the warning `real_input_corrupted`; local output only). New error
+  codes `input.contract_conflict` and `policy.unverified_input`. `format_schema` names the formats of
+  the new reports (`mutation-plan`, `mutation-report`, `incidents`, `backtest-report`). A request that
+  declares `api_version` `1.0` or `1.1` is answered exactly as that version answers it (a 1.2
+  command is `usage.unknown_command`, and the 1.2 values of an enumeration are refused as before);
+  the 1.1 schemas and vectors are frozen in `docs/bridge/schema/1.1/` and
+  `docs/bridge/vectors/1.1/`, and `tests/bridge/test_compat_1_1.py` replays them against the 1.2
+  bridge. The job file `shape-bridge-job` stays at version 1.
+- `shape registry ROOT diff NAME REF1 REF2` and `shape.registry.drift` (`docs/REGISTRY.md`): for two
+  share-safe profiles the result has `drift` with the changes of `shape diff` (`kind`, `severity`,
+  `score`) for every metric both safe forms hold, and `not_measured` for the metrics a safe form
+  withholds (the range of a column, the outlier rate, ...). Two raw profiles give the result of
+  before. `shape.rules.mutation_test` takes the optional `should_stop` and `on_mutant` (what a
+  cancellable bridge job needs); a finished run is unchanged.
+- Bridge API 1.1 (`docs/BRIDGE.md`, W7-04): the JSON bridge now reaches the workflows the command
+  line has. New commands: `proposals_propose`, `proposals_list`, `proposals_decide` (proposals and
+  decision files), `project_validate`, `project_show` and the arguments `project` and `source` on
+  `profile`, `diff`, `check` and `verify` (the `shape.yml` project file; the bridge never looks for
+  one on its own), `design` and `design_from_data` (schema design, read-only), `format_schema` (the
+  JSON Schema of each format Shape reads), `profile_show` (a stored `.shape` profile without
+  profiling again), `contract_validate` and `safe_scan` (the leak scanner; a finding's message never
+  holds the value it found). `verify` gains `source` (the memorization and utility gates, as
+  `shape verify --source`) and `details` on every gate (counts, rates, distances and scores, never a
+  data value). Request schemas annotate every path argument (`x-path`: `read` or `write`) and
+  `domain` (`x-name-or-path`); `index.json` lists each command's `effects` (`reads_files`,
+  `writes_files`, `cancels`, `network`), the version that added it and each argument (`since`), and
+  every warning code. New error codes: `input.unknown_proposal`, `input.unknown_source`,
+  `input.unknown_format`. A request that declares `api_version` `1.0` is answered exactly as 1.0
+  answered it (a 1.1 command is `usage.unknown_command`, a 1.1 argument `usage.unknown_argument`,
+  and no 1.1 field is added); the 1.0 schemas and vectors are frozen in `docs/bridge/schema/1.0/` and
+  `docs/bridge/vectors/1.0/` and `tests/bridge/test_compat_1_0.py` replays them against the 1.1
+  bridge. The job file `shape-bridge-job` and the vector files `shape-bridge-vectors` stay at
+  version 1.
+
+- Rule mutation testing and backtesting (`docs/RULES_TESTING.md`, W3-01, #99). `shape rules mutate
+  DATA CONTRACT.json` plants the corruptions of `shape chaos` one at a time (every applicable one, or a
+  `shape-mutation-plan`), profiles each mutant in memory, checks it against the contract (and, with
+  `--diff` or a `drift` section, compares it with the unmutated profile) and reports the mutation
+  score overall, per corruption kind and per table, the surviving mutants and the rules that killed
+  none; `--min-score` gates it. `shape rules backtest REGISTRY NAME CONTRACT.json` replays a contract
+  over every committed version of a registry name by business date, with `--window week|month`
+  through mergeable profiles, `not measured` for rules the stored form cannot evaluate, `--incidents`
+  (caught, missed, alarms outside incidents, `--fail-on-miss`) and `--compare OLD_CONTRACT.json`.
+  Python API `shape.rules.mutation_test` and `shape.rules.backtest`; JSON Schemas for the plan, the
+  incidents file and both reports (formats `shape-mutation-plan`, `shape-mutation-report`,
+  `shape-incidents`, `shape-backtest-report`, version 1).
 - Rule suggestion from a profile (W3-02, `docs/PROPOSALS.md#rules`). `shape proposals propose
   PROFILE.shape [PROFILE.shape ...] --kinds rule` (and `shape.proposals.propose_rules`) proposes
   contract v1 rules from what a profile measured: per column `dtype`, `nullable`, `unique`,
@@ -93,6 +147,42 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   allowed/blocked and `doctor` lists blocked plugins separately. The trust model now states what
   each first-party plugin can reach (checked against the source by a test). There is still no
   sandbox (D-09).
+- `shape bisect`, `shape bisect layers` and `shape timelapse` (`docs/HISTORY.md`, #101): git bisect
+  for data. `bisect REGISTRY NAME --good REF --bad REF` binary-searches the committed versions of a
+  name (ordered by `business_date`) for the first one whose `shape diff` against the good version
+  reports a change (under the `shape.yml` source's thresholds and ignore lists; `--column`,
+  `--kind`, or `--contract FILE` to test "the contract fails"), testing at most `ceil(log2(n)) + 2`
+  versions, and reports the first bad version, the last good one and the changes between them.
+  `--verify-all` tests every version and reports any that flips back; `--coarse week|month`
+  bisects over windows merged with `merge_profiles` first. `bisect layers` names the first layer of
+  a pipeline (sources of `shape.yml`, `--map` for renamed columns) where a change between two dates
+  appears, and where it persists or disappears (exit 0, 1 when none, 2). `timelapse` gives one
+  frame per version or merged window (rows, null rate, distinct estimate, quantiles, mean, std, top
+  values), marks the change points where `shape diff` reports a change, and writes JSON
+  (`shape-timelapse` v1), text sparklines, or one self-contained offline HTML page. Python:
+  `shape.history.bisect`, `bisect_layers`, `timelapse`.
+- `shape report-card REAL SYNTHETIC` (`docs/REPORT_CARD.md`, #102): one local report card for a
+  synthetic dataset. Three sections, each `pass`, `fail` or `not_run` with its reason: fidelity (the
+  `shape fidelity` scores and tiers 1 and 2), utility (the `shape verify --source` utility gate) and
+  privacy (the memorization gate and a new membership-inference test: with `--holdout`, the AUC of
+  telling real rows from held-out real rows by the distance to the closest synthetic row, failing
+  above `privacy.max_membership_auc`, default 0.6). Output as `shape-report-card` v1 JSON, Markdown
+  or a self-contained HTML page (`-o`, by extension); `--require` turns a skipped section into exit 1;
+  exit 2 for unusable input. The verify configuration gains an optional `privacy` section. Python:
+  `shape.quality.report_card(...)`. The card holds no value of the data.
+- Chaos safety and confirmation for non-local targets (W1-17). **Behaviour change for scripts that
+  write to remote targets:** `shape generate --to`, `shape emit`/`stream` (`--sink URI`, `--to`) and
+  `shape generate --scale-mode --sink` to a non-local target (a database, OneLake, Event Hubs,
+  Kafka; not a path, `file://`, `console` or `localhost`/`127.0.0.1`/`::1`) now exit 2 unless you
+  pass `--yes` or set `SHAPE_CONFIRM_REMOTE=1` (or answer `y` at a terminal prompt); `--dry-run`
+  needs none (`docs/SINKS.md`). `shape.cli.to.run_to` and the emit target setup take
+  `confirm_remote`. `shape generate -o`, `continue`, `time-travel`, `pack run` and `chaos` write
+  `_shape_provenance.json` (`format: shape-provenance`, `version: 1`) beside the tables, which are
+  unchanged; folder readers skip it and `_SUCCESS`. `shape chaos --input DIR` now refuses table
+  files that are not listed there with a matching sha256 (or Parquet with the `shape_synthetic`
+  marker) unless `--allow-real-input`, logs `input_provenance` (`verified`/`unverified`) in the
+  ground-truth `run` record, and refuses an `-o` that is the input folder or inside it
+  (`docs/CHAOS.md`, `docs/THREAT_MODEL.md`).
 
 - VS Code extension and data dictionary (W6-04, #87). `editors/vscode/` (TypeScript, MIT) validates
   and completes `shape.yml` (the bundled `shape-project-v1.schema.json`, through the Red Hat YAML

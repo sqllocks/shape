@@ -1,0 +1,282 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "bad": {
+      "additionalProperties": true,
+      "properties": {
+        "business_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content_id": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ref",
+        "content_id",
+        "business_date"
+      ],
+      "type": "object"
+    },
+    "candidates": {
+      "type": "integer"
+    },
+    "changes": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "after": {},
+          "before": {},
+          "column": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "redacted": {
+            "type": "boolean"
+          },
+          "score": {},
+          "severity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "column",
+          "kind"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "changes_vs_good": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "after": {},
+          "before": {},
+          "column": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "redacted": {
+            "type": "boolean"
+          },
+          "score": {},
+          "severity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "column",
+          "kind"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "cost": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "type": "object"
+    },
+    "evaluated": {
+      "type": "integer"
+    },
+    "evaluations": {
+      "items": {},
+      "type": "array"
+    },
+    "first_bad": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "properties": {
+            "business_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "content_id": {
+              "type": "string"
+            },
+            "ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "ref",
+            "content_id",
+            "business_date"
+          ],
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "flips": {
+      "items": {},
+      "type": "array"
+    },
+    "format": {
+      "const": "shape-bisect"
+    },
+    "found": {
+      "type": "boolean"
+    },
+    "good": {
+      "additionalProperties": true,
+      "properties": {
+        "business_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content_id": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ref",
+        "content_id",
+        "business_date"
+      ],
+      "type": "object"
+    },
+    "last_good": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "properties": {
+            "business_date": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "content_id": {
+              "type": "string"
+            },
+            "ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "ref",
+            "content_id",
+            "business_date"
+          ],
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "max_evaluations": {
+      "type": "integer"
+    },
+    "mode": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "test": {
+      "additionalProperties": {},
+      "type": "object"
+    },
+    "version": {
+      "type": "integer"
+    },
+    "violations": {
+      "items": {},
+      "type": "array"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "format",
+    "version",
+    "name",
+    "mode",
+    "found",
+    "changes",
+    "candidates",
+    "evaluated",
+    "evaluations",
+    "cost",
+    "flips",
+    "warnings"
+  ],
+  "title": "bisect result",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.2"
+}

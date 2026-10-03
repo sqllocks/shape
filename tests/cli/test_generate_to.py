@@ -20,6 +20,12 @@ ROWS = {"customer": 40, "order": 1200, "order_line": 3100}
 URI = "abfss://landing@acct.dfs.core.windows.net/raw"
 
 
+@pytest.fixture(autouse=True)
+def _confirm_remote(monkeypatch):
+    # These tests are about the sinks, not the confirmation (tests/cli/test_remote_confirmation.py).
+    monkeypatch.setenv("SHAPE_CONFIRM_REMOTE", "1")
+
+
 def run(capsys: Any, *argv: Any) -> tuple[int, str, str]:
     code = main([str(a) for a in argv])
     out = capsys.readouterr()

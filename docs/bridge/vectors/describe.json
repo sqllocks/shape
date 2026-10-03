@@ -1,5 +1,5 @@
 {
-  "api_version": "1.0",
+  "api_version": "1.2",
   "cases": [
     {
       "name": "retail-small",
@@ -13,7 +13,7 @@
         "id": "retail-small"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.2",
         "command": "describe",
         "id": "retail-small",
         "ok": true,
@@ -695,7 +695,7 @@
         "id": "schema-file"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.2",
         "command": "describe",
         "id": "schema-file",
         "ok": true,
@@ -851,7 +851,7 @@
         "id": "unknown-domain"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.2",
         "command": "describe",
         "error": {
           "code": "input.unknown_domain",
@@ -876,7 +876,7 @@
         "id": "unknown-argument"
       },
       "response": {
-        "api_version": "1.0",
+        "api_version": "1.2",
         "command": "describe",
         "error": {
           "code": "usage.unknown_argument",

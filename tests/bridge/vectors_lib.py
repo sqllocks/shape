@@ -30,6 +30,8 @@ VOLATILE = (
     "chunks",
     "parts_skipped",
     "summary",
+    "proposed_at",
+    "decided_at",
 )
 
 

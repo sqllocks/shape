@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "tables": {
+    "people": {
+      "columns": {
+        "amount": {
+          "max": 456,
+          "min": 123
+        },
+        "mail": {
+          "example": "vector.person@example.com"
+        }
+      },
+      "row_count": 10
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "api_version": "1.1",
+  "cases": [
+    {
+      "name": "pending",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "dry_run": true,
+          "session_id": "s-1"
+        },
+        "command": "demo_cleanup",
+        "id": "pending"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "demo_cleanup",
+        "error": {
+          "code": "policy.capability_unavailable",
+          "group": "policy",
+          "hint": "use generate, scale_generate or stream for now",
+          "message": "demo_cleanup needs `shape demo`, which this build does not include yet"
+        },
+        "id": "pending",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "needs-a-session",
+      "request": {
+        "api_version": "1.0",
+        "args": {},
+        "command": "demo_cleanup",
+        "id": "needs-a-session"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "demo_cleanup",
+        "error": {
+          "code": "usage.missing_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "demo_cleanup needs the argument 'session_id'"
+        },
+        "id": "needs-a-session",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "demo_cleanup",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

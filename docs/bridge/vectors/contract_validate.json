@@ -1,0 +1,134 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "good-file",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "path": "${DIR}/contract.json"
+        },
+        "command": "contract_validate",
+        "id": "good-file"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "contract_validate",
+        "id": "good-file",
+        "ok": true,
+        "result": {
+          "errors": [],
+          "kind": "check-contract",
+          "valid": true,
+          "warnings": []
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "good-text",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "text": "{\"row_count\": {\"min\": 1}}"
+        },
+        "command": "contract_validate",
+        "id": "good-text"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "contract_validate",
+        "id": "good-text",
+        "ok": true,
+        "result": {
+          "errors": [],
+          "kind": "check-contract",
+          "valid": true,
+          "warnings": []
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "bad-rule",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "path": "${DIR}/contract_invalid.json"
+        },
+        "command": "contract_validate",
+        "id": "bad-rule"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "contract_validate",
+        "id": "bad-rule",
+        "ok": true,
+        "result": {
+          "errors": [
+            {
+              "location": "columns.id",
+              "message": "unknown rules for column 'id': ['colour']"
+            }
+          ],
+          "kind": "check-contract",
+          "valid": false,
+          "warnings": []
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "missing-file",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "path": "${DIR}/none.json"
+        },
+        "command": "contract_validate",
+        "id": "missing-file"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "contract_validate",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "file not found: ${DIR}/none.json"
+        },
+        "id": "missing-file",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "text-and-path",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "path": "${DIR}/contract.json",
+          "text": "{}"
+        },
+        "command": "contract_validate",
+        "id": "text-and-path"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "contract_validate",
+        "error": {
+          "code": "usage.invalid_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "give exactly one of text and path"
+        },
+        "id": "text-and-path",
+        "ok": false,
+        "warnings": []
+      }
+    }
+  ],
+  "command": "contract_validate",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

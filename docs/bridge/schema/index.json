@@ -1,209 +1,858 @@
 {
-  "api_version": "1.0",
+  "api_version": "1.2",
   "commands": {
-    "check": {
+    "bisect": {
+      "args": {
+        "bad": "1.2",
+        "coarse": "1.2",
+        "column": "1.2",
+        "contract": "1.2",
+        "good": "1.2",
+        "kind": "1.2",
+        "name": "1.2",
+        "project": "1.2",
+        "registry": "1.2",
+        "source": "1.2",
+        "verify_all": "1.2"
+      },
       "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "optional",
+      "pending": null,
+      "request": "commands/bisect.request.schema.json",
+      "result": "commands/bisect.result.schema.json",
+      "since": "1.2",
+      "summary": "Find the first committed version of a name that changed: a binary search over a registry's history (job-capable)."
+    },
+    "bisect_layers": {
+      "args": {
+        "bad_date": "1.2",
+        "column": "1.2",
+        "good_date": "1.2",
+        "layers": "1.2",
+        "map": "1.2",
+        "project": "1.2"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "optional",
+      "pending": null,
+      "request": "commands/bisect_layers.request.schema.json",
+      "result": "commands/bisect_layers.result.schema.json",
+      "since": "1.2",
+      "summary": "Find the layer of a pipeline where a change first appears (job-capable)."
+    },
+    "chaos": {
+      "args": {
+        "allow_real_input": "1.2",
+        "batch": "1.2",
+        "corrupt": "1.2",
+        "domain": "1.2",
+        "format": "1.2",
+        "ground_truth": "1.2",
+        "input": "1.2",
+        "mode": "1.2",
+        "output_dir": "1.2",
+        "scale": "1.2",
+        "seed": "1.2",
+        "start_date": "1.2"
+      },
+      "cancellable": true,
+      "effects": [
+        "reads_files",
+        "writes_files",
+        "cancels"
+      ],
+      "job": "optional",
+      "pending": null,
+      "request": "commands/chaos.request.schema.json",
+      "result": "commands/chaos.result.schema.json",
+      "since": "1.2",
+      "summary": "Corrupt tables on purpose and write the ground-truth log (job-capable, cancellable before the files are written)."
+    },
+    "check": {
+      "args": {
+        "contract": "1.0",
+        "profile": "1.0",
+        "project": "1.1",
+        "source": "1.1"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
       "job": "never",
       "pending": null,
       "request": "commands/check.request.schema.json",
       "result": "commands/check.result.schema.json",
+      "since": "1.0",
       "summary": "Check a profile against a contract."
     },
-    "demo_cleanup": {
+    "contract_validate": {
+      "args": {
+        "path": "1.1",
+        "text": "1.1"
+      },
       "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/contract_validate.request.schema.json",
+      "result": "commands/contract_validate.result.schema.json",
+      "since": "1.1",
+      "summary": "Validate a contract of the format `shape check` reads (row_count, columns, ...)."
+    },
+    "demo_cleanup": {
+      "args": {
+        "dry_run": "1.0",
+        "session_id": "1.0"
+      },
+      "cancellable": false,
+      "effects": [
+        "writes_files",
+        "network"
+      ],
       "job": "never",
       "pending": "P6-12",
       "request": "commands/demo_cleanup.request.schema.json",
       "result": "commands/demo_cleanup.result.schema.json",
+      "since": "1.0",
       "summary": "Remove what a demo session created."
     },
     "demo_list": {
+      "args": {},
       "cancellable": false,
+      "effects": [],
       "job": "never",
       "pending": "P6-12",
       "request": "commands/demo_list.request.schema.json",
       "result": "commands/demo_list.result.schema.json",
+      "since": "1.0",
       "summary": "List the demo scenarios."
     },
     "demo_run": {
+      "args": {
+        "connection": "1.0",
+        "domain": "1.0",
+        "dry_run": "1.0",
+        "input_file": "1.0",
+        "mode": "1.0",
+        "output_formats": "1.0",
+        "rows": "1.0",
+        "scale_mode": "1.0",
+        "scenario": "1.0",
+        "seed": "1.0"
+      },
       "cancellable": false,
+      "effects": [
+        "reads_files",
+        "writes_files",
+        "network"
+      ],
       "job": "never",
       "pending": "P6-12",
       "request": "commands/demo_run.request.schema.json",
       "result": "commands/demo_run.result.schema.json",
+      "since": "1.0",
       "summary": "Run a demo scenario."
     },
     "demo_status": {
+      "args": {
+        "session_id": "1.0",
+        "token": "1.0"
+      },
       "cancellable": false,
+      "effects": [
+        "network"
+      ],
       "job": "never",
       "pending": "P6-12",
       "request": "commands/demo_status.request.schema.json",
       "result": "commands/demo_status.result.schema.json",
+      "since": "1.0",
       "summary": "The manifest of a demo session (and a Fabric run's live state)."
     },
     "describe": {
+      "args": {
+        "domain": "1.0",
+        "mode": "1.0",
+        "profile": "1.0",
+        "scale": "1.0"
+      },
       "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
       "job": "never",
       "pending": null,
       "request": "commands/describe.request.schema.json",
       "result": "commands/describe.result.schema.json",
+      "since": "1.0",
       "summary": "A domain's or schema's tables, columns, relationships, rules and scale presets."
     },
-    "diff": {
+    "design": {
+      "args": {
+        "dialect": "1.1",
+        "drop": "1.1",
+        "input": "1.1",
+        "mode": "1.1",
+        "schema_name": "1.1"
+      },
       "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/design.request.schema.json",
+      "result": "commands/design.result.schema.json",
+      "since": "1.1",
+      "summary": "Design a 3NF, star or snowflake schema from a design input: lint report, tables and DDL."
+    },
+    "design_from_data": {
+      "args": {
+        "name": "1.1",
+        "source": "1.1"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/design_from_data.request.schema.json",
+      "result": "commands/design_from_data.result.schema.json",
+      "since": "1.1",
+      "summary": "Build a design input from a data file: its types, keys and exact functional dependencies."
+    },
+    "diff": {
+      "args": {
+        "after": "1.0",
+        "before": "1.0",
+        "column_thresholds": "1.0",
+        "ignore_columns": "1.0",
+        "only_columns": "1.0",
+        "policy": "1.0",
+        "project": "1.1",
+        "source": "1.1",
+        "thresholds": "1.0"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
       "job": "never",
       "pending": null,
       "request": "commands/diff.request.schema.json",
       "result": "commands/diff.result.schema.json",
+      "since": "1.0",
       "summary": "Compare two profiles and report the drift."
     },
     "dry_run": {
+      "args": {
+        "domain": "1.0",
+        "mode": "1.0",
+        "profile": "1.0",
+        "scale": "1.0"
+      },
       "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
       "job": "never",
       "pending": null,
       "request": "commands/dry_run.request.schema.json",
       "result": "commands/dry_run.result.schema.json",
+      "since": "1.0",
       "summary": "Plan a run (row counts, order, problems) without generating a row."
     },
-    "generate": {
+    "format_schema": {
+      "args": {
+        "name": "1.1"
+      },
       "cancellable": false,
+      "effects": [],
+      "job": "never",
+      "pending": null,
+      "request": "commands/format_schema.request.schema.json",
+      "result": "commands/format_schema.result.schema.json",
+      "since": "1.1",
+      "summary": "List the formats Shape reads, or give the JSON Schema of one."
+    },
+    "generate": {
+      "args": {
+        "domain": "1.0",
+        "format": "1.0",
+        "mode": "1.0",
+        "output_dir": "1.0",
+        "profile": "1.0",
+        "scale": "1.0",
+        "seed": "1.0"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files",
+        "writes_files"
+      ],
       "job": "optional",
       "pending": null,
       "request": "commands/generate.request.schema.json",
       "result": "commands/generate.result.schema.json",
+      "since": "1.0",
       "summary": "Generate every table of a domain or schema; optionally write the files."
     },
     "job_cancel": {
+      "args": {
+        "job_id": "1.0",
+        "token": "1.0"
+      },
       "cancellable": false,
+      "effects": [
+        "network",
+        "cancels"
+      ],
       "job": "never",
       "pending": null,
       "request": "commands/job_cancel.request.schema.json",
       "result": "commands/job_cancel.result.schema.json",
+      "since": "1.0",
       "summary": "Cancel a running job."
     },
     "job_list": {
+      "args": {
+        "limit": "1.0",
+        "status": "1.0"
+      },
       "cancellable": false,
+      "effects": [],
       "job": "never",
       "pending": null,
       "request": "commands/job_list.request.schema.json",
       "result": "commands/job_list.result.schema.json",
+      "since": "1.0",
       "summary": "List the jobs, oldest first."
     },
     "job_status": {
+      "args": {
+        "job_id": "1.0",
+        "token": "1.0"
+      },
       "cancellable": false,
+      "effects": [
+        "network"
+      ],
       "job": "never",
       "pending": null,
       "request": "commands/job_status.request.schema.json",
       "result": "commands/job_status.result.schema.json",
+      "since": "1.0",
       "summary": "The state, progress and result of any job."
     },
     "list": {
+      "args": {},
       "cancellable": false,
+      "effects": [],
       "job": "never",
       "pending": null,
       "request": "commands/list.request.schema.json",
       "result": "commands/list.result.schema.json",
+      "since": "1.0",
       "summary": "List the installed domains."
     },
     "preview": {
+      "args": {
+        "domain": "1.0",
+        "mode": "1.0",
+        "profile": "1.0",
+        "rows": "1.0",
+        "seed": "1.0",
+        "tables": "1.0"
+      },
       "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
       "job": "never",
       "pending": null,
       "request": "commands/preview.request.schema.json",
       "result": "commands/preview.result.schema.json",
+      "since": "1.0",
       "summary": "Generate a small sample and return its first rows as JSON."
     },
     "profile": {
+      "args": {
+        "as_of": "1.0",
+        "dataset": "1.0",
+        "fail_on_empty": "1.0",
+        "name": "1.0",
+        "output": "1.0",
+        "project": "1.1",
+        "source": "1.0",
+        "version": "1.0"
+      },
       "cancellable": false,
+      "effects": [
+        "reads_files",
+        "writes_files"
+      ],
       "job": "optional",
       "pending": null,
       "request": "commands/profile.request.schema.json",
       "result": "commands/profile.result.schema.json",
+      "since": "1.0",
       "summary": "Profile a file, folder, glob or Delta table into a .shape artifact."
     },
     "profile_info": {
+      "args": {
+        "domain": "1.0",
+        "mode": "1.0",
+        "profile": "1.0"
+      },
       "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
       "job": "never",
       "pending": null,
       "request": "commands/profile_info.request.schema.json",
       "result": "commands/profile_info.result.schema.json",
+      "since": "1.0",
       "summary": "The distribution weights and derived-count ratios a domain generates with."
     },
-    "scale_cancel": {
+    "profile_show": {
+      "args": {
+        "path": "1.1"
+      },
       "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/profile_show.request.schema.json",
+      "result": "commands/profile_show.result.schema.json",
+      "since": "1.1",
+      "summary": "Show a stored .shape profile: its tables and summary, without profiling again."
+    },
+    "project_show": {
+      "args": {
+        "path": "1.1"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/project_show.request.schema.json",
+      "result": "commands/project_show.result.schema.json",
+      "since": "1.1",
+      "summary": "Show a project file: its sources (paths resolved against its folder) and gate modes."
+    },
+    "project_validate": {
+      "args": {
+        "path": "1.1",
+        "text": "1.1"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/project_validate.request.schema.json",
+      "result": "commands/project_validate.result.schema.json",
+      "since": "1.1",
+      "summary": "Check the text or the file of a shape.yml and report every problem with its key path."
+    },
+    "proposals_contract": {
+      "args": {
+        "decisions": "1.2",
+        "merge": "1.2",
+        "output": "1.2"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files",
+        "writes_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/proposals_contract.request.schema.json",
+      "result": "commands/proposals_contract.result.schema.json",
+      "since": "1.2",
+      "summary": "Write the accepted rule proposals of a decision file as a contract that `check` reads."
+    },
+    "proposals_decide": {
+      "args": {
+        "actor": "1.1",
+        "decisions": "1.1",
+        "note": "1.1",
+        "proposal": "1.1",
+        "verb": "1.1"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files",
+        "writes_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/proposals_decide.request.schema.json",
+      "result": "commands/proposals_decide.result.schema.json",
+      "since": "1.1",
+      "summary": "Record that a proposal is accepted, rejected or deferred."
+    },
+    "proposals_list": {
+      "args": {
+        "decisions": "1.1",
+        "kind": "1.1",
+        "min_confidence": "1.1",
+        "status": "1.1"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/proposals_list.request.schema.json",
+      "result": "commands/proposals_list.result.schema.json",
+      "since": "1.1",
+      "summary": "List the proposals of a decision file and the decisions on them."
+    },
+    "proposals_propose": {
+      "args": {
+        "auto_accept": "1.1",
+        "data": "1.1",
+        "decisions": "1.1",
+        "kinds": "1.1",
+        "min_confidence": "1.1",
+        "profile": "1.1"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files",
+        "writes_files"
+      ],
+      "job": "optional",
+      "pending": null,
+      "request": "commands/proposals_propose.request.schema.json",
+      "result": "commands/proposals_propose.result.schema.json",
+      "since": "1.1",
+      "summary": "Find proposals for a profile and merge them into a decision file."
+    },
+    "registry_diff": {
+      "args": {
+        "name": "1.2",
+        "policy": "1.2",
+        "ref1": "1.2",
+        "ref2": "1.2",
+        "root": "1.2",
+        "thresholds": "1.2"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/registry_diff.request.schema.json",
+      "result": "commands/registry_diff.result.schema.json",
+      "since": "1.2",
+      "summary": "Drift between two versions of a name in a registry: two raw profiles, or two share-safe profiles (with the metrics a safe form withholds listed apart)."
+    },
+    "report_card": {
+      "args": {
+        "config": "1.2",
+        "holdout": "1.2",
+        "manifest": "1.2",
+        "output": "1.2",
+        "real": "1.2",
+        "require": "1.2",
+        "synthetic": "1.2",
+        "tiers": "1.2"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files",
+        "writes_files"
+      ],
+      "job": "optional",
+      "pending": null,
+      "request": "commands/report_card.request.schema.json",
+      "result": "commands/report_card.result.schema.json",
+      "since": "1.2",
+      "summary": "One report card for a synthetic dataset: fidelity, utility and privacy (job-capable)."
+    },
+    "report_card_read": {
+      "args": {
+        "path": "1.2"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/report_card_read.request.schema.json",
+      "result": "commands/report_card_read.result.schema.json",
+      "since": "1.2",
+      "summary": "Read a stored report card after checking its format and version."
+    },
+    "rules_backtest": {
+      "args": {
+        "compare": "1.2",
+        "contract": "1.2",
+        "incidents": "1.2",
+        "name": "1.2",
+        "registry": "1.2",
+        "since": "1.2",
+        "until": "1.2",
+        "window": "1.2"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "optional",
+      "pending": null,
+      "request": "commands/rules_backtest.request.schema.json",
+      "result": "commands/rules_backtest.result.schema.json",
+      "since": "1.2",
+      "summary": "Replay a contract over every committed version of a registry name (job-capable)."
+    },
+    "rules_mutate": {
+      "args": {
+        "contract": "1.2",
+        "data": "1.2",
+        "min_score": "1.2",
+        "plan": "1.2",
+        "rate": "1.2",
+        "seed": "1.2"
+      },
+      "cancellable": true,
+      "effects": [
+        "reads_files",
+        "cancels"
+      ],
+      "job": "optional",
+      "pending": null,
+      "request": "commands/rules_mutate.request.schema.json",
+      "result": "commands/rules_mutate.result.schema.json",
+      "since": "1.2",
+      "summary": "Plant known faults in data and report which rules of a contract catch them (job-capable, cancellable between mutants)."
+    },
+    "safe_scan": {
+      "args": {
+        "path": "1.1",
+        "text": "1.1"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "never",
+      "pending": null,
+      "request": "commands/safe_scan.request.schema.json",
+      "result": "commands/safe_scan.result.schema.json",
+      "since": "1.1",
+      "summary": "Scan a share-safe profile for leaks of values, as `shape profile validate --safe` does."
+    },
+    "scale_cancel": {
+      "args": {
+        "job_id": "1.0",
+        "token": "1.0"
+      },
+      "cancellable": false,
+      "effects": [
+        "network",
+        "cancels"
+      ],
       "job": "never",
       "pending": null,
       "request": "commands/scale_cancel.request.schema.json",
       "result": "commands/scale_cancel.result.schema.json",
+      "since": "1.0",
       "summary": "Cancel a scale_generate job."
     },
     "scale_generate": {
+      "args": {
+        "chunk_size": "1.0",
+        "domain": "1.0",
+        "max_workers": "1.0",
+        "mode": "1.0",
+        "profile": "1.0",
+        "scale": "1.0",
+        "scale_mode": "1.0",
+        "seed": "1.0",
+        "sink_config": "1.0",
+        "sinks": "1.0"
+      },
       "cancellable": true,
+      "effects": [
+        "reads_files",
+        "writes_files",
+        "network",
+        "cancels"
+      ],
       "job": "optional",
       "pending": null,
       "request": "commands/scale_generate.request.schema.json",
       "result": "commands/scale_generate.result.schema.json",
+      "since": "1.0",
       "summary": "Generate at scale (local_single, local_mp or a Fabric Spark run) into sinks."
     },
     "scale_status": {
+      "args": {
+        "job_id": "1.0",
+        "token": "1.0"
+      },
       "cancellable": false,
+      "effects": [
+        "network"
+      ],
       "job": "never",
       "pending": null,
       "request": "commands/scale_status.request.schema.json",
       "result": "commands/scale_status.result.schema.json",
+      "since": "1.0",
       "summary": "The state of a scale_generate job (a Fabric run is asked of Fabric)."
     },
     "stream": {
+      "args": {
+        "chunk_size": "1.0",
+        "domain": "1.0",
+        "interval_seconds": "1.0",
+        "max_chunks": "1.0",
+        "mode": "1.0",
+        "profile": "1.0",
+        "scale": "1.0",
+        "seed": "1.0",
+        "sink_config": "1.0",
+        "sinks": "1.0"
+      },
       "cancellable": true,
+      "effects": [
+        "reads_files",
+        "writes_files",
+        "network",
+        "cancels"
+      ],
       "job": "always",
       "pending": null,
       "request": "commands/stream.request.schema.json",
       "result": "commands/stream.result.schema.json",
+      "since": "1.0",
       "summary": "Start a background stream: a chunk of generated data to the sinks, every interval."
     },
     "stream_status": {
+      "args": {
+        "stream_id": "1.0"
+      },
       "cancellable": false,
+      "effects": [],
       "job": "never",
       "pending": null,
       "request": "commands/stream_status.request.schema.json",
       "result": "commands/stream_status.result.schema.json",
+      "since": "1.0",
       "summary": "The state of a stream."
     },
     "stream_stop": {
+      "args": {
+        "stream_id": "1.0"
+      },
       "cancellable": false,
+      "effects": [
+        "cancels"
+      ],
       "job": "never",
       "pending": null,
       "request": "commands/stream_stop.request.schema.json",
       "result": "commands/stream_stop.result.schema.json",
+      "since": "1.0",
       "summary": "Stop a stream."
     },
-    "validate": {
+    "timelapse": {
+      "args": {
+        "column": "1.2",
+        "name": "1.2",
+        "registry": "1.2",
+        "since": "1.2",
+        "table": "1.2",
+        "until": "1.2",
+        "window": "1.2"
+      },
       "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
+      "job": "optional",
+      "pending": null,
+      "request": "commands/timelapse.request.schema.json",
+      "result": "commands/timelapse.result.schema.json",
+      "since": "1.2",
+      "summary": "One column's statistics across the committed versions of a name (job-capable)."
+    },
+    "validate": {
+      "args": {
+        "schema_path": "1.0"
+      },
+      "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
       "job": "never",
       "pending": null,
       "request": "commands/validate.request.schema.json",
       "result": "commands/validate.result.schema.json",
+      "since": "1.0",
       "summary": "Validate a generation schema file (or a contract)."
     },
     "verify": {
+      "args": {
+        "config": "1.0",
+        "format": "1.0",
+        "path": "1.0",
+        "project": "1.1",
+        "schema": "1.0",
+        "source": "1.1",
+        "statistical": "1.0",
+        "strict": "1.0"
+      },
       "cancellable": false,
+      "effects": [
+        "reads_files"
+      ],
       "job": "optional",
       "pending": null,
       "request": "commands/verify.request.schema.json",
       "result": "commands/verify.result.schema.json",
+      "since": "1.0",
       "summary": "Run the validation gates over data files."
     }
   },
   "error_codes": {
     "auth.missing_credentials": "a command needs a token or credential that was not given",
     "auth.rejected": "a remote service rejected the credential",
+    "input.contract_conflict": "an accepted rule disagrees with a rule already in the contract",
     "input.invalid_schema": "a schema, profile, contract or data file is not valid",
     "input.invalid_value": "the data or settings given cannot be used",
     "input.job_interrupted": "the process that ran a job ended before the job finished",
     "input.job_state": "the job is not in a state the command needs",
     "input.not_found": "a file or directory the request names does not exist",
     "input.unknown_domain": "no installed domain has this name",
+    "input.unknown_format": "Shape has no published schema with this name",
     "input.unknown_job": "no job has this id",
+    "input.unknown_proposal": "the decision file has no proposal with this id",
+    "input.unknown_source": "the project file has no source with this name",
     "input.unsupported_format_version": "a stored file was written by a newer Shape",
     "internal.error": "a bug in Shape: the message names the exception",
     "io.read_failed": "a file could not be read",
@@ -212,6 +861,7 @@
     "policy.capability_unavailable": "the operation needs something that is not installed here",
     "policy.not_permitted": "a security or trust policy refuses the operation",
     "policy.signature_invalid": "an artifact's signature does not verify",
+    "policy.unverified_input": "the input is not marked as Shape-generated, so it is not corrupted",
     "privacy.raw_values_withheld": "the operation would return raw values and was not asked to",
     "usage.invalid_argument": "an argument or option has the wrong type or an impossible value",
     "usage.invalid_json": "the request is not valid JSON",
@@ -223,5 +873,17 @@
     "usage.unsupported_version": "the request's api_version is not one this bridge serves"
   },
   "format": "shape-bridge-schema-index",
-  "version": 1
+  "version": 1,
+  "warning_codes": {
+    "api_version_assumed": "the request declared no api_version: the bridge's own was assumed",
+    "artifact_not_verified": "a .shape file was read and it is not signed",
+    "domain_load_failed": "an installed domain did not load and is left out of the list",
+    "empty_table": "a profiled table has 0 rows",
+    "newer_minor_version": "the request declared a newer minor version than the bridge serves",
+    "output_dir_ignored": "output_dir was given but nothing is written for this format",
+    "profile_file_holds_values": "the profile file written holds real values from the data",
+    "project_source_not_selected": "the project file has several sources and none was selected",
+    "real_input_corrupted": "chaos ran on input not marked as Shape-generated (allow_real_input)",
+    "result_in_file": "a result part was larger than max_inline_bytes and is in a file"
+  }
 }

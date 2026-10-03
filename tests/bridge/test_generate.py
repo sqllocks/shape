@@ -55,7 +55,7 @@ def test_generate_writes_the_files_the_cli_writes(api, capsys, tmp_path, fmt, ex
     cli(capsys, "generate", "retail", "--scale", "small", "--seed", 5, "--format", fmt, "-o", ref)
     assert result["output_format"] == fmt and result["output_dir"] == str(out)
     assert sorted(p.split("/")[-1] for p in result["files"]) == sorted(
-        p.name for p in ref.iterdir()
+        p.name for p in ref.iterdir() if p.name != "_shape_provenance.json"
     )
     assert all(p.endswith(f".{ext}") for p in result["files"])
     for path in result["files"]:
