@@ -201,3 +201,76 @@ def test_a_repeated_attribute_name_is_refused(
     ent = {"name": "s", "attributes": [{"name": "id"}, {"name": "a"}, {"name": "b"}], **entity}
     with pytest.raises(DesignError, match=rf"{where}.*repeats attribute"):
         DesignInput.from_dict(_doc([ent], **extra))
+
+
+# ---- issue 390: empty names and unchecked not_additive_over ---------------------------------
+
+
+@pytest.mark.parametrize(
+    "doc",
+    [
+        _doc([{"name": "", "attributes": [{"name": "id"}]}]),
+        _doc([{"name": "s", "attributes": [{"name": ""}]}]),
+        _doc([_sale()], facts=[{"name": "", "source": "sale", "grain": ["id"]}]),
+    ],
+)
+def test_an_empty_name_is_refused(doc: dict[str, Any]) -> None:
+    with pytest.raises(DesignError, match="empty name"):
+        DesignInput.from_dict(doc)
+
+
+def test_not_additive_over_must_name_a_dimension_date_or_attribute_of_the_fact() -> None:
+    def doc(over: list[str]) -> dict[str, Any]:
+        return _doc(
+            [
+                {"name": "acct", "attributes": [{"name": "aid"}], "keys": [["aid"]]},
+                _sale(
+                    {"name": "a", "references": "acct"},
+                    {"name": "day", "type": "date"},
+                    {"name": "bal", "type": "decimal"},
+                ),
+            ],
+            facts=[
+                {
+                    "name": "f",
+                    "source": "sale",
+                    "grain": ["id"],
+                    "degenerate": ["id"],
+                    "dimensions": [{"entity": "acct", "via": "a", "role": "account"}],
+                    "dates": ["day"],
+                    "measures": [
+                        {
+                            "name": "m",
+                            "attribute": "bal",
+                            "additivity": "semi_additive",
+                            "not_additive_over": over,
+                        }
+                    ],
+                }
+            ],
+        )
+
+    for ok in (["day"], ["acct"], ["account"], ["a"]):
+        DesignInput.from_dict(doc(ok))
+    with pytest.raises(DesignError, match="not_additive_over.*'nope'"):
+        DesignInput.from_dict(doc(["nope"]))
+
+
+# ---- issue 392: design_from_rows input errors and int+Decimal ------------------------------
+
+
+def test_from_data_refuses_a_row_that_is_not_a_mapping() -> None:
+    from shape.design.from_data import design_from_rows
+
+    with pytest.raises(DesignError, match="row 1 .*not a mapping"):
+        design_from_rows([{"a": 1}, "ab"], name="t")  # type: ignore[list-item]
+
+
+def test_from_data_types_int_mixed_with_decimal_as_decimal() -> None:
+    from decimal import Decimal
+
+    from shape.design.from_data import design_from_rows
+
+    rows = [{"id": 1, "v": 1}, {"id": 2, "v": Decimal("2.5")}]
+    attr = design_from_rows(rows, name="t").entities[0].attribute("v")
+    assert (attr.type, attr.scale) == ("decimal", 1)

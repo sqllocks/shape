@@ -55,3 +55,25 @@ def test_apply_decisions_accepts_a_shape_path(tmp_path, tables, profile, sub):
     from_path = apply_decisions(str(path), f)
     from_object = apply_decisions(profile, f)
     assert from_path.to_dict()["relationships"] == from_object.to_dict()["relationships"]
+
+
+# ---- issue 391: impossible times ------------------------------------------------------------
+
+
+@pytest.mark.parametrize("when", ["2026-13-45T99:99:99Z", "2026-02-30T12:00:00Z"])
+def test_an_impossible_time_is_refused(when):
+    from shape.proposals.model import stamp
+
+    with pytest.raises(DecisionError, match="2026-10-03T12:00:00Z"):
+        stamp(when)
+    f = DecisionFile.empty()
+    f.update([Proposal("pii:a", "pii", "a", {}, 0.9, {})], now=NOW)
+    doc = f.to_dict()
+    doc["proposals"][0]["proposed_at"] = when
+    with pytest.raises(DecisionError, match="proposed_at"):
+        DecisionFile.from_dict(doc)
+    f.decide("pii:a", "accepted", actor="ana", now=NOW)
+    doc = f.to_dict()
+    doc["decisions"][0]["at"] = when
+    with pytest.raises(DecisionError, match="at must be UTC"):
+        DecisionFile.from_dict(doc)

@@ -62,3 +62,28 @@ def test_a_missing_name_and_a_duplicate_field_are_named():
 def test_defaults_still_fill_missing_version_fidelity_fields():
     c = ShapeContract.from_dict({"name": "x"})
     assert (c.version, c.fidelity, c.fields) == (1, "gold", ())
+
+
+# ---- issue 393 ------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("value", ["core/1", None, [1], {"core/1": 1}])
+def test_check_capabilities_refuses_a_value_that_is_not_a_list_of_strings(value):
+    from shape.spec import check_capabilities
+
+    with pytest.raises(ValueError, match="mandatory_capabilities.*list of strings"):
+        check_capabilities({"mandatory_capabilities": value})
+
+
+def test_check_capabilities_accepts_a_tuple():
+    from shape.spec import check_capabilities
+
+    assert check_capabilities({"mandatory_capabilities": ("core/1",)}).compatible
+
+
+def test_migrating_keys_that_name_the_same_column_is_refused():
+    from shape.spec.migrate import migrate_capture_v1
+    from shape.spec.model import ModelError
+
+    with pytest.raises(ModelError, match="'1'"):
+        migrate_capture_v1({"rows": 1, "columns": {1: {}, "1": {}}})
