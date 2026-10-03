@@ -11,6 +11,7 @@ from __future__ import annotations
 import contextlib
 import json
 import os
+import re
 import tempfile
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
@@ -20,6 +21,18 @@ from shape.demo.errors import ConnectionNotFoundError, DemoError
 from shape.demo.home import check_name, connections_path
 
 AUTH_METHODS = ("cli", "msi", "spn", "sql", "device-code", "fabric")
+
+# What `holds_secret` does not read: a `user:password@` part of a URL, a credential in a URL's
+# query (a SAS token's `sig`), and the `Pass` and `Access Token` keys of a connection string.
+_URL_USERINFO = re.compile(r"://[^/@\s:]*:[^/@\s]+@")
+_URL_QUERY_SECRET = re.compile(
+    r"[?&;](?:sig|signature|sas|sas_?token|token|access_?token|key|api_?key|password|pwd|"
+    r"secret|client_?secret)=[^&;\s]",
+    re.IGNORECASE,
+)
+_KEY_VALUE_SECRET = re.compile(
+    r"(?:^|;)\s*(?:pass|access[ _]?token|token|secret|api[ _]?key)\s*=\s*[^;\s]", re.IGNORECASE
+)
 
 
 @dataclass
@@ -66,8 +79,6 @@ class ConnectionProfile:
 def check_profile(profile: ConnectionProfile) -> ConnectionProfile:
     """``profile`` when it can be stored: a plain name, a known sign-in, no secret in it."""
     from shape.security import credrefs
-    from shape.security.redact import holds_secret
-
     check_name(profile.name, "connection profile name")
     if profile.auth_method not in AUTH_METHODS:
         raise DemoError(
@@ -79,16 +90,35 @@ def check_profile(profile: ConnectionProfile) -> ConnectionProfile:
             "kv://VAULT/SECRET), not the secret itself: a profile is stored in a file"
         )
     for label, value in (
+        ("workspace id", profile.workspace_id),
         ("warehouse connection string", profile.warehouse_conn_str),
+        ("warehouse staging path", profile.warehouse_staging_path),
+        ("Eventhouse URI", profile.eventhouse_uri),
+        ("Eventhouse database", profile.eventhouse_database),
         ("SQL database connection string", profile.sql_db_conn_str),
+        ("lakehouse id", profile.lakehouse_id),
+        ("tenant id", profile.tenant_id),
+        ("client id", profile.client_id),
+        ("local path", profile.local_path),
     ):
-        if value and not credrefs.is_reference(value) and holds_secret(value):
+        if value and not credrefs.is_reference(value) and _holds_secret(value):
             raise DemoError(
-                f"the {label} holds a password or key, and a profile is stored in a file: "
-                "put the whole string in an environment variable and give env://NAME, or "
+                f"the {label} holds a password or key (or a token), and a profile is stored in "
+                "a file: put the whole value in an environment variable and give env://NAME, or "
                 "sign in with an auth method instead"
             )
     return profile
+
+
+def _holds_secret(value: str) -> bool:
+    from shape.security.redact import holds_secret
+
+    return bool(
+        holds_secret(value)
+        or _URL_USERINFO.search(value)
+        or _URL_QUERY_SECRET.search(value)
+        or _KEY_VALUE_SECRET.search(value)
+    )
 
 
 class ConnectionRegistry:

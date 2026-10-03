@@ -161,7 +161,8 @@ class SeedingDemoMode:
     def _session_dir(self) -> Path | None:
         if self._conn is None or not self._conn.local_path:
             return None
-        folder = Path(self._conn.local_path).expanduser() / self._manifest.session_id
+        # absolute, so a cleanup run from another directory finds what this run wrote
+        folder = Path(self._conn.local_path).expanduser().resolve() / self._manifest.session_id
         mark_session_folder(folder, self._manifest.session_id)
         return folder
 
