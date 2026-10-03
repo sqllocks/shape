@@ -439,6 +439,10 @@ class RangeConstraintGate(ValidationGate):
                 continue
             values = _to_floats(_column(table, cname))
             if values.size == 0:
+                warnings.append(
+                    f"{key}: no numeric values to check ({table.schema.field(cname).type}); "
+                    "not checked"
+                )
                 continue
             lo, hi = float(values.min()), float(values.max())
             info: dict[str, Any] = {"actual_min": lo, "actual_max": hi}
