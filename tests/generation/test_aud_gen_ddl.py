@@ -281,3 +281,22 @@ def test_a_quoted_table_name_with_a_dot_is_an_error_not_a_rename():
 
     with pytest.raises(DdlError, match=r"'my\.table'"):
         from_ddl("CREATE TABLE [dbo].[my.table] (id INT PRIMARY KEY)", smart=False)
+
+
+@pytest.mark.parametrize("smart", [False, True])
+def test_declared_logical_types_are_kept_in_the_data(smart):
+    # 202: BIT came out as double 1.0/0.0, BOOLEAN as 'true'/'false' strings, TIME as full
+    # timestamps and DATE as timestamps with a time of day.
+    import datetime as dt
+
+    import pyarrow as pa  # type: ignore[import-untyped]
+
+    schema, _ = from_ddl(
+        "CREATE TABLE t (id INT PRIMARY KEY, tm TIME, flag BIT, b BOOLEAN, d DATE)", smart=smart
+    )
+    t = Engine(schema, row_counts={"t": 200}).generate().tables["t"]
+    assert t.schema.field("flag").type == pa.bool_()
+    assert t.schema.field("b").type == pa.bool_()
+    assert t.schema.field("d").type == pa.date32()
+    assert t.schema.field("tm").type == pa.time64("us")
+    assert all(isinstance(v, dt.time) for v in t["tm"].to_pylist() if v is not None)
