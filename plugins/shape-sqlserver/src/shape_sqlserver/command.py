@@ -108,7 +108,7 @@ class ProfileDbCommand:
             out["written"] = args.output
             out["shape_content_id"] = shape.save(prof, args.output)
         if args.json:
-            with open(args.json, "w", encoding="utf-8") as fh:
+            with open(args.json, "w", encoding="utf-8", newline="\n") as fh:
                 json.dump(prof.summary(), fh, indent=2, default=str)
                 fh.write("\n")
         summary = prof.summary()
