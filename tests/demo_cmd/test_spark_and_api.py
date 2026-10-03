@@ -160,9 +160,9 @@ def test_demo_run_returns_the_payload_the_bridge_needs(home, schema_file):
     json.dumps(result)  # JSON-safe
 
 
-def test_a_failed_run_is_a_result_not_an_exception(home):
-    result = demo_run({"scenario": "healthcare", "mode": "seeding", "rows": 1000})
-    assert result["success"] is False and "no domain named 'healthcare'" in result["error"]
+def test_a_failed_run_is_a_result_not_an_exception(home, missing_domain_scenario):
+    result = demo_run({"scenario": missing_domain_scenario, "mode": "seeding", "rows": 1000})
+    assert result["success"] is False and "no domain named 'no-such-domain'" in result["error"]
     assert (home / "sessions" / f"demo-{result['session_id']}.json").exists()
 
 

@@ -93,13 +93,16 @@ def test_a_composite_run_writes_each_domain_to_its_own_folder(run, home, local_p
     assert parts_rows(folder / "beta" / "customer") == 7
 
 
-def test_a_scenario_runs_its_own_domain_not_retail(run, home, local_profile):
-    # healthcare is not installed in this environment: the run must say so, not run retail instead
+def test_a_scenario_runs_its_own_domain_not_retail(
+    run, home, local_profile, missing_domain_scenario
+):
+    # the scenario's own domain is not installed: the run must say so, not run retail instead
     code, out, err = run(
-        "demo", "run", "healthcare", "--mode", "seeding", "--connection", "local", "--rows", "1000"
-    )
+        "demo", "run", missing_domain_scenario, "--mode", "seeding", "--connection", "local",
+        "--rows", "1000",
+    )  # fmt: skip
     assert code == 1
-    assert "no domain named 'healthcare'" in err
+    assert "no domain named 'no-such-domain'" in err
     record = manifest(home, next(p.stem[5:] for p in (home / "sessions").glob("demo-*.json")))
     assert record["success"] is False and record["artifacts"] == []
     assert not any(local_profile.glob("*/customer")) if local_profile.exists() else True

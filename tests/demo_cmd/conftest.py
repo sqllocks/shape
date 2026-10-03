@@ -42,3 +42,19 @@ def run(capsys):
 def schema_file(tmp_path) -> Path:
     """A three-table domain (customer, order, order_line) with a ``small`` scale of ``ROWS``."""
     return write_schema(tmp_path / "shop.json")
+
+
+@pytest.fixture
+def missing_domain_scenario(monkeypatch) -> str:
+    """A scenario whose own domain, ``no-such-domain``, cannot be installed anywhere."""
+    from shape.demo.catalog import ScenarioMeta, get_catalog
+
+    name = "no-such-domain"
+    meta = ScenarioMeta(
+        name=name,
+        description="A scenario of a domain that does not exist.",
+        domains=[name],
+        supported_modes=["inference", "streaming", "seeding"],
+    )
+    monkeypatch.setitem(get_catalog()._scenarios, name, meta)
+    return name
