@@ -68,9 +68,17 @@ def _temporal(t: pa.DataType) -> bool:
     return bool(pa.types.is_timestamp(t) or pa.types.is_date(t))
 
 
+_PER_SECOND = {"s": 1, "ms": 1_000, "us": 1_000_000, "ns": 1_000_000_000}
+
+
 def _floats(col: pa.ChunkedArray) -> Array:
     if _temporal(col.type):
-        col = col.cast(pa.timestamp("s")).cast(pa.int64())
+        if pa.types.is_date(col.type):
+            col = col.cast(pa.timestamp("s"))
+        # seconds, with their fraction: a safe cast to whole seconds refuses sub-second values
+        # (nulls come back as NaN; numpy, not Arrow, rounds nanosecond counts past 2**53)
+        ticks = col.cast(pa.int64()).to_numpy(zero_copy_only=False)
+        return np.asarray(ticks, dtype=np.float64) / _PER_SECOND[col.type.unit]
     return np.asarray(col.cast(pa.float64()).to_numpy(zero_copy_only=False), dtype=np.float64)
 
 
