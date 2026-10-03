@@ -258,7 +258,9 @@ def truncate_strings(
     rows = _rows(defect, table.num_rows, rng)
     mask = _mask_of(table.num_rows, rows)
     cut = pc.utf8_slice_codeunits(table[i], 0, length)
-    return _replace(table, i, pc.if_else(pa.array(mask), cut, table[i])), int(len(rows))
+    longer = pc.fill_null(pc.greater(pc.utf8_length(table[i]), length), False)
+    changed = int(pc.sum(pc.and_(pa.array(mask), longer)).as_py() or 0)
+    return _replace(table, i, pc.if_else(pa.array(mask), cut, table[i])), changed
 
 
 def placeholder_values(
@@ -278,7 +280,9 @@ def corrupt_encoding(
     rows = _rows(defect, table.num_rows, rng)
     mask = _mask_of(table.num_rows, rows)
     broken = pc.binary_join_element_wise(table[i], pa.scalar("\u00c3\u00a9", typ), "")
-    return _replace(table, i, pc.if_else(pa.array(mask), broken, table[i])), int(len(rows))
+    present = pc.is_valid(table[i])
+    changed = int(pc.sum(pc.and_(pa.array(mask), present)).as_py() or 0)
+    return _replace(table, i, pc.if_else(pa.array(mask), broken, table[i])), changed
 
 
 DEFECTS: dict[str, Callable[..., tuple[pa.Table, int]]] = {
