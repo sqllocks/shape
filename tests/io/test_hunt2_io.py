@@ -139,8 +139,8 @@ def _failing(*, schema_change: bool = False):  # type: ignore[no-untyped-def]
 
 @pytest.mark.parametrize(
     ("fmt", "name", "schema_change"),
-    [(f, n, False) for f, n in _PLAIN] + [(f, n, True) for f, n in _PLAIN if f != "jsonl"],
-)  # JSON Lines has no schema to violate
+    [(f, n, False) for f, n in _PLAIN] + [(f, n, True) for f, n in _PLAIN if f in ("parquet", "ipc")],
+)  # text formats have no schema to violate
 def test_failed_write_keeps_the_previous_file(
     tmp_path: Path, fmt: str, name: str, schema_change: bool
 ) -> None:
@@ -192,6 +192,68 @@ def test_plain_write_through_a_symlink_and_keeps_the_mode(tmp_path: Path) -> Non
 @pytest.mark.skipif(not Path("/dev/null").exists(), reason="needs /dev/null")
 def test_plain_write_to_a_device_is_written_in_place() -> None:
     assert CsvSink().write("/dev/null", "t", _batches(1, 2)) == 2
+
+
+# ---- #623: folders that start with _ or . are skipped as a whole ----------------------------
+
+
+def _tree(root: Path) -> None:
+    t = pa.table({"a": [1, 2]})
+    for sub in ("", "_shape_tmp", ".hidden", "_delta_log", "keep/deeper"):
+        (root / sub).mkdir(parents=True, exist_ok=True)
+    pq.write_table(t, root / "p.parquet")
+    pq.write_table(t, root / "keep" / "deeper" / "q.parquet")
+    pq.write_table(t, root / "_shape_tmp" / "abc-p.parquet")
+    pq.write_table(t, root / ".hidden" / "q.parquet")
+    pq.write_table(pa.table({"z": [1]}), root / "_delta_log" / "0.checkpoint.parquet")
+    pq.write_table(t, root / "_skip.parquet")
+
+
+def test_directory_read_skips_hidden_and_underscore_folders(tmp_path: Path) -> None:
+    from shape.io import expand_paths, read_table
+
+    _tree(tmp_path)
+    found = [str(p.relative_to(tmp_path)) for p in expand_paths(tmp_path)]
+    assert found == ["keep/deeper/q.parquet", "p.parquet"]
+    assert read_table(tmp_path).num_rows == 4
+
+
+def test_a_directory_named_with_an_underscore_can_still_be_the_root(tmp_path: Path) -> None:
+    from shape.io import expand_paths
+
+    root = tmp_path / "_landing"
+    _tree(root)
+    found = [str(p.relative_to(root)) for p in expand_paths(root)]
+    assert found == ["keep/deeper/q.parquet", "p.parquet"]
+
+
+def test_abfss_source_skips_hidden_and_underscore_folders() -> None:
+    import io as _io
+
+    fsspec = pytest.importorskip("fsspec")
+    from shape.builtins.sources.azure import _list_files
+
+    fs = fsspec.filesystem("memory")
+    buffer = _io.BytesIO()
+    pq.write_table(pa.table({"a": [1]}), buffer)
+    for path in (
+        "/hunt2/root/part-1.parquet",
+        "/hunt2/root/sub/part-2.parquet",
+        "/hunt2/root/_shape_tmp/abc-part-3.parquet",
+        "/hunt2/root/.hidden/part-4.parquet",
+        "/hunt2/root/_delta_log/0.checkpoint.parquet",
+    ):
+        with fs.open(path, "wb") as handle:
+            handle.write(buffer.getvalue())
+    try:
+        assert _list_files(fs, "hunt2/root") == [
+            "/hunt2/root/part-1.parquet",
+            "/hunt2/root/sub/part-2.parquet",
+        ]
+        # a root that is itself below an underscore folder is still read
+        assert _list_files(fs, "hunt2/root/_delta_log") == ["/hunt2/root/_delta_log/0.checkpoint.parquet"]
+    finally:
+        fs.rm("/hunt2", recursive=True)
 
 
 _ = dt
