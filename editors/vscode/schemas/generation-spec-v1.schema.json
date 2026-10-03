@@ -26,6 +26,13 @@
     "min_shape_version": {
       "type": "string"
     },
+    "migrated_from": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "source_content_id": {
+      "type": "string"
+    },
     "schema_version": {
       "const": 1
     },

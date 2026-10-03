@@ -30,6 +30,9 @@ through the interfaces on this page.
   (`generation-schema-v1.json`, used by `GenSchema.from_dict`). The loader stays lenient about
   generator keys, so a file with a misspelled key still loads (and `GenSchema.validate()` warns);
   the published schema is the strict one.
+- The declaration keys `format`, `version`, `shape_version` and `min_shape_version`, and the
+  `migrated_from` and `source_content_id` that `shape migrate` adds, are accepted at the top level,
+  so a migrated spec loads and validates.
 - `temporal.type` and `faker.max_length` are accepted and marked `deprecated`: spec files made
   by `shape.generation.learn` have always carried them and the strategies ignore them.
 
