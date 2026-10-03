@@ -184,7 +184,8 @@ class DeltaSink:
         ):
             raise ValueError("fingerprint does not combine with micro-batch commits")
         if options.get("commit_rows") or options.get("commit_seconds"):
-            writer = self.open_table(uri, table, schema, **options)
+            rest = {k: v for k, v in options.items() if k != "schema"}
+            writer = self.open_table(uri, table, schema, **rest)
 
             def chained() -> Iterator[pa.RecordBatch]:
                 if first is not None:

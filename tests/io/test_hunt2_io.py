@@ -83,7 +83,7 @@ def test_delta_commit_rows_with_a_schema_option(tmp_path: Path) -> None:
     rows = DeltaSink().write(
         str(tmp_path),
         "t",
-        iter(_batches(1, 2, 3, 4, 5)),
+        iter([b for v in (1, 2, 3, 4, 5) for b in _batches(v)]),
         schema=schema,
         commit_rows=2,
     )
