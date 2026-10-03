@@ -1,6 +1,6 @@
 # Shape by SQLLocks — Normative Contract, version 2
 
-Status: draft for 2.0. Replaces the 1.x contract (`SHAPE_1_0_GA.md`). The model and file format
+Status: draft for 2.0. Replaces the 1.x contract (`SHAPE_1_0.md`). The model and file format
 are described in `SHAPE_MODEL_V2.md`; the schema is `src/shape/schemas/shape-v2.schema.json`.
 
 Every normative statement below is one bullet with an identifier and carries exactly one
