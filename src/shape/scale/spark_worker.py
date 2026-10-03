@@ -51,7 +51,8 @@ def arrow_to_ddl(schema: pa.Schema) -> str:
             ddl = text.replace("decimal128", "decimal").replace("(", "(").replace(" ", "")
         if ddl is None:
             raise TypeError(f"no Spark type for column {field.name!r}: {text}")
-        parts.append(f"`{field.name}` {ddl}")
+        quoted = field.name.replace("`", "``")
+        parts.append(f"`{quoted}` {ddl}")
     return ", ".join(parts)
 
 

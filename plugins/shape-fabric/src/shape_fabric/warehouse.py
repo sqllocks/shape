@@ -41,7 +41,7 @@ from .lakehouse import write_batches
 from .sqldb import SqlConnection, check_mode, prepare_table, undo, write_many
 
 DEFAULT_CHUNK_ROWS = 1_000_000
-_SAFE_URL = re.compile(r"^https://[A-Za-z0-9.\-]+/[A-Za-z0-9._~%@:/ \-]+$")
+_SAFE_URL = re.compile(r"https://[A-Za-z0-9.\-]+/[A-Za-z0-9._~%@:/ \-]+")
 
 
 def copy_literal(url: str) -> str:
@@ -49,7 +49,7 @@ def copy_literal(url: str) -> str:
     cannot be a parameter, so it is checked against a strict character set (no quote,
     semicolon, comment marker or control character can get through) and the quotes are doubled
     as well."""
-    if not _SAFE_URL.match(url) or "--" in url or "/*" in url:
+    if not _SAFE_URL.fullmatch(url) or "--" in url or "/*" in url:
         raise ShapeError(f"not a usable staging location for COPY INTO: {url!r}")
     return "'" + url.replace("'", "''") + "'"
 

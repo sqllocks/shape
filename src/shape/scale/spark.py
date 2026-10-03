@@ -33,11 +33,12 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_NOTEBOOK = "shape_spark_worker"
 SPEC_DIR = "shape_jobs"
-_GUID = re.compile(r"^[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$")
-_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_ .-]{0,127}$")
-_PREFIX = re.compile(r"^[A-Za-z0-9_]{0,64}$")
+# Matched with fullmatch: ``$`` with ``match`` would let a trailing newline through.
+_GUID = re.compile(r"[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}")
+_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_ .-]{0,127}")
+_PREFIX = re.compile(r"[A-Za-z0-9_]{0,64}")
 _REQUIREMENT = re.compile(
-    r"^[A-Za-z0-9][A-Za-z0-9_.\-]*(\[[A-Za-z0-9_,.\-]+\])?(==[A-Za-z0-9_.!+\-]+)?$"
+    r"[A-Za-z0-9][A-Za-z0-9_.\-]*(\[[A-Za-z0-9_,.\-]+\])?(==[A-Za-z0-9_.!+\-]+)?"
 )
 
 
@@ -64,7 +65,7 @@ def default_requirements() -> list[str]:
 
 
 def check_guid(value: str, what: str) -> str:
-    if not _GUID.match(value or ""):
+    if not _GUID.fullmatch(value or ""):
         raise ValueError(f"{what} must be a GUID, got {value!r}")
     return value
 
@@ -118,9 +119,9 @@ class FabricSparkRouter:
         self._lakehouse = check_guid(lakehouse_id, "lakehouse_id")
         if not token:
             raise ValueError("fabric_spark needs a Fabric token")
-        if not _NAME.match(notebook_name):
+        if not _NAME.fullmatch(notebook_name):
             raise ValueError(f"invalid notebook name {notebook_name!r}")
-        if not _PREFIX.match(table_prefix):
+        if not _PREFIX.fullmatch(table_prefix):
             raise ValueError("table_prefix may hold letters, digits and underscores only")
         self._http = Http(token, transport, sleep=sleep)
         self._notebook = notebook_name
@@ -132,7 +133,7 @@ class FabricSparkRouter:
             list(requirements) if requirements is not None else default_requirements()
         )
         for item in self._requirements:
-            if not _REQUIREMENT.match(item):
+            if not _REQUIREMENT.fullmatch(item):
                 raise ValueError(f"not a plain pip requirement: {item!r}")
 
     # -- OneLake --------------------------------------------------------------------------
