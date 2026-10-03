@@ -544,6 +544,9 @@ def run(a: argparse.Namespace) -> int:
         raise ShapeError(str(exc)) from exc
     if speed is not None and a.realtime:
         raise ShapeError("--speed paces by event time and --realtime by rate: choose one")
+    for name, value in (("duplicate", a.duplicate_fraction), ("poison", a.poison_fraction)):
+        if not 0.0 <= value <= 1.0:
+            raise ShapeError(f"the {name} fraction must be between 0 and 1")
     _check_live_options(a)
     targets = _targets(a)
     schema = load_target(a.target, a.mode)

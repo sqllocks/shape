@@ -238,6 +238,12 @@ class EmitRunner:
             raise ValueError("batch_events must be at least 1")
         if cfg.max_events is not None and cfg.max_events < 0:
             raise ValueError("max_events must be 0 or more")
+        if cfg.retries < 0:
+            raise ValueError("retries must be 0 or more")
+        if cfg.checkpoint_every < 1:
+            raise ValueError("checkpoint_every must be at least 1")
+        if cfg.checkpoint_seconds < 0:
+            raise ValueError("checkpoint_seconds must be 0 or more")
         if cfg.duration is not None and cfg.duration < 0:
             raise ValueError("duration must be 0 or more")
         if cfg.speed is not None and cfg.realtime:
