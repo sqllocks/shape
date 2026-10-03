@@ -258,7 +258,8 @@ def test_setup_replays_the_recorded_conversation(world):
     code, out, err = world.run("setup-fabric", "--workspace", "Demo", "--create-lakehouse")
     assert (code, err) == (0, "")
     tape.assert_done()
-    assert "Created Environment: shape-env" in out and "Created Lakehouse: shape-lakehouse" in out
+    assert "Created Environment: shape-env" in out
+    assert "Created Lakehouse:   shape-lakehouse" in out
     assert "sqllocks-shape 0.0.0" in out and "Publish the environment" in out
 
 

@@ -164,6 +164,10 @@ class FabricApi:
                 )
         raise FabricApiError(f"creating the {kind} {name!r} timed out")
 
+    def delete_item(self, workspace_id: str, item_id: str) -> None:
+        """Delete an item (the live tests remove what they made)."""
+        self._http.request("DELETE", f"{FABRIC_API}/workspaces/{workspace_id}/items/{item_id}")
+
     def ensure_item(self, workspace_id: str, body: dict[str, Any]) -> tuple[dict[str, Any], bool]:
         """The item of ``body``'s name and type, created if missing: ``(item, created)``."""
         try:

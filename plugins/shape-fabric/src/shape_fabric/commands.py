@@ -343,7 +343,7 @@ def _run_setup(a: argparse.Namespace) -> int:
     print(f"Shape v{_version()} — Fabric Environment Setup")
     print(f"  Workspace:   {a.workspace}")
     print(f"  Environment: {a.env_name}")
-    print(f"  Lakehouse:   {a.lakehouse_name if a.create_lakehouse else 'no'}")
+    print(f"  Lakehouse:   {'yes' if a.create_lakehouse else 'no'}")
     print()
     workspace_id = api.resolve_workspace(a.workspace)
     done: list[str] = []
@@ -352,8 +352,11 @@ def _run_setup(a: argparse.Namespace) -> int:
         wanted.append(("Lakehouse", a.lakehouse_name))
     for kind, name in wanted:
         item, created = api.ensure_item(workspace_id, {"displayName": name, "type": kind})
-        verb = "Created" if created else "Found existing"
-        print(f"  {verb} {kind}: {item.get('displayName', name)}")
+        shown = item.get("displayName", name)
+        if created:
+            print(f"  Created {f'{kind}:':<12} {shown}")
+        else:
+            print(f"  Found existing {kind}: {shown}")
         done.append(f"{kind}: {item.get('displayName', name)}")
     print()
     print("Setup complete:")
@@ -366,7 +369,7 @@ def _run_setup(a: argparse.Namespace) -> int:
     for lib in library_spec()["customLibraries"]["pypi"]:
         print(f"     - {lib['name']} {lib['version']}")
     print("  3. Publish the environment")
-    print("  4. Attach it to notebooks and run 'shape fabric notebook' to make one")
+    print("  4. Attach to notebooks and run 'shape notebook' to generate data")
     return EXIT_OK
 
 
