@@ -150,6 +150,11 @@ class FabricApi:
     def _await(self, location: str, kind: str, name: str) -> None:
         if not location:
             raise FabricApiError(f"creating the {kind} {name!r}: no operation URL to follow")
+        if not location.startswith(FABRIC_API + "/"):
+            # The bearer token goes with every poll: never to another host.
+            raise FabricApiError(
+                f"creating the {kind} {name!r}: the operation URL is not on {FABRIC_API}"
+            )
         for _ in range(POLL_LIMIT):
             self._sleep(POLL_SECONDS)
             state = self._http.request("GET", location).json()
