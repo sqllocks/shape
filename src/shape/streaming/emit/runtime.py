@@ -394,6 +394,7 @@ class EmitRunner:
         stopped_by = "complete"
         first: float | None = None
         first_n = 0
+        first_start = 0.0
         last = 0.0
         since_checkpoint = 0
         checkpoint_time = time.perf_counter()
@@ -431,10 +432,12 @@ class EmitRunner:
                         stopped_by = "stop-request"
                         break
                     report.max_lag = max(report.max_lag, time.perf_counter() - due)
+                send_start = time.perf_counter()
                 self._send(batch, report)
                 now = time.perf_counter()
                 if first is None:
                     first = now
+                    first_start = send_start
                     first_n = n
                 last = now
                 delivered = start + n
@@ -488,7 +491,12 @@ class EmitRunner:
             report.stopped_by = stopped_by
             if first is not None and last > first:
                 report.rate = (report.events - first_n) / (last - first)
-            report.elapsed = (last - first) if first is not None else 0.0
+                report.elapsed = last - first
+            elif first is not None:
+                # one batch (or none after the first): time the delivery of that batch itself
+                report.elapsed = last - first_start
+                if report.elapsed > 0:
+                    report.rate = report.events / report.elapsed
             if self.plan.anomaly is not None:
                 report.anomalies_selected = self.plan.anomaly.stats.rows_selected
                 report.anomalies_affected = dict(self.plan.anomaly.stats.rows_affected)
