@@ -432,3 +432,368 @@ def test_tsv_is_written_tab_separated(fs: Any) -> None:
         URI, "t", [batch(0, 2)], filesystem=fs, format="tsv", path_template="{table}.{ext}"
     )
     assert fs.cat("landing/raw/t.tsv").splitlines()[1] == b"0\t0"
+
+
+# --- OneLake targets: the pre-write check (W7-02) -------------------------------------------
+
+OL = "onelake.dfs.fabric.microsoft.com"
+WS_GUID = "11111111-2222-3333-4444-555555555555"
+ITEM_GUID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+LH_FILES = f"abfss://ws@{OL}/lh.Lakehouse/Files/landing"
+IDS_FORM = f"abfss://<workspace-id>@{OL}/<item-id>/Files/<folder>"
+FILES_ONLY = (
+    "OneLake only accepts files below <item>/Files/ (or Delta tables below <item>/Tables/ "
+    "with the delta sink)"
+)
+WAREHOUSE_MSG = (
+    "Warehouse tables are written through T-SQL, not OneLake storage: use the Fabric "
+    "warehouse writer (the shape-fabric warehouse target)"
+)
+TABLES_MSG = (
+    "files under Tables/ are not tables: write Delta with delta+abfss://... (the delta sink), "
+    "or write files below Files/"
+)
+
+
+class RecordingFs:
+    """Wraps a filesystem and records every method called on it."""
+
+    def __init__(self, inner: Any) -> None:
+        self._inner = inner
+        self.calls: list[str] = []
+
+    def __getattr__(self, name: str) -> Any:
+        attr = getattr(self._inner, name)
+        if callable(attr):
+
+            def call(*a: Any, **k: Any) -> Any:
+                self.calls.append(name)
+                return attr(*a, **k)
+
+            return call
+        return attr
+
+
+@pytest.fixture
+def lake(fs: Any) -> Any:
+    """An in-memory OneLake: workspace ``ws`` with ``lh.Lakehouse`` and ``wh.Warehouse``, and a
+    workspace by GUID holding an item by GUID."""
+    for path in (
+        "ws/lh.Lakehouse/Files",
+        "ws/lh.Lakehouse/Tables",
+        "ws/wh.Warehouse/Tables",
+        f"{WS_GUID}/{ITEM_GUID}/Files",
+    ):
+        fs.mkdir(path, create_parents=True)
+    return fs
+
+
+def everything(fs: Any) -> list[str]:
+    return sorted(fs.find(""))
+
+
+def one_line(exc: BaseException) -> str:
+    text = str(exc)
+    assert "\n" not in text
+    return text
+
+
+@pytest.mark.parametrize(
+    ("uri", "message"),
+    [
+        (
+            f"abfss://my ws@{OL}/lh.Lakehouse/Files/x",
+            f'OneLake workspace or item name "my ws" contains a space; use the workspace and '
+            f"item IDs instead: {IDS_FORM}",
+        ),
+        (
+            f"abfss://my%20ws@{OL}/lh.Lakehouse/Files/x",
+            f'OneLake workspace or item name "my ws" contains a space; use the workspace and '
+            f"item IDs instead: {IDS_FORM}",
+        ),
+        (
+            f"abfss://ws@{OL}/my lh.Lakehouse/Files/x",
+            f'OneLake workspace or item name "my lh.Lakehouse" contains a space; use the '
+            f"workspace and item IDs instead: {IDS_FORM}",
+        ),
+        (
+            f"abfss://ws@{OL}/my%20lh.Lakehouse/Files/x",
+            f'OneLake workspace or item name "my lh.Lakehouse" contains a space; use the '
+            f"workspace and item IDs instead: {IDS_FORM}",
+        ),
+    ],
+)
+def test_onelake_names_with_spaces_are_refused(lake: Any, uri: str, message: str) -> None:
+    with pytest.raises(ValueError) as caught:
+        AbfssSink().write(uri, "t", [batch(0, 2)], filesystem=lake)
+    assert one_line(caught.value) == message
+    assert lake.find("ws") == []
+
+
+@pytest.mark.parametrize("item", ["lh", "lh.NotAType", "lakehouse", ".Lakehouse", "lh."])
+def test_onelake_item_must_be_name_dot_type_or_a_guid(lake: Any, item: str) -> None:
+    with pytest.raises(ValueError) as caught:
+        AbfssSink().write(f"abfss://ws@{OL}/{item}/Files/x", "t", [batch(0, 1)], filesystem=lake)
+    assert one_line(caught.value) == (
+        f'OneLake item "{item}" is not <name>.<ItemType> (for example lh.Lakehouse) or an '
+        f"item ID; use abfss://<workspace>@{OL}/<name>.Lakehouse/Files/<folder>"
+    )
+    assert lake.find("ws") == []
+
+
+def test_onelake_target_without_an_item_is_refused(lake: Any) -> None:
+    with pytest.raises(ValueError) as caught:
+        AbfssSink().write(f"abfss://ws@{OL}", "t", [batch(0, 1)], filesystem=lake)
+    assert one_line(caught.value) == (
+        f"OneLake target has no item; use abfss://<workspace>@{OL}/<name>.Lakehouse/Files/<folder>"
+    )
+
+
+@pytest.mark.parametrize(
+    "path", ["lh.Lakehouse", "lh.Lakehouse/Other/x", "lh.Lakehouse/files/x", f"{ITEM_GUID}/x"]
+)
+def test_onelake_only_files_or_tables_areas(lake: Any, path: str) -> None:
+    with pytest.raises(ValueError) as caught:
+        AbfssSink().write(f"abfss://ws@{OL}/{path}", "t", [batch(0, 1)], filesystem=lake)
+    assert one_line(caught.value) == FILES_ONLY
+    assert [p for p in lake.find("ws") if "/_shape_tmp/" in p or p.endswith(".parquet")] == []
+
+
+def test_onelake_missing_item_cannot_be_created_by_storage(lake: Any) -> None:
+    with pytest.raises(FileNotFoundError) as caught:
+        AbfssSink().write(
+            f"abfss://ws@{OL}/new.Lakehouse/Files/x", "t", [batch(0, 1)], filesystem=lake
+        )
+    assert one_line(caught.value) == (
+        'OneLake item "new.Lakehouse" does not exist in workspace "ws"; the storage API cannot '
+        "create Fabric items: create the Lakehouse in Fabric first (or with shape fabric setup)"
+    )
+    assert not lake.exists("ws/new.Lakehouse")
+    assert not any(p.endswith(".parquet") or "_shape_tmp" in p for p in lake.find("ws"))
+
+
+def test_onelake_missing_item_by_guid_is_refused_too(lake: Any) -> None:
+    other = "99999999-8888-7777-6666-555555555555"
+    with pytest.raises(FileNotFoundError, match=f'OneLake item "{other}" does not exist'):
+        AbfssSink().write(
+            f"abfss://{WS_GUID}@{OL}/{other}/Files/x", "t", [batch(0, 1)], filesystem=lake
+        )
+
+
+@pytest.mark.parametrize("area", ["Files/x", "Tables/x", "Tables", "Other/x"])
+def test_onelake_warehouse_is_written_through_tsql(lake: Any, area: str) -> None:
+    with pytest.raises(ValueError) as caught:
+        AbfssSink().write(
+            f"abfss://ws@{OL}/wh.Warehouse/{area}", "t", [batch(0, 1)], filesystem=lake
+        )
+    assert one_line(caught.value) == WAREHOUSE_MSG
+    assert not any(p.endswith(".parquet") or "_shape_tmp" in p for p in lake.find("ws"))
+
+
+@pytest.mark.parametrize(
+    "path", ["lh.Lakehouse/Tables", "lh.Lakehouse/Tables/t", f"{ITEM_GUID}/Tables"]
+)
+def test_onelake_plain_files_under_tables_are_not_tables(lake: Any, path: str) -> None:
+    ws = WS_GUID if path.startswith(ITEM_GUID) else "ws"
+    with pytest.raises(ValueError) as caught:
+        AbfssSink().write(f"abfss://{ws}@{OL}/{path}", "t", [batch(0, 1)], filesystem=lake)
+    assert one_line(caught.value) == TABLES_MSG
+    assert not any(p.endswith(".parquet") or "_shape_tmp" in p for p in lake.find(ws))
+
+
+def test_every_refusal_leaves_the_filesystem_untouched(lake: Any) -> None:
+    before = everything(lake)
+    for path in ("lh/Files/x", "lh.Lakehouse", "wh.Warehouse/Files/x", "lh.Lakehouse/Tables/x"):
+        with pytest.raises((ValueError, FileNotFoundError)):
+            AbfssSink().write(f"abfss://ws@{OL}/{path}", "t", [batch(0, 1)], filesystem=lake)
+    assert everything(lake) == before
+
+
+@pytest.mark.parametrize(
+    ("uri", "root"),
+    [
+        (f"abfss://ws@{OL}/lh.Lakehouse/Files/landing", "ws/lh.Lakehouse/Files/landing"),
+        (f"abfss://ws@{OL}/lh.Lakehouse/Files", "ws/lh.Lakehouse/Files"),
+        (
+            f"abfss://{WS_GUID}@{OL}/{ITEM_GUID}/Files/landing",
+            f"{WS_GUID}/{ITEM_GUID}/Files/landing",
+        ),
+        (f"abfss://ws@westus-{OL}/lh.Lakehouse/Files/landing", "ws/lh.Lakehouse/Files/landing"),
+        (f"abfss://ws@{OL}/lh.Lakehouse/Files/my%20folder", "ws/lh.Lakehouse/Files/my folder"),
+    ],
+)
+def test_accepted_onelake_forms_write_what_the_sink_wrote_before(
+    lake: Any, monkeypatch: pytest.MonkeyPatch, uri: str, root: str
+) -> None:
+    opts: dict[str, Any] = {"filesystem": lake, "batch_date": "2026-10-02"}
+    assert AbfssSink().write(uri, "t", [batch(0, 5)], **opts) == 5
+    written = {p: lake.cat(p) for p in finals(lake, root)}
+    assert len(written) == 1
+    assert not any("/_shape_tmp/" in p and not p.endswith("/") for p in lake.find(root))
+
+    # the same write with the check switched off (the earlier behavior): identical files
+    for path in lake.find(root):
+        lake.rm(path)
+    monkeypatch.setattr(AbfssSink, "_check_onelake", lambda self, loc, fs: None)
+    AbfssSink().write(uri, "t", [batch(0, 5)], **opts)
+    assert {p: lake.cat(p) for p in finals(lake, root)} == written
+
+
+def test_the_item_is_checked_once_per_uri(lake: Any) -> None:
+    rec = RecordingFs(lake)
+    sink = AbfssSink()
+    for table in ("a", "b", "c"):
+        sink.write(LH_FILES, table, [batch(0, 1)], filesystem=rec)
+    item_checks = [c for c in rec.calls if c == "isdir"]
+    assert len(item_checks) == 1
+
+
+def test_adls_host_is_not_checked_and_makes_no_extra_call(fs: Any) -> None:
+    """Paths that a OneLake check would refuse are written as before on an ADLS Gen2 host, and
+    the filesystem sees exactly the calls it saw before the check existed."""
+    uri = "abfss://my ws@acct.dfs.core.windows.net/no%20type/Other/x"
+    rec = RecordingFs(fs)
+    AbfssSink().write(uri, "t", [batch(0, 3)], filesystem=rec, batch_date="2026-10-02")
+    assert any(p.endswith(".parquet") for p in fs.find(""))
+
+    for path in fs.find(""):
+        fs.rm(path)
+    baseline = RecordingFs(fs)
+    import shape.builtins.sinks.azure as azure_sink
+
+    original = azure_sink.AbfssSink._check_onelake
+    azure_sink.AbfssSink._check_onelake = lambda self, loc, filesystem: None  # type: ignore[method-assign]
+    try:
+        AbfssSink().write(uri, "t", [batch(0, 3)], filesystem=baseline, batch_date="2026-10-02")
+    finally:
+        azure_sink.AbfssSink._check_onelake = original  # type: ignore[method-assign]
+    assert rec.calls == baseline.calls
+
+
+def test_adls_and_a_non_onelake_host_keep_the_old_paths(fs: Any) -> None:
+    for uri in (
+        "abfss://landing@acct.dfs.core.windows.net/lh.Warehouse/Tables/x",
+        "abfss://landing@onelake.example.com/lh/Files/x",
+    ):
+        AbfssSink().write(uri, "t", [batch(0, 1)], filesystem=fs, batch_date="2026-10-02")
+    assert len([p for p in fs.find("landing") if p.endswith(".parquet")]) == 2
+
+
+def test_onelake_refusals_never_contain_a_credential(lake: Any) -> None:
+    secret = "sv=2024&sig=TOPSECRETSIG"
+    for path in ("lh/Files/x", "wh.Warehouse/Files/x", "lh.Lakehouse/Tables/x", "lh.Lakehouse"):
+        with pytest.raises(ValueError) as caught:
+            AbfssSink().write(
+                f"abfss://ws@{OL}/{path}", "t", [batch(0, 1)], filesystem=lake, sas_token=secret
+            )
+        assert secret not in str(caught.value) and "TOPSECRET" not in str(caught.value)
+    with pytest.raises(FileNotFoundError) as missing:
+        AbfssSink().write(
+            f"abfss://ws@{OL}/new.Lakehouse/Files/x",
+            "t",
+            [batch(0, 1)],
+            filesystem=lake,
+            sas_token=secret,
+        )
+    assert "TOPSECRET" not in str(missing.value)
+
+
+class _Forbidden(Exception):
+    status_code = 403
+
+
+def test_a_failing_item_check_is_translated_like_any_storage_error(lake: Any) -> None:
+    class Denied(RecordingFs):
+        def isdir(self, *a: Any, **k: Any) -> Any:
+            raise _Forbidden("AuthorizationFailure sig=TOPSECRET")
+
+        def exists(self, *a: Any, **k: Any) -> Any:
+            raise _Forbidden("AuthorizationFailure sig=TOPSECRET")
+
+        def info(self, *a: Any, **k: Any) -> Any:
+            raise _Forbidden("AuthorizationFailure sig=TOPSECRET")
+
+    with pytest.raises(PermissionError) as caught:
+        AbfssSink().write(LH_FILES, "t", [batch(0, 1)], filesystem=Denied(lake))
+    assert "not authorized to write to abfss://ws@" + OL in str(caught.value)
+    assert "TOPSECRET" not in str(caught.value)
+
+
+def test_the_error_translation_is_unchanged() -> None:
+    from shape.builtins.sinks.azure import translate_error
+
+    class E(Exception):
+        status_code = 404
+
+    err = translate_error(E("x"), "abfss://c@h")
+    assert isinstance(err, FileNotFoundError)
+    assert str(err) == (
+        "abfss://c@h was not found: check the container (or OneLake workspace and lakehouse) "
+        "name, and that the storage account exists"
+    )
+
+
+# --- the same refusals through the command line ----------------------------------------------
+
+
+@pytest.fixture
+def cli_lake(lake: Any, monkeypatch: pytest.MonkeyPatch) -> Any:
+    from shape.builtins.sources import azure
+
+    monkeypatch.setattr(azure, "_filesystem", lambda loc, options: lake)
+    return lake
+
+
+CLI_CASES = [
+    (
+        f"abfss://my%20ws@{OL}/lh.Lakehouse/Files/x",
+        f'OneLake workspace or item name "my ws" contains a space; use the workspace and item '
+        f"IDs instead: {IDS_FORM}",
+    ),
+    (f"abfss://ws@{OL}/lh.Lakehouse/Other/x", FILES_ONLY),
+    (f"abfss://ws@{OL}/wh.Warehouse/Files/x", WAREHOUSE_MSG),
+    (f"abfss://ws@{OL}/lh.Lakehouse/Tables/x", TABLES_MSG),
+    (
+        f"abfss://ws@{OL}/new.Lakehouse/Files/x",
+        'OneLake item "new.Lakehouse" does not exist in workspace "ws"; the storage API cannot '
+        "create Fabric items: create the Lakehouse in Fabric first (or with shape fabric setup)",
+    ),
+]
+
+
+# The missing-item refusal is a FileNotFoundError, which the emit runtime retries and wraps
+# ("delivery failed after N retries: ..."); `stream` and `emit` for that case are blocked on a
+# change outside this package (docs/plans/lane_status/W7-02.md).
+CLI_RUNS = [
+    (command, uri, message)
+    for command in ("generate", "stream", "emit")
+    for uri, message in CLI_CASES
+    if command == "generate" or "does not exist" not in message
+]
+
+
+@pytest.mark.parametrize(("command", "uri", "message"), CLI_RUNS)
+def test_cli_exits_2_before_any_file_appears(
+    cli_lake: Any, capsys: Any, tmp_path: Any, command: str, uri: str, message: str
+) -> None:
+    import json
+    import sys as _sys
+    from pathlib import Path
+
+    from shape.cli.main import main
+
+    _sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scale"))
+    from scale_schemas import plain_doc
+
+    schema = tmp_path / "schema.json"
+    schema.write_text(json.dumps(plain_doc({"customer": 40})))
+    before = everything(cli_lake)
+    if command == "generate":
+        argv = ["generate", str(schema), "--seed", "3", "--to", uri]
+    else:
+        argv = [command, str(schema), "--seed", "3", "--table", "customer"]
+        argv += ["--max-events", "50", "--to", uri]
+    assert main(argv) == 2
+    err = capsys.readouterr().err
+    assert f"shape: error: {message}" in err
+    assert everything(cli_lake) == before

@@ -27,8 +27,11 @@ its final name, so a reader never sees a partial file (:mod:`shape.io.store`).
 from __future__ import annotations
 
 import os
+import re
+import threading
 from collections.abc import Iterable, Mapping
 from typing import Any
+from urllib.parse import unquote
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
@@ -49,6 +52,92 @@ _ENCODERS: dict[str, type[Any]] = {
     "jsonl": JsonlSink,
     "ipc": IpcSink,
 }
+
+
+ONELAKE_HOST = "onelake.dfs.fabric.microsoft.com"
+_GUID = re.compile(r"^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$")
+#: The item types OneLake exposes by name (``<name>.<ItemType>``).
+ITEM_TYPES = frozenset(
+    {
+        "Lakehouse",
+        "Warehouse",
+        "KQLDatabase",
+        "Eventhouse",
+        "SQLDatabase",
+        "MirroredDatabase",
+        "MLModel",
+        "MLExperiment",
+        "Notebook",
+        "SemanticModel",
+        "Report",
+        "DataPipeline",
+        "Dataflow",
+        "Environment",
+        "SparkJobDefinition",
+        "Eventstream",
+        "Reflex",
+        "GraphQLApi",
+    }
+)
+
+
+def is_onelake(host: str | None) -> bool:
+    """True for ``onelake.dfs.fabric.microsoft.com`` and its regional forms
+    (``<region>-onelake.dfs.fabric.microsoft.com``)."""
+    if not host:
+        return False
+    return host == ONELAKE_HOST or host.endswith(("-" + ONELAKE_HOST, "." + ONELAKE_HOST))
+
+
+def _item_kind(segment: str) -> str | None:
+    """The ItemType of ``<name>.<ItemType>``, ``""`` for a GUID, ``None`` for anything else."""
+    if _GUID.match(segment):
+        return ""
+    name, dot, kind = segment.rpartition(".")
+    return kind if dot and name and kind in ITEM_TYPES else None
+
+
+def check_onelake_target(workspace: str, path: str) -> tuple[str, str]:
+    """Refuse, without any storage call, a OneLake target the storage API cannot write.
+    -> (workspace, item) as written, with ``%20`` decoded. Raises ``ValueError``."""
+    workspace = unquote(workspace)
+    segments = [seg for seg in path.split("/") if seg]
+    item = segments[0] if segments else ""
+    for name in (workspace, item):
+        if " " in name:
+            raise ValueError(
+                f'OneLake workspace or item name "{name}" contains a space; use the workspace '
+                f"and item IDs instead: abfss://<workspace-id>@{ONELAKE_HOST}/<item-id>/Files/"
+                "<folder>"
+            )
+    if not item:
+        raise ValueError(
+            f"OneLake target has no item; use abfss://<workspace>@{ONELAKE_HOST}/"
+            "<name>.Lakehouse/Files/<folder>"
+        )
+    kind = _item_kind(item)
+    if kind is None:
+        raise ValueError(
+            f'OneLake item "{item}" is not <name>.<ItemType> (for example lh.Lakehouse) or an '
+            f"item ID; use abfss://<workspace>@{ONELAKE_HOST}/<name>.Lakehouse/Files/<folder>"
+        )
+    if kind == "Warehouse":
+        raise ValueError(
+            "Warehouse tables are written through T-SQL, not OneLake storage: use the Fabric "
+            "warehouse writer (the shape-fabric warehouse target)"
+        )
+    area = segments[1] if len(segments) > 1 else ""
+    if area not in ("Files", "Tables"):
+        raise ValueError(
+            "OneLake only accepts files below <item>/Files/ (or Delta tables below "
+            "<item>/Tables/ with the delta sink)"
+        )
+    if area == "Tables":
+        raise ValueError(
+            "files under Tables/ are not tables: write Delta with delta+abfss://... (the delta "
+            "sink), or write files below Files/"
+        )
+    return workspace, item
 
 
 def encoder_for(fmt: str) -> Encoder:
@@ -90,6 +179,35 @@ class AbfssSink:
     name = "abfss"
     schemes = SCHEMES
 
+    def __init__(self) -> None:
+        self._verified: set[str] = set()
+        self._lock = threading.Lock()
+
+    def _check_onelake(self, loc: azure.Location, fs: Any) -> None:
+        """OneLake only, once per target: the item must exist (the storage API cannot create
+        one). The rules that need no storage call are checked first, every time."""
+        workspace, item = check_onelake_target(loc.container, loc.path)
+        key = f"{workspace}/{item}@{loc.host}"
+        with self._lock:
+            if key in self._verified:
+                return
+        where = f"abfss://{loc.container}@{loc.host}"
+        try:
+            found = bool(fs.isdir(f"{loc.container}/{item}"))
+        except Exception as exc:
+            translated = translate_error(exc, where)
+            if translated is None:
+                raise
+            raise translated from None
+        if not found:
+            raise FileNotFoundError(
+                f'OneLake item "{item}" does not exist in workspace "{workspace}"; the storage '
+                "API cannot create Fabric items: create the Lakehouse in Fabric first (or with "
+                "shape fabric setup)"
+            )
+        with self._lock:
+            self._verified.add(key)
+
     def _store(self, uri: str, options: Mapping[str, Any]) -> FsspecStore:
         loc = azure.parse(uri)
         opts = _with_environment_keys(options)
@@ -115,7 +233,12 @@ class AbfssSink:
     ) -> RollingTableWriter:
         """A streaming writer for ``table`` (``write_batch``, ``flush``, ``close``)."""
         require_scheme(self, uri)
+        loc = azure.parse(uri)
+        if is_onelake(loc.host):
+            check_onelake_target(loc.container, loc.path)  # no storage call: fail before sign-in
         store = self._store(uri, options)
+        if is_onelake(loc.host):
+            self._check_onelake(loc, store.fs)
         rolling = bool(
             options.get("roll_rows") or options.get("roll_seconds") or options.get("streaming")
         )
