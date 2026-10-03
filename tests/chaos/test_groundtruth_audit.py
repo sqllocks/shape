@@ -157,6 +157,16 @@ def test_corruption_parse_names_the_bad_option(text: str, message: str) -> None:
         Corruption.parse(text)
 
 
+def test_duplicates_refuses_a_column() -> None:
+    """#408: duplicates copies whole rows of a table; a column is an error, not ignored."""
+    message = r"duplicates applies to whole rows of a table, not the column 'status'"
+    with pytest.raises(ValueError, match=message):
+        Corruption("duplicates", 0.1, "t", "status")
+    with pytest.raises(ValueError, match=message):
+        Corruption.parse("duplicates=0.1@t.status")
+    assert Corruption.parse("duplicates=0.1@t").column is None
+
+
 def test_read_ground_truth_refuses_an_unknown_log_version(tmp_path: Path) -> None:
     """#410: a log of a version this release does not know is refused, naming the version."""
     log = tmp_path / "log.jsonl"

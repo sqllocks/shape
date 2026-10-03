@@ -121,6 +121,11 @@ class Corruption:
             raise ValueError(f"pii_fill pii is one of {', '.join(PII_KINDS)}")
         if self.kind == "null_creep" and float(self.options.get("step", 0.0)) < 0:
             raise ValueError("null_creep step cannot be negative")
+        if self.kind == "duplicates" and self.column is not None:
+            raise ValueError(
+                f"duplicates applies to whole rows of a table, not the column {self.column!r}: "
+                "name only the table (duplicates=RATE@TABLE)"
+            )
         if self.kind in ("pii_fill", "type_change", "null_creep") and self.column is None:
             raise ValueError(f"{self.kind} needs a column: {self.kind}=RATE@TABLE.COLUMN")
 

@@ -219,7 +219,7 @@ CHAOS_CASES: dict[str, tuple[Corruption, tuple[str, ...]]] = {
         ("mean_shift", "distribution_shift", "range_change"),
     ),
     "duplicates": (
-        Corruption("duplicates", 0.6, "orders", "order_id"),
+        Corruption("duplicates", 0.6, "orders"),
         ("uniqueness_change", "cardinality_change"),
     ),
     "pii_fill": (
@@ -279,16 +279,16 @@ def planted_pairs(trial: int, rows: int) -> list[tuple[Planted, Any, Any]]:
         out.append((entry, baseline, profile_of(today)))
     # chaos corruptions are planted into the same day-1 sample the quiet pairs use
     day1 = base_plan.generate_day(schema, 1, row_counts={"orders": rows})["orders"]
+    keys = {"orders": "order_id"}
     for case, (corruption, kinds) in CHAOS_CASES.items():
-        outcome = corrupt_tables(
-            {"orders": day1}, [corruption], seed=trial, keys={"orders": "order_id"}
-        )
+        outcome = corrupt_tables({"orders": day1}, [corruption], seed=trial, keys=keys)
         (applied,) = outcome.applied
         assert applied["kind"] == corruption.kind
         entry = Planted(
             f"chaos_{case}",
             "chaos",
-            corruption.column,
+            # duplicates copies whole rows; the copies show on the table's key column
+            corruption.column or keys["orders"],
             corruption.kind,
             applied["rows"] / rows,
             kinds,

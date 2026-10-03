@@ -11,7 +11,8 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   key a parent row has, also without a declared reference (#397), and handles narrow integers,
   infinite floats and non-key types (#399); `negative_amounts` refuses unsigned columns (#401); a
   corruption that fits nothing it is aimed at is an error (#403); input errors name the seed, batch
-  or option (#408); `read_ground_truth` checks `log_version`
+  or option, and `duplicates` refuses a column, since it copies whole rows of a table (#408);
+  `read_ground_truth` checks `log_version`
   and names a malformed line (#410); out-of-range anomalies and value chaos no longer overflow on
   huge or infinite floats (#406); `ChaosConfig.validate` lists bad weights, seeds and override
   categories (#414); anomaly report details always carry the same keys (#418); CHAOS.md says

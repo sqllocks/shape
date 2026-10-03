@@ -78,7 +78,7 @@ applies to every table it fits; without a column, to the columns it picks itself
 
 | Kind | What it models | Column when not named | Options |
 |---|---|---|---|
-| `duplicates` | rows delivered twice (at-least-once delivery): copies are appended at the end | the table | |
+| `duplicates` | rows delivered twice (at-least-once delivery): copies are appended at the end | whole rows of the table; naming a column is an error | |
 | `orphan_keys` | foreign keys that match no parent row (the declared parent, else every other table's column of the same name); integer, float or text keys, and an integer column too narrow for the orphan ids becomes `int64` | the table's foreign keys | |
 | `date_shift` | late-arriving or wrongly dated rows | every date and timestamp column | `days` (up to, default 7), `direction` (`both`, `late`, `early`) |
 | `negative_amounts` | sign flips of positive amounts | signed number columns that are not keys (an unsigned column cannot hold a negative and is an error when named) | |
@@ -91,7 +91,8 @@ Every corruption also takes `from` and `to`, the first and last batch in which i
 (`type_change=1@order.amount:from=5,to=7` is a few days of numbers as strings). A corruption that
 cannot apply to what it is aimed at (a column that is not there, text where a date is needed) is an
 error, not a silent no-op: `date_shift@order` on a table with no date column fails, and so does a
-corruption without `@TABLE` that fits no table at all.
+corruption without `@TABLE` that fits no table at all. `duplicates` copies whole rows, so
+`duplicates=0.1@order.status` is refused: name only the table (`duplicates=0.1@order`).
 
 **The log** is JSON Lines. The first line is the run (`record: "run"`, `log_version: 1`, which
 `read_ground_truth` checks: the seed, the batch, the
