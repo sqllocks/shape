@@ -203,6 +203,12 @@ class EventHubsEmitter:
                 data.properties[PROP_SYNTHETIC] = True
             return data
 
+        def too_large(ev: EncodedEvent) -> ShapeError:
+            return ShapeError(
+                f"event {ev.key} ({len(ev.body)} bytes) is larger than an event hub batch; "
+                "make the rows smaller or emit to a hub tier with a larger message size"
+            )
+
         current = new_batch()
         count = 0
         for ev in group:
@@ -211,12 +217,13 @@ class EventHubsEmitter:
                 current.add(data)
             except ValueError:
                 if count == 0:
-                    raise ShapeError(
-                        f"event {ev.key} ({len(ev.body)} bytes) is larger than an event hub batch"
-                    ) from None
+                    raise too_large(ev) from None
                 self._send(client, current, busy)
                 current = new_batch()
-                current.add(data)
+                try:
+                    current.add(data)
+                except ValueError:
+                    raise too_large(ev) from None
                 count = 0
             count += 1
         if count:
