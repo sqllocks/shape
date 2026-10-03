@@ -216,7 +216,7 @@ def test_check_withholds_the_observed_values_of_a_classified_column(api, tmp_pat
 # ---- diff -----------------------------------------------------------------------------------
 
 
-def test_diff_finds_what_the_cli_finds(api, capsys, csv_pair, tmp_path):
+def test_diff_finds_what_the_cli_finds(api, api12, capsys, csv_pair, tmp_path):
     a, b = csv_pair
     pa = api.ok("profile", source=str(a), output=str(tmp_path / "a.shape"))["path"]
     pb = api.ok("profile", source=str(b), output=str(tmp_path / "b.shape"))["path"]
@@ -224,8 +224,15 @@ def test_diff_finds_what_the_cli_finds(api, capsys, csv_pair, tmp_path):
     assert main(["diff", pa, pb]) == 0
     cli = json.loads(capsys.readouterr().out)
     assert result["drifted"] is True and cli["drifted"] is True
-    assert result["changes"] == json.loads(json.dumps(cli["changes"]))
+    # a 1.0 request gets the change records of 1.0: without the change classes of W1-13
+    pre_classes = [
+        {k: v for k, v in c.items() if k not in ("class", "class_reason")} for c in cli["changes"]
+    ]
+    assert result["changes"] == json.loads(json.dumps(pre_classes))
     assert result["change_count"] == len(cli["changes"])
+    latest = api12.ok("diff", {"include_raw_values": True}, before=pa, after=pb)
+    assert latest["changes"] == json.loads(json.dumps(cli["changes"]))
+    assert all("class" in c and "class_reason" in c for c in latest["changes"])
     same = api.ok("diff", before=pa, after=pa)
     assert same["drifted"] is False and same["changes"] == [] and same["change_count"] == 0
 

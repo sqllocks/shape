@@ -22,7 +22,7 @@
             "holdout": null,
             "manifest": null,
             "real": {
-              "dataset_id": "sha256:927845dbf2ecb6bdf1cb07b93ee1ee11068d33191df4afcf9055864dbcc07f53",
+              "dataset_id": "sha256:ed4a40e81d1bf97fe55bbfd1f90a760202a89de3af22461c9dfe4cb300673a65",
               "tables": {
                 "customers": 120
               }
@@ -168,11 +168,10 @@
                   "customers": {
                     "adversarial": null,
                     "adversarial_reason": "adversarial test skipped: scikit-learn is not installed (pip install 'sqllocks-shape[advanced]')",
-                    "conditional_profiles": 2,
+                    "conditional_profiles": 1,
                     "mixture_fit_columns": [],
                     "periodic_columns": [
-                      "amount",
-                      "customer_id"
+                      "amount"
                     ],
                     "temporal_columns": []
                   }
@@ -234,6 +233,12 @@
                     },
                     "passing_rate": 1.0,
                     "string_similarity": {
+                      "customer_id": {
+                        "column": "customer_id",
+                        "cosine_similarity": 0.014885889194962794,
+                        "ngram_n": 3,
+                        "score": 1.49
+                      },
                       "email": {
                         "column": "email",
                         "cosine_similarity": 0.35661379234708135,
@@ -283,6 +288,7 @@
                   "tables": {
                     "customers": {
                       "columns": [
+                        "customer_id",
                         "email",
                         "full_name",
                         "tier"
@@ -290,12 +296,11 @@
                       "exact_match_rate": 0.0,
                       "nn_distance": {
                         "columns": [
-                          "customer_id",
                           "amount"
                         ],
-                        "median": 22887.951286148826,
-                        "min": 22887.705888113585,
-                        "p05": 22887.73039819422,
+                        "median": 0.008302127409569371,
+                        "min": 0.0002591041064102795,
+                        "p05": 0.0007514019085912538,
                         "rows_checked": 120
                       },
                       "reproduced_row_indices": [],

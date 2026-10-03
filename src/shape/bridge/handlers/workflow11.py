@@ -90,7 +90,7 @@ def diff_11(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
     )
     result = shape.diff(before, after, **options)
     doc = jsonable(result.to_dict())
-    changes = doc.pop("changes", [])
+    changes = flow.served_changes(doc.pop("changes", []), ctx)
     if not ctx.include_raw:
         classified = flow.classified_columns(before) | flow.classified_columns(after)
         changes = flow.redact_entries(changes, classified)

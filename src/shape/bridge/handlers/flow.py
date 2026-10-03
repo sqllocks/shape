@@ -161,6 +161,14 @@ def cmd_profile(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
 # ---- diff ---------------------------------------------------------------------------------
 
 
+def served_changes(changes: list[Any], ctx: Context) -> list[Any]:
+    """The change records as the request's version gives them: change classes (W1-13) came
+    after 1.1, so a 1.0 or 1.1 request gets the records without ``class`` and ``class_reason``."""
+    if ctx.minor >= 2:
+        return changes
+    return [{k: v for k, v in c.items() if k not in ("class", "class_reason")} for c in changes]
+
+
 def cmd_diff(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
     import shape
 
@@ -177,7 +185,7 @@ def cmd_diff(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
     if not ctx.include_raw:
         classified = classified_columns(before) | classified_columns(after)
         doc["changes"] = redact_entries(doc.get("changes", []), classified)
-    changes = doc.pop("changes", [])
+    changes = served_changes(doc.pop("changes", []), ctx)
     return {
         "drifted": bool(doc.pop("drifted", result.drifted)),
         "change_count": len(changes),

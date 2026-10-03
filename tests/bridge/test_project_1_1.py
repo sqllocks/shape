@@ -280,7 +280,7 @@ def test_an_existing_path_wins_over_a_source_name(home, api11, monkeypatch):
     assert list(result["tables"]) == ["t"]  # the folder, not data/a.csv of the source
 
 
-def test_diff_applies_the_sources_policy_and_annotates_like_the_cli(home, api11, capsys):
+def test_diff_applies_the_sources_policy_and_annotates_like_the_cli(home, api11, api12, capsys):
     profile_both(api11, home)
     project = str(home / "shape.yml")
     plain = api11.ok("diff", before=str(home / "a.shape"), after=str(home / "b.shape"))
@@ -318,7 +318,17 @@ def test_diff_applies_the_sources_policy_and_annotates_like_the_cli(home, api11,
         {k: v for k, v in c.items() if k not in ("baseline", "current", "redacted")}
         for c in expected["changes"]
     ]
-    assert redacted == cleaned
+    # a 1.1 request gets the change records of 1.1: without the change classes of W1-13
+    assert redacted == [
+        {k: v for k, v in c.items() if k not in ("class", "class_reason")} for c in cleaned
+    ]
+    latest = api12.ok(
+        "diff", before=str(home / "a.shape"), after=str(home / "b.shape"), project=project
+    )
+    assert [
+        {k: v for k, v in c.items() if k not in ("baseline", "current", "redacted")}
+        for c in latest["changes"]
+    ] == cleaned
 
 
 def test_a_flag_beats_the_project_on_diff(home, api11):
