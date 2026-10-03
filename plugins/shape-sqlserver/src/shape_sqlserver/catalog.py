@@ -160,7 +160,8 @@ def read_catalog(cursor: Any, schema: str, tables: Iterable[str] | None = None) 
         columns = [
             ColumnInfo(
                 name=c["column_name"],
-                type_name=c["type_name"],
+                # an alias type is read, typed and profiled as its base system type
+                type_name=c.get("base_type_name") or c["type_name"],
                 max_length=int(c["max_length"] or 0),
                 precision=int(c["precision"] or 0),
                 scale=int(c["scale"] or 0),

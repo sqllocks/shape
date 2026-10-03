@@ -198,11 +198,17 @@ WHERE s.name = ?
 ORDER BY t.name
 """
 
+# ``base_type_name`` is the system type under a user-defined alias type (``CREATE TYPE Amount
+# FROM decimal(10, 2)`` gives ``decimal``), and the type itself otherwise (CLR types included).
 COLUMNS_QUERY = """
 SELECT c.name AS column_name, tp.name AS type_name,
+    COALESCE(bt.name, tp.name) AS base_type_name,
     c.max_length, c.precision, c.scale, c.is_nullable, c.is_identity, c.column_id
 FROM sys.columns c
 JOIN sys.types tp ON c.user_type_id = tp.user_type_id
+LEFT JOIN sys.types bt
+    ON tp.is_user_defined = 1 AND tp.is_assembly_type = 0
+    AND bt.user_type_id = tp.system_type_id
 WHERE c.object_id = ?
 ORDER BY c.column_id
 """

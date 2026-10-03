@@ -177,7 +177,8 @@ The URI never carries a secret. Options: `connection` (an open connection, left 
 `connection_string`, `auth` or `credentials`, `user` and `password` (a SQL login),
 `trust_server_certificate`, `batch_size`. A table with a primary key is read in key order, so
 reading twice gives the same data. `datetimeoffset` arrives as UTC timestamps, `money` and
-`decimal` as `decimal128`, `uniqueidentifier` as text.
+`decimal` as `decimal128`, `uniqueidentifier` as text. A column of a user-defined alias type
+(`CREATE TYPE Amount FROM decimal(10, 2)`) is read and profiled as its base system type.
 
 ## For plugin authors
 

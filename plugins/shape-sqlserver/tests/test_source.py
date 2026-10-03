@@ -321,7 +321,7 @@ def test_alias_type_columns_are_read_and_profiled_as_their_base_type():
 
     from shape_sqlserver import profile_database
 
-    columns = profile_database(connection=conn()).to_dict()["tables"]["t"]["columns"]
+    columns = profile_database(connection=conn()).summary()["tables"]["t"]["columns"]
     assert columns["amt"]["dtype"] == "float"
-    assert columns["amt"]["min_value"] == 5.25
+    assert columns["amt"]["min"] == 5.25
     assert columns["flag"]["dtype"] == "boolean"
