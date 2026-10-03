@@ -169,3 +169,24 @@ No output that a verifier compares changed. `benchmarks/vs_spindle/bridge_1to1` 
 results changed (the `jsonable` change only touches NumPy objects, which none returns, and paths
 are not compared). `tests/bridge/test_parity_compare.py` passes. The harness itself needs
 `$SPINDLE_ROOT`, which this container does not have.
+
+## Checks run in this session (final)
+
+Environment: `/root/.venvs/shape` with `pip install -e '.[dev,streaming,advanced]'` and the
+plugins `shape-domains`, `shape-kafka`, `shape-eventhubs`, `shape-sqlserver`, `shape-fabric`
+(pyarrow 25.0.1); a second venv with `tests/demo/fabric/requirements.txt` (pyarrow 19.0.1, as the
+`fabric-demo` CI job) and unixODBC for `tests/demo/fabric`.
+
+| check | result |
+|---|---|
+| `ruff check src tests plugins benchmarks/vs_spindle` | All checks passed |
+| `ruff format --check src tests plugins benchmarks/vs_spindle` | 1098 files already formatted |
+| `mypy` | Success: no issues found in 436 source files |
+| `python scripts/check_user_facing.py` (D-13) | clean |
+| `SHAPE_KERNEL=rust pytest -m "not emulator and not live" --ignore=tests/demo/fabric` | 6943 passed, 2 skipped, 2 failed: both `tests/demo_cmd/test_notebook_and_outputs.py` (`.bim` model) need the `shape-fabric` plugin, which was not installed for that run; with it installed they pass in both kernels (14 passed each) |
+| `SHAPE_KERNEL=python pytest -m "not emulator and not live" --ignore=tests/demo/fabric` | 6945 passed, 2 skipped |
+| `SHAPE_KERNEL=rust pytest tests/demo/fabric` (fabric venv) | 216 passed |
+| `SHAPE_KERNEL=python pytest tests/demo/fabric` (fabric venv) | 216 passed |
+
+The 2 skips need `shape_databases` (the `shape-databases` plugin, installed only by its own CI job).
+`origin/build/main-plan` had no new commits at the end of the session (nothing to merge).
