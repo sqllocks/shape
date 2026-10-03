@@ -44,7 +44,7 @@ def test_generate_sample_is_registered_with_the_planned_signature(app):
     names = f.__code__.co_varnames[: f.__code__.co_argcount]
     assert names == ("domain", "table", "rows", "seed")
     assert f.__defaults__ == (10000, 42)
-    tree = ast.parse((UDF_DIR / "function_app.py").read_text())
+    tree = ast.parse((UDF_DIR / "function_app.py").read_text(encoding="utf-8"))
     node = next(
         n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "generateSample"
     )

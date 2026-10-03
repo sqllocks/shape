@@ -185,9 +185,8 @@ def run(settings: dict[str, Any], shape_cmd: list[str], workdir: str | Path | No
         work = Path(tmp)
         try:
             gate = evaluate(settings, work, shape_cmd)
-            base = output.rstrip("/")
             for parquet in sorted((work / DATA_DIR).glob("*.parquet")):
-                run_gate._upload(parquet, f"{base}/{DATA_DIR}", parquet.name, client_id)
+                run_gate._upload(parquet, run_gate.join_location(output, DATA_DIR), parquet.name, client_id)
             gate["contractUrl"] = run_gate._upload(
                 work / CONTRACT_FILE, output, CONTRACT_FILE, client_id
             )

@@ -23,8 +23,8 @@ def _load_sheet_builder():
 
 
 sheet = _load_sheet_builder()
-TALK = (DEMO / "TALK.md").read_text()
-BENCH = (DEMO / "BENCHMARKS.md").read_text()
+TALK = (DEMO / "TALK.md").read_text(encoding="utf-8")
+BENCH = (DEMO / "BENCHMARKS.md").read_text(encoding="utf-8")
 
 
 def test_benchmark_sheet_is_up_to_date():
@@ -33,7 +33,7 @@ def test_benchmark_sheet_is_up_to_date():
 
 
 def _product():
-    return json.loads((BASE / "product_bench.json").read_text())
+    return json.loads((BASE / "product_bench.json").read_text(encoding="utf-8"))
 
 
 def test_benchmark_sheet_matches_product_json():
@@ -99,15 +99,15 @@ def test_nothing_in_the_kit_names_the_retired_baseline():
             "build_benchmark_sheet.py",
         )
     ]:
-        assert word not in path.read_text().lower(), path.name
+        assert word not in path.read_text(encoding="utf-8").lower(), path.name
     for path in (REPO / "docs" / "talks").rglob("*"):
         if path.is_file():
-            assert word not in path.read_text().lower(), str(path.relative_to(REPO))
+            assert word not in path.read_text(encoding="utf-8").lower(), str(path.relative_to(REPO))
 
 
 def test_public_wording():
     for name in ("TALK.md", "BENCHMARKS.md", "DRIFT.md", "LIVE_TIMINGS.md"):
-        text = (DEMO / name).read_text().lower()
+        text = (DEMO / name).read_text(encoding="utf-8").lower()
         for banned in (
             "retire",
             "successor",
@@ -131,7 +131,7 @@ def test_the_kit_makes_no_comparison_claims():
 
 
 def test_live_timings_is_a_marked_placeholder():
-    text = (DEMO / "LIVE_TIMINGS.md").read_text()
+    text = (DEMO / "LIVE_TIMINGS.md").read_text(encoding="utf-8")
     assert "PLACEHOLDER" in text and "Not measured yet" in text
     rows = [r for r in text.splitlines() if r.startswith("| ") and "---" not in r][1:]
     assert rows and all("TBD" in r for r in rows)

@@ -184,7 +184,7 @@ def session(tmp_path_factory):
     builder_ = (
         SparkSession.builder.master("local[2]")
         .appName("shape-synapse-generate-tests")
-        .config("spark.sql.warehouse.dir", str(tmp_path_factory.mktemp("warehouse")))
+        .config("spark.sql.warehouse.dir", tmp_path_factory.mktemp("warehouse").as_uri())
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
         .config(
             "spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog"
@@ -343,7 +343,7 @@ def test_the_notebook_writes_every_table_as_delta_and_the_contract(session, adls
     engine = expected["customer"].to_pandas()
     assert customer["customer_id"].tolist() == engine["customer_id"].tolist()
     assert customer["first_name"].tolist() == engine["first_name"].tolist()
-    contract = json.loads((adls / "shape" / "generated" / "retail" / "contract.json").read_text())
+    contract = json.loads((adls / "shape" / "generated" / "retail" / "contract.json").read_text(encoding="utf-8"))
     assert set(contract["tables"]) == set(expected.tables)
     assert contract["tables"]["customer"]["row_count"] == {"min": 1000, "max": 1000}
 

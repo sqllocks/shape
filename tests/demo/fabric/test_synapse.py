@@ -111,7 +111,7 @@ def spark(tmp_path_factory):
     builder_ = (
         SparkSession.builder.master("local[2]")
         .appName("shape-synapse-tests")
-        .config("spark.sql.warehouse.dir", str(tmp_path_factory.mktemp("warehouse")))
+        .config("spark.sql.warehouse.dir", tmp_path_factory.mktemp("warehouse").as_uri())
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
         .config(
             "spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog"

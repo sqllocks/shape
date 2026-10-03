@@ -39,7 +39,7 @@ def trunc_int(x: float) -> str:
 
 
 def build() -> str:
-    d = json.loads(SRC.read_text())
+    d = json.loads(SRC.read_text(encoding="utf-8"))
     meta, su = d["_meta"], d["startup"]
     lines = [
         "# Benchmark sheet",
@@ -108,11 +108,11 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
     text = build()
     if a.check:
-        if not OUT.exists() or OUT.read_text() != text:
+        if not OUT.exists() or OUT.read_text(encoding="utf-8") != text:
             print("demo/BENCHMARKS.md is out of date", file=sys.stderr)
             return 1
         return 0
-    OUT.write_text(text)
+    OUT.write_text(text, encoding="utf-8")
     return 0
 
 
