@@ -67,9 +67,9 @@ the gate schema and the contract format, with its own `format` and `version`:
 | `utility` | `utility` (`--source`) | the model target and the minimum retention (below) |
 
 Each gate runs only when its keys are present, with or without `--schema`; the report lists
-the gates that ran. Every key is checked when the file is read: an unknown key, a wrong type
-or a bad date is refused with exit `2` and a message naming the key, so a misspelt rule cannot
-be skipped silently; a `ranges`, `no_future` or `ordering` entry that names a table or column
+the gates that ran. Every key is checked when the file is read: an unknown key, a wrong type,
+a bad date, a NaN bound, a `min` above its `max` or a `start` after its `end` is refused with
+exit `2` and a message naming the key, so a misspelt rule cannot be skipped silently; a `ranges`, `no_future` or `ordering` entry that names a table or column
 the data does not have is a warning in the report. `date_range` and `no_future` apply to columns whose type is a timestamp
 (Parquet timestamps; CSV and JSONL text columns are strings, so convert them first).
 

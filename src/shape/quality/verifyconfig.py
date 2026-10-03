@@ -11,9 +11,10 @@ a misspelt rule can never be skipped without notice.
 from __future__ import annotations
 
 import json
+import math
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -60,8 +61,12 @@ def _check_ranges(value: Any) -> None:
         for b, v in bounds.items():
             if b not in ("min", "max"):
                 raise VerifyConfigError(f'ranges["{key}"]: unknown key "{b}" (use "min", "max")')
-            if not _number(v):
+            if not _number(v) or math.isnan(v):
                 raise VerifyConfigError(f'ranges["{key}"]["{b}"] must be a number, not {v!r}')
+        if "min" in bounds and "max" in bounds and bounds["min"] > bounds["max"]:
+            raise VerifyConfigError(
+                f'ranges["{key}"]: "min" {bounds["min"]} is above "max" {bounds["max"]}'
+            )
 
 
 def _check_date(where: str, value: Any) -> None:
@@ -81,6 +86,16 @@ def _check_date_range(value: Any) -> None:
         if k not in ("start", "end"):
             raise VerifyConfigError(f'date_range: unknown key "{k}" (use "start", "end")')
         _check_date(f'date_range["{k}"]', v)
+    if "start" in value and "end" in value and _instant(value["start"]) > _instant(value["end"]):
+        raise VerifyConfigError(
+            f'date_range: "start" {value["start"]} is after "end" {value["end"]}'
+        )
+
+
+def _instant(text: str) -> datetime:
+    """An ISO time as an aware datetime (a naive one is UTC, as the gate reads it)."""
+    dt = datetime.fromisoformat(text)
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=UTC)
 
 
 def _check_no_future(value: Any) -> None:
