@@ -354,3 +354,29 @@ def test_678_the_emit_checkpoint_declares_a_version(tmp_path, capsys):
     assert main([*args, "-o", str(out), "--max-events", "40"]) == 2
     err = capsys.readouterr().err
     assert "version 2" in err and "upgrade" in err.lower()
+
+
+def test_709_a_csv_with_a_repeated_column_name_is_refused(tmp_path, capsys):
+    dup = tmp_path / "dup.csv"
+    dup.write_text("a,b,a\n1,2,3\n")
+    assert main(["stream-profile", str(dup), "-o", str(tmp_path / "o.json")]) == 2
+    err = capsys.readouterr().err
+    assert "'a'" in err and "more than once" in err and "dup.csv" in err
+    assert not (tmp_path / "o.json").exists()
+
+
+def test_709_a_parquet_file_with_a_repeated_column_name_is_refused(tmp_path, capsys):
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    dup = tmp_path / "dup.parquet"
+    pq.write_table(pa.table([[1], [2]], names=["a", "a"]), dup)
+    assert main(["stream-profile", str(dup), "-o", str(tmp_path / "o.json")]) == 2
+    assert "more than once" in capsys.readouterr().err
+
+
+def test_709_distinct_names_still_profile(tmp_path, capsys):
+    ok = tmp_path / "ok.csv"
+    ok.write_text("a,b,A\n1,2,3\n")  # names differing in case are different names
+    assert main(["stream-profile", str(ok), "-o", str(tmp_path / "o.json")]) == 0
+    assert json.loads(capsys.readouterr().out)["events"] == 1
