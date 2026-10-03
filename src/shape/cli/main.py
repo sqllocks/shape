@@ -678,6 +678,24 @@ def _diff_options(a):
     }
 
 
+def _check_only(a, *profiles):
+    """Every ``--only`` name (a column, ``table.column`` or a glob) must match a column of a
+    profile: otherwise nothing is compared and the run reports no drift."""
+    import fnmatch
+
+    wanted = _diff_options(a)["only_columns"] or []
+    known, bare = [], []
+    for prof in profiles:
+        for tname, table in prof.tables.items():
+            for cname in table["columns"]:
+                known += [cname, f"{tname}.{cname}"]
+                bare.append(cname)
+    for name in wanted:
+        if not any(fnmatch.fnmatchcase(k, name) for k in known):
+            shown = ", ".join(dict.fromkeys(bare))
+            raise ValueError(f"--only {name!r} matches no column of the profiles (columns: {shown})")
+
+
 def _cmd_diff(a):
     import shape
     from shape.cli import project as project_cli
@@ -690,13 +708,16 @@ def _cmd_diff(a):
     as_of = project_cli.baseline_date(a)
     baseline = None
     if a.after is not None:  # BASE and CURRENT given: no baseline is looked up
-        changes = shape.diff(shape.load(a.before), current, **options).changes
+        base = shape.load(a.before)
+        _check_only(a, base, current)
+        changes = shape.diff(base, current, **options).changes
     else:
         if source is None:
             raise ValueError(
                 "shape diff needs BASE.shape and CURRENT.shape (or one CURRENT.shape when "
                 "shape.yml declares the source's baseline)"
             )
+        _check_only(a, current)
         changes, baseline = _diff_against_baseline(ctx, source, current, options, as_of)
     out = {"drifted": bool(changes), "changes": changes}
     if ctx:
