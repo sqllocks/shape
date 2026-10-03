@@ -103,13 +103,32 @@ def _quote(text: str) -> str:
     return "'" + text.replace("'", "''") + "'"
 
 
+_ACCOUNT_NAME = re.compile(r"[a-z0-9]{3,24}")
+
+
+def _account_name(target: str) -> str:
+    """The storage account named by ``target``'s host, refused unless it is a valid Azure storage
+    account name (3-24 lower-case letters and digits): it is spliced into a connection string,
+    where ``;`` would add keys (#296). Host names are case-insensitive, so it is lower-cased."""
+    host = urlparse(target).netloc.partition("@")[2]
+    account = host.partition(".")[0].lower()
+    if not _ACCOUNT_NAME.fullmatch(account):
+        raise ValueError(
+            f"{target}: {account!r} is not a valid Azure storage account name (3 to 24 "
+            "lower-case letters and digits); give the location as "
+            "abfss://<container>@<account>.dfs.core.windows.net/<path>"
+        )
+    return account
+
+
 def _azure_secret(target: str, opts: Mapping[str, str]) -> str | None:
     """A DuckDB ``CREATE SECRET`` for the Azure options ``DeltaSource`` derived for delta-rs."""
-    host = urlparse(target).netloc.partition("@")[2]
-    account = host.partition(".")[0]
     key = opts.get("azure_storage_account_key")
     sas = opts.get("azure_storage_sas_key")
     token = opts.get("azure_storage_token")
+    if not (key or sas or token):
+        return None
+    account = _account_name(target)
     if key:
         conn = f"DefaultEndpointsProtocol=https;AccountName={account};AccountKey={key};"
         return (
