@@ -73,6 +73,15 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   rule proposal and version 1, byte for byte as before, otherwise; version 2 adds the status
   `stale` for an accepted rule whose evidence no longer holds (`shape proposals list --status
   stale`). `propose` kinds default to `relationship,pii,semantic` as before.
+- `shape contract emit CONTRACT.json --to ddl|jsonschema|pandera|gx` (`docs/CONTRACT_EMIT.md`, W5-04):
+  a v1 contract as `CREATE TABLE` DDL for the SQL sink's four dialects (Fabric Warehouse constraints
+  `NOT ENFORCED`), a draft 2020-12 JSON Schema for a row, a pandera schema as generated Python text,
+  or a Great Expectations 1.x suite. Output is byte-identical for the same contract. Every rule a
+  target cannot state is listed in `not_expressed` (`--strict` exits 1 and writes nothing; `--json`
+  prints the `shape-contract-emit` version 1 result) and kept as metadata (`x-shape`, pandera
+  `metadata`, GX `meta`); `contract_from` rebuilds the expressible part (or all of it with
+  `use_meta=True`) from a JSON Schema or a suite. New sample `examples/contracts/orders.contract.json`.
+  `shape.schemacheck` now understands `maximum`, `pattern` and `not`.
 
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and

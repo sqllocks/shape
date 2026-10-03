@@ -3,9 +3,9 @@ enforced without adding a dependency.
 
 Supported: ``type`` (also a list), ``enum``, ``const``, ``required``, ``properties``,
 ``patternProperties``, ``additionalProperties`` (false or a schema), ``items``, ``minItems``,
-``minimum``, ``maximum``, ``anyOf``, ``allOf``, ``not``, ``if``/``then`` and local ``$ref``
-(``#/$defs/...``). Anything else in a schema is ignored, so schemas that use other keywords are
-only checked for the ones listed here.
+``minimum``, ``maximum``, ``pattern`` (not anchored: a search, as in JSON Schema), ``anyOf``,
+``allOf``, ``not``, ``if``/``then`` and local ``$ref`` (``#/$defs/...``). Anything else in a schema
+is ignored, so schemas that use other keywords are only checked for the ones listed here.
 """
 
 from __future__ import annotations
@@ -89,6 +89,8 @@ def problems(
         add(f"{value} < minimum {schema['minimum']}")
     if "maximum" in schema and _is_type(value, "number") and value > schema["maximum"]:
         add(f"{value} > maximum {schema['maximum']}")
+    if "pattern" in schema and isinstance(value, str) and not re.search(schema["pattern"], value):
+        add(f"{value!r} does not match pattern {schema['pattern']!r}")
     if "not" in schema and not problems(value, schema["not"], path, root):
         add("matches a schema it must not match")
     for sub in schema.get("allOf", []):

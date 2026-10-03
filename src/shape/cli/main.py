@@ -1205,6 +1205,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli import design as design_cmd
 
     design_cmd.add_parsers(sub)
+    from shape.cli import contract as contract_cmd
+
+    contract_cmd.add_parsers(sub)
     fd = sub.add_parser(
         "from-ddl",
         help="read SQL CREATE TABLE DDL into a generation schema",
@@ -1744,6 +1747,10 @@ def _dispatch(argv):
         from shape.cli.transform import run as run_transform
 
         return _run(run_transform, a)
+    if a.cmd == "contract":
+        from shape.cli.contract import run as run_contract
+
+        return _run(run_contract, a)
     if a.cmd == "design":
         from shape.cli.design import run as run_design
 
