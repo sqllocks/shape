@@ -11,7 +11,7 @@ shape demo run retail --mode seeding --connection here     # write the tables th
 shape demo status SESSION                                  # what a session made
 shape demo report SESSION --format html --output report.html
 shape demo cleanup SESSION                                 # remove exactly what it made
-shape demo notebook retail --mode seeding -o retail.ipynb  # a Fabric notebook for the scenario
+shape demo notebook retail --mode seeding --output retail.ipynb  # a Fabric notebook
 ```
 
 Install the domains (`pip install 'sqllocks-shape[domains]'`) for the scenarios that generate
