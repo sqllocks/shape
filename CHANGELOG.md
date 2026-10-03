@@ -5,6 +5,12 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- `shape diff`: new `row_count_change` kind (a table with more than twice or fewer than half the
+  baseline's rows; thresholds `row_count_ratio_max` and `row_count_ratio_min`). `distribution_change`
+  now respects sample size: a changed fitted-family name is reported only when the samples also
+  differ by more than sampling noise, so two samples of one distribution no longer trigger it. A
+  planted-drift sweep (`tests/diff/test_drift_sweep.py`; fast in CI, full nightly) guards both
+  (`docs/DRIFT.md`).
 - `sqllocks-shape-simulation`, financial simulator: the default window is now the whole span of
   the transactions plus one settlement batch, not 24 hours, so settlements, fraud bursts and
   clearing cover every month of a multi-month table. `duration_hours` still overrides it

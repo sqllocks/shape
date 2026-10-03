@@ -61,6 +61,12 @@ jobs:
         env: {SHAPE_KERNEL: python}
       - run: python -m pytest -q tests/kernel
         env: {SHAPE_KERNEL: rust}
+      # W1-08: the planted-drift sweep at its fast size, once per kernel (a change that misses
+      # planted drift, or makes a same-distribution pair drift, fails here)
+      - run: python -m pytest -q tests/diff/test_drift_sweep.py
+        env: {SHAPE_KERNEL: python, SHAPE_DRIFT_SWEEP: fast}
+      - run: python -m pytest -q tests/diff/test_drift_sweep.py
+        env: {SHAPE_KERNEL: rust, SHAPE_DRIFT_SWEEP: fast}
   plugin-skeletons:
     # P2-06: every first-party plugin distribution builds a pure wheel, and the example plugin,
     # installed from outside the tree, passes the conformance kit (G2) on every OS.
