@@ -14,6 +14,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 import pyarrow.csv as pacsv  # type: ignore[import-untyped]
 
+from shape.io import sniff_delimiter
 from shape.kernel.dispatch import get_kernel
 
 # threading
@@ -79,6 +80,9 @@ class _Col:
     tz: str | None = None  # dt64 only: the Parquet column's time zone (arr holds UTC instants)
     # file sources only: fail where the reference profiler fails on the same file (P1-08)
     strict: bool = False
+    # text kept as text (an Excel cell stored as text): no number, date or boolean is inferred
+    # from its values, so identifiers such as ZIP codes keep their leading zeros
+    text: bool = False
 
 
 def _is_string_view(typ: pa.DataType) -> bool:
@@ -202,9 +206,38 @@ def _block_size(path: str | Path, n: int) -> int:
     return min(_MAX_BLOCK, max(_MIN_BLOCK, -(-size // (2 * n))))
 
 
-def read_csv(path: str | Path, threads: int | None = None) -> pa.Table:
+@dataclass(frozen=True)
+class CsvFormat:
+    """How to read a CSV file. ``delimiter`` of ``None`` is sniffed (comma, semicolon, tab or
+    pipe); ``encoding`` of ``None`` is UTF-8 and ``quotechar`` of ``None`` is the double quote."""
+
+    delimiter: str | None = None
+    encoding: str | None = None
+    quotechar: str | None = None
+    header: bool = True
+
+
+def _csv_options(path: str | Path, fmt: CsvFormat | None) -> tuple[CsvFormat, Any]:
+    """``(the format, Arrow parse options)`` for a file: the delimiter is sniffed if not given."""
+    f = fmt or CsvFormat()
+    delimiter = f.delimiter or sniff_delimiter(path, f.encoding, f.quotechar) or ","
+    if len(delimiter) != 1:
+        raise ValueError(f"the CSV delimiter must be one character, got {delimiter!r}")
+    po = pacsv.ParseOptions(delimiter=delimiter, quote_char=f.quotechar or '"')
+    return f, po
+
+
+def read_csv(
+    path: str | Path, threads: int | None = None, fmt: CsvFormat | None = None
+) -> pa.Table:
     n = _n_threads(threads)
-    ro = pacsv.ReadOptions(use_threads=n != 1, block_size=_block_size(path, n))
+    f, po = _csv_options(path, fmt)
+    ro = pacsv.ReadOptions(
+        use_threads=n != 1,
+        block_size=_block_size(path, n),
+        encoding=f.encoding or "utf8",
+        autogenerate_column_names=not f.header,
+    )
     co = pacsv.ConvertOptions(
         null_values=PANDAS_NA,
         strings_can_be_null=True,
@@ -213,8 +246,8 @@ def read_csv(path: str | Path, threads: int | None = None) -> pa.Table:
         false_values=["False", "FALSE", "false"],
         timestamp_parsers=["@@never%Y"],  # pandas.read_csv does not parse datetimes
     )
-    table = pacsv.read_csv(path, read_options=ro, convert_options=co)
-    table = _refine_integers(path, table, ro, co)
+    table = pacsv.read_csv(path, read_options=ro, parse_options=po, convert_options=co)
+    table = _refine_integers(path, table, ro, po, co)
     return _mixed_chunk_columns(table)
 
 
@@ -338,7 +371,7 @@ _U64_MAX = 2**64 - 1
 _DEC_MAX = 10**38
 
 
-def _refine_integers(path: str | Path, table: pa.Table, ro: Any, co: Any) -> pa.Table:
+def _refine_integers(path: str | Path, table: pa.Table, ro: Any, po: Any, co: Any) -> pa.Table:
     """pandas' integer rules where Arrow's differ: a ``+`` sign is an int, positive values up
     to 2**64-1 make a uint64 column, anything wider than that is an object column of Python
     ints (held here as decimal128(38, 0)). Arrow reads all of these as float64, so only float
@@ -362,7 +395,7 @@ def _refine_integers(path: str | Path, table: pa.Table, ro: Any, co: Any) -> pa.
         include_columns=cands,
         column_types={c: pa.string() for c in cands},
     )
-    text = pacsv.read_csv(path, read_options=ro, convert_options=co2)
+    text = pacsv.read_csv(path, read_options=ro, parse_options=po, convert_options=co2)
     for name in cands:
         col = text[name]
         if col.null_count or not pc.all(pc.match_substring_regex(col, _INT_TEXT)).as_py():

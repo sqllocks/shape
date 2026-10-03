@@ -46,11 +46,15 @@ def test_round_trip_multi_table(tmp_path: Path, orders, customers):
 def test_nan_and_infinity_round_trip(tmp_path: Path):
     t = pa.table({"x": pa.array([1.0, float("inf"), 3.0, float("-inf"), float("nan"), 5.0] * 10)})
     p = shape.profile(t)
-    assert p.to_dict()["columns"]["x"]["std"] == "NaN"
+    col = p.to_dict()["columns"]["x"]
+    # ISS-profile #22: NaN and infinity are counted apart and kept out of the statistics, so the
+    # profile itself holds only finite numbers
+    assert (col["nan_count"], col["inf_count"]) == (10, 20)
+    assert col["std"] == pytest.approx(1.6329931618554523 * (30 / 29) ** 0.5)
     shape.save(p, tmp_path / "n.shape")
     q = shape.load(tmp_path / "n.shape")
     assert q == p
-    assert q.to_dict()["columns"]["x"]["min_value"] == ["float", -math.inf]
+    assert q.to_dict()["columns"]["x"]["min_value"] == ["float", 1.0]
 
 
 def test_raw_float_nan_and_inf_are_encoded_explicitly(tmp_path: Path):

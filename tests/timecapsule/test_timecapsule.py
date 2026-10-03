@@ -68,10 +68,56 @@ def test_generation_is_frozen(generation: Path) -> None:
     assert files <= owned, f"unlisted files in {generation.name}: {sorted(files - owned)}"
 
 
+def _is_default(value: object) -> bool:
+    return value is None or value is False or value in ("", 0) or value == [] or value == {}
+
+
+def problems(actual: object, expected: object, path: str = "$") -> list[str]:
+    """How ``actual`` departs from ``expected``. Every recorded value must be there unchanged. A
+    later release may add an optional field, and a file that lacks it reads with its default, so
+    a field that only ``actual`` has is accepted when it holds an empty default (``null``,
+    ``false``, ``0``, ``""``, ``[]``, ``{}``) and nothing else: a value the old file cannot have
+    carried is a change of meaning."""
+    if isinstance(expected, dict) and isinstance(actual, dict):
+        out: list[str] = []
+        for key in expected:
+            if key not in actual:
+                out.append(f"{path}.{key}: missing")
+            else:
+                out += problems(actual[key], expected[key], f"{path}.{key}")
+        for key in actual.keys() - expected.keys():
+            if not _is_default(actual[key]):
+                out.append(f"{path}.{key}: new field with a value ({str(actual[key])[:40]})")
+        return out
+    if isinstance(expected, list) and isinstance(actual, list):
+        if len(expected) != len(actual):
+            return [f"{path}: {len(actual)} items, recorded {len(expected)}"]
+        return [
+            p
+            for i, (a, e) in enumerate(zip(actual, expected, strict=True))
+            for p in problems(a, e, f"{path}[{i}]")
+        ]
+    if actual != expected or type(actual) is not type(expected):
+        return [f"{path}: {str(actual)[:40]} != recorded {str(expected)[:40]}"]
+    return []
+
+
+def test_the_comparison_accepts_only_added_defaults() -> None:
+    assert problems({"a": 1, "b": None, "c": []}, {"a": 1}) == []
+    assert problems({"a": 1, "b": 2}, {"a": 1}) == ["$.b: new field with a value (2)"]
+    assert problems({"a": 2}, {"a": 1}) == ["$.a: 2 != recorded 1"]
+    assert problems({}, {"a": 1}) == ["$.a: missing"]
+    assert problems({"a": [1, 2]}, {"a": [1]}) == ["$.a: 2 items, recorded 1"]
+    assert problems({"a": 1.0}, {"a": 1}) != []  # an int stays an int
+
+
 @pytest.mark.parametrize(("generation", "entry"), ENTRIES, ids=IDS)
 def test_file_loads_to_its_canonical_form(generation: Path, entry: dict) -> None:
     expected = (EXPECTED / generation.name / f"{entry['id']}.json").read_text(encoding="utf-8")
-    assert canonical_of(generation, entry) == expected.rstrip("\n")
+    actual = canonical_of(generation, entry)
+    if actual == expected.rstrip("\n"):
+        return
+    assert problems(json.loads(actual), json.loads(expected)) == []
 
 
 @pytest.mark.parametrize(("generation", "entry"), ENTRIES, ids=IDS)

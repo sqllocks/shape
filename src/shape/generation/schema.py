@@ -14,13 +14,14 @@ property names, ``to_dict``/``from_dict``, ``validate`` and :class:`Issue`.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field, is_dataclass
 from functools import cache
 from importlib import resources
 from typing import Any
 
 from shape import compat
 from shape.errors import ShapeSchemaError
+from shape.generation.spec_keys import unknown_keys
 from shape.schemacheck import validate as _validate_document
 from shape.security.names import is_safe_name
 
@@ -54,9 +55,28 @@ STRATEGY_REQUIRED_KEYS: dict[str, frozenset[str]] = {
     "composite_foreign_key": frozenset({"ref_table", "ref_columns"}),
     "composite_fk_field": frozenset({"source_column", "ref_column"}),
     "native": frozenset(),
+    "address": frozenset(),
+    "bootstrap": frozenset({"dataset", "field"}),
+    "constant": frozenset({"value"}),
+    "choice": frozenset({"values"}),
+    "empirical": frozenset({"quantiles"}),
+    "normal": frozenset({"mean", "stddev"}),
+    "uniform": frozenset({"low", "high"}),
 }
 
 MODES = ("3nf", "star")
+
+
+def _plain_json(value: Any) -> Any:
+    """A copy of ``value`` made of JSON types only. A dataclass (an ``AddressReference`` or a
+    ``Location`` row of an address reference) becomes a dict, as a schema file would hold it."""
+
+    def default(obj: Any) -> Any:
+        if is_dataclass(obj) and not isinstance(obj, type):
+            return asdict(obj)
+        raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+    return json.loads(json.dumps(value, default=default))
 
 
 class GenSchemaError(ShapeSchemaError):
@@ -334,7 +354,7 @@ class GenSchema:
                 cname: Column(
                     name=cname,
                     type=c["type"],
-                    generator=json.loads(json.dumps(c["generator"])),
+                    generator=_plain_json(c["generator"]),
                     nullable=c.get("nullable", False),
                     null_rate=float(c.get("null_rate", 0.0)),
                     max_length=c.get("max_length"),
@@ -528,6 +548,8 @@ class GenSchema:
                         out.append(
                             Issue("warning", f"Strategy '{c.strategy}' expects key '{key}'", where)
                         )
+                for _, message in unknown_keys(c.strategy, c.generator):
+                    out.append(Issue("warning", message, where))
         return out
 
 

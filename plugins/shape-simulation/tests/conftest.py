@@ -104,7 +104,8 @@ def make(
     return dict(Engine(GenSchema.from_dict(doc), scale="small", seed=seed).generate().tables)
 
 
-DAY = {"date_range": {"start": "2024-03-01", "end": "2024-03-03"}}
+# Two whole days, 2024-03-01 and 2024-03-02 (a date `end` is inclusive since #10).
+DAY = {"date_range": {"start": "2024-03-01", "end": "2024-03-02"}}
 
 
 def spec(kind: str) -> tuple[dict[str, dict[str, Any]], list[tuple[str, str, str]], dict[str, int]]:

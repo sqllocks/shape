@@ -25,7 +25,7 @@ from __future__ import annotations
 import posixpath
 import re
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import PureWindowsPath
 from urllib.parse import unquote, urlsplit
 
 from shape.errors import ShapeError
@@ -124,14 +124,24 @@ def join(base: str, *parts: str) -> str:
     segs = [segment(s, "path segment") for part in parts for s in str(part).split("/") if s]
     if is_remote(base):
         return "/".join([base.rstrip("/"), *segs])
-    return str(Path(base, *segs))
+    if _is_windows_style(base):
+        return str(PureWindowsPath(base, *segs))
+    return posixpath.join(base, *segs)
 
 
 def parent(path: str) -> str:
     if is_remote(path):
         head, _, _ = path.rstrip("/").rpartition("/")
         return head
-    return str(Path(path).parent)
+    if _is_windows_style(path):
+        return str(PureWindowsPath(path).parent)
+    return posixpath.dirname(path.rstrip("/")) or ("/" if path.startswith("/") else ".")
+
+
+def _is_windows_style(path: str) -> bool:
+    """A drive letter or a backslash; every other location uses ``/`` on every host OS (OneLake
+    and ABFS paths always do, and a ``/`` path must not be rewritten with ``\\`` on Windows)."""
+    return "\\" in path or bool(PureWindowsPath(path).drive)
 
 
 def _dt(value: str) -> str:

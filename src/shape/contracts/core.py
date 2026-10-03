@@ -159,31 +159,52 @@ def compatibility(before: Any, after: Any, mode: str = "backward") -> Compatibil
     (full). Both arguments are v2 models or v1 captures."""
     if mode not in ("backward", "forward", "full"):
         raise ValueError("mode")
-    old_cols = columns_of(table_of(model_of(before)))
-    new_cols = columns_of(table_of(model_of(after)))
+    old_model, new_model = model_of(before), model_of(after)
+    many = len(old_model["tables"]) != 1 or len(new_model["tables"]) != 1
 
-    def one(oc: dict[str, Any], nc: dict[str, Any], direction: str) -> list[CompatibilityIssue]:
+    def one(
+        oc: dict[str, Any], nc: dict[str, Any], direction: str, at: str
+    ) -> list[CompatibilityIssue]:
         issues = []
         for n, c in oc.items():
             if n not in nc:
                 issues.append(
                     CompatibilityIssue(
-                        f"columns.{n}", "removed", f"column required by {direction} Shape is absent"
+                        f"{at}columns.{n}",
+                        "removed",
+                        f"column required by {direction} Shape is absent",
                     )
                 )
             elif family(c.get("kind")) != family(nc[n].get("kind")):
                 issues.append(
                     CompatibilityIssue(
-                        f"columns.{n}.kind",
+                        f"{at}columns.{n}.kind",
                         "type_changed",
                         f"{c.get('kind')} -> {nc[n].get('kind')}",
                     )
                 )
         return issues
 
+    def pairs(a: dict[str, Any], b: dict[str, Any], direction: str) -> list[CompatibilityIssue]:
+        if not many:
+            return one(columns_of(table_of(a)), columns_of(table_of(b)), direction, "")
+        found: list[CompatibilityIssue] = []
+        for t, table in a["tables"].items():
+            if t not in b["tables"]:
+                found.append(
+                    CompatibilityIssue(
+                        f"tables.{t}", "removed", f"table required by {direction} Shape is absent"
+                    )
+                )
+            else:
+                found += one(
+                    columns_of(table), columns_of(b["tables"][t]), direction, f"tables.{t}."
+                )
+        return found
+
     issues: list[CompatibilityIssue] = []
     if mode in ("backward", "full"):
-        issues += one(old_cols, new_cols, "previous")
+        issues += pairs(old_model, new_model, "previous")
     if mode in ("forward", "full"):
-        issues += one(new_cols, old_cols, "new")
+        issues += pairs(new_model, old_model, "new")
     return CompatibilityReport(mode, tuple(issues))

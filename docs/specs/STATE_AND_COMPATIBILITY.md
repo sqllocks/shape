@@ -266,7 +266,9 @@ by the release that introduced it, through its own writer. A generation is froze
 lists each file with its SHA-256, and `expected/<generation>/<id>.json` holds the canonical form
 the reader returned when the generation was written. `test_timecapsule.py` runs in CI and, for
 every file of every generation, checks that nothing was edited, that the installed release loads
-it, and that the canonical form is the recorded one. It also fails if a kind or version of
+it, and that the canonical form is the recorded one: every recorded value unchanged, and any field
+a later release added holding only its empty default (a file that lacks an optional field reads
+with its default; a value there would be a change of meaning). It also fails if a kind or version of
 `shape.compat.KINDS` has no file.
 
 - `base` is what the code wrote before the unified keys (old key names only).
