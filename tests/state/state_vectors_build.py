@@ -1,7 +1,7 @@
 """Build the language-neutral test vectors for the canonical forms and content ids.
 
-    python tests/state/vectors.py            # check docs/specs/vectors/state_vectors.json
-    python tests/state/vectors.py --write    # rewrite it
+    python tests/state/state_vectors_build.py            # check the committed vectors
+    python tests/state/state_vectors_build.py --write    # rewrite docs/specs/vectors/*.json
 
 ``docs/specs/STATE_AND_COMPATIBILITY.md`` ("Canonical forms") states the rules in prose; the file
 holds inputs as JSON text (so any language can parse them) and the exact output bytes (as text,
@@ -226,7 +226,8 @@ def build() -> dict[str, Any]:
         "format": "shape-test-vectors",
         "version": 1,
         "description": "Language-neutral vectors for the canonical forms and content ids of "
-        "docs/specs/STATE_AND_COMPATIBILITY.md. Regenerate with tests/state/vectors.py --write; "
+        "docs/specs/STATE_AND_COMPATIBILITY.md. Regenerate with "
+        "tests/state/state_vectors_build.py --write; "
         "a change to any vector is a format change and needs a version bump.",
         "codec": codec_vectors,
         "codec_errors": error_vectors,

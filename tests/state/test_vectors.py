@@ -18,7 +18,7 @@ from typing import Any
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import vectors  # noqa: E402
+import state_vectors_build as vectors  # noqa: E402
 
 FILE = vectors.TARGET
 DATA = json.loads(FILE.read_text(encoding="utf-8"))
@@ -28,7 +28,8 @@ DECLARATION = ("format", "version", "shape_version", "min_shape_version")
 
 def test_the_committed_vectors_are_current() -> None:
     assert FILE.read_text(encoding="utf-8") == vectors.render(vectors.build()), (
-        "run `python tests/state/vectors.py --write`; a changed vector is a format change"
+        "run `python tests/state/state_vectors_build.py --write`; "
+        "a changed vector is a format change"
     )
 
 

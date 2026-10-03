@@ -17,8 +17,8 @@ import pytest
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-import generate  # noqa: E402
-from loaders import LOADERS, canonical_of  # noqa: E402
+import capsule_generate as generate  # noqa: E402
+from capsule_loaders import LOADERS, canonical_of  # noqa: E402
 
 CORPUS = HERE / "corpus"
 EXPECTED = HERE / "expected"

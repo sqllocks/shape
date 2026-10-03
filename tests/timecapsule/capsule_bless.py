@@ -1,6 +1,6 @@
 """Record the expected canonical form of every file of a generation.
 
-    python tests/timecapsule/bless.py tests/timecapsule/corpus/<generation>
+    python tests/timecapsule/capsule_bless.py tests/timecapsule/corpus/<generation>
 
 Run it once, by the release that wrote the generation (or the one that introduces it). The
 expected files are then frozen with the corpus: a later release that reads a file differently has
@@ -17,7 +17,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from loaders import canonical_of  # noqa: E402
+from capsule_loaders import canonical_of  # noqa: E402
 
 
 def bless(corpus: Path) -> None:

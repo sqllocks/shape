@@ -277,8 +277,8 @@ layout and migrated by the existing registry, and `index.json` says so (`produce
 that users author and no command writes is marked `authored`.
 
 To add a generation (a release that changes a format): run
-`python tests/timecapsule/generate.py tests/timecapsule/corpus/<name>` with that release, then
-`python tests/timecapsule/bless.py tests/timecapsule/corpus/<name>`, and commit the result. Never
+`python tests/timecapsule/capsule_generate.py tests/timecapsule/corpus/<name>` with that release, then
+`python tests/timecapsule/capsule_bless.py tests/timecapsule/corpus/<name>`, and commit the result. Never
 edit an existing generation or its expected files: a reader that no longer matches is the
 defect.
 

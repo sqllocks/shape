@@ -187,7 +187,7 @@
       "why": "not JSON"
     }
   ],
-  "description": "Language-neutral vectors for the canonical forms and content ids of docs/specs/STATE_AND_COMPATIBILITY.md. Regenerate with tests/state/vectors.py --write; a change to any vector is a format change and needs a version bump.",
+  "description": "Language-neutral vectors for the canonical forms and content ids of docs/specs/STATE_AND_COMPATIBILITY.md. Regenerate with tests/state/state_vectors_build.py --write; a change to any vector is a format change and needs a version bump.",
   "documents": [
     {
       "content_id": "caf70e3c6ff2f0e605025f35ce5f0883ffde0e643aa2745c58ec66cc64c1a1f7",

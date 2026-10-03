@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from shape.migrate import MigrationError
 
 import shape
 from shape import compat, migrate
@@ -30,6 +29,7 @@ from shape.artifact.io import (
     write_artifact,
     write_container,
 )
+from shape.migrate import MigrationError
 
 OLD_KEY = b"\x04" * 32
 NEW_KEY = b"\x05" * 32

@@ -1,7 +1,7 @@
 """Write a time-capsule generation: one file per persisted kind and format version, produced by
 the Shape code that is installed, never edited by hand.
 
-    python tests/timecapsule/generate.py tests/timecapsule/corpus/<generation>
+    python tests/timecapsule/capsule_generate.py tests/timecapsule/corpus/<generation>
 
 A generation is frozen once committed (``test_timecapsule.py`` checks each file against the digest
 in its ``index.json``). The corpus grows by adding a generation, written by the Shape release that
