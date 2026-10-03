@@ -196,3 +196,57 @@ def test_a_document_without_a_joint_block_is_released_as_before():
     doc = _joint_doc()
     del doc["joint"]
     assert "joint" not in release_for(doc, {}, "PUBLIC").shape
+
+
+# --- #657: the leak scanner and format versions -----------------------------------------------
+
+from shape.privacy.safe_validator import SafeProfileValidator  # noqa: E402
+
+
+def _safe_doc(**patch) -> dict:
+    doc = {
+        "format": "shape-safe-profile",
+        "version": 1,
+        "schema_version": 1,
+        "redaction_manifest": {},
+        "tables": {"t": {"row_count": 10, "columns": {}}},
+    }
+    doc.update(patch)
+    return doc
+
+
+def _rules(doc) -> set[str]:
+    return {f.rule for f in SafeProfileValidator().validate_data(doc).findings}
+
+
+def test_a_current_safe_profile_is_still_clean():
+    assert _rules(_safe_doc()) == set()
+    legacy = _safe_doc()
+    del legacy["format"], legacy["version"]  # a profile of an older writer declares less
+    assert _rules(legacy) == set()
+
+
+def test_a_newer_version_is_a_finding_that_names_the_release():
+    result = SafeProfileValidator().validate_data(_safe_doc(version=99, schema_version=99))
+    (finding,) = result.findings
+    assert finding.rule == "unsupported-version"
+    assert "version 99" in finding.detail and "0.9.0" in finding.detail
+
+
+@pytest.mark.parametrize(
+    "patch",
+    [
+        {"schema_version": "1"},
+        {"version": True},
+        {"schema_version": 0},
+        {"version": 2.0},
+        {"version": 1, "schema_version": 2},
+    ],
+)
+def test_a_malformed_version_is_a_finding(patch):
+    assert _rules(_safe_doc(**patch)) == {"format-version"}
+
+
+def test_another_format_is_a_finding():
+    assert _rules(_safe_doc(format="other")) == {"format-version"}
+    assert _rules(_safe_doc(format=["x"])) == {"format-version"}
