@@ -36,7 +36,12 @@ def find_records(host: PluginHost, ref: str) -> list[PluginRecord]:
         group, _, name = ref.partition(":")
         rec = host.record(group, name)
         return [rec] if rec else []
-    return [r for r in host.records() if r.name == ref]
+    # One record per group: a duplicate registration resolves to the record the host loads.
+    found: dict[str, PluginRecord] = {}
+    for r in host.records():
+        if r.name == ref and r.group not in found:
+            found[r.group] = host.record(r.group, r.name) or r
+    return list(found.values())
 
 
 def describe(host: PluginHost, rec: PluginRecord) -> dict[str, Any]:
@@ -46,7 +51,7 @@ def describe(host: PluginHost, rec: PluginRecord) -> dict[str, Any]:
     out["protocol"] = protocol
     try:
         obj = host.get(rec.group, rec.name)
-    except PluginLoadError:
+    except (PluginLoadError, KeyError):  # KeyError: a record that is not loadable (discovery)
         pass
     else:
         out["doc"] = inspect.getdoc(obj) or ""
