@@ -5,6 +5,25 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+### Fixed
+
+- Quality, validation, contracts and drift (AUD-quality audit): the utility gate reads
+  sub-second timestamps (#457); `shape.drift.compare` paths name the row count (`rows`) and each
+  joint change (`joint.zip -> city`) instead of `tables.None` (#461); `shape.check` refuses a
+  non-number `row_count` or `max_null_rate`, a non-boolean `nullable`, `unique` or
+  `allow_extra_columns`, and table rules beside `tables` in a dataset contract, with
+  `ContractError` (#462, #463, #464); gate schema values are validated, never coerced
+  (`"nullable": "false"`, `"primary_key": "id"`) (#465); `referential_integrity` checks composite
+  keys as a whole (#466); a `no_future` entry or a `ranges` column that checks nothing is a warning
+  (#467, #472); the chi-squared enum test matches integer and boolean columns (#468); the drift
+  engine no longer divides by zero with `min_rows: 0`, refuses NaN thresholds and malformed
+  policies with `ValueError`, names an empty document, and reads naive times as UTC (#469, #470,
+  #471, #478); the verify configuration refuses NaN bounds, `min` above `max` and `start` after
+  `end` (#474); `validate_rows` (`shape quality`) and `quality.evaluate` treat values that cannot
+  be compared as violations (#475, #476); clearer contract errors (#477); `load_tables` skips
+  sub-directories and matches upper-case extensions (#479); the verify report names the
+  configured α (#480).
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
