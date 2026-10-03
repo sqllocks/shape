@@ -59,4 +59,38 @@ change rather than a plain occurrence fix). No `.github/workflows` change is nee
 
 ## Commands and results
 
-See the end of this file (filled in after the final run).
+Final run 2026-10-03 on `904c2ae` (`origin/build/main-plan` had not moved from `5c91ea5`, so no merge
+was needed). Environment: Python 3.11.15, `~/.venvs/shape` with `pip install -e ".[dev,advanced]"`
+and `-e` of all seven first-party plugins (`shape-domains`, `shape-fabric`, `shape-simulation`,
+`shape-sqlserver`, `shape-databases`, `shape-eventhubs`, `shape-kafka`), maturin-built kernel, Rust
+1.97.0.
+
+| Command | Result |
+|---|---|
+| `make check` (every step: ruff check, ruff format --check, mypy, compileall, vulture, lint-imports, the six `scripts/check_*.py`, the coverage run, heavy, `SHAPE_KERNEL=python pytest tests/kernel`, cargo fmt/clippy/test), newest pyarrow | exit 0; 6792 passed (coverage 92.62% ≥ 86), heavy 42 passed, python kernel 265 passed, cargo 34 passed; mypy clean on 436 files |
+| `python scripts/check_user_facing.py` | `check_user_facing: clean`, exit 0 |
+| `SHAPE_KERNEL=rust pytest -m "not emulator and not live"` | 4 failed, 7084 passed, 13 deselected (the marker expression) |
+| `SHAPE_KERNEL=python pytest -m "not emulator and not live"` | the same 4 failed, 7084 passed, 13 deselected |
+
+The full suite collects `tests/demo/fabric`, which needs `tests/demo/fabric/requirements.txt`
+(`nbformat`, `pyspark`, `delta-spark`, `fabric-user-data-functions`, ...) and the system package
+`unixodbc`. Those were installed so that nothing is left out; `fabric-user-data-functions` pins
+`pyarrow<20`, so the two full runs used pyarrow 19.0.1 (inside T-07's `>=14.0.1`, the version CI's
+`fabric-demo` job uses). `make check` ran first, on the newest pyarrow without the UDF SDK.
+
+The 4 failures are not this lane's: each also fails on `origin/build/main-plan` (`5c91ea5`, a
+worktree run with the same venv and `PYTHONPATH` set to the worktree's `src` and `plugins/*/src`),
+none of them touches a file this lane changed, and every one is already filed:
+
+- `tests/iss_gaps/test_landing_and_batches.py::test_file_sinks_take_path_template_and_batch_date`
+  (pyarrow 19 `read_table` adds the hive column `ingest_date`), and
+  `tests/kernel/test_hashing.py::test_rust_equals_reference_on_a_million_values[float16]`,
+  `::test_one_and_one_point_zero_hash_equal` (pyarrow 19 has no float16 `if_else` kernel /
+  `Expected np.float16 instance`): base run "3 failed, 1 passed"; filed as #333 (and #76).
+- `tests/security/test_credential_refs.py::test_core_imports_no_cloud_sdk_to_resolve_references`:
+  order-dependent; it passes alone on both, and fails on both when
+  `tests/demo/fabric/test_udf.py` runs first (it imports `fabric.functions`, which imports `azure`):
+  `pytest tests/demo/fabric/test_udf.py <that test>` gives "1 failed, 34 passed" on the lane and on
+  base. Filed as #77, #554 and #558.
+
+Not done here: emulator and live tests (CI nightly only, plan §1.3).
