@@ -51,6 +51,9 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
 - `shape design INPUT.json` reads a **design input** and writes DDL for a 3NF, star or snowflake
   schema, after linting it; `shape design DATA.csv --from-data` builds a design input from data.
   See [DESIGN.md](DESIGN.md).
+- `shape contract emit CONTRACT.json --to ddl|jsonschema|pandera|gx` writes a contract as database
+  DDL, a JSON Schema, a pandera schema or a Great Expectations suite, listing what the target cannot
+  say (`--strict` fails on it). See [CONTRACT_EMIT.md](CONTRACT_EMIT.md).
 - `shape compatibility BEFORE AFTER` compares two Shape **models** (made by `shape capture` or
   written as model JSON), not profiles. Compare two profiles with `shape diff`. To check a feed
   for schema changes, capture it each day and compare with the baseline; a renamed or dropped

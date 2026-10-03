@@ -2,13 +2,15 @@
 enforced without adding a dependency.
 
 Supported: ``type`` (also a list), ``enum``, ``const``, ``required``, ``properties``,
-``additionalProperties`` (false or a schema), ``items``, ``minimum``, ``anyOf`` and local
-``$ref`` (``#/$defs/...``). Anything else in a schema is ignored, so schemas that use other
+``additionalProperties`` (false or a schema), ``items``, ``minimum``, ``maximum``, ``pattern``
+(not anchored: a search, as in JSON Schema), ``not``, ``anyOf`` and local ``$ref``
+(``#/$defs/...``). Anything else in a schema is ignored, so schemas that use other
 keywords are only checked for the ones listed here.
 """
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 _TYPES: dict[str, Any] = {
@@ -57,6 +59,12 @@ def validate(
             return [*out, f"{path}: expected {types}, got {type(value).__name__}"]
     if "minimum" in schema and _is_type(value, "number") and value < schema["minimum"]:
         out.append(f"{path}: {value} < minimum {schema['minimum']}")
+    if "maximum" in schema and _is_type(value, "number") and value > schema["maximum"]:
+        out.append(f"{path}: {value} > maximum {schema['maximum']}")
+    if "pattern" in schema and isinstance(value, str) and not re.search(schema["pattern"], value):
+        out.append(f"{path}: {value!r} does not match pattern {schema['pattern']!r}")
+    if "not" in schema and not validate(value, schema["not"], path, root):
+        out.append(f"{path}: {value!r} matches a schema it must not match")
     if isinstance(value, dict):
         for k in schema.get("required", []):
             if k not in value:
