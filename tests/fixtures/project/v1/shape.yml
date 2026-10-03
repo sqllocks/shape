@@ -1,0 +1,39 @@
+# Time capsule (W1-04): a shape.yml written for format version 1. It must load and validate
+# unchanged under every later Shape. Never edit it; add a v2 fixture when the format changes.
+format: shape-project
+version: 1
+name: capsule
+sources:
+  orders:
+    path: data/orders
+    dataset: true
+    contract: contracts/orders.json
+    baseline:
+      kind: rolling_window
+      window: 7
+      registry: shapes/registry
+      name: orders-daily
+    thresholds:
+      null_rate: 0.02
+      min_severity: medium
+    ignore: [load_ts]
+    columns:
+      amount:
+        thresholds:
+          mean_shift_std: 1.0
+        owner: finance@example.com
+        annotations:
+          unit: EUR
+          pii: "no"
+      batch_id:
+        ignore: true
+  events:
+    path: data/events
+    baseline:
+      kind: pinned
+      ref: production
+gates:
+  schema_conformance:
+    mode: enforce
+  distribution:
+    mode: observe
