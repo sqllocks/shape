@@ -1,6 +1,6 @@
 # sqllocks-shape-healthcare-standards
 
-Shape plugin: standard healthcare outputs from the payer tables.
+Shape plugin: standard healthcare outputs from a domain pack's tables.
 
 | Sink / emitter | Output |
 |---|---|
@@ -13,7 +13,7 @@ Shape plugin: standard healthcare outputs from the payer tables.
 | `fhir` (emitter) | FHIR resources as events |
 
 The input is the table contract in `shape_healthcare_standards.contract` (also the source of
-truth for the column names and types the payer domain must produce). Every identifier is
+truth for the column names and types a domain pack must produce). Every identifier is
 synthetic, and the X12 envelopes carry clearly synthetic sender and receiver ids.
 
 Installing the validators the tests use: `pip install 'sqllocks-shape-healthcare-standards[test]'`.

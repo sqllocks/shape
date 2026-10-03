@@ -278,8 +278,8 @@ error.
 A domain pack (claims, invoices, work orders) ships module documents and turns the event table
 into its tables. It uses the engine through the public names of section 3 only:
 `load_module` / `Module`, `Population`, `Simulator` and the `EVENT_SCHEMA` columns. Clinical
-modules for the healthcare payer pack are written on this API in the healthcare payer domain pack; Shape
-ships no terminology, so a pack supplies (or asks the user for) the code sets it needs.
+modules are written on this API in a domain pack; Shape ships no terminology, so a pack supplies
+(or asks the user for) the code sets it needs.
 
 ## 9. Limits
 
