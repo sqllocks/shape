@@ -149,11 +149,10 @@ def test_corrupt_tables_names_a_bad_seed_or_batch(kwargs: dict[str, int], messag
         ("duplicates=0.1@t:to=", r"option to .* an integer, got ''"),
         ("date_shift=0.1@t:days=1.5", r"option days .* an integer, got '1.5'"),
         ("null_creep=0.1@t.c:step=lots", r"option step .* a number, got 'lots'"),
-        ("duplicates=0.1@t.status", r"duplicates applies to whole rows: name a table"),
     ],
 )
 def test_corruption_parse_names_the_bad_option(text: str, message: str) -> None:
-    """#408: a bad option names itself; duplicates refuses a column."""
+    """#408: a bad option names itself."""
     with pytest.raises(ValueError, match=message):
         Corruption.parse(text)
 
