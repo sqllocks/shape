@@ -25,6 +25,7 @@ _PLAIN_KEY = re.compile(r"[A-Za-z0-9_\-]+")
 DEFAULT_PATTERN = "*.shape"
 DEFAULT_TEXTCONV = "shape cat"
 _DRIVER = "shape"
+VAULT_IGNORE = "*.shapevault"
 
 
 def _scalar(v: Any) -> str:
@@ -135,6 +136,13 @@ def git_setup(a: argparse.Namespace) -> int:
     if added:
         text = "\n".join(existing + [f"{p} diff={_DRIVER}" for p in added]) + "\n"
         attrs.write_text(text, encoding="utf-8")
+    ignore = Path(top) / ".gitignore"
+    if ignore.is_symlink():
+        raise ValueError(f"{ignore} is a symbolic link; refusing to write through it")
+    ignored = ignore.read_text(encoding="utf-8").splitlines() if ignore.exists() else []
+    vault_ignored = VAULT_IGNORE not in (ln.strip() for ln in ignored)
+    if vault_ignored:  # a value vault is encrypted, but it is not meant for version control
+        ignore.write_text("\n".join([*ignored, VAULT_IGNORE]) + "\n", encoding="utf-8")
     print(
         json.dumps(
             {
@@ -143,6 +151,8 @@ def git_setup(a: argparse.Namespace) -> int:
                 "gitattributes": str(attrs),
                 "patterns": patterns,
                 "added": added,
+                "gitignore": str(ignore),
+                "gitignore_added": [VAULT_IGNORE] if vault_ignored else [],
             },
             sort_keys=True,
         )
@@ -164,7 +174,8 @@ def add_parsers(sub: Any) -> None:
         "git-setup",
         help="configure this git repository to show readable diffs of .shape files",
         description="Writes `diff.shape.textconv` to the repository's local git config and "
-        "`*.shape diff=shape` to .gitattributes. Safe to run again.",
+        "`*.shape diff=shape` to .gitattributes, and adds `*.shapevault` to .gitignore (a value "
+        "vault is encrypted but not meant for version control). Safe to run again.",
     )
     g.add_argument("--repo", default=".", metavar="DIR", help="a directory in the repository")
     g.add_argument(

@@ -19,6 +19,13 @@ stored in the archive member `manifest.sig`, outside the hashed set. The signed 
 fixed domain prefix followed by the manifest bytes, so the signature cannot be replayed as a
 signature of anything else.
 
+A profile that has a value vault (`docs/VAULT.md`) records `vault: {"vault_id", "sha256"}` in its
+manifest, so the signature covers the vault's hash: replace or alter the vault and `shape vault
+verify --verify PUBKEY` and `shape generate --vault ... --verify PUBKEY` fail (exit 1). Signing needs
+no extra step for this; sign the profile after the vault is written (`shape profile --sign KEY`
+does). `shape vault rekey` writes a new profile, drops the old signature (a notice says so) and
+signs the new one only with `--key`.
+
 `--verify` fails (exit code 1) when the artifact:
 
 - is unsigned, or has had its signature stripped;

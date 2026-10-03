@@ -14,6 +14,8 @@ residual risk. The review that produced this version, with every finding, is in
 
 - Source data and the real values inside a full-capture profile (`.shape`, `--json` written with `--capture full`).
 - Safe profiles (`shape profile safe`): the artifact that is meant to be shared and committed.
+- Vaulted values (`.shapevault`, W5-03): the values a safe capture withheld, encrypted in a
+  separate file; and the key-encryption key (KEK) and the data key that protect them.
 - Synthetic output: files, tables, event streams.
 - Credentials: connection strings, SAS tokens, SASL and SQL passwords, Entra tokens, Ed25519
   private keys, AES-GCM keys.
@@ -101,6 +103,35 @@ validator and k-anonymity (`docs/PRIVACY_MODEL.md`, `tests/privacy`). A full-fid
 and `--json` (`--capture full`) hold real values by design; the default capture of `shape profile`
 is the committable artifact (`docs/PRIVACY_MODEL.md`), and `shape profile validate --safe` flags a
 full one.
+
+### The value vault
+
+`docs/VAULT.md` states the model. Protected: the confidentiality and integrity of vaulted values at
+rest and in transit against anyone who does not hold the KEK. Not protected: a holder of the KEK
+and the vault, values after decryption (memory, and data generated in vault mode), a compromised
+machine, metadata in the clear (column names, policies, ciphertext sizes, the key id), and old
+copies of a vault after rotation.
+
+| Threat | Control | Test |
+|---|---|---|
+| Vaulted values readable from the vault, the profile, `--json`, stderr or an error | AES-256-GCM envelope encryption (`cryptography`, no custom primitive); only withheld values enter the vault; the planted values are in no output but the decrypted vault | `tests/vault/test_generate.py::test_leak_planted_values_are_in_no_output_but_the_decrypted_vault`, `tests/vault/test_build.py` |
+| A weak or reused key or nonce | a fresh 256-bit data key from `os.urandom` and a fresh 96-bit nonce per call; two writes of one profile share no data key, nonce or ciphertext | `tests/vault/test_format.py::test_two_writes_differ_in_every_secret_part`, `tests/vault/test_build.py::test_two_writes_of_one_profile_differ` |
+| A format only this program can read, or a mistake in it | standard AES-GCM envelope; an independent decrypt written from the documented format with `AESGCM` alone | `tests/vault/test_format.py::test_independent_decrypt_from_the_documented_format` |
+| A changed header, wrapped key, nonce or ciphertext; truncation | the whole header is the associated data of every call; any change fails authentication (exit 1, no value printed) | `tests/vault/test_format.py` (one changed character in each part, truncation), `tests/vault/test_ops.py::test_any_changed_byte_of_the_vault_is_a_mismatch_not_a_crash` |
+| A column moved to another column, vault or profile | the column name, its policy, the vault id and the profile content id are in the associated data | `tests/vault/test_format.py` (swap, rename, drop, another vault, another profile) |
+| Substituting another vault for the one a signed profile names | the profile manifest records `vault_id` and SHA-256; the signature covers `manifest.json`; `shape generate --vault` and `shape vault verify` refuse a mismatch before decrypting | `tests/vault/test_ops.py`, `tests/vault/test_generate.py` |
+| The wrong key | `kek_id` names both ids and never a key; exit 1 | `tests/vault/test_format.py::test_wrong_kek_names_both_ids_and_no_key`, `tests/vault/test_cli.py` |
+| The KEK in a command line, a log, a message or a readable file | `--kek` takes a reference only (a literal key is refused without being echoed); `file://` refuses a group- or world-readable file; no message carries a key or a value | `tests/vault/test_kek.py`, `tests/vault/test_cli.py` |
+| A vault or KEK committed to git | `profile --vault` and `keygen` refuse (exit 2) a path inside an unignored git work tree and name the `.gitignore` line; `shape git-setup` adds `*.shapevault` | `tests/vault/test_ops.py`, `tests/vault/test_build.py` |
+| A vault written with the values already in the clear | `--vault` with `--capture full` exits 2 | `tests/vault/test_generate.py::test_profile_command_vault_with_capture_full_is_exit_2` |
+| A vault run mistaken for shape-only output | the run records `generation_mode: "shape+vault"` and the vault id; one warning on stderr; `--dry-run` and `shape plan` mark the columns `vault` | `tests/vault/test_generate.py` |
+| Vault files readable by other users | vaults and key files are written with mode 0600 (POSIX) | `tests/vault/test_ops.py::test_vault_files_are_private`, `tests/vault/test_kek.py` |
+
+Residual risks of the vault: V1. A holder of the KEK and the vault reads every vaulted value. V2.
+Generated data in vault mode holds real values. V3. Column names, policies, ciphertext sizes and the
+key id are in the clear. V4. An old vault still opens with the old KEK after `rekey`; rotate by
+deleting the old copies. V5. Key storage, backup and revocation are the user's: a lost KEK means
+the values are gone. V6. A process that holds a decrypted value (or the KEK) in memory is trusted.
 
 ### Network surfaces
 

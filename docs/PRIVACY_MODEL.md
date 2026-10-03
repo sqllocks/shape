@@ -77,6 +77,22 @@ pattern and length distribution and mark what was left out `approximate` in the 
 This is data minimisation, not anonymisation: a safe capture still holds statistics of the data,
 and the limits listed under "Minimum cohort and small cells" apply to it.
 
+**The vault: the alternative to `--capture full`.** When generation needs the exact values (the
+real status codes, categories or region names with their frequencies), `--capture full` puts them
+in the clear in the file you commit. A **value vault** keeps them in a separate file, encrypted with
+AES-256-GCM under a key you hold, and the `.shape` stays the safe, committable capture:
+
+```bash
+shape profile orders.csv -o orders.shape --vault orders.shapevault \
+      --vault-policy policy.json --kek file://KEK.key
+shape generate --from orders.shape --vault orders.shapevault --kek file://KEK.key -f csv -o out
+```
+
+Only what the safe capture withheld is vaulted, column by column, as the policy says (`categories`,
+`extremes`, `all`, `none`; by column, by classification or by default). Without `--vault`, nothing
+changes. Data generated with a vault holds real values: treat it like the source data. See
+`docs/VAULT.md`.
+
 ## The safe profile
 
 A full profile holds value-bearing evidence (exact minimum and maximum, every enum value, top value counts). `shape profile safe PROFILE.shape -o SAFE.json` writes the form that is meant to be shared. It has no field that can hold a raw extreme or a value list, and:

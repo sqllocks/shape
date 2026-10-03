@@ -30,6 +30,25 @@ shape --debug registry reg checkout orders nope
 SHAPE_DEBUG=1 shape check missing.shape contract.json
 ```
 
+## `shape vault`
+
+`shape vault keygen|inspect|verify|rekey` manage the value vault, an encrypted file of the values a
+safe capture withheld (`docs/VAULT.md`). `shape profile --vault OUT.shapevault --vault-policy
+POLICY.json --kek REF` writes one with the profile; `shape generate --from X.shape --vault VAULT
+--kek REF [--verify PUBKEY]` and `shape plan X.shape --vault VAULT --kek REF` use it. A key is
+always a reference (`env://NAME`, `file://PATH`, a path), never a literal value.
+
+| Command | Does |
+|---|---|
+| `shape vault keygen -o KEK.key` | writes a key-encryption key: 32 random bytes, base64, mode 0600; never overwrites |
+| `shape vault inspect VAULT [--json]` | prints the header; needs no key |
+| `shape vault verify VAULT --shape X.shape [--kek REF] [--verify PUBKEY] [--json]` | checks hash, ids, signature and, with a key, every column |
+| `shape vault rekey X.shape VAULT --kek OLD --new-kek NEW --out-shape X2.shape --out-vault V2.shapevault [--key SIGNING_KEY] [--dry-run] [--json]` | re-encrypts under a new key; never in place |
+
+Exit codes: 0 valid; 1 a wrong key, a hash, id, signature or authentication mismatch; 2 a malformed
+vault, a newer `version`, an unusable key, policy or path, or other bad input. `shape git-setup`
+also adds `*.shapevault` to `.gitignore`.
+
 ## `shape migrate`
 
 `shape migrate SRC DST` (also installed as `shape-migrate`) writes a migrated copy of a persisted

@@ -220,3 +220,50 @@ def test_vault_in_unignored_work_tree_exit_2_and_nothing_written(full, tmp_path,
     assert not (tmp_path / "orders.shapevault").exists()
     (tmp_path / ".gitignore").write_text("*.shapevault\n")
     _save(full, tmp_path, kek, _policy(default="all"))
+
+
+@pytest.mark.skipif(shutil.which("git") is None, reason="needs git")
+def test_kek_file_in_unignored_work_tree_exit_2_and_nothing_written(full, tmp_path, kek):
+    import base64
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    (repo / ".gitignore").write_text("*.shapevault\n")
+    key = repo / "kek.key"
+    key.write_text(base64.b64encode(kek).decode())
+    if os.name == "posix":
+        key.chmod(0o600)
+    with pytest.raises(errors.VaultInputError, match="kek.key"):
+        shape.save(
+            full,
+            repo / "o.shape",
+            vault=repo / "o.shapevault",
+            vault_policy=_policy(default="all"),
+            kek=str(key),
+        )
+    assert not (repo / "o.shapevault").exists() and not (repo / "o.shape").exists()
+    (repo / ".gitignore").write_text("*.shapevault\nkek.key\n")
+    shape.save(
+        full,
+        repo / "o.shape",
+        vault=repo / "o.shapevault",
+        vault_policy=_policy(default="all"),
+        kek=str(key),
+    )
+
+
+def test_git_setup_and_the_gitignore_line(tmp_path):
+    import argparse
+
+    from shape.cli import gitcmds
+
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    ns = argparse.Namespace(repo=str(tmp_path), pattern=None, command="shape cat")
+    gitcmds.git_setup(ns)
+    gitcmds.git_setup(ns)  # again: nothing changes
+    lines = (tmp_path / ".gitignore").read_text().splitlines()
+    assert lines.count("*.shapevault") == 1
+    (tmp_path / ".gitignore").write_text("build/\n")
+    gitcmds.git_setup(ns)
+    assert (tmp_path / ".gitignore").read_text().splitlines() == ["build/", "*.shapevault"]

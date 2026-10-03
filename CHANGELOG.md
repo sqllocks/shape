@@ -5,6 +5,20 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- **Value vault (W5-03).** An optional, separate, encrypted file of the values a safe capture
+  withheld, for users who need the exact values back at generation time without `--capture full`.
+  `shape vault keygen|inspect|verify|rekey`; `shape profile --vault OUT.shapevault --vault-policy
+  POLICY.json --kek REF` and `shape.save(profile, path, vault=..., vault_policy=..., kek=...)`;
+  `shape generate --from X.shape --vault VAULT --kek REF [--verify PUBKEY]` draws `categories`
+  columns from the vaulted values and frequencies and bounds `extremes` columns by the raw minimum
+  and maximum (`generation_mode: "shape+vault"`, one warning on stderr; `shape plan` and `--dry-run`
+  mark the columns `vault`). AES-256-GCM envelope encryption through `cryptography` (a fresh data
+  key per vault, the header as associated data, the key-encryption key from `env://` or `file://`
+  and never on the command line); the profile manifest gains the additive `vault` field
+  (`vault_id`, `sha256`), so `shape sign` covers the vault hash; formats `shape-vault` and
+  `shape-vault-policy` (version 1) are in `shape.compat` and the time-capsule corpus.
+  **Without `--vault`, generation output is byte-identical to before.** `shape git-setup` adds
+  `*.shapevault` to `.gitignore`. See `docs/VAULT.md`.
 - **Behaviour change: profiles are written safe by default (W1-11).** `shape profile -o OUT.shape`,
   its `--json` summary and `--html` report, `shape.save(profile, path)` and `shape profile
   registry save` now write the **safe capture**: a sensitive column (declared `CONFIDENTIAL` or
