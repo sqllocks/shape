@@ -275,6 +275,7 @@ source_modules = [
     "shape.cli",
     "shape.connectors",
     "shape.contracts",
+    "shape.design",
     "shape.diff",
     "shape.dimensional",
     "shape.drift",

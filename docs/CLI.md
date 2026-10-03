@@ -48,6 +48,9 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
   one difference is what the format itself carries: a CSV holds text and numbers only, so a date
   column is text there and a timestamp in Parquet (both are captured as text values). It is not a
   second way to profile; use `shape profile` for that.
+- `shape design INPUT.json` reads a **design input** and writes DDL for a 3NF, star or snowflake
+  schema, after linting it; `shape design DATA.csv --from-data` builds a design input from data.
+  See [DESIGN.md](DESIGN.md).
 - `shape compatibility BEFORE AFTER` compares two Shape **models** (made by `shape capture` or
   written as model JSON), not profiles. Compare two profiles with `shape diff`. To check a feed
   for schema changes, capture it each day and compare with the baseline; a renamed or dropped
