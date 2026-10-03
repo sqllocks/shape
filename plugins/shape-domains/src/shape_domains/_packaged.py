@@ -15,13 +15,14 @@ import json
 import os
 from functools import cache
 from importlib import resources
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
-from shape.generation.composite import Composition
 from shape.plugins.api.v1 import DomainDefinition
-from shape_domains.composition import composition
+
+if TYPE_CHECKING:
+    from shape.generation.composite import Composition
 
 _PACKAGE = "shape_domains"
 _FILES = {"3nf": "schema.json", "star": "schema_star.json"}
@@ -98,7 +99,11 @@ class PackagedDomain:
     modes = ("3nf", "star")
 
     def composition(self) -> Composition:
-        """The composite presets and shared-entity tables (``shape composite``)."""
+        """The composite presets and shared-entity tables (``shape composite``). Imported here, not
+        with the module: loading a domain to generate it does not need the composite machinery
+        (about 2.5 ms in a fresh process)."""
+        from shape_domains.composition import composition
+
         return composition()
 
     def definition(self, mode: str = "3nf") -> DomainDefinition:
