@@ -179,7 +179,8 @@ The column's `max_length` cuts the text. `native` raises `StrategyError` for any
 (`pip install faker`, `ImportError` without it) and takes `args` as the provider's keyword
 arguments. It draws a pool of `min(rows of the table, 50,000)` values once, from a Faker seeded by
 the run seed, the table and the column, with the model's `locale`; row `r` reads pool entry `r`
-while the table fits the pool (every value distinct), else a uniformly drawn entry. A strategy
+while the table fits the pool (each row its own entry; the values repeat where the provider
+repeats them), else a uniformly drawn entry. A strategy
 that needs more than the pools offer is a `shape.strategies` plugin.
 
 ### `formula`

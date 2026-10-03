@@ -433,7 +433,8 @@ class Faker:
     For an exotic provider (``spec['provider']``, with ``spec['args']`` as its keyword arguments)
     a pool of ``min(rows of the table, 50,000)`` values is drawn once from a Faker seeded by the
     run seed, the table and the column, and the column takes values from it: row ``r`` reads pool
-    entry ``r`` while the table fits the pool (all values distinct), else a uniformly drawn entry.
+    entry ``r`` while the table fits the pool (each row its own entry; values repeat where the
+    provider repeats them), else a uniformly drawn entry.
     The ``locale`` is the model's. Without the package the strategy raises ``ImportError``.
     """
 
