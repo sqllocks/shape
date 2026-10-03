@@ -327,7 +327,9 @@ class WorkflowSimulator:
 
     def _entity_summary(self, events: pa.Table, first_state: dict[str, str]) -> pa.Table:
         cfg = self._config
-        if events.num_rows == 0:
+        # Without an initial state there are no entities to summarise; otherwise every entity
+        # has a row, also when none of them moves (an initial state that is terminal).
+        if not any(first_state.values()):
             return _SUMMARY_SCHEMA.empty_table()
         entity = events.column("entity_id").to_pylist()
         from_state = events.column("from_state").to_pylist()
