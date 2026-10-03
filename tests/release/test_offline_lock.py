@@ -144,3 +144,47 @@ def test_check_directory_flags_dropped_dependency(tmp_path, bad):
         assert any("pyarrow" in p for p in problems)
     else:
         assert problems == []  # tzdata is Windows-only: not required on this platform
+
+
+def test_first_party_extras_keep_the_plugin_extras_they_ask_for():
+    """#259: `sqllocks-shape-databases[postgres]` brings the plugin's `postgres` extra."""
+    sets = offline_lock.declared_sets(ROOT)
+    names = {k: {offline_lock.canonical(r.name) for r in sets[k]} for k in sets}
+    assert "psycopg" in names["postgres"]
+    assert "pymysql" in names["mysql"]
+    assert {"psycopg", "pymysql"} <= names["databases"]
+
+
+def test_core_extras_named_by_a_plugin_are_expanded(tmp_path):
+    """A plugin that asks for `sqllocks-shape[azure]` brings core's `azure` extra."""
+    (tmp_path / "plugins" / "p").mkdir(parents=True)
+    (tmp_path / "pyproject.toml").write_text(
+        textwrap.dedent(
+            """\
+            [project]
+            name = "sqllocks-shape"
+            dependencies = ["numpy>=2"]
+            [project.optional-dependencies]
+            azure = ["adlfs>=2024.4.1"]
+            p = ["sqllocks-shape-p[cloud]==0.9.0"]
+            """
+        )
+    )
+    (tmp_path / "plugins" / "p" / "pyproject.toml").write_text(
+        textwrap.dedent(
+            """\
+            [project]
+            name = "sqllocks-shape-p"
+            dependencies = ["sqllocks-shape==0.9.0", "requests>=2"]
+            [project.optional-dependencies]
+            cloud = ["sqllocks-shape[azure]==0.9.0", "boto3>=1"]
+            """
+        )
+    )
+    sets = offline_lock.declared_sets(tmp_path)
+    assert sorted(offline_lock.canonical(r.name) for r in sets["p"]) == [
+        "adlfs",
+        "boto3",
+        "numpy",
+        "requests",
+    ]
