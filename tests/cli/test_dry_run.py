@@ -320,13 +320,14 @@ def test_ci_defaults_of_shape_yml_are_listed_as_writes(world, capsys, monkeypatc
     proj.mkdir(exist_ok=True)
     (proj / "shape.yml").write_text(
         "format: shape-project\nversion: 1\nsources:\n  a: {path: x}\n"
-        "ci: {junit: 'out/{command}.xml'}\n"
+        "ci: {junit: 'out/{command}.xml', json: 'out/{command}.json'}\n"
     )
     monkeypatch.chdir(proj)
     try:
         assert main(["diff", "../a.shape", "../b.shape", "--dry-run", "--json", "-"]) == 0
         acts = json.loads(capsys.readouterr().out)["actions"]
         assert {"action": "create", "target": str(proj / "out" / "diff.xml")} in acts
+        assert {"action": "create", "target": str(proj / "out" / "diff.json")} in acts
     finally:
         monkeypatch.chdir(world)
         (proj / "shape.yml").unlink()

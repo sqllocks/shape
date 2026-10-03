@@ -378,3 +378,29 @@ def test_check_on_a_model_writes_reports_too(work):
     doc = _sarif(work / "m.sarif")
     _assert_sarif_schema(doc)
     assert doc["runs"][0]["results"][0]["ruleId"] == "missing"
+
+
+def test_project_ci_json_default_writes_the_result_document_and_keeps_stdout(work, capsys):
+    (work / "shape.yml").write_text(PROJECT)
+    capsys.readouterr()
+    assert main(["diff", "a.shape", "b.shape"]) == 0
+    printed = json.loads(capsys.readouterr().out)
+    assert "format" not in printed  # the command prints what it always did
+    doc = json.loads((work / "out" / "diff.json").read_text())
+    assert doc["format"] == "shape-result" and doc["command"] == "diff" and doc["exit_code"] == 0
+    assert doc["drifted"] == printed["drifted"]
+
+
+def test_ci_json_default_is_overridden_by_the_flag_and_follows_the_exit_code(work, capsys):
+    (work / "shape.yml").write_text(PROJECT)
+    assert main(["diff", "a.shape", "b.shape", "--fail-on-drift", "--json", "mine.json"]) == 1
+    assert (work / "mine.json").is_file()
+    assert not (work / "out" / "diff.json").exists()  # a flag beat the default
+    assert main(["diff", "a.shape", "b.shape", "--fail-on-drift"]) == 1
+    assert json.loads((work / "out" / "diff.json").read_text())["exit_code"] == 1
+
+
+def test_ci_json_default_does_not_apply_to_other_commands(work):
+    (work / "shape.yml").write_text(PROJECT)
+    assert main(["capture", "a.csv", "-o", "m.shape"]) == 0
+    assert not (work / "out").exists()

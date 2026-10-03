@@ -313,8 +313,26 @@ def run(path: str, a: argparse.Namespace, fn: Callable[[], int]) -> int:
     if getattr(a, "dry_run", False) and not getattr(a, "native_dry_run", False):
         return _dry_run(path, a, json_mode)
     if not json_mode:
+        default = _ci_json_default(path, a)
+        if default is not None:
+            return _enveloped(path, fn, errors, to_file=default)
         return fn()
     return _enveloped(path, fn, errors)
+
+
+#: the commands that write CI reports and so read the ``ci:`` block of shape.yml
+CI_COMMANDS = frozenset({"diff", "check", "verify", "fidelity", "profile validate"})
+
+
+def _ci_json_default(path: str, a: argparse.Namespace) -> Path | None:
+    """Where the ``shape-result`` document goes when shape.yml's ``ci.json`` names a file and the
+    command was given no ``--json`` of its own (a flag overrides the file)."""
+    if path not in CI_COMMANDS or getattr(a, "json", None):
+        return None
+    from shape.cli import ci
+
+    defaults, root = ci.project_ci(a)
+    return ci.resolve_path(None, defaults.get("json"), path, root)
 
 
 class _Tee(io.TextIOBase):
@@ -368,12 +386,24 @@ def envelope(
     return doc
 
 
-def _enveloped(path: str, fn: Callable[[], int], errors: Any) -> int:
+class _Echo(io.StringIO):
+    """Standard output that is also passed on: the command's output stays as it was."""
+
+    def __init__(self, inner: Any) -> None:
+        super().__init__()
+        self.inner = inner
+
+    def write(self, text: str) -> int:
+        self.inner.write(text)
+        return super().write(text)
+
+
+def _enveloped(path: str, fn: Callable[[], int], errors: Any, to_file: Path | None = None) -> int:
     from shape.cli import lifecycle
     from shape.security.redact import redact_text
 
     lifecycle.quick_exit_allowed = False  # the document is printed after the command returns
-    buf = io.StringIO()
+    buf = _Echo(sys.stdout) if to_file is not None else io.StringIO()
     tee = _Tee(sys.stderr)
     saved = sys.stderr
     sys.stderr = tee
@@ -389,13 +419,19 @@ def _enveloped(path: str, fn: Callable[[], int], errors: Any) -> int:
     finally:
         sys.stderr = saved
     payload, human = parse_output(buf.getvalue())
-    if human:
+    if human and to_file is None:
         sys.stderr.write(human)
     if error is None and code != 0:
         lines = [x.strip() for x in "".join(tee.seen).splitlines() if "shape: error:" in x]
         if lines:
             error = " ".join(ln.split("shape: error:", 1)[1].strip() for ln in lines)
-    print(json.dumps(envelope(path, int(code or 0), payload, error), default=str))
+    doc = json.dumps(envelope(path, int(code or 0), payload, error), default=str)
+    if to_file is None:
+        print(doc)
+    else:
+        from shape.cli import ci
+
+        ci.write_text(to_file, doc + "\n", "JSON result")
     return int(code or 0)
 
 
@@ -499,7 +535,7 @@ def _flag_outputs(a: argparse.Namespace) -> list[str]:
 
         defaults, root = ci.project_ci(a)
         command = getattr(a, "_command", "")
-        for key in ("junit", "sarif"):
+        for key in ("junit", "sarif", "json"):
             if not getattr(a, key, None):
                 found = ci.resolve_path(None, defaults.get(key), command, root)
                 if found is not None:

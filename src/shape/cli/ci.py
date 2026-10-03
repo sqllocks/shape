@@ -470,7 +470,7 @@ def resolve_path(
     return path if path.is_absolute() or root is None else root / path
 
 
-def _write(path: Path, text: str, what: str) -> None:
+def write_text(path: Path, text: str, what: str) -> None:
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
@@ -499,9 +499,9 @@ def write_reports(
     junit = resolve_path(getattr(a, "junit", None), ci.get("junit"), command, root)
     sarif = resolve_path(getattr(a, "sarif", None), ci.get("sarif"), command, root)
     if junit is not None:
-        _write(junit, junit_xml(command, checks, time.perf_counter() - t0), "JUnit report")
+        write_text(junit, junit_xml(command, checks, time.perf_counter() - t0), "JUnit report")
     if sarif is not None:
         from shape import __version__
 
         doc = sarif_doc(command, checks, input_path, __version__)
-        _write(sarif, json.dumps(doc, indent=2) + "\n", "SARIF report")
+        write_text(sarif, json.dumps(doc, indent=2) + "\n", "SARIF report")
