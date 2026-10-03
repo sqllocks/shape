@@ -422,6 +422,7 @@ class GenSchema:
         out += self._table_issues()
         out += self._relationship_issues()
         out += self._foreign_key_issues()
+        out += self._cycle_issues()
         out += self._rule_issues()
         out += self._generation_issues()
         out += self._strategy_issues()
@@ -500,6 +501,23 @@ class GenSchema:
                             Issue("error", f"Child column '{col}' not in table '{r.child}'", where)
                         )
         return out
+
+    def _cycle_issues(self) -> list[Issue]:
+        """Tables that point at each other through foreign keys (or relationships) cannot be
+        generated in any order (#733); a reference to a missing table is reported elsewhere."""
+        from shape.generation.engine import (
+            CircularDependencyError,
+            MissingTableError,
+            resolve_order,
+        )
+
+        try:
+            resolve_order(self)
+        except CircularDependencyError as exc:
+            return [Issue("error", f"foreign keys form a cycle: {exc}", "tables")]
+        except MissingTableError:
+            return []
+        return []
 
     def _foreign_key_issues(self) -> list[Issue]:
         out: list[Issue] = []

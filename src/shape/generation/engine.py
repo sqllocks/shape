@@ -207,7 +207,8 @@ def resolve_order(schema: GenSchema) -> list[str]:
                     queue.append(other)
     if len(order) != len(graph):
         raise CircularDependencyError(
-            f"Circular dependency detected among tables: {set(graph) - set(order)}"
+            "Circular dependency detected among tables: "
+            + ", ".join(sorted(set(graph) - set(order)))
         )
     return order
 
@@ -603,9 +604,14 @@ class Engine:
         """Plan the run: order, levels, row counts, columns, memory estimate and every problem
         (schema issues, unknown strategies), without generating anything."""
         issues = self.schema.validate()
+        try:
+            order, levels = self.order, self.levels
+        except (CircularDependencyError, MissingTableError):
+            # validate() reports it; the plan still lists every table, in the schema's order
+            order, levels = list(self.schema.tables), []
         missing: list[str] = []
         tables: dict[str, dict[str, Any]] = {}
-        for name in self.order:
+        for name in order:
             t = self.schema.tables[name]
             cols = []
             for cname in order_columns(t):
@@ -622,7 +628,7 @@ class Engine:
                 "columns": cols,
                 "estimated_bytes": rows * _estimated_row_bytes(t),
             }
-        flat = [n for level in self.levels for n in level]
+        flat = [n for level in levels for n in level] or order
         return DryRun(
             name=self.schema.model.name,
             domain=self.schema.model.domain,
@@ -630,7 +636,7 @@ class Engine:
             seed=self.seed,
             scale=self.schema.generation.scale,
             order=flat,
-            levels=self.levels,
+            levels=levels,
             tables={n: tables[n] for n in flat},
             total_rows=sum(v["rows"] for v in tables.values()),
             estimated_bytes=sum(v["estimated_bytes"] for v in tables.values()),
