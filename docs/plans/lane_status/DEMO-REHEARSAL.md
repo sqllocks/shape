@@ -168,8 +168,23 @@ Run 1 and run 2 were each built from scratch: wheels, venv, `SHAPE_HOME`, data. 
 - `scripts/check_user_facing.py`, `check_secrets.py`, `check_shipped_data.py`: exit 0.
 - `pytest tests/demo tests/demo_cmd -m "not emulator and not live"`: 502 passed (fabric lane: real
   API; `tests/demo/content` alone: 39 passed).
-- Full suite, rust kernel (`SHAPE_KERNEL=rust pytest -m "not emulator and not live"`): running when
-  this file was first committed; the result is recorded in the next commit.
+- Full suite, rust kernel (`SHAPE_KERNEL=rust pytest -m "not emulator and not live"`, dev venv
+  `pip install -e ".[dev]"` with every plugin, plus `tests/demo/fabric/requirements.txt`): 8744 passed,
+  17 skipped, **14 failed** in 32 min. None of the 14 is in the code this branch changes:
+  - 13 fail the same way on the base commit `c153e9c`, run in the same venv with a worktree.
+    - 9 are `tests/generation/test_composite_p601e.py`: the pinned Spindle baseline
+      (`sqllocks_spindle`, `$SPINDLE_ROOT`) is not installed in this session.
+    - 4 are `tests/kernel/test_hashing.py` (float16, `1 == 1.0`),
+      `tests/iss_gaps/test_landing_and_batches.py::test_file_sinks_take_path_template_and_batch_date`
+      and `tests/streaming/emit/test_faults.py::test_emit_to_two_files`. The venv has pyarrow
+      19.0.1: the Fabric test requirements (deltalake, delta-spark) pulled it down from the 25.x
+      that CI uses.
+  - 1, `tests/plugins/test_plugin_kit_install.py::test_every_skeleton_builds_a_pure_wheel`, was
+    caused by this session's `pip wheel plugins/...`, which left `plugins/*/build/` behind. With
+    those removed it passes: the file gives 10 passed. `demo/rehearse.sh` builds the same way, so
+    after running it, delete `plugins/*/build/` before running the suite.
+
+  No test was skipped, deselected or weakened.
 
 Before any fix, the new tests failed: 9 of the first set, then the inference-plan test, then the 3
 charts tests and the TALK stage-diff test. All pass after the fixes.
