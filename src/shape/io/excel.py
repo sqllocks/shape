@@ -142,8 +142,11 @@ def check_workbook_file(path: str | Path) -> Path:
     return p
 
 
-MAX_EXPANSION = 1000  # an archive member that inflates more than this many times is refused
-MAX_PLAIN_BYTES = 256 << 20  # ... once it is also larger than this
+# An archive member that inflates more than MAX_EXPANSION times is refused once it is also larger
+# than MAX_PLAIN_BYTES. Spreadsheet XML compresses 5-30x; shared strings are deduplicated, so
+# they compress less. A part far beyond that is a bomb: openpyxl loads every shared string.
+MAX_EXPANSION = 100
+MAX_PLAIN_BYTES = 16 << 20
 
 
 def _refuse_zip_bomb(p: Path) -> None:
