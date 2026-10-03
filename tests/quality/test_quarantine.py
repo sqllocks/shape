@@ -95,3 +95,81 @@ def test_unknown_format_is_refused(tmp_path):
         QuarantineManager().quarantine_table(
             pa.table({"a": [1]}), tmp_path, "r", "t", "x", fmt="xls"
         )
+
+
+# -- HUNT2-quality ----------------------------------------------------------------------------
+
+
+def test_a_second_file_with_the_same_name_does_not_replace_the_first(tmp_path):
+    """#605: the second copy and its metadata overwrote the first."""
+    import json
+
+    from shape.quality.quarantine import QuarantineManager
+
+    for d, text in (("a", "AAA"), ("b", "BBB")):
+        (tmp_path / d).mkdir()
+        (tmp_path / d / "x.csv").write_text(text)
+    m = QuarantineManager()
+    first = m.quarantine_file(tmp_path / "a" / "x.csv", tmp_path / "q", "r1", "bad a", "g")
+    second = m.quarantine_file(tmp_path / "b" / "x.csv", tmp_path / "q", "r1", "bad b", "g")
+    assert first != second
+    assert first.read_text() == "AAA" and second.read_text() == "BBB"
+    items = m.list_quarantined(tmp_path / "q")
+    assert sorted(i["reason"] for i in items) == ["bad a", "bad b"]
+    assert all(i["exists"] for i in items)
+    assert json.loads(open(f"{first}._quarantine_meta.json").read())["reason"] == "bad a"
+    # a third one and the plain first name stay stable
+    (tmp_path / "c").mkdir()
+    (tmp_path / "c" / "x.csv").write_text("CCC")
+    third = m.quarantine_file(tmp_path / "c" / "x.csv", tmp_path / "q", "r1", "bad c", "g")
+    assert third not in (first, second) and third.read_text() == "CCC"
+    assert first.name == "x.csv"
+
+
+def test_a_table_quarantined_twice_in_one_run_keeps_both(tmp_path):
+    import pyarrow as pa
+
+    from shape.quality.quarantine import QuarantineManager
+
+    m = QuarantineManager()
+    t1 = m.quarantine_table(pa.table({"a": [1]}), tmp_path, "r", "t", "one", "g1")
+    t2 = m.quarantine_table(pa.table({"a": [1, 2]}), tmp_path, "r", "t", "two", "g2")
+    assert t1 != t2
+    rep = m.get_quarantine_report(tmp_path, "r")
+    assert rep["total_quarantined"] == 2 and rep["gates_triggered"] == {"g1": 1, "g2": 1}
+    # a different run id starts clean
+    other = m.quarantine_table(pa.table({"a": [1]}), tmp_path, "r2", "t", "one", "g1")
+    assert other.name == "t.parquet"
+
+
+def test_jsonl_quarantine_is_strict_json(tmp_path):
+    """#606: NaN and Infinity are not JSON."""
+    import json
+
+    import pyarrow as pa
+
+    from shape.quality.quarantine import QuarantineManager
+
+    t = pa.table({"v": [float("nan"), float("inf"), float("-inf"), 1.5]})
+    p = QuarantineManager().quarantine_table(t, tmp_path, "r", "t", "why", "g", "jsonl")
+    rows = [json.loads(line, parse_constant=_reject) for line in p.read_text().splitlines()]
+    assert [r["v"] for r in rows] == [None, None, None, 1.5]
+
+
+def _reject(name):
+    raise AssertionError(f"{name} is not valid JSON")
+
+
+def test_list_quarantined_skips_a_metadata_file_that_is_not_an_object(tmp_path):
+    """#607: one bad metadata file hid every other item."""
+    import pyarrow as pa
+
+    from shape.quality.quarantine import QuarantineManager
+
+    m = QuarantineManager()
+    m.quarantine_table(pa.table({"a": [1]}), tmp_path, "r", "good", "why", "g")
+    bad_dir = tmp_path / "default" / "r"
+    for name, text in (("a.json", "[1]"), ("b.json", '"text"'), ("c.json", "null"), ("d", "{")):
+        (bad_dir / f"{name}._quarantine_meta.json").write_text(text)
+    items = m.list_quarantined(tmp_path)
+    assert [i["table_name"] for i in items] == ["good"]
