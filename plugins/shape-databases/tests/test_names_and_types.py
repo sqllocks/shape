@@ -245,3 +245,18 @@ def test_unknown_uri_parameters_and_schemes_are_refused(flavour):
             "postgresql://h/d?sslmode=sometimes", "t", iter([sample_batch()])
         )
     assert server.events == []
+
+
+@pytest.mark.parametrize(
+    ("uri", "message"),
+    [
+        ("postgresql://u@h/db?sslmode=bogus", r"URI parameter 'sslmode'.*'bogus'.*one of disable"),
+        ("postgresql://u@h/db?connect_timeout=x", r"URI parameter 'connect_timeout'.*integer"),
+        ("mysql://u@h/db?ssl_verify_cert=maybe", r"URI parameter 'ssl_verify_cert'.*true or false"),
+    ],
+)
+def test_a_bad_uri_parameter_value_names_the_parameter(uri, message):
+    # Issue #344: the error was only "must be one of ..." with no parameter name.
+    sink = PostgresSink() if uri.startswith("postgresql") else MySqlSink()
+    with pytest.raises(ShapeError, match=message):
+        sink.write(uri, "t", iter([sample_batch()]))
