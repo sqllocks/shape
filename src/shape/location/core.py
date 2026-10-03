@@ -180,9 +180,12 @@ def scope_from_specs(specs, weights=None, exclude=()):
         return LocationScope(
             tuple(WeightedLocation(x) for x in locs), tuple(location_from_spec(x) for x in exclude)
         )
+    weights = list(weights)
     if len(weights) != len(locs):
-        raise ValueError("weights")
-    return LocationScope.weighted(zip(locs, weights, strict=False)).__class__(
-        tuple(WeightedLocation(x, w) for x, w in zip(locs, weights, strict=False)),
+        raise ValueError(
+            f"got {len(weights)} weights for {len(locs)} location(s); give one weight per location"
+        )
+    return LocationScope(
+        tuple(WeightedLocation(x, w) for x, w in zip(locs, weights, strict=True)),
         tuple(location_from_spec(x) for x in exclude),
     )
