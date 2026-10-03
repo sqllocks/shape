@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import binascii
 import json
 from dataclasses import dataclass
 
@@ -28,13 +29,21 @@ class SecureEnvelope:
 
     @classmethod
     def from_bytes(cls, data: bytes):
-        o = json.loads(data)
-        return cls(
-            o["header"],
-            base64.b64decode(o["nonce"]),
-            base64.b64decode(o["ciphertext"]),
-            base64.b64decode(o["signature"]),
-        )
+        """Parse :meth:`to_bytes` output. Anything else is a ``ShapeSecurityError``
+        ("malformed envelope"), with strict base64 (#428)."""
+        from shape.errors import ShapeSecurityError
+
+        try:
+            o = json.loads(data)
+            if not isinstance(o, dict) or not isinstance(o.get("header"), dict):
+                raise ValueError("expected an object with an object header")
+            parts = [o[k] for k in ("nonce", "ciphertext", "signature")]
+            if not all(isinstance(p, str) for p in parts):
+                raise ValueError("nonce, ciphertext and signature must be base64 strings")
+            nonce, ciphertext, signature = (base64.b64decode(p, validate=True) for p in parts)
+        except (ValueError, KeyError, RecursionError, binascii.Error) as e:
+            raise ShapeSecurityError(f"malformed envelope: {e}") from None
+        return cls(o["header"], nonce, ciphertext, signature)
 
 
 def seal(
