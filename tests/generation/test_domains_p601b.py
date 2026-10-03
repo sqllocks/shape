@@ -94,17 +94,22 @@ def test_the_shipped_files_equal_what_the_exporter_writes():
 
 
 def test_the_schema_is_the_baselines_dump_with_nanosecond_dates(domain):
-    """The one difference: ``unit: ns`` on every non-seasonal temporal column, for T-21 (a)."""
+    """The one difference: ``unit: ns`` on every non-seasonal temporal column, for T-21 (a).
+    Generator keys that no generator reads (``export_domains.UNREAD_KEYS``) are left out."""
     dump = json.loads((BENCH / "fixtures" / "schemas" / f"{domain.name}_3nf.json").read_text())
     assert not [k for k in export_domains.OVERRIDES if k[0] == domain.name]
     mine = domain.schema.to_dict()
     expected = schema_import.import_dump(dump).to_dict()
-    for table in mine["tables"].values():
-        for col in table["columns"].values():
+    for tname, table in mine["tables"].items():
+        for cname, col in table["columns"].items():
             gen = col["generator"]
             if gen.get("unit") == "ns":
                 assert gen["strategy"] == "temporal" and gen.get("pattern") != "seasonal"
                 del gen["unit"]
+            unread = export_domains.UNREAD_KEYS.get(gen.get("strategy"), frozenset())
+            assert not unread & set(gen), (tname, cname)  # keys no generator reads are left out
+            for key in unread:
+                expected["tables"][tname]["columns"][cname]["generator"].pop(key, None)
     assert mine == expected
 
 

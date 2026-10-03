@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "compat",
+    "seed": 7
+  },
+  "tables": {
+    "t": {
+      "name": "t",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "dept": {
+          "name": "dept",
+          "type": "string",
+          "generator": {
+            "strategy": "weighted_enum",
+            "values": {
+              "er": 2,
+              "icu": 1,
+              "lab": 1
+            }
+          }
+        },
+        "ward": {
+          "name": "ward",
+          "type": "string",
+          "generator": {
+            "strategy": "conditional_table",
+            "source_column": "dept",
+            "table": {
+              "er": {
+                "e1": 3,
+                "e2": 1
+              },
+              "icu": {
+                "i1": 1.0
+              }
+            },
+            "values": {
+              "general": 1
+            }
+          }
+        }
+      }
+    }
+  },
+  "relationships": [],
+  "generation": {
+    "scale": "small",
+    "scales": {
+      "small": {
+        "t": 20
+      }
+    }
+  }
+}

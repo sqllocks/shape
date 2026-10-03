@@ -29,6 +29,9 @@ DATASETS: dict[str, list[Any]] = {
     "compat_colors": ["red", "green", "blue"],
     "compat_people": [{"income": 10.0 * i} for i in range(1, 30)],
     "compat_places": [{"city": f"c{i}", "zip": f"{10000 + i}"} for i in range(40)],
+    "compat_regions": [
+        {"state": f"s{i % 3}", "city": f"c{i % 7}", "zip": f"{20000 + i}"} for i in range(42)
+    ],
 }
 
 

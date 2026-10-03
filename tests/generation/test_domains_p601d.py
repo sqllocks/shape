@@ -101,7 +101,8 @@ def test_the_shipped_files_equal_what_the_exporter_writes():
 
 def test_the_schema_is_the_baselines_dump_with_nanosecond_dates(domain):
     """The one difference: nanosecond dates (``unit: ns`` on every non-seasonal temporal column,
-    for T-21 (a)); none of these domains has an override."""
+    for T-21 (a)); none of these domains has an override. Generator keys that no generator
+    reads (``export_domains.UNREAD_KEYS``) are left out."""
     dump = json.loads((BENCH / "fixtures" / "schemas" / f"{domain.name}_3nf.json").read_text())
     mine = domain.schema.to_dict()
     expected = schema_import.import_dump(dump).to_dict()
@@ -111,6 +112,10 @@ def test_the_schema_is_the_baselines_dump_with_nanosecond_dates(domain):
             if gen.get("unit") == "ns":
                 assert gen["strategy"] == "temporal" and gen.get("pattern") != "seasonal"
                 del gen["unit"]
+            unread = export_domains.UNREAD_KEYS.get(gen.get("strategy"), frozenset())
+            assert not unread & set(gen), (tname, cname)  # keys no generator reads are left out
+            for key in unread:
+                expected["tables"][tname]["columns"][cname]["generator"].pop(key, None)
             assert (domain.name, tname, cname) not in export_domains.OVERRIDES
     assert mine == expected
 

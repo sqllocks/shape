@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "compat",
+    "seed": 7
+  },
+  "tables": {
+    "t": {
+      "name": "t",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "zip": {
+          "name": "zip",
+          "type": "string",
+          "generator": {
+            "strategy": "hierarchy",
+            "dataset": "compat_regions",
+            "field": "zip",
+            "levels": [
+              "state",
+              "city"
+            ]
+          }
+        },
+        "state": {
+          "name": "state",
+          "type": "string",
+          "generator": {
+            "strategy": "hierarchy_field",
+            "dataset": "compat_regions",
+            "field": "state"
+          }
+        },
+        "city": {
+          "name": "city",
+          "type": "string",
+          "generator": {
+            "strategy": "hierarchy_field",
+            "dataset": "compat_regions",
+            "field": "city"
+          }
+        }
+      }
+    }
+  },
+  "relationships": [],
+  "generation": {
+    "scale": "small",
+    "scales": {
+      "small": {
+        "t": 20
+      }
+    }
+  }
+}

@@ -14,6 +14,18 @@
     "^(x-|\\$comment$)": {}
   },
   "properties": {
+    "format": {
+      "const": "shape-generation-schema"
+    },
+    "version": {
+      "const": 1
+    },
+    "shape_version": {
+      "type": "string"
+    },
+    "min_shape_version": {
+      "type": "string"
+    },
     "schema_version": {
       "const": 1
     },
@@ -313,6 +325,7 @@
             "composite_foreign_key",
             "computed",
             "conditional",
+            "conditional_table",
             "constant",
             "correlated",
             "derived",
@@ -322,7 +335,10 @@
             "first_per_parent",
             "foreign_key",
             "formula",
+            "hierarchy",
+            "hierarchy_field",
             "lifecycle",
+            "locale",
             "lookup",
             "native",
             "normal",
@@ -651,6 +667,48 @@
             },
             "required": [
               "condition"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "conditional_table"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "source_column": {},
+              "strategy": {
+                "const": "conditional_table"
+              },
+              "table": {},
+              "values": {}
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "source_column",
+              "table",
+              "values"
             ]
           }
         },
@@ -1880,6 +1938,90 @@
           "if": {
             "properties": {
               "strategy": {
+                "const": "hierarchy"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "dataset": {},
+              "field": {},
+              "levels": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "strategy": {
+                "const": "hierarchy"
+              },
+              "top_weights": {},
+              "weighting": {}
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "dataset",
+              "field",
+              "levels"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "hierarchy_field"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "dataset": {},
+              "field": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "strategy": {
+                "const": "hierarchy_field"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "dataset",
+              "field"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
                 "const": "lifecycle"
               }
             },
@@ -1912,6 +2054,48 @@
             },
             "required": [
               "phases"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strategy": {
+                "const": "locale"
+              }
+            },
+            "required": [
+              "strategy"
+            ]
+          },
+          "then": {
+            "type": "object",
+            "properties": {
+              "format": {},
+              "group": {},
+              "locale": {},
+              "output_type": {
+                "enum": [
+                  "int64",
+                  "float64",
+                  "bool",
+                  "string",
+                  "decimal",
+                  "timestamp"
+                ]
+              },
+              "provider": {},
+              "strategy": {
+                "const": "locale"
+              }
+            },
+            "additionalProperties": false,
+            "patternProperties": {
+              "^(x-|\\$comment$)": {}
+            },
+            "required": [
+              "locale",
+              "provider"
             ]
           }
         },

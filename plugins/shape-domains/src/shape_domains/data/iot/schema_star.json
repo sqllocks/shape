@@ -343,8 +343,7 @@
       "strategy": "distribution",
       "distribution": "uniform",
       "min": 0.0,
-      "max": 100.0,
-      "round": 1
+      "max": 100.0
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -439,8 +438,7 @@
       "strategy": "distribution",
       "distribution": "uniform",
       "min": -50.0,
-      "max": 0.0,
-      "round": 2
+      "max": 0.0
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -455,8 +453,7 @@
       "strategy": "distribution",
       "distribution": "uniform",
       "min": 50.0,
-      "max": 500.0,
-      "round": 2
+      "max": 500.0
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -511,8 +508,7 @@
       "mean": 25.0,
       "sigma": 15.0,
       "min": -50.0,
-      "max": 500.0,
-      "round": 3
+      "max": 500.0
      },
      "nullable": false,
      "null_rate": 0.0,

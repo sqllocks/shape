@@ -89,6 +89,19 @@
       ],
       "params": []
     },
+    "conditional_table": {
+      "keys": [
+        "source_column",
+        "table",
+        "values"
+      ],
+      "required": [
+        "source_column",
+        "table",
+        "values"
+      ],
+      "params": []
+    },
     "constant": {
       "keys": [
         "value"
@@ -214,6 +227,32 @@
       ],
       "params": []
     },
+    "hierarchy": {
+      "keys": [
+        "dataset",
+        "field",
+        "levels",
+        "top_weights",
+        "weighting"
+      ],
+      "required": [
+        "dataset",
+        "field",
+        "levels"
+      ],
+      "params": []
+    },
+    "hierarchy_field": {
+      "keys": [
+        "dataset",
+        "field"
+      ],
+      "required": [
+        "dataset",
+        "field"
+      ],
+      "params": []
+    },
     "lifecycle": {
       "keys": [
         "phases",
@@ -221,6 +260,19 @@
       ],
       "required": [
         "phases"
+      ],
+      "params": []
+    },
+    "locale": {
+      "keys": [
+        "format",
+        "group",
+        "locale",
+        "provider"
+      ],
+      "required": [
+        "locale",
+        "provider"
       ],
       "params": []
     },

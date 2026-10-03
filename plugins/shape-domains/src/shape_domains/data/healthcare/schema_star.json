@@ -98,8 +98,7 @@
      "generator": {
       "strategy": "reference_data",
       "dataset": "specialties",
-      "field": "name",
-      "weight_field": "weight"
+      "field": "name"
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -498,8 +497,7 @@
      "generator": {
       "strategy": "reference_data",
       "dataset": "insurance_plans",
-      "field": "name",
-      "weight_field": "weight"
+      "field": "name"
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -751,8 +749,7 @@
      "generator": {
       "strategy": "record_sample",
       "dataset": "icd10_codes",
-      "field": "code",
-      "weight_field": "weight"
+      "field": "code"
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -850,8 +847,7 @@
      "generator": {
       "strategy": "record_sample",
       "dataset": "cpt_codes",
-      "field": "code",
-      "weight_field": "weight"
+      "field": "code"
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -980,8 +976,7 @@
      "generator": {
       "strategy": "reference_data",
       "dataset": "medication_names",
-      "field": "name",
-      "weight_field": "weight"
+      "field": "name"
      },
      "nullable": false,
      "null_rate": 0.0,

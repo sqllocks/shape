@@ -54,6 +54,7 @@ STRATEGY_REQUIRED_KEYS: dict[str, frozenset[str]] = {
     "conditional_table": frozenset({"source_column", "table", "values"}),
     "hierarchy": frozenset({"dataset", "field", "levels"}),
     "hierarchy_field": frozenset({"dataset", "field"}),
+    "locale": frozenset({"locale", "provider"}),
     "scd2": frozenset({"role", "business_key"}),
     "composite_foreign_key": frozenset({"ref_table", "ref_columns"}),
     "composite_fk_field": frozenset({"source_column", "ref_column"}),
