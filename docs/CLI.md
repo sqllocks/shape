@@ -91,7 +91,7 @@ the policy.
   ```
 - `shape fidelity REFERENCE SYNTHETIC` compares data with data: CSV, Parquet, JSONL or a folder
   of one file per table. Given a captured evidence document (`REFERENCE.json`) it certifies the
-  CSV against it instead. A profile is not a fidelity reference; profile the synthetic data and
+  CSV against it instead. A `.shape` file (a profile or a model) is not data and is refused with a one-line message; profile the synthetic data and
   run `shape diff`.
 - `shape proposals propose|list|decide` keeps the answers to what a profile cannot settle alone
   (foreign keys, personal data, meaning) in a decision file; `shape generate --from` and
@@ -130,6 +130,42 @@ It shows the Shape version, the Python, which kernel is in use (`rust` is the co
 is needed for. Exit code 0 unless a required package is missing (then 1); a missing optional
 package never fails it. `shape doctor --json` prints the same facts as one JSON object. For
 plugins, run `shape plugins doctor`.
+
+### Connectivity checks
+
+Three options add checks that touch the network or a cloud sign-in. Each is off unless you ask for
+it, so plain `shape doctor` stays offline. Every check is one line with a status, `PASS`, `WARN` or
+`FAIL`, and a `Next:` step for a warning or failure. A warning never changes the exit code; a
+failure exits 1. A malformed target is an input error (exit 2).
+
+```
+shape doctor --fabric onelake://WORKSPACE/ITEM [--auth cli|msi|spn|device-code|fabric ...]
+shape doctor --broker kafka://host:9092[,host2:9092]/topic
+shape doctor --broker eventhubs://NAMESPACE/HUB [--auth ...]
+shape doctor --delta-table PATH
+```
+
+| Option | Checks |
+|---|---|
+| `--fabric` | `fabric.onelake`: DNS, TCP and TLS to the OneLake endpoint; `fabric.auth`: sign-in with the `--auth` mode (default `cli`); `fabric.item`: the workspace and item exist and you may read them (404 means not found, 403 means no permission) |
+| `--broker` (repeatable) | `broker.dns`, `broker.tcp`, `broker.tls` (Event Hubs, port 5671) and `broker.auth` (Event Hubs: a token from `--auth`; Kafka: a metadata request through `confluent-kafka` when installed, otherwise a warning). `--no-auth-check` skips the sign-in |
+| `--delta-table` | `delta.limits`: deletion vectors and column mapping, which delta-rs cannot read in a Python notebook; the fix names Spark or a table rewrite |
+
+**IPv6.** When a broker name resolves to an IPv6 address that does not answer while an IPv4
+address does, `broker.tcp` is a warning that names the address (a client that tries IPv6 first
+stalls); when nothing answers it is a failure that says IPv6 may be the cause.
+
+**Sign-in.** `--auth`, `--tenant-id`, `--client-id`, `--client-secret`, `--sql-user` and
+`--sql-password` work as in `shape emit` (see the credential references in
+[SECURITY_SPECIFICATION.md](SECURITY_SPECIFICATION.md)); a secret is always a reference such as
+`env://NAME`. A token is used for one request and never printed. `--auth` needs the `shape-fabric`
+plugin; without it the sign-in line fails and says so. `--timeout SECONDS` bounds each step
+(default 5).
+
+**`--json`** prints every check as an entry of `checks`, each with `id`, `status`, `message` and
+`next`, next to the earlier keys; `ok` is false when any check failed.
+
+Live variants of these checks are marked `live` in the test suite and need network access.
 
 ## Content ids across source formats
 

@@ -993,8 +993,14 @@ def _build_parser(plugin_commands=()):
         help="show the traceback of an error instead of a one-line message (also SHAPE_DEBUG=1)",
     )
     sub = p.add_subparsers(dest="cmd", required=True)
-    dr = sub.add_parser("doctor", help="check this installation: version, kernel, packages")
-    dr.add_argument("--json", action="store_true", help="print the report as JSON")
+    dr = sub.add_parser(
+        "doctor",
+        help="check this installation (version, kernel, packages) and, when asked, Fabric access "
+        "and broker reachability",
+    )
+    from shape.cli.doctor import add_arguments as add_doctor_arguments
+
+    add_doctor_arguments(dr)
     sub.add_parser("conformance")
     sub.add_parser("version")
     pl = sub.add_parser("plugins", help="inspect installed plugins")
@@ -1799,14 +1805,17 @@ def _dispatch(argv):
         from shape.cli.tiers import run_drift
 
         return _run(run_drift, a)
-    if a.cmd in ("fidelity", "compare") and not a.tier and _artifact_kind(a.reference) == "profile":
-        print(
-            f"shape: error: {a.reference} is a profile, and `shape fidelity` compares data with "
-            "data: pass the reference data (CSV, Parquet, JSONL or a folder of them), or profile "
-            "the synthetic data and compare the two profiles with `shape diff`",
-            file=sys.stderr,
-        )
-        return 2
+    if a.cmd in ("fidelity", "compare"):
+        for path in (a.reference, a.csv):
+            if str(path).endswith(".shape"):
+                what = "a profile" if _artifact_kind(path) == "profile" else "a Shape artifact"
+                print(
+                    f"shape: error: {path} is {what}, and `shape {a.cmd}` compares data with data: "
+                    "it accepts CSV, Parquet or JSONL files, or a folder of them, not a .shape "
+                    "file (to compare profiles, run `shape diff`)",
+                    file=sys.stderr,
+                )
+                return 2
     if a.cmd in ("fidelity", "compare") and (a.tier or not str(a.reference).endswith(".json")):
         return _run(_cmd_fidelity, a)
     if a.cmd in ("fidelity", "compare"):
