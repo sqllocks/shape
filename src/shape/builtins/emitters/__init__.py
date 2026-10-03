@@ -41,6 +41,8 @@ def uri_path(uri: str, scheme: str) -> Path:
     raw = unquote(parts.netloc + parts.path) if parts.scheme else uri
     if not raw:
         raise ShapeError(f"the {scheme} URI needs a path: {uri!r}")
+    if parts.scheme and len(raw) > 2 and raw[0] == "/" and raw[1].isalpha() and raw[2] == ":":
+        raw = raw[1:]  # file:///C:/x on Windows
     return Path(raw)
 
 

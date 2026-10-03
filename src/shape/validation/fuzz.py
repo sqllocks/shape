@@ -17,6 +17,7 @@ job runs ``python scripts/fuzz_artifacts.py`` with a fresh seed and many more it
 from __future__ import annotations
 
 import contextlib
+import ctypes
 import hashlib
 import io
 import json
@@ -28,6 +29,7 @@ import time
 import zipfile
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from typing import Any
 
@@ -78,16 +80,13 @@ class _Timeout(BaseException):
     """Raised by the alarm; a BaseException so a parser's ``except Exception`` cannot hide it."""
 
 
-@contextlib.contextmanager
-def _time_limit(seconds: float) -> Iterator[None]:
-    # SIGALRM works only on the main thread of a POSIX process; elsewhere the limit is not enforced.
-    if (
-        not hasattr(signal, "setitimer")
-        or threading.current_thread() is not threading.main_thread()
-    ):
-        yield
-        return
+def _alarm_available() -> bool:
+    """SIGALRM-based limits work only on the main thread of a POSIX process."""
+    return hasattr(signal, "setitimer") and threading.current_thread() is threading.main_thread()
 
+
+@contextlib.contextmanager
+def _alarm_limit(seconds: float) -> Iterator[None]:
     def _fire(_signum: int, _frame: Any) -> None:
         raise _Timeout(f"no result after {seconds}s")
 
@@ -98,6 +97,55 @@ def _time_limit(seconds: float) -> Iterator[None]:
     finally:
         signal.setitimer(signal.ITIMER_REAL, 0)
         signal.signal(signal.SIGALRM, old)
+
+
+_WORKER_STACK_BYTES = 64 * 1024 * 1024  # as deep as the main thread: parsers recurse on input
+
+
+def _call_in_worker(seconds: float, func: Callable[[], None]) -> None:
+    """Run ``func`` on a worker thread and wait ``seconds`` for it (Windows has no SIGALRM).
+
+    A call that has not returned by then is a hang: the worker is asked to stop with an
+    asynchronous ``_Timeout`` (that ends a Python-level loop; a call blocked in C ends when it
+    returns), the thread is abandoned as a daemon and ``_Timeout`` is raised to the caller.
+    Whatever the call raised is re-raised in the caller."""
+    outcome: list[BaseException] = []
+
+    def work() -> None:
+        try:
+            func()
+        except BaseException as e:  # noqa: BLE001 - handed to the caller below
+            outcome.append(e)
+
+    previous = threading.stack_size()
+    try:
+        threading.stack_size(_WORKER_STACK_BYTES)
+    except (ValueError, RuntimeError):
+        previous = -1
+    worker = threading.Thread(target=work, name="shape-fuzz-worker", daemon=True)
+    try:
+        worker.start()
+    finally:
+        if previous >= 0:
+            threading.stack_size(previous)
+    worker.join(seconds)
+    if worker.is_alive():
+        if worker.ident is not None:
+            ctypes.pythonapi.PyThreadState_SetAsyncExc(
+                ctypes.c_ulong(worker.ident), ctypes.py_object(_Timeout)
+            )
+        raise _Timeout(f"no result after {seconds}s")
+    if outcome:
+        raise outcome[0]
+
+
+def _run_limited(seconds: float, func: Callable[[], None]) -> None:
+    """Call ``func``; raise ``_Timeout`` if it has not returned after ``seconds``."""
+    if _alarm_available():
+        with _alarm_limit(seconds):
+            func()
+    else:
+        _call_in_worker(seconds, func)
 
 
 # ---- mutators ----------------------------------------------------------------------------------
@@ -581,8 +629,7 @@ def run_fuzz(
                 data = spec.gen(rng, seeds)
                 start = time.monotonic()
                 try:
-                    with _time_limit(time_limit):
-                        spec.run(data, scratch, seeds)
+                    _run_limited(time_limit, partial(spec.run, data, scratch, seeds))
                 except REJECTED:
                     pass
                 except _Timeout as e:

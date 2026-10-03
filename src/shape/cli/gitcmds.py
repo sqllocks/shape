@@ -115,6 +115,17 @@ def _has_rule(lines: list[str], pattern: str) -> bool:
     return False
 
 
+def python_textconv_command() -> str:
+    """A textconv command that runs this interpreter: ``"<python>" -m shape.cli.main cat``.
+
+    Git runs a textconv command through ``sh`` (Git for Windows ships its own), which treats a
+    backslash as an escape: a path written with backslashes reaches the shell with them
+    stripped, and git fails with exit 128. The interpreter path is written with forward slashes,
+    which Windows accepts everywhere, and in double quotes for a path with spaces.
+    """
+    return f'"{Path(sys.executable).as_posix()}" -m shape.cli.main cat'
+
+
 def git_setup(a: argparse.Namespace) -> int:
     """Write ``diff.shape.textconv`` (repository-local) and ``<pattern> diff=shape`` lines in
     the repository's ``.gitattributes``. Running it again changes nothing."""
@@ -123,9 +134,9 @@ def git_setup(a: argparse.Namespace) -> int:
     for p in patterns:
         if not p or any(c.isspace() or c == "\x00" for c in p):
             raise ValueError(f"invalid --pattern {p!r}: no whitespace or control characters")
-    command = a.command or (DEFAULT_TEXTCONV if shutil.which("shape") else None)
-    if command is None:
-        command = f'"{sys.executable}" -m shape.cli.main cat'
+    command = a.command or (
+        DEFAULT_TEXTCONV if shutil.which("shape") else python_textconv_command()
+    )
     _git(["config", "--local", f"diff.{_DRIVER}.textconv", command], top)
     attrs = Path(top) / ".gitattributes"
     if attrs.is_symlink():

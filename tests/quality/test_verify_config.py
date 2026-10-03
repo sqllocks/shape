@@ -112,10 +112,10 @@ def test_the_report_names_the_config(tmp_path):
     cfg = write_config(tmp_path, ranges={"orders.amount": {"min": 0}})
     rep = tmp_path / "r.json"
     assert main(["verify", str(data), "--config", str(cfg), "-o", str(rep)]) == 1
-    assert json.loads(rep.read_text())["config_path"] == str(cfg)
+    assert json.loads(rep.read_text(encoding="utf-8"))["config_path"] == str(cfg)
     md = tmp_path / "r.md"
     main(["verify", str(data), "--config", str(cfg), "-o", str(md)])
-    assert f"--config {cfg}" in md.read_text()
+    assert f"--config {cfg}" in md.read_text(encoding="utf-8")
     assert (
         "range_constraint"
         in VerifyReport(
