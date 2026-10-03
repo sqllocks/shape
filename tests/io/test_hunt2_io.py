@@ -867,4 +867,66 @@ def test_open_table_still_takes_a_path_and_a_file_uri(tmp_path: Path) -> None:
     assert len(os.listdir(tmp_path / "a" / "t")) == 2
 
 
+# ---- #742: a damaged workbook is a WorkbookError that names the file ---------------------------
+
+
+def _damaged_books(tmp_path: Path) -> dict[str, Path]:
+    import zipfile
+
+    openpyxl = pytest.importorskip("openpyxl")
+    wb = openpyxl.Workbook()
+    wb.active.append(["a"])
+    wb.active.append([1])
+    good = tmp_path / "ok.xlsx"
+    wb.save(good)
+
+    def mutate(name: str, part: str, change) -> Path:  # type: ignore[no-untyped-def]
+        out = tmp_path / name
+        with zipfile.ZipFile(good) as src, zipfile.ZipFile(out, "w") as dst:
+            for info in src.infolist():
+                data = src.read(info.filename)
+                dst.writestr(info, change(data) if info.filename == part else data)
+        return out
+
+    books = {
+        "cut sheet": mutate("cut_sheet.xlsx", "xl/worksheets/sheet1.xml", lambda b: b[:100]),
+        "cut workbook": mutate("cut_book.xlsx", "xl/workbook.xml", lambda b: b[:60]),
+        "empty sheet": mutate("empty.xlsx", "xl/worksheets/sheet1.xml", lambda b: b""),
+        "junk types": mutate("types.xlsx", "[Content_Types].xml", lambda b: b"junk"),
+    }
+    raw = bytearray(good.read_bytes())
+    with zipfile.ZipFile(good) as zf:
+        info = zf.getinfo("xl/worksheets/sheet1.xml")
+    offset = info.header_offset + 30 + len(info.filename.encode()) + len(info.extra) + 5
+    raw[offset : offset + 6] = b"\xff\xfe\xfd\xfc\xfb\xfa"
+    flipped = tmp_path / "flip.xlsx"
+    flipped.write_bytes(bytes(raw))
+    books["flipped bytes"] = flipped
+    return books
+
+
+def test_a_damaged_workbook_is_a_workbook_error_naming_the_file(tmp_path: Path) -> None:
+    from shape.io import WorkbookError, open_workbook, read_table
+    from shape.io.excel import read_workbook, workbook_sheet_names
+
+    for label, path in _damaged_books(tmp_path).items():
+        for call in (
+            lambda p=path: read_table(p),
+            lambda p=path: read_table(f"{p}#nosuch"),
+            lambda p=path: read_workbook(p),
+            lambda p=path: workbook_sheet_names(p),
+            lambda p=path: open_workbook(p),
+        ):
+            with pytest.raises(WorkbookError, match=rf"{path.name}.*damaged"):
+                call()
+        assert label  # the mutation that made it
+
+
+def test_an_intact_workbook_still_reads_after_the_damaged_ones(tmp_path: Path) -> None:
+    from shape.io import read_table
+
+    _damaged_books(tmp_path)
+    assert read_table(tmp_path / "ok.xlsx").to_pydict() == {"a": [1]}
+
+
 _ = dt
