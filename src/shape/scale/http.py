@@ -14,6 +14,7 @@ import urllib.request
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
+from urllib.parse import urlsplit
 
 FABRIC_API = "https://api.fabric.microsoft.com/v1"
 ONELAKE_DFS = "https://onelake.dfs.fabric.microsoft.com"
@@ -50,14 +51,58 @@ def _host_path(url: str) -> str:
     return url.split("?", 1)[0]
 
 
+def _origin(url: str) -> tuple[str, str, int | None]:
+    parts = urlsplit(url)
+    return parts.scheme.lower(), (parts.hostname or "").lower(), parts.port
+
+
+def same_origin(url: str, base: str) -> str:
+    """``url`` when it has ``base``'s scheme, host and port; else ``ValueError``.
+
+    A URL a service hands back (an operation ``Location``, a ``continuationUri``) is called with the
+    bearer token, so it is followed only on the service's own origin."""
+    if _origin(url) != _origin(base):
+        host = urlsplit(url).hostname or url
+        raise ValueError(
+            f"refusing to send the token to {host}: the service answered with a URL outside "
+            f"{urlsplit(base).hostname}"
+        )
+    return url
+
+
+def bearer_request(
+    method: str, url: str, headers: Mapping[str, str], body: bytes | None
+) -> urllib.request.Request:
+    """A request whose ``Authorization`` header is never copied onto a redirect: urllib's redirect
+    handler copies every other header to whatever URL a ``Location`` names."""
+    request = urllib.request.Request(url, data=body, method=method)  # noqa: S310
+    for name, value in headers.items():
+        if name.lower() == "authorization":
+            request.add_unredirected_header(name, value)
+        else:
+            request.add_header(name, value)
+    return request
+
+
+def redirected_away(url: str, response: Any) -> bool:
+    """True when ``response`` (after any redirects) came from another origin than ``url``."""
+    return _origin(str(getattr(response, "url", None) or url)) != _origin(url)
+
+
 def urllib_transport(
     method: str, url: str, headers: Mapping[str, str], body: bytes | None, timeout: float
 ) -> HttpResponse:
     if not url.startswith("https://"):
         raise ValueError("only https:// URLs are allowed")
-    request = urllib.request.Request(url, data=body, headers=dict(headers), method=method)  # noqa: S310
+    request = bearer_request(method, url, headers, body)
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310  # nosec B310
+            if redirected_away(url, response):
+                raise HttpError(
+                    response.status,
+                    url,
+                    "the request was redirected to another origin; its answer is not used",
+                )
             return HttpResponse(
                 response.status,
                 response.read(),

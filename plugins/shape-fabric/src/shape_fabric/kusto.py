@@ -26,6 +26,7 @@ from urllib.parse import quote
 import pyarrow as pa  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
+from shape.scale.http import bearer_request, redirected_away
 
 from .errors import AuthError
 
@@ -49,9 +50,14 @@ class KustoTarget(NamedTuple):
 def urllib_transport(
     method: str, url: str, headers: dict[str, str], body: bytes, timeout: float
 ) -> tuple[int, dict[str, str], bytes]:
-    req = urlrequest.Request(url, data=body, headers=headers, method=method)  # noqa: S310
+    req = bearer_request(method, url, headers, body)
     try:
         with urlrequest.urlopen(req, timeout=timeout) as resp:  # noqa: S310  # nosec B310
+            if redirected_away(url, resp):
+                raise ConnectionError(
+                    "eventhouse: the request was redirected to another origin; its answer is "
+                    "not used"
+                )
             return resp.status, dict(resp.headers), resp.read()
     except urlerror.HTTPError as exc:
         return exc.code, dict(exc.headers or {}), exc.read()

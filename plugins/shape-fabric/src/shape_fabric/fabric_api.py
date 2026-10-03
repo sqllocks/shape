@@ -18,7 +18,7 @@ from collections.abc import Callable
 from typing import Any
 from urllib.parse import quote
 
-from shape.scale.http import FABRIC_API, Http, HttpError, Transport
+from shape.scale.http import FABRIC_API, Http, HttpError, Transport, same_origin
 
 from ._auth import token_for
 from .errors import AuthError
@@ -150,6 +150,7 @@ class FabricApi:
     def _await(self, location: str, kind: str, name: str) -> None:
         if not location:
             raise FabricApiError(f"creating the {kind} {name!r}: no operation URL to follow")
+        same_origin(location, FABRIC_API)
         for _ in range(POLL_LIMIT):
             self._sleep(POLL_SECONDS)
             state = self._http.request("GET", location).json()

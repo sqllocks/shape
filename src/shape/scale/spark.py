@@ -26,7 +26,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from shape.scale.http import FABRIC_API, ONELAKE_DFS, Http, Transport
+from shape.scale.http import FABRIC_API, ONELAKE_DFS, Http, Transport, same_origin
 from shape.scale.jobs import JobRecord
 
 logger = logging.getLogger(__name__)
@@ -184,7 +184,8 @@ class FabricSparkRouter:
         while url:
             doc = self._http.request("GET", url).json()
             found.extend(doc.get("value", []))
-            url = doc.get("continuationUri") or ""
+            following = doc.get("continuationUri") or ""
+            url = same_origin(following, FABRIC_API) if following else ""
         return found
 
     def find_notebook(self) -> str | None:
@@ -257,7 +258,7 @@ class FabricSparkRouter:
             )
         for _ in range(60):
             self._sleep(2.0)
-            operation = self._http.request("GET", location).json()
+            operation = self._http.request("GET", same_origin(location, FABRIC_API)).json()
             state = operation.get("status", "")
             if state == "Succeeded":
                 created = self.find_notebook()
