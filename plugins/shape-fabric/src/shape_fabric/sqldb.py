@@ -181,9 +181,11 @@ def write_many(
     :class:`WriteError` whose ``result`` lists the tables completed before it."""
     start = time.monotonic()
     result = WriteResult(writer.destination)
-    for table in order or list(tables):
-        if table not in tables:
-            raise ShapeError(f"no data was given for table {table!r}")
+    names = list(order or tables)
+    missing = [t for t in names if t not in tables]
+    if missing:  # before anything is written
+        raise ShapeError(f"no data was given for table {missing[0]!r}")
+    for table in names:
         per = {**common, **dict((options or {}).get(table, {}))}
         try:
             result.per_table[table] = writer.write_table(table, tables[table], **per)
