@@ -81,6 +81,9 @@ the same order in every file.
   one), the versions of every entity chain without a gap and exactly one is current.
 * The business key must be numeric (new entities get the next integer); a text key is refused before
   anything is written.
+  So are a key that repeats or is null (each row is one entity's current version), tracking the key
+  or a version column in `scd2_columns`, and a `daily_change_rate` or `daily_new_rate` outside
+  [0, 1]. A rate above 0 changes at least one entity a day; a rate of 0 changes none.
 
 ## Stream emitter
 

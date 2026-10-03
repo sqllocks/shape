@@ -22,6 +22,7 @@ from typing import Any
 
 import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
+import pyarrow.compute as pc  # type: ignore[import-untyped]
 
 from shape_simulation import _tables as tb
 
@@ -71,6 +72,24 @@ class SCD2FileDropConfig:
             raise ValueError("formats must name at least one file format")
         if self.num_delta_days < 0:
             raise ValueError("num_delta_days must be 0 or more")
+        for name in ("daily_change_rate", "daily_new_rate"):
+            rate = getattr(self, name)
+            if not 0.0 <= rate <= 1.0:  # also refuses NaN
+                raise ValueError(f"{name} must be between 0 and 1, got {rate!r}")
+        # Changing the key or a version column would break the version chains (a changed key
+        # collides with other entities; a flipped is_current makes two current versions).
+        fixed = {
+            self.business_key_column,
+            self.effective_date_column,
+            self.end_date_column,
+            self.is_current_column,
+        }
+        tracked = [c for c in self.scd2_columns if c in fixed]
+        if tracked:
+            raise ValueError(
+                f"scd2_columns cannot track {', '.join(map(repr, tracked))}: the business key and "
+                "the version columns are kept by the simulator, not changed"
+            )
 
 
 @dataclass
@@ -141,6 +160,7 @@ class SCD2FileDropSimulator:
                 )
             if table.num_rows == 0:
                 raise ValueError(f"table {entity!r} has no rows to version")
+            self._check_keys(table, entity)
             schema = self._versioned_schema(table.schema)
             # A missing number or text draws like a NaN does; a missing date or flag does not.
             self._nan_columns = {
@@ -224,8 +244,27 @@ class SCD2FileDropSimulator:
                 columns.append(table.column(f.name).combine_chunks())
         return pa.Table.from_arrays(columns, schema=schema)
 
+    def _check_keys(self, table: pa.Table, entity: str) -> None:
+        """One row per business key, and no null key: each row is one entity's only current
+        version, so a repeated or missing key would give an entity two or none."""
+        key = self._config.business_key_column
+        column = table.column(key)
+        if column.null_count:
+            raise ValueError(
+                f"the business key column {key!r} of table {entity!r} has {column.null_count} "
+                "null value(s); every entity needs a key"
+            )
+        counts = pc.value_counts(column)
+        repeated = counts.filter(pc.greater(counts.field("counts"), 1))
+        if len(repeated):
+            sample = ", ".join(str(v) for v in repeated.field("values").to_pylist()[:5])
+            raise ValueError(
+                f"the business key column {key!r} of table {entity!r} has keys that repeat "
+                f"({len(repeated)}, e.g. {sample}); the snapshot needs one row per entity"
+            )
+
     def _initial_state(self, snapshot: pa.Table) -> dict[Any, dict[str, Any]]:
-        """The current row of each business key (a repeated key keeps its last row)."""
+        """The current row of each business key (keys are unique: :meth:`_check_keys`)."""
         key = self._config.business_key_column
         state: dict[Any, dict[str, Any]] = {}
         for row in snapshot.to_pylist():
@@ -257,7 +296,10 @@ class SCD2FileDropSimulator:
         keys = list(state)
         rows: list[dict[str, Any]] = []
 
-        count = min(max(1, int(len(keys) * cfg.daily_change_rate)), len(keys))
+        # at least one change of a kind a rate asks for; none when the rate is 0
+        count = 0
+        if cfg.daily_change_rate > 0:
+            count = min(max(1, int(len(keys) * cfg.daily_change_rate)), len(keys))
         chosen = self._rng.choice(keys, size=count, replace=False).tolist()
         for key in chosen:
             old = state[key]
@@ -276,7 +318,7 @@ class SCD2FileDropSimulator:
             rows.append(new)
             state[key] = {k: v for k, v in new.items() if k != DELTA_TYPE}
 
-        inserts = max(1, int(len(keys) * cfg.daily_new_rate))
+        inserts = max(1, int(len(keys) * cfg.daily_new_rate)) if cfg.daily_new_rate > 0 else 0
         template = state[keys[0]]
         for _ in range(inserts):
             row = self._new_row(template, next_key, day)
