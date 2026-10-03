@@ -243,6 +243,7 @@ instruction.
 
 | Date | ID | Change | Reason |
 |---|---|---|---|
+| 2026-10-03 | W2-04, Delta output | **Shape's Delta writer stores time-zone-less timestamps as UTC timestamps** (the wall-clock value is kept and reads back as UTC), so Shape's Delta tables stay at reader version 1 / writer version 2 with no table features: `deltalake` 1.6.6 otherwise adds the `timestampNtz` feature (reader 3 / writer 7), which not every Fabric engine reads. Documented as a behaviour change of Delta output; a regression test asserts the protocol. | Lead decision on the lane's finding; Fabric compatibility (readers 1 / writers 2 for Python notebooks, pipelines and Eventstreams). |
 | 2026-10-03 | INT-13, P6-07b, issues | **Integration INT-13 merged into build/main-plan:** CI-FIX round 3 (profile JSON depth limit, POSIX OneLake paths, domains in the bench-quick venv, synthetic-secret tests under `tests/security/`), ISS-profile (#2, #21, #22, #23, #24, #37), ISS-gen (#11, #12, #17, #18, #19, with #9 and #10 temporal and spec-key fixes), EXCEL (#50 Excel source, #51 multi-sheet workbook sink), FIN-CAP (financial simulator full-span window; `shape capture` reads every profile input), P6-07b (Fabric `--auth` modes and credential references; P6-07b done) and NIGHTLY-FIX (nightly soak and emulator jobs). Conflicts resolved by the lead keeping both sides: ISS-cli's `errors.guarded` plus ISS-gen's one-line program crash message; P6-07b's sign-in options passed through the shared `open_sink`, and its redaction moved into `errors.fail` so every one-line error is redacted; FIN-CAP's `load_table` with Excel workbook and CSV options. Three lead fixes found by verification: `spec_keys` lists the digits providers' `width`; `pack_1to1` applies the deliberate reserved-email difference already listed in `domain_differences.py` (only when `vocab` is the sole failing check and every address is at a reserved domain); the simulation fixtures state their two-day range with an inclusive end date (#10). Lead verification, every step exit 0: static checks, cargo debug and release, strategy baselines, full suite both kernels (5496 each), heavy, demo, profile verify both kernels, ddl, plugins and their kits, SQL Server parity, domains and export, retail T-21, tiers, fabric plugins, simulation file and pattern parity with negative controls, incremental, pack, stream and stream-profile parity, heavy streaming, simulation plugin (156), chaos parity. | Lead. |
 | 2026-10-03 | Owner delegation, §13 | **The owner delegated decisions to the lead** (2026-10-03): the lead decides with best practice and records each decision here; actions that spend money, publish packages to a public index or make a repository public, create legal obligations, contact outside parties, or delete repositories or rewrite published history stay with the owner. New §13 adds the roadmap work packages W1-01 to W5-02 (issues #52, #53, #55 to #65), with P6-11 specified further by #56. | Owner, 2026-10-03. |
 | 2026-10-03 | Decisions held since 2026-10-02 | Lead decisions under the delegation: (1) joint profiling (#47) is off by default for multi-table profiles, `--joint` turns it on (single tables keep it on); (2) `shape-dbt`, `shape-behavior`, `shape-healthcare-codes` and `shape-healthcare-standards` join the first-party plugins (T-09, §5) with extras `[dbt]` and `[healthcare]` (T-08 amended); (3) #39 non-local destinations: `--yes`, or `SHAPE_CONFIRM_REMOTE=1` for notebooks and pipelines, built after the 2026-10-07 talk; (4) NCPDP output and the NUCC taxonomy are bring-your-own only, nothing licensed ships; (5) this repository's healthcare scope is the behavior framework, the code-set loaders and the X12, FHIR and OMOP emitters with an NCPDP bring-your-own layer; other healthcare domain content is not part of this repository; (6) new optional contract rules are additive keys in contract v1 and an older reader refuses an unknown rule; (7) the new plugins' slow suites run nightly. | Owner delegation, 2026-10-03; recommendations of 2026-10-02 8:32 PM EDT. |
@@ -2069,12 +2070,58 @@ Work packages are listed in execution order. The next work package is the first 
 | 90 | W1-04 | todo | |
 | 91 | W1-05 | todo | |
 | 92 | W1-06 | todo | |
-| 93 | W1-07 | todo | |
+| 93 | W1-07 | done | 9e87cd8, c6b5d17 |
 | 94 | W2-01 | todo | |
 | 95 | W2-02 | todo | |
 | 96 | W2-03 | todo | |
 | 97 | W5-01 | todo | |
 | 98 | W5-02 | todo | |
+| 99 | W1-08 | todo | |
+| 100 | W1-09 | todo | |
+| 101 | W1-10 | todo | |
+| 102 | W1-11 | todo | |
+| 103 | W1-12 | todo | |
+| 104 | W1-13 | todo | |
+| 105 | W1-14 | todo | |
+| 106 | W1-15 | todo | |
+| 107 | W1-16 | todo | |
+| 108 | W1-17 | todo | |
+| 109 | W1-18 | todo | |
+| 110 | W2-04 | todo | |
+| 111 | W2-05 | todo | |
+| 112 | W2-06 | todo | |
+| 113 | W2-07 | todo | |
+| 114 | W2-08 | todo | |
+| 115 | W2-09 | todo | |
+| 116 | W2-10 | todo | |
+| 117 | W3-01 | todo | |
+| 118 | W3-02 | todo | |
+| 119 | W3-03 | todo | |
+| 120 | W3-04 | todo | |
+| 121 | W3-05 | todo | |
+| 122 | W3-06 | todo | |
+| 123 | W3-07 | todo | |
+| 124 | W3-08 | todo | |
+| 125 | W3-09 | todo | |
+| 126 | W3-10 | todo | |
+| 127 | W3-11 | todo | |
+| 128 | W3-12 | todo | |
+| 129 | W3-13 | todo | |
+| 130 | W4-01 | todo | |
+| 131 | W4-02 | todo | |
+| 132 | W4-03 | todo | |
+| 133 | W5-03 | todo | |
+| 134 | W5-04 | todo | |
+| 135 | W5-05 | todo | |
+| 136 | W5-06 | todo | |
+| 137 | W5-07 | todo | |
+| 138 | W5-08 | todo | |
+| 139 | W5-09 | todo | |
+| 140 | W5-10 | todo | |
+| 141 | W6-01 | todo | |
+| 142 | W6-02 | todo | |
+| 143 | W6-03 | todo | |
+| 144 | W6-04 | todo | |
 
 | Gate | Status |
 |---|---|
@@ -2546,7 +2593,7 @@ shape diff BASE.shape CURRENT.shape [--json RESULT.json] [--fail-on-drift]
 
 ## 13. Roadmap work packages (2026-10-03)
 
-The owner delegated decisions to the lead on 2026-10-03 (§2.3). These work packages build the open roadmap items. Each one's deliverables are the numbered "Wanted" list of its issue, which is its specification; anything not on that list is out of scope (§0 default). Common acceptance for every package below: a test per deliverable item, including negative and boundary cases; the full suite in both kernel modes, `make check` and `python scripts/check_user_facing.py` pass; documentation for every new command, file format or API; a compatibility test for any persisted format (follows W1-01 once it lands); no gate, tolerance or D-xx/T-xx decision changed. Persisted formats declare `format` and an integer `version`.
+The owner delegated decisions to the lead on 2026-10-03 (§2.3). These work packages build the open roadmap items. A package whose issue says "filed at start" gets its issue, which is then its specification, when its lane starts. Each one's deliverables are the numbered "Wanted" list of its issue, which is its specification; anything not on that list is out of scope (§0 default). Common acceptance for every package below: a test per deliverable item, including negative and boundary cases; the full suite in both kernel modes, `make check` and `python scripts/check_user_facing.py` pass; documentation for every new command, file format or API; a compatibility test for any persisted format (follows W1-01 once it lands); no gate, tolerance or D-xx/T-xx decision changed. Persisted formats declare `format` and an integer `version`.
 
 | WP | Issue | Title | Depends |
 |---|---|---|---|
@@ -2562,6 +2609,52 @@ The owner delegated decisions to the lead on 2026-10-03 (§2.3). These work pack
 | W2-03 | #53 | Delta read fallback for deletion vectors and column mapping | none |
 | W5-01 | #62 | Stable public masking API | none |
 | W5-02 | #63 | Deterministic schema design engine | none |
+| W1-08 | #66 | Planted-drift regression sweep, `row_count_change`, quieter `distribution_change` | none |
+| W1-09 | #67 | Windows Fabric helper path, Kafka emulator flake, Spark Delta-catalog on Windows | none |
+| W1-10 | filed at start | v1.0 definition of done, CLI stability promise, what we are not building | W1-05 |
+| W1-11 | filed at start | Safe-by-default capture (sensitive columns keep statistics and formats only; count floor) | W1-01 |
+| W1-12 | filed at start | Planned-change registry read by `diff` and gates | W1-04 |
+| W1-13 | filed at start | Semantic versioning of diffs (breaking, additive, cosmetic) used by gates | W1-12 |
+| W1-14 | filed at start | CI outputs: JUnit, SARIF, documented exit codes, `--json` and `--dry-run` everywhere | W1-04 |
+| W1-15 | filed at start | Generator version pinning and a stability promise for pinned fixtures | W1-03, W1-06 |
+| W1-16 | #68 | `shape doctor`: Fabric access and broker reachability checks | none |
+| W1-17 | filed at start | Chaos safety and non-local confirmation (`--yes`, `SHAPE_CONFIRM_REMOTE=1`; after 2026-10-07) | ISS2-sinks |
+| W1-18 | filed at start | Plugin allow-list and opt-in signature check; statement of plugin reach | W1-05 |
+| W2-04 | #69 | Excel named ranges, tables, merged cells, autofilter; Delta reader 1 / writer 2 test | none |
+| W2-05 | filed at start | Fabric guidance and measurements: Eventstream ingestion, memory on 2 vCore/16 GB, numpy 2 on Fabric runtimes | O-07 |
+| W2-06 | filed at start | `sempy` source plugin for semantic models | W1-05 |
+| W2-07 | filed at start | Sampling controls recorded in the profile; type inference confidence and declared-versus-inferred report | ISS2-bugs |
+| W2-08 | filed at start | Sinks II: Snowflake, Databricks, Synapse | ISS2-sinks |
+| W2-09 | filed at start | Streaming II: schema registry formats, dead-letter routing, arrival processes, curves, drift plans, dry run and progress | ISS2-sinks |
+| W2-10 | filed at start | SQL Server write path II (Kerberos keytab, identity columns, constraint toggling, idempotent reruns); DuckDB writer | ISS2-sinks |
+| W3-01 | filed at start | Rule mutation testing and rule backtesting | W2-01 |
+| W3-02 | filed at start | Rule suggestion from a profile through proposal files | W1-02 |
+| W3-03 | filed at start | `shape bisect` (and layer bisect) and `shape timelapse` | W2-01, W1-04 |
+| W3-04 | #70 | `shape explain` and notebook display | none |
+| W3-05 | filed at start | Local synthetic-data report card | W1-03 |
+| W3-06 | #71 | Data quality scorecards by dimension; failing-row samples and flag column | none |
+| W3-07 | filed at start | Univariate depth (model selection, zero inflation, heaping, Benford, tail index) | ISS2-joint |
+| W3-08 | filed at start | Multivariate outliers, mixed-type copula, multi-column determinants | W3-07 |
+| W3-09 | #72 | Duplicate detection and entity resolution | none |
+| W3-10 | #73 | Reconciliation and time-series quality checks | none |
+| W3-11 | filed at start | Fairness slices and training-serving skew | W3-06 |
+| W3-12 | filed at start | Reference packs: ZIP-city, IBAN, ISO codes | ISS2-joint |
+| W3-13 | filed at start | Environment parity check; consumer data contracts checked in producer CI | W1-04 |
+| W4-01 | filed at start | Behavior models (event sequences, telemetry series, transaction streams, file arrivals, entity lifecycles) as `shape.behaviors` modules | PLUG-INT |
+| W4-02 | filed at start | Optional Synthea module runner plugin | PLUG-INT |
+| W4-03 | #74 | Basic locale packs | none |
+| W5-03 | filed at start | Value vault (envelope encryption, per-column policy, vault hash in signatures, vault generation mode) | W1-01, W1-11 |
+| W5-04 | filed at start | Contract emission: DDL, JSON Schema, pandera, Great Expectations | PLUG-INT |
+| W5-05 | filed at start | Starter scenario library, named CI suites, pytest plugin and database seeding | W1-05 |
+| W5-06 | filed at start | Importers (JSON Schema, OpenAPI, Avro, Protobuf, Pydantic, TMDL) and TMDL star export | W1-06, W5-02 |
+| W5-07 | filed at start | Nested and standards sources: JSON arrays and structs, XML, X12 835, HL7 | PLUG-INT |
+| W5-08 | filed at start | Integration plugins: OpenLineage, MLflow, Presidio, SDMetrics, Anonymeter, Ibis/DuckDB | W1-05 |
+| W5-09 | filed at start | Known-answer datasets for DAX measures; drift report template (`publish-report`) | P6-07c |
+| W5-10 | filed at start | File-footer fingerprint, safe-to-share bundle, skew rehearsal | W1-03 |
+| W6-01 | filed at start | PR bot action, status badge, plugin template, webhook notifications | W1-14 |
+| W6-02 | #75 | Air-gap hardening: zero-network tests, offline lockfile, shipped reference data | none |
+| W6-03 | filed at start | Failure mode catalog, data detective packs, public dataset library, canaries and game-day runner | W5-05 |
+| W6-04 | filed at start | VS Code extension and data dictionary from a profile | W1-04 |
 
 P6-11 (`shape bridge`) is specified further by issue #56; its `demo_*` commands follow P6-12 and the rest start now (owner standing instruction: whatever can run in parallel, do).
 
