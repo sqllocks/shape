@@ -63,3 +63,18 @@ def test_154_an_out_of_range_event_time_is_not_a_time(value):
     assert batch is not None and batch.num_rows == 2
     times = batch.column("_shape_event_time").cast("int64").to_pylist()
     assert times == [5, 7]  # the broker's time, as for any value that is not a valid time
+
+
+@pytest.mark.parametrize("cls", ["TumblingWindow", "AggregateTumblingWindow"])
+@pytest.mark.parametrize("size_ms", [100, 300, 700, 1100])
+def test_155_tumbling_window_start_contains_the_event(cls, size_ms):
+    from datetime import UTC, datetime, timedelta
+
+    import shape.streaming as streaming
+
+    w = getattr(streaming, cls)(timedelta(milliseconds=size_ms))
+    base = datetime(2026, 1, 1, tzinfo=UTC)
+    for ms in range(0, 20_000, 100):
+        t = base + timedelta(milliseconds=ms)
+        start = w._start(t)
+        assert start <= t < start + w.size, (ms, start)
