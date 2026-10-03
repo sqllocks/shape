@@ -11,12 +11,12 @@ from shape.scenario.gsl import (
     GenerationSpec,
 )
 from shape.scenario.loader import PackError, PackLoader, ScenarioPack
-from shape.scenario.runner import _with_spec
+from shape.scenario.runner import _with_spec, spec_chaos_section
 from shape.scenario.validator import (
     KNOWN_GATES,
     PackValidationResult,
     PackValidator,
-    chaos_config,
+    check_chaos,
     schema_of,
     unsafe_path,
 )
@@ -91,9 +91,10 @@ def validate_spec(spec: GenerationSpec) -> PackValidationResult:
         checked = PackValidator().validate(_with_spec(pack, spec), domain)
         result.errors.extend(f"pack: {e}" for e in checked.errors)
         result.warnings.extend(f"pack: {w}" for w in checked.warnings)
-    if spec.chaos is not None and spec.chaos.enabled:
-        section = {**spec.chaos.config, "enabled": True, "intensity": spec.chaos.intensity}
-        result.errors.extend(f"chaos: {m}" for m in chaos_config(section).validate())
+    if spec.chaos is not None:
+        errors, warnings = check_chaos(spec_chaos_section(spec.chaos))
+        result.errors.extend(errors)
+        result.warnings.extend(warnings)
     if spec.validation is not None:
         for gate in spec.validation.gates:
             if gate not in KNOWN_GATES:

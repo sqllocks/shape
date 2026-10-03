@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import PurePosixPath, PureWindowsPath
 from typing import Any
 
-from shape.scenario.loader import PACK_KINDS, ScenarioPack
+from shape.scenario.loader import PACK_KINDS, ScenarioPack, describe_type
 
 KNOWN_GATES = (
     "schema_conformance",
@@ -201,9 +201,10 @@ class PackValidator:
     def _extras(pack: ScenarioPack, result: PackValidationResult) -> None:
         for key in pack.extra_keys:
             result.warnings.append(f"Unknown key '{key}' is ignored")
-        if pack.chaos is not None and pack.chaos.get("enabled", False):
-            for message in chaos_config(pack.chaos).validate():
-                result.errors.append(f"chaos: {message}")
+        if pack.chaos is not None:
+            errors, warnings = check_chaos(pack.chaos)
+            result.errors.extend(errors)
+            result.warnings.extend(warnings)
         fd = pack.file_drop
         if fd is not None:
             for label, spec in (
@@ -230,6 +231,57 @@ def match_table(name: str, tables: list[str]) -> str | None:
         if name in table or table in name:
             return table
     return None
+
+
+CHAOS_INTEGERS = ("seed", "warmup_days", "chaos_start_day", "breaking_change_day", "day")
+CHAOS_TEXTS = ("intensity", "escalation")
+CHAOS_KEYS = ("enabled", "categories", "config", *CHAOS_INTEGERS, *CHAOS_TEXTS)
+
+
+def check_chaos(section: dict[str, Any], where: str = "chaos") -> tuple[list[str], list[str]]:
+    """``(errors, warnings)`` of a ``chaos`` mapping (a pack's, or a spec's settings).
+
+    A value of the wrong type is an error naming its key, whether chaos is enabled or not; an
+    unknown key is a warning. The settings themselves (intensity, escalation, days, categories)
+    are checked by ``ChaosConfig.validate`` only when chaos is enabled and every type is right.
+    """
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    def wrong(key: str, what: str, value: Any) -> None:
+        errors.append(f"{where}.{key} must be {what}, got {describe_type(value)}")
+
+    def visit(mapping: dict[str, Any], prefix: str) -> None:
+        for key, value in mapping.items():
+            name = f"{prefix}{key}"
+            if key == "config" and not prefix:
+                if not isinstance(value, dict):
+                    wrong(name, "a mapping", value)
+                else:
+                    visit(value, "config.")
+            elif key == "enabled":
+                if not isinstance(value, bool):
+                    wrong(name, "true or false", value)
+            elif key in CHAOS_INTEGERS:
+                if isinstance(value, bool) or not isinstance(value, int):
+                    wrong(name, "an integer", value)
+            elif key in CHAOS_TEXTS:
+                if not isinstance(value, str):
+                    wrong(name, "text", value)
+            elif key == "categories":
+                if not isinstance(value, dict):
+                    wrong(name, "a mapping", value)
+                    continue
+                for category, setting in value.items():
+                    if not isinstance(setting, (dict, bool)):
+                        wrong(f"{name}.{category}", "a mapping or true or false", setting)
+            else:
+                warnings.append(f"Unknown key '{where}.{name}' is ignored")
+
+    visit(section, "")
+    if not errors and section.get("enabled", False):
+        errors.extend(f"{where}: {message}" for message in chaos_config(section).validate())
+    return errors, warnings
 
 
 def chaos_config(section: dict[str, Any]) -> Any:

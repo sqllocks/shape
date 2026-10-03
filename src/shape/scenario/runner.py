@@ -27,6 +27,7 @@ from shape.scenario.validator import (
     KNOWN_GATES,
     PackValidator,
     chaos_config,
+    check_chaos,
     domain_name_of,
     match_table,
     schema_of,
@@ -122,6 +123,9 @@ class PackRunner:
             )
 
         checked = PackValidator().validate(pack, domain)
+        if spec is not None and spec.chaos is not None:  # the pack's chaos is checked above
+            chaos_errors, _ = check_chaos(spec_chaos_section(spec.chaos))
+            checked.errors.extend(chaos_errors)
         if not checked.is_valid:
             return failed([f"Pack validation failed: {e}" for e in checked.errors])
         schema = schema_of(domain)
@@ -300,10 +304,15 @@ def _empty_validation() -> Any:
 def _chaos_section(pack: ScenarioPack, spec: GenerationSpec | None) -> dict[str, Any] | None:
     """The chaos settings that apply: the spec's when it enables chaos, else the pack's."""
     if spec is not None and spec.chaos is not None and spec.chaos.enabled:
-        return {**spec.chaos.config, "enabled": True, "intensity": spec.chaos.intensity}
+        return spec_chaos_section(spec.chaos)
     if pack.chaos is not None and pack.chaos.get("enabled", False):
         return dict(pack.chaos)
     return None
+
+
+def spec_chaos_section(chaos: Any) -> dict[str, Any]:
+    """The chaos mapping of a spec's ``chaos`` (its settings, ``enabled`` and ``intensity``)."""
+    return {**chaos.config, "enabled": chaos.enabled, "intensity": chaos.intensity}
 
 
 def _apply_chaos(
