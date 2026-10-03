@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime as _dt
 import re
 import threading
+import warnings
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import lru_cache
@@ -842,8 +843,15 @@ def _profile_column(
         stype = "integer"
         numeric = non_null.to_numpy().astype(np.float64)
     elif kind in ("uint64", "objint"):
-        stype = "integer"
         numeric = np.array([float(int(v)) for v in non_null.to_pylist()], dtype=np.float64)
+        stype = "integer"
+        if kind == "objint":
+            # pandas holds these as Python ints in an object column and the baseline checks
+            # numeric == numeric.astype(int): the cast overflows, so the column is float (#236)
+            with np.errstate(invalid="ignore"), warnings.catch_warnings():
+                warnings.simplefilter("ignore", RuntimeWarning)
+                whole = bool(np.array_equal(numeric, numeric.astype(np.int64)))
+            stype = "integer" if whole else "float"
     elif kind == "float":
         if n_nn and c.strict:
             _require_finite(nn_np)
