@@ -1,4 +1,4 @@
-"""Built-in sources (``shape.sources``): CSV, Parquet, JSONL and Arrow IPC files, ``abfss://``
+"""Built-in sources (``shape.sources``): CSV, Parquet, JSON, JSONL, XML and Arrow IPC files, ``abfss://``
 files in OneLake and ADLS Gen2, and Delta tables.
 
 Sources are imported on first use (PEP 562), so the file sources and the helpers the sinks use
@@ -16,6 +16,8 @@ if TYPE_CHECKING:
     from .files import IpcSource as IpcSource
     from .files import JsonlSource as JsonlSource
     from .files import ParquetSource as ParquetSource
+    from .nested import JsonSource as JsonSource
+    from .nested import XmlSource as XmlSource
 
 SHAPE_API = "1.0"
 
@@ -24,8 +26,10 @@ _EXPORTS = {
     "CsvSource": "files",
     "DeltaSource": "delta",
     "IpcSource": "files",
+    "JsonSource": "nested",
     "JsonlSource": "files",
     "ParquetSource": "files",
+    "XmlSource": "nested",
 }
 
 __all__ = ["SHAPE_API", *_EXPORTS]

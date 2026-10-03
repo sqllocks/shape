@@ -5,6 +5,21 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Nested and standards sources (`docs/SOURCES.md`, `docs/plugins/healthcare-standards.md`, #83). New
+  `json` source (a `.json` file holding one document or an array of documents) and `xml` source, and a
+  `flatten` option for `json` and `jsonl`: `flatten="struct"` keeps Arrow structs and lists,
+  `flatten="tables"` turns each array into a child table `<parent>__<field>` with `_id`, `_parent_id` and
+  `_ordinal` (nested objects become `address.city` columns), and the sources add
+  `read_tables`, `read_relationships` and `read_nested` (relationships are
+  `shape.generation.schema.Relationship` objects). The XML reader takes a `record` path
+  (`//order`), reads attributes and child text into columns and repeated children into child tables, and
+  refuses any document that declares entities (`UnsafeXml`). JSON depth is checked across the whole
+  document before parsing (`shape.security.jsondepth.check_json_document`) and file size against
+  `max_bytes`. Healthcare standards plugin: `x12` source (`x12://FILE`, `.x12`, `.edi`; every segment in
+  `x12_segment`, envelope checks with `strict=False` reporting `x12_problems`, and `loops="tables"` for
+  one table per 835 loop) and `hl7v2` source (`.hl7`, MLLP framing, escapes decoded; `hl7_segment`, and
+  `segments="tables"` for one table per segment id). Structural only: no codes are interpreted.
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
