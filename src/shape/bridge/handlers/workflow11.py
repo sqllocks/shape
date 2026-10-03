@@ -135,6 +135,8 @@ def check_11(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
 
 
 def verify_11(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
+    if ctx.minor < 1:  # a request served as 1.0 gets 1.0's gates: no details
+        return flow.cmd_verify(args, ctx)
     from shape.quality import VerifyRunner, load_gate_schema, load_tables, load_verify_config
     from shape.quality.verify import data_files
 

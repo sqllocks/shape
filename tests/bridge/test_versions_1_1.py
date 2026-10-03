@@ -131,11 +131,26 @@ def test_a_1_1_argument_of_a_1_1_request_is_checked_not_refused():
 
 
 def test_a_1_0_request_gets_no_1_1_field_and_no_new_warning(bridge, tmp_path, csv_pair):
-    verify = handle(bridge, "verify", {"path": str(csv_pair[0])}, version="1.0")["result"]
-    assert all(set(g) == {"name", "passed", "errors", "warnings"} for g in verify["gates"])
-    assert set(verify) == {"passed", "gates", "row_counts", "statistical"}
-    new = handle(bridge, "verify", {"path": str(csv_pair[0])}, version="1.1")["result"]
-    assert all("details" in g for g in new["gates"])
+    config = tmp_path / "config.json"
+    config.write_text(
+        json.dumps(
+            {
+                "format": "shape-verify-config",
+                "version": 1,
+                "ranges": {"a.amount": {"max": 1000}},
+                "baseline": {"a": {"columns": {"id": "int64"}}},
+            }
+        )
+    )
+    args = {"path": str(csv_pair[0]), "config": str(config)}
+    verify = handle(bridge, "verify", args, version="1.0")
+    assert verify["ok"] and verify["warnings"] == []
+    gates = verify["result"]["gates"]
+    assert len(gates) >= 2  # the loop below is not vacuous
+    assert all(set(g) == {"name", "passed", "errors", "warnings"} for g in gates)
+    assert set(verify["result"]) == {"passed", "gates", "row_counts", "statistical"}
+    new = handle(bridge, "verify", args, version="1.1")["result"]
+    assert len(new["gates"]) == len(gates) and all("details" in g for g in new["gates"])
     out = tmp_path / "a.shape"
     profile = handle(
         bridge, "profile", {"source": str(csv_pair[0]), "output": str(out)}, version="1.0"

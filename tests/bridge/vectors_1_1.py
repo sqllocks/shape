@@ -130,6 +130,7 @@ FILES: dict[str, dict[str, Any]] = {
 }
 
 PROJECT = f"{D}/shape.yml"
+MEMO = f"{D}/memo.json"
 PROJECT_YML = """\
 format: shape-project
 version: 1
@@ -298,6 +299,22 @@ EXTENDS: dict[str, dict[str, Any]] = {
                 "verify",
                 {"path": f"{D}/a.csv", "project": f"{D}/none.yml"},
             ),
+            case(
+                "memorization-fails",
+                "verify",
+                {"path": f"{D}/people_copy", "source": f"{D}/people_real", "config": MEMO},
+            ),
+            case(
+                "memorization-passes",
+                "verify",
+                {"path": f"{D}/people_new", "source": f"{D}/people_real", "config": MEMO},
+            ),
+            case("needs-the-source", "verify", {"path": f"{D}/people_new", "config": MEMO}),
+            case(
+                "missing-source",
+                "verify",
+                {"path": f"{D}/people_new", "source": f"{D}/none", "config": MEMO},
+            ),
         ]
     },
 }
@@ -317,6 +334,38 @@ LEAKY = {
 }
 
 
+def _write_people(folder: Path) -> None:
+    """``people_real``, ``people_copy`` (rows copied from it) and ``people_new`` (independent),
+    each a folder with a ``people.csv``, and ``memo.json``, a verify configuration."""
+    import pyarrow as pa
+
+    def people(prefix: str, n: int) -> pa.Table:
+        return pa.table(
+            {
+                "name": [f"{prefix} Name {i}" for i in range(n)],
+                "email": [f"{prefix.lower()}{i}@vectors.example" for i in range(n)],
+                "age": [18 + (i * 7) % 60 for i in range(n)],
+            }
+        )
+
+    real = people("Real", 40)
+    write_dataset(folder / "people_real", {"people": real})
+    write_dataset(folder / "people_copy", {"people": real.slice(0, 20)})
+    write_dataset(folder / "people_new", {"people": people("Fresh", 40)})
+    (folder / "memo.json").write_text(
+        json.dumps(
+            {
+                "format": "shape-verify-config",
+                "version": 1,
+                "classifications": {"people.name": "CONFIDENTIAL", "people.email": "SECRET"},
+                "memorization": {},
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+
+
 def _write_safe_profile(folder: Path) -> None:
     """``safe.json``: the share-safe form of a profile of ``a.csv``."""
     import shape
@@ -331,6 +380,7 @@ def write_fixtures(folder: Path) -> None:
     for name in ("retail", "tiny", "failing"):
         write_design(folder, name)
     (folder / "shape.yml").write_text(PROJECT_YML)
+    _write_people(folder)
     (folder / "contract_invalid.json").write_text(
         json.dumps({"columns": {"id": {"colour": 1}}}, indent=2) + "\n"
     )
