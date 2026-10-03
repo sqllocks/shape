@@ -15,6 +15,7 @@ import numpy as np
 
 from shape.artifact import codec
 from shape.artifact.io import ArtifactError, read_artifact, write_artifact
+from shape.io.excel import is_workbook_spec
 from shape.security.hardening import validate_structure
 
 from .column import MAX_VALUE_CHARS
@@ -189,12 +190,15 @@ def _column_summary(col: dict[str, Any]) -> dict[str, Any]:
 
 
 def _table_summary(table: dict[str, Any]) -> dict[str, Any]:
-    return {
+    out = {
         "name": table["name"],
         "row_count": table["row_count"],
         "primary_key": list(table["primary_key"]),
         "columns": {c: _column_summary(col) for c, col in table["columns"].items()},
     }
+    if table.get("findings"):
+        out["findings"] = copy.deepcopy(table["findings"])
+    return out
 
 
 class Profile:
@@ -243,12 +247,15 @@ class Profile:
             out = _table_summary(self._data)
             out["name"] = self.name if self.name else out["name"]
             return out
-        return {
+        out = {
             "name": self.name,
             "row_count": sum(t["row_count"] for t in self._data["tables"].values()),
             "tables": {n: _table_summary(t) for n, t in self._data["tables"].items()},
             "relationships": copy.deepcopy(self._data["relationships"]),
         }
+        if self._data.get("findings"):
+            out["findings"] = copy.deepcopy(self._data["findings"])
+        return out
 
     def to_html(self) -> str:
         """A self-contained HTML report (no external assets)."""
@@ -280,6 +287,8 @@ def profile(
     encoding: str | None = None,
     quotechar: str | None = None,
     header: bool = True,
+    sheet: str | None = None,
+    include_hidden: bool = False,
 ) -> Profile:
     """Profile a path, glob, directory, Delta table, Arrow table or DataFrame.
 
@@ -293,9 +302,20 @@ def profile(
     CSV options: ``delimiter`` (default: sniffed among comma, semicolon, tab and pipe),
     ``encoding`` (default UTF-8), ``quotechar`` (default ``"``) and ``header=False`` for a file
     without a header row (columns are then ``f0``, ``f1``, ...).
+
+    An ``.xlsx`` workbook is a dataset with one table per visible sheet (``"book.xlsx#Sheet"``
+    or ``sheet=`` profiles that sheet alone, hidden or not; ``include_hidden=True`` reads the
+    hidden sheets too), and the profile carries ``findings`` about its cells.
     """
     fmt = CsvFormat(delimiter, encoding, quotechar, header)
     with np.errstate(all="ignore"):  # inf / NaN inputs are data, not numpy warnings
+        if is_workbook_spec(source):
+            from .workbook import profile_workbook
+
+            data, title = profile_workbook(source, name, sheet, include_hidden)
+            return Profile(data, name=title)
+        if sheet is not None or include_hidden:
+            raise SourceError("sheet and include_hidden apply to .xlsx workbooks only")
         return _profile(source, name, version, as_of, fmt)
 
 

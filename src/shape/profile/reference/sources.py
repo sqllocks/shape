@@ -12,6 +12,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.json as pajson  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
+from shape.io.excel import is_workbook_spec
 from shape.security.jsondepth import check_json_file
 
 from .readers import CsvFormat, _arrow_cols, _Col, _csv_cols, _csv_options, read_csv
@@ -225,9 +226,19 @@ def _load_remote(text: str, name: str | None) -> tuple[str, list[_Col], int]:
     )
 
 
+def _load_workbook_sheet(text: str, name: str | None) -> tuple[str, list[_Col], int]:
+    from shape.io import open_source
+
+    src = open_source(text, name=name)
+    table = src.table()
+    return src.name, _to_cols("xlsx", table), table.num_rows
+
+
 def _load_path(
     text: str, name: str | None, threads: int | None, csv: CsvFormat | None = None
 ) -> tuple[str, list[_Col], int]:
+    if is_workbook_spec(text):
+        return _load_workbook_sheet(text, name)
     if _is_url(text):
         return _load_remote(text, name)
     if any(ch in text for ch in "*?["):
@@ -316,7 +327,8 @@ def folder_is_one_table(folder: str | Path, csv: CsvFormat | None = None) -> boo
 
 def _to_cols(kind: str, table: pa.Table) -> list[_Col]:
     # CSV keeps pandas.read_csv dtype semantics; everything else Table.to_pandas() semantics.
-    cols = _csv_cols(table) if kind == "csv" else _arrow_cols(table)
+    cols = _csv_cols(table) if kind == "csv" else _arrow_cols(table)  # xlsx: Arrow semantics
     for c in cols:
         c.strict = True
+        c.text = kind == "xlsx" and c.kind == "str"
     return cols

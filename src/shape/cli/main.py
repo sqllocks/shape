@@ -282,6 +282,16 @@ def _profile_source(a):
     return a.src
 
 
+def _workbook_options(a):
+    """``--sheet`` and ``--include-hidden``: the options of an ``.xlsx`` source."""
+    opts = {}
+    if a.sheet:
+        opts["sheet"] = a.sheet
+    if a.include_hidden:
+        opts["include_hidden"] = True
+    return opts
+
+
 def _profile_name(a):
     """``--name``, else the name of the profile ``-o`` is about to overwrite (so a versioned
     ``.shape`` keeps its name when the input file changes), else None: the input's own name."""
@@ -322,6 +332,7 @@ def _cmd_profile(a):
         encoding=fmt.encoding,
         quotechar=fmt.quotechar,
         header=fmt.header,
+        **_workbook_options(a),
     )
     _warn_empty(a, prof)
     content_id = shape.save(prof, a.output)
@@ -789,7 +800,7 @@ def _build_parser(plugin_commands=()):
     _add_passphrase_args(c)
     pr = sub.add_parser(
         "profile",
-        help="profile a file, glob, directory or Delta table",
+        help="profile a file, glob, directory, Excel workbook or Delta table",
         epilog="also: `shape profile safe PROFILE.shape -o SAFE.json` writes the share-safe "
         "form; `shape profile validate --safe ARTIFACT` scans it for leaks; "
         "`shape profile export|import|list|validate` and `shape profile registry "
@@ -841,6 +852,17 @@ def _build_parser(plugin_commands=()):
         action=argparse.BooleanOptionalAction,
         default=True,
         help="the CSV's first row is a header (--no-header: columns are named f0, f1, ...)",
+    )
+    pr.add_argument(
+        "--sheet",
+        metavar="SHEET",
+        help="SRC is an .xlsx workbook: profile this sheet alone (also SRC#SHEET); without it "
+        "every visible sheet is a table",
+    )
+    pr.add_argument(
+        "--include-hidden",
+        action="store_true",
+        help="SRC is an .xlsx workbook: read its hidden sheets too (they are always reported)",
     )
     pr.add_argument("--html", metavar="REPORT.html")
     pr.add_argument("--json", metavar="SUMMARY.json")

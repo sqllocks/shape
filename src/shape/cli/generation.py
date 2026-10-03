@@ -98,6 +98,17 @@ def add_arguments(sub: Any) -> None:
             default=None,
             help=f"write {what} statements (default: yes)",
         )
+    xl = ge.add_argument_group("excel output (--format excel: one workbook, a sheet per table)")
+    xl.add_argument(
+        "--chaos-log",
+        metavar="FILE",
+        help="a chaos ground-truth log (`shape chaos`): the _README sheet lists what it planted",
+    )
+    xl.add_argument(
+        "--drift-plan",
+        metavar="FILE",
+        help="a drift plan or its answer key: the _README sheet lists the planted drift",
+    )
     dl = ge.add_argument_group("delta output (--format delta)")
     dl.add_argument("--delta-mode", choices=("overwrite", "append"), default="overwrite")
     dl.add_argument("--partition-by", metavar="COLUMN", action="append", help="repeatable")
@@ -181,6 +192,10 @@ def _sink_options(a: argparse.Namespace) -> dict[str, Any]:
             ("drop", a.sql_drop),
             ("go", a.sql_go),
         ):
+            if value is not None:
+                options[key] = value
+    elif fmt == "excel":
+        for key, value in (("chaos_log", a.chaos_log), ("drift_plan", a.drift_plan)):
             if value is not None:
                 options[key] = value
     elif fmt == "delta":
