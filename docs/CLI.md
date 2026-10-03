@@ -140,3 +140,20 @@ remove something or a preflight check failed, 2 bad input.
 
 `shape registry` (content-addressed artifacts) and `shape profile registry` (named profiles) are
 different stores. See `docs/REGISTRY.md` and `docs/PROFILE_REGISTRY.md`.
+
+## History: `shape bisect` and `shape timelapse`
+
+```
+shape bisect REGISTRY NAME --good REF --bad REF [--column COL] [--kind KIND] [--contract FILE]
+             [--verify-all] [--coarse week|month] [--json] [--source NAME] [threshold flags]
+shape bisect layers --layers SOURCE[,SOURCE...] --good-date D1 --bad-date D2 [--column COL]
+             [--map LAYER.COL=COL]... [--project shape.yml] [--json]
+shape timelapse REGISTRY NAME --column COL [--table T] [--since DATE] [--until DATE]
+             [--window day|week|month] [-o OUT.json|OUT.html] [--format json|text]
+```
+
+`bisect` finds the first committed version of `NAME` that changed (exit 0; exit 2 when `--good`
+tests bad, `--bad` tests good, or a version cannot be tested, for example a share-safe profile).
+`bisect layers` finds the layer of a pipeline where a change appears (exit 0 a layer shows it, 1
+none does, 2 unusable input). `timelapse` follows one column across the versions (`-o OUT.html` is
+one offline page). See `docs/HISTORY.md`.

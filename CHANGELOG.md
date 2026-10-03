@@ -57,6 +57,20 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   rule proposal and version 1, byte for byte as before, otherwise; version 2 adds the status
   `stale` for an accepted rule whose evidence no longer holds (`shape proposals list --status
   stale`). `propose` kinds default to `relationship,pii,semantic` as before.
+- `shape bisect`, `shape bisect layers` and `shape timelapse` (`docs/HISTORY.md`, #101): git bisect
+  for data. `bisect REGISTRY NAME --good REF --bad REF` binary-searches the committed versions of a
+  name (ordered by `business_date`) for the first one whose `shape diff` against the good version
+  reports a change (under the `shape.yml` source's thresholds and ignore lists; `--column`,
+  `--kind`, or `--contract FILE` to test "the contract fails"), testing at most `ceil(log2(n)) + 2`
+  versions, and reports the first bad version, the last good one and the changes between them.
+  `--verify-all` tests every version and reports any that flips back; `--coarse week|month`
+  bisects over windows merged with `merge_profiles` first. `bisect layers` names the first layer of
+  a pipeline (sources of `shape.yml`, `--map` for renamed columns) where a change between two dates
+  appears, and where it persists or disappears (exit 0, 1 when none, 2). `timelapse` gives one
+  frame per version or merged window (rows, null rate, distinct estimate, quantiles, mean, std, top
+  values), marks the change points where `shape diff` reports a change, and writes JSON
+  (`shape-timelapse` v1), text sparklines, or one self-contained offline HTML page. Python:
+  `shape.history.bisect`, `bisect_layers`, `timelapse`.
 
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
@@ -131,6 +145,12 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `docs/bridge/schema/` (`shape bridge schema --out|--check`) with test vectors in
   `docs/bridge/vectors/`; a compatibility test per command keeps them from changing silently.
   Harness: `benchmarks/vs_spindle/bridge_1to1/`.
+- Mergeable profiles (`docs/PROFILE_MERGE.md`): `shape profile --sketches` keeps an optional,
+  versioned sketch state beside the profile (the profile and its content id are unchanged), and
+  `shape profile merge A.shape B.shape -o OUT.shape` / `shape.profile.merge_profiles` combine
+  profiles of partitions or days without re-reading the data: exact statistics exactly,
+  cardinality, quantiles and top values within each sketch's documented error. Merged profiles
+  carry their inputs' content ids (`Profile.merged_from`).
 - `shape.yml` project file and `shape init` (`docs/PROJECT.md`): named sources, a baseline per
   source (previous run, same weekday, rolling window, month end or a pinned artifact, resolved
   against the registry), drift thresholds and ignore lists per column, gates with `observe` or

@@ -1387,6 +1387,9 @@ def _build_parser(plugin_commands=()):
     from shape.cli.registry import add_arguments as add_registry_arguments
 
     add_registry_arguments(sub)
+    from shape.cli.history import add_arguments as add_history_arguments
+
+    add_history_arguments(sub, _diff_policy_arguments)
     add_project_arguments(sub)
     for rec in plugin_commands:  # listed in --help only; the plugin loads when it is run
         sub.add_parser(rec.name, help=f"(plugin {rec.source})", add_help=False)
@@ -1563,6 +1566,10 @@ def _dispatch(argv):
         from shape.privacy.cli import main as privacy_main
 
         return privacy_main(argv[1:])
+    if argv[:2] == ["bisect", "layers"]:
+        from shape.cli.history import run_layers
+
+        return run_layers(argv[2:])
     if argv[:1] == ["profile"] and argv[1:2] in (
         ["export"],
         ["import"],
@@ -1777,6 +1784,10 @@ def _dispatch(argv):
         cert = certify_shapes(LS(a.target), LS(a.observed))
         _dump(cert.to_dict())
         return 0 if cert.score >= a.threshold else 3
+    if a.cmd in ("bisect", "timelapse"):
+        from shape.cli.history import run as run_history
+
+        return _run(run_history, a)
     if a.cmd == "registry":
         from shape.cli.registry import run as run_registry
 

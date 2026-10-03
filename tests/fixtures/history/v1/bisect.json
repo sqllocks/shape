@@ -1,0 +1,149 @@
+{
+  "bad": {
+    "business_date": "2026-03-06",
+    "content_id": "977e292a377e141a8de9cc514baaa0b7ada42d4bffb1e2a17c96a4645bda003b",
+    "ref": "977e292a377e141a8de9cc514baaa0b7ada42d4bffb1e2a17c96a4645bda003b"
+  },
+  "candidates": 5,
+  "changes": [
+    {
+      "after": 5.0,
+      "before": 4.705581031523842e-17,
+      "column": "v",
+      "kind": "mean_shift",
+      "score": 0.8334,
+      "severity": "medium"
+    },
+    {
+      "after": {
+        "p05": 3.369309,
+        "p25": 4.328095,
+        "p50": 5.0,
+        "p75": 5.671905,
+        "p95": 6.630691
+      },
+      "before": {
+        "p05": -1.630611,
+        "p25": -0.671894,
+        "p50": -0.0,
+        "p75": 0.671894,
+        "p95": 1.630611
+      },
+      "column": "v",
+      "kind": "distribution_shift",
+      "score": 0.9903,
+      "severity": "medium"
+    },
+    {
+      "after": {
+        "max": 7.93828544724399,
+        "min": 2.0617145527560172
+      },
+      "before": {
+        "max": 2.9372604996366642,
+        "min": -2.937260499636655
+      },
+      "column": "v",
+      "kind": "range_change",
+      "score": 0.8334,
+      "severity": "low"
+    }
+  ],
+  "changes_vs_good": [
+    {
+      "after": 5.0,
+      "before": 0.0,
+      "column": "v",
+      "kind": "mean_shift",
+      "score": 0.8334,
+      "severity": "medium"
+    },
+    {
+      "after": {
+        "p05": 3.369309,
+        "p25": 4.328095,
+        "p50": 5.0,
+        "p75": 5.671905,
+        "p95": 6.630691
+      },
+      "before": {
+        "p05": -1.63052,
+        "p25": -0.671877,
+        "p50": 0.0,
+        "p75": 0.671877,
+        "p95": 1.63052
+      },
+      "column": "v",
+      "kind": "distribution_shift",
+      "score": 0.9903,
+      "severity": "medium"
+    },
+    {
+      "after": {
+        "max": 7.93828544724399,
+        "min": 2.0617145527560172
+      },
+      "before": {
+        "max": 2.935199468866699,
+        "min": -2.935199468866706
+      },
+      "column": "v",
+      "kind": "range_change",
+      "score": 0.8335,
+      "severity": "low"
+    }
+  ],
+  "cost": {
+    "full_profile_tests": 3,
+    "versions_read": 4,
+    "window_tests": 0
+  },
+  "evaluated": 3,
+  "evaluations": [
+    {
+      "bad": true,
+      "business_date": "2026-03-06",
+      "content_id": "977e292a377e141a8de9cc514baaa0b7ada42d4bffb1e2a17c96a4645bda003b"
+    },
+    {
+      "bad": false,
+      "business_date": "2026-03-03",
+      "content_id": "16b1e3e33063241544e13f8730e52266880d1f16bf2cde463e3ae7d2406d930a"
+    },
+    {
+      "bad": true,
+      "business_date": "2026-03-04",
+      "content_id": "0c44f0c7ceb3beac829f32ee6c9475fa512941f6014bd150bd6673ea471d537f"
+    }
+  ],
+  "first_bad": {
+    "business_date": "2026-03-04",
+    "content_id": "0c44f0c7ceb3beac829f32ee6c9475fa512941f6014bd150bd6673ea471d537f",
+    "ref": "0c44f0c7ceb3beac829f32ee6c9475fa512941f6014bd150bd6673ea471d537f"
+  },
+  "flips": [],
+  "format": "shape-bisect",
+  "found": true,
+  "good": {
+    "business_date": "2026-03-01",
+    "content_id": "909680731a49995f810da609cc947c4456622f5a7042faaf9e20e104d5f045b5",
+    "ref": "909680731a49995f810da609cc947c4456622f5a7042faaf9e20e104d5f045b5"
+  },
+  "last_good": {
+    "business_date": "2026-03-03",
+    "content_id": "16b1e3e33063241544e13f8730e52266880d1f16bf2cde463e3ae7d2406d930a",
+    "ref": "16b1e3e33063241544e13f8730e52266880d1f16bf2cde463e3ae7d2406d930a"
+  },
+  "max_evaluations": 5,
+  "mode": "bisect",
+  "name": "feed",
+  "test": {
+    "change_kind": null,
+    "column": null,
+    "contract": null,
+    "kind": "diff",
+    "source": null
+  },
+  "version": 1,
+  "warnings": []
+}
