@@ -195,3 +195,43 @@ def test_unclosed_headers_are_read_in_linear_time():
     started = time.perf_counter()
     DdlParser().parse_string("CREATE TABLE t (" * 4000)
     assert time.perf_counter() - started < 2.0
+
+
+@pytest.mark.parametrize(
+    ("declared", "type_"),
+    [
+        ("INT UNSIGNED", "integer"),
+        ("BIGINT UNSIGNED ZEROFILL", "integer"),
+        ("DOUBLE", "float"),
+        ("TIMESTAMP WITH TIME ZONE", "timestamp"),
+        ("timestamp without time zone", "timestamp"),
+        ("TIMESTAMP(3) WITH TIME ZONE", "timestamp"),
+    ],
+)
+def test_mysql_and_postgres_types(declared, type_):
+    # 199: these fell through to string + faker text.
+    schema, _ = from_ddl(f"CREATE TABLE t (id INT PRIMARY KEY, a {declared} NULL)", smart=False)
+    a = schema.tables["t"].columns["a"]
+    assert a.type == type_
+    assert a.generator["strategy"] != "faker"
+
+
+def test_a_mysql_enum_draws_its_values():
+    # 199: ENUM('a','b') fell through to string + faker text.
+    schema, _ = from_ddl(
+        "CREATE TABLE t (id INT PRIMARY KEY, size ENUM('small','large','x''l') NOT NULL)",
+        smart=False,
+    )
+    size = schema.tables["t"].columns["size"]
+    assert size.generator["strategy"] == "weighted_enum"
+    assert sorted(size.generator["values"]) == ["large", "small", "x'l"]
+
+
+def test_a_mysql_key_line_is_an_index_not_a_column():
+    # 199: KEY idx_a (a) became a string column named KEY.
+    schema, _ = from_ddl(
+        "CREATE TABLE t (id INT PRIMARY KEY, a INT, `key` VARCHAR(10), KEY idx_a (a), "
+        "UNIQUE KEY uq (a), FULLTEXT KEY ft (`key`))",
+        smart=False,
+    )
+    assert list(schema.tables["t"].columns) == ["id", "a", "key"]
