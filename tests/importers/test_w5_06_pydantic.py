@@ -8,31 +8,11 @@ from pathlib import Path
 import pytest
 from import_fixtures import FIXTURES, columns, generate
 
-from shape.cli.main import main
 from shape.importers import import_schema
 from shape.importers.core import ImportFormatError
 
 pydantic = pytest.importorskip("pydantic", reason="Pydantic v2 is not installed")
 MODELS = FIXTURES / "shop_models.py"
-
-
-def test_the_import_is_refused_without_allow_import_and_runs_nothing(tmp_path: Path) -> None:
-    marker = tmp_path / "ran"
-    f = tmp_path / "evil_models.py"
-    f.write_text(f"from pathlib import Path\nPath({str(marker)!r}).write_text('x')\n")
-    with pytest.raises(ImportFormatError, match="--allow-import"):
-        import_schema(f"{f}:Whatever", "pydantic")
-    assert not marker.exists()
-
-
-def test_the_command_exits_2_without_allow_import(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    code = main(
-        ["import-schema", f"{MODELS}:Order", "--from", "pydantic", "-o", str(tmp_path / "o.json")]
-    )
-    assert code == 2 and "--allow-import" in capsys.readouterr().err
-    assert not (tmp_path / "o.json").exists()
 
 
 def test_a_named_model_with_nested_models_lists_and_enums() -> None:

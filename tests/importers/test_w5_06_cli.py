@@ -16,6 +16,8 @@ from shape import schemacheck
 from shape.cli.main import main
 from shape.generation.spec_edit import SpecDocument
 from shape.generation.spec_schema import published_schema
+from shape.importers import import_schema
+from shape.importers.core import ImportFormatError
 
 COMPAT = Path(__file__).parent / "report_compat"
 
@@ -243,3 +245,46 @@ def test_a_version_1_report_still_has_every_key_the_current_one_writes() -> None
     contains(_shape_of(frozen), _shape_of(current))
     assert frozen["summary"]["imported"] == len(frozen["imported"])
     assert frozen["summary"]["not_imported"] == len(frozen["not_imported"])
+
+
+# ---- Pydantic: opt-in, and it needs no Pydantic to refuse ----------------------------------------
+
+
+def test_the_pydantic_import_is_refused_without_allow_import_and_runs_nothing(
+    tmp_path: Path,
+) -> None:
+    marker = tmp_path / "ran"
+    f = tmp_path / "evil_models.py"
+    f.write_text(f"from pathlib import Path\nPath({str(marker)!r}).write_text('x')\n")
+    with pytest.raises(ImportFormatError, match="--allow-import"):
+        import_schema(f"{f}:Whatever", "pydantic")
+    with pytest.raises(ImportFormatError, match="--allow-import"):
+        import_schema(f)  # a .py file is inferred as pydantic
+    assert not marker.exists()
+
+
+def test_the_command_exits_2_without_allow_import(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    models = FIXTURES / "shop_models.py"
+    out = tmp_path / "o.json"
+    code, _, err = run(capsys, "import-schema", f"{models}:Order", "--from", "pydantic", "-o", out)
+    assert code == 2 and "--allow-import" in err
+    assert not out.exists()
+
+
+def test_without_pydantic_installed_the_command_exits_2_with_the_reason(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setitem(sys.modules, "pydantic", None)  # an import of it now fails
+    code, _, err = run(
+        capsys,
+        "import-schema",
+        f"{FIXTURES / 'shop_models.py'}:Order",
+        "--from",
+        "pydantic",
+        "--allow-import",
+        "-o",
+        tmp_path / "o.json",
+    )
+    assert code == 2 and "Pydantic is not installed" in err
