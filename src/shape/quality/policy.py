@@ -45,9 +45,9 @@ def validate_rows(rows: Iterable[Mapping[str, Any]], rules: tuple[Rule, ...]) ->
             if q.kind == "not_null":
                 bad = v is None
             elif q.kind == "min":
-                bad = v is not None and v < q.value
+                bad = v is not None and isinstance(v, (int, float)) and v < q.value
             elif q.kind == "max":
-                bad = v is not None and v > q.value
+                bad = v is not None and isinstance(v, (int, float)) and v > q.value
             elif q.kind == "in":
                 bad = v is not None and v not in q.value
             elif q.kind == "unique":
