@@ -96,3 +96,28 @@ def test_seasonal_partial_edge_days_weigh_their_share_of_the_day() -> None:
     )
     share = sum(v.day == 2 for v in values) / len(values)
     assert abs(share - 2 / 3) < 0.03
+
+
+# ---- #130: truncation works for ordinary intervals, the same for any chunking -----------------
+
+_TRUNCATED = {
+    "strategy": "distribution",
+    "distribution": "truncated",
+    "base": "normal",
+    "base_params": {"mean": 0, "std_dev": 1},
+    "low": 1.3,
+    "high": 10,
+}
+
+
+def test_truncated_ten_percent_interval_fills_a_large_table() -> None:
+    values = _table({"x": {"type": "float", "generator": _TRUNCATED}}, rows=20_000)["x"]
+    numbers = values.to_numpy()
+    assert values.null_count == 0 and numbers.min() >= 1.3 and numbers.max() <= 10
+
+
+def test_truncated_does_not_depend_on_chunking() -> None:
+    column = {"x": {"type": "float", "generator": _TRUNCATED}}
+    whole = _table(column, rows=300)["x"].to_pylist()
+    assert _table(column, rows=300, chunk_rows=1)["x"].to_pylist() == whole
+    assert _table(column, rows=300, chunk_rows=7)["x"].to_pylist() == whole
