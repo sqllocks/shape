@@ -348,3 +348,19 @@ def test_a_far_future_time_or_huge_window_is_refused_not_simulated():
         tx.slice(0, 2), accounts, FinancialStreamConfig(duration_hours=24 * 365)
     ).run()
     assert ok.settlements.num_rows == 24 * 365 // 4  # one batch per settlement_batch_hours
+
+
+@pytest.mark.parametrize("n", [1, 7, 10, 23])
+def test_settlements_without_a_time_column_settle_every_transaction(n):
+    # Issue #417: without a time column the batches were n // batches rows each, so the
+    # remainder transactions were in no settlement batch.
+    tx = pa.table({"transaction_id": list(range(n)), "account_id": [1] * n, "amount": [2.5] * n})
+    r = FinancialStreamSimulator(
+        tx,
+        pa.table({"account_id": [1, 2, 3]}),
+        FinancialStreamConfig(reversal_enabled=False, fraud_burst_enabled=False),
+    ).run()
+    counts = r.settlements.column("transaction_count").to_pylist()
+    assert sum(counts) == n
+    assert max(counts) - min(counts) <= 1  # near-equal batches
+    assert sum(r.settlements.column("total_amount").to_pylist()) == pytest.approx(2.5 * n)
