@@ -58,6 +58,7 @@ gates:
 | `…thresholds` | Any threshold of `docs/DRIFT.md` for the whole source. |
 | `…ignore` | Columns left out of the comparison: a name, `table.column` or a glob. |
 | `…columns.COLUMN` | A column name, `table.column` or glob. `thresholds`, `ignore: true`, `owner`, `annotations` (strings, numbers, booleans). |
+| `ci.junit`, `ci.sarif`, `ci.json` | Optional default paths of the reports of `shape diff`, `check`, `verify`, `fidelity` and `profile validate --safe` (`--junit`, `--sarif`; the `shape-result` document). Each may contain `{command}`; no other braces. A flag overrides it; relative paths are relative to the folder holding `shape.yml`. See `docs/CI.md`. |
 | `gates.NAME.mode` | `observe` or `enforce`. NAME is a gate of `shape verify` (`schema_conformance`, `referential_integrity`, …). A gate that is not listed is enforced. |
 
 The JSON Schema is `src/shape/schemas/shape-project-v1.schema.json` (also `shape.project.schema()`).
@@ -132,6 +133,7 @@ configure the `git diff` filter itself.
 ## Versioning
 
 The file declares `format` and an integer `version`. A change that older Shapes could misread
-raises the version; additions an older Shape would ignore do not exist, because unknown keys are
-errors. `tests/fixtures/project/v1/shape.yml` is a frozen version 1 file that every later Shape
+raises the version. A key that is only added (the `ci` block) keeps version 1: a file without it
+reads as before, and a file with it needs a Shape that knows it (an older Shape reports the key as
+unknown, because unknown keys are errors). `tests/fixtures/project/v1/shape.yml` is a frozen version 1 file that every later Shape
 must still load (`tests/project/test_compat.py`).

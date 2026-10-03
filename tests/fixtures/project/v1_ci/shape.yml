@@ -1,0 +1,10 @@
+format: shape-project
+version: 1
+name: frozen-with-ci
+sources:
+  orders:
+    path: data/orders
+ci:
+  junit: reports/{command}.xml
+  sarif: reports/{command}.sarif
+  json: reports/{command}.json

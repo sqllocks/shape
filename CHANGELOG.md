@@ -5,6 +5,19 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- CI outputs (W1-14, `docs/CI.md`, `docs/EXIT_CODES.md`). `--junit FILE` and `--sarif FILE` on
+  `shape diff`, `check`, `verify`, `fidelity` and `profile validate --safe` write JUnit XML (one
+  test case per evaluated check; an observe-mode gate is skipped; a planned change passes) and
+  SARIF 2.1.0 (rules per drift kind or contract rule, `TABLE.COLUMN` logical locations, stable
+  `shapeFinding/v1` fingerprints); messages never carry a value from the data. `shape.yml` gets an
+  optional `ci:` block for the report paths. One exit-code registry, `shape.cli.exitcodes`,
+  generates `docs/EXIT_CODES.md` (`python scripts/gen_exit_codes.py --check` runs in `make check`)
+  and the end of every `--help`; no command's codes changed. `--json` on every core command prints
+  one `shape-result` document (envelope keys `format`, `version`, `command`, `exit_code`; the
+  command's own keys are kept; a list or text is under `payload` or `output`), and `--dry-run` on
+  every command that writes prints a `shape-dry-run` plan of `write`, `create`, `delete` and `send`
+  actions (secrets removed) without writing or opening a connection. Commands whose `--json` was
+  a switch that printed a list now print it under `payload`; a coverage test walks the parser.
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

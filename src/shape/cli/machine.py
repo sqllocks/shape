@@ -399,6 +399,26 @@ def _enveloped(path: str, fn: Callable[[], int], errors: Any) -> int:
     return int(code or 0)
 
 
+def check_document(doc: Any) -> str:
+    """Check a ``shape-result`` or ``shape-dry-run`` document read from somewhere (a saved file, a
+    pipe): returns its format. A document of a newer version than this Shape understands is
+    refused with the usual message; a document that is neither is an error."""
+    if not isinstance(doc, dict) or doc.get("format") not in (RESULT_FORMAT, DRY_RUN_FORMAT):
+        raise ValueError("not a shape-result or shape-dry-run document")
+    version = doc.get("version")
+    if not isinstance(version, int) or isinstance(version, bool) or version < 1:
+        raise ValueError(f"{doc['format']}: version must be a positive integer")
+    if version > VERSION:
+        raise ValueError(
+            f"{doc['format']} version {version} is newer than this Shape understands (it reads "
+            f"up to version {VERSION}): upgrade Shape"
+        )
+    for key in ("command",) + (("exit_code",) if doc["format"] == RESULT_FORMAT else ("actions",)):
+        if key not in doc:
+            raise ValueError(f"{doc['format']}: missing key {key!r}")
+    return str(doc["format"])
+
+
 # ---- dry run -------------------------------------------------------------------------------------
 
 
@@ -557,6 +577,7 @@ __all__ = [
     "DRY_RUN_FORMAT",
     "RESULT_FORMAT",
     "SPECS",
+    "check_document",
     "envelope",
     "install",
     "parse_output",

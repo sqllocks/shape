@@ -1,0 +1,1 @@
+{"actions": [{"action": "create", "target": "x.shape"}, {"action": "send", "target": "kafka://broker:9092/topic"}], "command": "emit", "format": "shape-dry-run", "version": 1}

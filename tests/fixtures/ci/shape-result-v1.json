@@ -1,0 +1,1 @@
+{"passed": false, "violations": [{"column": "zz", "expected": "present", "observed": "missing", "rule": "column_exists"}], "format": "shape-result", "version": 1, "command": "check", "exit_code": 1}

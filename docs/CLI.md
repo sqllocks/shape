@@ -12,6 +12,19 @@ environment that is not activated, a CI step, a notebook). Both start the same p
 | 2 | bad input: a missing or unreadable file, the wrong kind of file, a bad argument |
 | 3 and above | a command's own verdict (a certificate below its threshold, a failed contract, an incompatible change); each command's `--help` says which |
 
+Every command's codes are listed in `docs/EXIT_CODES.md` (generated from `shape.cli.exitcodes`) and
+at the end of its `--help`.
+
+## `--json` and `--dry-run` on every command
+
+`--json` prints exactly one JSON document on standard output (`format: "shape-result"`, `version: 1`,
+`command`, `exit_code`, and the keys of what the command prints); the text goes to standard error.
+Where `--json` takes a file (`profile`, `diff`, `check`, `design`) it keeps that meaning, and
+`--json -` writes the document to standard output. `--dry-run` is on every command that writes: it
+prints what would be written or sent (`format: "shape-dry-run"` with `--json`), writes nothing and
+exits 0, or 2 for invalid input. `--junit FILE` and `--sarif FILE` on `diff`, `check`, `verify`,
+`fidelity` and `profile validate --safe` write CI reports. See `docs/CI.md`.
+
 ## Errors
 
 An expected error is one line on stderr and exit code 2:
