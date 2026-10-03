@@ -86,6 +86,8 @@ def kusto_type(t: pa.DataType) -> str:
         return kusto_type(t.value_type)
     if pa.types.is_boolean(t):
         return "bool"
+    if pa.types.is_uint64(t):
+        return "decimal"  # above 2**63 - 1 a long overflows (the SQL writers use DECIMAL(20,0))
     if pa.types.is_integer(t):
         return "int" if t.bit_width <= 32 and pa.types.is_signed_integer(t) else "long"
     if pa.types.is_floating(t):
