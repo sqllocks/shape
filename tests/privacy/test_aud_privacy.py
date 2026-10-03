@@ -87,3 +87,43 @@ def test_columns_at_or_above_k_keep_their_mean(n):
     safe = to_safe_profile(shape.profile(pa.table({"v": [float(i) for i in range(n)]})))
     assert _col(safe, "v")["mean"] == pytest.approx((n - 1) / 2)
     assert SafeProfileValidator().validate_data(safe.to_dict()).is_clean
+
+
+# --- #398: the leak scanner fails closed when tables is not an object -----------------------
+
+
+@pytest.mark.parametrize("tables", [[{"row_count": 0}], "t", 5, None])
+def test_tables_that_is_not_an_object_is_a_finding(tables):
+    res = SafeProfileValidator().validate_data({"schema_version": 1, "tables": tables})
+    assert ("row-count-missing", "$.tables") in [(f.rule, f.path) for f in res.findings]
+    assert res.exit_code == 1
+
+
+def test_a_document_without_tables_is_not_flagged_for_row_counts():
+    res = SafeProfileValidator().validate_data({"schema_version": 1, "redaction_manifest": {}})
+    assert res.is_clean
+
+
+# --- #400: dates are not phone numbers ----------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "value", ["2024-01-15", "2024/01/15", "15/01/2024", "01-15-2024", "15.01.2024", "2024.01.15"]
+)
+def test_a_date_is_not_a_phone_number(value):
+    from shape.privacy import detect_value
+
+    assert "phone" not in [d.kind for d in detect_value(value)]
+
+
+@pytest.mark.parametrize("value", ["555-123-4567", "+1 (555) 123-4567", "020 7946 0958"])
+def test_phone_numbers_are_still_phone_numbers(value):
+    from shape.privacy import detect_value
+
+    assert "phone" in [d.kind for d in detect_value(value)]
+
+
+def test_a_date_column_is_not_detected_as_phone():
+    from shape.privacy import detect_column
+
+    assert detect_column([f"2024-01-{d:02d}" for d in range(1, 29)]) == ()
