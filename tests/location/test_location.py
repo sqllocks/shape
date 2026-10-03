@@ -53,3 +53,10 @@ def test_ambiguous_city_fails():
 def test_weight_normalization():
     s = LocationScope.weighted([(Location.state_scope("OH"), 60), (Location.state_scope("PA"), 40)])
     assert s.normalized_weights == (0.6, 0.4)
+
+
+@pytest.mark.parametrize("weight", [float("nan"), float("inf"), -float("inf"), 0, -1])
+def test_a_weight_must_be_positive_and_finite(weight):
+    """#370: NaN passed `weight <= 0`, and infinity made the normalised weights NaN."""
+    with pytest.raises(ValueError, match="positive finite"):
+        LocationScope.weighted([(Location.state_scope("OH"), weight)])
