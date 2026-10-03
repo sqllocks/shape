@@ -193,3 +193,21 @@ def test_the_cli_reports_it_as_a_shape_error(tmp_path: Path, monkeypatch, capsys
     assert code == 2
     assert err.startswith("shape: error: the parquet sink writes only to local files; got abfss://")
     assert list(tmp_path.iterdir()) == []
+
+
+# ---- found while reproducing #46: a table with correlated columns was never handed over ------
+
+
+def test_a_table_with_correlated_columns_is_written(tmp_path: Path):
+    """``generate --from PROFILE`` reported "Wrote 1 csv files" and wrote none: the copula table
+    was held back for the copula and never released afterwards."""
+    s = schema()
+    s.correlated_columns = {"order": [["score", "double_score", 0.9]]}
+    handed: list[str] = []
+    result = Engine(s, strategies=STRATEGIES, seed=1).generate(
+        on_table=lambda name, table: handed.append(name)
+    )
+    assert sorted(handed) == sorted(result.tables)
+    paths = write_engine(Engine(s, strategies=STRATEGIES, seed=1), "csv", tmp_path)
+    assert paths and all(p.exists() for p in paths)
+    assert {p.stem for p in paths} == set(result.tables)

@@ -7,9 +7,11 @@ zero-copy), pandas DataFrames, and iterables of row dicts (the edge adapter). Pa
 file, a glob, a directory (searched recursively) or a list of those; many files are read as one
 table whose schema is the first file's.
 
-CSV values are typed by inference, not left as strings (bug P1). ``CsvOptions`` covers schema
-overrides and null/boolean tokens; ``PANDAS_CSV`` reproduces ``pandas.read_csv`` token semantics
-(the parity profile path).
+CSV values are typed by inference, not left as strings (bug P1), except the columns that hold
+identifiers: digits with leading zeros, or a fixed width and an identifier name, stay text
+(``shape.io.identifiers``); ``CsvOptions.string_columns``, ``column_types`` and ``infer_types``
+say it explicitly. ``CsvOptions`` covers schema overrides and null/boolean tokens;
+``PANDAS_CSV`` reproduces ``pandas.read_csv`` token semantics (the parity profile path).
 """
 
 from __future__ import annotations
@@ -37,6 +39,7 @@ from .excel import (
     split_spec,
     workbook_sheet_names,
 )
+from .identifiers import identifier_columns, resolve_type
 
 DEFAULT_BATCH_ROWS = 65_536
 _COMPRESSION = {".gz", ".bz2", ".zst", ".lz4", ".xz"}
@@ -84,12 +87,18 @@ class ReaderError(ValueError):
 @dataclass(frozen=True)
 class CsvOptions:
     """CSV parsing options. ``column_types`` overrides inference per column (Arrow types or
-    their names, e.g. ``{"zip": "string"}``); ``None`` tokens keep pyarrow's defaults."""
+    their names, e.g. ``{"zip": "string"}``), ``string_columns`` names columns to keep as text and
+    ``infer_types="off"`` reads everything as text; ``None`` tokens keep pyarrow's defaults."""
 
     delimiter: str | None = None  # None: "\t" for .tsv, else sniffed (comma, semicolon, tab, pipe)
     encoding: str | None = None  # None: utf-8
     quotechar: str | None = None  # None: '"'
     column_types: Mapping[str, Any] = field(default_factory=dict)
+    # Columns read as text whatever they look like (a ZIP, an NDC, a member number).
+    string_columns: tuple[str, ...] = ()
+    # "auto": Arrow's inference, except that integer columns holding identifiers (leading zeros,
+    # or a fixed width and an identifier name) stay text; "off": every column is text.
+    infer_types: str = "auto"
     null_values: tuple[str, ...] | None = None
     true_values: tuple[str, ...] | None = None
     false_values: tuple[str, ...] | None = None
@@ -176,14 +185,10 @@ def expand_paths(spec: str | Path | Iterable[str | Path]) -> list[Path]:
 
 
 def _resolve_type(t: Any) -> Any:
-    if isinstance(t, pa.DataType):
-        return t
-    if isinstance(t, str):
-        try:
-            return pa.type_for_alias(t)
-        except (ValueError, KeyError) as exc:
-            raise ReaderError(f"unknown Arrow type name {t!r}") from exc
-    raise ReaderError(f"cannot use {t!r} as a column type")
+    try:
+        return resolve_type(t)
+    except ValueError as exc:
+        raise ReaderError(str(exc)) from exc
 
 
 _DELIMITERS = (",", ";", "\t", "|")
@@ -230,7 +235,11 @@ def sniff_delimiter(
 
 
 def _csv_options(
-    path: Path, opts: CsvOptions, columns: list[str] | None, schema: pa.Schema | None
+    path: Path,
+    opts: CsvOptions,
+    columns: list[str] | None,
+    schema: pa.Schema | None,
+    text: Iterable[str] = (),
 ) -> tuple[Any, Any, Any]:
     delimiter = opts.delimiter
     if delimiter is None:
@@ -252,8 +261,17 @@ def _csv_options(
     )
     po = pacsv.ParseOptions(delimiter=delimiter, quote_char=opts.quotechar or '"')
     types = {k: _resolve_type(v) for k, v in opts.column_types.items()}
+    for name in (*opts.string_columns, *text):
+        types[name] = pa.string()
     if schema is not None:
         types = {**{f.name: f.type for f in schema}, **types}
+    elif opts.infer_types == "off":
+        names = pacsv.open_csv(path, read_options=ro, parse_options=po).schema.names
+        if columns:
+            names = [n for n in names if n in columns]
+        types = {**dict.fromkeys(names, pa.string()), **types}
+    elif opts.infer_types != "auto":
+        raise ReaderError(f"infer_types must be 'auto' or 'off', not {opts.infer_types!r}")
     kwargs: dict[str, Any] = {
         "strings_can_be_null": opts.strings_can_be_null,
         "quoted_strings_can_be_null": opts.quoted_strings_can_be_null,
@@ -276,13 +294,48 @@ def _csv_streams(path: Path, opts: CsvOptions) -> bool:
     return bool(opts.stream or (opts.stream is None and path.stat().st_size > opts.stream_above))
 
 
+def _identifier_text(
+    path: Path,
+    opts: CsvOptions,
+    schema: pa.Schema | None,
+    inferred: pa.Schema,
+    ro: Any,
+    po: Any,
+    co: Any,
+    *,
+    first_block: bool,
+) -> dict[str, str]:
+    """The integer columns of ``inferred`` that hold identifiers and so are read as text. Only a
+    file whose types are inferred is looked at: a schema given by the caller (or the first file's
+    schema, for the files after it) and the columns typed by name are left alone."""
+    if opts.infer_types != "auto" or schema is not None:
+        return {}
+    fixed = {*opts.column_types, *opts.string_columns}
+    return identifier_columns(
+        path,
+        inferred,
+        read_options=ro,
+        parse_options=po,
+        null_values=co.null_values,
+        skip=fixed,
+        max_batches=1 if first_block else None,
+    )
+
+
 def _open_csv_stream(
     path: Path, opts: CsvOptions, columns: list[str] | None, schema: pa.Schema | None
 ) -> Any:
-    """A streaming CSV reader: types come from the first block, and memory stays bounded."""
+    """A streaming CSV reader: types come from the first block, and memory stays bounded. The
+    first block also settles which integer columns are identifiers."""
     ro, po, co = _csv_options(path, opts, columns, schema)
     try:
-        return pacsv.open_csv(path, read_options=ro, parse_options=po, convert_options=co)
+        reader = pacsv.open_csv(path, read_options=ro, parse_options=po, convert_options=co)
+        found = _identifier_text(path, opts, schema, reader.schema, ro, po, co, first_block=True)
+        if found:
+            reader.close()
+            ro, po, co = _csv_options(path, opts, columns, schema, text=found)
+            reader = pacsv.open_csv(path, read_options=ro, parse_options=po, convert_options=co)
+        return reader
     except pa.ArrowInvalid as exc:
         raise ReaderError(f"cannot parse {path} as CSV: {exc}") from exc
 
@@ -292,7 +345,15 @@ def _read_csv_table(
 ) -> pa.Table:
     ro, po, co = _csv_options(path, opts, columns, schema)
     try:
-        return pacsv.read_csv(path, read_options=ro, parse_options=po, convert_options=co)
+        table = pacsv.read_csv(path, read_options=ro, parse_options=po, convert_options=co)
+        found = _identifier_text(path, opts, schema, table.schema, ro, po, co, first_block=False)
+        if found:  # re-read those columns as text and put them back where they were
+            names = list(found)
+            _, _, as_text = _csv_options(path, opts, names, None, text=names)
+            texts = pacsv.read_csv(path, read_options=ro, parse_options=po, convert_options=as_text)
+            for name in names:
+                table = table.set_column(table.schema.get_field_index(name), name, texts[name])
+        return table
     except pa.ArrowInvalid as exc:
         raise ReaderError(f"cannot parse {path} as CSV: {exc}") from exc
 
@@ -414,9 +475,9 @@ def _files_source(
         return _workbook_source(str(paths[0]), name, size, columns)
     first_table: list[pa.Table] = []  # csv/jsonl: the first file is read once and reused
 
-    def whole(p: Path) -> pa.Table:
-        if kind == "csv":
-            return _read_csv_table(p, csv, columns, schema)
+    def whole(p: Path, pinned: pa.Schema | None = None) -> pa.Table:
+        if kind == "csv":  # the files after the first take the first file's types
+            return _read_csv_table(p, csv, columns, pinned if pinned is not None else schema)
         table = _read_jsonl_table(p, schema)
         return table.select(columns) if columns else table
 
@@ -449,7 +510,11 @@ def _files_source(
                 reader = _open_csv_stream(p, csv, columns, out_schema if i else schema)
                 stream = (b for raw in reader for b in _slice(raw, size))
             else:
-                table = first_table[0] if i == 0 and first_table else whole(p)
+                table = (
+                    first_table[0]
+                    if i == 0 and first_table
+                    else whole(p, out_schema if i else None)
+                )
                 stream = _table_batches(table, size)
             for batch in stream:
                 yield _conform(batch, out_schema, str(p)) if i else batch

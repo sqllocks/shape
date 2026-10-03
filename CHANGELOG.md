@@ -5,6 +5,22 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- CSV identifier columns keep their text (#46): an integer column of digits with leading zeros, or of
+  one fixed width of five or more digits under an identifier name (`zip`, `npi`, `ndc`, `member_id`),
+  is read as text by `shape.profile`, `shape.io` and the commands built on them, so `00000` is not 0.
+  `shape profile` has `--string-columns`, `--types FILE.json` and `--infer-types off`
+  (`shape.profile(string_columns=, types=, infer_types=)`); an integer column that only looks like an
+  identifier is reported as a warning. `learn` and `generate --from` build fixed-width digit text
+  (`{digits:N}` pattern token) and keep numeric-looking labels as text.
+- Sinks check the URI scheme before writing (#42): a cloud or database URI gives a message that says
+  what the sink writes and which sinks handle which scheme, instead of an `OSError` (or a directory
+  called `abfss:`). `shape generate -f` accepts every installed `shape.sinks` plugin, `ipc` included (#40).
+- `shape stream-profile` keeps the watermark per partition (#41): partitions read at different speeds
+  lose no events with the default `--allowed-lateness 0s`. New `--max-partition-skew` (10m) and
+  `--partition-idle-timeout` (30 s, followed reads); late events are reported with the
+  `--allowed-lateness` that would have kept them.
+- `generate --from PROFILE` (and any schema with correlated columns) wrote no files while reporting
+  success; the table is now handed to the writer after the correlation pass.
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every

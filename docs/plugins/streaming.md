@@ -40,8 +40,10 @@ message says what).
 | `-o OUT.json` | The `global` window: one profile of everything read, the profile engine's document with `mode: "bounded"`. |
 | `--window` | `global` (default), `tumbling`, `sliding` or `session`. Windowed runs write `--windows`. |
 | `--windows OUT.jsonl` | One closed window per line (`kind`, `start`, `end`, `rows`, `profile`), written as it closes. A window is identified by `(kind, start, end)`; a restarted run reads the file and does not write a window it already has. |
-| `--size`, `--slide`, `--gap` | Durations: `500ms`, `30s`, `5m`, `1h`, `1d`, or a number of seconds. In the Python API a duration is a `timedelta` or such a string; a bare integer is refused (`docs/specs/STREAMING_SEMANTICS.md` section 2). |
-| `--allowed-lateness` | How far behind the newest event time a row may arrive and still count (default `0s`). |
+| `--size`, `--slide`, `--gap` | Durations: `500ms`, `30s`, `5m`, `1h`, `1d`, or a number of seconds. One rule everywhere (one parser, `shape.streaming.runtime.parse_duration`): a string with a unit, where a bare numeric *string* means seconds. In the Python API a duration is a `timedelta` or such a string; a bare integer or float is refused (`docs/specs/STREAMING_SEMANTICS.md` section 2). |
+| `--allowed-lateness` | How far behind the watermark a row may arrive and still count (default `0s`; a duration as above). The watermark is kept per partition, so partitions read at different speeds lose nothing by default; rows that are still late are counted, and a line on stderr gives the count and the `--allowed-lateness` that would have kept them. |
+| `--max-partition-skew` | How far (event time) a partition may trail the newest event before windows stop waiting for it (a duration, default `10m`). Bounds the number of open windows. |
+| `--partition-idle-timeout` | With `--follow`: seconds without a delivery before a partition stops holding windows open (default `30`; `0` is off). A plain number of seconds, not a duration string. |
 | `--event-time FIELD` | The payload field holding the event time (default `_shape_event_time`); `--event-time-unit s|ms|us` for numbers. An event without one uses the broker's timestamp. |
 | `--start earliest\|latest` | Where to begin when there is no checkpoint (brokers only; a file is read from its start). |
 | `--order file\|event-time` | Files only: replay in file order (default), or sorted by event time. |
@@ -108,8 +110,9 @@ Shape keeps its own position and commits nothing to the broker:
 
 A **bounded** read (the default) takes the partitions one after the other, in order, so every run
 produces the same batches and the same profile. **Following** reads all partitions together in
-arrival order; partitions are not ordered against each other in event time, so set
-`--allowed-lateness` for windows. Delivery is at least once and the profile state is exact:
+arrival order; partitions are not ordered against each other in event time, so the watermark is
+kept per partition (`docs/specs/STREAMING_SEMANTICS.md` section 3) and nothing is lost to
+interleaving; `--allowed-lateness` is for events that really arrive late. Delivery is at least once and the profile state is exact:
 `docs/specs/STREAMING_SEMANTICS.md` section 6.
 
 A checkpoint belongs to one URI and one profiler configuration; another is refused. A checkpoint

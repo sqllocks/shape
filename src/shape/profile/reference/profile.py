@@ -7,6 +7,7 @@ import datetime as _dt
 import hashlib
 import math
 import warnings
+from collections.abc import Iterable, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
@@ -291,6 +292,9 @@ def profile(
     encoding: str | None = None,
     quotechar: str | None = None,
     header: bool = True,
+    string_columns: Iterable[str] = (),
+    types: Mapping[str, str] | None = None,
+    infer_types: str = "auto",
     reference_pairs: Any = None,
     joint: bool | None = None,
     sheet: str | None = None,
@@ -299,6 +303,17 @@ def profile(
     """Profile a path, glob, directory, Delta table, Arrow table or DataFrame.
 
     Pass a ``dict`` of such sources to profile several tables and detect foreign keys.
+
+    CSV options: ``delimiter`` (default: sniffed among comma, semicolon, tab and pipe),
+    ``encoding`` (default UTF-8), ``quotechar`` (default ``"``) and ``header=False`` for a file
+    without a header row (columns are then ``f0``, ``f1``, ...).
+
+    Identifiers are not numbers: a CSV column of digits with leading zeros (``02134``), or of one
+    fixed width of five or more digits whose name says it is an identifier (``zip``, ``npi``,
+    ``member_id``), is read as text, so ``00000`` stays ``00000``. ``string_columns`` keeps more
+    columns as text, ``types`` (``{"amount": "float"}``; string, integer, float, boolean, date,
+    datetime) sets column types, and ``infer_types="off"`` reads every column as text. An integer
+    column that only looks like an identifier is reported as a warning.
 
     For a Delta table directory, ``version=N`` profiles that version and ``as_of`` (a
     ``datetime``, naive meaning UTC, or an ISO-8601 string) the newest version committed at or
@@ -323,7 +338,15 @@ def profile(
     or ``sheet=`` profiles that sheet alone, hidden or not; ``include_hidden=True`` reads the
     hidden sheets too), and the profile carries ``findings`` about its cells.
     """
-    fmt = CsvFormat(delimiter, encoding, quotechar, header)
+    fmt = CsvFormat(
+        delimiter,
+        encoding,
+        quotechar,
+        header,
+        tuple(string_columns),
+        tuple((types or {}).items()),
+        infer_types,
+    )
     with np.errstate(all="ignore"):  # inf / NaN inputs are data, not numpy warnings
         if is_workbook_spec(source):
             from .workbook import profile_workbook

@@ -54,7 +54,7 @@ def test_csv_values_are_typed_not_strings(tmp_path):
         "active": "bool",
         "signup": "date32[day]",
         "seen": "timestamp[s]",
-        "zip": "int64",  # inference: override it (see test_csv_schema_override)
+        "zip": "string",  # leading zeros (02134): an identifier is text, not 2134 (issue #46)
         "note": "string",
     }
     assert t["price"].to_pylist() == [9.5, 10.25, None]

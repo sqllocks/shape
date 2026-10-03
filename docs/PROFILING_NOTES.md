@@ -22,6 +22,37 @@ A CSV that still comes out as one column whose name contains `;`, tab, `|` or `,
 delimiter to pass. `shape.io.CsvOptions` (the fused engine and `stream-profile`) has the same `delimiter`, `encoding` and
 `quotechar`, and sniffs when `delimiter` is not set.
 
+## Identifiers are not numbers
+
+A CSV column of ZIP codes, NDCs, NPIs or member numbers is digits, and plain type inference reads it as an integer:
+`02134` becomes 2134 and the placeholder `00000` becomes 0. Shape reads an integer column as **text** when
+
+* some value has a leading zero (two or more digits, the first `0`), whatever the column is called, or
+* every value is digits of one width of five or more **and** the column name says it is an identifier (`zip`, `postal`,
+  `npi`, `ndc`, `mrn`, `member_id`, `patient_number`, `code`, ...).
+
+A column that only looks like an identifier (a fixed width of five or more digits without such a name, or a name such as
+`zip` or `phone` over values of mixed width) stays an integer and `shape profile` warns, naming the columns and the option
+that keeps them as text. The options:
+
+```bash
+shape profile members.csv -o members.shape --string-columns zip,npi        # keep these as text
+shape profile members.csv -o members.shape --types types.json              # {"zip": "string", "amount": "float"}
+shape profile members.csv -o members.shape --infer-types off               # read every column as text
+```
+
+`shape.profile(path, string_columns=["zip"], types={"amount": "float"}, infer_types="off")` is the same from Python, and
+`shape.io.CsvOptions(string_columns=, column_types=, infer_types=)` for the readers. Types are `string`, `integer`, `float`,
+`boolean`, `date`, `datetime` (or an Arrow type name). A text column the reader fixed stays text: its digits are not
+re-typed as numbers by the profiler's own detectors, and `value_counts_ext` and the minimum show `00000`. The safe profile describes the column as text of a fixed length (no mean, bounds or quantiles of a "ZIP number").
+With `--infer-types off` the profiler's detectors type the text (dates, booleans, numbers), except that digits with
+leading zeros stay text.
+
+`shape learn` and `shape generate --from` turn a column of digit text of one width into a `{digits:N}` pattern (random
+digits, zeros included) or, when the profile lists every value, a value set whose labels stay text, so generated ZIPs
+and NPIs keep their width and leading zeros. Writers quote text, and every reader in Shape applies the same rule, so a
+generated CSV reads back as the same text.
+
 ## NaN, infinity and single values
 
 A float column keeps three things apart: nulls (`null_count`), NaN (`nan_count`) and +/- infinity (`inf_count`). The last

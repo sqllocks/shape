@@ -37,6 +37,7 @@ from shape.errors import ShapeError
 EVENT_TIME = "_shape_event_time"
 PARTITION = "_shape_partition"
 OFFSET = "_shape_offset"
+PARTITION_KEY = b"shape.partition"  # schema metadata of a batch that came from one partition
 _UNITS = {"s": 1_000_000, "ms": 1_000, "us": 1}
 _EPOCH = datetime(1970, 1, 1, tzinfo=UTC)
 EVENT_TIME_TYPE = pa.timestamp("us", tz="UTC")
@@ -224,13 +225,28 @@ def decode_messages(
         keep = [i for i in range(batch.num_rows) if i not in bad]
         batch = batch.take(pa.array(keep, type=pa.int64()))
     stats.rows += batch.num_rows
-    return batch if batch.num_rows else None
+    if not batch.num_rows:
+        return None
+    origin = {m.partition for m in source}
+    if len(origin) == 1:  # the consumer keeps one watermark per partition (see ``partition_of``)
+        batch = batch.replace_schema_metadata({PARTITION_KEY: next(iter(origin)).encode()})
+    return batch
+
+
+def partition_of(batch: pa.RecordBatch) -> str | None:
+    """The partition every row of ``batch`` came from, when its source said so (``decode_messages``
+    does, for a batch from one partition); ``None`` for a batch of unknown or mixed origin."""
+    meta = batch.schema.metadata
+    value = None if not meta else meta.get(PARTITION_KEY)
+    return None if value is None else value.decode()
 
 
 def conform(batch: pa.RecordBatch, schema: pa.Schema) -> pa.RecordBatch:
-    """``batch`` with ``schema``'s column types (same column names, same order)."""
+    """``batch`` with ``schema``'s column types (same column names, same order); the batch keeps
+    its own schema metadata (its partition)."""
     return pa.RecordBatch.from_arrays(
-        [batch.column(i).cast(f.type) for i, f in enumerate(schema)], schema=schema
+        [batch.column(i).cast(f.type) for i, f in enumerate(schema)],
+        schema=schema.with_metadata(batch.schema.metadata or {}),
     )
 
 

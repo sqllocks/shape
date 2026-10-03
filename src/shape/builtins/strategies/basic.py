@@ -46,7 +46,8 @@ class WeightedEnum:
     """A value drawn from ``spec['values']``, a mapping from value to weight.
 
     Weights are relative (they are normalised) and may be zero. When every key reads as a number
-    the column is ``float64``; otherwise it is a string. The draw uses an alias table (two words
+    the column is ``float64``; otherwise it is a string (``output_type: "string"`` keeps numeric
+    looking labels such as ``02134`` as text). The draw uses an alias table (two words
     per row), so it costs the same for 3 values or 30,000.
     """
 
@@ -64,6 +65,8 @@ class WeightedEnum:
                 f"weighted_enum weights must be non-negative with a positive sum ({where(ctx)})"
             )
         numbers, pool = _labels(tuple(str(k) for k in values))
+        if spec.get("output_type") == "string":  # labels such as ZIP codes: text, zeros and all
+            numbers = None
         index = kernel_ops.alias_draw(
             kernel_ops.alias_table(weights), stream(ctx, "v"), ctx.row_start, ctx.n_rows
         )

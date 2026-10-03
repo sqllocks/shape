@@ -253,11 +253,25 @@ def _cmd_verify_signature(a):
 def _csv_format(a):
     from shape.profile.reference.readers import CsvFormat
 
+    names = getattr(a, "string_columns", None)
+    types_file = getattr(a, "types", None)
+    types: dict[str, str] = {}
+    if types_file:
+        with open(types_file, encoding="utf-8") as fh:
+            loaded = json.load(fh)
+        if not isinstance(loaded, dict) or not all(
+            isinstance(k, str) and isinstance(v, str) for k, v in loaded.items()
+        ):
+            raise ValueError(f"--types {types_file} must hold a JSON object of column: type")
+        types = loaded
     return CsvFormat(
         getattr(a, "delimiter", None),
         getattr(a, "encoding", None),
         getattr(a, "quotechar", None),
         getattr(a, "header", True),
+        tuple(n.strip() for n in names.split(",") if n.strip()) if names else (),
+        tuple(types.items()),
+        getattr(a, "infer_types", "auto"),
     )
 
 
@@ -351,6 +365,9 @@ def _cmd_profile(a):
         encoding=fmt.encoding,
         quotechar=fmt.quotechar,
         header=fmt.header,
+        string_columns=fmt.string_columns,
+        types=dict(fmt.types),
+        infer_types=fmt.infer_types,
         reference_pairs=_reference_pairs(a),
         joint=a.joint,
         **_workbook_options(a),
@@ -769,7 +786,23 @@ def _stream_profile_arguments(parser):
         "--allowed-lateness",
         default="0s",
         metavar="DURATION",
-        help="how far behind the newest event time a row may arrive and still count (default: 0s)",
+        help="how far behind the watermark a row may arrive and still count (default: 0s). The "
+        "watermark is kept per partition, so reading partitions at different speeds loses "
+        "nothing by default; rows that are still late are counted and reported",
+    )
+    parser.add_argument(
+        "--max-partition-skew",
+        default="10m",
+        metavar="DURATION",
+        help="how far (event time) a partition may trail the newest event before windows stop "
+        "waiting for it (default: 10m); bounds the number of open windows",
+    )
+    parser.add_argument(
+        "--partition-idle-timeout",
+        type=float,
+        metavar="SECONDS",
+        help="with --follow, a partition that delivers nothing for this long stops holding "
+        "windows open (default: 30; 0 turns it off)",
     )
     parser.add_argument(
         "--event-time",
@@ -939,6 +972,39 @@ def _build_parser(plugin_commands=()):
         "profile, that profile's name, so re-profiling a versioned file keeps a stable name)",
     )
     pr.add_argument(
+        "--delimiter",
+        metavar="CHAR",
+        help="CSV field delimiter (default: sniffed among comma, semicolon, tab and pipe)",
+    )
+    pr.add_argument("--encoding", metavar="NAME", help="CSV text encoding (default: utf-8)")
+    pr.add_argument("--quotechar", metavar="CHAR", help='CSV quote character (default: ")')
+    pr.add_argument(
+        "--header",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="the CSV's first row is a header (--no-header: columns are named f0, f1, ...)",
+    )
+    pr.add_argument(
+        "--string-columns",
+        metavar="NAMES",
+        help="comma-separated CSV columns to keep as text (ZIP, NPI, NDC, member numbers); "
+        "digits with leading zeros, or of one fixed width under an identifier name, are text "
+        "already",
+    )
+    pr.add_argument(
+        "--types",
+        metavar="FILE.json",
+        help='a JSON object of CSV column types, e.g. {"amount": "float", "zip": "string"} '
+        "(string, integer, float, boolean, date, datetime)",
+    )
+    pr.add_argument(
+        "--infer-types",
+        choices=("auto", "off"),
+        default="auto",
+        help="auto (default): infer CSV column types, keeping identifiers as text; "
+        "off: read every column as text",
+    )
+    pr.add_argument(
         "--version",
         dest="delta_version",
         type=int,
@@ -955,19 +1021,6 @@ def _build_parser(plugin_commands=()):
         "--fail-on-empty",
         action="store_true",
         help="exit 2 instead of warning when a table has 0 rows",
-    )
-    pr.add_argument(
-        "--delimiter",
-        metavar="CHAR",
-        help="CSV field delimiter (default: sniffed among comma, semicolon, tab and pipe)",
-    )
-    pr.add_argument("--encoding", metavar="NAME", help="CSV text encoding (default: utf-8)")
-    pr.add_argument("--quotechar", metavar="CHAR", help='CSV quote character (default: ")')
-    pr.add_argument(
-        "--header",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help="the CSV's first row is a header (--no-header: columns are named f0, f1, ...)",
     )
     pr.add_argument(
         "--reference-pair",
