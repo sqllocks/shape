@@ -5,7 +5,6 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
-<<<<<<< ours
 - Starter scenarios, suites, a pytest plugin and database seeding (W5-05, #81). `DriftPlan` has a
   `rename_column` event (`{"kind": "rename_column", "column": "orders.status", "to":
   "order_status", "start": ...}`; the answer key records the dropped and added column as one
@@ -20,7 +19,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   formats `shape-scenario-expect`, `shape-scenario-library` and `shape-suite` (and
   `shape-scenario`) at version 1. `docs/SCENARIO_LIBRARY.md`, `docs/TESTING_WITH_SHAPE.md`.
 
-=======
+
 - CI outputs (W1-14, `docs/CI.md`, `docs/EXIT_CODES.md`). `--junit FILE` and `--sarif FILE` on
   `shape diff`, `check`, `verify`, `fidelity` and `profile validate --safe` write JUnit XML (one
   test case per evaluated check; an observe-mode gate is skipped; a planned change passes) and
@@ -34,7 +33,6 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   every command that writes prints a `shape-dry-run` plan of `write`, `create`, `delete` and `send`
   actions (secrets removed) without writing or opening a connection. Commands whose `--json` was
   a switch that printed a list now print it under `payload`; a coverage test walks the parser.
->>>>>>> theirs
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
