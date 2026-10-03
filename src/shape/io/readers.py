@@ -39,7 +39,7 @@ from .excel import (
     split_spec,
     workbook_sheet_names,
 )
-from .identifiers import identifier_columns, resolve_type
+from .identifiers import identifier_columns, refuse_duplicate_names, resolve_type
 
 DEFAULT_BATCH_ROWS = 65_536
 _COMPRESSION = {".gz", ".bz2", ".zst", ".lz4", ".xz"}
@@ -291,6 +291,13 @@ def _csv_options(
     return ro, po, pacsv.ConvertOptions(**kwargs)
 
 
+def _refuse_duplicate_columns(path: Path, names: list[str]) -> None:
+    try:
+        refuse_duplicate_names(path, names)
+    except ValueError as exc:
+        raise ReaderError(str(exc)) from exc
+
+
 def _csv_streams(path: Path, opts: CsvOptions) -> bool:
     return bool(opts.stream or (opts.stream is None and path.stat().st_size > opts.stream_above))
 
@@ -331,6 +338,7 @@ def _open_csv_stream(
     ro, po, co = _csv_options(path, opts, columns, schema)
     try:
         reader = pacsv.open_csv(path, read_options=ro, parse_options=po, convert_options=co)
+        _refuse_duplicate_columns(path, reader.schema.names)
         found = _identifier_text(path, opts, schema, reader.schema, ro, po, co, first_block=True)
         if found:
             reader.close()
@@ -347,6 +355,7 @@ def _read_csv_table(
     ro, po, co = _csv_options(path, opts, columns, schema)
     try:
         table = pacsv.read_csv(path, read_options=ro, parse_options=po, convert_options=co)
+        _refuse_duplicate_columns(path, table.schema.names)
         found = _identifier_text(path, opts, schema, table.schema, ro, po, co, first_block=False)
         if found:  # re-read those columns as text and put them back where they were
             names = list(found)

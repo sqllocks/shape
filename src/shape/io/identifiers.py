@@ -175,6 +175,28 @@ def _is_integer_type(t: pa.DataType) -> bool:
     return bool(pa.types.is_integer(t) or pa.types.is_decimal(t))
 
 
+def duplicate_names(names: Iterable[str]) -> list[str]:
+    """The names that occur more than once, in order of first repeat (an empty name counts)."""
+    seen: set[str] = set()
+    repeated: list[str] = []
+    for name in names:
+        if name in seen and name not in repeated:
+            repeated.append(name)
+        seen.add(name)
+    return repeated
+
+
+def refuse_duplicate_names(path: str | Path, names: Iterable[str]) -> None:
+    """Raise ``ValueError`` when a CSV header repeats a name: columns are found by name all
+    through Shape, so a repeat would crash a lookup or silently merge or drop a column."""
+    repeated = duplicate_names(names)
+    if repeated:
+        raise ValueError(
+            f"{path} has duplicate column names {repeated}: rename them in the file "
+            "(an empty name counts as a name)"
+        )
+
+
 def integer_columns(schema: pa.Schema) -> list[str]:
     """The columns of ``schema`` Arrow typed as integers (the only ones identifiers hide in)."""
     return [f.name for f in schema if _is_integer_type(f.type)]
@@ -243,6 +265,7 @@ def identifier_columns(
     ``skip`` names columns whose type the caller fixed. ``on_suspect`` receives the integer
     columns that stay numbers although they look like identifiers.
     """
+    refuse_duplicate_names(path, schema.names)
     skipped = set(skip)
     candidates = [c for c in integer_columns(schema) if c not in skipped]
     stats = scan_text(

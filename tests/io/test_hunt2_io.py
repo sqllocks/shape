@@ -779,4 +779,14 @@ def test_csv_with_unique_names_and_a_named_header_still_reads(tmp_path: Path) ->
     assert named.column_names == ["k", "v"]
 
 
+def test_profile_of_a_csv_with_duplicate_names_says_so(tmp_path: Path) -> None:
+    import shape
+
+    for text in ("a,a\nx,y\n", "a,a,a\n1,2,3\n", ",,\n1,2,3\n"):
+        path = tmp_path / "dup.csv"
+        path.write_text(text)
+        with pytest.raises(ValueError, match="duplicate column names"):
+            shape.profile(str(path))
+
+
 _ = dt
