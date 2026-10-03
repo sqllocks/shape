@@ -65,6 +65,12 @@ def _check_private(path: str) -> None:
         )
 
 
+def check_private_file(path: str) -> None:
+    """The ``file://`` permission rule for any secret file (a private key named by a plain path
+    too): ``CredentialReferenceError`` on POSIX when group or others can access it."""
+    _check_private(path)
+
+
 def _resolve_file(path: str, *, private: bool = True) -> str:
     if not path:
         raise CredentialReferenceError("file:// needs a path, as file://PATH")

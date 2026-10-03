@@ -112,6 +112,8 @@ def read_source(
         return credrefs.read_stdin_text(stdin)
     if credrefs.is_reference(s):
         return credrefs.resolve_reference(s, private=private)
+    if private:  # the same rule as file:// whichever way the private key file is named (#402)
+        credrefs.check_private_file(s)
     try:
         return Path(s).read_text(encoding="ascii")
     except UnicodeDecodeError:

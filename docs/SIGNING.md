@@ -59,7 +59,7 @@ take a *key source*:
 
 | Source | Meaning |
 | --- | --- |
-| `PATH` | a key file |
+| `PATH` | a key file; a **private** key file follows the `file://` rule below (refused on POSIX when group or others can access it) |
 | `-` | standard input |
 | `env://NAME` | the environment variable `NAME` (the key text itself) |
 | `file://PATH` | a file, read like a credential: refused on POSIX when group or others can access it (`chmod 600`); a **public** key may be world-readable |
