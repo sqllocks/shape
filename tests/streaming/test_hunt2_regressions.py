@@ -380,3 +380,40 @@ def test_709_distinct_names_still_profile(tmp_path, capsys):
     ok.write_text("a,b,A\n1,2,3\n")  # names differing in case are different names
     assert main(["stream-profile", str(ok), "-o", str(tmp_path / "o.json")]) == 0
     assert json.loads(capsys.readouterr().out)["events"] == 1
+
+
+def test_696_emit_to_a_closed_pipe_stops_quietly():
+    import subprocess
+    import sys
+
+    code = "import sys; from shape.cli.main import main; sys.exit(main())"
+    cmd = [sys.executable, "-c", code, "emit", "retail", "--scale", "tiny", "--seed", "1"]
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    assert proc.stdout is not None and proc.stderr is not None
+    first = proc.stdout.readline()
+    proc.stdout.close()  # the reader (`head -1`) goes away
+    err = proc.stderr.read().decode()
+    assert proc.wait(timeout=60) == 0, err
+    assert json.loads(first)["_shape_seq"] == 0
+    assert "Broken pipe" not in err and "error" not in err and "Traceback" not in err
+    assert "reader closed" in err
+
+
+def test_696_a_gone_reader_is_not_retried():
+    from shape.streaming.emit.runtime import EmitConfig, EmitRunner
+    from shape.streaming.emit.sinks import ReaderGone
+
+    class Gone:
+        calls = 0
+
+        def send(self, batch):
+            Gone.calls += 1
+            raise ReaderGone("the reader closed")
+
+        def flush(self): ...
+        def close(self): ...
+
+    engine = Engine(load_target("retail", None), scale="tiny", seed=1)
+    report = EmitRunner(EventPlan(engine), Gone(), EmitConfig(retries=3)).run()
+    assert Gone.calls == 1 and report.retries == 0
+    assert report.stopped_by == "reader-closed" and report.events == 0 and not report.complete
