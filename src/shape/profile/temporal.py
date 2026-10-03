@@ -61,8 +61,8 @@ def _micros(values: pa.Array | pa.ChunkedArray) -> npt.NDArray[np.int64]:
     t = arr.type
     if pa.types.is_date(t):
         arr = pc.cast(pc.cast(arr, pa.date32()), pa.timestamp("us"))
-    elif pa.types.is_timestamp(t):
-        arr = pc.cast(arr.cast(pa.timestamp(t.unit)), pa.timestamp("us", tz=None))
+    elif pa.types.is_timestamp(t):  # nanoseconds are cut to microseconds (#316)
+        arr = pc.cast(arr.cast(pa.timestamp(t.unit)), pa.timestamp("us", tz=None), safe=False)
     else:
         raise ValueError(f"expected a timestamp or date column, got {t}")
     arr = pc.drop_null(arr)
@@ -115,6 +115,8 @@ def holiday_lifts(
     day, are left out.
     """
     days = np.floor_divide(_micros(values), US_PER_DAY)
+    if len(days) == 0:
+        raise ValueError("holiday lifts need at least one non-null value")
     lo, hi = int(days.min()), int(days.max())
     counts = np.bincount(days - lo, minlength=hi - lo + 1).astype(np.float64)
     axis = np.arange(lo, hi + 1)

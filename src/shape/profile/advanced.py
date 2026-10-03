@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from math import log2, sqrt
+from math import isfinite, log2, sqrt
+from numbers import Real
 from typing import Any
 
 
@@ -67,14 +68,24 @@ def infer_pattern(values: Iterable[Any], sample_limit: int = 1000) -> list[tuple
     return c.most_common(10)
 
 
+def finite_number(v: Any) -> float | None:
+    """``v`` as a float when it is a finite real number (numpy numbers too; a bool counts as
+    0 or 1), else None: a missing value, NaN, infinity or anything that is not a number (#315)."""
+    if not isinstance(v, Real):
+        return None
+    f = float(v)
+    return f if isfinite(f) else None
+
+
 def pearson(rows: Iterable[Mapping[str, Any]], left: str, right: str) -> float:
     """Pearson correlation of two numeric columns in one pass with O(1) memory (Welford-style
-    co-moments); the rows are never retained."""
+    co-moments); the rows are never retained. Rows where either value is missing, not finite
+    or not a number are skipped."""
     n = 0
     mx = my = sxx = syy = sxy = 0.0
     for r in rows:
-        x, y = r.get(left), r.get(right)
-        if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+        x, y = finite_number(r.get(left)), finite_number(r.get(right))
+        if x is None or y is None:
             continue
         n += 1
         dx = x - mx

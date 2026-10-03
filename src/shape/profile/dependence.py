@@ -7,7 +7,10 @@ import math
 import random
 from collections import Counter
 from collections.abc import Iterable, Mapping
+from numbers import Real
 from typing import Any, TypeVar
+
+from .advanced import finite_number
 
 _T = TypeVar("_T")
 
@@ -30,6 +33,16 @@ def _reservoir(pairs: Iterable[_T], max_rows: int) -> tuple[list[_T], int]:
     return kept, seen
 
 
+def _present(v: Any) -> bool:
+    """Not a missing value: None and NaN are missing (#315)."""
+    return v is not None and not (isinstance(v, Real) and math.isnan(float(v)))
+
+
+def _is_number(v: Any) -> bool:
+    """A real number that is not a boolean (numpy numbers too)."""
+    return isinstance(v, Real) and not isinstance(v, bool) and type(v).__name__ != "bool_"
+
+
 def normalized_mutual_information(
     rows: Iterable[Mapping[str, Any]],
     left: str,
@@ -45,7 +58,7 @@ def normalized_mutual_information(
         (
             (r.get(left), r.get(right))
             for r in rows
-            if r.get(left) is not None and r.get(right) is not None
+            if _present(r.get(left)) and _present(r.get(right))
         ),
         max_rows,
     )
@@ -53,7 +66,7 @@ def normalized_mutual_information(
         return 0.0
 
     def encode(vals: list[Any]) -> list[Any]:
-        if all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in vals):
+        if all(_is_number(v) for v in vals):
             s = sorted(float(v) for v in vals)
             n = len(s)
             cuts = [s[min(n - 1, int(n * i / bins))] for i in range(1, bins)]
@@ -87,11 +100,11 @@ def conditional_numeric_means(
     groups: dict[Any, tuple[float, int]] = {}
     for r in rows:
         c = r.get(category)
-        v = r.get(value)
-        if c is None or not isinstance(v, (int, float)):
+        v = finite_number(r.get(value))
+        if c is None or v is None:
             continue
         if c not in groups and len(groups) >= max_groups:
             continue
         s, n = groups.get(c, (0.0, 0))
-        groups[c] = (s + float(v), n + 1)
+        groups[c] = (s + v, n + 1)
     return {str(k): s / n for k, (s, n) in groups.items() if n >= min_count}
