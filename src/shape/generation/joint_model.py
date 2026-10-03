@@ -112,9 +112,18 @@ class _Encoder:
             return np.asarray(codes, dtype=np.int64)
         d = pc.dictionary_encode(arr, null_encoding="encode")
         names = d.dictionary.to_pylist()
-        lut = np.array([self.index.get(v, self.index[OTHER]) for v in names], dtype=np.int64)
+        # NaN equals no NaN, so dict.get misses the level a NaN was fitted under: find it apart
+        nan_code = next((c for v, c in self.index.items() if _is_nan(v)), self.index.get(OTHER))
+        lut = np.array(
+            [nan_code if _is_nan(v) else self.index.get(v, self.index[OTHER]) for v in names],
+            dtype=np.int64,
+        )
         out = lut[d.indices.to_numpy(zero_copy_only=False).astype(np.int64)] if n else lut[:0]
         return out
+
+
+def _is_nan(value: Any) -> bool:
+    return isinstance(value, float) and value != value
 
 
 def _fit_encoder(name: str, values: Any, max_levels: int, bins: int) -> _Encoder:

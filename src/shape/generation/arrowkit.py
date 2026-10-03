@@ -4,7 +4,9 @@
 0.16 s of every process that generates data. :func:`array` builds the same arrays for the inputs
 the engine and its strategies pass (numpy arrays of a fixed-width dtype, optionally with a null
 mask, Arrow arrays, short lists of ``str``) straight from buffers, without copying, and hands every
-other input to ``pyarrow.array`` unchanged, so the result is the same either way.
+other input to ``pyarrow.array`` unchanged, so the result is the same either way, with one
+difference: with a ``mask``, NaT (and NaN, with ``from_pandas``) is null as well, where
+``pyarrow.array`` keeps it as a value.
 """
 
 from __future__ import annotations
