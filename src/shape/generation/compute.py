@@ -101,6 +101,9 @@ def _aggregate(
     keys, values = grouped[fk].combine_chunks(), grouped[f"{source}_{func}"].combine_chunks()
     pos = pc.index_in(parent[pk].combine_chunks(), value_set=keys)
     out = pc.take(values, pos)
+    numeric = pa.types.is_integer(out.type) or pa.types.is_floating(out.type)
+    if not (numeric or pa.types.is_decimal(out.type)):
+        return out  # a date or text has no zero: a parent without children gets null
     return _round_if_float(arrow_fill_null(out, arrow_scalar(0, type=out.type)))
 
 
