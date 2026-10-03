@@ -98,11 +98,11 @@ def _read(source: Any, uri: str, **options: Any) -> pa.Table:
 @pytest.mark.parametrize(
     ("name", "blob"),
     [
-        ("t.parquet", _parquet(TABLE)),
-        ("t.csv", _csv(TABLE)),
-        ("t.csv.gz", gzip.compress(_csv(TABLE))),
-        ("t.jsonl", _jsonl(TABLE)),
-        ("t.arrow", _ipc(TABLE)),
+        pytest.param("t.parquet", _parquet(TABLE), id="t.parquet"),
+        pytest.param("t.csv", _csv(TABLE), id="t.csv"),
+        pytest.param("t.csv.gz", gzip.compress(_csv(TABLE), mtime=0), id="t.csv.gz"),
+        pytest.param("t.jsonl", _jsonl(TABLE), id="t.jsonl"),
+        pytest.param("t.arrow", _ipc(TABLE), id="t.arrow"),
     ],
 )
 def test_every_file_kind_reads_through_the_filesystem(name, blob):
