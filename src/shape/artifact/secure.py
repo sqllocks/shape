@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import binascii
 import base64
 import json
 from dataclasses import dataclass
 
 from shape.artifact.canonical import canonical_json
+from shape.errors import ShapeSecurityError
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,14 +29,25 @@ class SecureEnvelope:
         )
 
     @classmethod
-    def from_bytes(cls, data: bytes):
-        o = json.loads(data)
-        return cls(
-            o["header"],
-            base64.b64decode(o["nonce"]),
-            base64.b64decode(o["ciphertext"]),
-            base64.b64decode(o["signature"]),
-        )
+    def from_bytes(cls, data: bytes) -> "SecureEnvelope":
+        try:
+            o = json.loads(data)
+        except json.JSONDecodeError as exc:
+            raise ShapeSecurityError(f"malformed envelope: not valid JSON: {exc}") from exc
+        if not isinstance(o, dict):
+            raise ShapeSecurityError("malformed envelope: root must be a JSON object")
+        for key in ("header", "nonce", "ciphertext", "signature"):
+            if key not in o:
+                raise ShapeSecurityError(f"malformed envelope: missing key {key!r}")
+        try:
+            return cls(
+                o["header"],
+                base64.b64decode(o["nonce"], validate=True),
+                base64.b64decode(o["ciphertext"], validate=True),
+                base64.b64decode(o["signature"], validate=True),
+            )
+        except (binascii.Error, TypeError, ValueError) as exc:
+            raise ShapeSecurityError(f"malformed envelope: {exc}") from exc
 
 
 def seal(
