@@ -7,6 +7,7 @@ when it runs.
 from __future__ import annotations
 
 import argparse
+import errno
 import json
 from pathlib import Path
 from typing import Any
@@ -50,7 +51,7 @@ def _sources(path: Path, fmt: str | None) -> dict[str, Path] | Path:
             raise ValueError(f"no {fmt or 'csv'} files found in {path}")
         return {p.stem: p for p in files}
     if not path.is_file():
-        raise ValueError(f"path not found: {path}")
+        raise FileNotFoundError(errno.ENOENT, "file not found", str(path))
     if fmt is not None and path.suffix.lower().lstrip(".") not in (fmt, "ndjson"):
         raise ValueError(f"{path} is not a {fmt} file")
     return path

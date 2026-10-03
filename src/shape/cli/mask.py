@@ -7,6 +7,7 @@ masker when it runs.
 from __future__ import annotations
 
 import argparse
+import errno
 import json
 from pathlib import Path
 from typing import Any
@@ -57,7 +58,7 @@ def _files(path: Path, fmt: str | None) -> tuple[dict[str, Path], str]:
             raise ValueError(f"no {fmt} files found in {path}")
         return {p.stem: p for p in files}, fmt
     if not path.is_file():
-        raise ValueError(f"path not found: {path}")
+        raise FileNotFoundError(errno.ENOENT, "file not found", str(path))
     ext = path.suffix.lower().lstrip(".")
     fmt = fmt or ext
     if fmt not in FORMATS or ext != fmt:

@@ -334,7 +334,7 @@ def _reg_save(a: argparse.Namespace) -> int:
 
     reg = _registry(a)
     if not Path(a.source).exists():
-        return _err(f"not found: {a.source}")
+        return _err(f"file not found: {a.source}")
     prof = (
         shape.load(a.source)
         if Path(a.source).is_file() and _is_shape(a.source)
