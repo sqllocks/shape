@@ -5,6 +5,12 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- Mergeable profiles (`docs/PROFILE_MERGE.md`): `shape profile --sketches` keeps an optional,
+  versioned sketch state beside the profile (the profile and its content id are unchanged), and
+  `shape profile merge A.shape B.shape -o OUT.shape` / `shape.profile.merge_profiles` combine
+  profiles of partitions or days without re-reading the data: exact statistics exactly,
+  cardinality, quantiles and top values within each sketch's documented error. Merged profiles
+  carry their inputs' content ids (`Profile.merged_from`).
 - `shape generate --scale-mode local_single|local_mp|fabric_spark` and `shape jobs list|status|cancel|resume`
   (`docs/SCALE.md`): the scale router with sinks (memory, Parquet part files, Lakehouse, Warehouse,
   SQL Database, KQL), a durable job store (submit, status, cancel, resume), the `fabric_spark` router

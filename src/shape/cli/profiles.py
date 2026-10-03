@@ -17,7 +17,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-COMMANDS = ("export", "import", "list", "validate", "registry")
+COMMANDS = ("export", "import", "list", "validate", "registry", "merge")
 EXPORT_FORMAT = "shape-profile"
 EXPORT_VERSION = 1
 
@@ -63,6 +63,21 @@ def _parser() -> argparse.ArgumentParser:
     im.add_argument("input", metavar="IN.json")
     im.add_argument("-o", "--output", required=True, metavar="OUT.shape")
     im.add_argument("--name", help="profile name (default: the name in the file)")
+    mg = sub.add_parser(
+        "merge",
+        help="merge profiles of partitions or days into the profile of their union",
+        description="Combine profiles without reading the data again. Exact statistics (rows, "
+        "nulls, min, max, mean, std) always merge exactly; cardinality and quantiles need every "
+        "input to carry sketch state (`shape profile SRC -o OUT.shape --sketches`).",
+    )
+    mg.add_argument("profiles", nargs="+", metavar="PROFILE.shape")
+    mg.add_argument("-o", "--output", required=True, metavar="OUT.shape")
+    mg.add_argument("--name", help="the merged profile's name (default: the first input's)")
+    mg.add_argument(
+        "--exact-only",
+        action="store_true",
+        help="merge only the exact statistics, so profiles without sketch state can be merged",
+    )
     ls = sub.add_parser("list", help="list the .shape profiles in a directory")
     ls.add_argument("directory", nargs="?", default=".", metavar="DIR")
     ls.add_argument("--json", action="store_true", help="print JSON")
@@ -247,6 +262,28 @@ def _import(a: argparse.Namespace) -> int:
         prof = _profile_class()(prof.to_dict(), name=a.name)
     cid = shape.save(prof, a.output)
     _out({"written": a.output, "name": prof.name, "shape_content_id": cid})
+    return 0
+
+
+def _merge(a: argparse.Namespace) -> int:
+    import shape
+    from shape.profile.merge import merge_profiles
+
+    if len(a.profiles) < 2:
+        raise ValueError("merge needs at least two profiles")
+    merged = merge_profiles(
+        [_load_any(p) for p in a.profiles], exact_only=a.exact_only, name=a.name
+    )
+    cid = shape.save(merged, a.output)
+    _out(
+        {
+            "written": a.output,
+            "name": merged.name,
+            "shape_content_id": cid,
+            "mode": "exact-only" if a.exact_only else "sketched",
+            "merged_from": merged.merged_from,
+        }
+    )
     return 0
 
 
@@ -470,6 +507,7 @@ _HANDLERS = {
     "import": _import,
     "list": _list,
     "validate": _validate,
+    "merge": _merge,
 }
 _REGISTRY = {
     "list": _reg_list,
