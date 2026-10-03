@@ -5,6 +5,24 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+### Fixed
+
+- `shape bridge` (AUD-bridge): `diff` and `check` withhold the raw values of a classified column
+  in joint-analysis entries too (`message`, `detail`, an `fd` violation's `observed`) (#533);
+  `verify` withholds the actual minimum and maximum a range gate quotes (#535); concurrent
+  `profile` jobs no longer share a scratch file and corrupt each other's artifact (#537); requests
+  are read as UTF-8 whatever the locale, and a line that is not UTF-8 is `usage.invalid_json`
+  (#539); a Fabric status the bridge has no name for keeps the job active (#542); a job file must
+  be the job its name says, with fields of the right types (#544); a very long stream
+  `interval_seconds` waits instead of failing (#545); the request size limit counts UTF-8 bytes of
+  the request without its line end, result paths are absolute, NumPy values stay numbers,
+  `Bridge.handle` never raises and finished job threads are let go (#546).
+- `shape.generate` raises `TypeError` for an argument its form cannot use (`n` or `relationships`
+  for a domain or schema, `mode` for anything but a domain, `scale` for an evidence document)
+  instead of ignoring it (#251).
+- `shape.LogicalType` refuses an unknown kind or bit width; an invalid type raises
+  `ShapeTypeError`, which is now also a `ValueError` (#260).
+
 - Joint distributions and plausibility (`docs/JOINT.md`, #47). `shape profile` finds placeholder
   values (`00000`, `99999`, `1900-01-01`, `-1`, `N/A`, ...) with their share and evidence, and
   records approximate functional dependencies, two-column keys, association measures for every
