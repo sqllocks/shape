@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import sys
 import time
 from dataclasses import dataclass, field
@@ -30,24 +31,38 @@ from typing import Any
 
 LOGGER = "shape"
 _STANDARD = frozenset(logging.LogRecord("", 0, "", 0, None, None, None).__dict__) | {"message"}
+_SECRET_KEY = re.compile(
+    r"token|secret|passw|credential|connection_?string|api_?key|access_?key|sas", re.IGNORECASE
+)
 
 
 class JsonFormatter(logging.Formatter):
     """Format a log record as one JSON object: ``timestamp``, ``level``, ``logger``, ``message``,
-    the record's ``extra`` keys and, when there is one, the ``exception``."""
+    the record's ``extra`` keys and, when there is one, the ``exception``.
+
+    The log never holds a credential: text is redacted (``PWD=***``, a URI's password) and an
+    ``extra`` key named like a secret has its value replaced by ``***``."""
 
     def format(self, record: logging.LogRecord) -> str:
+        from shape.security.redact import MASK, redact_text
+
         entry: dict[str, Any] = {
             "timestamp": datetime.fromtimestamp(record.created, tz=UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
-            "message": record.getMessage(),
+            "message": redact_text(record.getMessage()),
         }
         for key, value in record.__dict__.items():
-            if key not in _STANDARD:
+            if key in _STANDARD:
+                continue
+            if _SECRET_KEY.search(key) and value not in (None, ""):
+                entry[key] = MASK
+            elif isinstance(value, str):
+                entry[key] = redact_text(value)
+            else:
                 entry[key] = value
         if record.exc_info and record.exc_info[1]:
-            entry["exception"] = self.formatException(record.exc_info)
+            entry["exception"] = redact_text(self.formatException(record.exc_info))
         return json.dumps(entry, default=str)
 
 
