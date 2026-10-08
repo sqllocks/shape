@@ -49,3 +49,8 @@ duckdb = "shape_databases:DuckDbSink"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[project.entry-points."shape.sources"]
+postgresql = "shape_databases.sources:PostgresSource"
+postgres = "shape_databases.sources:PostgresAliasSource"
+mysql = "shape_databases.sources:MySqlSource"

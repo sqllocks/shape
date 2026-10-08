@@ -1339,10 +1339,17 @@ There is no second implementation: a command calls what the matching command lin
 
 ## Security
 
+`profile` opens a database connection when its `source` is a database URI.
+PostgreSQL (`postgresql://`, also `postgres://`) and MySQL (`mysql://`) profile a schema
+or a URI-selected table. Optional `tables` is an array of table names; `sample_rows` is
+a non-negative integer (default 1000; 0 is catalog only). These database artifacts use
+safe capture for sampled values. Use password environment variables or credential references;
+passwords in URIs are rejected and never persisted in job records.
+
 The bridge speaks over standard input and output and does what its caller asks with the
 permissions of its process: it reads and writes the paths a request names, as given. Run it with
 the permissions you would give the program that drives it. It opens no network connection of its
-own, except to Fabric for a `fabric_spark` run you ask for. A credential is read from the request
+own, except for a database `profile` or Fabric `fabric_spark` run you ask for. A credential is read from the request
 or the environment when a command needs it and is never written to a job file, a result or a
 log. Job files and spilled results are created with mode `0600` in a `0700` directory.
 

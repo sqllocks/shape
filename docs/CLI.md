@@ -496,3 +496,21 @@ tests bad, `--bad` tests good, or a version cannot be tested, for example a shar
 `bisect layers` finds the layer of a pipeline where a change appears (exit 0 a layer shows it, 1
 none does, 2 unusable input). `timelapse` follows one column across the versions (`-o OUT.html` is
 one offline page). See `docs/HISTORY.md`.
+
+### PostgreSQL and MySQL profiling
+
+Install the database plugin and its driver extra. `shape profile` accepts
+`postgresql://user@host:5432/db?schema=public` (also `postgres://`) and
+`mysql://user@host:3306/db`. Without `table=T`, all tables in the schema are included;
+with it, the selected table is profiled. `--tables orders,customers` selects tables.
+`--sample-rows N` sets the bounded distribution sample per table (default 1000;
+0 means catalog only). Catalog counts, declared primary/foreign keys and nullability are
+kept; distributions describe the sample, with sampling recorded in the profile.
+PostgreSQL uses system sampling, MySQL a keyed hash spread. Catalog counts are estimates.
+Pass passwords through the driver environment variables, never a URI. Safe capture applies
+to sampled values. See the database plugin README for credentials, TLS and type mapping.
+
+```bash
+shape profile 'postgresql://shape@localhost/db?schema=public' --tables orders --sample-rows 1000 -o db.shape
+shape profile 'mysql://shape@localhost/db?table=orders' --sample-rows 0 -o catalog.shape
+```

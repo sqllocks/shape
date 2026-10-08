@@ -11,7 +11,7 @@ from collections.abc import Iterable, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 
@@ -409,6 +409,8 @@ def profile(
     decisions: Any = None,
     validators: Any = None,
     time_column: str | None = None,
+    sample_rows: int | None = None,
+    tables: list[str] | None = None,
 ) -> Profile:
     """Profile a path, glob, directory, Delta table, Arrow table or DataFrame.
 
@@ -487,6 +489,62 @@ def profile(
     ``docs/JOINT.md``), which ``shape.diff`` compares and ``mixed_copula`` generation reads. They
     are off by default too: they add a fixed cost per table.
     """
+    if isinstance(source, str) and "://" in source:
+        from shape.plugins.host import default_host
+
+        from .sources import _SOURCE_OPTIONS
+
+        host = default_host()
+        for record in host.records("shape.sources"):
+            plugin = host.try_get(record.group, record.name)
+            if (
+                plugin is not None
+                and plugin.can_open(source)
+                and hasattr(plugin, "profile_database")
+            ):
+                unsupported = {
+                    "version": version,
+                    "as_of": as_of,
+                    "delimiter": delimiter,
+                    "encoding": encoding,
+                    "quotechar": quotechar,
+                    "types": types or None,
+                    "reference_pairs": reference_pairs,
+                    "joint": joint,
+                    "sheet": sheet,
+                    "sample": sample,
+                    "sample_seed": sample_seed,
+                    "decisions": decisions,
+                    "validators": validators,
+                    "time_column": time_column,
+                }
+                selected_options = [key for key, value in unsupported.items() if value is not None]
+                if (
+                    not header
+                    or tuple(string_columns)
+                    or infer_types != "auto"
+                    or include_hidden
+                    or sketches
+                    or univariate
+                    or multivariate
+                    or sample_method != "random"
+                ):
+                    selected_options.append("file or extended profiling options")
+                if selected_options:
+                    raise SourceError(
+                        "database profiling does not support: " + ", ".join(selected_options)
+                    )
+                opts = dict(_SOURCE_OPTIONS.get() or {})
+                if sample_rows is not None:
+                    opts["sample_rows"] = sample_rows
+                if tables is not None:
+                    opts["tables"] = tables
+                if name is not None:
+                    opts["name"] = name
+                return cast(Profile, plugin.profile_database(source, **opts))
+    if sample_rows is not None or tables is not None:
+        raise SourceError("sample_rows and tables need a database URI source")
+
     fmt = CsvFormat(
         delimiter,
         encoding,

@@ -1,7 +1,7 @@
 # sqllocks-shape-databases
 
 Shape plugin: write generated tables straight into a running database, or a local DuckDB file
-(`shape.sinks`). Five sinks live here. `postgres` and `mysql` match the dialects of the built-in
+(`shape.sinks`), and stream PostgreSQL/MySQL tables (`shape.sources`). Five sinks live here. `postgres` and `mysql` match the dialects of the built-in
 `sql` script sink (same quoting, same Arrow-to-database type map); `snowflake` and `databricks`
 have their own type maps (see [Snowflake](#snowflake) and [Databricks](#databricks)); `duckdb`
 writes Arrow batches into a DuckDB file:
@@ -314,3 +314,42 @@ up -d --wait postgres mysql`, with `SHAPE_POSTGRES_PASSWORD` / `SHAPE_MYSQL_PASS
 
 Its version always equals core's (`sqllocks-shape`), and it is released together with core.
 How plugins are written: `docs/plugins/authoring.md` in the repository.
+
+## PostgreSQL and MySQL sources
+
+The plugin registers `shape.sources` entries `postgresql`, `postgres` and `mysql`.
+`postgresql://user@host:5432/db?schema=public&table=orders` and
+`mysql://user@host:3306/db?table=orders` select one table. `schema()` returns the catalog
+Arrow schema; `read()` yields record batches, default `batch_size=65536`, with server-side
+cursors. Missing `table`, passwords in URIs, unknown options and invalid batch sizes fail
+before connecting. Sources use the sinks' TLS defaults and credential precedence: `password`,
+`credential`, then `SHAPE_POSTGRES_PASSWORD` / `PGPASSWORD` or `SHAPE_MYSQL_PASSWORD` /
+`MYSQL_PWD`. Passwords belong in options or the environment, never the URI.
+
+The catalog maps `smallint` to `int16`, `integer` to `int32`, `bigint` to `int64`,
+`numeric(p,s)` / `decimal(p,s)` to `decimal128(p,s)` (precision 1–38), `timestamptz` to
+`timestamp(us, tz=UTC)`, `timestamp` / MySQL `datetime(6)` to zone-less `timestamp(us)`,
+`date` to `date32`, `time` to `time64(us)`, `boolean` / MySQL `tinyint(1)` to boolean,
+`uuid` to string with field metadata `shape.type=uuid`, and `bytea` / `blob` to binary.
+`jsonb`, `json` and arrays are JSON text strings. An unmapped type becomes text and emits
+one warning naming the column. Field metadata `shape.sql_type` retains the declaration;
+nullability comes from the catalog. Decimal declarations outside Arrow's range fail explicitly.
+
+`shape.profile(uri)` uses catalog-plus-sample profiling for both a table URI and a URI without
+`table` (the whole schema). `shape.profile(uri, sample_rows=1000, tables=["orders"])`
+selects tables and bounds the sample; `sample_rows=0` reads only catalog information.
+PostgreSQL uses `TABLESAMPLE SYSTEM` with a row limit; it can return fewer rows than requested.
+MySQL orders by a CRC32 hash of the declared primary key, or columns when no key is declared,
+then limits rows. MySQL's spread query can scan/sort the table on the server, but does not
+transfer the entire table to the client. Catalog row counts are estimates (`reltuples` / `table_rows`),
+and stale counts may affect the sampling strategy. Primary keys and foreign keys are exact
+catalog declarations; relationships carry `evidence: "declared"`.
+`sampled_rows`, `sample_method` and dataset `sampling` distinguish sample statistics from
+catalog counts. Null rates and uniqueness are unknown when no rows are sampled.
+Saved profiles use the existing versioned `.shape` format and safe capture by default.
+
+Service checks: `pytest -m emulator plugins/shape-databases/tests/test_sources_services.py`
+uses PostgreSQL 16 and MySQL 8.4 from the emulator compose file. Opt-in live checks use
+`SHAPE_TEST_POSTGRES_URI` / `SHAPE_POSTGRES_PASSWORD` or
+`SHAPE_TEST_MYSQL_URI` / `SHAPE_MYSQL_PASSWORD`; a missing setting is named in the skip reason.
+Offline fake-server source acceptance runs on every PR.

@@ -4665,6 +4665,10 @@
      ],
      "takes_value": true
     },
+    "--sample-rows": {
+     "choices": null,
+     "takes_value": true
+    },
     "--sample-seed": {
      "choices": null,
      "takes_value": true
@@ -4690,6 +4694,10 @@
      "takes_value": true
     },
     "--string-columns": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--tables": {
      "choices": null,
      "takes_value": true
     },

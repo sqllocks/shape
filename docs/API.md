@@ -12,13 +12,16 @@ model and query functions are documented as they behave today and may change.
 ## Profiles
 
 ```python
-shape.profile(source, *, name=None, version=None, as_of=None, delimiter=None, encoding=None, quotechar=None, header=True, string_columns=(), types=None, infer_types='auto', reference_pairs=None, joint=None, sheet=None, include_hidden=False, sketches=False, univariate=False, multivariate=False, sample=None, sample_method='random', sample_seed=None, decisions=None, validators=None, time_column=None)
+shape.profile(source, *, name=None, version=None, as_of=None, delimiter=None, encoding=None, quotechar=None, header=True, string_columns=(), types=None, infer_types='auto', reference_pairs=None, joint=None, sheet=None, include_hidden=False, sketches=False, univariate=False, multivariate=False, sample=None, sample_method='random', sample_seed=None, decisions=None, validators=None, time_column=None, sample_rows=None, tables=None)
 ```
 
 Profiles `source` and returns a `Profile`. `source` is a path (CSV, Parquet, JSONL, `.xlsx`, a
 Delta table directory, a glob or a directory of files), a `pyarrow.Table`, a
 `pandas.DataFrame`, a list of row dicts, or a `dict` of such sources for several tables (with
-foreign-key detection). Every argument after `source` is keyword-only. `version` and `as_of`
+foreign-key detection). Installed database sources also accept PostgreSQL/MySQL URIs;
+`sample_rows` bounds each database table sample (default 1000; 0 is catalog only), and
+`tables` selects schema table names. Database connection settings use the plugin credential
+and TLS rules (`plugins/shape-databases/README.md`). Every argument after `source` is keyword-only. `version` and `as_of`
 select a Delta table version (`README.md`); `delimiter`, `encoding`, `quotechar` and `header`
 are CSV options (`docs/PROFILING_NOTES.md`); `reference_pairs` and `joint` control the joint
 analysis (`docs/JOINT.md`); `sheet` and `include_hidden` select workbook sheets

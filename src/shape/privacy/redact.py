@@ -431,7 +431,7 @@ def redact_profile(profile: Any, config: CaptureConfig | None = None) -> Any:
     multivariate_removed = False
     manifest_tables: dict[str, Any] = {}
     for tname, table in tables.items():
-        row_count = int(table.get("row_count") or 0)
+        row_count = int(table.get("sampled_rows", table.get("row_count")) or 0)
         sensitive: set[str] = set()
         entries: dict[str, Any] = {}
         columns: dict[str, Any] = {}

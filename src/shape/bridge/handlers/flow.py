@@ -49,7 +49,7 @@ def classified_columns(profile: Any) -> set[str]:
     config = SafeConfig()
     names: set[str] = set()
     for tname, table in profile.tables.items():
-        rows = table["row_count"]
+        rows = table.get("sampled_rows", table["row_count"])
         for cname, col in table["columns"].items():
             if pii_gate_fires(col.get("pattern"), int(col.get("cardinality") or 0), rows, config):
                 names.update((cname, f"{tname}.{cname}"))
@@ -159,7 +159,12 @@ def cmd_profile(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
         argparse.Namespace(src=args["source"], dataset=bool(args.get("dataset")))
     )
     prof = shape.profile(
-        source, name=args.get("name"), version=args.get("version"), as_of=args.get("as_of")
+        source,
+        name=args.get("name"),
+        version=args.get("version"),
+        as_of=args.get("as_of"),
+        sample_rows=args.get("sample_rows"),
+        tables=args.get("tables"),
     )
     empty = [n for n, t in prof.tables.items() if not t["row_count"]]
     if empty:
@@ -171,11 +176,17 @@ def cmd_profile(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
             raise BridgeError("input.invalid_value", message)
         ctx.warn("empty_table", message)
     output = args.get("output")
+    database = isinstance(source, str) and source.partition("://")[0].lower() in (
+        "postgresql",
+        "postgres",
+        "mysql",
+    )
+    capture = "safe" if database else BRIDGE_CAPTURE
     with writing():
         if output:
             target = Path(output)
             target.parent.mkdir(parents=True, exist_ok=True)
-            content_id = shape.save(prof, str(target), capture=BRIDGE_CAPTURE)
+            content_id = shape.save(prof, str(target), capture=capture)
         else:
             folder = ctx.jobs_dir / "bridge" / "profiles"
             folder.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -184,16 +195,17 @@ def cmd_profile(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
             os.close(fd)
             scratch = Path(name)
             try:
-                content_id = shape.save(prof, str(scratch), capture=BRIDGE_CAPTURE)
+                content_id = shape.save(prof, str(scratch), capture=capture)
                 target = folder / f"{str(content_id).replace(':', '-')}.shape"
                 os.replace(scratch, target)
             finally:
                 scratch.unlink(missing_ok=True)
-    ctx.warn(
-        "profile_file_holds_values",
-        f"{target} is the full profile: it holds real values (value counts and extremes); "
-        "keep it private or share a safe profile",
-    )
+    if capture == "full":
+        ctx.warn(
+            "profile_file_holds_values",
+            f"{target} is the full profile: it holds real values (value counts and extremes); "
+            "keep it private or share a safe profile",
+        )
     summary = prof.summary()
     if not ctx.include_raw:
         summary = redact_summary(summary, classified_columns(prof))
@@ -357,7 +369,14 @@ COMMANDS = [
         "profile",
         "Profile a file, folder, glob or Delta table into a .shape artifact.",
         {
-            "source": Arg("string", "a file, folder, glob or Delta table", True),
+            "source": Arg("string", "a file, folder, glob, Delta table or database URI", True),
+            "sample_rows": Arg(
+                "integer",
+                "database: rows sampled per table (default 1000; 0 catalog only)",
+                minimum=0,
+                since="1.2",
+            ),
+            "tables": Arg("array", "database: table names to include", items="string", since="1.2"),
             "output": Arg(
                 "string", "where to write the .shape profile (default: the jobs directory)"
             ),
