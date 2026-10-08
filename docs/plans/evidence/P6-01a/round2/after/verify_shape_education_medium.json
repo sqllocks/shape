@@ -1,0 +1,4322 @@
+{
+ "domain": "education",
+ "scale": "medium",
+ "impl": "shape",
+ "seed": 42,
+ "impl_seed": 1042,
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "tables": {
+  "department": {
+   "rows": {
+    "refengine": 25,
+    "impl": 25
+   },
+   "columns_refengine": [
+    "department_id",
+    "department_name",
+    "college",
+    "budget"
+   ],
+   "columns_impl": [
+    "department_id",
+    "department_name",
+    "college",
+    "budget"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "department_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "department_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "college": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "budget": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "department_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.27712812921102037
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.5513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": 13.0,
+       "impl": 13.0
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 25.0,
+       "impl": 25.0
+      },
+      "std": {
+       "refengine": 7.211102550927978,
+       "impl": 7.211102550927978,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 25,
+      "impl": 25
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "department_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.27712812921102037
+     },
+     "distinct": {
+      "refengine": 15,
+      "impl": 16,
+      "ratio": 1.0666666666666667,
+      "baseline_max_ratio_dev": 0.19999999999999996
+     },
+     "top10": [
+      {
+       "value": "Physics",
+       "refengine": 0.12,
+       "impl": 0.0
+      },
+      {
+       "value": "Mathematics",
+       "refengine": 0.12,
+       "impl": 0.04
+      },
+      {
+       "value": "English",
+       "refengine": 0.08,
+       "impl": 0.08
+      },
+      {
+       "value": "Psychology",
+       "refengine": 0.08,
+       "impl": 0.12
+      },
+      {
+       "value": "History",
+       "refengine": 0.08,
+       "impl": 0.04
+      },
+      {
+       "value": "Communications",
+       "refengine": 0.08,
+       "impl": 0.0
+      },
+      {
+       "value": "Chemistry",
+       "refengine": 0.08,
+       "impl": 0.0
+      },
+      {
+       "value": "Biology",
+       "refengine": 0.08,
+       "impl": 0.04
+      },
+      {
+       "value": "Marketing",
+       "refengine": 0.04,
+       "impl": 0.08
+      },
+      {
+       "value": "Economics",
+       "refengine": 0.04,
+       "impl": 0.08
+      },
+      {
+       "value": "Accounting",
+       "refengine": 0.0,
+       "impl": 0.12
+      },
+      {
+       "value": "Nursing",
+       "refengine": 0.04,
+       "impl": 0.08
+      },
+      {
+       "value": "Electrical Engineering",
+       "refengine": 0.0,
+       "impl": 0.08
+      },
+      {
+       "value": "Sociology",
+       "refengine": 0.0,
+       "impl": 0.04
+      },
+      {
+       "value": "Kinesiology",
+       "refengine": 0.04,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.56,
+     "tvd_baseline": 0.6000000000000001,
+     "tvd_tol": 1.8541161697113102,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "college": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.27712812921102037
+     },
+     "distinct": {
+      "refengine": 6,
+      "impl": 5,
+      "ratio": 0.8333333333333334,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Arts & Sciences",
+       "refengine": 0.36,
+       "impl": 0.4
+      },
+      {
+       "value": "Business",
+       "refengine": 0.2,
+       "impl": 0.16
+      },
+      {
+       "value": "Engineering",
+       "refengine": 0.2,
+       "impl": 0.2
+      },
+      {
+       "value": "Health Sciences",
+       "refengine": 0.12,
+       "impl": 0.0
+      },
+      {
+       "value": "Law",
+       "refengine": 0.08,
+       "impl": 0.04
+      },
+      {
+       "value": "Education",
+       "refengine": 0.04,
+       "impl": 0.2
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.2,
+     "tvd_baseline": 0.27999999999999997,
+     "tvd_tol": 1.172646028567008,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "budget": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.27712812921102037
+     },
+     "ks": 0.16000000000000003,
+     "ks_baseline": 0.28,
+     "ks_tol": 0.5513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": 1068363.8850396965,
+       "impl": 811296.5752302151
+      },
+      "min": {
+       "refengine": 500000.0,
+       "impl": 500000.0
+      },
+      "max": {
+       "refengine": 5584647.170143141,
+       "impl": 1986724.5718985517
+      },
+      "std": {
+       "refengine": 1037619.2929415796,
+       "impl": 413741.8244379853,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 16,
+      "impl": 19
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "instructor": {
+   "rows": {
+    "refengine": 150,
+    "impl": 150
+   },
+   "columns_refengine": [
+    "instructor_id",
+    "department_id",
+    "first_name",
+    "last_name",
+    "email",
+    "rank",
+    "tenure_status",
+    "hire_date"
+   ],
+   "columns_impl": [
+    "instructor_id",
+    "department_id",
+    "first_name",
+    "last_name",
+    "email",
+    "rank",
+    "tenure_status",
+    "hire_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "instructor_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "department_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "first_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "last_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "email": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "rank": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "tenure_status": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "hire_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "instructor_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.22510593742416898,
+     "stats": {
+      "mean": {
+       "refengine": 75.5,
+       "impl": 75.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 150.0,
+       "impl": 150.0
+      },
+      "std": {
+       "refengine": 43.300307928081374,
+       "impl": 43.300307928081374,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 150,
+      "impl": 150
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "department_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "ks": 0.10666666666666669,
+     "ks_baseline": 0.1333333333333333,
+     "ks_tol": 0.22510593742416898,
+     "stats": {
+      "mean": {
+       "refengine": 4.58,
+       "impl": 5.7
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 25.0,
+       "impl": 25.0
+      },
+      "std": {
+       "refengine": 5.63355423629997,
+       "impl": 6.303173803727771,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 20,
+      "impl": 23
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "first_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "refengine": 147,
+      "impl": 149,
+      "ratio": 1.0136054421768708,
+      "baseline_max_ratio_dev": 0.013605442176870763
+     },
+     "top10": [
+      {
+       "value": "Phaya",
+       "refengine": 0.013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Neoa",
+       "refengine": 0.013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Wesley",
+       "refengine": 0.013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Caoa",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Harold",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Saie",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Nora",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Hiina",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Maya",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Huna",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Rinah",
+       "refengine": 0.0,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "Haol",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Orok",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Coiah",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Orisha",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.9733333333333334,
+     "tvd_baseline": 0.9933333333333334,
+     "tvd_tol": 2.3695962509005764,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "last_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "refengine": 149,
+      "impl": 150,
+      "ratio": 1.0067114093959733,
+      "baseline_max_ratio_dev": 0.03355704697986572
+     },
+     "top10": [
+      {
+       "value": "Hogfield",
+       "refengine": 0.013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Arelstein",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Blaiberg",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Kellburg",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Comptstein",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Chamwood",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Cantbrook",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Valenstein",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Kidgate",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Mosburg",
+       "refengine": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Pruridge",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Kane",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Shaffer",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Gloveberg",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Craworth",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.9666666666666668,
+     "tvd_baseline": 1.0,
+     "tvd_tol": 2.385661494212072,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "email": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "refengine": 150,
+      "impl": 150,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "caoa.arelstein762@lawyer.com",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "phaya.blaiberg562@live.com",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "harold.kellburg427@att.net",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "saie.comptstein454@icloud.com",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "nora.chamwood180@seznam.cz",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "hiina.cantbrook45@yandex.com",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "maya.valenstein527@runbox.com",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "huna.kidgate378@rocketmail.com",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "orisa.mosburg8@usa.com",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "noo.copelsen445@fastmail.com",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "haol.pruridge22@email.com",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "orok.kane213@usa.com",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "coiah.shaffer470@web.de",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "orisha.gloveberg468@mail.ru",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "celyn.craworth274@earthlink.net",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "rank": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Assistant Professor",
+       "refengine": 0.23333333333333334,
+       "impl": 0.2733333333333333
+      },
+      {
+       "value": "Associate Professor",
+       "refengine": 0.2,
+       "impl": 0.20666666666666667
+      },
+      {
+       "value": "Adjunct",
+       "refengine": 0.19333333333333333,
+       "impl": 0.17333333333333334
+      },
+      {
+       "value": "Lecturer",
+       "refengine": 0.18666666666666668,
+       "impl": 0.14
+      },
+      {
+       "value": "Professor",
+       "refengine": 0.18666666666666668,
+       "impl": 0.20666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.06666666666666664,
+     "tvd_baseline": 0.11999999999999997,
+     "tvd_tol": 0.4370193722368317,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "tenure_status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "refengine": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Non-Tenure",
+       "refengine": 0.4066666666666667,
+       "impl": 0.42
+      },
+      {
+       "value": "Tenure-Track",
+       "refengine": 0.30666666666666664,
+       "impl": 0.21333333333333335
+      },
+      {
+       "value": "Tenured",
+       "refengine": 0.2866666666666667,
+       "impl": 0.36666666666666664
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.09333333333333328,
+     "tvd_baseline": 0.10000000000000002,
+     "tvd_tol": 0.3385137501286538,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "hire_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "ks": 0.10666666666666669,
+     "ks_baseline": 0.15333333333333338,
+     "ks_tol": 0.23200000000000007,
+     "stats": {
+      "mean": {
+       "refengine": "2013-07-23 23:32:49.230519552",
+       "impl": "2012-01-18 12:47:17.966003968"
+      },
+      "min": {
+       "refengine": "2000-01-19 06:40:32.701761152",
+       "impl": "2000-01-16 04:03:55.095771008"
+      },
+      "max": {
+       "refengine": "2025-05-06 04:15:03.355143424",
+       "impl": "2025-05-15 23:06:32.937401088"
+      },
+      "std": {
+       "refengine": 2688.5744263629795,
+       "impl": 2721.45652086927,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 150,
+      "impl": 150
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "course": {
+   "rows": {
+    "refengine": 300,
+    "impl": 300
+   },
+   "columns_refengine": [
+    "course_id",
+    "department_id",
+    "course_code",
+    "course_name",
+    "credits",
+    "level"
+   ],
+   "columns_impl": [
+    "course_id",
+    "department_id",
+    "course_code",
+    "course_name",
+    "credits",
+    "level"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "course_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "department_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "course_code": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "course_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "credits": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "level": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "course_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.15917393483798453,
+     "stats": {
+      "mean": {
+       "refengine": 150.5,
+       "impl": 150.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 300.0,
+       "impl": 300.0
+      },
+      "std": {
+       "refengine": 86.60205925188308,
+       "impl": 86.60205925188308,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 300,
+      "impl": 300
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "department_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.05333333333333329,
+     "ks_baseline": 0.07666666666666666,
+     "ks_tol": 0.15917393483798453,
+     "stats": {
+      "mean": {
+       "refengine": 12.976666666666667,
+       "impl": 12.69
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 25.0,
+       "impl": 25.0
+      },
+      "std": {
+       "refengine": 6.786466107056177,
+       "impl": 6.9623200156269744,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 25,
+      "impl": 25
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "course_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "distinct": {
+      "refengine": 300,
+      "impl": 300,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "CRS-0001",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "CRS-0002",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "CRS-0003",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "CRS-0004",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "CRS-0005",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "CRS-0006",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "CRS-0007",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "CRS-0008",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "CRS-0009",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "CRS-0010",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "CRS-{seq:4}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "course_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "distinct": {
+      "refengine": 96,
+      "impl": 94,
+      "ratio": 0.9791666666666666,
+      "baseline_max_ratio_dev": 0.05208333333333337
+     },
+     "top10": [
+      {
+       "value": "Physics I",
+       "refengine": 0.03,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "Introduction to Sociology",
+       "refengine": 0.023333333333333334,
+       "impl": 0.01
+      },
+      {
+       "value": "Ethics in Technology",
+       "refengine": 0.023333333333333334,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Introduction to Psychology",
+       "refengine": 0.023333333333333334,
+       "impl": 0.02
+      },
+      {
+       "value": "Calculus II",
+       "refengine": 0.02,
+       "impl": 0.023333333333333334
+      },
+      {
+       "value": "Developmental Psychology",
+       "refengine": 0.02,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "Research Methods",
+       "refengine": 0.02,
+       "impl": 0.023333333333333334
+      },
+      {
+       "value": "US History to 1877",
+       "refengine": 0.02,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Introduction to Business",
+       "refengine": 0.02,
+       "impl": 0.01
+      },
+      {
+       "value": "Introduction to Programming",
+       "refengine": 0.02,
+       "impl": 0.01
+      },
+      {
+       "value": "General Biology",
+       "refengine": 0.01,
+       "impl": 0.03666666666666667
+      },
+      {
+       "value": "Technical Writing",
+       "refengine": 0.01,
+       "impl": 0.02666666666666667
+      },
+      {
+       "value": "English Composition",
+       "refengine": 0.013333333333333334,
+       "impl": 0.023333333333333334
+      },
+      {
+       "value": "Spanish I",
+       "refengine": 0.006666666666666667,
+       "impl": 0.02
+      },
+      {
+       "value": "Thermodynamics",
+       "refengine": 0.01,
+       "impl": 0.02
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.3033333333333333,
+     "tvd_baseline": 0.31,
+     "tvd_tol": 1.3540550005146148,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "credits": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.039999999999999994,
+     "ks_baseline": 0.06666666666666667,
+     "ks_tol": 0.15917393483798453,
+     "stats": {
+      "mean": {
+       "refengine": 3.1333333333333333,
+       "impl": 3.0533333333333332
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 4.0,
+       "impl": 4.0
+      },
+      "std": {
+       "refengine": 0.6992058987801011,
+       "impl": 0.7283466817998753,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "level": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.08333333333333337,
+     "ks_baseline": 0.08333333333333337,
+     "ks_tol": 0.15917393483798453,
+     "stats": {
+      "mean": {
+       "refengine": 276.0,
+       "impl": 289.6666666666667
+      },
+      "min": {
+       "refengine": 100.0,
+       "impl": 100.0
+      },
+      "max": {
+       "refengine": 600.0,
+       "impl": 600.0
+      },
+      "std": {
+       "refengine": 154.13414071299496,
+       "impl": 155.32725309988444,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 6,
+      "impl": 6
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "student": {
+   "rows": {
+    "refengine": 20000,
+    "impl": 20000
+   },
+   "columns_refengine": [
+    "student_id",
+    "major_department_id",
+    "first_name",
+    "last_name",
+    "email",
+    "date_of_birth",
+    "enrollment_date",
+    "gpa",
+    "classification",
+    "status"
+   ],
+   "columns_impl": [
+    "student_id",
+    "major_department_id",
+    "first_name",
+    "last_name",
+    "email",
+    "date_of_birth",
+    "enrollment_date",
+    "gpa",
+    "classification",
+    "status"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "student_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "major_department_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "first_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "last_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "email": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "date_of_birth": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "enrollment_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "gpa": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "classification": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "status": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "student_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "refengine": 10000.5,
+       "impl": 10000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 20000.0,
+       "impl": 20000.0
+      },
+      "std": {
+       "refengine": 5773.502684679379,
+       "impl": 5773.502684679379,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 20000,
+      "impl": 20000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "major_department_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.006450000000000067,
+     "ks_baseline": 0.008099999999999996,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "refengine": 4.85755,
+       "impl": 4.7874
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 25.0,
+       "impl": 25.0
+      },
+      "std": {
+       "refengine": 5.591337764569405,
+       "impl": 5.506432714562124,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 25,
+      "impl": 25
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "first_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "distinct": {
+      "refengine": 4920,
+      "impl": 4916,
+      "ratio": 0.9991869918699187,
+      "baseline_max_ratio_dev": 0.003658536585365857
+     },
+     "top10": [
+      {
+       "value": "Krey",
+       "refengine": 0.00065,
+       "impl": 0.0002
+      },
+      {
+       "value": "Neella",
+       "refengine": 0.0006,
+       "impl": 0.00035
+      },
+      {
+       "value": "Dean",
+       "refengine": 0.0006,
+       "impl": 0.00035
+      },
+      {
+       "value": "Soisa",
+       "refengine": 0.0006,
+       "impl": 0.0002
+      },
+      {
+       "value": "Auene",
+       "refengine": 0.0006,
+       "impl": 0.0001
+      },
+      {
+       "value": "Emis",
+       "refengine": 0.0006,
+       "impl": 0.0003
+      },
+      {
+       "value": "Vaisa",
+       "refengine": 0.00055,
+       "impl": 0.0001
+      },
+      {
+       "value": "Noila",
+       "refengine": 0.00055,
+       "impl": 0.00015
+      },
+      {
+       "value": "Ceoa",
+       "refengine": 0.00055,
+       "impl": 0.00015
+      },
+      {
+       "value": "Ziion",
+       "refengine": 0.00055,
+       "impl": 0.00015
+      },
+      {
+       "value": "Jue",
+       "refengine": 0.00035,
+       "impl": 0.00065
+      },
+      {
+       "value": "Roan",
+       "refengine": 0.00015,
+       "impl": 0.0006
+      },
+      {
+       "value": "Emma",
+       "refengine": 0.00035,
+       "impl": 0.00055
+      },
+      {
+       "value": "Ilene",
+       "refengine": 0.00025,
+       "impl": 0.00055
+      },
+      {
+       "value": "Paok",
+       "refengine": 0.0003,
+       "impl": 0.00055
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "last_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "distinct": {
+      "refengine": 4912,
+      "impl": 4916,
+      "ratio": 1.000814332247557,
+      "baseline_max_ratio_dev": 0.002850162866449457
+     },
+     "top10": [
+      {
+       "value": "Mckaybrook",
+       "refengine": 0.00065,
+       "impl": 0.0003
+      },
+      {
+       "value": "Wooford",
+       "refengine": 0.00065,
+       "impl": 0.00015
+      },
+      {
+       "value": "Key",
+       "refengine": 0.0006,
+       "impl": 0.00015
+      },
+      {
+       "value": "Meyercroft",
+       "refengine": 0.0006,
+       "impl": 0.00025
+      },
+      {
+       "value": "Mirasen",
+       "refengine": 0.0006,
+       "impl": 0.00015
+      },
+      {
+       "value": "Burway",
+       "refengine": 0.00055,
+       "impl": 0.0002
+      },
+      {
+       "value": "Brighbrook",
+       "refengine": 0.00055,
+       "impl": 0.00015
+      },
+      {
+       "value": "Ortberg",
+       "refengine": 0.00055,
+       "impl": 0.00045
+      },
+      {
+       "value": "Ramwick",
+       "refengine": 0.00055,
+       "impl": 0.00015
+      },
+      {
+       "value": "Garnwood",
+       "refengine": 0.00055,
+       "impl": 0.00015
+      },
+      {
+       "value": "Russen",
+       "refengine": 0.0002,
+       "impl": 0.0006
+      },
+      {
+       "value": "Shawbrook",
+       "refengine": 0.00035,
+       "impl": 0.0006
+      },
+      {
+       "value": "Barajas",
+       "refengine": 0.00035,
+       "impl": 0.00055
+      },
+      {
+       "value": "Knigbrook",
+       "refengine": 0.0001,
+       "impl": 0.00055
+      },
+      {
+       "value": "Riceton",
+       "refengine": 0.0001,
+       "impl": 0.00055
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "email": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "distinct": {
+      "refengine": 20000,
+      "impl": 20000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "baol.delcormick323@inbox.com",
+       "refengine": 5e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "oline.stafgate881@tutanota.com",
+       "refengine": 5e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "shlyn.cookburg955@verizon.net",
+       "refengine": 5e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "loar.casley33@rocketmail.com",
+       "refengine": 5e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "aresa.durhcroft232@workmail.com",
+       "refengine": 5e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "olnor.ricwick858@outlook.co.uk",
+       "refengine": 5e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "eree.acevedo198@outlook.com",
+       "refengine": 5e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "paita.levinburg170@yahoo.co.uk",
+       "refengine": 5e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "trien.averyham231@gmail.com",
+       "refengine": 5e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "erson.mendez403@rediffmail.com",
+       "refengine": 5e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "cllyn.morgfield475@charter.net",
+       "refengine": 0.0,
+       "impl": 5e-05
+      },
+      {
+       "value": "suaya.holburg330@accountant.com",
+       "refengine": 0.0,
+       "impl": 5e-05
+      },
+      {
+       "value": "baie.monrwood773@verizon.net",
+       "refengine": 0.0,
+       "impl": 5e-05
+      },
+      {
+       "value": "neya.mcfgate472@mail.ru",
+       "refengine": 0.0,
+       "impl": 5e-05
+      },
+      {
+       "value": "koella.daywick369@hotmail.com",
+       "refengine": 0.0,
+       "impl": 5e-05
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "date_of_birth": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.006250000000000089,
+     "ks_baseline": 0.011800000000000033,
+     "ks_tol": 0.01970000000000005,
+     "stats": {
+      "mean": {
+       "refengine": "1998-07-18 01:22:28.999755008",
+       "impl": "1998-07-08 16:50:31.509235456"
+      },
+      "min": {
+       "refengine": "1990-01-01 13:40:48.284157056",
+       "impl": "1990-01-02 00:42:07.544194048"
+      },
+      "max": {
+       "refengine": "2006-12-30 04:43:32.641303296",
+       "impl": "2006-12-30 13:10:02.050212096"
+      },
+      "std": {
+       "refengine": 1796.9276642300567,
+       "impl": 1790.58479877062,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 20000,
+      "impl": 20000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "enrollment_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.01200000000000001,
+     "ks_baseline": 0.01204999999999995,
+     "ks_tol": 0.020074999999999926,
+     "stats": {
+      "mean": {
+       "refengine": "2022-02-19 13:48:09.567527424",
+       "impl": "2022-02-08 03:48:20.572440064"
+      },
+      "min": {
+       "refengine": "2018-08-01 01:33:06.839203840",
+       "impl": "2018-08-01 03:27:03.300168960"
+      },
+      "max": {
+       "refengine": "2025-08-30 19:15:58.250496256",
+       "impl": "2025-08-30 21:10:54.051026944"
+      },
+      "std": {
+       "refengine": 747.1824242320586,
+       "impl": 747.6183600239527,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 20000,
+      "impl": 20000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "gpa": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.010749999999999982,
+     "ks_baseline": 0.02015,
+     "ks_tol": 0.032225000000000004,
+     "stats": {
+      "mean": {
+       "refengine": 2.9965585026127037,
+       "impl": 2.9965906343587796
+      },
+      "min": {
+       "refengine": 1.0229650001774462,
+       "impl": 0.7862043235884362
+      },
+      "max": {
+       "refengine": 4.0,
+       "impl": 4.0
+      },
+      "std": {
+       "refengine": 0.4832409569740545,
+       "impl": 0.4908700015284685,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 19566,
+      "impl": 19527
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "classification": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Freshman",
+       "refengine": 0.2247,
+       "impl": 0.2175
+      },
+      {
+       "value": "Junior",
+       "refengine": 0.19935,
+       "impl": 0.1985
+      },
+      {
+       "value": "Senior",
+       "refengine": 0.19855,
+       "impl": 0.2019
+      },
+      {
+       "value": "Sophomore",
+       "refengine": 0.1978,
+       "impl": 0.205
+      },
+      {
+       "value": "Graduate",
+       "refengine": 0.1796,
+       "impl": 0.1771
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.01054999999999999,
+     "tvd_baseline": 0.010249999999999995,
+     "tvd_tol": 0.0378469878303024,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Active",
+       "refengine": 0.80095,
+       "impl": 0.79665
+      },
+      {
+       "value": "Graduated",
+       "refengine": 0.12085,
+       "impl": 0.1214
+      },
+      {
+       "value": "Withdrawn",
+       "refengine": 0.04955,
+       "impl": 0.04965
+      },
+      {
+       "value": "Suspended",
+       "refengine": 0.02865,
+       "impl": 0.0323
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.004300000000000042,
+     "tvd_baseline": 0.0036499999999999623,
+     "tvd_tol": 0.03385137501286538,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "enrollment": {
+   "rows": {
+    "refengine": 160000,
+    "impl": 160000
+   },
+   "columns_refengine": [
+    "enrollment_id",
+    "student_id",
+    "course_id",
+    "instructor_id",
+    "semester",
+    "grade",
+    "credits_attempted"
+   ],
+   "columns_impl": [
+    "enrollment_id",
+    "student_id",
+    "course_id",
+    "instructor_id",
+    "semester",
+    "grade",
+    "credits_attempted"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "enrollment_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "student_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "course_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "instructor_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "semester": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "grade": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "credits_attempted": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "enrollment_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 4.419403571715023e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.006892433559501173,
+     "stats": {
+      "mean": {
+       "refengine": 80000.5,
+       "impl": 80000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 160000.0,
+       "impl": 160000.0
+      },
+      "std": {
+       "refengine": 46188.02153426795,
+       "impl": 46188.02153426795,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 160000,
+      "impl": 160000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "student_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 4.419403571715023e-05
+     },
+     "ks": 0.0020687500000000636,
+     "ks_baseline": 0.0039124999999999854,
+     "ks_tol": 0.007868749999999978,
+     "stats": {
+      "mean": {
+       "refengine": 9993.50453125,
+       "impl": 9990.85001875
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 20000.0,
+       "impl": 20000.0
+      },
+      "std": {
+       "refengine": 5778.366732504694,
+       "impl": 5769.215899813586,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 19991,
+      "impl": 19990
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "course_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 4.419403571715023e-05
+     },
+     "ks": 0.0030000000000000027,
+     "ks_baseline": 0.004325000000000023,
+     "ks_tol": 0.008487500000000035,
+     "stats": {
+      "mean": {
+       "refengine": 23.07559375,
+       "impl": 22.82085625
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 300.0,
+       "impl": 300.0
+      },
+      "std": {
+       "refengine": 48.785154164304544,
+       "impl": 48.21618038860851,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 300,
+      "impl": 300
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "instructor_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 4.419403571715023e-05
+     },
+     "ks": 0.0034874999999999767,
+     "ks_baseline": 0.003193749999999995,
+     "ks_tol": 0.006892433559501173,
+     "stats": {
+      "mean": {
+       "refengine": 18.35355,
+       "impl": 18.11793125
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 150.0,
+       "impl": 150.0
+      },
+      "std": {
+       "refengine": 30.17479457092459,
+       "impl": 29.850297083450837,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 150,
+      "impl": 150
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "semester": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 4.419403571715023e-05
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Spring 2025",
+       "refengine": 0.23915,
+       "impl": 0.23936875
+      },
+      {
+       "value": "Fall 2024",
+       "refengine": 0.2198875,
+       "impl": 0.22033125
+      },
+      {
+       "value": "Spring 2024",
+       "refengine": 0.21959375,
+       "impl": 0.2199375
+      },
+      {
+       "value": "Fall 2023",
+       "refengine": 0.20116875,
+       "impl": 0.20083125
+      },
+      {
+       "value": "Summer 2024",
+       "refengine": 0.1202,
+       "impl": 0.11953125
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.0010062500000000002,
+     "tvd_baseline": 0.0037375000000000186,
+     "tvd_tol": 0.013380930871145783,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "grade": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.1000125,
+      "impl": 0.10058125,
+      "baseline_max_abs_diff": 0.000962500000000005,
+      "tol": 0.0053035954739376456
+     },
+     "distinct": {
+      "refengine": 12,
+      "impl": 12,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "A",
+       "refengine": 0.18059973055181322,
+       "impl": 0.17937278937091317
+      },
+      {
+       "value": "B",
+       "refengine": 0.1395852720176669,
+       "impl": 0.14067418541141152
+      },
+      {
+       "value": "B+",
+       "refengine": 0.11989055403547272,
+       "impl": 0.11859742750526382
+      },
+      {
+       "value": "B-",
+       "refengine": 0.10002916707176489,
+       "impl": 0.09957819980959925
+      },
+      {
+       "value": "A-",
+       "refengine": 0.09976527451770163,
+       "impl": 0.09999513574739241
+      },
+      {
+       "value": "C",
+       "refengine": 0.07964693954082695,
+       "impl": 0.07950968333715525
+      },
+      {
+       "value": "C+",
+       "refengine": 0.07904970902373644,
+       "impl": 0.08055897211393469
+      },
+      {
+       "value": "C-",
+       "refengine": 0.05034792149890971,
+       "impl": 0.05107465237966186
+      },
+      {
+       "value": "D",
+       "refengine": 0.04952846567313435,
+       "impl": 0.050755001494020444
+      },
+      {
+       "value": "F",
+       "refengine": 0.041021403075042706,
+       "impl": 0.040414990236750124
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.004932820508634899,
+     "tvd_baseline": 0.0063573125498043465,
+     "tvd_tol": 0.02072964896828013,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "credits_attempted": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 4.419403571715023e-05
+     },
+     "ks": 0.003556250000000011,
+     "ks_baseline": 0.002112500000000017,
+     "ks_tol": 0.006892433559501173,
+     "stats": {
+      "mean": {
+       "refengine": 3.04940625,
+       "impl": 3.05186875
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 4.0,
+       "impl": 4.0
+      },
+      "std": {
+       "refengine": 0.7411749270320316,
+       "impl": 0.7370826838106003,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "financial_aid": {
+   "rows": {
+    "refengine": 14000,
+    "impl": 14000
+   },
+   "columns_refengine": [
+    "aid_id",
+    "student_id",
+    "aid_type",
+    "academic_year",
+    "amount",
+    "status",
+    "award_date"
+   ],
+   "columns_impl": [
+    "aid_id",
+    "student_id",
+    "aid_type",
+    "academic_year",
+    "amount",
+    "status",
+    "award_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "aid_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "student_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "aid_type": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "academic_year": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "amount": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "status": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "award_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "aid_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005050582335156833
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.023300678192984123,
+     "stats": {
+      "mean": {
+       "refengine": 7000.5,
+       "impl": 7000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 14000.0,
+       "impl": 14000.0
+      },
+      "std": {
+       "refengine": 4041.451874017554,
+       "impl": 4041.451874017554,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 14000,
+      "impl": 14000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "student_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005050582335156833
+     },
+     "ks": 0.010499999999999954,
+     "ks_baseline": 0.012857142857142845,
+     "ks_tol": 0.023300678192984123,
+     "stats": {
+      "mean": {
+       "refengine": 10062.57992857143,
+       "impl": 9987.58
+      },
+      "min": {
+       "refengine": 2.0,
+       "impl": 3.0
+      },
+      "max": {
+       "refengine": 19999.0,
+       "impl": 19998.0
+      },
+      "std": {
+       "refengine": 5779.349198238748,
+       "impl": 5783.1158519088995,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 9993,
+      "impl": 10128
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "aid_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005050582335156833
+     },
+     "distinct": {
+      "refengine": 15,
+      "impl": 15,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Federal Pell Grant",
+       "refengine": 0.1372857142857143,
+       "impl": 0.13714285714285715
+      },
+      {
+       "value": "Federal Subsidized Loan",
+       "refengine": 0.123,
+       "impl": 0.12535714285714286
+      },
+      {
+       "value": "Federal Unsubsidized Loan",
+       "refengine": 0.10164285714285715,
+       "impl": 0.10357142857142858
+      },
+      {
+       "value": "Need-Based Grant",
+       "refengine": 0.08535714285714285,
+       "impl": 0.09128571428571429
+      },
+      {
+       "value": "Merit Scholarship",
+       "refengine": 0.084,
+       "impl": 0.07964285714285714
+      },
+      {
+       "value": "Institutional Grant",
+       "refengine": 0.0775,
+       "impl": 0.07435714285714286
+      },
+      {
+       "value": "State Grant",
+       "refengine": 0.06885714285714285,
+       "impl": 0.06657142857142857
+      },
+      {
+       "value": "Federal PLUS Loan",
+       "refengine": 0.062285714285714285,
+       "impl": 0.06371428571428571
+      },
+      {
+       "value": "Work-Study",
+       "refengine": 0.055857142857142855,
+       "impl": 0.05242857142857143
+      },
+      {
+       "value": "Private Scholarship",
+       "refengine": 0.048285714285714286,
+       "impl": 0.047357142857142855
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.0165,
+     "tvd_baseline": 0.024285714285714296,
+     "tvd_tol": 0.0783507084796227,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "academic_year": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005050582335156833
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "2024-2025",
+       "refengine": 0.2972142857142857,
+       "impl": 0.294
+      },
+      {
+       "value": "2023-2024",
+       "refengine": 0.25035714285714283,
+       "impl": 0.25157142857142856
+      },
+      {
+       "value": "2022-2023",
+       "refengine": 0.18057142857142858,
+       "impl": 0.17957142857142858
+      },
+      {
+       "value": "2025-2026",
+       "refengine": 0.151,
+       "impl": 0.15378571428571428
+      },
+      {
+       "value": "2021-2022",
+       "refengine": 0.12085714285714286,
+       "impl": 0.12107142857142857
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.004214285714285719,
+     "tvd_baseline": 0.011285714285714274,
+     "tvd_tol": 0.045235802631908066,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "amount": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005050582335156833
+     },
+     "ks": 0.008428571428571424,
+     "ks_baseline": 0.0133571428571429,
+     "ks_tol": 0.023300678192984123,
+     "stats": {
+      "mean": {
+       "refengine": 6702.730998676288,
+       "impl": 6708.176222087578
+      },
+      "min": {
+       "refengine": 500.0,
+       "impl": 500.0
+      },
+      "max": {
+       "refengine": 50000.0,
+       "impl": 50000.0
+      },
+      "std": {
+       "refengine": 6105.018842343693,
+       "impl": 6184.374851536676,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 13950,
+      "impl": 13949
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005050582335156833
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Awarded",
+       "refengine": 0.403,
+       "impl": 0.3954285714285714
+      },
+      {
+       "value": "Disbursed",
+       "refengine": 0.37807142857142856,
+       "impl": 0.3882857142857143
+      },
+      {
+       "value": "Pending",
+       "refengine": 0.14907142857142858,
+       "impl": 0.14592857142857144
+      },
+      {
+       "value": "Cancelled",
+       "refengine": 0.06985714285714285,
+       "impl": 0.07035714285714285
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.010714285714285746,
+     "tvd_baseline": 0.007571428571428576,
+     "tvd_tol": 0.04046013188068413,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "award_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005050582335156833
+     },
+     "ks": 0.011714285714285733,
+     "ks_baseline": 0.010928571428571454,
+     "ks_tol": 0.023300678192984123,
+     "stats": {
+      "mean": {
+       "refengine": "2022-12-28 18:31:10.355828224",
+       "impl": "2023-01-05 23:01:30.250439936"
+      },
+      "min": {
+       "refengine": "2020-01-01 00:35:16.599717632",
+       "impl": "2020-01-01 00:59:08.808779008"
+      },
+      "max": {
+       "refengine": "2025-12-30 19:19:51.781668096",
+       "impl": "2025-12-30 19:11:09.785132032"
+      },
+      "std": {
+       "refengine": 634.4112637549727,
+       "impl": 633.5224334105509,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 14000,
+      "impl": 14000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "course_section": {
+   "rows": {
+    "refengine": 600,
+    "impl": 600
+   },
+   "columns_refengine": [
+    "section_id",
+    "course_id",
+    "instructor_id",
+    "semester",
+    "room_number",
+    "capacity",
+    "enrolled_count"
+   ],
+   "columns_impl": [
+    "section_id",
+    "course_id",
+    "instructor_id",
+    "semester",
+    "room_number",
+    "capacity",
+    "enrolled_count"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "section_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "course_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "instructor_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "semester": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "room_number": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "capacity": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "enrolled_count": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "section_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.011775287996792581
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.11255296871208449,
+     "stats": {
+      "mean": {
+       "refengine": 300.5,
+       "impl": 300.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 600.0,
+       "impl": 600.0
+      },
+      "std": {
+       "refengine": 173.2048401941085,
+       "impl": 173.2048401941085,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 600,
+      "impl": 600
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "course_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.011775287996792581
+     },
+     "ks": 0.043333333333333335,
+     "ks_baseline": 0.07166666666666666,
+     "ks_tol": 0.11255296871208449,
+     "stats": {
+      "mean": {
+       "refengine": 152.45,
+       "impl": 149.735
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 300.0,
+       "impl": 299.0
+      },
+      "std": {
+       "refengine": 84.52483362894009,
+       "impl": 86.96783758953651,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 254,
+      "impl": 254
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "instructor_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.011775287996792581
+     },
+     "ks": 0.04500000000000004,
+     "ks_baseline": 0.08000000000000002,
+     "ks_tol": 0.12200000000000003,
+     "stats": {
+      "mean": {
+       "refengine": 16.105,
+       "impl": 19.413333333333334
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 149.0,
+       "impl": 150.0
+      },
+      "std": {
+       "refengine": 27.406093756681194,
+       "impl": 31.910643295859074,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 89,
+      "impl": 98
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "semester": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.011775287996792581
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Fall 2024",
+       "refengine": 0.24166666666666667,
+       "impl": 0.21666666666666667
+      },
+      {
+       "value": "Spring 2024",
+       "refengine": 0.225,
+       "impl": 0.2
+      },
+      {
+       "value": "Spring 2025",
+       "refengine": 0.225,
+       "impl": 0.24833333333333332
+      },
+      {
+       "value": "Fall 2023",
+       "refengine": 0.17333333333333334,
+       "impl": 0.19833333333333333
+      },
+      {
+       "value": "Summer 2024",
+       "refengine": 0.135,
+       "impl": 0.13666666666666666
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.049999999999999975,
+     "tvd_baseline": 0.07166666666666666,
+     "tvd_tol": 0.21850968611841584,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "room_number": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.011775287996792581
+     },
+     "distinct": {
+      "refengine": 600,
+      "impl": 600,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "RM-001",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      },
+      {
+       "value": "RM-002",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      },
+      {
+       "value": "RM-003",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      },
+      {
+       "value": "RM-004",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      },
+      {
+       "value": "RM-005",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      },
+      {
+       "value": "RM-006",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      },
+      {
+       "value": "RM-007",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      },
+      {
+       "value": "RM-008",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      },
+      {
+       "value": "RM-009",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      },
+      {
+       "value": "RM-010",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "RM-{seq:3}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "capacity": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.011775287996792581
+     },
+     "ks": 0.043333333333333335,
+     "ks_baseline": 0.03833333333333333,
+     "ks_tol": 0.11255296871208449,
+     "stats": {
+      "mean": {
+       "refengine": 159.6575110832897,
+       "impl": 154.83309549733863
+      },
+      "min": {
+       "refengine": 20.486853907902308,
+       "impl": 20.34834490462302
+      },
+      "max": {
+       "refengine": 299.76015358861736,
+       "impl": 298.9134648604641
+      },
+      "std": {
+       "refengine": 81.53670014411259,
+       "impl": 81.83207382535228,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 600,
+      "impl": 600
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "enrolled_count": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.011775287996792581
+     },
+     "ks": 0.0566666666666667,
+     "ks_baseline": 0.043333333333333335,
+     "ks_tol": 0.11255296871208449,
+     "stats": {
+      "mean": {
+       "refengine": 114.96353333333333,
+       "impl": 113.27505
+      },
+      "min": {
+       "refengine": 12.48,
+       "impl": 12.87
+      },
+      "max": {
+       "refengine": 272.12,
+       "impl": 274.66
+      },
+      "std": {
+       "refengine": 62.09605776683591,
+       "impl": 64.799998796277,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 593,
+      "impl": 585
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "grade_appeal": {
+   "rows": {
+    "refengine": 3200,
+    "impl": 3200
+   },
+   "columns_refengine": [
+    "appeal_id",
+    "enrollment_id",
+    "filed_date",
+    "reason",
+    "status",
+    "resolution_date"
+   ],
+   "columns_impl": [
+    "appeal_id",
+    "enrollment_id",
+    "filed_date",
+    "reason",
+    "status",
+    "resolution_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "appeal_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "enrollment_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "filed_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "reason": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "status": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "resolution_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "appeal_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0022093633972467613
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.04873686508801013,
+     "stats": {
+      "mean": {
+       "refengine": 1600.5,
+       "impl": 1600.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 3200.0,
+       "impl": 3200.0
+      },
+      "std": {
+       "refengine": 923.7603855979104,
+       "impl": 923.7603855979104,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 3200,
+      "impl": 3200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "enrollment_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0022093633972467613
+     },
+     "ks": 0.02906249999999999,
+     "ks_baseline": 0.04468749999999999,
+     "ks_tol": 0.06903124999999999,
+     "stats": {
+      "mean": {
+       "refengine": 78026.9478125,
+       "impl": 79985.5121875
+      },
+      "min": {
+       "refengine": 19.0,
+       "impl": 25.0
+      },
+      "max": {
+       "refengine": 159973.0,
+       "impl": 159981.0
+      },
+      "std": {
+       "refengine": 45702.95523875578,
+       "impl": 46729.0101537629,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 3169,
+      "impl": 3174
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "filed_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0022093633972467613
+     },
+     "ks": 0.022187500000000027,
+     "ks_baseline": 0.03437499999999999,
+     "ks_tol": 0.053562499999999985,
+     "stats": {
+      "mean": {
+       "refengine": "2024-07-03 02:59:46.484645632",
+       "impl": "2024-06-27 07:10:29.457654016"
+      },
+      "min": {
+       "refengine": "2023-01-01 13:06:05.750104320",
+       "impl": "2023-01-01 14:49:15.870472960"
+      },
+      "max": {
+       "refengine": "2025-12-30 16:21:50.723227136",
+       "impl": "2025-12-30 08:08:15.935152896"
+      },
+      "std": {
+       "refengine": 318.5388156513951,
+       "impl": 315.88886487809805,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 3200,
+      "impl": 3200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "reason": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0022093633972467613
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Calculation Error",
+       "refengine": 0.30125,
+       "impl": 0.2978125
+      },
+      {
+       "value": "Grading Criteria",
+       "refengine": 0.254375,
+       "impl": 0.255
+      },
+      {
+       "value": "Incomplete Grade",
+       "refengine": 0.205,
+       "impl": 0.210625
+      },
+      {
+       "value": "Medical",
+       "refengine": 0.1490625,
+       "impl": 0.145
+      },
+      {
+       "value": "Other",
+       "refengine": 0.0903125,
+       "impl": 0.0915625
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.0075000000000000205,
+     "tvd_baseline": 0.03343750000000001,
+     "tvd_tol": 0.09461746957575601,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0022093633972467613
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Approved",
+       "refengine": 0.310625,
+       "impl": 0.3034375
+      },
+      {
+       "value": "Under Review",
+       "refengine": 0.2459375,
+       "impl": 0.250625
+      },
+      {
+       "value": "Denied",
+       "refengine": 0.24,
+       "impl": 0.255
+      },
+      {
+       "value": "Pending",
+       "refengine": 0.2034375,
+       "impl": 0.1909375
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.01968749999999997,
+     "tvd_baseline": 0.014687499999999978,
+     "tvd_tol": 0.08462843753216345,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "resolution_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.2903125,
+      "impl": 0.2934375,
+      "baseline_max_abs_diff": 0.027500000000000024,
+      "tol": 0.05673831822825817
+     },
+     "ks": 0.02430137041258834,
+     "ks_baseline": 0.021812738113593633,
+     "ks_tol": 0.057916683420061024,
+     "stats": {
+      "mean": {
+       "refengine": "2024-07-17 22:23:43.143571712",
+       "impl": "2024-07-08 13:04:24.238159360"
+      },
+      "min": {
+       "refengine": "2023-02-01 01:58:51.636887552",
+       "impl": "2023-02-01 00:30:42.737292032"
+      },
+      "max": {
+       "refengine": "2025-12-30 16:16:59.622167296",
+       "impl": "2025-12-29 09:12:15.424952064"
+      },
+      "std": {
+       "refengine": 303.9495594681542,
+       "impl": 303.1031325922875,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 2271,
+      "impl": 2261
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "academic_standing": {
+   "rows": {
+    "refengine": 40000,
+    "impl": 40000
+   },
+   "columns_refengine": [
+    "standing_id",
+    "student_id",
+    "semester",
+    "standing",
+    "cumulative_gpa",
+    "semester_gpa"
+   ],
+   "columns_impl": [
+    "standing_id",
+    "student_id",
+    "semester",
+    "standing",
+    "cumulative_gpa",
+    "semester_gpa"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "standing_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "student_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "semester": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "standing": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "cumulative_gpa": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "semester_gpa": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "standing_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00017677448557413481
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.013784867119002345,
+     "stats": {
+      "mean": {
+       "refengine": 20000.5,
+       "impl": 20000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 40000.0,
+       "impl": 40000.0
+      },
+      "std": {
+       "refengine": 11547.005380184077,
+       "impl": 11547.005380184077,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 40000,
+      "impl": 40000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "student_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00017677448557413481
+     },
+     "ks": 0.00417500000000004,
+     "ks_baseline": 0.007025000000000059,
+     "ks_tol": 0.013784867119002345,
+     "stats": {
+      "mean": {
+       "refengine": 9973.908225,
+       "impl": 9998.8891
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 20000.0,
+       "impl": 20000.0
+      },
+      "std": {
+       "refengine": 5768.673414776777,
+       "impl": 5770.65697227371,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 17285,
+      "impl": 17302
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "semester": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00017677448557413481
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Spring 2025",
+       "refengine": 0.236925,
+       "impl": 0.23895
+      },
+      {
+       "value": "Fall 2024",
+       "refengine": 0.2216,
+       "impl": 0.2176
+      },
+      {
+       "value": "Spring 2024",
+       "refengine": 0.21785,
+       "impl": 0.220525
+      },
+      {
+       "value": "Fall 2023",
+       "refengine": 0.202675,
+       "impl": 0.20165
+      },
+      {
+       "value": "Summer 2024",
+       "refengine": 0.12095,
+       "impl": 0.121275
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.005025000000000002,
+     "tvd_baseline": 0.007650000000000004,
+     "tvd_tol": 0.026761861742291566,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "standing": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00017677448557413481
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Good Standing",
+       "refengine": 0.699375,
+       "impl": 0.70025
+      },
+      {
+       "value": "Dean's List",
+       "refengine": 0.15295,
+       "impl": 0.148175
+      },
+      {
+       "value": "Probation",
+       "refengine": 0.099025,
+       "impl": 0.099475
+      },
+      {
+       "value": "Suspension",
+       "refengine": 0.04865,
+       "impl": 0.0521
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.004775000000000033,
+     "tvd_baseline": 0.00615000000000001,
+     "tvd_tol": 0.02393653682408596,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "cumulative_gpa": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00017677448557413481
+     },
+     "ks": 0.007874999999999965,
+     "ks_baseline": 0.011050000000000004,
+     "ks_tol": 0.018575000000000008,
+     "stats": {
+      "mean": {
+       "refengine": 2.9993910931779064,
+       "impl": 2.995778681252785
+      },
+      "min": {
+       "refengine": 0.9507090731224217,
+       "impl": 0.7090225015863321
+      },
+      "max": {
+       "refengine": 4.0,
+       "impl": 4.0
+      },
+      "std": {
+       "refengine": 0.4899393694413939,
+       "impl": 0.4885740840805872,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 39105,
+      "impl": 39099
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "semester_gpa": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00017677448557413481
+     },
+     "ks": 0.005975000000000008,
+     "ks_baseline": 0.006275000000000003,
+     "ks_tol": 0.013784867119002345,
+     "stats": {
+      "mean": {
+       "refengine": 2.9851185076390108,
+       "impl": 2.9879119244390173
+      },
+      "min": {
+       "refengine": 0.4685898903209291,
+       "impl": 0.7533452702859682
+      },
+      "max": {
+       "refengine": 4.0,
+       "impl": 4.0
+      },
+      "std": {
+       "refengine": 0.5765222232801024,
+       "impl": 0.5752435367753359,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 38039,
+      "impl": 38106
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  }
+ },
+ "table_order": {
+  "refengine": [
+   "department",
+   "course",
+   "instructor",
+   "student",
+   "course_section",
+   "academic_standing",
+   "enrollment",
+   "financial_aid",
+   "grade_appeal"
+  ],
+  "impl": [
+   "department",
+   "course",
+   "instructor",
+   "student",
+   "course_section",
+   "academic_standing",
+   "enrollment",
+   "financial_aid",
+   "grade_appeal"
+  ]
+ },
+ "fk_integrity": {
+  "refengine": {
+   "instructor.department_id->department.department_id": {
+    "integrity": 1.0,
+    "n": 150
+   },
+   "course.department_id->department.department_id": {
+    "integrity": 1.0,
+    "n": 300
+   },
+   "student.major_department_id->department.department_id": {
+    "integrity": 1.0,
+    "n": 20000
+   },
+   "enrollment.student_id->student.student_id": {
+    "integrity": 1.0,
+    "n": 160000
+   },
+   "enrollment.course_id->course.course_id": {
+    "integrity": 1.0,
+    "n": 160000
+   },
+   "enrollment.instructor_id->instructor.instructor_id": {
+    "integrity": 1.0,
+    "n": 160000
+   },
+   "financial_aid.student_id->student.student_id": {
+    "integrity": 1.0,
+    "n": 14000
+   },
+   "course_section.course_id->course.course_id": {
+    "integrity": 1.0,
+    "n": 600
+   },
+   "course_section.instructor_id->instructor.instructor_id": {
+    "integrity": 1.0,
+    "n": 600
+   },
+   "grade_appeal.enrollment_id->enrollment.enrollment_id": {
+    "integrity": 1.0,
+    "n": 3200
+   },
+   "academic_standing.student_id->student.student_id": {
+    "integrity": 1.0,
+    "n": 40000
+   }
+  },
+  "impl": {
+   "instructor.department_id->department.department_id": {
+    "integrity": 1.0,
+    "n": 150
+   },
+   "course.department_id->department.department_id": {
+    "integrity": 1.0,
+    "n": 300
+   },
+   "student.major_department_id->department.department_id": {
+    "integrity": 1.0,
+    "n": 20000
+   },
+   "enrollment.student_id->student.student_id": {
+    "integrity": 1.0,
+    "n": 160000
+   },
+   "enrollment.course_id->course.course_id": {
+    "integrity": 1.0,
+    "n": 160000
+   },
+   "enrollment.instructor_id->instructor.instructor_id": {
+    "integrity": 1.0,
+    "n": 160000
+   },
+   "financial_aid.student_id->student.student_id": {
+    "integrity": 1.0,
+    "n": 14000
+   },
+   "course_section.course_id->course.course_id": {
+    "integrity": 1.0,
+    "n": 600
+   },
+   "course_section.instructor_id->instructor.instructor_id": {
+    "integrity": 1.0,
+    "n": 600
+   },
+   "grade_appeal.enrollment_id->enrollment.enrollment_id": {
+    "integrity": 1.0,
+    "n": 3200
+   },
+   "academic_standing.student_id->student.student_id": {
+    "integrity": 1.0,
+    "n": 40000
+   }
+  }
+ },
+ "fanout": {
+  "department->instructor.department_id": {
+   "refengine": {
+    "p50": 2.0,
+    "p90": 10.200000000000003,
+    "p99": 54.919999999999916,
+    "max": 65,
+    "mean": 6.0,
+    "zero_frac": 0.2
+   },
+   "impl": {
+    "p50": 3.0,
+    "p90": 13.400000000000006,
+    "p99": 43.279999999999944,
+    "max": 50,
+    "mean": 6.0,
+    "zero_frac": 0.08
+   },
+   "ks_counts": 0.2,
+   "ks_baseline_max": 0.24000000000000002,
+   "ks_tol": 0.5513946847600938,
+   "equivalent": true
+  },
+  "department->course.department_id": {
+   "refengine": {
+    "p50": 11.0,
+    "p90": 16.6,
+    "p99": 21.759999999999998,
+    "max": 22,
+    "mean": 12.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 11.0,
+    "p90": 15.0,
+    "p99": 19.519999999999996,
+    "max": 20,
+    "mean": 12.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.2,
+   "ks_baseline_max": 0.2,
+   "ks_tol": 0.5513946847600938,
+   "equivalent": true
+  },
+  "department->student.major_department_id": {
+   "refengine": {
+    "p50": 273.0,
+    "p90": 1556.2000000000007,
+    "p99": 6381.119999999992,
+    "max": 7428,
+    "mean": 800.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 252.0,
+    "p90": 1586.8000000000009,
+    "p99": 6386.3599999999915,
+    "max": 7415,
+    "mean": 800.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.12,
+   "ks_baseline_max": 0.12,
+   "ks_tol": 0.5513946847600938,
+   "equivalent": true
+  },
+  "student->enrollment.student_id": {
+   "refengine": {
+    "p50": 8.0,
+    "p90": 12.0,
+    "p99": 15.0,
+    "max": 23,
+    "mean": 8.0,
+    "zero_frac": 0.00045
+   },
+   "impl": {
+    "p50": 8.0,
+    "p90": 12.0,
+    "p99": 15.0,
+    "max": 22,
+    "mean": 8.0,
+    "zero_frac": 0.0005
+   },
+   "ks_counts": 0.006650000000000045,
+   "ks_baseline_max": 0.008950000000000014,
+   "ks_tol": 0.019494746035204052,
+   "equivalent": true
+  },
+  "course->enrollment.course_id": {
+   "refengine": {
+    "p50": 70.0,
+    "p90": 582.6000000000001,
+    "p99": 7972.509999999967,
+    "max": 48151,
+    "mean": 533.3333333333334,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 70.0,
+    "p90": 564.1,
+    "p99": 8049.799999999967,
+    "max": 48128,
+    "mean": 533.3333333333334,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.05333333333333333,
+   "ks_baseline_max": 0.04999999999999999,
+   "ks_tol": 0.15917393483798453,
+   "equivalent": true
+  },
+  "instructor->enrollment.instructor_id": {
+   "refengine": {
+    "p50": 240.0,
+    "p90": 1568.5999999999997,
+    "p99": 14990.169999999933,
+    "max": 42387,
+    "mean": 1066.6666666666667,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 239.5,
+    "p90": 1542.7999999999993,
+    "p99": 14940.729999999936,
+    "max": 42189,
+    "mean": 1066.6666666666667,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.04666666666666666,
+   "ks_baseline_max": 0.05999999999999997,
+   "ks_tol": 0.22510593742416898,
+   "equivalent": true
+  },
+  "student->financial_aid.student_id": {
+   "refengine": {
+    "p50": 0.0,
+    "p90": 2.0,
+    "p99": 3.0,
+    "max": 6,
+    "mean": 0.7,
+    "zero_frac": 0.50035
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 2.0,
+    "p99": 3.0,
+    "max": 5,
+    "mean": 0.7,
+    "zero_frac": 0.4936
+   },
+   "ks_counts": 0.006749999999999978,
+   "ks_baseline_max": 0.00809999999999994,
+   "ks_tol": 0.019494746035204052,
+   "equivalent": true
+  },
+  "course->course_section.course_id": {
+   "refengine": {
+    "p50": 2.0,
+    "p90": 4.0,
+    "p99": 6.0,
+    "max": 8,
+    "mean": 2.0,
+    "zero_frac": 0.15333333333333332
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 4.0,
+    "p99": 5.009999999999991,
+    "max": 7,
+    "mean": 2.0,
+    "zero_frac": 0.15333333333333332
+   },
+   "ks_counts": 0.013333333333333308,
+   "ks_baseline_max": 0.039999999999999994,
+   "ks_tol": 0.15917393483798453,
+   "equivalent": true
+  },
+  "instructor->course_section.instructor_id": {
+   "refengine": {
+    "p50": 1.0,
+    "p90": 5.099999999999994,
+    "p99": 62.86999999999966,
+    "max": 180,
+    "mean": 4.0,
+    "zero_frac": 0.4066666666666667
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 7.0,
+    "p99": 56.70999999999981,
+    "max": 169,
+    "mean": 4.0,
+    "zero_frac": 0.3466666666666667
+   },
+   "ks_counts": 0.06,
+   "ks_baseline_max": 0.08666666666666667,
+   "ks_tol": 0.22510593742416898,
+   "equivalent": true
+  },
+  "enrollment->grade_appeal.enrollment_id": {
+   "refengine": {
+    "p50": 0.0,
+    "p90": 0.0,
+    "p99": 1.0,
+    "max": 2,
+    "mean": 0.02,
+    "zero_frac": 0.98019375
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 0.0,
+    "p99": 1.0,
+    "max": 2,
+    "mean": 0.02,
+    "zero_frac": 0.9801625
+   },
+   "ks_counts": 3.125000000003819e-05,
+   "ks_baseline_max": 2.4999999999941735e-05,
+   "ks_tol": 0.006892433559501173,
+   "equivalent": true
+  },
+  "student->academic_standing.student_id": {
+   "refengine": {
+    "p50": 2.0,
+    "p90": 4.0,
+    "p99": 6.0,
+    "max": 10,
+    "mean": 2.0,
+    "zero_frac": 0.13575
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 4.0,
+    "p99": 6.0,
+    "max": 9,
+    "mean": 2.0,
+    "zero_frac": 0.1349
+   },
+   "ks_counts": 0.004999999999999949,
+   "ks_baseline_max": 0.006749999999999978,
+   "ks_tol": 0.019494746035204052,
+   "equivalent": true
+  }
+ },
+ "record_coherence": {},
+ "strategy_semantics": {},
+ "business_rules": {
+  "refengine_BusinessRulesEngine_violations": {},
+  "refengine_on_refengine": {}
+ },
+ "refengine_fidelity_comparator": {
+  "overall_impl": 92.40783989189822,
+  "overall_baseline_refengine_vs_refengine": [
+   92.67593062859379,
+   92.74481309260702,
+   93.06518503018367,
+   92.81288351750536
+  ],
+  "tables": {
+   "academic_standing": {
+    "impl": 99.10270633048357,
+    "baseline": [
+     99.27744277938889,
+     99.14589830840549,
+     99.19967836069901,
+     98.99018295156822
+    ],
+    "floor": 98.49018295156822,
+    "ok": true
+   },
+   "course": {
+    "impl": 92.94604922854562,
+    "baseline": [
+     92.04648708232882,
+     91.93663673773246,
+     92.95186905387571,
+     93.67158190237706
+    ],
+    "floor": 91.43663673773246,
+    "ok": true
+   },
+   "course_section": {
+    "impl": 97.9155633629571,
+    "baseline": [
+     97.37263400448983,
+     97.98240015319051,
+     97.67930191110325,
+     98.14583558446573
+    ],
+    "floor": 96.87263400448983,
+    "ok": true
+   },
+   "department": {
+    "impl": 80.07518191194652,
+    "baseline": [
+     84.65066186061763,
+     84.33965585912247,
+     85.9695395949455,
+     84.12880676730413
+    ],
+    "floor": 83.62880676730413,
+    "ok": false
+   },
+   "enrollment": {
+    "impl": 98.96509488765287,
+    "baseline": [
+     99.86606507461546,
+     99.9242731543925,
+     97.9459536494716,
+     99.51988217566328
+    ],
+    "floor": 97.4459536494716,
+    "ok": true
+   },
+   "financial_aid": {
+    "impl": 99.76974752482421,
+    "baseline": [
+     97.58093048933803,
+     97.87245650551274,
+     98.41440507090108,
+     98.24201511637484
+    ],
+    "floor": 97.08093048933803,
+    "ok": true
+   },
+   "grade_appeal": {
+    "impl": 99.28037717144228,
+    "baseline": [
+     99.40089583212868,
+     98.11456398891805,
+     99.42387468148941,
+     98.23296381940902
+    ],
+    "floor": 97.61456398891805,
+    "ok": true
+   },
+   "instructor": {
+    "impl": 76.04872189495427,
+    "baseline": [
+     76.0082768392898,
+     77.22720576547508,
+     77.91010388341051,
+     76.14868405337862
+    ],
+    "floor": 75.5082768392898,
+    "ok": true
+   },
+   "student": {
+    "impl": 87.56711671427755,
+    "baseline": [
+     87.87998169514694,
+     88.16022736071386,
+     88.09193906575692,
+     88.23599928700726
+    ],
+    "floor": 87.37998169514694,
+    "ok": true
+   }
+  }
+ },
+ "summary": {
+  "columns_total": 61,
+  "columns_equivalent": 61,
+  "flagged": [
+   "(h) fidelity department: 80.08 < floor 83.63"
+  ],
+  "passed": false,
+  "seconds": 55.133544921875
+ }
+}

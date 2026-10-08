@@ -1,0 +1,25 @@
+{
+  "row_count": {"min": 1, "max": 1000000},
+  "required_columns": ["order_id", "customer_email", "status", "amount", "placed_at"],
+  "allow_extra_columns": false,
+  "columns": {
+    "order_id": {"dtype": "integer", "nullable": false, "unique": true, "min": 1},
+    "customer_email": {"dtype": "string", "nullable": false, "pattern": "email"},
+    "status": {
+      "dtype": "string",
+      "nullable": false,
+      "allowed_values": ["new", "paid", "shipped", "cancelled"]
+    },
+    "amount": {
+      "dtype": "float",
+      "nullable": false,
+      "min": 0,
+      "max": 100000,
+      "distribution": "lognormal"
+    },
+    "discount_code": {"dtype": "string", "max_null_rate": 0.8},
+    "is_gift": {"dtype": "boolean", "min_true_rate": 0.01, "max_true_rate": 0.2},
+    "placed_at": {"dtype": "datetime", "nullable": false}
+  },
+  "fd": [{"determinant": "order_id", "dependent": "customer_email", "min_confidence": 1}]
+}

@@ -1,0 +1,190 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "generated-tables",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "corrupt": [
+            "duplicates=0.05"
+          ],
+          "domain": "${DIR}/schema.json",
+          "output_dir": "${DIR}/chaos_out",
+          "seed": 5
+        },
+        "command": "chaos",
+        "id": "generated-tables"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "chaos",
+        "id": "generated-tables",
+        "ok": true,
+        "result": {
+          "applied": [
+            {
+              "column": null,
+              "kind": "duplicates",
+              "rows": 2,
+              "table": "customer"
+            },
+            {
+              "column": null,
+              "kind": "duplicates",
+              "rows": 60,
+              "table": "order"
+            },
+            {
+              "column": null,
+              "kind": "duplicates",
+              "rows": 155,
+              "table": "order_line"
+            }
+          ],
+          "batch": 0,
+          "changes": 217,
+          "files": [
+            "${DIR}/chaos_out/customer.csv",
+            "${DIR}/chaos_out/order.csv",
+            "${DIR}/chaos_out/order_line.csv"
+          ],
+          "ground_truth": "${DIR}/chaos_out/_chaos_ground_truth.jsonl",
+          "output": "${DIR}/chaos_out",
+          "seed": 5
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unmarked-input-refused",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "corrupt": [
+            "duplicates=0.5"
+          ],
+          "input": "${DIR}/unmarked",
+          "output_dir": "${DIR}/chaos_refused"
+        },
+        "command": "chaos",
+        "id": "unmarked-input-refused"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "chaos",
+        "error": {
+          "code": "policy.unverified_input",
+          "group": "policy",
+          "hint": "chaos only corrupts data marked as Shape-generated; allow_real_input runs it anyway",
+          "message": "chaos input ${DIR}/unmarked/orders.csv is not marked as Shape-generated data; chaos only corrupts synthetic data (pass --allow-real-input to override)"
+        },
+        "id": "unmarked-input-refused",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "real-input-allowed",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "allow_real_input": true,
+          "corrupt": [
+            "duplicates=0.5"
+          ],
+          "input": "${DIR}/unmarked",
+          "output_dir": "${DIR}/chaos_real"
+        },
+        "command": "chaos",
+        "id": "real-input-allowed"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "chaos",
+        "id": "real-input-allowed",
+        "ok": true,
+        "result": {
+          "applied": [
+            {
+              "column": null,
+              "kind": "duplicates",
+              "rows": 2,
+              "table": "orders"
+            }
+          ],
+          "batch": 0,
+          "changes": 2,
+          "files": [
+            "${DIR}/chaos_real/orders.csv"
+          ],
+          "ground_truth": "${DIR}/chaos_real/_chaos_ground_truth.jsonl",
+          "output": "${DIR}/chaos_real",
+          "seed": 42
+        },
+        "warnings": [
+          {
+            "code": "real_input_corrupted",
+            "message": "allow_real_input: corrupting data that is not marked as Shape-generated; the ground-truth log records input_provenance: unverified"
+          }
+        ]
+      }
+    },
+    {
+      "name": "not-local",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "corrupt": [
+            "duplicates=0.5"
+          ],
+          "input": "${DIR}/unmarked",
+          "output_dir": "s3://bucket/out"
+        },
+        "command": "chaos",
+        "id": "not-local"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "chaos",
+        "error": {
+          "code": "policy.not_permitted",
+          "group": "policy",
+          "hint": "give a folder on this machine",
+          "message": "output_dir s3://bucket/out is not a local path: chaos writes local files only"
+        },
+        "id": "not-local",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "needs-a-corruption",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "output_dir": "o"
+        },
+        "command": "chaos",
+        "id": "needs-a-corruption"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "chaos",
+        "error": {
+          "code": "usage.missing_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "chaos needs the argument 'corrupt'"
+        },
+        "id": "needs-a-corruption",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "chaos",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

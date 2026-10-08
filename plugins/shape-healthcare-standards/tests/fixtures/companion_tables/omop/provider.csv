@@ -1,0 +1,8 @@
+"provider_id","provider_name","npi","dea","specialty_concept_id","care_site_id","year_of_birth","gender_concept_id","provider_source_value","specialty_source_value","specialty_source_concept_id","gender_source_value","gender_source_concept_id"
+769806888,"Example Medical Group","9000000015",,0,,,,"9000000015","207Q00000X",0,,
+846166059,"Morgan Brooks","9000000049",,0,,,,"9000000049","207R00000X",0,,
+885850619,"Example General Hospital","9000000031",,0,1059101907,,,"9000000031","282N00000X",0,,
+1064506484,"Avery Kim","9000000064",,0,,,,"9000000064","207Q00000X",0,,
+1767792991,"Taylor Nguyen","9000000023",,0,,,,"9000000023","207Q00000X",0,,
+1907778637,"Example Pharmacy","9000000072",,0,,,,"9000000072","333600000X",0,,
+1928831411,"Riley Patel","9000000056",,0,,,,"9000000056","207Q00000X",0,,

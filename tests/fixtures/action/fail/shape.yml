@@ -1,0 +1,9 @@
+format: shape-project
+version: 1
+name: action-fixture
+sources:
+  orders:
+    path: data/orders.csv
+    baseline:
+      kind: pinned
+      artifact: baseline/orders.shape

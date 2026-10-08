@@ -1,0 +1,20 @@
+# Every platform checks out the bytes that are committed. Golden files, corpora, vault and
+# timecapsule fixtures and README.md (the sdist description) are compared byte for byte, and
+# Windows' core.autocrlf would otherwise turn their LF into CRLF. Files committed with CRLF stay
+# CRLF (git's text=auto leaves them alone); new text files are committed with LF.
+* text=auto eol=lf
+
+# Binary formats: never converted, never diffed as text.
+*.parquet binary
+*.arrow binary
+*.zip binary
+*.bin binary
+*.shapevault binary
+
+# Shipped value lists, the golden byte corpus and the time-capsule corpus are bytes, not text: a
+# checkout must not change their line ends (docs/GENERATION_STABILITY.md, "Byte-identical files";
+# the time capsule: lead decision 2026-10-06, W8-04b).
+src/shape/builtins/strategies/pools/** -text
+src/shape/builtins/strategies/locales/** -text
+tests/generation/golden_bytes/** -text
+tests/timecapsule/corpus/** -text

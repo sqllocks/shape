@@ -1,0 +1,24 @@
+{
+  "format": "shape-scenario",
+  "version": 1,
+  "id": "placeholder_values",
+  "domain": "retail",
+  "scale": "small",
+  "seed": 42,
+  "gates": [
+    "schema_conformance",
+    "referential_integrity",
+    "row_count",
+    "null_check",
+    "uniqueness"
+  ],
+  "defects": [
+    {
+      "kind": "placeholder_values",
+      "table": "customer",
+      "column": "first_name",
+      "fraction": 0.2,
+      "value": "N/A"
+    }
+  ]
+}

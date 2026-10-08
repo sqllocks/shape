@@ -1,0 +1,48 @@
+"""Behavior `{{name}}`: what happens to simulated entities over time."""
+
+from __future__ import annotations
+
+import random
+from datetime import datetime, timedelta
+
+import pyarrow as pa
+
+SHAPE_API = "1.0"
+
+ORIGIN = datetime(2024, 1, 1)
+
+
+class {{class}}:
+    """Each entity signs up, then churns or stays. Replace ``simulate`` with your own states."""
+
+    name = "{{name}}"
+    version = "0.1.0"
+    states = ("active", "churned")
+    attributes = ()
+    events = ("signed_up", "churned")
+
+    def simulate(self, population: int, seed: int, years: float) -> pa.Table:
+        rng = random.Random(seed)
+        horizon = years * 365.0
+        rows: dict[str, list] = {"entity_id": [], "time": [], "state": [], "kind": []}
+
+        def add(entity: int, day: float, state: str, kind: str) -> None:
+            rows["entity_id"].append(entity)
+            rows["time"].append(ORIGIN + timedelta(days=day))
+            rows["state"].append(state)
+            rows["kind"].append(kind)
+
+        for entity in range(population):
+            start = rng.uniform(0.0, horizon / 2)
+            add(entity, start, "active", "signed_up")
+            end = start + rng.expovariate(1 / 180.0)
+            if end < horizon:
+                add(entity, end, "churned", "churned")
+        return pa.table(
+            {
+                "entity_id": pa.array(rows["entity_id"], pa.int64()),
+                "time": pa.array(rows["time"], pa.timestamp("us")),
+                "state": pa.array(rows["state"], pa.string()),
+                "kind": pa.array(rows["kind"], pa.string()),
+            }
+        )

@@ -1,0 +1,17 @@
+{
+  "row_count": {"min": 5000, "max": 10},
+  "columns": {
+    "visits": {"dtype": "string", "nullable": false, "unique": true, "max_null_rate": 0.0, "min": 5, "max": 2},
+    "age": {"min": 30, "max": 40, "distribution": "normal"},
+    "city": {"allowed_values": ["a", "b"], "pattern": "email", "no_placeholder": true},
+    "flag": {"min_true_rate": 0.9, "max_true_rate": 0.1},
+    "ratio": {"min_true_rate": 0.5},
+    "ghost": {"dtype": "integer"}
+  },
+  "required_columns": ["when", "ghost2"],
+  "allow_extra_columns": false,
+  "fd": [{"determinant": "city", "dependent": "age", "min_confidence": 0.99}],
+  "implies": [{"if": {"column": "city", "equals": "c1"}, "then": {"column": "age", "equals": 5}, "min_confidence": 0.9}],
+  "reference_pair": [{"columns": ["city", "age"], "reference": "zips", "min_match_rate": 0.99}],
+  "max_implausible_rate": 0.0
+}

@@ -1,0 +1,726 @@
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in log
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: invalid value encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: invalid value encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: invalid value encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: invalid value encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: invalid value encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: invalid value encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: invalid value encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: invalid value encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: invalid value encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: invalid value encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: invalid value encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: invalid value encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: invalid value encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: invalid value encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: invalid value encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: invalid value encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/refengine/sqllocks_refengine/inference/profiler.py:269: DtypeWarning: Columns (1: ints_then_words, 2: words_then_ints, 3: floats_nulls_then_words, 4: bool_then_ints) have mixed types. Specify dtype option on import or set low_memory=False.
+  df = pd.read_csv(path)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: divide by zero encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: invalid value encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py:2159: RuntimeWarning: invalid value encountered in divide
+  x = np.asarray((x - loc)/scale, dtype=dtyp)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/refengine/sqllocks_refengine/inference/profiler.py:550: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  hours = pd.to_datetime(dt_series, errors="coerce").dropna().dt.hour
+/root/refengine/sqllocks_refengine/inference/profiler.py:559: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dows = pd.to_datetime(dt_series, errors="coerce").dropna().dt.dayofweek
+/root/refengine/sqllocks_refengine/inference/profiler.py:575: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(dt_series, errors="coerce").dropna()
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/refengine/sqllocks_refengine/inference/profiler.py:550: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  hours = pd.to_datetime(dt_series, errors="coerce").dropna().dt.hour
+/root/refengine/sqllocks_refengine/inference/profiler.py:559: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dows = pd.to_datetime(dt_series, errors="coerce").dropna().dt.dayofweek
+/root/refengine/sqllocks_refengine/inference/profiler.py:575: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(dt_series, errors="coerce").dropna()

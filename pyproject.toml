@@ -1,0 +1,369 @@
+[build-system]
+requires=["maturin>=1.15,<2"]
+build-backend="maturin"
+
+[project]
+name = "sqllocks-shape"
+version = "0.9.1"
+description = "Shape by SQLLocks — Shape as Code: profile, check and compare how your data behaves. Early access."
+readme="README.md"
+requires-python=">=3.11"
+license = "MIT"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md", "THIRD_PARTY_NOTICES_RUST.md"]
+# T-06: Python 3.11-3.14 (tests/release/test_packaging.py keeps these in step).
+classifiers=[
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Operating System :: OS Independent",
+  "Topic :: Database",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+  "Typing :: Typed",
+]
+dependencies=["numpy>=2.0,<3","pyarrow>=14.0.1","tzdata; sys_platform == 'win32'"]
+
+[project.optional-dependencies]
+yaml=["pyyaml>=6"]
+sign=["cryptography>=50,<51"]
+delta=["deltalake>=0.17"]
+delta-fallback=["deltalake>=0.17","duckdb>=1.2"]
+excel=["openpyxl>=3.1","defusedxml>=0.7"]
+azure=["adlfs>=2024.4.1","azure-identity>=1.16.1","deltalake>=0.17"]
+pandas=["pandas>=2"]
+pytest=["pytest>=9.0.3"]
+scipy=["scipy>=1.11"]
+advanced=["scikit-learn>=1.5.1,<2"]
+faker=["faker>=24"]
+ctgan=["sdv>=1.0,<2"]
+kafka=["sqllocks-shape-kafka==0.9.1"]
+eventhubs=["sqllocks-shape-eventhubs==0.9.1"]
+fabric=["sqllocks-shape-fabric==0.9.1"]
+sqlserver=["sqllocks-shape-sqlserver==0.9.1"]
+domains=["sqllocks-shape-domains==0.9.1"]
+simulation=["sqllocks-shape-simulation==0.9.1"]
+dbt=["sqllocks-shape-dbt==0.9.1"]
+healthcare=["sqllocks-shape-behavior==0.9.1","sqllocks-shape-healthcare-codes==0.9.1","sqllocks-shape-healthcare-standards==0.9.1"]
+integrations=["sqllocks-shape-integrations==0.9.1"]
+all=["sqllocks-shape-kafka==0.9.1","sqllocks-shape-eventhubs==0.9.1","sqllocks-shape-fabric==0.9.1","sqllocks-shape-sqlserver==0.9.1","sqllocks-shape-databases==0.9.1","sqllocks-shape-domains==0.9.1","sqllocks-shape-simulation==0.9.1","sqllocks-shape-dbt==0.9.1","sqllocks-shape-behavior==0.9.1","sqllocks-shape-healthcare-codes==0.9.1","sqllocks-shape-healthcare-standards==0.9.1","sqllocks-shape-integrations==0.9.1","cryptography>=50,<51","scipy>=1.11","openpyxl>=3.1","deltalake>=0.17","faker>=24"]
+postgres=["sqllocks-shape-databases[postgres]==0.9.1"]
+mysql=["sqllocks-shape-databases[mysql]==0.9.1"]
+databases=["sqllocks-shape-databases[postgres,mysql]==0.9.1"]
+duckdb=["sqllocks-shape-databases[duckdb]==0.9.1"]
+docs=["mkdocs>=1.6,<2","mkdocs-material>=9.5,<10"]
+streaming=["confluent-kafka>=2.5,<4","azure-eventhub>=5.12,<6"]
+dev=["setuptools>=68","pytest>=9.0.3","pytest-cov>=6","coverage>=7.10","hypothesis>=6.115","ruff>=0.8","mypy>=1.13","pip-audit>=2.7","build>=1.2","pyyaml>=6","pandas>=2","deltalake>=0.17","twine>=5","cryptography>=50,<51","xxhash>=3.5","maturin>=1.15,<2","import-linter>=2","vulture>=2.11","bandit>=1.8","py-spy>=0.4","sqlglot>=25","openpyxl>=3.1","defusedxml>=0.7","scipy>=1.11","pyspark>=4.0,<5","faker>=24","duckdb>=1.2","fsspec>=2024.2","jsonschema>=4.18","fastavro>=1.9","protobuf>=5"]
+
+[tool.maturin]
+# T-05: mixed Python/Rust layout. The kernel is `shape._kernel`, built from rust/shape-kernel.
+python-source="src"
+module-name="shape._kernel"
+manifest-path="rust/shape-kernel/Cargo.toml"
+profile="release"
+# The sdist holds what maturin needs to build (pyproject.toml, src/shape, rust/shape-kernel), the
+# README and the licence files; no tests, plans, benchmarks or CI files
+# (tests/release/test_packaging.py).
+include=[
+  {path="THIRD_PARTY_NOTICES.md", format="sdist"},
+]
+
+[tool.pytest.ini_options]
+testpaths=["tests"]
+addopts="-ra --strict-markers --import-mode=importlib"
+markers=["conformance: normative conformance","security: security invariant","zero_network: network forbidden","sign: needs the cryptography extra","contract: contract test (no external service)","emulator: needs a Docker emulator (CI nightly only)","live: needs live cloud resources","heavy: runs millions of values; CI runs these without coverage tracing","realtime: wall-clock pacing assertions; run on Linux CI runners and the nightly soak","dbt: runs `dbt build` against DuckDB (needs dbt-duckdb; the CI dbt job, never core's own suites)","integration: needs the third-party library of a plugin adapter; runs in the dedicated integrations CI job and is skipped, with the reason, where the library is missing","nightly: slow check that the nightly job runs for every case and the main job for a representative few"]
+
+[tool.coverage.run]
+# #337: measure the code tests run in a child Python process too (CLI tests, the chunk worker,
+# `shape` git commands). Needs coverage >= 7.10; it implies `parallel`, and pytest-cov combines
+# the child data files at the end of the run.
+patch=["subprocess"]
+
+[tool.ruff]
+target-version="py311"
+line-length=100
+[tool.ruff.lint]
+select=["E","F","I","B","UP"]
+
+[tool.mypy]
+python_version="3.11"
+strict=true
+mypy_path="src"
+packages=["shape"]
+
+# Optional cloud packages (extra [azure], and Fabric's own notebookutils): not installed in every
+# environment, so mypy must not depend on them being present.
+[[tool.mypy.overrides]]
+module=["adlfs","azure.*","deltalake","deltalake.*","openpyxl","openpyxl.*","notebookutils","mssparkutils","pyspark","pyspark.*","sklearn","sklearn.*","scipy","scipy.*","sdv","sdv.*","pydantic","pydantic.*"]
+ignore_missing_imports=true
+
+# T-12 ratchet: modules not yet strict. A work package that creates or rewrites a module
+# removes it from this list; the list must be empty by G8.
+[[tool.mypy.overrides]]
+module=[
+    "shape.artifact.canonical",
+    "shape.artifact.migrate",
+    "shape.artifact.secure",
+    "shape.cli.main",
+    "shape.connectors.dbapi",
+    "shape.connectors.eventhubs",
+    "shape.connectors.kafka",
+    "shape.builtins.strategies.address",
+    "shape.drift.policy",
+    "shape.generation.address_vectorized",
+    "shape.generation.advanced",
+    "shape.generation.certificate",
+    "shape.generation.compiler",
+    "shape.generation.core",
+    "shape.generation.distribution_fidelity",
+    "shape.generation.evolution",
+    "shape.generation.geo_fidelity",
+    "shape.generation.joint",
+    "shape.generation.relational",
+    "shape.generation.relational_fidelity",
+    "shape.generation.release",
+    "shape.generation.strategies",
+    "shape.generation.timeline",
+    "shape.generation.vectorized",
+    "shape.geospatial.core",
+    "shape.location.core",
+    "shape.location.reference",
+    "shape.packs.domains",
+    "shape.packs.person",
+    "shape.packs.sdk",
+    "shape.packs.verify",
+    "shape.privacy.advanced",
+    "shape.privacy.core",
+    "shape.privacy.propagate",
+    "shape.quality.core",
+    "shape.quality.policy",
+    "shape.relations.core",
+    "shape.security.hardening",
+    "shape.spec.capabilities",
+    "shape.spec.io",
+    "shape.streaming.aggregate_windows",
+    "shape.streaming.core",
+    "shape.streaming.failure",
+    "shape.streaming.monitor",
+    "shape.streaming.online",
+    "shape.validation",
+    "shape.validation.adversarial",
+    "shape.validation.fuzz",
+    "shape.validation.invariants",
+    "shape.validation.statistics",
+    "shape.validation.suite",
+]
+ignore_errors=true
+
+[project.scripts]
+shape = "shape.cli.main:main"
+shape-migrate = "shape.cli.migrate:main_entry"
+
+[project.entry-points.pytest11]
+shape = "shape.testdata.pytest_plugin"
+
+[project.entry-points."shape.sources"]
+csv = "shape.builtins.sources:CsvSource"
+parquet = "shape.builtins.sources:ParquetSource"
+jsonl = "shape.builtins.sources:JsonlSource"
+ipc = "shape.builtins.sources:IpcSource"
+json = "shape.builtins.sources:JsonSource"
+xml = "shape.builtins.sources:XmlSource"
+abfss = "shape.builtins.sources:AbfssSource"
+delta = "shape.builtins.sources:DeltaSource"
+
+[project.entry-points."shape.sinks"]
+csv = "shape.builtins.sinks:CsvSink"
+parquet = "shape.builtins.sinks:ParquetSink"
+jsonl = "shape.builtins.sinks:JsonlSink"
+ipc = "shape.builtins.sinks:IpcSink"
+tsv = "shape.builtins.sinks:TsvSink"
+sql = "shape.builtins.sinks:SqlSink"
+excel = "shape.builtins.sinks:ExcelSink"
+delta = "shape.builtins.sinks:DeltaSink"
+abfss = "shape.builtins.sinks:AbfssSink"
+fabric-mirror = "shape.builtins.sinks:FabricMirrorSink"
+
+[project.entry-points."shape.emitters"]
+console = "shape.builtins.emitters:ConsoleEmitter"
+file = "shape.builtins.emitters:FileEmitter"
+jsonl = "shape.builtins.emitters:JsonlEmitter"
+
+[project.entry-points."shape.detectors"]
+email = "shape.builtins.detectors:EmailDetector"
+us_ssn = "shape.builtins.detectors:UsSsnDetector"
+phone = "shape.builtins.detectors:PhoneDetector"
+ipv4 = "shape.builtins.detectors:Ipv4Detector"
+
+[project.entry-points."shape.fitters"]
+auto = "shape.builtins.fitters:AutoFitter"
+
+[project.entry-points."shape.strategies"]
+constant = "shape.builtins.strategies:Constant"
+sequence = "shape.builtins.strategies:Sequence"
+choice = "shape.builtins.strategies:Choice"
+uniform = "shape.builtins.strategies:Uniform"
+normal = "shape.builtins.strategies:Normal"
+native = "shape.builtins.strategies.providers:Native"
+faker = "shape.builtins.strategies.providers:Faker"
+formula = "shape.builtins.strategies.formula:Formula"
+derived = "shape.builtins.strategies.derived:Derived"
+computed = "shape.builtins.strategies.derived:Computed"
+address = "shape.builtins.strategies:AddressStrategy"
+locale = "shape.builtins.strategies.locale_pack:Locale"
+uuid = "shape.builtins.strategies.basic:Uuid"
+weighted_enum = "shape.builtins.strategies.basic:WeightedEnum"
+distribution = "shape.builtins.strategies.numeric:Distribution"
+empirical = "shape.builtins.strategies.numeric:Empirical"
+pattern = "shape.builtins.strategies.text:Pattern"
+lookup = "shape.builtins.strategies.linked:Lookup"
+conditional = "shape.builtins.strategies.linked:Conditional"
+correlated = "shape.builtins.strategies.linked:Correlated"
+reference_data = "shape.builtins.strategies.reference_data:ReferenceData"
+record_sample = "shape.builtins.strategies.reference_data:RecordSample"
+record_field = "shape.builtins.strategies.reference_data:RecordField"
+hierarchy = "shape.builtins.strategies.reference_hierarchy:Hierarchy"
+hierarchy_field = "shape.builtins.strategies.reference_hierarchy:HierarchyField"
+conditional_table = "shape.builtins.strategies.joint_table:ConditionalTable"
+bootstrap = "shape.builtins.strategies.bootstrap:Bootstrap"
+temporal = "shape.builtins.strategies.temporal:Temporal"
+foreign_key = "shape.builtins.strategies.keys:ForeignKey"
+composite_foreign_key = "shape.builtins.strategies.keys:CompositeForeignKey"
+composite_fk_field = "shape.builtins.strategies.keys:CompositeFkField"
+first_per_parent = "shape.builtins.strategies.groups:FirstPerParent"
+scd2 = "shape.builtins.strategies.groups:Scd2"
+self_referencing = "shape.builtins.strategies.hierarchy:SelfReferencing"
+self_ref_field = "shape.builtins.strategies.hierarchy:SelfRefField"
+lifecycle = "shape.builtins.strategies.lifecycle:Lifecycle"
+
+[project.entry-points."shape.commands"]
+ctgan = "shape.builtins.ctgan:CtganCommand"
+
+[project.entry-points."shape.transforms"]
+mask = "shape.builtins.transforms:Mask"
+star = "shape.builtins.dimensional:StarTransform"
+cdm = "shape.builtins.dimensional:CdmTransform"
+
+[project.entry-points."shape.distributions"]
+normal = "shape.builtins.distributions:Normal"
+uniform = "shape.builtins.distributions:Uniform"
+exponential = "shape.builtins.distributions:Exponential"
+lognormal = "shape.builtins.distributions:Lognormal"
+log_normal = "shape.builtins.distributions:LogNormalFamily"
+pareto = "shape.builtins.distributions:Pareto"
+zipf = "shape.builtins.distributions:Zipf"
+geometric = "shape.builtins.distributions:Geometric"
+poisson = "shape.builtins.distributions:Poisson"
+bernoulli = "shape.builtins.distributions:Bernoulli"
+gamma = "shape.builtins.distributions:Gamma"
+beta = "shape.builtins.distributions:Beta"
+weibull = "shape.builtins.distributions:Weibull"
+triangular = "shape.builtins.distributions:Triangular"
+negative_binomial = "shape.builtins.distributions:NegativeBinomial"
+power_law_cutoff = "shape.builtins.distributions:PowerLawCutoff"
+mixture = "shape.builtins.distributions:Mixture"
+truncated = "shape.builtins.distributions:Truncated"
+histogram = "shape.builtins.distributions:Histogram"
+
+[project.entry-points."shape.calendars"]
+us_federal = "shape.builtins.calendars:UsFederalCalendar"
+us_retail = "shape.builtins.calendars:UsRetailCalendar"
+composite = "shape.builtins.calendars:CompositeCalendar"
+
+[project.entry-points."shape.chaos"]
+schema = "shape.builtins.chaos:SchemaChaos"
+value = "shape.builtins.chaos:ValueChaos"
+file = "shape.builtins.chaos:FileChaos"
+referential = "shape.builtins.chaos:ReferentialChaos"
+temporal = "shape.builtins.chaos:TemporalChaos"
+volume = "shape.builtins.chaos:VolumeChaos"
+
+[project.entry-points."shape.reports"]
+json = "shape.builtins.reports:JsonReport"
+md = "shape.builtins.reports:MarkdownReport"
+html = "shape.builtins.reports:HtmlReport"
+
+[project.urls]
+Homepage = "https://github.com/sqllocks/shape"
+Repository = "https://github.com/sqllocks/shape"
+Issues = "https://github.com/sqllocks/shape/issues"
+
+[tool.importlinter]
+root_package = "shape"
+
+[[tool.importlinter.contracts]]
+name = "Built-ins load only through the plugin registry (plan 4.3)"
+type = "forbidden"
+# Every top-level module except shape.builtins (a test fails when one is missing here: naming
+# the root "shape" would make import-linter skip its own subpackages).
+source_modules = [
+    "shape.__main__",
+    "shape._callable",
+    "shape._process",
+    "shape.api",
+    "shape.artifact",
+    "shape.bridge",
+    "shape.capture",
+    "shape.chaos",
+    "shape.compat",
+    "shape.cli",
+    "shape.connectors",
+    "shape.consumers",
+    "shape.contracts",
+    "shape.demo",
+    "shape.design",
+    "shape.dictionary",
+    "shape.diff",
+    "shape.dimensional",
+    "shape.drift",
+    "shape.errors",
+    "shape.fidelity",
+    "shape.fingerprint",
+    "shape.generation",
+    "shape.geospatial",
+    "shape.versions",
+    "shape.importers",
+    "shape.integrations",
+    "shape.io",
+    "shape.kernel",
+    "shape.library",
+    "shape.location",
+    "shape.masking",
+    "shape.migrate",
+    "shape.model",
+    "shape.parity",
+    "shape.runlog",
+    "shape.scale",
+    "shape.scenario",
+    "shape.packs",
+    "shape.plugins",
+    "shape.privacy",
+    "shape.project",
+    "shape.profile",
+    "shape.proposals",
+    "shape.quality",
+    "shape.query",
+    "shape.refpacks",
+    "shape.registry",
+    "shape.relations",
+    "shape.repro",
+    "shape.report",
+    "shape.resolve",
+    "shape.rules",
+    "shape.schemacheck",
+    "shape.security",
+    "shape.share_bundle",
+    "shape.skew",
+    "shape.spec",
+    "shape.testdata",
+    "shape.streaming",
+    "shape.types",
+    "shape.validation",
+    "shape.vault",
+]
+forbidden_modules = ["shape.builtins"]
+allow_indirect_imports = true
+ignore_imports = [
+    "shape.plugins.registry -> shape.builtins.catalog",
+]

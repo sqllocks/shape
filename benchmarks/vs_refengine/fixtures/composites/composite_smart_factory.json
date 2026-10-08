@@ -1,0 +1,4361 @@
+{
+ "plan": {
+  "columns": {
+   "iot_alert": [
+    "alert_id",
+    "device_id",
+    "alert_type",
+    "severity",
+    "triggered_at",
+    "acknowledged",
+    "resolved_at"
+   ],
+   "iot_command": [
+    "command_id",
+    "device_id",
+    "command_type",
+    "issued_at",
+    "status",
+    "issued_by"
+   ],
+   "iot_device": [
+    "device_id",
+    "device_type_id",
+    "location_id",
+    "serial_number",
+    "firmware_version",
+    "install_date",
+    "status",
+    "battery_level"
+   ],
+   "iot_device_type": [
+    "type_id",
+    "type_name",
+    "manufacturer",
+    "category",
+    "protocol"
+   ],
+   "iot_location": [
+    "location_id",
+    "shared_location_manufacturing_production_line_id",
+    "location_name",
+    "facility_type",
+    "city",
+    "state",
+    "zip_code",
+    "lat",
+    "lng"
+   ],
+   "iot_maintenance_log": [
+    "log_id",
+    "device_id",
+    "maintenance_type",
+    "performed_date",
+    "performed_by",
+    "notes"
+   ],
+   "iot_reading": [
+    "reading_id",
+    "sensor_id",
+    "reading_value",
+    "reading_timestamp",
+    "quality_flag"
+   ],
+   "iot_sensor": [
+    "sensor_id",
+    "device_id",
+    "sensor_type",
+    "unit_of_measure",
+    "min_range",
+    "max_range"
+   ],
+   "manufacturing_bom": [
+    "bom_id",
+    "product_id",
+    "component_name",
+    "quantity_required",
+    "unit_of_measure",
+    "unit_cost",
+    "is_critical"
+   ],
+   "manufacturing_defect": [
+    "defect_id",
+    "check_id",
+    "defect_code",
+    "severity",
+    "root_cause",
+    "disposition"
+   ],
+   "manufacturing_downtime_event": [
+    "event_id",
+    "equipment_id",
+    "start_time",
+    "duration_minutes",
+    "cause",
+    "impact_level"
+   ],
+   "manufacturing_equipment": [
+    "equipment_id",
+    "production_line_id",
+    "equipment_name",
+    "equipment_type",
+    "purchase_date",
+    "status",
+    "last_maintenance_date"
+   ],
+   "manufacturing_product": [
+    "product_id",
+    "product_name",
+    "product_category",
+    "unit_cost",
+    "weight_kg",
+    "sell_price"
+   ],
+   "manufacturing_production_line": [
+    "line_id",
+    "line_name",
+    "facility",
+    "line_type",
+    "capacity_per_hour",
+    "is_active"
+   ],
+   "manufacturing_production_metric": [
+    "metric_id",
+    "wo_id",
+    "metric_date",
+    "oee_score",
+    "yield_rate",
+    "cycle_time_seconds",
+    "scrap_rate"
+   ],
+   "manufacturing_quality_check": [
+    "check_id",
+    "wo_id",
+    "check_date",
+    "check_type",
+    "result",
+    "defect_count",
+    "inspector_name"
+   ],
+   "manufacturing_work_order": [
+    "wo_id",
+    "product_id",
+    "production_line_id",
+    "work_order_number",
+    "quantity_planned",
+    "start_date",
+    "status",
+    "priority",
+    "quantity_produced",
+    "end_date"
+   ],
+   "supply_chain_demand_forecast": [
+    "forecast_id",
+    "material_id",
+    "forecast_date",
+    "forecast_quantity",
+    "confidence_level",
+    "forecast_method"
+   ],
+   "supply_chain_inventory": [
+    "inventory_id",
+    "warehouse_id",
+    "material_id",
+    "quantity_on_hand",
+    "last_counted_date",
+    "bin_location",
+    "quantity_reserved"
+   ],
+   "supply_chain_material": [
+    "material_id",
+    "material_name",
+    "category",
+    "unit_of_measure",
+    "unit_cost",
+    "reorder_point",
+    "is_hazardous"
+   ],
+   "supply_chain_purchase_order": [
+    "po_id",
+    "supplier_id",
+    "po_number",
+    "order_date",
+    "total_amount",
+    "status",
+    "priority",
+    "expected_delivery_date"
+   ],
+   "supply_chain_purchase_order_line": [
+    "po_line_id",
+    "po_id",
+    "material_id",
+    "quantity_ordered",
+    "unit_price",
+    "quantity_received",
+    "line_total"
+   ],
+   "supply_chain_quality_inspection": [
+    "inspection_id",
+    "shipment_id",
+    "inspector_name",
+    "inspection_date",
+    "result",
+    "defect_count",
+    "notes"
+   ],
+   "supply_chain_shipment": [
+    "shipment_id",
+    "po_id",
+    "warehouse_id",
+    "shipment_number",
+    "carrier_name",
+    "shipping_method",
+    "ship_date",
+    "status",
+    "weight_kg",
+    "delivery_date"
+   ],
+   "supply_chain_shipment_event": [
+    "event_id",
+    "shipment_id",
+    "event_type",
+    "event_timestamp",
+    "location",
+    "notes"
+   ],
+   "supply_chain_supplier": [
+    "supplier_id",
+    "shared_organization_manufacturing_production_line_id",
+    "supplier_name",
+    "contact_name",
+    "contact_email",
+    "country",
+    "lead_time_days",
+    "reliability_score",
+    "is_active"
+   ],
+   "supply_chain_warehouse": [
+    "warehouse_id",
+    "shared_location_manufacturing_production_line_id",
+    "warehouse_name",
+    "warehouse_type",
+    "city",
+    "capacity_sqft",
+    "is_active",
+    "state",
+    "zip_code",
+    "lat",
+    "lng"
+   ]
+  },
+  "levels": [
+   [
+    "iot_device_type",
+    "manufacturing_product",
+    "manufacturing_production_line",
+    "supply_chain_material"
+   ],
+   [
+    "manufacturing_bom",
+    "iot_location",
+    "manufacturing_equipment",
+    "manufacturing_work_order",
+    "supply_chain_demand_forecast",
+    "supply_chain_supplier",
+    "supply_chain_warehouse"
+   ],
+   [
+    "iot_device",
+    "manufacturing_downtime_event",
+    "manufacturing_production_metric",
+    "manufacturing_quality_check",
+    "supply_chain_purchase_order",
+    "supply_chain_inventory"
+   ],
+   [
+    "iot_alert",
+    "iot_command",
+    "iot_maintenance_log",
+    "iot_sensor",
+    "manufacturing_defect",
+    "supply_chain_purchase_order_line",
+    "supply_chain_shipment"
+   ],
+   [
+    "iot_reading",
+    "supply_chain_quality_inspection",
+    "supply_chain_shipment_event"
+   ]
+  ],
+  "order": [
+   "iot_device_type",
+   "manufacturing_product",
+   "manufacturing_bom",
+   "manufacturing_production_line",
+   "iot_location",
+   "iot_device",
+   "iot_alert",
+   "iot_command",
+   "iot_maintenance_log",
+   "iot_sensor",
+   "iot_reading",
+   "manufacturing_equipment",
+   "manufacturing_downtime_event",
+   "manufacturing_work_order",
+   "manufacturing_production_metric",
+   "manufacturing_quality_check",
+   "manufacturing_defect",
+   "supply_chain_material",
+   "supply_chain_demand_forecast",
+   "supply_chain_supplier",
+   "supply_chain_purchase_order",
+   "supply_chain_purchase_order_line",
+   "supply_chain_warehouse",
+   "supply_chain_inventory",
+   "supply_chain_shipment",
+   "supply_chain_quality_inspection",
+   "supply_chain_shipment_event"
+  ],
+  "row_counts": {
+   "fabric_demo": {
+    "iot_alert": 25,
+    "iot_command": 150,
+    "iot_device": 50,
+    "iot_device_type": 20,
+    "iot_location": 100,
+    "iot_maintenance_log": 75,
+    "iot_reading": 2500,
+    "iot_sensor": 125,
+    "manufacturing_bom": 500,
+    "manufacturing_defect": 45,
+    "manufacturing_downtime_event": 320,
+    "manufacturing_equipment": 80,
+    "manufacturing_product": 100,
+    "manufacturing_production_line": 20,
+    "manufacturing_production_metric": 250,
+    "manufacturing_quality_check": 150,
+    "manufacturing_work_order": 50,
+    "supply_chain_demand_forecast": 1800,
+    "supply_chain_inventory": 900,
+    "supply_chain_material": 300,
+    "supply_chain_purchase_order": 200,
+    "supply_chain_purchase_order_line": 600,
+    "supply_chain_quality_inspection": 72,
+    "supply_chain_shipment": 240,
+    "supply_chain_shipment_event": 960,
+    "supply_chain_supplier": 200,
+    "supply_chain_warehouse": 50
+   },
+   "large": {
+    "iot_alert": 25000,
+    "iot_command": 150000,
+    "iot_device": 50000,
+    "iot_device_type": 20,
+    "iot_location": 100,
+    "iot_maintenance_log": 75000,
+    "iot_reading": 2500000,
+    "iot_sensor": 125000,
+    "manufacturing_bom": 500,
+    "manufacturing_defect": 45000,
+    "manufacturing_downtime_event": 320,
+    "manufacturing_equipment": 80,
+    "manufacturing_product": 100,
+    "manufacturing_production_line": 20,
+    "manufacturing_production_metric": 250000,
+    "manufacturing_quality_check": 150000,
+    "manufacturing_work_order": 50000,
+    "supply_chain_demand_forecast": 1800,
+    "supply_chain_inventory": 900,
+    "supply_chain_material": 300,
+    "supply_chain_purchase_order": 200000,
+    "supply_chain_purchase_order_line": 600000,
+    "supply_chain_quality_inspection": 72000,
+    "supply_chain_shipment": 240000,
+    "supply_chain_shipment_event": 960000,
+    "supply_chain_supplier": 200,
+    "supply_chain_warehouse": 50
+   },
+   "medium": {
+    "iot_alert": 2500,
+    "iot_command": 15000,
+    "iot_device": 5000,
+    "iot_device_type": 20,
+    "iot_location": 100,
+    "iot_maintenance_log": 7500,
+    "iot_reading": 250000,
+    "iot_sensor": 12500,
+    "manufacturing_bom": 500,
+    "manufacturing_defect": 4500,
+    "manufacturing_downtime_event": 320,
+    "manufacturing_equipment": 80,
+    "manufacturing_product": 100,
+    "manufacturing_production_line": 20,
+    "manufacturing_production_metric": 25000,
+    "manufacturing_quality_check": 15000,
+    "manufacturing_work_order": 5000,
+    "supply_chain_demand_forecast": 1800,
+    "supply_chain_inventory": 900,
+    "supply_chain_material": 300,
+    "supply_chain_purchase_order": 20000,
+    "supply_chain_purchase_order_line": 60000,
+    "supply_chain_quality_inspection": 7200,
+    "supply_chain_shipment": 24000,
+    "supply_chain_shipment_event": 96000,
+    "supply_chain_supplier": 200,
+    "supply_chain_warehouse": 50
+   },
+   "small": {
+    "iot_alert": 250,
+    "iot_command": 1500,
+    "iot_device": 500,
+    "iot_device_type": 20,
+    "iot_location": 100,
+    "iot_maintenance_log": 750,
+    "iot_reading": 25000,
+    "iot_sensor": 1250,
+    "manufacturing_bom": 500,
+    "manufacturing_defect": 450,
+    "manufacturing_downtime_event": 320,
+    "manufacturing_equipment": 80,
+    "manufacturing_product": 100,
+    "manufacturing_production_line": 20,
+    "manufacturing_production_metric": 2500,
+    "manufacturing_quality_check": 1500,
+    "manufacturing_work_order": 500,
+    "supply_chain_demand_forecast": 1800,
+    "supply_chain_inventory": 900,
+    "supply_chain_material": 300,
+    "supply_chain_purchase_order": 2000,
+    "supply_chain_purchase_order_line": 6000,
+    "supply_chain_quality_inspection": 720,
+    "supply_chain_shipment": 2400,
+    "supply_chain_shipment_event": 9600,
+    "supply_chain_supplier": 200,
+    "supply_chain_warehouse": 50
+   },
+   "warehouse": {
+    "iot_alert": 2500000,
+    "iot_command": 15000000,
+    "iot_device": 5000000,
+    "iot_device_type": 20,
+    "iot_location": 100,
+    "iot_maintenance_log": 7500000,
+    "iot_reading": 250000000,
+    "iot_sensor": 12500000,
+    "manufacturing_bom": 500,
+    "manufacturing_defect": 4500000,
+    "manufacturing_downtime_event": 320,
+    "manufacturing_equipment": 80,
+    "manufacturing_product": 100,
+    "manufacturing_production_line": 20,
+    "manufacturing_production_metric": 25000000,
+    "manufacturing_quality_check": 15000000,
+    "manufacturing_work_order": 5000000,
+    "supply_chain_demand_forecast": 1800,
+    "supply_chain_inventory": 900,
+    "supply_chain_material": 300,
+    "supply_chain_purchase_order": 20000000,
+    "supply_chain_purchase_order_line": 60000000,
+    "supply_chain_quality_inspection": 7200000,
+    "supply_chain_shipment": 24000000,
+    "supply_chain_shipment_event": 96000000,
+    "supply_chain_supplier": 200,
+    "supply_chain_warehouse": 50
+   },
+   "xlarge": {
+    "iot_alert": 250000,
+    "iot_command": 1500000,
+    "iot_device": 500000,
+    "iot_device_type": 20,
+    "iot_location": 100,
+    "iot_maintenance_log": 750000,
+    "iot_reading": 25000000,
+    "iot_sensor": 1250000,
+    "manufacturing_bom": 500,
+    "manufacturing_defect": 450000,
+    "manufacturing_downtime_event": 320,
+    "manufacturing_equipment": 80,
+    "manufacturing_product": 100,
+    "manufacturing_production_line": 20,
+    "manufacturing_production_metric": 2500000,
+    "manufacturing_quality_check": 1500000,
+    "manufacturing_work_order": 500000,
+    "supply_chain_demand_forecast": 1800,
+    "supply_chain_inventory": 900,
+    "supply_chain_material": 300,
+    "supply_chain_purchase_order": 2000000,
+    "supply_chain_purchase_order_line": 6000000,
+    "supply_chain_quality_inspection": 720000,
+    "supply_chain_shipment": 2400000,
+    "supply_chain_shipment_event": 9600000,
+    "supply_chain_supplier": 200,
+    "supply_chain_warehouse": 50
+   },
+   "xxl": {
+    "iot_alert": 10000000,
+    "iot_command": 60000000,
+    "iot_device": 20000000,
+    "iot_device_type": 20,
+    "iot_location": 100,
+    "iot_maintenance_log": 30000000,
+    "iot_reading": 1000000000,
+    "iot_sensor": 50000000,
+    "manufacturing_bom": 500,
+    "manufacturing_defect": 18000000,
+    "manufacturing_downtime_event": 320,
+    "manufacturing_equipment": 80,
+    "manufacturing_product": 100,
+    "manufacturing_production_line": 20,
+    "manufacturing_production_metric": 100000000,
+    "manufacturing_quality_check": 60000000,
+    "manufacturing_work_order": 20000000,
+    "supply_chain_demand_forecast": 1800,
+    "supply_chain_inventory": 900,
+    "supply_chain_material": 300,
+    "supply_chain_purchase_order": 200000000,
+    "supply_chain_purchase_order_line": 600000000,
+    "supply_chain_quality_inspection": 72000000,
+    "supply_chain_shipment": 240000000,
+    "supply_chain_shipment_event": 960000000,
+    "supply_chain_supplier": 200,
+    "supply_chain_warehouse": 50
+   },
+   "xxxl": {
+    "iot_alert": 50000000,
+    "iot_command": 300000000,
+    "iot_device": 100000000,
+    "iot_device_type": 20,
+    "iot_location": 100,
+    "iot_maintenance_log": 150000000,
+    "iot_reading": 5000000000,
+    "iot_sensor": 250000000,
+    "manufacturing_bom": 500,
+    "manufacturing_defect": 90000000,
+    "manufacturing_downtime_event": 320,
+    "manufacturing_equipment": 80,
+    "manufacturing_product": 100,
+    "manufacturing_production_line": 20,
+    "manufacturing_production_metric": 500000000,
+    "manufacturing_quality_check": 300000000,
+    "manufacturing_work_order": 100000000,
+    "supply_chain_demand_forecast": 1800,
+    "supply_chain_inventory": 900,
+    "supply_chain_material": 300,
+    "supply_chain_purchase_order": 1000000000,
+    "supply_chain_purchase_order_line": 3000000000,
+    "supply_chain_quality_inspection": 360000000,
+    "supply_chain_shipment": 1200000000,
+    "supply_chain_shipment_event": 4800000000,
+    "supply_chain_supplier": 200,
+    "supply_chain_warehouse": 50
+   }
+  }
+ },
+ "preset": {
+  "description": "Smart factory combining manufacturing, IoT, and supply chain",
+  "domains": [
+   "manufacturing",
+   "iot",
+   "supply_chain"
+  ],
+  "name": "smart_factory",
+  "shared_entities": {}
+ },
+ "schema": {
+  "business_rules": [
+   {
+    "name": "manufacturing_quantity_produced_leq_planned",
+    "rule": "",
+    "table": "manufacturing_work_order",
+    "type": "column_comparison",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "manufacturing_sell_price_gte_unit_cost",
+    "rule": "",
+    "table": "manufacturing_product",
+    "type": "column_comparison",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "iot_battery_level_range",
+    "rule": "battery_level >= 0 AND battery_level <= 100",
+    "table": "iot_device",
+    "type": "constraint",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "iot_max_range_exceeds_min",
+    "rule": "",
+    "table": "iot_sensor",
+    "type": "column_comparison",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "supply_chain_received_leq_ordered",
+    "rule": "",
+    "table": "supply_chain_purchase_order_line",
+    "type": "column_comparison",
+    "via": null,
+    "when": null
+   },
+   {
+    "name": "supply_chain_shipment_delivery_after_ship",
+    "rule": "",
+    "table": "supply_chain_shipment",
+    "type": "column_comparison",
+    "via": null,
+    "when": null
+   }
+  ],
+  "correlated_columns": {},
+  "generation": {
+   "derived_counts": {
+    "iot_alert": {
+     "per_parent": "iot_device",
+     "ratio": 0.5
+    },
+    "iot_command": {
+     "per_parent": "iot_device",
+     "ratio": 3.0
+    },
+    "iot_device_type": {
+     "fixed": 20
+    },
+    "iot_location": {
+     "fixed": 100
+    },
+    "iot_maintenance_log": {
+     "per_parent": "iot_device",
+     "ratio": 1.5
+    },
+    "iot_reading": {
+     "per_parent": "iot_sensor",
+     "ratio": 20.0
+    },
+    "iot_sensor": {
+     "per_parent": "iot_device",
+     "ratio": 2.5
+    },
+    "manufacturing_bom": {
+     "per_parent": "manufacturing_product",
+     "ratio": 5.0
+    },
+    "manufacturing_defect": {
+     "per_parent": "manufacturing_quality_check",
+     "ratio": 0.3
+    },
+    "manufacturing_downtime_event": {
+     "per_parent": "manufacturing_equipment",
+     "ratio": 4.0
+    },
+    "manufacturing_equipment": {
+     "fixed": 80
+    },
+    "manufacturing_product": {
+     "fixed": 100
+    },
+    "manufacturing_production_line": {
+     "fixed": 20
+    },
+    "manufacturing_production_metric": {
+     "per_parent": "manufacturing_work_order",
+     "ratio": 5.0
+    },
+    "manufacturing_quality_check": {
+     "per_parent": "manufacturing_work_order",
+     "ratio": 3.0
+    },
+    "supply_chain_demand_forecast": {
+     "per_parent": "supply_chain_material",
+     "ratio": 6.0
+    },
+    "supply_chain_inventory": {
+     "per_parent": "supply_chain_material",
+     "ratio": 3.0
+    },
+    "supply_chain_material": {
+     "fixed": 300
+    },
+    "supply_chain_purchase_order_line": {
+     "per_parent": "supply_chain_purchase_order",
+     "ratio": 3.0
+    },
+    "supply_chain_quality_inspection": {
+     "per_parent": "supply_chain_shipment",
+     "ratio": 0.3
+    },
+    "supply_chain_shipment": {
+     "per_parent": "supply_chain_purchase_order",
+     "ratio": 1.2
+    },
+    "supply_chain_shipment_event": {
+     "per_parent": "supply_chain_shipment",
+     "ratio": 4.0
+    },
+    "supply_chain_supplier": {
+     "fixed": 200
+    },
+    "supply_chain_warehouse": {
+     "fixed": 50
+    }
+   },
+   "output": {
+    "format": "dataframe"
+   },
+   "scale": "small",
+   "scales": {
+    "fabric_demo": {
+     "iot_device": 50,
+     "manufacturing_work_order": 50,
+     "supply_chain_purchase_order": 200
+    },
+    "large": {
+     "iot_device": 50000,
+     "manufacturing_work_order": 50000,
+     "supply_chain_purchase_order": 200000
+    },
+    "medium": {
+     "iot_device": 5000,
+     "manufacturing_work_order": 5000,
+     "supply_chain_purchase_order": 20000
+    },
+    "small": {
+     "iot_device": 500,
+     "manufacturing_work_order": 500,
+     "supply_chain_purchase_order": 2000
+    },
+    "warehouse": {
+     "iot_device": 5000000,
+     "manufacturing_work_order": 5000000,
+     "supply_chain_purchase_order": 20000000
+    },
+    "xlarge": {
+     "iot_device": 500000,
+     "manufacturing_work_order": 500000,
+     "supply_chain_purchase_order": 2000000
+    },
+    "xxl": {
+     "iot_device": 20000000,
+     "manufacturing_work_order": 20000000,
+     "supply_chain_purchase_order": 200000000
+    },
+    "xxxl": {
+     "iot_device": 100000000,
+     "manufacturing_work_order": 100000000,
+     "supply_chain_purchase_order": 1000000000
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2022-01-01"
+   },
+   "description": "Cross-domain composition of: manufacturing, iot, supply_chain",
+   "domain": "composite",
+   "locale": "en_US",
+   "name": "composite_iot_manufacturing_supply_chain",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "cardinality": {},
+    "child": "manufacturing_bom",
+    "child_columns": [
+     "product_id"
+    ],
+    "name": "manufacturing_bom_product",
+    "optional": false,
+    "parent": "manufacturing_product",
+    "parent_columns": [
+     "product_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "manufacturing_work_order",
+    "child_columns": [
+     "product_id"
+    ],
+    "name": "manufacturing_work_order_product",
+    "optional": false,
+    "parent": "manufacturing_product",
+    "parent_columns": [
+     "product_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "manufacturing_work_order",
+    "child_columns": [
+     "production_line_id"
+    ],
+    "name": "manufacturing_work_order_production_line",
+    "optional": false,
+    "parent": "manufacturing_production_line",
+    "parent_columns": [
+     "line_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "manufacturing_quality_check",
+    "child_columns": [
+     "wo_id"
+    ],
+    "name": "manufacturing_quality_check_work_order",
+    "optional": false,
+    "parent": "manufacturing_work_order",
+    "parent_columns": [
+     "wo_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "manufacturing_defect",
+    "child_columns": [
+     "check_id"
+    ],
+    "name": "manufacturing_defect_quality_check",
+    "optional": false,
+    "parent": "manufacturing_quality_check",
+    "parent_columns": [
+     "check_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "manufacturing_equipment",
+    "child_columns": [
+     "production_line_id"
+    ],
+    "name": "manufacturing_equipment_production_line",
+    "optional": false,
+    "parent": "manufacturing_production_line",
+    "parent_columns": [
+     "line_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "manufacturing_downtime_event",
+    "child_columns": [
+     "equipment_id"
+    ],
+    "name": "manufacturing_downtime_event_equipment",
+    "optional": false,
+    "parent": "manufacturing_equipment",
+    "parent_columns": [
+     "equipment_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "manufacturing_production_metric",
+    "child_columns": [
+     "wo_id"
+    ],
+    "name": "manufacturing_production_metric_work_order",
+    "optional": false,
+    "parent": "manufacturing_work_order",
+    "parent_columns": [
+     "wo_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "iot_device",
+    "child_columns": [
+     "device_type_id"
+    ],
+    "name": "iot_device_device_type",
+    "optional": false,
+    "parent": "iot_device_type",
+    "parent_columns": [
+     "type_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "iot_device",
+    "child_columns": [
+     "location_id"
+    ],
+    "name": "iot_device_location",
+    "optional": false,
+    "parent": "iot_location",
+    "parent_columns": [
+     "location_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "iot_sensor",
+    "child_columns": [
+     "device_id"
+    ],
+    "name": "iot_sensor_device",
+    "optional": false,
+    "parent": "iot_device",
+    "parent_columns": [
+     "device_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "iot_reading",
+    "child_columns": [
+     "sensor_id"
+    ],
+    "name": "iot_reading_sensor",
+    "optional": false,
+    "parent": "iot_sensor",
+    "parent_columns": [
+     "sensor_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "iot_alert",
+    "child_columns": [
+     "device_id"
+    ],
+    "name": "iot_alert_device",
+    "optional": false,
+    "parent": "iot_device",
+    "parent_columns": [
+     "device_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "iot_maintenance_log",
+    "child_columns": [
+     "device_id"
+    ],
+    "name": "iot_maintenance_log_device",
+    "optional": false,
+    "parent": "iot_device",
+    "parent_columns": [
+     "device_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "iot_command",
+    "child_columns": [
+     "device_id"
+    ],
+    "name": "iot_command_device",
+    "optional": false,
+    "parent": "iot_device",
+    "parent_columns": [
+     "device_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "supply_chain_purchase_order",
+    "child_columns": [
+     "supplier_id"
+    ],
+    "name": "supply_chain_po_supplier",
+    "optional": false,
+    "parent": "supply_chain_supplier",
+    "parent_columns": [
+     "supplier_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "supply_chain_purchase_order_line",
+    "child_columns": [
+     "po_id"
+    ],
+    "name": "supply_chain_po_line_po",
+    "optional": false,
+    "parent": "supply_chain_purchase_order",
+    "parent_columns": [
+     "po_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "supply_chain_purchase_order_line",
+    "child_columns": [
+     "material_id"
+    ],
+    "name": "supply_chain_po_line_material",
+    "optional": false,
+    "parent": "supply_chain_material",
+    "parent_columns": [
+     "material_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "supply_chain_inventory",
+    "child_columns": [
+     "warehouse_id"
+    ],
+    "name": "supply_chain_inventory_warehouse",
+    "optional": false,
+    "parent": "supply_chain_warehouse",
+    "parent_columns": [
+     "warehouse_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "supply_chain_inventory",
+    "child_columns": [
+     "material_id"
+    ],
+    "name": "supply_chain_inventory_material",
+    "optional": false,
+    "parent": "supply_chain_material",
+    "parent_columns": [
+     "material_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "supply_chain_shipment",
+    "child_columns": [
+     "po_id"
+    ],
+    "name": "supply_chain_shipment_po",
+    "optional": false,
+    "parent": "supply_chain_purchase_order",
+    "parent_columns": [
+     "po_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "supply_chain_shipment",
+    "child_columns": [
+     "warehouse_id"
+    ],
+    "name": "supply_chain_shipment_warehouse",
+    "optional": false,
+    "parent": "supply_chain_warehouse",
+    "parent_columns": [
+     "warehouse_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "supply_chain_shipment_event",
+    "child_columns": [
+     "shipment_id"
+    ],
+    "name": "supply_chain_shipment_event_shipment",
+    "optional": false,
+    "parent": "supply_chain_shipment",
+    "parent_columns": [
+     "shipment_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "supply_chain_quality_inspection",
+    "child_columns": [
+     "shipment_id"
+    ],
+    "name": "supply_chain_quality_inspection_shipment",
+    "optional": false,
+    "parent": "supply_chain_shipment",
+    "parent_columns": [
+     "shipment_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "supply_chain_demand_forecast",
+    "child_columns": [
+     "material_id"
+    ],
+    "name": "supply_chain_demand_forecast_material",
+    "optional": false,
+    "parent": "supply_chain_material",
+    "parent_columns": [
+     "material_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "iot_location",
+    "child_columns": [
+     "shared_location_manufacturing_production_line_id"
+    ],
+    "name": "xdomain_location_manufacturing_to_iot",
+    "optional": true,
+    "parent": "manufacturing_production_line",
+    "parent_columns": [
+     "line_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "supply_chain_warehouse",
+    "child_columns": [
+     "shared_location_manufacturing_production_line_id"
+    ],
+    "name": "xdomain_location_manufacturing_to_supply_chain",
+    "optional": true,
+    "parent": "manufacturing_production_line",
+    "parent_columns": [
+     "line_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "supply_chain_supplier",
+    "child_columns": [
+     "shared_organization_manufacturing_production_line_id"
+    ],
+    "name": "xdomain_organization_manufacturing_to_supply_chain",
+    "optional": true,
+    "parent": "manufacturing_production_line",
+    "parent_columns": [
+     "line_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "iot_alert": {
+    "cdm_mapping": null,
+    "columns": {
+     "acknowledged": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.3,
+        "true": 0.7
+       }
+      },
+      "max_length": null,
+      "name": "acknowledged",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "boolean"
+     },
+     "alert_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "alert_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "alert_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Anomaly": 0.25,
+        "Battery": 0.15,
+        "Connectivity": 0.2,
+        "Maintenance": 0.1,
+        "Threshold": 0.3
+       }
+      },
+      "max_length": null,
+      "name": "alert_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "device_id": {
+      "generator": {
+       "alpha": 1.3,
+       "distribution": "zipf",
+       "ref": "iot_device.device_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "device_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "resolved_at": {
+      "generator": {
+       "params": {
+        "distribution": "uniform",
+        "max": 7,
+        "min": 0
+       },
+       "rule": "add_days",
+       "source": "triggered_at",
+       "strategy": "derived"
+      },
+      "max_length": null,
+      "name": "resolved_at",
+      "null_rate": 0.25,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "datetime"
+     },
+     "severity": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Critical": 0.1,
+        "High": 0.2,
+        "Low": 0.3,
+        "Medium": 0.4
+       }
+      },
+      "max_length": null,
+      "name": "severity",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "triggered_at": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2024-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "triggered_at",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "datetime"
+     }
+    },
+    "description": "[iot] Device alerts",
+    "name": "iot_alert",
+    "primary_key": [
+     "alert_id"
+    ]
+   },
+   "iot_command": {
+    "cdm_mapping": null,
+    "columns": {
+     "command_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "command_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "command_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Calibrate": 0.2,
+        "Configure": 0.25,
+        "Reboot": 0.2,
+        "Reset": 0.15,
+        "Update": 0.2
+       }
+      },
+      "max_length": null,
+      "name": "command_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "device_id": {
+      "generator": {
+       "ref": "iot_device.device_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "device_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "issued_at": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2024-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "issued_at",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "datetime"
+     },
+     "issued_by": {
+      "generator": {
+       "provider": "name",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "name": "issued_by",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Acknowledged": 0.2,
+        "Executed": 0.55,
+        "Failed": 0.1,
+        "Sent": 0.15
+       }
+      },
+      "max_length": null,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[iot] Device commands",
+    "name": "iot_command",
+    "primary_key": [
+     "command_id"
+    ]
+   },
+   "iot_device": {
+    "cdm_mapping": null,
+    "columns": {
+     "battery_level": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 100.0,
+       "min": 0.0,
+       "round": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "battery_level",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "device_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "device_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "device_type_id": {
+      "generator": {
+       "alpha": 1.2,
+       "distribution": "zipf",
+       "ref": "iot_device_type.type_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "device_type_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "firmware_version": {
+      "generator": {
+       "format": "v{seq:1}.{seq:1}.{seq:1}",
+       "strategy": "pattern"
+      },
+      "max_length": 20,
+      "name": "firmware_version",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "install_date": {
+      "generator": {
+       "end": "2025-06-30",
+       "pattern": "uniform",
+       "start": "2020-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "install_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "location_id": {
+      "generator": {
+       "alpha": 1.1,
+       "distribution": "zipf",
+       "ref": "iot_location.location_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "location_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "serial_number": {
+      "generator": {
+       "format": "DEV-{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 20,
+      "name": "serial_number",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Active": 0.72,
+        "Decommissioned": 0.08,
+        "Inactive": 0.1,
+        "Maintenance": 0.1
+       }
+      },
+      "max_length": null,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[iot] Deployed IoT devices",
+    "name": "iot_device",
+    "primary_key": [
+     "device_id"
+    ]
+   },
+   "iot_device_type": {
+    "cdm_mapping": null,
+    "columns": {
+     "category": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Automotive": 0.15,
+        "Consumer": 0.25,
+        "Industrial": 0.3,
+        "Medical": 0.15,
+        "Smart Home": 0.15
+       }
+      },
+      "max_length": null,
+      "name": "category",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "manufacturer": {
+      "generator": {
+       "provider": "company",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "name": "manufacturer",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "protocol": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "AMQP": 0.15,
+        "CoAP": 0.15,
+        "HTTP": 0.25,
+        "MQTT": 0.35,
+        "Modbus": 0.1
+       }
+      },
+      "max_length": null,
+      "name": "protocol",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "type_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "type_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "type_name": {
+      "generator": {
+       "dataset": "device_types",
+       "strategy": "reference_data"
+      },
+      "max_length": 100,
+      "name": "type_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[iot] IoT device type catalog",
+    "name": "iot_device_type",
+    "primary_key": [
+     "type_id"
+    ]
+   },
+   "iot_location": {
+    "cdm_mapping": null,
+    "columns": {
+     "city": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "city",
+       "strategy": "record_sample"
+      },
+      "max_length": 100,
+      "name": "city",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "facility_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Factory": 0.25,
+        "Field": 0.15,
+        "Office": 0.2,
+        "Residential": 0.15,
+        "Warehouse": 0.25
+       }
+      },
+      "max_length": null,
+      "name": "facility_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "lat": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "lat",
+       "strategy": "record_field"
+      },
+      "max_length": null,
+      "name": "lat",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "lng": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "lng",
+       "strategy": "record_field"
+      },
+      "max_length": null,
+      "name": "lng",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "location_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "location_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "location_name": {
+      "generator": {
+       "format": "LOC-{seq:4}",
+       "strategy": "pattern"
+      },
+      "max_length": 150,
+      "name": "location_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "shared_location_manufacturing_production_line_id": {
+      "generator": {
+       "ref": "manufacturing_production_line.line_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "shared_location_manufacturing_production_line_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "state": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "state",
+       "strategy": "record_field"
+      },
+      "max_length": 2,
+      "name": "state",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "zip_code": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "zip",
+       "strategy": "record_field"
+      },
+      "max_length": 10,
+      "name": "zip_code",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[iot] Deployment locations",
+    "name": "iot_location",
+    "primary_key": [
+     "location_id"
+    ]
+   },
+   "iot_maintenance_log": {
+    "cdm_mapping": null,
+    "columns": {
+     "device_id": {
+      "generator": {
+       "ref": "iot_device.device_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "device_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "log_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "log_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "maintenance_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Calibration": 0.2,
+        "Corrective": 0.25,
+        "Firmware Update": 0.2,
+        "Preventive": 0.35
+       }
+      },
+      "max_length": null,
+      "name": "maintenance_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "notes": {
+      "generator": {
+       "provider": "sentence",
+       "strategy": "faker"
+      },
+      "max_length": 500,
+      "name": "notes",
+      "null_rate": 0.3,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "performed_by": {
+      "generator": {
+       "provider": "name",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "name": "performed_by",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "performed_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2023-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "performed_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     }
+    },
+    "description": "[iot] Device maintenance records",
+    "name": "iot_maintenance_log",
+    "primary_key": [
+     "log_id"
+    ]
+   },
+   "iot_reading": {
+    "cdm_mapping": null,
+    "columns": {
+     "quality_flag": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Bad": 0.03,
+        "Good": 0.9,
+        "Suspect": 0.07
+       }
+      },
+      "max_length": null,
+      "name": "quality_flag",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "reading_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "reading_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "reading_timestamp": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2024-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "reading_timestamp",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "datetime"
+     },
+     "reading_value": {
+      "generator": {
+       "distribution": "normal",
+       "max": 500.0,
+       "mean": 25.0,
+       "min": -50.0,
+       "round": 3,
+       "sigma": 15.0,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "reading_value",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "sensor_id": {
+      "generator": {
+       "alpha": 1.1,
+       "distribution": "zipf",
+       "ref": "iot_sensor.sensor_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "sensor_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[iot] Sensor readings",
+    "name": "iot_reading",
+    "primary_key": [
+     "reading_id"
+    ]
+   },
+   "iot_sensor": {
+    "cdm_mapping": null,
+    "columns": {
+     "device_id": {
+      "generator": {
+       "ref": "iot_device.device_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "device_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "max_range": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 500.0,
+       "min": 50.0,
+       "round": 2,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "max_range",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "min_range": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 0.0,
+       "min": -50.0,
+       "round": 2,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "min_range",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "sensor_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "sensor_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "sensor_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Flow": 0.1,
+        "Humidity": 0.15,
+        "Level": 0.1,
+        "Light": 0.1,
+        "Pressure": 0.14,
+        "Proximity": 0.11,
+        "Temperature": 0.18,
+        "Vibration": 0.12
+       }
+      },
+      "max_length": null,
+      "name": "sensor_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "unit_of_measure": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "%RH": 0.15,
+        "C": 0.18,
+        "L/min": 0.1,
+        "Pa": 0.14,
+        "cm": 0.11,
+        "lux": 0.1,
+        "m": 0.1,
+        "mm/s": 0.12
+       }
+      },
+      "max_length": 20,
+      "name": "unit_of_measure",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[iot] Device sensors",
+    "name": "iot_sensor",
+    "primary_key": [
+     "sensor_id"
+    ]
+   },
+   "manufacturing_bom": {
+    "cdm_mapping": null,
+    "columns": {
+     "bom_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "bom_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "component_name": {
+      "generator": {
+       "format": "CMP-{seq:5}",
+       "strategy": "pattern"
+      },
+      "max_length": 30,
+      "name": "component_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "is_critical": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.75,
+        "true": 0.25
+       }
+      },
+      "max_length": null,
+      "name": "is_critical",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "boolean"
+     },
+     "product_id": {
+      "generator": {
+       "ref": "manufacturing_product.product_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "product_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "quantity_required": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 50,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "quantity_required",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "unit_cost": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 5000.0,
+       "mean": 3.0,
+       "min": 0.01,
+       "round": 2,
+       "sigma": 1.3,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "unit_cost",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "unit_of_measure": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "EA": 0.4,
+        "KG": 0.2,
+        "LB": 0.15,
+        "LT": 0.15,
+        "M": 0.1
+       }
+      },
+      "max_length": 10,
+      "name": "unit_of_measure",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[manufacturing] Bill of materials \u2014 components per product",
+    "name": "manufacturing_bom",
+    "primary_key": [
+     "bom_id"
+    ]
+   },
+   "manufacturing_defect": {
+    "cdm_mapping": null,
+    "columns": {
+     "check_id": {
+      "generator": {
+       "ref": "manufacturing_quality_check.check_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "check_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "defect_code": {
+      "generator": {
+       "dataset": "defect_codes",
+       "strategy": "reference_data"
+      },
+      "max_length": 50,
+      "name": "defect_code",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "defect_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "defect_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "disposition": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Return to Supplier": 0.15,
+        "Rework": 0.35,
+        "Scrap": 0.25,
+        "Use As-Is": 0.25
+       }
+      },
+      "max_length": null,
+      "name": "disposition",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "root_cause": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Design": 0.1,
+        "Equipment": 0.2,
+        "Human": 0.2,
+        "Material": 0.25,
+        "Process": 0.25
+       }
+      },
+      "max_length": null,
+      "name": "root_cause",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "severity": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Cosmetic": 0.3,
+        "Critical": 0.05,
+        "Major": 0.15,
+        "Minor": 0.5
+       }
+      },
+      "max_length": null,
+      "name": "severity",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[manufacturing] Defect records from quality checks",
+    "name": "manufacturing_defect",
+    "primary_key": [
+     "defect_id"
+    ]
+   },
+   "manufacturing_downtime_event": {
+    "cdm_mapping": null,
+    "columns": {
+     "cause": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Breakdown": 0.25,
+        "Changeover": 0.15,
+        "Material Shortage": 0.15,
+        "Planned Maintenance": 0.25,
+        "Power Outage": 0.1,
+        "Quality Issue": 0.1
+       }
+      },
+      "max_length": null,
+      "name": "cause",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "duration_minutes": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 1440,
+       "mean": 3.5,
+       "min": 5,
+       "sigma": 1.0,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "duration_minutes",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "equipment_id": {
+      "generator": {
+       "ref": "manufacturing_equipment.equipment_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "equipment_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "event_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "event_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "impact_level": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "High": 0.2,
+        "Low": 0.3,
+        "Medium": 0.5
+       }
+      },
+      "max_length": null,
+      "name": "impact_level",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "start_time": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2022-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "start_time",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "datetime"
+     }
+    },
+    "description": "[manufacturing] Equipment downtime tracking",
+    "name": "manufacturing_downtime_event",
+    "primary_key": [
+     "event_id"
+    ]
+   },
+   "manufacturing_equipment": {
+    "cdm_mapping": null,
+    "columns": {
+     "equipment_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "equipment_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "equipment_name": {
+      "generator": {
+       "format": "EQP-{seq:4}",
+       "strategy": "pattern"
+      },
+      "max_length": 20,
+      "name": "equipment_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "equipment_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "CNC": 0.25,
+        "Conveyor": 0.15,
+        "Oven": 0.12,
+        "Press": 0.18,
+        "Robot": 0.15,
+        "Tester": 0.15
+       }
+      },
+      "max_length": null,
+      "name": "equipment_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "last_maintenance_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2023-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "last_maintenance_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "production_line_id": {
+      "generator": {
+       "ref": "manufacturing_production_line.line_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "production_line_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "purchase_date": {
+      "generator": {
+       "end": "2025-06-30",
+       "pattern": "uniform",
+       "start": "2015-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "purchase_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Decommissioned": 0.05,
+        "Operational": 0.8,
+        "Under Maintenance": 0.15
+       }
+      },
+      "max_length": null,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[manufacturing] Machines, tools, and equipment",
+    "name": "manufacturing_equipment",
+    "primary_key": [
+     "equipment_id"
+    ]
+   },
+   "manufacturing_product": {
+    "cdm_mapping": null,
+    "columns": {
+     "product_category": {
+      "generator": {
+       "dataset": "material_types",
+       "strategy": "reference_data"
+      },
+      "max_length": 50,
+      "name": "product_category",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "product_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "product_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "product_name": {
+      "generator": {
+       "format": "PRD-{seq:5}",
+       "strategy": "pattern"
+      },
+      "max_length": 30,
+      "name": "product_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "sell_price": {
+      "generator": {
+       "operation": "multiply",
+       "params": {
+        "factor_max": 2.5,
+        "factor_min": 1.3
+       },
+       "source_column": "unit_cost",
+       "strategy": "correlated"
+      },
+      "max_length": null,
+      "name": "sell_price",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "unit_cost": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 10000.0,
+       "mean": 4.5,
+       "min": 1.0,
+       "round": 2,
+       "sigma": 1.2,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "unit_cost",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "weight_kg": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 500.0,
+       "mean": 1.5,
+       "min": 0.01,
+       "round": 2,
+       "sigma": 1.0,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "weight_kg",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     }
+    },
+    "description": "[manufacturing] Manufactured products",
+    "name": "manufacturing_product",
+    "primary_key": [
+     "product_id"
+    ]
+   },
+   "manufacturing_production_line": {
+    "cdm_mapping": null,
+    "columns": {
+     "capacity_per_hour": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 500,
+       "min": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "capacity_per_hour",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "facility": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Plant A": 0.3,
+        "Plant B": 0.28,
+        "Plant C": 0.22,
+        "Plant D": 0.2
+       }
+      },
+      "max_length": null,
+      "name": "facility",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "is_active": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.1,
+        "true": 0.9
+       }
+      },
+      "max_length": null,
+      "name": "is_active",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "boolean"
+     },
+     "line_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "line_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "line_name": {
+      "generator": {
+       "format": "LINE-{seq:3}",
+       "strategy": "pattern"
+      },
+      "max_length": 20,
+      "name": "line_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "line_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Assembly": 0.3,
+        "Finishing": 0.1,
+        "Machining": 0.25,
+        "Packaging": 0.2,
+        "Testing": 0.15
+       }
+      },
+      "max_length": null,
+      "name": "line_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[manufacturing] Manufacturing production lines",
+    "name": "manufacturing_production_line",
+    "primary_key": [
+     "line_id"
+    ]
+   },
+   "manufacturing_production_metric": {
+    "cdm_mapping": null,
+    "columns": {
+     "cycle_time_seconds": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 3600.0,
+       "mean": 4.0,
+       "min": 5.0,
+       "round": 1,
+       "sigma": 0.8,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "cycle_time_seconds",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "metric_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2022-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "metric_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "metric_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "metric_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "oee_score": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 0.99,
+       "min": 0.5,
+       "round": 3,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "oee_score",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "scrap_rate": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 0.1,
+       "min": 0.001,
+       "round": 4,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "scrap_rate",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "wo_id": {
+      "generator": {
+       "ref": "manufacturing_work_order.wo_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "wo_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "yield_rate": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 0.99,
+       "min": 0.85,
+       "round": 3,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "yield_rate",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     }
+    },
+    "description": "[manufacturing] Production KPIs per work order",
+    "name": "manufacturing_production_metric",
+    "primary_key": [
+     "metric_id"
+    ]
+   },
+   "manufacturing_quality_check": {
+    "cdm_mapping": null,
+    "columns": {
+     "check_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2022-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "check_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "check_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "check_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "check_type": {
+      "generator": {
+       "dataset": "operation_types",
+       "strategy": "reference_data"
+      },
+      "max_length": 50,
+      "name": "check_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "defect_count": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 50,
+       "mean": 0.5,
+       "min": 0,
+       "sigma": 0.8,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "defect_count",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "inspector_name": {
+      "generator": {
+       "provider": "name",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "name": "inspector_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "result": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Fail": 0.08,
+        "Pass": 0.82,
+        "Rework": 0.1
+       }
+      },
+      "max_length": null,
+      "name": "result",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "wo_id": {
+      "generator": {
+       "ref": "manufacturing_work_order.wo_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "wo_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[manufacturing] Quality control inspections",
+    "name": "manufacturing_quality_check",
+    "primary_key": [
+     "check_id"
+    ]
+   },
+   "manufacturing_work_order": {
+    "cdm_mapping": null,
+    "columns": {
+     "end_date": {
+      "generator": {
+       "days": 14,
+       "operation": "add_days",
+       "source": "start_date",
+       "strategy": "derived"
+      },
+      "max_length": null,
+      "name": "end_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "priority": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "High": 0.2,
+        "Low": 0.25,
+        "Medium": 0.55
+       }
+      },
+      "max_length": null,
+      "name": "priority",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "product_id": {
+      "generator": {
+       "alpha": 1.3,
+       "distribution": "zipf",
+       "ref": "manufacturing_product.product_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "product_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "production_line_id": {
+      "generator": {
+       "ref": "manufacturing_production_line.line_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "production_line_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "quantity_planned": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 10000,
+       "mean": 5.0,
+       "min": 1,
+       "sigma": 1.0,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "quantity_planned",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "quantity_produced": {
+      "generator": {
+       "operation": "multiply",
+       "params": {
+        "factor_max": 1.0,
+        "factor_min": 0.85
+       },
+       "source_column": "quantity_planned",
+       "strategy": "correlated"
+      },
+      "max_length": null,
+      "name": "quantity_produced",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "start_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2022-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "start_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Cancelled": 0.1,
+        "Completed": 0.55,
+        "In Progress": 0.15,
+        "On Hold": 0.1,
+        "Open": 0.1
+       }
+      },
+      "max_length": null,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "wo_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "wo_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "work_order_number": {
+      "generator": {
+       "format": "WO-{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 15,
+      "name": "work_order_number",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[manufacturing] Production work orders",
+    "name": "manufacturing_work_order",
+    "primary_key": [
+     "wo_id"
+    ]
+   },
+   "supply_chain_demand_forecast": {
+    "cdm_mapping": null,
+    "columns": {
+     "confidence_level": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 0.99,
+       "min": 0.5,
+       "round": 2,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "confidence_level",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "forecast_date": {
+      "generator": {
+       "end": "2026-12-31",
+       "pattern": "uniform",
+       "start": "2024-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "forecast_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "forecast_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "forecast_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "forecast_method": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "ARIMA": 0.2,
+        "Exponential Smoothing": 0.25,
+        "Machine Learning": 0.15,
+        "Manual": 0.1,
+        "Moving Average": 0.3
+       }
+      },
+      "max_length": null,
+      "name": "forecast_method",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "forecast_quantity": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 50000,
+       "mean": 6.0,
+       "min": 1,
+       "round": 0,
+       "sigma": 1.2,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "forecast_quantity",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "material_id": {
+      "generator": {
+       "ref": "supply_chain_material.material_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "material_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[supply_chain] Forecasted demand by period",
+    "name": "supply_chain_demand_forecast",
+    "primary_key": [
+     "forecast_id"
+    ]
+   },
+   "supply_chain_inventory": {
+    "cdm_mapping": null,
+    "columns": {
+     "bin_location": {
+      "generator": {
+       "format": "A{seq:2}-R{seq:2}-S{seq:2}",
+       "strategy": "pattern"
+      },
+      "max_length": 20,
+      "name": "bin_location",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "inventory_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "inventory_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "last_counted_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2024-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "last_counted_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "material_id": {
+      "generator": {
+       "ref": "supply_chain_material.material_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "material_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "quantity_on_hand": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 100000,
+       "mean": 6.0,
+       "min": 0,
+       "round": 0,
+       "sigma": 1.5,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "quantity_on_hand",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "quantity_reserved": {
+      "generator": {
+       "operation": "multiply",
+       "params": {
+        "factor_max": 0.4,
+        "factor_min": 0.0
+       },
+       "source_column": "quantity_on_hand",
+       "strategy": "correlated"
+      },
+      "max_length": null,
+      "name": "quantity_reserved",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "warehouse_id": {
+      "generator": {
+       "alpha": 1.1,
+       "distribution": "zipf",
+       "ref": "supply_chain_warehouse.warehouse_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "warehouse_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[supply_chain] Stock levels by warehouse and material",
+    "name": "supply_chain_inventory",
+    "primary_key": [
+     "inventory_id"
+    ]
+   },
+   "supply_chain_material": {
+    "cdm_mapping": null,
+    "columns": {
+     "category": {
+      "generator": {
+       "dataset": "material_categories",
+       "strategy": "reference_data"
+      },
+      "max_length": 100,
+      "name": "category",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "is_hazardous": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.92,
+        "true": 0.08
+       }
+      },
+      "max_length": null,
+      "name": "is_hazardous",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "boolean"
+     },
+     "material_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "material_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "material_name": {
+      "generator": {
+       "format": "MAT-{seq:5}",
+       "strategy": "pattern"
+      },
+      "max_length": 200,
+      "name": "material_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "reorder_point": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 500,
+       "min": 10,
+       "round": 0,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "reorder_point",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "unit_cost": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 50000.0,
+       "mean": 3.5,
+       "min": 0.01,
+       "round": 2,
+       "sigma": 1.5,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "unit_cost",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "unit_of_measure": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "EA": 0.4,
+        "FT": 0.07,
+        "KG": 0.2,
+        "LB": 0.15,
+        "LT": 0.1,
+        "M": 0.08
+       }
+      },
+      "max_length": 20,
+      "name": "unit_of_measure",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[supply_chain] Raw materials and components",
+    "name": "supply_chain_material",
+    "primary_key": [
+     "material_id"
+    ]
+   },
+   "supply_chain_purchase_order": {
+    "cdm_mapping": null,
+    "columns": {
+     "expected_delivery_date": {
+      "generator": {
+       "days": 21,
+       "operation": "add_days",
+       "source": "order_date",
+       "strategy": "derived"
+      },
+      "max_length": null,
+      "name": "expected_delivery_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "order_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2022-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "order_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "po_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "po_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "po_number": {
+      "generator": {
+       "format": "PO-{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 20,
+      "name": "po_number",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "priority": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Critical": 0.1,
+        "Expedited": 0.25,
+        "Low": 0.05,
+        "Standard": 0.6
+       }
+      },
+      "max_length": null,
+      "name": "priority",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Approved": 0.3,
+        "Cancelled": 0.05,
+        "Delivered": 0.35,
+        "Pending": 0.1,
+        "Shipped": 0.2
+       }
+      },
+      "max_length": null,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "supplier_id": {
+      "generator": {
+       "alpha": 1.2,
+       "distribution": "zipf",
+       "ref": "supply_chain_supplier.supplier_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "supplier_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "total_amount": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 5000000.0,
+       "mean": 9.0,
+       "min": 100.0,
+       "round": 2,
+       "sigma": 1.5,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "total_amount",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     }
+    },
+    "description": "[supply_chain] Purchase orders to suppliers",
+    "name": "supply_chain_purchase_order",
+    "primary_key": [
+     "po_id"
+    ]
+   },
+   "supply_chain_purchase_order_line": {
+    "cdm_mapping": null,
+    "columns": {
+     "line_total": {
+      "generator": {
+       "expression": "quantity_ordered * unit_price",
+       "strategy": "formula"
+      },
+      "max_length": null,
+      "name": "line_total",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "material_id": {
+      "generator": {
+       "alpha": 1.1,
+       "distribution": "zipf",
+       "ref": "supply_chain_material.material_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "material_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "po_id": {
+      "generator": {
+       "ref": "supply_chain_purchase_order.po_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "po_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "po_line_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "po_line_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "quantity_ordered": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 10000,
+       "mean": 5.0,
+       "min": 1,
+       "round": 0,
+       "sigma": 1.2,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "quantity_ordered",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "quantity_received": {
+      "generator": {
+       "operation": "multiply",
+       "params": {
+        "factor_max": 1.0,
+        "factor_min": 0.85
+       },
+       "source_column": "quantity_ordered",
+       "strategy": "correlated"
+      },
+      "max_length": null,
+      "name": "quantity_received",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "unit_price": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 50000.0,
+       "mean": 3.5,
+       "min": 0.1,
+       "round": 2,
+       "sigma": 1.5,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "unit_price",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     }
+    },
+    "description": "[supply_chain] Purchase order line items",
+    "name": "supply_chain_purchase_order_line",
+    "primary_key": [
+     "po_line_id"
+    ]
+   },
+   "supply_chain_quality_inspection": {
+    "cdm_mapping": null,
+    "columns": {
+     "defect_count": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 100,
+       "mean": 0.5,
+       "min": 0,
+       "round": 0,
+       "sigma": 1.0,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "defect_count",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "inspection_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2022-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "inspection_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "inspection_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "inspection_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "inspector_name": {
+      "generator": {
+       "provider": "name",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "name": "inspector_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "notes": {
+      "generator": {
+       "provider": "sentence",
+       "strategy": "faker"
+      },
+      "max_length": 500,
+      "name": "notes",
+      "null_rate": 0.4,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "result": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Conditional Pass": 0.1,
+        "Fail": 0.1,
+        "Pass": 0.75,
+        "Pending Retest": 0.05
+       }
+      },
+      "max_length": null,
+      "name": "result",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "shipment_id": {
+      "generator": {
+       "ref": "supply_chain_shipment.shipment_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "shipment_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[supply_chain] QA inspection results",
+    "name": "supply_chain_quality_inspection",
+    "primary_key": [
+     "inspection_id"
+    ]
+   },
+   "supply_chain_shipment": {
+    "cdm_mapping": null,
+    "columns": {
+     "carrier_name": {
+      "generator": {
+       "dataset": "carrier_names",
+       "strategy": "reference_data"
+      },
+      "max_length": 100,
+      "name": "carrier_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "delivery_date": {
+      "generator": {
+       "days": 5,
+       "operation": "add_days",
+       "source": "ship_date",
+       "strategy": "derived"
+      },
+      "max_length": null,
+      "name": "delivery_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "po_id": {
+      "generator": {
+       "ref": "supply_chain_purchase_order.po_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "po_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "ship_date": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2022-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "ship_date",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "shipment_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "shipment_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "shipment_number": {
+      "generator": {
+       "format": "SHP-{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 20,
+      "name": "shipment_number",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "shipping_method": {
+      "generator": {
+       "dataset": "shipping_methods",
+       "strategy": "reference_data"
+      },
+      "max_length": 50,
+      "name": "shipping_method",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Delayed": 0.08,
+        "Delivered": 0.55,
+        "In Transit": 0.2,
+        "Lost": 0.03,
+        "Pending Pickup": 0.1,
+        "Returned": 0.04
+       }
+      },
+      "max_length": null,
+      "name": "status",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "warehouse_id": {
+      "generator": {
+       "alpha": 1.1,
+       "distribution": "zipf",
+       "ref": "supply_chain_warehouse.warehouse_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "warehouse_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "weight_kg": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 50000.0,
+       "mean": 5.0,
+       "min": 0.5,
+       "round": 2,
+       "sigma": 1.5,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "weight_kg",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     }
+    },
+    "description": "[supply_chain] Inbound and outbound shipments",
+    "name": "supply_chain_shipment",
+    "primary_key": [
+     "shipment_id"
+    ]
+   },
+   "supply_chain_shipment_event": {
+    "cdm_mapping": null,
+    "columns": {
+     "event_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "event_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "event_timestamp": {
+      "generator": {
+       "end": "2025-12-31",
+       "pattern": "uniform",
+       "start": "2022-01-01",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "event_timestamp",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "datetime"
+     },
+     "event_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "At Hub": 0.15,
+        "Delivered": 0.15,
+        "Exception": 0.05,
+        "In Transit": 0.25,
+        "Out for Delivery": 0.15,
+        "Picked Up": 0.2,
+        "Returned to Sender": 0.05
+       }
+      },
+      "max_length": null,
+      "name": "event_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "location": {
+      "generator": {
+       "provider": "city",
+       "strategy": "faker"
+      },
+      "max_length": 200,
+      "name": "location",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "notes": {
+      "generator": {
+       "provider": "sentence",
+       "strategy": "faker"
+      },
+      "max_length": 500,
+      "name": "notes",
+      "null_rate": 0.6,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "shipment_id": {
+      "generator": {
+       "ref": "supply_chain_shipment.shipment_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "shipment_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "[supply_chain] Shipment tracking events",
+    "name": "supply_chain_shipment_event",
+    "primary_key": [
+     "event_id"
+    ]
+   },
+   "supply_chain_supplier": {
+    "cdm_mapping": null,
+    "columns": {
+     "contact_email": {
+      "generator": {
+       "provider": "company_email",
+       "strategy": "faker"
+      },
+      "max_length": 255,
+      "name": "contact_email",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "contact_name": {
+      "generator": {
+       "provider": "name",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "name": "contact_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "country": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Canada": 0.03,
+        "China": 0.2,
+        "Germany": 0.1,
+        "India": 0.05,
+        "Japan": 0.08,
+        "Mexico": 0.1,
+        "South Korea": 0.05,
+        "Taiwan": 0.04,
+        "United States": 0.35
+       }
+      },
+      "max_length": 50,
+      "name": "country",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "is_active": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.1,
+        "true": 0.9
+       }
+      },
+      "max_length": null,
+      "name": "is_active",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "boolean"
+     },
+     "lead_time_days": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 120,
+       "mean": 3.0,
+       "min": 1,
+       "round": 0,
+       "sigma": 0.7,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "lead_time_days",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "reliability_score": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 0.99,
+       "min": 0.6,
+       "round": 2,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "reliability_score",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "shared_organization_manufacturing_production_line_id": {
+      "generator": {
+       "ref": "manufacturing_production_line.line_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "shared_organization_manufacturing_production_line_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "supplier_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "supplier_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "supplier_name": {
+      "generator": {
+       "provider": "company",
+       "strategy": "faker"
+      },
+      "max_length": 200,
+      "name": "supplier_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[supply_chain] Material and product suppliers",
+    "name": "supply_chain_supplier",
+    "primary_key": [
+     "supplier_id"
+    ]
+   },
+   "supply_chain_warehouse": {
+    "cdm_mapping": null,
+    "columns": {
+     "capacity_sqft": {
+      "generator": {
+       "distribution": "log_normal",
+       "max": 500000,
+       "mean": 11.0,
+       "min": 10000,
+       "round": 0,
+       "sigma": 0.8,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "capacity_sqft",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "city": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "city",
+       "strategy": "record_sample"
+      },
+      "max_length": 100,
+      "name": "city",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "is_active": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "false": 0.06,
+        "true": 0.94
+       }
+      },
+      "max_length": null,
+      "name": "is_active",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "boolean"
+     },
+     "lat": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "lat",
+       "strategy": "record_field"
+      },
+      "max_length": null,
+      "name": "lat",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "lng": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "lng",
+       "strategy": "record_field"
+      },
+      "max_length": null,
+      "name": "lng",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "float"
+     },
+     "shared_location_manufacturing_production_line_id": {
+      "generator": {
+       "ref": "manufacturing_production_line.line_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "shared_location_manufacturing_production_line_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "state": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "state",
+       "strategy": "record_field"
+      },
+      "max_length": 2,
+      "name": "state",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "warehouse_id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "warehouse_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "warehouse_name": {
+      "generator": {
+       "format": "DC-{seq:4}",
+       "strategy": "pattern"
+      },
+      "max_length": 100,
+      "name": "warehouse_name",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "warehouse_type": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "Cold Storage": 0.12,
+        "Cross-Dock": 0.15,
+        "Distribution Center": 0.4,
+        "Fulfillment Center": 0.08,
+        "Regional Hub": 0.25
+       }
+      },
+      "max_length": null,
+      "name": "warehouse_type",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "zip_code": {
+      "generator": {
+       "dataset": "us_zip_locations",
+       "field": "zip",
+       "strategy": "record_field"
+      },
+      "max_length": 10,
+      "name": "zip_code",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "[supply_chain] Distribution centers with locations",
+    "name": "supply_chain_warehouse",
+    "primary_key": [
+     "warehouse_id"
+    ]
+   }
+  }
+ },
+ "spec": "smart_factory"
+}

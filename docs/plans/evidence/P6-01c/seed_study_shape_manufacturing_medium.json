@@ -1,0 +1,208 @@
+{
+ "domain": "manufacturing",
+ "scale": "medium",
+ "impl": "shape",
+ "floor": {
+  "production_line": 94.01449694867956,
+  "product": 89.29773562463885,
+  "bom": 97.59437930307641,
+  "work_order": 98.5661030258365,
+  "quality_check": 90.13244417607766,
+  "defect": 95.89583681272181,
+  "equipment": 95.55904046517146,
+  "downtime_event": 95.51010950085647,
+  "production_metric": 99.07030513121751
+ },
+ "baseline": {
+  "43": {
+   "production_line": 94.51449694867956,
+   "product": 89.79773562463885,
+   "bom": 98.92034365609277,
+   "work_order": 99.0661030258365,
+   "quality_check": 91.65434183374946,
+   "defect": 96.39583681272181,
+   "equipment": 97.14871553207126,
+   "downtime_event": 96.95046775400964,
+   "production_metric": 99.59100910609858
+  },
+  "44": {
+   "production_line": 98.00584154208468,
+   "product": 91.72132459954746,
+   "bom": 98.09437930307641,
+   "work_order": 99.54555869956134,
+   "quality_check": 90.63244417607766,
+   "defect": 97.48307515952335,
+   "equipment": 97.76494553659019,
+   "downtime_event": 96.01010950085647,
+   "production_metric": 99.65285826277834
+  },
+  "45": {
+   "production_line": 96.71222986022762,
+   "product": 89.97238600324437,
+   "bom": 98.54763786008668,
+   "work_order": 99.34016569807493,
+   "quality_check": 91.26939206906569,
+   "defect": 96.60426740649636,
+   "equipment": 97.13214216354966,
+   "downtime_event": 97.32573213181479,
+   "production_metric": 99.57030513121751
+  },
+  "46": {
+   "production_line": 98.78196154758854,
+   "product": 91.44653364877807,
+   "bom": 98.1003576865691,
+   "work_order": 99.44010707571688,
+   "quality_check": 90.70850838378021,
+   "defect": 97.4329439981853,
+   "equipment": 96.05904046517146,
+   "downtime_event": 96.9520070173851,
+   "production_metric": 99.6529163837172
+  }
+ },
+ "impl_seeds": {
+  "1042": {
+   "scores": {
+    "production_line": 92.4692159391361,
+    "product": 91.1720254538306,
+    "bom": 98.7790725802167,
+    "work_order": 99.70081931447142,
+    "quality_check": 91.6999599074989,
+    "defect": 99.93837233471801,
+    "equipment": 97.68655449570058,
+    "downtime_event": 96.59780782396884,
+    "production_metric": 99.5688498369541
+   },
+   "below_floor": [
+    "production_line"
+   ],
+   "shortfall": {
+    "production_line": 1.5452810095434586
+   }
+  },
+  "1043": {
+   "scores": {
+    "production_line": 94.75835489903356,
+    "product": 91.61835183676426,
+    "bom": 98.64729486659199,
+    "work_order": 99.5464091265022,
+    "quality_check": 90.61272320983048,
+    "defect": 96.84094285675911,
+    "equipment": 97.08414396702834,
+    "downtime_event": 96.6273121396883,
+    "production_metric": 99.51913380680844
+   },
+   "below_floor": [],
+   "shortfall": {}
+  },
+  "1044": {
+   "scores": {
+    "production_line": 97.49051056235577,
+    "product": 90.89532174945982,
+    "bom": 98.65373866148546,
+    "work_order": 98.85892072808919,
+    "quality_check": 89.73661751706115,
+    "defect": 98.66168951008758,
+    "equipment": 97.03858242124959,
+    "downtime_event": 97.75689649595982,
+    "production_metric": 99.62109103179874
+   },
+   "below_floor": [
+    "quality_check"
+   ],
+   "shortfall": {
+    "quality_check": 0.3958266590165067
+   }
+  },
+  "1045": {
+   "scores": {
+    "production_line": 97.86236266965038,
+    "product": 89.01858907777468,
+    "bom": 98.38403493373282,
+    "work_order": 99.0435089844835,
+    "quality_check": 91.59315927279927,
+    "defect": 99.79351307475979,
+    "equipment": 98.07304369279174,
+    "downtime_event": 95.64921419157598,
+    "production_metric": 99.7053550169693
+   },
+   "below_floor": [
+    "product"
+   ],
+   "shortfall": {
+    "product": 0.27914654686416895
+   }
+  },
+  "1046": {
+   "scores": {
+    "production_line": 96.86190428888908,
+    "product": 88.47079954689275,
+    "bom": 98.28824164419144,
+    "work_order": 99.3804285416234,
+    "quality_check": 90.59245315358062,
+    "defect": 98.08539252800051,
+    "equipment": 97.38420823065518,
+    "downtime_event": 95.53105787056442,
+    "production_metric": 99.6063495923424
+   },
+   "below_floor": [
+    "product"
+   ],
+   "shortfall": {
+    "product": 0.8269360777460975
+   }
+  },
+  "1047": {
+   "scores": {
+    "production_line": 99.08812236045948,
+    "product": 90.29887523544659,
+    "bom": 98.90760381229373,
+    "work_order": 99.44556675559916,
+    "quality_check": 90.04614461158374,
+    "defect": 99.28012941486828,
+    "equipment": 96.42669944640105,
+    "downtime_event": 97.64280176185349,
+    "production_metric": 99.65528285449808
+   },
+   "below_floor": [
+    "quality_check"
+   ],
+   "shortfall": {
+    "quality_check": 0.0862995644939133
+   }
+  },
+  "1048": {
+   "scores": {
+    "production_line": 98.3913308655654,
+    "product": 88.26889837510559,
+    "bom": 98.41925800271147,
+    "work_order": 98.98714234203307,
+    "quality_check": 90.67975204451399,
+    "defect": 97.5731575848914,
+    "equipment": 97.82340941148468,
+    "downtime_event": 96.79318740960355,
+    "production_metric": 99.66863695714343
+   },
+   "below_floor": [
+    "product"
+   ],
+   "shortfall": {
+    "product": 1.0288372495332538
+   }
+  },
+  "1049": {
+   "scores": {
+    "production_line": 97.84645112067498,
+    "product": 91.38632116813858,
+    "bom": 97.80881539806568,
+    "work_order": 99.24733038814823,
+    "quality_check": 91.7017031363861,
+    "defect": 96.19967084801003,
+    "equipment": 96.71537868663287,
+    "downtime_event": 98.44386212037064,
+    "production_metric": 99.5538244217253
+   },
+   "below_floor": [],
+   "shortfall": {}
+  }
+ }
+}

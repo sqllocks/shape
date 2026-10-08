@@ -1,0 +1,60 @@
+{
+  "format": "shape-evaluation",
+  "results": {
+    "column_pair_trends": [
+      {
+        "column_1": "age",
+        "column_2": "city",
+        "metric": "ContingencySimilarity",
+        "score": 0.6333333333333333,
+        "table": "people"
+      },
+      {
+        "column_1": "age",
+        "column_2": "income",
+        "metric": "CorrelationSimilarity",
+        "score": null,
+        "table": "people"
+      },
+      {
+        "column_1": "city",
+        "column_2": "income",
+        "metric": "ContingencySimilarity",
+        "score": 0.5833333333333333,
+        "table": "people"
+      }
+    ],
+    "column_shapes": [
+      {
+        "column": "age",
+        "metric": "KSComplement",
+        "score": 0.8833333333333333,
+        "table": "people"
+      },
+      {
+        "column": "city",
+        "metric": "TVComplement",
+        "score": 0.9,
+        "table": "people"
+      },
+      {
+        "column": "income",
+        "metric": "KSComplement",
+        "score": 0.8833333333333333,
+        "table": "people"
+      }
+    ],
+    "overall_score": 0.7486111111111111,
+    "properties": {
+      "Column Pair Trends": 0.6083333333333333,
+      "Column Shapes": 0.8888888888888888
+    },
+    "skipped_columns": {},
+    "tables": [
+      "people"
+    ]
+  },
+  "tool": "sdmetrics",
+  "tool_version": "0.32.0",
+  "version": 1
+}

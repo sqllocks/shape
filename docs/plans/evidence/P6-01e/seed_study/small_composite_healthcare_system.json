@@ -1,0 +1,174 @@
+{
+ "domain": "composite_healthcare_system",
+ "scale": "small",
+ "impl": "shape",
+ "seeds": [
+  "1042",
+  "1043",
+  "1044",
+  "1045",
+  "1046",
+  "1047",
+  "1048",
+  "1049"
+ ],
+ "findings_per_seed": {
+  "1042": 6,
+  "1043": 1,
+  "1044": 3,
+  "1045": 4,
+  "1046": 7,
+  "1047": 5,
+  "1048": 7,
+  "1049": 1
+ },
+ "by_finding": {
+  "(b-e) healthcare_patient.email: failed ['distinct_ratio']": {
+   "seeds": [
+    "1042",
+    "1045",
+    "1046",
+    "1047",
+    "1048"
+   ],
+   "count": 5
+  },
+  "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [#,#] days": {
+   "seeds": [
+    "1042",
+    "1044",
+    "1045",
+    "1046",
+    "1048"
+   ],
+   "count": 5
+  },
+  "(h) fidelity healthcare_claim:": {
+   "seeds": [
+    "1044",
+    "1045",
+    "1046",
+    "1047",
+    "1048"
+   ],
+   "count": 5
+  },
+  "(h) fidelity healthcare_claim_line:": {
+   "seeds": [
+    "1044",
+    "1045",
+    "1047",
+    "1048"
+   ],
+   "count": 4
+  },
+  "(h) fidelity healthcare_facility:": {
+   "seeds": [
+    "1046"
+   ],
+   "count": 1
+  },
+  "(h) fidelity hr_performance_review:": {
+   "seeds": [
+    "1048"
+   ],
+   "count": 1
+  },
+  "(h) fidelity hr_position:": {
+   "seeds": [
+    "1048"
+   ],
+   "count": 1
+  },
+  "(h) fidelity hr_termination:": {
+   "seeds": [
+    "1042",
+    "1047",
+    "1048",
+    "1049"
+   ],
+   "count": 4
+  },
+  "(h) fidelity hr_training:": {
+   "seeds": [
+    "1042"
+   ],
+   "count": 1
+  },
+  "(h) fidelity insurance_agent:": {
+   "seeds": [
+    "1046",
+    "1047"
+   ],
+   "count": 2
+  },
+  "(h) fidelity insurance_claim:": {
+   "seeds": [
+    "1042",
+    "1043",
+    "1046"
+   ],
+   "count": 3
+  },
+  "(h) fidelity insurance_policy_type:": {
+   "seeds": [
+    "1042",
+    "1046"
+   ],
+   "count": 2
+  }
+ },
+ "systematic": [],
+ "flagged": {
+  "1042": [
+   "(b-e) healthcare_patient.email: failed ['distinct_ratio']",
+   "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8455 < floor 0.8460",
+   "(h) fidelity hr_termination: 89.53 < floor 90.27",
+   "(h) fidelity hr_training: 90.30 < floor 90.52",
+   "(h) fidelity insurance_claim: 95.32 < floor 95.66",
+   "(h) fidelity insurance_policy_type: 81.77 < floor 84.15"
+  ],
+  "1043": [
+   "(h) fidelity insurance_claim: 94.63 < floor 95.66"
+  ],
+  "1044": [
+   "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8395 < floor 0.8460",
+   "(h) fidelity healthcare_claim: 90.41 < floor 94.54",
+   "(h) fidelity healthcare_claim_line: 88.15 < floor 91.64"
+  ],
+  "1045": [
+   "(b-e) healthcare_patient.email: failed ['distinct_ratio']",
+   "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8355 < floor 0.8460",
+   "(h) fidelity healthcare_claim: 90.11 < floor 94.54",
+   "(h) fidelity healthcare_claim_line: 88.75 < floor 91.64"
+  ],
+  "1046": [
+   "(b-e) healthcare_patient.email: failed ['distinct_ratio']",
+   "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8440 < floor 0.8460",
+   "(h) fidelity healthcare_claim: 94.30 < floor 94.54",
+   "(h) fidelity healthcare_facility: 74.62 < floor 75.05",
+   "(h) fidelity insurance_agent: 76.67 < floor 77.11",
+   "(h) fidelity insurance_claim: 94.74 < floor 95.66",
+   "(h) fidelity insurance_policy_type: 83.67 < floor 84.15"
+  ],
+  "1047": [
+   "(b-e) healthcare_patient.email: failed ['distinct_ratio']",
+   "(h) fidelity healthcare_claim: 93.67 < floor 94.54",
+   "(h) fidelity healthcare_claim_line: 89.61 < floor 91.64",
+   "(h) fidelity hr_termination: 88.38 < floor 90.27",
+   "(h) fidelity insurance_agent: 76.99 < floor 77.11"
+  ],
+  "1048": [
+   "(b-e) healthcare_patient.email: failed ['distinct_ratio']",
+   "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8455 < floor 0.8460",
+   "(h) fidelity healthcare_claim: 83.24 < floor 94.54",
+   "(h) fidelity healthcare_claim_line: 77.46 < floor 91.64",
+   "(h) fidelity hr_performance_review: 90.69 < floor 90.70",
+   "(h) fidelity hr_position: 87.52 < floor 87.83",
+   "(h) fidelity hr_termination: 89.94 < floor 90.27"
+  ],
+  "1049": [
+   "(h) fidelity hr_termination: 88.56 < floor 90.27"
+  ]
+ }
+}

@@ -1,0 +1,329 @@
+{
+ "meta": {
+  "cores": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+  "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-10-02 05:41:47",
+  "impl": "shape",
+  "domain": "education",
+  "runs": 3,
+  "warmup": 1,
+  "ref_seed": 42,
+  "impl_seed": 1042,
+  "loadavg_start": 0.84716796875
+ },
+ "scales": {
+  "large": {
+   "summary": {
+    "refengine": {
+     "total_s": 4.547559021999859,
+     "gen_s": 3.5417545519999294,
+     "write_s": 1.0290864100002182,
+     "cpu_s": 4.507835,
+     "user_s": 2.819549,
+     "sys_s": 1.7214809999999998,
+     "minor_faults": 34372,
+     "import_s": 1.3492277849995844,
+     "peak_rss_mb": 594.46875,
+     "parquet_bytes": 47864477,
+     "rows": 2373075,
+     "rows_per_s_total": 521834.8983530957,
+     "rows_per_s_generate": 670028.0793484097,
+     "runs_total_s": [
+      4.304,
+      4.548,
+      4.668
+     ],
+     "loadavg_before": [
+      0.87109375,
+      0.8818359375,
+      0.900390625
+     ],
+     "per_table_s_median": {
+      "department": 0.005578689000230952,
+      "course": 0.0023050549998515635,
+      "instructor": 0.008600546999787184,
+      "student": 0.6545321990001867,
+      "course_section": 0.002677086999938183,
+      "academic_standing": 0.20590522600014083,
+      "enrollment": 2.4501221010000336,
+      "financial_aid": 0.0757833570000912,
+      "grade_appeal": 0.1268657760001588,
+      "_compute_phase+business_rules": 0.0008456689997728972,
+      "_construct_domain+RefEngine()": 0.008907080999961181
+     },
+     "row_counts": {
+      "department": 25,
+      "course": 300,
+      "instructor": 150,
+      "student": 200000,
+      "course_section": 600,
+      "academic_standing": 400000,
+      "enrollment": 1600000,
+      "financial_aid": 140000,
+      "grade_appeal": 32000
+     }
+    },
+    "shape": {
+     "total_s": 0.5088722969999253,
+     "gen_s": 0.5088722969999253,
+     "write_s": 0.0,
+     "cpu_s": 1.3522890000000003,
+     "user_s": 1.050438,
+     "sys_s": 0.265764,
+     "minor_faults": 64933,
+     "import_s": 0.4070990499999425,
+     "peak_rss_mb": 359.51953125,
+     "parquet_bytes": 45091279,
+     "rows": 2373075,
+     "rows_per_s_total": 4663399.862776079,
+     "rows_per_s_generate": 4663399.862776079,
+     "runs_total_s": [
+      0.509,
+      0.472,
+      0.529
+     ],
+     "loadavg_before": [
+      0.8818359375,
+      0.900390625,
+      0.90869140625
+     ],
+     "per_table_s_median": {
+      "_construct_domain+Engine": 0.006578253000043333,
+      "_generate+write": 0.5014460050001617
+     },
+     "row_counts": {
+      "department": 25,
+      "course": 300,
+      "instructor": 150,
+      "student": 200000,
+      "course_section": 600,
+      "academic_standing": 400000,
+      "enrollment": 1600000,
+      "financial_aid": 140000,
+      "grade_appeal": 32000
+     },
+     "numpy": "2.4.6",
+     "pyarrow": "25.0.1"
+    }
+   },
+   "raw": {
+    "refengine": [
+     {
+      "import_s": 1.3411344149999422,
+      "gen_s": 3.2699748210002326,
+      "write_s": 1.0339370389997384,
+      "total_s": 4.303911859999971,
+      "rows": {
+       "department": 25,
+       "course": 300,
+       "instructor": 150,
+       "student": 200000,
+       "course_section": 600,
+       "academic_standing": 400000,
+       "enrollment": 1600000,
+       "financial_aid": 140000,
+       "grade_appeal": 32000
+      },
+      "per_table_s": {
+       "department": 0.00677385700009836,
+       "course": 0.0023050549998515635,
+       "instructor": 0.008600546999787184,
+       "student": 0.47896128000002136,
+       "course_section": 0.0023135350002121413,
+       "academic_standing": 0.10067428100001052,
+       "enrollment": 2.454126616999929,
+       "financial_aid": 0.07535834700001942,
+       "grade_appeal": 0.1268657760001588,
+       "_compute_phase+business_rules": 0.0009596009999768285,
+       "_construct_domain+RefEngine()": 0.013035925000167481
+      },
+      "user_s": 2.819549,
+      "sys_s": 1.4517030000000002,
+      "minor_faults": 32861,
+      "major_faults": 0,
+      "cpu_s": 4.2712520000000005,
+      "peak_rss_mb": 594.27734375,
+      "parquet_bytes": 47864477,
+      "loadavg_before": 0.87109375
+     },
+     {
+      "import_s": 1.3492277849995844,
+      "gen_s": 3.5417545519999294,
+      "write_s": 1.00580446999993,
+      "total_s": 4.547559021999859,
+      "rows": {
+       "department": 25,
+       "course": 300,
+       "instructor": 150,
+       "student": 200000,
+       "course_section": 600,
+       "academic_standing": 400000,
+       "enrollment": 1600000,
+       "financial_aid": 140000,
+       "grade_appeal": 32000
+      },
+      "per_table_s": {
+       "department": 0.004707416000201192,
+       "course": 0.0018651239997780067,
+       "instructor": 0.008121285000015632,
+       "student": 0.6545321990001867,
+       "course_section": 0.002677086999938183,
+       "academic_standing": 0.21298788900003274,
+       "enrollment": 2.4501221010000336,
+       "financial_aid": 0.0757833570000912,
+       "grade_appeal": 0.12154037099980997,
+       "_compute_phase+business_rules": 0.0007559939999737253,
+       "_construct_domain+RefEngine()": 0.008661728999868501
+      },
+      "user_s": 2.786354,
+      "sys_s": 1.7214809999999998,
+      "minor_faults": 34372,
+      "major_faults": 0,
+      "cpu_s": 4.507835,
+      "peak_rss_mb": 594.46875,
+      "parquet_bytes": 47864477,
+      "loadavg_before": 0.8818359375
+     },
+     {
+      "import_s": 1.408819362000031,
+      "gen_s": 3.6388366599999244,
+      "write_s": 1.0290864100002182,
+      "total_s": 4.667923070000143,
+      "rows": {
+       "department": 25,
+       "course": 300,
+       "instructor": 150,
+       "student": 200000,
+       "course_section": 600,
+       "academic_standing": 400000,
+       "enrollment": 1600000,
+       "financial_aid": 140000,
+       "grade_appeal": 32000
+      },
+      "per_table_s": {
+       "department": 0.005578689000230952,
+       "course": 0.00269823799999358,
+       "instructor": 0.008937247999710962,
+       "student": 0.7416802910001934,
+       "course_section": 0.0035180449999643315,
+       "academic_standing": 0.20590522600014083,
+       "enrollment": 2.439484433999951,
+       "financial_aid": 0.08645832399997744,
+       "grade_appeal": 0.13482341500002804,
+       "_compute_phase+business_rules": 0.0008456689997728972,
+       "_construct_domain+RefEngine()": 0.008907080999961181
+      },
+      "user_s": 2.9183779999999997,
+      "sys_s": 1.7244609999999998,
+      "minor_faults": 34842,
+      "major_faults": 0,
+      "cpu_s": 4.6428389999999995,
+      "peak_rss_mb": 594.72265625,
+      "parquet_bytes": 47864477,
+      "loadavg_before": 0.900390625
+     }
+    ],
+    "shape": [
+     {
+      "import_s": 0.39790162100007365,
+      "gen_s": 0.5088722969999253,
+      "write_s": 0.0,
+      "total_s": 0.5088722969999253,
+      "overlapped": true,
+      "rows": {
+       "department": 25,
+       "course": 300,
+       "instructor": 150,
+       "student": 200000,
+       "course_section": 600,
+       "academic_standing": 400000,
+       "enrollment": 1600000,
+       "financial_aid": 140000,
+       "grade_appeal": 32000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.0074262919997636345,
+       "_generate+write": 0.5014460050001617
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 1.0865250000000002,
+      "sys_s": 0.265764,
+      "minor_faults": 64572,
+      "major_faults": 0,
+      "cpu_s": 1.3522890000000003,
+      "peak_rss_mb": 361.94921875,
+      "parquet_bytes": 45091279,
+      "loadavg_before": 0.8818359375
+     },
+     {
+      "import_s": 0.4070990499999425,
+      "gen_s": 0.4720476709999275,
+      "write_s": 0.0,
+      "total_s": 0.4720476709999275,
+      "overlapped": true,
+      "rows": {
+       "department": 25,
+       "course": 300,
+       "instructor": 150,
+       "student": 200000,
+       "course_section": 600,
+       "academic_standing": 400000,
+       "enrollment": 1600000,
+       "financial_aid": 140000,
+       "grade_appeal": 32000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.0064514239998061385,
+       "_generate+write": 0.46559624700012137
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 1.0200390000000001,
+      "sys_s": 0.21145799999999998,
+      "minor_faults": 67630,
+      "major_faults": 0,
+      "cpu_s": 1.231497,
+      "peak_rss_mb": 353.90625,
+      "parquet_bytes": 45091279,
+      "loadavg_before": 0.900390625
+     },
+     {
+      "import_s": 0.4487482210001872,
+      "gen_s": 0.5287645630000952,
+      "write_s": 0.0,
+      "total_s": 0.5287645630000952,
+      "overlapped": true,
+      "rows": {
+       "department": 25,
+       "course": 300,
+       "instructor": 150,
+       "student": 200000,
+       "course_section": 600,
+       "academic_standing": 400000,
+       "enrollment": 1600000,
+       "financial_aid": 140000,
+       "grade_appeal": 32000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.006578253000043333,
+       "_generate+write": 0.5221863100000519
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 1.050438,
+      "sys_s": 0.318336,
+      "minor_faults": 64933,
+      "major_faults": 0,
+      "cpu_s": 1.368774,
+      "peak_rss_mb": 359.51953125,
+      "parquet_bytes": 45091279,
+      "loadavg_before": 0.90869140625
+     }
+    ]
+   }
+  }
+ }
+}

@@ -1,0 +1,220 @@
+{
+  "properties": {
+    "description": "Shape: generate a domain into lakehouse Delta tables, profile them, and check the profile against the domain's contract.",
+    "parameters": {
+      "domain": {
+        "type": "string",
+        "defaultValue": "retail"
+      },
+      "scale": {
+        "type": "string",
+        "defaultValue": "small"
+      },
+      "seed": {
+        "type": "int",
+        "defaultValue": 42
+      },
+      "mode": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "tablePrefix": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "writeMode": {
+        "type": "string",
+        "defaultValue": "overwrite"
+      },
+      "outputDir": {
+        "type": "string",
+        "defaultValue": "shape"
+      },
+      "baselinePath": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "failOnDrift": {
+        "type": "bool",
+        "defaultValue": false
+      }
+    },
+    "activities": [
+      {
+        "name": "GenerateDomain",
+        "type": "TridentNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "typeProperties": {
+          "notebookId": "<<NOTEBOOK_ID:shape_generate>>",
+          "workspaceId": "<<WORKSPACE_ID>>",
+          "parameters": {
+            "domain": {
+              "value": {
+                "value": "@pipeline().parameters.domain",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "scale": {
+              "value": {
+                "value": "@pipeline().parameters.scale",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "seed": {
+              "value": {
+                "value": "@pipeline().parameters.seed",
+                "type": "Expression"
+              },
+              "type": "int"
+            },
+            "mode": {
+              "value": {
+                "value": "@pipeline().parameters.mode",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "tablePrefix": {
+              "value": {
+                "value": "@pipeline().parameters.tablePrefix",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "writeMode": {
+              "value": {
+                "value": "@pipeline().parameters.writeMode",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "outputDir": {
+              "value": {
+                "value": "@pipeline().parameters.outputDir",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "_inlineInstallationEnabled": {
+              "value": true,
+              "type": "bool"
+            }
+          }
+        }
+      },
+      {
+        "name": "ProfileAndCheck",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "GenerateDomain",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "typeProperties": {
+          "notebookId": "<<NOTEBOOK_ID:shape_profile_domain>>",
+          "workspaceId": "<<WORKSPACE_ID>>",
+          "parameters": {
+            "domain": {
+              "value": {
+                "value": "@pipeline().parameters.domain",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "tablePrefix": {
+              "value": {
+                "value": "@pipeline().parameters.tablePrefix",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "baselinePath": {
+              "value": {
+                "value": "@pipeline().parameters.baselinePath",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "outputDir": {
+              "value": {
+                "value": "@pipeline().parameters.outputDir",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "failOnDrift": {
+              "value": {
+                "value": "@pipeline().parameters.failOnDrift",
+                "type": "Expression"
+              },
+              "type": "bool"
+            },
+            "contractPath": {
+              "value": {
+                "value": "@json(activity('GenerateDomain').output.result.exitValue).contractPath",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "_inlineInstallationEnabled": {
+              "value": true,
+              "type": "bool"
+            }
+          }
+        }
+      },
+      {
+        "name": "CheckGate",
+        "type": "IfCondition",
+        "dependsOn": [
+          {
+            "activity": "ProfileAndCheck",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "typeProperties": {
+          "expression": {
+            "value": "@json(activity('ProfileAndCheck').output.result.exitValue).passed",
+            "type": "Expression"
+          },
+          "ifTrueActivities": [],
+          "ifFalseActivities": [
+            {
+              "name": "FailGate",
+              "type": "Fail",
+              "dependsOn": [],
+              "typeProperties": {
+                "message": {
+                  "value": "@concat('Shape generated data broke the contract of ', pipeline().parameters.domain, ': ', string(json(activity('ProfileAndCheck').output.result.exitValue).violations))",
+                  "type": "Expression"
+                },
+                "errorCode": "ShapeContractFailed"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

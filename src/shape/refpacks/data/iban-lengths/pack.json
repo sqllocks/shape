@@ -1,0 +1,24 @@
+{
+  "format": "shape-reference-pack",
+  "version": 1,
+  "name": "iban-lengths",
+  "pack_version": "1.0.0",
+  "source": "schwifty 2026.7.3 (https://pypi.org/project/schwifty/2026.7.3/), schwifty/iban_registry/generated.json (sha256 4b25b3f6c334c60da9f426dcad835d1b2a082bba8d81ab119d1671e74c060ce8), the IBAN length of each country, as in the SWIFT IBAN Registry",
+  "retrieved": "2026-10-03",
+  "license": "MIT",
+  "attribution": "Copyright (c) 2021 Martin Domke (schwifty), MIT License; the lengths are those of the SWIFT IBAN Registry.",
+  "transformation_version": "1",
+  "sensitivity": "public",
+  "datasets": [
+    {
+      "name": "iban_lengths",
+      "file": "iban_lengths.arrow",
+      "fields": [
+        "country",
+        "length"
+      ],
+      "rows": 103,
+      "sha256": "f950bfe9dd76644fbe2fdfacc9ab36d86c1ea24f7192bf151bb2791091f54b46"
+    }
+  ]
+}

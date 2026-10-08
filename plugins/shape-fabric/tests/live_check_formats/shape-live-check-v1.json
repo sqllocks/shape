@@ -1,0 +1,15 @@
+{
+  "format": "shape-live-check",
+  "version": 1,
+  "check": "fabric-git-sync",
+  "passed": true,
+  "shape_version": "0.9.0",
+  "started": "2026-10-04T02:00:00Z",
+  "finished": "2026-10-04T02:07:31Z",
+  "steps": [
+    {"name": "push", "passed": true, "seconds": 3.2},
+    {"name": "update-from-git", "passed": true, "seconds": 61.0},
+    {"name": "commit-to-git", "passed": true, "seconds": 48.5},
+    {"name": "verify-files", "passed": true, "seconds": 1.1}
+  ]
+}

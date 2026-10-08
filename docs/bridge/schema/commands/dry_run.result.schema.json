@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "domain": {
+      "type": "string"
+    },
+    "estimated_bytes": {
+      "type": "integer"
+    },
+    "generation_order": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "issues": {
+      "items": {},
+      "type": "array"
+    },
+    "missing_strategies": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "planned_rows": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "type": "object"
+    },
+    "scale": {
+      "type": "string"
+    },
+    "total_rows": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "domain",
+    "scale",
+    "generation_order",
+    "planned_rows",
+    "total_rows",
+    "ok"
+  ],
+  "title": "dry_run result",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.0"
+}

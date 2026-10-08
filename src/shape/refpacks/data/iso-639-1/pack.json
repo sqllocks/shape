@@ -1,0 +1,24 @@
+{
+  "format": "shape-reference-pack",
+  "version": 1,
+  "name": "iso-639-1",
+  "pack_version": "1.0.0",
+  "source": "Unicode CLDR 48.2 core.zip (https://unicode.org/Public/cldr/48.2/core.zip), sha256 d2844f9dbf6124d11a7b047f5381a467902d82a673be3d658f4c0791ffa0b83b: two-letter language codes with idStatus regular in common/validity/language.xml, plus tl and tw (ISO 639-1 codes that CLDR deprecates in favour of fil and ak); English names from common/main/en.xml",
+  "retrieved": "2026-10-03",
+  "license": "Unicode-3.0",
+  "attribution": "Copyright (c) 2019-2025 Unicode, Inc. Data files of the Unicode Common Locale Data Repository (CLDR) are used under the Unicode License v3 (https://www.unicode.org/license.txt).",
+  "transformation_version": "1",
+  "sensitivity": "public",
+  "datasets": [
+    {
+      "name": "iso_639_1",
+      "file": "iso_639_1.arrow",
+      "fields": [
+        "alpha2",
+        "name"
+      ],
+      "rows": 183,
+      "sha256": "c98e303daccb2a1724c5b59d26af911c5967826f468162fb28b1eeb3838976ac"
+    }
+  ]
+}

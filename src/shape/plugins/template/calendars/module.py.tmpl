@@ -1,0 +1,19 @@
+"""Calendar `{{name}}`: a lift factor for every day."""
+
+from __future__ import annotations
+
+from datetime import date, timedelta
+
+import pyarrow as pa
+
+SHAPE_API = "1.0"
+
+class {{class}}:
+    """1.0 on weekdays and 1.2 on weekends. Replace it with your seasonality."""
+
+    name = "{{name}}"
+
+    def lift(self, start: date, end: date) -> pa.Array:
+        days = (end - start).days + 1
+        factors = [1.2 if (start + timedelta(days=i)).weekday() >= 5 else 1.0 for i in range(days)]
+        return pa.array(factors, type=pa.float64())

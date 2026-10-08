@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sqllocks-shape-healthcare-standards"
+# Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
+version = "0.9.1"
+description = "Shape plugin: healthcare standard outputs (X12 837/835/834, FHIR R4, OMOP CDM, NCPDP mapping) and X12 / HL7 v2 readers"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: OS Independent",
+    "Topic :: Database",
+]
+dependencies = ["sqllocks-shape==0.9.1"]
+
+[project.urls]
+Homepage = "https://github.com/sqllocks/shape"
+Repository = "https://github.com/sqllocks/shape"
+Issues = "https://github.com/sqllocks/shape/issues"
+Documentation = "https://github.com/sqllocks/shape/tree/main/plugins/shape-healthcare-standards"
+
+[project.optional-dependencies]
+# Test-only validators and loaders; none is needed to write the outputs.
+test = ["pyx12>=4.0,<5", "fhir.resources>=8.3,<9", "duckdb>=1.1,<2"]
+
+[project.entry-points."shape.sinks"]
+x12-837p = "shape_healthcare_standards.sinks:X12Claim837PSink"
+x12-837i = "shape_healthcare_standards.sinks:X12Claim837ISink"
+x12-835 = "shape_healthcare_standards.sinks:X12Remittance835Sink"
+x12-834 = "shape_healthcare_standards.sinks:X12Enrollment834Sink"
+x12-277ca = "shape_healthcare_standards.sinks:X12Acknowledgment277CASink"
+fhir-ndjson = "shape_healthcare_standards.sinks:FhirNdjsonSink"
+fhir-bundle = "shape_healthcare_standards.sinks:FhirBundleSink"
+omop = "shape_healthcare_standards.sinks:OmopSink"
+ncpdp = "shape_healthcare_standards.sinks:NcpdpSink"
+
+[project.entry-points."shape.sources"]
+x12 = "shape_healthcare_standards.sources:X12Source"
+hl7v2 = "shape_healthcare_standards.sources:Hl7v2Source"
+
+[project.entry-points."shape.emitters"]
+fhir = "shape_healthcare_standards.emitters:FhirEmitter"
+
+[tool.setuptools.packages.find]
+where = ["src"]

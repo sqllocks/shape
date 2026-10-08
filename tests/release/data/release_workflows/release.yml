@@ -1,0 +1,160 @@
+name: Release build
+# P8-04 (T-04, T-25, T-29, T-09): every archive of a release, built once, from one commit:
+# the T-04 platform wheels (wheels.yml), the T-29 pure wheel, the core sdist and each plugin's
+# wheel and sdist; a CycloneDX SBOM per archive plus the resolved SBOM of `sqllocks-shape[all]`;
+# Sigstore build-provenance and SBOM attestations; and the smoke suite on every platform.
+# Nothing is published from here: publish.yml calls this workflow and alone publishes. Run it
+# by hand (Actions > "Release build") to rehearse a release without publishing.
+# Attestations need a public repository (owner action O-08) or GitHub Enterprise Cloud.
+on:
+  workflow_call:
+    inputs:
+      release:
+        description: Also require a releasable tree (final version, a CHANGELOG section)
+        type: boolean
+        default: true
+    outputs:
+      version:
+        description: The version every archive carries
+        value: ${{ jobs.versions.outputs.version }}
+  workflow_dispatch:
+    inputs:
+      release:
+        description: Also require a releasable tree (final version, a CHANGELOG section)
+        type: boolean
+        default: false
+permissions: {contents: read}
+jobs:
+  versions:
+    runs-on: ubuntu-latest
+    outputs: {version: '${{ steps.version.outputs.version }}'}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Every version agrees (and, for a tag, matches it)
+        id: version
+        env: {RELEASE: '${{ inputs.release }}'}
+        run: |
+          args=()
+          if [ "$RELEASE" = "true" ]; then args+=(--release); fi
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then args+=(--tag "$GITHUB_REF_NAME"); fi
+          python scripts/check_versions.py "${args[@]}"
+          echo "version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")" >> "$GITHUB_OUTPUT"
+
+  wheels:
+    # T-04: one abi3 wheel per target, each installed and imported on Python 3.11 and 3.14
+    needs: versions
+    uses: ./.github/workflows/wheels.yml
+
+  python-dists:
+    needs: versions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install --upgrade pip build twine "maturin>=1.15,<2"
+      - name: Pure wheel (tested with tests/demo/core), core sdist, plugin wheels and sdists
+        run: python scripts/build_release_dist.py --out dist --verify-pure --python python3.11
+      - name: The core sdist builds the Rust kernel with the runner's stable Rust (>= 1.85)
+        env: {VERSION: '${{ needs.versions.outputs.version }}'}
+        run: |
+          python -m venv "$RUNNER_TEMP/sdist"
+          "$RUNNER_TEMP/sdist/bin/python" -m pip install -U pip
+          "$RUNNER_TEMP/sdist/bin/python" -m pip install "dist/sqllocks_shape-$VERSION.tar.gz"
+          cd "$RUNNER_TEMP" && SHAPE_KERNEL=rust "$RUNNER_TEMP/sdist/bin/python" -c "import shape; from shape.kernel import kernel_name; assert kernel_name() == 'rust'; print(shape.__version__)"
+      - uses: actions/upload-artifact@v4
+        with: {name: python-dists, path: dist/*, if-no-files-found: error}
+
+  sbom:
+    needs: [versions, wheels, python-dists]
+    runs-on: ubuntu-latest
+    permissions: {contents: read, id-token: write, attestations: write}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install --upgrade pip twine pip-audit cyclonedx-bom
+      - uses: actions/download-artifact@v4
+        with: {pattern: 'wheel-*', path: dist, merge-multiple: true}
+      - uses: actions/download-artifact@v4
+        with: {name: python-dists, path: dist}
+      - name: 'A complete release: every T-04 platform wheel, the pure wheel, every sdist'
+        run: python scripts/build_release_dist.py --check-set dist
+      - run: python -m twine check --strict dist/*
+      - name: One CycloneDX SBOM per archive, and SHA256SUMS
+        run: |
+          python scripts/release_sbom.py build dist --out sbom
+          python scripts/release_sbom.py check dist --sboms sbom --schema
+      - name: The resolved SBOM of sqllocks-shape[all], and an audit of what it resolves
+        run: |
+          python scripts/release_sbom.py environment dist --out sbom/environment-all.cdx.json \
+            --core "$(ls dist/sqllocks_shape-*-cp311-abi3-manylinux_2_28_x86_64.whl)"
+          python scripts/release_sbom.py requirements sbom/environment-all.cdx.json --out "$RUNNER_TEMP/audit.txt"
+          pip-audit --no-deps --disable-pip -r "$RUNNER_TEMP/audit.txt"
+      - name: Build provenance for every archive and every SBOM (Sigstore)
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            dist/*
+            sbom/*.cdx.json
+      - name: The resolved SBOM, attested against every archive
+        uses: actions/attest-sbom@v2
+        with:
+          subject-path: dist/*
+          sbom-path: sbom/environment-all.cdx.json
+      - name: Every archive verifies against its attestation
+        env: {GH_TOKEN: '${{ github.token }}'}
+        run: |
+          for f in dist/*; do
+            gh attestation verify "$f" --repo "$GITHUB_REPOSITORY" > /dev/null
+            echo "verified $f"
+          done
+      - uses: actions/upload-artifact@v4
+        with: {name: release-dist, path: dist/*, if-no-files-found: error}
+      - uses: actions/upload-artifact@v4
+        with: {name: release-sbom, path: sbom/*, if-no-files-found: error}
+
+  smoke:
+    # sqllocks-shape[all] from these archives only (no index for first-party), on every T-04
+    # platform: the import, every plugin, the Rust kernel and `shape suite run smoke`.
+    needs: [versions, sbom]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-14, macos-15-intel, windows-latest]
+        python: ['3.11', '3.14']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: {name: release-dist, path: dist}
+      - uses: actions/setup-python@v5
+        with: {python-version: '${{ matrix.python }}', allow-prereleases: true}
+      - if: runner.os == 'macOS'
+        run: brew install unixodbc librdkafka
+      - run: python scripts/release_smoke.py --version "$VERSION" --source dist --kernel rust --attempts 1
+        shell: bash
+        env: {VERSION: '${{ needs.versions.outputs.version }}'}
+
+  smoke-musllinux:
+    needs: [versions, sbom]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-latest, platform: linux/amd64}
+          - {os: ubuntu-24.04-arm, platform: linux/arm64}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: {name: release-dist, path: dist}
+      - env: {VERSION: '${{ needs.versions.outputs.version }}'}
+        run: |
+          for py in 3.11 3.14; do
+            docker run --rm --platform ${{ matrix.platform }} -e VERSION -v "$PWD:/src" -w /src "python:${py}-alpine" sh -c '
+              apk add --no-cache libstdc++ build-base unixodbc-dev librdkafka-dev >/dev/null &&
+              python scripts/release_smoke.py --version "$VERSION" --source dist --kernel rust --attempts 1'
+          done

@@ -1,0 +1,102 @@
+{
+  "properties": {
+    "description": "Shape quality gate using User Data Functions (Functions activity).",
+    "parameters": {
+      "filePath": {
+        "type": "string",
+        "defaultValue": "demo/day1/orders.parquet"
+      },
+      "profilePath": {
+        "type": "string",
+        "defaultValue": "shape/orders/latest.shape"
+      },
+      "contract": {
+        "type": "object",
+        "defaultValue": {}
+      }
+    },
+    "activities": [
+      {
+        "name": "ProfileFile",
+        "type": "UserDataFunctions",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "typeProperties": {
+          "functionSetId": "<<FUNCTION_SET_ID>>",
+          "workspaceId": "<<WORKSPACE_ID>>",
+          "functionName": "profileLakehouseFile",
+          "parameters": {
+            "filePath": {
+              "value": {
+                "value": "@pipeline().parameters.filePath",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "outputPath": {
+              "value": {
+                "value": "@pipeline().parameters.profilePath",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "maxMegabytes": {
+              "value": 50,
+              "type": "int"
+            }
+          }
+        }
+      },
+      {
+        "name": "CheckContract",
+        "type": "UserDataFunctions",
+        "dependsOn": [
+          {
+            "activity": "ProfileFile",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "typeProperties": {
+          "functionSetId": "<<FUNCTION_SET_ID>>",
+          "workspaceId": "<<WORKSPACE_ID>>",
+          "functionName": "checkProfile",
+          "parameters": {
+            "profilePath": {
+              "value": {
+                "value": "@pipeline().parameters.profilePath",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "contract": {
+              "value": {
+                "value": "@pipeline().parameters.contract",
+                "type": "Expression"
+              },
+              "type": "object"
+            },
+            "failOnViolation": {
+              "value": true,
+              "type": "bool"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,180 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "second-layer",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "bad_date": "2026-03-03",
+          "good_date": "2026-03-01",
+          "layers": [
+            "raw",
+            "clean"
+          ],
+          "project": "${DIR}/layers/shape.yml"
+        },
+        "command": "bisect_layers",
+        "id": "second-layer"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "bisect_layers",
+        "id": "second-layer",
+        "ok": true,
+        "result": {
+          "bad_date": "2026-03-03",
+          "column": null,
+          "disappears": [],
+          "first_layer": "clean",
+          "format": "shape-bisect-layers",
+          "found": true,
+          "good_date": "2026-03-01",
+          "layers": [
+            {
+              "bad": {
+                "business_date": "2026-03-03",
+                "content_id": "<any>",
+                "ref": "86d972bbbd4b7eabef1e87e4a2e1a7aa9096bb7f12eef4ff4ee7c4def45c89e6"
+              },
+              "changed": false,
+              "changes": [],
+              "columns": [],
+              "good": {
+                "business_date": "2026-03-01",
+                "content_id": "<any>",
+                "ref": "f96e3ed913d136efc72d72f3c62fa8c7f23d29521fc02513b09d1f4b5772ca12"
+              },
+              "name": "layer_raw",
+              "registry": "${DIR}/layers/reg",
+              "source": "raw",
+              "status": "unchanged"
+            },
+            {
+              "bad": {
+                "business_date": "2026-03-03",
+                "content_id": "<any>",
+                "ref": "1583a94945d3e9edc4db4689b554d7bcb16e313709c4de4e3494c2712a846a95"
+              },
+              "changed": true,
+              "changes": [
+                {
+                  "after": null,
+                  "before": null,
+                  "column": "total",
+                  "kind": "mean_shift",
+                  "redacted": true,
+                  "score": 0.7648,
+                  "severity": "medium"
+                },
+                {
+                  "after": null,
+                  "before": null,
+                  "column": "total",
+                  "kind": "distribution_shift",
+                  "redacted": true,
+                  "score": 0.866,
+                  "severity": "medium"
+                },
+                {
+                  "after": null,
+                  "before": null,
+                  "column": "total",
+                  "kind": "range_change",
+                  "redacted": true,
+                  "score": 0.8336,
+                  "severity": "low"
+                },
+                {
+                  "after": null,
+                  "before": null,
+                  "column": "total",
+                  "kind": "distribution_change",
+                  "redacted": true,
+                  "score": 0.2,
+                  "severity": "low"
+                }
+              ],
+              "columns": [
+                "total"
+              ],
+              "good": {
+                "business_date": "2026-03-01",
+                "content_id": "<any>",
+                "ref": "4a35577bf2b7685cd0f592fb0113a3e62cdfd0ffd01ae7c2ddbc7efe0a436c76"
+              },
+              "name": "layer_clean",
+              "registry": "${DIR}/layers/reg",
+              "source": "clean",
+              "status": "origin"
+            }
+          ],
+          "persists": [],
+          "project": "${DIR}/layers/shape.yml",
+          "version": 1,
+          "warnings": []
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "needs-a-project",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "bad_date": "2026-03-03",
+          "good_date": "2026-03-01",
+          "layers": [
+            "raw",
+            "clean"
+          ]
+        },
+        "command": "bisect_layers",
+        "id": "needs-a-project"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "bisect_layers",
+        "error": {
+          "code": "input.invalid_value",
+          "group": "input",
+          "hint": "give project (the bridge never looks for a shape.yml on its own)",
+          "message": "bisect_layers needs a project file: its sources are the layers"
+        },
+        "id": "needs-a-project",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "layers-is-an-array",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "bad_date": "b",
+          "good_date": "a",
+          "layers": "raw"
+        },
+        "command": "bisect_layers",
+        "id": "layers-is-an-array"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "bisect_layers",
+        "error": {
+          "code": "usage.invalid_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "argument 'layers' must be of type array of string, got str"
+        },
+        "id": "layers-is-an-array",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "bisect_layers",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

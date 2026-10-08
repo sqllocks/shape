@@ -1,0 +1,3 @@
+START: median 39 ms (gate 300)
+PROF-CLI d2.csv: refengine 30.15s, shape 3.39s, 8.9x (gate 10x)
+PROF-CLI d3.csv: refengine 81.63s, shape 7.61s, 10.7x (gate 10x)

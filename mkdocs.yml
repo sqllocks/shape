@@ -1,0 +1,195 @@
+# The documentation site (P8-03, T-24). Build with `mkdocs build --strict`; check links with
+# `python scripts/check_doc_links.py`. Two pages are generated at build time by
+# `scripts/mkdocs_hooks.py`: the CLI reference (from the argparse parser) and the performance
+# page (from the committed benchmark results).
+site_name: Shape by SQLLocks
+site_description: Shape as Code — a portable, executable description of how data behaves.
+site_url: https://sqllocks.github.io/shape/
+repo_url: https://github.com/sqllocks/shape
+repo_name: sqllocks/shape
+edit_uri: edit/main/docs/
+copyright: Copyright SQLLocks. Released under the MIT license.
+
+docs_dir: docs
+site_dir: site
+strict: true
+
+# Internal planning material and talk rehearsal files are not part of the site.
+exclude_docs: |
+  plans/
+  talks/
+
+hooks:
+  - scripts/mkdocs_hooks.py
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/weather-night
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/weather-sunny
+        name: Light mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+
+nav:
+  - Home: index.md
+  - Get started:
+      - Install: INSTALL.md
+      - Five-minute quickstart: QUICKSTART.md
+      - Tutorial: TUTORIAL.md
+      - Manifesto: SHAPE_MANIFESTO.md
+  - Profiling:
+      - File sources: SOURCES.md
+      - Profiling notes: PROFILING_NOTES.md
+      - Mergeable profiles: PROFILE_MERGE.md
+      - Profile registry: PROFILE_REGISTRY.md
+      - Fingerprint: FINGERPRINT.md
+      - Joint distributions: JOINT.md
+      - Slices and skew: FAIRNESS_AND_SKEW.md
+      - Explain and notebooks: EXPLAIN.md
+      - Data dictionary: DICTIONARY.md
+      - Scorecards: SCORECARD.md
+      - Duplicate detection: RESOLVE.md
+      - Data detective packs: DETECTIVE.md
+      - Reference packs and validators: REFERENCE_PACKS.md
+      - Public dataset library: DATASET_LIBRARY.md
+  - Contracts, checks and drift:
+      - Drift: DRIFT.md
+      - Contracts: CONTRACTS.md
+      - Consumer contracts: CONSUMER_CONTRACTS.md
+      - Canaries: CANARIES.md
+      - Environment parity: PARITY.md
+      - Drift report: DRIFT_REPORT.md
+      - Verifying data: VERIFY.md
+      - Emitting a contract: CONTRACT_EMIT.md
+      - Testing your rules: RULES_TESTING.md
+      - Testing with Shape: TESTING_WITH_SHAPE.md
+      - Proposals: PROPOSALS.md
+      - Planned changes: PLANNED_CHANGES.md
+  - Generation:
+      - Schema design: DESIGN.md
+      - Generation engine: GENERATION_ENGINE.md
+      - Generation strategies: GENERATION_STRATEGIES.md
+      - Calendars and timestamps: GENERATION_CALENDARS.md
+      - Generation spec: GENERATION_SPEC.md
+      - Generation stability: GENERATION_STABILITY.md
+      - Generation kernel: GENERATION_KERNEL.md
+      - Locales: LOCALES.md
+      - Location as Code: LOCATION_AS_CODE.md
+      - Scenario packs: SCENARIO_PACKS.md
+      - Scenario library: SCENARIO_LIBRARY.md
+      - Schema importers: IMPORTERS.md
+      - Chaos: CHAOS.md
+      - Game days: GAMEDAY.md
+      - Failure modes: FAILURE_MODES.md
+      - Incremental data: INCREMENTAL.md
+      - Transforms: TRANSFORMS.md
+      - Simulating files and events: SIMULATION_FILES_EVENTS.md
+      - Generating at scale: SCALE.md
+      - Performance: PERFORMANCE.md
+      - Fidelity report: FIDELITY.md
+      - Fidelity tiers: FIDELITY_TIERS.md
+      - Report card: REPORT_CARD.md
+  - Outputs and integration:
+      - Sinks: SINKS.md
+      - Landing layout: LANDING.md
+      - Emitting events: EMIT.md
+      - Fabric mirroring: FABRIC_MIRROR.md
+      - Excel workbooks: EXCEL.md
+      - dbt: DBT.md
+      - JSON bridge: BRIDGE.md
+      - Demos: DEMO.md
+      - Container image: CONTAINER.md
+      - Fabric platform inventory: FABRIC_PLATFORM.md
+      - Shape in CI: CI.md
+      - Pull request check: PR_BOT.md
+      - Webhook notifications: NOTIFICATIONS.md
+  - Projects and history:
+      - Project file: PROJECT.md
+      - Registry: REGISTRY.md
+      - History tools: HISTORY.md
+      - Reproducibility: REPRODUCIBILITY.md
+      - Determinism: DETERMINISM.md
+  - Privacy and trust:
+      - Privacy model: PRIVACY_MODEL.md
+      - Masking: MASK.md
+      - Value vault: VAULT.md
+      - Safe-to-share bundle: SHARE_BUNDLE.md
+      - Signing: SIGNING.md
+      - Threat model: THREAT_MODEL.md
+      - Security specification: SECURITY_SPECIFICATION.md
+      - External reference assets: EXTERNAL_REFERENCE_ASSETS.md
+  - Plugins:
+      - Built-in plugins: plugins/builtins.md
+      - Writing a plugin: plugins/authoring.md
+      - Plugin API v1: plugins/api-v1.md
+      - Plugin host: plugins/host.md
+      - Stability promise: plugins/stability.md
+      - Trust model: plugins/trust-model.md
+      - Cloud sources: plugins/cloud-sources.md
+      - Fabric sign-in: plugins/fabric-auth.md
+      - Fabric commands: plugins/fabric-commands.md
+      - Fabric writers: plugins/fabric-writers.md
+      - SQL Server: plugins/sqlserver.md
+      - Streaming: plugins/streaming.md
+      - Simulation: plugins/simulation.md
+      - Behavior models: plugins/behavior.md
+      - Healthcare code sets: plugins/healthcare-codes.md
+      - Healthcare standards: plugins/healthcare-standards.md
+      - Integrations: plugins/integrations.md
+  - Reference:
+      - Command line: CLI.md
+      - CLI reference (generated): reference/cli.md
+      - CLI stability: CLI_STABILITY.md
+      - Exit codes: EXIT_CODES.md
+      - Python API: API.md
+      - API stability: API_STABILITY.md
+      - Performance (generated): reference/performance.md
+      - Specifications:
+          - Shape model v2: specs/SHAPE_MODEL_V2.md
+          - Normative contract v2: specs/SHAPE_2.md
+          - Shape 1.0 contract: specs/SHAPE_1_0.md
+          - 1.0 compatibility contract: specs/ONE_ZERO_CONTRACT.md
+          - Artifact specification: specs/SHAPE_ARTIFACT_SPEC.md
+          - State and compatibility: specs/STATE_AND_COMPATIBILITY.md
+          - Streaming semantics: specs/STREAMING_SEMANTICS.md
+          - Pack specification: specs/PACK_SPEC.md
+          - Location specification: specs/LOCATION_SPEC.md
+  - Project:
+      - Product architecture: PRODUCT_ARCHITECTURE.md
+      - Release policy: RELEASE_POLICY.md
+      - Release checklist: RELEASE_CHECKLIST.md
+      - Definition of done for 1.0: V1_DONE.md
+      - What Shape will not build: NOT_BUILDING.md
+      - Branding: BRANDING.md
+      - Contributing: CONTRIBUTING.md

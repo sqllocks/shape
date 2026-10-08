@@ -1,0 +1,35 @@
+$ SHAPE_KERNEL=rust pytest -p no:cacheprovider -v tests/privacy/test_taxonomy.py tests/artifact/test_signing.py tests/regressions/test_phase7_bugs.py
+tests/privacy/test_taxonomy.py::test_policy_and_taxonomy_share_one_table PASSED
+tests/privacy/test_taxonomy.py::test_every_label_is_accepted_by_every_entry_point[PUBLIC] PASSED
+tests/privacy/test_taxonomy.py::test_every_label_is_accepted_by_every_entry_point[INTERNAL] PASSED
+tests/privacy/test_taxonomy.py::test_every_label_is_accepted_by_every_entry_point[CONFIDENTIAL] PASSED
+tests/privacy/test_taxonomy.py::test_every_label_is_accepted_by_every_entry_point[SENSITIVE] PASSED
+tests/privacy/test_taxonomy.py::test_every_label_is_accepted_by_every_entry_point[PII] PASSED
+tests/privacy/test_taxonomy.py::test_every_label_is_accepted_by_every_entry_point[SECRET] PASSED
+tests/privacy/test_taxonomy.py::test_every_label_is_accepted_by_every_entry_point[TOP_SECRET] PASSED
+tests/privacy/test_taxonomy.py::test_aliases_rank_as_confidential PASSED
+tests/privacy/test_taxonomy.py::test_confidential_is_released_and_redacted_like_sensitive PASSED
+tests/privacy/test_taxonomy.py::test_unknown_label_is_rejected_not_ignored PASSED
+tests/artifact/test_signing.py::test_sign_then_verify_round_trip PASSED
+tests/artifact/test_signing.py::test_unsigned_artifact_fails_verify PASSED
+tests/artifact/test_signing.py::test_wrong_key_fails PASSED
+tests/artifact/test_signing.py::test_forged_artifact_with_rewritten_hashes_fails_verify PASSED
+tests/artifact/test_signing.py::test_forged_and_stripped_signature_fails PASSED
+tests/artifact/test_signing.py::test_attacker_resigns_with_own_key_fails_trusted_key PASSED
+tests/artifact/test_signing.py::test_signature_is_not_valid_for_another_message PASSED
+tests/artifact/test_signing.py::test_malformed_signature_member_fails[] PASSED
+tests/artifact/test_signing.py::test_malformed_signature_member_fails[not json] PASSED
+tests/artifact/test_signing.py::test_malformed_signature_member_fails[[]] PASSED
+tests/artifact/test_signing.py::test_malformed_signature_member_fails[{"algorithm":"RSA"}] PASSED
+tests/artifact/test_signing.py::test_malformed_signature_member_fails[{"algorithm":"Ed25519"}] PASSED
+tests/artifact/test_signing.py::test_resign_replaces_signature PASSED
+tests/artifact/test_signing.py::test_sign_to_output_leaves_source_untouched PASSED
+tests/artifact/test_signing.py::test_signature_member_is_reserved_for_writers PASSED
+tests/artifact/test_signing.py::test_damaged_artifact_is_not_signed PASSED
+tests/artifact/test_signing.py::test_key_files PASSED
+tests/artifact/test_signing.py::test_cli_sign_verify_flags PASSED
+tests/regressions/test_phase7_bugs.py::test_every_phase_7_bug_is_in_the_table PASSED
+tests/regressions/test_phase7_bugs.py::test_the_regression_test_exists[P19] PASSED
+tests/regressions/test_phase7_bugs.py::test_the_regression_test_exists[SEC3] PASSED
+======================== 32 passed, 3 warnings in 4.53s ========================
+exit 0

@@ -1,0 +1,37 @@
+{
+  "type": "record",
+  "name": "Trip",
+  "namespace": "demo.transit",
+  "fields": [
+    {"name": "trip_id", "type": "long"},
+    {"name": "rider", "type": {
+      "type": "record", "name": "Rider",
+      "fields": [
+        {"name": "rider_id", "type": "int"},
+        {"name": "email", "type": "string"},
+        {"name": "home", "type": ["null", "string"]}
+      ]
+    }},
+    {"name": "backup_rider", "type": ["null", "Rider"], "default": null},
+    {"name": "mode", "type": {"type": "enum", "name": "Mode", "symbols": ["bus", "tram", "ferry"]}},
+    {"name": "return_mode", "type": "Mode"},
+    {"name": "fare", "type": {"type": "bytes", "logicalType": "decimal", "precision": 6, "scale": 2}},
+    {"name": "day", "type": {"type": "int", "logicalType": "date"}},
+    {"name": "started", "type": {"type": "long", "logicalType": "timestamp-millis"}},
+    {"name": "ended", "type": ["null", {"type": "long", "logicalType": "timestamp-micros"}]},
+    {"name": "ticket", "type": {"type": "string", "logicalType": "uuid"}},
+    {"name": "distance", "type": "double"},
+    {"name": "express", "type": "boolean"},
+    {"name": "legs", "type": {"type": "array", "items": {
+      "type": "record", "name": "Leg",
+      "fields": [{"name": "stop", "type": "string"}, {"name": "minutes", "type": "int"}]
+    }}},
+    {"name": "stops", "type": {"type": "array", "items": "string"}},
+    {"name": "extras", "type": {"type": "map", "values": "int"}},
+    {"name": "photo", "type": "bytes"},
+    {"name": "badge", "type": {"type": "fixed", "name": "Badge", "size": 8}},
+    {"name": "payload", "type": ["null", "string", "long"]},
+    {"name": "grid", "type": {"type": "array", "items": {"type": "array", "items": "int"}}},
+    {"name": "span", "type": {"type": "string", "logicalType": "duration-ish"}}
+  ]
+}

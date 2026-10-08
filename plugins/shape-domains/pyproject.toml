@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sqllocks-shape-domains"
+# Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
+version = "0.9.1"
+description = "Shape plugin: Industry domains and reference data"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: OS Independent",
+    "Topic :: Database",
+]
+# faker: the generation strategies of some domain schemas, and learned schemas (#309); the
+# same requirement as the core's [faker] extra.
+dependencies = ["sqllocks-shape==0.9.1", "faker>=24"]
+
+# Entry points (shape.* groups, plugin API v1); see docs/plugins/authoring.md.
+
+[project.urls]
+Homepage = "https://github.com/sqllocks/shape"
+Repository = "https://github.com/sqllocks/shape"
+Issues = "https://github.com/sqllocks/shape/issues"
+Documentation = "https://github.com/sqllocks/shape/tree/main/plugins/shape-domains"
+
+[project.entry-points."shape.domains"]
+retail = "shape_domains.retail:RetailDomain"
+capital_markets = "shape_domains.capital_markets:CapitalMarketsDomain"
+education = "shape_domains.education:EducationDomain"
+financial = "shape_domains.financial:FinancialDomain"
+healthcare = "shape_domains.healthcare:HealthcareDomain"
+hr = "shape_domains.hr:HrDomain"
+insurance = "shape_domains.insurance:InsuranceDomain"
+iot = "shape_domains.iot:IotDomain"
+manufacturing = "shape_domains.manufacturing:ManufacturingDomain"
+marketing = "shape_domains.marketing:MarketingDomain"
+pulse = "shape_domains.pulse:PulseDomain"
+real_estate = "shape_domains.real_estate:RealEstateDomain"
+supply_chain = "shape_domains.supply_chain:SupplyChainDomain"
+telecom = "shape_domains.telecom:TelecomDomain"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+shape_domains = ["data/**/*.json", "data/**/*.arrow", "reference_packs/**/*.json", "reference_packs/**/*.arrow"]

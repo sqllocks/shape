@@ -1,0 +1,119 @@
+{
+ "meta": {
+  "cores": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+  "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-10-02 00:38:06",
+  "cpu_mhz": 2799.998,
+  "dataset": "/root/bench-data/profile/d2.csv",
+  "runs": 5,
+  "warmup": 1,
+  "shape_threads": 1,
+  "loadavg_start": 0.63134765625
+ },
+ "gate": "LEARN-CLI >= 10x (D2 csv, median of 5 fresh-process runs)",
+ "refengine_median_s": 39.85062592700024,
+ "shape_median_s": 2.4516573589999098,
+ "ratio": 16.254565826954003,
+ "refengine_runs_s": [
+  39.851,
+  40.142,
+  39.897,
+  39.295,
+  39.848
+ ],
+ "shape_runs_s": [
+  2.416,
+  2.48,
+  2.573,
+  2.452,
+  2.326
+ ],
+ "equivalence": {
+  "explained": [
+   {
+    "column": "d2.wait_time",
+    "rule": "exponential",
+    "reason": "an exponential fit becomes an exponential distribution; the alternative, a normal with the same mean and standard deviation clipped to the observed range, has the wrong shape"
+   },
+   {
+    "column": "d2.currency",
+    "rule": "enum_pattern",
+    "reason": "a currency or language code column whose profile lists every value is generated from those values and weights; drawing any code of a fake-data provider would lose the column's own vocabulary (and needs the optional faker package). Other patterns (e-mail, phone, ip address...) are never turned into value lists: the schema would carry personal data"
+   },
+   {
+    "column": "d2.order_value",
+    "rule": "truncated_enum",
+    "reason": "a numeric column whose profile lists fewer values than it has distinct ones is generated from its distribution; drawing only the listed values (the 500 most frequent) would leave the rest of the column's values out for good"
+   }
+  ],
+  "unexplained": 0
+ },
+ "raw": {
+  "refengine": [
+   {
+    "wall_s": 39.85062592700024,
+    "cpu_s": 40.04665,
+    "loadavg_before": 0.90771484375,
+    "cmd": "/root/.venvs/refengine/bin/refengine learn /root/bench-data/profile/d2.csv -o /root/bench-out/learn_cli/out.refengine.json"
+   },
+   {
+    "wall_s": 40.14211960200009,
+    "cpu_s": 40.45647100000001,
+    "loadavg_before": 0.9541015625,
+    "cmd": "/root/.venvs/refengine/bin/refengine learn /root/bench-data/profile/d2.csv -o /root/bench-out/learn_cli/out.refengine.json"
+   },
+   {
+    "wall_s": 39.896815738999976,
+    "cpu_s": 40.138037,
+    "loadavg_before": 0.97998046875,
+    "cmd": "/root/.venvs/refengine/bin/refengine learn /root/bench-data/profile/d2.csv -o /root/bench-out/learn_cli/out.refengine.json"
+   },
+   {
+    "wall_s": 39.29498834500009,
+    "cpu_s": 39.53407699999997,
+    "loadavg_before": 0.9912109375,
+    "cmd": "/root/.venvs/refengine/bin/refengine learn /root/bench-data/profile/d2.csv -o /root/bench-out/learn_cli/out.refengine.json"
+   },
+   {
+    "wall_s": 39.84840729000007,
+    "cpu_s": 39.979686000000015,
+    "loadavg_before": 0.99658203125,
+    "cmd": "/root/.venvs/refengine/bin/refengine learn /root/bench-data/profile/d2.csv -o /root/bench-out/learn_cli/out.refengine.json"
+   }
+  ],
+  "shape": [
+   {
+    "wall_s": 2.4159370400002445,
+    "cpu_s": 7.316535999999999,
+    "loadavg_before": 0.9541015625,
+    "cmd": "/root/.venvs/shape/bin/shape learn /root/bench-data/profile/d2.csv -o /root/bench-out/learn_cli/out.shape.json"
+   },
+   {
+    "wall_s": 2.479836075000094,
+    "cpu_s": 7.257373000000001,
+    "loadavg_before": 0.97802734375,
+    "cmd": "/root/.venvs/shape/bin/shape learn /root/bench-data/profile/d2.csv -o /root/bench-out/learn_cli/out.shape.json"
+   },
+   {
+    "wall_s": 2.5731261030000496,
+    "cpu_s": 7.538540000000012,
+    "loadavg_before": 0.990234375,
+    "cmd": "/root/.venvs/shape/bin/shape learn /root/bench-data/profile/d2.csv -o /root/bench-out/learn_cli/out.shape.json"
+   },
+   {
+    "wall_s": 2.4516573589999098,
+    "cpu_s": 7.132029000000017,
+    "loadavg_before": 0.99658203125,
+    "cmd": "/root/.venvs/shape/bin/shape learn /root/bench-data/profile/d2.csv -o /root/bench-out/learn_cli/out.shape.json"
+   },
+   {
+    "wall_s": 2.325995045000127,
+    "cpu_s": 7.139384000000007,
+    "loadavg_before": 1.0,
+    "cmd": "/root/.venvs/shape/bin/shape learn /root/bench-data/profile/d2.csv -o /root/bench-out/learn_cli/out.shape.json"
+   }
+  ]
+ }
+}

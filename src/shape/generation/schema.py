@@ -1,0 +1,844 @@
+"""The Shape generation schema: tables, columns with a generator each, relationships, business
+rules, scale presets and modes (``3nf`` and ``star``).
+
+One typed model for every route into generation (a domain plugin, a ``.shape`` fit, a DDL file,
+a hand-written JSON file). :meth:`GenSchema.to_dict` and :meth:`GenSchema.from_dict` read and
+write the JSON form described by ``shape/schemas/generation-schema-v1.json``;
+:func:`schema_problems` checks a document against that schema and :meth:`GenSchema.validate`
+checks the semantics (keys exist, references resolve, required generator keys).
+
+Stable interface (P4-02 and later work packages build on it): the dataclasses below, their
+property names, ``to_dict``/``from_dict``, ``validate`` and :class:`Issue`.
+"""
+
+from __future__ import annotations
+
+import json
+from dataclasses import asdict, dataclass, field, is_dataclass
+from functools import cache
+from importlib import resources
+from typing import Any
+
+from shape import compat
+from shape.errors import ShapeSchemaError
+from shape.generation.spec_keys import unknown_keys
+from shape.schemacheck import validate as _validate_document
+from shape.security.names import is_safe_name
+
+SCHEMA_VERSION = 1
+
+# Generator keys each strategy needs. A missing key is a warning from ``GenSchema.validate``;
+# a strategy that is not listed is a warning too (a plugin may register it).
+STRATEGY_REQUIRED_KEYS: dict[str, frozenset[str]] = {
+    "sequence": frozenset(),
+    "uuid": frozenset(),
+    "faker": frozenset({"provider"}),
+    "weighted_enum": frozenset({"values"}),
+    "distribution": frozenset({"distribution"}),
+    "temporal": frozenset(),
+    "formula": frozenset({"expression"}),
+    "derived": frozenset({"source"}),
+    "correlated": frozenset({"source_column"}),
+    "foreign_key": frozenset({"ref"}),
+    "lookup": frozenset({"source_table", "source_column", "via"}),
+    "reference_data": frozenset({"dataset"}),
+    "pattern": frozenset({"format"}),
+    "conditional": frozenset({"condition"}),
+    "computed": frozenset({"rule", "child_table", "child_column"}),
+    "lifecycle": frozenset({"phases"}),
+    "self_referencing": frozenset({"pk_column"}),
+    "self_ref_field": frozenset({"field"}),
+    "first_per_parent": frozenset({"parent_column"}),
+    "record_sample": frozenset({"dataset", "field"}),
+    "record_field": frozenset({"dataset", "field"}),
+    "conditional_table": frozenset({"source_column", "table", "values"}),
+    "hierarchy": frozenset({"dataset", "field", "levels"}),
+    "hierarchy_field": frozenset({"dataset", "field"}),
+    "locale": frozenset({"locale", "provider"}),
+    "scd2": frozenset({"role", "business_key"}),
+    "composite_foreign_key": frozenset({"ref_table", "ref_columns"}),
+    "composite_fk_field": frozenset({"source_column", "ref_column"}),
+    "native": frozenset(),
+    "address": frozenset(),
+    "bootstrap": frozenset({"dataset", "field"}),
+    "constant": frozenset({"value"}),
+    "choice": frozenset({"values"}),
+    "empirical": frozenset({"quantiles"}),
+    "normal": frozenset({"mean", "stddev"}),
+    "uniform": frozenset({"low", "high"}),
+}
+
+MODES = ("3nf", "star")
+
+
+def _plain_json(value: Any) -> Any:
+    """A copy of ``value`` made of JSON types only. A dataclass (an ``AddressReference`` or a
+    ``Location`` row of an address reference) becomes a dict, as a schema file would hold it."""
+
+    def default(obj: Any) -> Any:
+        if is_dataclass(obj) and not isinstance(obj, type):
+            return asdict(obj)
+        raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+    return json.loads(json.dumps(value, default=default))
+
+
+def _is_number(text: str) -> bool:
+    try:
+        float(text)
+    except ValueError:
+        return False
+    return True
+
+
+class GenSchemaError(ShapeSchemaError):
+    """A generation schema document does not follow ``generation-schema-v1.json``."""
+
+
+@dataclass(frozen=True, slots=True)
+class Issue:
+    """One finding of :meth:`GenSchema.validate`: ``level`` is ``error`` or ``warning``."""
+
+    level: str
+    message: str
+    location: str
+
+
+@dataclass(slots=True)
+class Column:
+    """One column: its logical ``type`` and the ``generator`` (a ``strategy`` plus its keys)."""
+
+    name: str
+    type: str
+    generator: dict[str, Any]
+    nullable: bool = False
+    null_rate: float = 0.0
+    max_length: int | None = None
+    precision: int | None = None
+    scale: int | None = None
+    #: A database identity column (``IDENTITY``, ``SERIAL``, ``AUTO_INCREMENT``): an ``integer``
+    #: column of the ``sequence`` strategy; a SQL writer keeps its values or lets the server number.
+    identity: bool = False
+
+    @property
+    def strategy(self) -> str:
+        return str(self.generator.get("strategy", ""))
+
+    @property
+    def is_foreign_key(self) -> bool:
+        return self.strategy == "foreign_key"
+
+    @property
+    def fk_ref_table(self) -> str | None:
+        """The table a ``foreign_key`` column points at (from ``ref = "table.column"``)."""
+        if not self.is_foreign_key:
+            return None
+        ref = str(self.generator.get("ref", ""))
+        return ref.split(".")[0] if "." in ref else None
+
+    @property
+    def fk_ref_column(self) -> str | None:
+        if not self.is_foreign_key:
+            return None
+        ref = str(self.generator.get("ref", ""))
+        return ref.split(".")[1] if "." in ref else None
+
+    @property
+    def is_computed(self) -> bool:
+        return self.strategy in ("computed", "formula")
+
+
+@dataclass(slots=True)
+class Table:
+    """A table: ordered columns and its primary key."""
+
+    name: str
+    columns: dict[str, Column]
+    primary_key: list[str] = field(default_factory=list)
+    description: str = ""
+    cdm_mapping: str | None = None
+
+    @property
+    def column_names(self) -> list[str]:
+        return list(self.columns)
+
+    @property
+    def fk_dependencies(self) -> set[str]:
+        """Tables this table's foreign-key columns point at (never itself)."""
+        deps: set[str] = set()
+        for col in self.columns.values():
+            ref = col.fk_ref_table
+            if ref and ref != self.name:
+                deps.add(ref)
+        return deps
+
+
+@dataclass(slots=True)
+class Relationship:
+    """A parent/child link: ``one_to_many``, ``one_to_one``, ``many_to_many`` or
+    ``self_referencing``."""
+
+    name: str
+    parent: str
+    child: str
+    parent_columns: list[str]
+    child_columns: list[str]
+    type: str = "one_to_many"
+    cardinality: dict[str, Any] = field(default_factory=dict)
+    optional: bool = False
+
+
+@dataclass(slots=True)
+class BusinessRule:
+    """A constraint over generated data: ``cross_table`` (``A.x >= B.y`` joined ``via`` a key),
+    ``cross_column`` or ``constraint`` (``left OP right`` inside ``table``). Other types are
+    carried and ignored by the rules engine."""
+
+    name: str
+    type: str
+    rule: str
+    table: str | None = None
+    via: str | None = None
+    when: str | None = None
+
+
+@dataclass(slots=True)
+class Generation:
+    """Scale presets (``scales``: preset -> table -> rows), the current ``scale`` and how the
+    remaining tables' counts derive (``derived_counts``: ``fixed``, ``per_parent`` x ``ratio`` or
+    ``per_year``)."""
+
+    scale: str = "small"
+    scales: dict[str, dict[str, int]] = field(default_factory=dict)
+    derived_counts: dict[str, dict[str, Any]] = field(default_factory=dict)
+    output: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(slots=True)
+class Model:
+    """Top-level metadata. ``seed`` is the run seed (T-16); ``date_range`` holds ISO ``start``
+    and ``end`` dates for temporal strategies and ``per_year`` row counts."""
+
+    name: str = "unnamed"
+    description: str = ""
+    domain: str = ""
+    schema_mode: str = "3nf"
+    locale: str = "en_US"
+    seed: int = 42
+    date_range: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(slots=True)
+class GenSchema:
+    """A complete generation schema. ``correlated_columns`` maps a table to ``[column_a,
+    column_b, r]`` triples that the Gaussian-copula post-pass enforces."""
+
+    model: Model
+    tables: dict[str, Table]
+    relationships: list[Relationship] = field(default_factory=list)
+    business_rules: list[BusinessRule] = field(default_factory=list)
+    generation: Generation = field(default_factory=Generation)
+    correlated_columns: dict[str, list[list[Any]]] = field(default_factory=dict)
+    # ``x_`` fields a newer release or a tool wrote: ignored, and written back as read.
+    extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+    # strategy or distribution name -> generator version (``shape.generation.versions``)
+    generators: dict[str, int] = field(default_factory=dict)
+    # the identifier values of a run with no run switch (``shape.generation.identifiers``);
+    # None is ``reserved`` and is not written
+    identifiers: str | None = None
+
+    # ---- structure ----------------------------------------------------------------------
+
+    @property
+    def table_names(self) -> list[str]:
+        return list(self.tables)
+
+    def get_children(self, table: str) -> list[Relationship]:
+        return [r for r in self.relationships if r.parent == table]
+
+    def get_parents(self, table: str) -> list[Relationship]:
+        return [r for r in self.relationships if r.child == table]
+
+    def get_relationship(self, name: str) -> Relationship | None:
+        return next((r for r in self.relationships if r.name == name), None)
+
+    # ---- JSON ---------------------------------------------------------------------------
+
+    def to_dict(self) -> dict[str, Any]:
+        """The JSON document (``generation-schema-v1.json``). Round-trips through
+        :meth:`from_dict`. It is written without ``format``, ``version``, ``shape_version`` and
+        ``min_shape_version``: ``shape from-ddl`` and the schema dumps are pinned equal to the
+        baseline's file by the parity harnesses (``ddl_1to1`` and ``schema_import`` under
+        ``benchmarks/``), so the declaration waits for the owner's decision recorded in
+        ``docs/plans/lane_status/W1-01.md``. Readers already accept it."""
+        document = {
+            "schema_version": SCHEMA_VERSION,
+            "model": {
+                "name": self.model.name,
+                "description": self.model.description,
+                "domain": self.model.domain,
+                "schema_mode": self.model.schema_mode,
+                "locale": self.model.locale,
+                "seed": self.model.seed,
+                "date_range": dict(self.model.date_range),
+            },
+            "tables": {
+                t.name: {
+                    "name": t.name,
+                    "description": t.description,
+                    "cdm_mapping": t.cdm_mapping,
+                    "primary_key": list(t.primary_key),
+                    "columns": {c.name: _column_doc(c) for c in t.columns.values()},
+                }
+                for t in self.tables.values()
+            },
+            "relationships": [
+                {
+                    "name": r.name,
+                    "parent": r.parent,
+                    "child": r.child,
+                    "parent_columns": list(r.parent_columns),
+                    "child_columns": list(r.child_columns),
+                    "type": r.type,
+                    "cardinality": json.loads(json.dumps(r.cardinality)),
+                    "optional": r.optional,
+                }
+                for r in self.relationships
+            ],
+            "business_rules": [
+                {
+                    "name": b.name,
+                    "type": b.type,
+                    "rule": b.rule,
+                    "table": b.table,
+                    "via": b.via,
+                    "when": b.when,
+                }
+                for b in self.business_rules
+            ],
+            "generation": {
+                "scale": self.generation.scale,
+                "scales": json.loads(json.dumps(self.generation.scales)),
+                "derived_counts": json.loads(json.dumps(self.generation.derived_counts)),
+                "output": json.loads(json.dumps(self.generation.output)),
+            },
+            "correlated_columns": json.loads(json.dumps(self.correlated_columns)),
+        }
+        if self.generators:  # an unpinned schema stays as it was before pinning existed
+            document["generators"] = dict(self.generators)
+        if self.identifiers is not None:  # a schema without the switch stays as it was
+            document["identifiers"] = self.identifiers
+        return {**document, **{k: v for k, v in self.extra.items() if k not in document}}
+
+    @classmethod
+    def from_dict(cls, doc: Any) -> GenSchema:
+        """Parse a document; :class:`GenSchemaError` lists the first problems if it does not
+        follow the JSON Schema. A newer version than this release reads is refused with the
+        minimum release that reads it; ``x_`` fields are kept in ``extra``."""
+        extra: dict[str, Any] = {}
+        if isinstance(doc, dict):
+            compat.check_format("generation-schema", doc, error=GenSchemaError)
+            version = compat.check_readable("generation-schema", doc, error=GenSchemaError)
+            extra = {k: v for k, v in doc.items() if isinstance(k, str) and k.startswith("x_")}
+            doc = {k: v for k, v in doc.items() if k not in extra}
+            doc.setdefault("schema_version", version)
+        problems = schema_problems(doc)
+        if problems:
+            more = f" (+{len(problems) - 5} more)" if len(problems) > 5 else ""
+            raise GenSchemaError("; ".join(problems[:5]) + more)
+        m, g = doc["model"], doc.get("generation", {})  # generation is optional
+        model = Model(
+            name=m["name"],
+            description=m.get("description", ""),
+            domain=m.get("domain", ""),
+            schema_mode=m.get("schema_mode", "3nf"),
+            locale=m.get("locale", "en_US"),
+            seed=m.get("seed", 42),
+            date_range=dict(m.get("date_range", {})),
+        )
+        tables: dict[str, Table] = {}
+        folded: dict[str, str] = {}
+        for tname, t in doc["tables"].items():
+            if not is_safe_name(tname):
+                raise GenSchemaError(
+                    f"tables.{tname!r}: a table name must be a plain name, not a path"
+                )
+            first = folded.setdefault(tname.casefold(), tname)
+            if first != tname:
+                raise GenSchemaError(
+                    f"tables {first!r} and {tname!r} differ only in case: they would write the "
+                    "same file on Windows and macOS"
+                )
+            columns = {
+                cname: Column(
+                    name=cname,
+                    type=c["type"],
+                    generator=_plain_json(c["generator"]),
+                    nullable=c.get("nullable", False),
+                    null_rate=float(c.get("null_rate", 0.0)),
+                    max_length=c.get("max_length"),
+                    precision=c.get("precision"),
+                    scale=c.get("scale"),
+                    identity=bool(c.get("identity", False)),
+                )
+                for cname, c in t["columns"].items()
+            }
+            tables[tname] = Table(
+                name=tname,
+                columns=columns,
+                primary_key=list(t.get("primary_key", [])),
+                description=t.get("description", ""),
+                cdm_mapping=t.get("cdm_mapping"),
+            )
+        return cls(
+            model=model,
+            tables=tables,
+            relationships=[
+                Relationship(
+                    name=r["name"],
+                    parent=r["parent"],
+                    child=r["child"],
+                    parent_columns=list(r.get("parent_columns", [])),
+                    child_columns=list(r.get("child_columns", [])),
+                    type=r.get("type", "one_to_many"),
+                    cardinality=dict(r.get("cardinality", {})),
+                    optional=r.get("optional", False),
+                )
+                for r in doc.get("relationships", [])
+            ],
+            business_rules=[
+                BusinessRule(
+                    name=b["name"],
+                    type=b["type"],
+                    rule=b["rule"],
+                    table=b.get("table"),
+                    via=b.get("via"),
+                    when=b.get("when"),
+                )
+                for b in doc.get("business_rules", [])
+            ],
+            generation=Generation(
+                scale=g.get("scale", "small"),
+                scales={k: dict(v) for k, v in g.get("scales", {}).items()},
+                derived_counts={k: dict(v) for k, v in g.get("derived_counts", {}).items()},
+                output=dict(g.get("output", {})),
+            ),
+            correlated_columns={
+                k: [list(p) for p in v] for k, v in doc.get("correlated_columns", {}).items()
+            },
+            extra=extra,
+            generators={str(k): int(v) for k, v in doc.get("generators", {}).items()},
+            identifiers=doc.get("identifiers"),
+        )
+
+    # ---- semantics ----------------------------------------------------------------------
+
+    def validate(self) -> list[Issue]:
+        """Every semantic problem of the schema: an ``error`` stops generation, a ``warning``
+        does not."""
+        out: list[Issue] = []
+        out += self._table_issues()
+        out += self._relationship_issues()
+        out += self._foreign_key_issues()
+        out += self._cycle_issues()
+        out += self._rule_issues()
+        out += self._generation_issues()
+        out += self._strategy_issues()
+        out += self._pin_issues()
+        out += self._identifier_issues()
+        out += self._reference_issues()
+        out += self._correlation_issues()
+        return out
+
+    def _identifier_issues(self) -> list[Issue]:
+        from shape.generation.identifiers import IDENTIFIER_MODES
+
+        if self.identifiers is None or self.identifiers in IDENTIFIER_MODES:
+            return []
+        modes = " or ".join(IDENTIFIER_MODES)
+        return [Issue("error", f"must be {modes}, not {self.identifiers!r}", "identifiers")]
+
+    def validate_or_raise(self) -> None:
+        errors = [i for i in self.validate() if i.level == "error"]
+        if errors:
+            detail = "\n".join(f"  [{i.location}] {i.message}" for i in errors)
+            raise GenSchemaError(f"Schema validation failed:\n{detail}")
+
+    def _table_issues(self) -> list[Issue]:
+        out: list[Issue] = []
+        for tname, t in self.tables.items():
+            if not t.primary_key:
+                out.append(
+                    Issue(
+                        "warning",
+                        "Table has no primary key defined: it cannot be FK-referenced",
+                        f"tables.{tname}",
+                    )
+                )
+            for pk in t.primary_key:
+                if pk not in t.columns:
+                    out.append(
+                        Issue(
+                            "error",
+                            f"Primary key column '{pk}' not found in columns",
+                            f"tables.{tname}.primary_key",
+                        )
+                    )
+            if not t.columns:
+                out.append(Issue("error", "Table has no columns", f"tables.{tname}"))
+            for cname, c in t.columns.items():
+                where = f"tables.{tname}.columns.{cname}"
+                if not c.generator:
+                    out.append(
+                        Issue("warning", f"Column '{cname}' has no generator defined", where)
+                    )
+                if not 0 <= c.null_rate <= 1:  # NaN fails this too
+                    out.append(
+                        Issue(
+                            "error", f"null_rate must be between 0 and 1, got {c.null_rate}", where
+                        )
+                    )
+                if c.identity and c.type != "integer":
+                    out.append(
+                        Issue(
+                            "error",
+                            f"Column '{cname}' is an identity column and must have type "
+                            f"'integer', not '{c.type}'",
+                            where,
+                        )
+                    )
+                if c.identity and c.strategy != "sequence":
+                    out.append(
+                        Issue(
+                            "error",
+                            f"Column '{cname}' is an identity column and must use the "
+                            f"'sequence' strategy, not '{c.strategy or 'none'}'",
+                            where,
+                        )
+                    )
+                if isinstance(c.max_length, int) and c.max_length < 0:
+                    out.append(
+                        Issue(
+                            "error",
+                            f"max_length must be 0 (no limit) or more, got {c.max_length}",
+                            where,
+                        )
+                    )
+        return out
+
+    def _relationship_issues(self) -> list[Issue]:
+        out: list[Issue] = []
+        for r in self.relationships:
+            where = f"relationships.{r.name}"
+            if len(r.parent_columns) != len(r.child_columns):
+                out.append(
+                    Issue(
+                        "error",
+                        f"{len(r.parent_columns)} parent columns but {len(r.child_columns)} "
+                        "child columns: they are matched in pairs",
+                        where,
+                    )
+                )
+            if r.parent not in self.tables:
+                out.append(Issue("error", f"Parent table '{r.parent}' not found", where))
+            else:
+                for col in r.parent_columns:
+                    if col not in self.tables[r.parent].columns:
+                        out.append(
+                            Issue(
+                                "error", f"Parent column '{col}' not in table '{r.parent}'", where
+                            )
+                        )
+            if r.child not in self.tables:
+                out.append(Issue("error", f"Child table '{r.child}' not found", where))
+            else:
+                for col in r.child_columns:
+                    if col not in self.tables[r.child].columns:
+                        out.append(
+                            Issue("error", f"Child column '{col}' not in table '{r.child}'", where)
+                        )
+        return out
+
+    def _cycle_issues(self) -> list[Issue]:
+        """Tables that point at each other through foreign keys (or relationships) cannot be
+        generated in any order (#733); a reference to a missing table is reported elsewhere."""
+        from shape.generation.engine import (
+            CircularDependencyError,
+            MissingTableError,
+            resolve_order,
+        )
+
+        try:
+            resolve_order(self)
+        except CircularDependencyError as exc:
+            return [Issue("error", f"foreign keys form a cycle: {exc}", "tables")]
+        except MissingTableError:
+            return []
+        return []
+
+    def _foreign_key_issues(self) -> list[Issue]:
+        out: list[Issue] = []
+        for tname, t in self.tables.items():
+            for cname, c in t.columns.items():
+                ref_table = c.fk_ref_table
+                if not c.is_foreign_key or not ref_table:
+                    continue
+                where = f"tables.{tname}.columns.{cname}"
+                if ref_table not in self.tables:
+                    out.append(
+                        Issue("error", f"FK references non-existent table '{ref_table}'", where)
+                    )
+                    continue
+                ref_col = c.fk_ref_column
+                if ref_col and ref_col not in self.tables[ref_table].columns:
+                    out.append(
+                        Issue(
+                            "error",
+                            f"FK references non-existent column '{ref_table}.{ref_col}'",
+                            where,
+                        )
+                    )
+        return out
+
+    def _rule_issues(self) -> list[Issue]:
+        out = [
+            Issue(
+                "error",
+                f"Rule references non-existent table '{b.table}'",
+                f"business_rules.{b.name}",
+            )
+            for b in self.business_rules
+            if b.table and b.table not in self.tables
+        ]
+        for b in self.business_rules:
+            if b.type in ("cross_column", "constraint") and b.table in self.tables:
+                problem = self._comparison_problem(b, cross_table=False)
+            elif b.type == "cross_table":
+                problem = self._comparison_problem(b, cross_table=True)
+            else:
+                continue
+            if problem:
+                out.append(
+                    Issue(
+                        "warning",
+                        f"Rule {b.rule!r} is never checked or repaired: {problem}",
+                        f"business_rules.{b.name}",
+                    )
+                )
+        return out
+
+    def _comparison_problem(self, b: BusinessRule, *, cross_table: bool) -> str | None:
+        """Why the rules engine cannot evaluate ``b`` (it then skips it), or ``None``."""
+        from shape.generation.rules import parse_between, parse_comparison
+
+        between = parse_between(b.rule)
+        if between is not None and not cross_table:
+            column = between[0]
+            ok = column in self.tables[str(b.table)].columns
+            return None if ok else f"'{column}' is not a column of '{b.table}'"
+        left, op, right = parse_comparison(b.rule)
+        if not op:
+            return (
+                "it is not a comparison 'A OP B' with OP one of >=, <=, >, <, == (or "
+                "'x BETWEEN low AND high')"
+            )
+        if not cross_table:
+            table = self.tables[str(b.table)]
+            for side in (left, right):
+                if side not in table.columns and not _is_number(side):
+                    return f"'{side}' is not a column of '{b.table}' nor a number"
+            return None
+        for side in (left, right):
+            tname, dot, cname = side.partition(".")
+            if not dot or tname not in self.tables or cname not in self.tables[tname].columns:
+                return f"'{side}' is not a table.column of the schema"
+        for tname in (left.partition(".")[0], right.partition(".")[0]):
+            if not b.via or b.via not in self.tables[tname].columns:
+                return f"its 'via' key {b.via!r} is not a column of '{tname}'"
+        return None
+
+    def _generation_issues(self) -> list[Issue]:
+        g = self.generation
+        out: list[Issue] = []
+        if g.scale and g.scales and g.scale not in g.scales:
+            out.append(
+                Issue("warning", f"Scale '{g.scale}' not defined in scales", "generation.scale")
+            )
+        for preset, counts in g.scales.items():
+            for tname in counts:
+                if tname not in self.tables:
+                    out.append(
+                        Issue(
+                            "warning",
+                            f"Scale '{preset}' counts rows of '{tname}', which is not a table",
+                            f"generation.scales.{preset}",
+                        )
+                    )
+        for tname, rule in g.derived_counts.items():
+            where = f"generation.derived_counts.{tname}"
+            if tname not in self.tables:
+                out.append(Issue("warning", f"'{tname}' is not a table", where))
+            parent = rule.get("per_parent")
+            if parent is not None and parent not in self.tables:
+                out.append(Issue("warning", f"per_parent '{parent}' is not a table", where))
+        return out
+
+    def _reference_issues(self) -> list[Issue]:
+        """Generators that name another table or column: it must exist (a computed column on an
+        unknown child is left empty, a foreign key without a column cannot draw keys)."""
+        from shape.generation.compute import AGGREGATES
+
+        out: list[Issue] = []
+        for tname, t in self.tables.items():
+            if len(set(t.primary_key)) != len(t.primary_key):
+                out.append(Issue("error", "Primary key lists a column twice", f"tables.{tname}"))
+            for cname, c in t.columns.items():
+                where = f"tables.{tname}.columns.{cname}"
+                if not is_safe_name(cname):
+                    out.append(
+                        Issue("error", "A column name must be a plain name, not a path", where)
+                    )
+                g = c.generator
+                strategy = c.strategy
+                if strategy == "foreign_key" and isinstance(g.get("ref"), str):
+                    if g["ref"].count(".") != 1:
+                        out.append(
+                            Issue(
+                                "error",
+                                f"FK ref {g['ref']!r} must be 'table.column'",
+                                where,
+                            )
+                        )
+                elif strategy == "composite_foreign_key":
+                    ref = g.get("ref_table")
+                    if ref not in self.tables:
+                        out.append(Issue("error", f"ref_table {ref!r} is not a table", where))
+                elif strategy == "derived" and isinstance(g.get("source"), str):
+                    # a column of this table, or ``table.column`` of another
+                    other, dot, name = g["source"].rpartition(".")
+                    owner = self.tables.get(other) if dot else t
+                    if owner is None or name not in owner.columns:
+                        out.append(
+                            Issue(
+                                "error",
+                                f"derived source {g['source']!r} is neither a column of "
+                                f"'{tname}' nor a table.column of the schema",
+                                where,
+                            )
+                        )
+                elif strategy == "computed":
+                    out += self._computed_issues(tname, c, where, AGGREGATES)
+        return out
+
+    def _computed_issues(self, tname: str, c: Column, where: str, aggregates: Any) -> list[Issue]:
+        g = c.generator
+        rule = g.get("rule", "sum_children")
+        child, column = g.get("child_table"), g.get("child_column")
+        if rule != "lookup_parent" and rule not in aggregates:
+            known = ", ".join([*aggregates, "lookup_parent"])
+            return [Issue("warning", f"Unknown computed rule {rule!r} (known: {known})", where)]
+        if child not in self.tables:
+            return [Issue("warning", f"child_table {child!r} is not a table: left empty", where)]
+        if column not in self.tables[str(child)].columns:
+            return [
+                Issue(
+                    "warning",
+                    f"child_column {column!r} is not a column of '{child}': left empty",
+                    where,
+                )
+            ]
+        return []
+
+    def _pin_issues(self) -> list[Issue]:
+        if not self.generators:
+            return []
+        from shape.generation import versions
+
+        usage = versions.usage_of(self.tables)
+        out: list[Issue] = []
+        for name in sorted(self.generators):
+            where = f"generators.{name}"
+            if name not in usage:
+                out.append(Issue("warning", "pinned, but the spec does not use it", where))
+                continue
+            low, high = versions.version_range(usage[name])
+            if not low <= self.generators[name] <= high:
+                err = versions.GeneratorPinError("the spec", name, self.generators[name], low, high)
+                out.append(Issue("error", str(err), where))
+        return out
+
+    def _correlation_issues(self) -> list[Issue]:
+        out: list[Issue] = []
+        for tname, pairs in self.correlated_columns.items():
+            where = f"correlated_columns.{tname}"
+            if tname not in self.tables:
+                out.append(Issue("warning", f"'{tname}' is not a table: ignored", where))
+                continue
+            cols = self.tables[tname].columns
+            for pair in pairs:
+                if len(pair) != 3:
+                    out.append(Issue("warning", f"{pair!r} is not [column, column, r]", where))
+                    continue
+                a, b, r = pair
+                if a not in cols or b not in cols:
+                    out.append(
+                        Issue("warning", f"{pair!r} names a column '{tname}' does not have", where)
+                    )
+                elif a == b:
+                    out.append(Issue("warning", f"{pair!r} pairs a column with itself", where))
+                elif isinstance(r, bool) or not isinstance(r, int | float) or not -1 <= r <= 1:
+                    out.append(
+                        Issue("warning", f"{pair!r}: r must be a number from -1 to 1", where)
+                    )
+        return out
+
+    def _strategy_issues(self) -> list[Issue]:
+        out: list[Issue] = []
+        for tname, t in self.tables.items():
+            for cname, c in t.columns.items():
+                if not c.generator or not c.strategy:
+                    continue
+                where = f"tables.{tname}.columns.{cname}.generator"
+                required = STRATEGY_REQUIRED_KEYS.get(c.strategy)
+                if required is None:
+                    out.append(Issue("warning", f"Unknown strategy '{c.strategy}'", where))
+                    continue
+                for key in sorted(required):
+                    if key not in c.generator:
+                        out.append(
+                            Issue("warning", f"Strategy '{c.strategy}' expects key '{key}'", where)
+                        )
+                for _, message in unknown_keys(c.strategy, c.generator):
+                    out.append(Issue("warning", message, where))
+        return out
+
+
+def _column_doc(c: Column) -> dict[str, Any]:
+    doc: dict[str, Any] = {
+        "name": c.name,
+        "type": c.type,
+        "generator": _plain_json(c.generator),
+        "nullable": c.nullable,
+        "null_rate": c.null_rate,
+        "max_length": c.max_length,
+        "precision": c.precision,
+        "scale": c.scale,
+    }
+    if c.identity:  # absent otherwise, so a schema without identity serializes as it always did
+        doc["identity"] = True
+    return doc
+
+
+@cache
+def json_schema() -> dict[str, Any]:
+    """The JSON Schema of the generation schema, as shipped in ``shape/schemas``."""
+    text = resources.files("shape").joinpath("schemas/generation-schema-v1.json").read_text("utf-8")
+    schema: dict[str, Any] = json.loads(text)
+    return schema
+
+
+def schema_problems(doc: Any) -> list[str]:
+    """Every way ``doc`` departs from ``generation-schema-v1.json`` (empty when it conforms)."""
+    if not isinstance(doc, dict):
+        return [f"$: expected an object, got {type(doc).__name__}"]
+    return _validate_document(doc, json_schema())

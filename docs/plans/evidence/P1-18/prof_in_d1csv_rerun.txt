@@ -1,0 +1,38 @@
+cores=4 cpu=Intel(R) Xeon(R) Processor @ 2.10GHz
+d1.csv      rep0 refengine      1.68s load=1.14 rss=342MB child=0MB
+d1.csv      rep0 impl_mt      0.17s load=1.12 rss=229MB child=0MB
+d1.csv      rep0 impl_st      0.17s load=1.12 rss=221MB child=0MB
+d1.csv      rep1 refengine      1.42s load=1.12 rss=341MB child=0MB
+d1.csv      rep1 impl_mt      0.18s load=1.11 rss=227MB child=0MB
+d1.csv      rep1 impl_st      0.17s load=1.11 rss=221MB child=0MB
+d1.csv      rep2 refengine      1.66s load=1.11 rss=335MB child=0MB
+d1.csv      rep2 impl_mt      0.13s load=1.10 rss=228MB child=0MB
+d1.csv      rep2 impl_st      0.20s load=1.10 rss=221MB child=0MB
+d1.csv      rep3 refengine      1.45s load=1.10 rss=342MB child=0MB
+d1.csv      rep3 impl_mt      0.09s load=1.10 rss=228MB child=0MB
+d1.csv      rep3 impl_st      0.25s load=1.10 rss=221MB child=0MB
+d1.csv      rep4 refengine      1.42s load=1.10 rss=342MB child=0MB
+d1.csv      rep4 impl_mt      0.23s load=1.10 rss=231MB child=0MB
+d1.csv      rep4 impl_st      0.24s load=1.10 rss=221MB child=0MB
+d1.csv      rep5 refengine      1.71s load=1.09 rss=335MB child=0MB
+d1.csv      rep5 impl_mt      0.12s load=1.09 rss=228MB child=0MB
+d1.csv      rep5 impl_st      0.21s load=1.09 rss=221MB child=0MB
+d1.csv      rep6 refengine      1.60s load=1.09 rss=342MB child=0MB
+d1.csv      rep6 impl_mt      0.11s load=1.08 rss=238MB child=0MB
+d1.csv      rep6 impl_st      0.17s load=1.08 rss=221MB child=0MB
+d1.csv      rep7 refengine      1.47s load=1.08 rss=342MB child=0MB
+d1.csv      rep7 impl_mt      0.10s load=1.07 rss=232MB child=0MB
+d1.csv      rep7 impl_st      0.18s load=1.07 rss=221MB child=0MB
+d1.csv      rep8 refengine      1.49s load=1.07 rss=342MB child=0MB
+d1.csv      rep8 impl_mt      0.13s load=1.07 rss=233MB child=0MB
+d1.csv      rep8 impl_st      0.16s load=1.07 rss=221MB child=0MB
+d1.csv      rep9 refengine      1.36s load=1.07 rss=342MB child=0MB
+d1.csv      rep9 impl_mt      0.12s load=1.06 rss=228MB child=0MB
+d1.csv      rep9 impl_st      0.15s load=1.06 rss=221MB child=0MB
+d1.csv      rep10 refengine      1.40s load=1.06 rss=341MB child=0MB
+d1.csv      rep10 impl_mt      0.17s load=1.06 rss=228MB child=0MB
+d1.csv      rep10 impl_st      0.19s load=1.06 rss=221MB child=0MB
+
+| dataset | RefEngine s | port MT s | port 1T s | speedup MT | speedup 1T | peak RSS RefEngine / port MT (+child) / port 1T MB |
+|---|---:|---:|---:|---:|---:|---|
+| d1.csv | 1.47 | 0.13 | 0.18 | 11.7x | 8.1x | 342 / 238 (+0) / 221 |

@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sqllocks-shape-integrations"
+# Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
+version = "0.9.1"
+description = "Shape plugin: OpenLineage, MLflow, Presidio, SDMetrics, Anonymeter and Ibis/DuckDB adapters"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: OS Independent",
+    "Topic :: Database",
+]
+# Every third-party library is an extra, so a host installs only the adapters it uses and core
+# never carries them (T-07). Without its library an adapter exits 2 with the pip command.
+dependencies = ["sqllocks-shape==0.9.1"]
+
+[project.urls]
+Homepage = "https://github.com/sqllocks/shape"
+Repository = "https://github.com/sqllocks/shape"
+Issues = "https://github.com/sqllocks/shape/issues"
+Documentation = "https://github.com/sqllocks/shape/tree/main/plugins/shape-integrations"
+
+[project.optional-dependencies]
+openlineage = ["openlineage-python>=1.20,<2"]
+mlflow = ["mlflow>=3,<4"]
+presidio = ["presidio-analyzer>=2.2,<3"]
+sdmetrics = ["sdmetrics>=0.18,<1"]
+anonymeter = ["anonymeter>=1,<2"]
+ibis = ["ibis-framework[duckdb]>=12,<13", "duckdb>=1.2,<2"]
+
+[project.entry-points."shape.commands"]
+lineage = "shape_integrations.lineage:LineageCommand"
+mlflow = "shape_integrations.mlflow_log:MlflowCommand"
+evaluate = "shape_integrations.evaluate:EvaluateCommand"
+
+[project.entry-points."shape.detectors"]
+presidio = "shape_integrations.presidio_detector:PresidioDetector"
+
+[project.entry-points."shape.sources"]
+duckdb = "shape_integrations.duckdb_source:DuckDbSource"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+shape_integrations = ["schemas/*.json"]

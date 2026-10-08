@@ -1,0 +1,11 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "dst_boundary",
+  "gates_fail": [],
+  "defects": {
+    "chaos_temporal": {
+      "min": 1
+    }
+  }
+}

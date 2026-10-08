@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "artifact_count": {
+      "type": "integer"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "fabric_run_id": {
+      "type": "string"
+    },
+    "fidelity_score": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "mode": {
+      "type": "string"
+    },
+    "scale_mode": {
+      "type": "string"
+    },
+    "scenario": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    },
+    "success": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "success",
+    "session_id",
+    "scenario",
+    "mode",
+    "fidelity_score",
+    "error",
+    "artifact_count"
+  ],
+  "title": "demo_run result",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.0"
+}

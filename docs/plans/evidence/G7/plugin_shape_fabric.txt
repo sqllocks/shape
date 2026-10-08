@@ -1,0 +1,9 @@
+$ pytest -m "not emulator and not live and not dbt" plugins/shape-fabric/tests   (with this lane)
+FAILED plugins/shape-fabric/tests/test_lakehouse.py::test_parquet_to_a_local_folder_round_trips
+FAILED plugins/shape-fabric/tests/test_publish.py::test_lakehouse_writes_the_landing_zone_and_the_manifest
+FAILED plugins/shape-fabric/tests/test_sql_write_path_cli.py::test_upsert_is_a_write_mode_choice_and_other_databases_refuse_it
+FAILED plugins/shape-fabric/tests/test_synapse.py::test_generate_to_synapse_with_a_sql_login
+FAILED plugins/shape-fabric/tests/test_synapse.py::test_emit_to_synapse_commits_while_the_stream_runs
+5 failed, 916 passed, 42 deselected, 4 warnings in 38.33s
+
+The same 5 fail on int/INT-18 without this lane (run with src and plugins/shape-fabric/src stashed): 5 failed, 915 passed.

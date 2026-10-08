@@ -1,0 +1,20 @@
+address 75000 1
+customer 50000 1
+order 786160 4
+order_line 1965400 4
+product 5000 1
+product_category 50 1
+promotion 200 1
+return 85000 1
+store 150 1
+
+--- baseline local_single (natural counts)
+address 75000 1
+customer 50000 1
+order 500000 1
+order_line 1250000 1
+product 5000 1
+product_category 50 1
+promotion 200 1
+return 85000 1
+store 150 1

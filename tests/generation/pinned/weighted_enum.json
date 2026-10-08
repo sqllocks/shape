@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "m",
+    "seed": 3
+  },
+  "tables": {
+    "t": {
+      "name": "t",
+      "primary_key": [
+        "k"
+      ],
+      "columns": {
+        "k": {
+          "name": "k",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "x": {
+          "name": "x",
+          "type": "string",
+          "generator": {
+            "strategy": "weighted_enum",
+            "values": {
+              "1": 0.5,
+              "2": 0.5
+            },
+            "output_type": "int64"
+          }
+        }
+      }
+    }
+  },
+  "generation": {
+    "scale": "s",
+    "scales": {
+      "s": {
+        "t": 20000
+      }
+    }
+  },
+  "generators": {
+    "sequence": 1,
+    "weighted_enum": 1
+  }
+}

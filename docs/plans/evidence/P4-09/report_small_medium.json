@@ -1,0 +1,4041 @@
+{
+ "domain": "retail",
+ "tolerance": 0.5,
+ "scales": {
+  "small": {
+   "retail": {
+    "shape1042_vs_refengine42": {
+     "overall": {
+      "shape": 90.21058771219802,
+      "baseline": 90.21058771219802,
+      "diff": 0.0
+     },
+     "shape_passed": true,
+     "shape_failures": [],
+     "tables": {
+      "address": {
+       "shape": 85.4578366276013,
+       "baseline": 85.45783662760131,
+       "diff": -1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 98.91947705633187,
+        "address_type": 100.0,
+        "street": 42.857142857142854,
+        "city": 45.70504649212769,
+        "state": 71.42857142857143,
+        "zip_code": 99.41932779364984,
+        "lat": 97.1948968006655,
+        "lng": 99.05390384752378,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 78.84054233771673,
+       "baseline": 78.84054233771673,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 45.61220163592224,
+        "last_name": 45.461834663286574,
+        "email": 42.798653702318624,
+        "gender": 98.89800718187412,
+        "loyalty_tier": 100.0,
+        "signup_date": 97.95364151833226,
+        "is_active": 100.0
+       }
+      },
+      "order": {
+       "shape": 97.13484286460414,
+       "baseline": 97.13484286460411,
+       "diff": 2.842170943040401e-14,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 2.4158453015843406e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 98.72160108399794,
+        "store_id": 98.86274873374444,
+        "shipping_address_id": 95.46627164621025,
+        "promotion_id": 98.93292897278907,
+        "order_date": 98.05297902272325,
+        "status": 94.96573901966417,
+        "order_total": 92.07647443770404
+       }
+      },
+      "order_line": {
+       "shape": 95.65734878285589,
+       "baseline": 95.65734878285589,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.7444956001193,
+        "product_id": 98.24601472308862,
+        "quantity": 99.6143631604045,
+        "promotion_id": 99.15071754668675,
+        "unit_price": 80.75655090646033,
+        "discount_percent": 98.70890767399135,
+        "line_total": 89.03774065209626
+       }
+      },
+      "product": {
+       "shape": 92.59452092420936,
+       "baseline": 92.59452092420936,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 97.23003310602736,
+        "product_name": 69.92481203007519,
+        "unit_price": 98.18999018689043,
+        "product_status": 95.4783653568519,
+        "cost": 94.74392486541129
+       }
+      },
+      "product_category": {
+       "shape": 86.49836493305747,
+       "baseline": 86.49836493305747,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 58.33872010342599,
+        "parent_category_id": 87.65473962880391,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 91.61842816334114,
+       "baseline": 91.61842816334114,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 70.28571428571428,
+        "promo_type": 96.3961224489796,
+        "discount_pct": 94.17468138434211,
+        "start_date": 94.39664052317828,
+        "end_date": 94.4574103378325
+       }
+      },
+      "return": {
+       "shape": 98.67920609055648,
+       "baseline": 98.67920609055653,
+       "diff": -5.684341886080802e-14,
+       "max_column_diff": {
+        "column": "return_date",
+        "diff": 2.8421709430404007e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 100.0,
+        "order_id": 98.80141489197361,
+        "reason": 100.0,
+        "refund_amount": 98.73549210620244,
+        "return_date": 95.85912345460632
+       }
+      },
+      "store": {
+       "shape": 85.41419868583964,
+       "baseline": 85.41419868583964,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 98.2,
+        "city": 61.23124187640316,
+        "state": 67.63975155279503
+       }
+      }
+     }
+    },
+    "refengine43_vs_refengine42": {
+     "overall": {
+      "shape": 90.83247822520816,
+      "baseline": 90.83247822520815,
+      "diff": 1.4210854715202004e-14
+     },
+     "shape_passed": true,
+     "shape_failures": [],
+     "tables": {
+      "address": {
+       "shape": 85.15768808804567,
+       "baseline": 85.1576880880457,
+       "diff": -2.842170943040401e-14,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 99.03589801354474,
+        "address_type": 96.92079714737143,
+        "street": 42.857142857142854,
+        "city": 45.55259507993284,
+        "state": 71.42857142857143,
+        "zip_code": 98.84012808642328,
+        "lat": 97.88668476339619,
+        "lng": 99.05506350407404,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 78.84115398583083,
+       "baseline": 78.84115398583083,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 45.859187265101774,
+        "last_name": 45.37593082587239,
+        "email": 42.506207928197455,
+        "gender": 98.89800718187412,
+        "loyalty_tier": 100.0,
+        "signup_date": 98.08989868560086,
+        "is_active": 100.0
+       }
+      },
+      "order": {
+       "shape": 98.57547013355423,
+       "baseline": 98.57547013355422,
+       "diff": 1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 1.5631940186722204e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 97.59832461769747,
+        "store_id": 98.48085095135691,
+        "shipping_address_id": 98.55071389355949,
+        "promotion_id": 99.07808308992492,
+        "order_date": 98.5302184780008,
+        "status": 100.0,
+        "order_total": 96.36557003789432
+       }
+      },
+      "order_line": {
+       "shape": 96.91186722411449,
+       "baseline": 96.91186722411449,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.44788926639953,
+        "product_id": 98.0460878003548,
+        "quantity": 97.80081614536091,
+        "promotion_id": 98.4200497906528,
+        "unit_price": 89.29303698327473,
+        "discount_percent": 98.88404098760492,
+        "line_total": 93.40301681926822
+       }
+      },
+      "product": {
+       "shape": 93.9530253407454,
+       "baseline": 93.95302534074538,
+       "diff": 1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 98.26479657071286,
+        "product_name": 70.16866490550701,
+        "unit_price": 98.60221156189587,
+        "product_status": 98.28132898712573,
+        "cost": 98.40115001923085
+       }
+      },
+      "product_category": {
+       "shape": 87.56220318832499,
+       "baseline": 87.56220318832499,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 55.04201680672269,
+        "parent_category_id": 95.20679594657726,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 93.38416432592675,
+       "baseline": 93.38416432592675,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 70.28571428571428,
+        "promo_type": 100.0,
+        "discount_pct": 96.36748612153417,
+        "start_date": 96.84390940597393,
+        "end_date": 96.80787614233809
+       }
+      },
+      "return": {
+       "shape": 97.46481292405107,
+       "baseline": 97.46481292405102,
+       "diff": 5.684341886080802e-14,
+       "max_column_diff": {
+        "column": "return_date",
+        "diff": 2.1316282072803006e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 100.0,
+        "order_id": 96.64772592709102,
+        "reason": 100.0,
+        "refund_amount": 92.02085907159837,
+        "return_date": 98.65547962156596
+       }
+      },
+      "store": {
+       "shape": 85.64191881628008,
+       "baseline": 85.64191881628008,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 100.0,
+        "city": 60.56984252860541,
+        "state": 67.63975155279503
+       }
+      }
+     }
+    },
+    "refengine44_vs_refengine42": {
+     "overall": {
+      "shape": 89.50543075862653,
+      "baseline": 89.50543075862653,
+      "diff": 0.0
+     },
+     "shape_passed": true,
+     "shape_failures": [],
+     "tables": {
+      "address": {
+       "shape": 85.97874180746241,
+       "baseline": 85.97874180746244,
+       "diff": -2.842170943040401e-14,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 98.22033168356454,
+        "address_type": 100.0,
+        "street": 42.857142857142854,
+        "city": 45.88981049807422,
+        "state": 76.74458382517959,
+        "zip_code": 98.92007415766187,
+        "lat": 98.111272253475,
+        "lng": 99.04420279952612,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 78.91413333594107,
+       "baseline": 78.91413333594107,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 45.426484344279565,
+        "last_name": 45.73302751052111,
+        "email": 42.740164547494395,
+        "gender": 100.0,
+        "loyalty_tier": 100.0,
+        "signup_date": 98.80848763248477,
+        "is_active": 98.60490265274873
+       }
+      },
+      "order": {
+       "shape": 95.29405451144892,
+       "baseline": 95.29405451144888,
+       "diff": 4.263256414560601e-14,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 1.8474111129762605e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 98.25393269057217,
+        "store_id": 98.97755665867527,
+        "shipping_address_id": 95.6496997280385,
+        "promotion_id": 98.03505701555552,
+        "order_date": 96.64375559808524,
+        "status": 96.79875466978146,
+        "order_total": 77.99367973088314
+       }
+      },
+      "order_line": {
+       "shape": 92.57353082688279,
+       "baseline": 92.5735308268828,
+       "diff": -1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.07677448811776,
+        "product_id": 99.28228757112674,
+        "quantity": 98.28379122765791,
+        "promotion_id": 97.05761413837075,
+        "unit_price": 71.58123226930311,
+        "discount_percent": 96.07316090304421,
+        "line_total": 79.2333860174418
+       }
+      },
+      "product": {
+       "shape": 92.66121888069632,
+       "baseline": 92.66121888069632,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 99.11043049792836,
+        "product_name": 70.0467384677911,
+        "unit_price": 95.3235126099498,
+        "product_status": 94.98881198032302,
+        "cost": 96.49781972818573
+       }
+      },
+      "product_category": {
+       "shape": 87.73440233562891,
+       "baseline": 87.73440233562891,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 54.29505135387489,
+        "parent_category_id": 96.64255798864075,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 91.81618927591192,
+       "baseline": 91.81618927591192,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 70.28571428571428,
+        "promo_type": 96.7791156462585,
+        "discount_pct": 92.84342142552319,
+        "start_date": 95.50992218318586,
+        "end_date": 95.4789621147897
+       }
+      },
+      "return": {
+       "shape": 94.55424560521926,
+       "baseline": 94.55424560521924,
+       "diff": 2.842170943040401e-14,
+       "max_column_diff": {
+        "column": "return_date",
+        "diff": 5.684341886080802e-14
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 100.0,
+        "order_id": 99.1076036853756,
+        "reason": 93.48192428221066,
+        "refund_amount": 84.95068900134021,
+        "return_date": 95.23101105716981
+       }
+      },
+      "store": {
+       "shape": 86.0223602484472,
+       "baseline": 86.0223602484472,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 100.0,
+        "city": 62.732919254658384,
+        "state": 67.37888198757764
+       }
+      }
+     }
+    },
+    "refengine45_vs_refengine42": {
+     "overall": {
+      "shape": 90.11327966588452,
+      "baseline": 90.11327966588455,
+      "diff": -2.842170943040401e-14
+     },
+     "shape_passed": true,
+     "shape_failures": [],
+     "tables": {
+      "address": {
+       "shape": 88.00024091140442,
+       "baseline": 88.00024091140443,
+       "diff": -1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 99.48955164783365,
+        "address_type": 95.25898117593292,
+        "street": 42.857142857142854,
+        "city": 45.762470919524034,
+        "state": 100.0,
+        "zip_code": 99.17981796624517,
+        "lat": 98.44993599627428,
+        "lng": 99.00450855109129,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 79.1622210942982,
+       "baseline": 79.16222109429822,
+       "diff": -1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 45.46291813815388,
+        "last_name": 45.990582003018574,
+        "email": 42.798653702318624,
+        "gender": 100.0,
+        "loyalty_tier": 100.0,
+        "signup_date": 99.04561491089456,
+        "is_active": 100.0
+       }
+      },
+      "order": {
+       "shape": 96.10259855822825,
+       "baseline": 96.10259855822827,
+       "diff": -1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 1.2789769243681803e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 96.11151864684703,
+        "store_id": 98.53834382337685,
+        "shipping_address_id": 97.35587142887616,
+        "promotion_id": 99.23043756465756,
+        "order_date": 96.40191119056655,
+        "status": 95.09563481842785,
+        "order_total": 86.08707099307402
+       }
+      },
+      "order_line": {
+       "shape": 94.58525299086791,
+       "baseline": 94.58525299086791,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.34435531663378,
+        "product_id": 99.2457970804666,
+        "quantity": 97.51492508023576,
+        "promotion_id": 98.8540572820743,
+        "unit_price": 78.48559109790533,
+        "discount_percent": 97.40175557315641,
+        "line_total": 85.83554249647116
+       }
+      },
+      "product": {
+       "shape": 93.77210741371753,
+       "baseline": 93.77210741371753,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 99.3085825230584,
+        "product_name": 70.16866490550701,
+        "unit_price": 97.06693950762637,
+        "product_status": 100.0,
+        "cost": 96.08845754611339
+       }
+      },
+      "product_category": {
+       "shape": 84.74559762497057,
+       "baseline": 84.74559762497057,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 53.23996265172736,
+        "parent_category_id": 85.74242784815495,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 91.02613006552633,
+       "baseline": 91.02613006552633,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 70.28571428571428,
+        "promo_type": 100.0,
+        "discount_pct": 90.59770338499891,
+        "start_date": 92.64274327181916,
+        "end_date": 92.63061945062562
+       }
+      },
+      "return": {
+       "shape": 98.11011867132945,
+       "baseline": 98.11011867132949,
+       "diff": -4.263256414560601e-14,
+       "max_column_diff": {
+        "column": "return_date",
+        "diff": 1.9895196601282805e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 100.0,
+        "order_id": 98.26566316279995,
+        "reason": 100.0,
+        "refund_amount": 93.92009118675794,
+        "return_date": 98.36483900708933
+       }
+      },
+      "store": {
+       "shape": 85.51524966261807,
+       "baseline": 85.51524966261809,
+       "diff": -1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 100.0,
+        "city": 60.71910545594756,
+        "state": 66.85714285714285
+       }
+      }
+     }
+    },
+    "refengine46_vs_refengine42": {
+     "overall": {
+      "shape": 90.82949961091957,
+      "baseline": 90.82949961091957,
+      "diff": 0.0
+     },
+     "shape_passed": true,
+     "shape_failures": [],
+     "tables": {
+      "address": {
+       "shape": 85.56921319093543,
+       "baseline": 85.56921319093543,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "state",
+        "diff": 1.4210854715202004e-14
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 98.3316925364256,
+        "address_type": 95.3046661135843,
+        "street": 42.857142857142854,
+        "city": 45.69358611532695,
+        "state": 77.81788190601605,
+        "zip_code": 98.49188626104676,
+        "lat": 98.34113588744293,
+        "lng": 98.85414023236892,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 79.04609418595714,
+       "baseline": 79.04609418595714,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 45.24806797077162,
+        "last_name": 45.42187156468339,
+        "email": 42.798653702318624,
+        "gender": 100.0,
+        "loyalty_tier": 100.0,
+        "signup_date": 98.90016024988354,
+        "is_active": 100.0
+       }
+      },
+      "order": {
+       "shape": 98.54262255635871,
+       "baseline": 98.54262255635868,
+       "diff": 2.842170943040401e-14,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 1.2789769243681803e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 99.47080698772245,
+        "store_id": 99.21631270376598,
+        "shipping_address_id": 96.8620685538562,
+        "promotion_id": 99.1347186352662,
+        "order_date": 97.54785710738875,
+        "status": 100.0,
+        "order_total": 96.10921646286998
+       }
+      },
+      "order_line": {
+       "shape": 97.08858829422883,
+       "baseline": 97.08858829422883,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.49239573648913,
+        "product_id": 99.53546300802569,
+        "quantity": 99.41599315929622,
+        "promotion_id": 97.98202949589721,
+        "unit_price": 88.30604785165099,
+        "discount_percent": 98.2537072321607,
+        "line_total": 93.72306987031067
+       }
+      },
+      "product": {
+       "shape": 93.86552327160665,
+       "baseline": 93.86552327160665,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 98.09468433619077,
+        "product_name": 69.54548533495901,
+        "unit_price": 97.93280847810271,
+        "product_status": 100.0,
+        "cost": 97.62016148038734
+       }
+      },
+      "product_category": {
+       "shape": 87.53686589429493,
+       "baseline": 87.53686589429493,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 54.04533906585891,
+        "parent_category_id": 96.10212451132082,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 92.01188905648381,
+       "baseline": 92.01188905648381,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "end_date",
+        "diff": 1.4210854715202004e-14
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 73.30407868775217,
+        "promo_type": 95.69503401360545,
+        "discount_pct": 93.70165524119854,
+        "start_date": 94.74695258697527,
+        "end_date": 94.62361380937138
+       }
+      },
+      "return": {
+       "shape": 98.422354133456,
+       "baseline": 98.42235413345603,
+       "diff": -2.842170943040401e-14,
+       "max_column_diff": {
+        "column": "return_date",
+        "diff": 5.684341886080802e-14
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 100.0,
+        "order_id": 97.54051876800897,
+        "reason": 100.0,
+        "refund_amount": 97.30182622031914,
+        "return_date": 97.26942567895193
+       }
+      },
+      "store": {
+       "shape": 85.38234591495461,
+       "baseline": 85.38234591495461,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 100.0,
+        "city": 59.27197802197802,
+        "state": 67.63975155279503
+       }
+      }
+     }
+    }
+   },
+   "edge": {
+    "same_units": {
+     "overall": {
+      "shape": 90.83247822520816,
+      "baseline": 90.83247822520815,
+      "diff": 1.4210854715202004e-14
+     },
+     "shape_passed": true,
+     "shape_failures": [],
+     "tables": {
+      "address": {
+       "shape": 85.15768808804567,
+       "baseline": 85.1576880880457,
+       "diff": -2.842170943040401e-14,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 99.03589801354474,
+        "address_type": 96.92079714737143,
+        "street": 42.857142857142854,
+        "city": 45.55259507993284,
+        "state": 71.42857142857143,
+        "zip_code": 98.84012808642328,
+        "lat": 97.88668476339619,
+        "lng": 99.05506350407404,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 78.84115398583083,
+       "baseline": 78.84115398583083,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 45.859187265101774,
+        "last_name": 45.37593082587239,
+        "email": 42.506207928197455,
+        "gender": 98.89800718187412,
+        "loyalty_tier": 100.0,
+        "signup_date": 98.08989868560086,
+        "is_active": 100.0
+       }
+      },
+      "order": {
+       "shape": 98.57547013355423,
+       "baseline": 98.57547013355422,
+       "diff": 1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 1.5631940186722204e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 97.59832461769747,
+        "store_id": 98.48085095135691,
+        "shipping_address_id": 98.55071389355949,
+        "promotion_id": 99.07808308992492,
+        "order_date": 98.5302184780008,
+        "status": 100.0,
+        "order_total": 96.36557003789432
+       }
+      },
+      "order_line": {
+       "shape": 96.91186722411449,
+       "baseline": 96.91186722411449,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.44788926639953,
+        "product_id": 98.0460878003548,
+        "quantity": 97.80081614536091,
+        "promotion_id": 98.4200497906528,
+        "unit_price": 89.29303698327473,
+        "discount_percent": 98.88404098760492,
+        "line_total": 93.40301681926822
+       }
+      },
+      "product": {
+       "shape": 93.9530253407454,
+       "baseline": 93.95302534074538,
+       "diff": 1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 98.26479657071286,
+        "product_name": 70.16866490550701,
+        "unit_price": 98.60221156189587,
+        "product_status": 98.28132898712573,
+        "cost": 98.40115001923085
+       }
+      },
+      "product_category": {
+       "shape": 87.56220318832499,
+       "baseline": 87.56220318832499,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 55.04201680672269,
+        "parent_category_id": 95.20679594657726,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 93.38416432592675,
+       "baseline": 93.38416432592675,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 70.28571428571428,
+        "promo_type": 100.0,
+        "discount_pct": 96.36748612153417,
+        "start_date": 96.84390940597393,
+        "end_date": 96.80787614233809
+       }
+      },
+      "return": {
+       "shape": 97.46481292405107,
+       "baseline": 97.46481292405102,
+       "diff": 5.684341886080802e-14,
+       "max_column_diff": {
+        "column": "return_date",
+        "diff": 2.1316282072803006e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 100.0,
+        "order_id": 96.64772592709102,
+        "reason": 100.0,
+        "refund_amount": 92.02085907159837,
+        "return_date": 98.65547962156596
+       }
+      },
+      "store": {
+       "shape": 85.64191881628008,
+       "baseline": 85.64191881628008,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 100.0,
+        "city": 60.56984252860541,
+        "state": 67.63975155279503
+       }
+      }
+     }
+    },
+    "missing_column": {
+     "overall": {
+      "shape": 90.24211422620542,
+      "baseline": 91.40922340072615,
+      "diff": -1.167109174520732
+     },
+     "shape_passed": false,
+     "shape_failures": [
+      "table customer: column email is missing from the synthetic data"
+     ],
+     "tables": {
+      "address": {
+       "shape": 85.15768808804567,
+       "baseline": 85.1576880880457,
+       "diff": -2.842170943040401e-14,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 99.03589801354474,
+        "address_type": 96.92079714737143,
+        "street": 42.857142857142854,
+        "city": 45.55259507993284,
+        "state": 71.42857142857143,
+        "zip_code": 98.84012808642328,
+        "lat": 97.88668476339619,
+        "lng": 99.05506350407404,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 73.52787799480615,
+       "baseline": 84.03186056549274,
+       "diff": -10.503982570686588,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [
+        "email"
+       ],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 45.859187265101774,
+        "last_name": 45.37593082587239,
+        "email": 0.0,
+        "gender": 98.89800718187412,
+        "loyalty_tier": 100.0,
+        "signup_date": 98.08989868560086,
+        "is_active": 100.0
+       }
+      },
+      "order": {
+       "shape": 98.57547013355423,
+       "baseline": 98.57547013355422,
+       "diff": 1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 1.5631940186722204e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 97.59832461769747,
+        "store_id": 98.48085095135691,
+        "shipping_address_id": 98.55071389355949,
+        "promotion_id": 99.07808308992492,
+        "order_date": 98.5302184780008,
+        "status": 100.0,
+        "order_total": 96.36557003789432
+       }
+      },
+      "order_line": {
+       "shape": 96.91186722411449,
+       "baseline": 96.91186722411449,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.44788926639953,
+        "product_id": 98.0460878003548,
+        "quantity": 97.80081614536091,
+        "promotion_id": 98.4200497906528,
+        "unit_price": 89.29303698327473,
+        "discount_percent": 98.88404098760492,
+        "line_total": 93.40301681926822
+       }
+      },
+      "product": {
+       "shape": 93.9530253407454,
+       "baseline": 93.95302534074538,
+       "diff": 1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 98.26479657071286,
+        "product_name": 70.16866490550701,
+        "unit_price": 98.60221156189587,
+        "product_status": 98.28132898712573,
+        "cost": 98.40115001923085
+       }
+      },
+      "product_category": {
+       "shape": 87.56220318832499,
+       "baseline": 87.56220318832499,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 55.04201680672269,
+        "parent_category_id": 95.20679594657726,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 93.38416432592675,
+       "baseline": 93.38416432592675,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 70.28571428571428,
+        "promo_type": 100.0,
+        "discount_pct": 96.36748612153417,
+        "start_date": 96.84390940597393,
+        "end_date": 96.80787614233809
+       }
+      },
+      "return": {
+       "shape": 97.46481292405107,
+       "baseline": 97.46481292405102,
+       "diff": 5.684341886080802e-14,
+       "max_column_diff": {
+        "column": "return_date",
+        "diff": 2.1316282072803006e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 100.0,
+        "order_id": 96.64772592709102,
+        "reason": 100.0,
+        "refund_amount": 92.02085907159837,
+        "return_date": 98.65547962156596
+       }
+      },
+      "store": {
+       "shape": 85.64191881628008,
+       "baseline": 85.64191881628008,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 100.0,
+        "city": 60.56984252860541,
+        "state": 67.63975155279503
+       }
+      }
+     }
+    },
+    "missing_table": {
+     "overall": {
+      "shape": 80.00305456698027,
+      "baseline": 90.0034363878528,
+      "diff": -10.000381820872533
+     },
+     "shape_passed": false,
+     "shape_failures": [
+      "table return: missing from the synthetic data",
+      "table return: column return_id is missing from the synthetic data",
+      "table return: column order_id is missing from the synthetic data",
+      "table return: column reason is missing from the synthetic data",
+      "table return: column refund_amount is missing from the synthetic data",
+      "table return: column return_date is missing from the synthetic data",
+      "overall score 80.00 < 85"
+     ],
+     "tables": {
+      "address": {
+       "shape": 85.15768808804567,
+       "baseline": 85.1576880880457,
+       "diff": -2.842170943040401e-14,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 99.03589801354474,
+        "address_type": 96.92079714737143,
+        "street": 42.857142857142854,
+        "city": 45.55259507993284,
+        "state": 71.42857142857143,
+        "zip_code": 98.84012808642328,
+        "lat": 97.88668476339619,
+        "lng": 99.05506350407404,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 78.84115398583083,
+       "baseline": 78.84115398583083,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 45.859187265101774,
+        "last_name": 45.37593082587239,
+        "email": 42.506207928197455,
+        "gender": 98.89800718187412,
+        "loyalty_tier": 100.0,
+        "signup_date": 98.08989868560086,
+        "is_active": 100.0
+       }
+      },
+      "order": {
+       "shape": 98.57547013355423,
+       "baseline": 98.57547013355422,
+       "diff": 1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 1.5631940186722204e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 97.59832461769747,
+        "store_id": 98.48085095135691,
+        "shipping_address_id": 98.55071389355949,
+        "promotion_id": 99.07808308992492,
+        "order_date": 98.5302184780008,
+        "status": 100.0,
+        "order_total": 96.36557003789432
+       }
+      },
+      "order_line": {
+       "shape": 96.91186722411449,
+       "baseline": 96.91186722411449,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.44788926639953,
+        "product_id": 98.0460878003548,
+        "quantity": 97.80081614536091,
+        "promotion_id": 98.4200497906528,
+        "unit_price": 89.29303698327473,
+        "discount_percent": 98.88404098760492,
+        "line_total": 93.40301681926822
+       }
+      },
+      "product": {
+       "shape": 93.9530253407454,
+       "baseline": 93.95302534074538,
+       "diff": 1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 98.26479657071286,
+        "product_name": 70.16866490550701,
+        "unit_price": 98.60221156189587,
+        "product_status": 98.28132898712573,
+        "cost": 98.40115001923085
+       }
+      },
+      "product_category": {
+       "shape": 87.56220318832499,
+       "baseline": 87.56220318832499,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 55.04201680672269,
+        "parent_category_id": 95.20679594657726,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 93.38416432592675,
+       "baseline": 93.38416432592675,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 70.28571428571428,
+        "promo_type": 100.0,
+        "discount_pct": 96.36748612153417,
+        "start_date": 96.84390940597393,
+        "end_date": 96.80787614233809
+       }
+      },
+      "return": {
+       "shape": 0.0,
+       "baseline": null,
+       "diff": null,
+       "missing_columns": [
+        "return_id",
+        "order_id",
+        "reason",
+        "refund_amount",
+        "return_date"
+       ],
+       "shape_columns": {
+        "return_id": 0.0,
+        "order_id": 0.0,
+        "reason": 0.0,
+        "refund_amount": 0.0,
+        "return_date": 0.0
+       }
+      },
+      "store": {
+       "shape": 85.64191881628008,
+       "baseline": 85.64191881628008,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 100.0,
+        "city": 60.56984252860541,
+        "state": 67.63975155279503
+       }
+      }
+     }
+    },
+    "empty_reference": {
+     "overall": {
+      "shape": 0.0,
+      "baseline": 37.85237037037037,
+      "diff": -37.85237037037037
+     },
+     "shape_passed": false,
+     "shape_failures": [
+      "table address: the reference table has no rows",
+      "table address: score 0.00 < 70",
+      "table customer: the reference table has no rows",
+      "table customer: score 0.00 < 70",
+      "table order: the reference table has no rows",
+      "table order: score 0.00 < 70",
+      "table order_line: the reference table has no rows",
+      "table order_line: score 0.00 < 70",
+      "table product: the reference table has no rows",
+      "table product: score 0.00 < 70",
+      "table product_category: the reference table has no rows",
+      "table product_category: score 0.00 < 70",
+      "table promotion: the reference table has no rows",
+      "table promotion: score 0.00 < 70",
+      "table return: the reference table has no rows",
+      "table return: score 0.00 < 70",
+      "table store: the reference table has no rows",
+      "table store: score 0.00 < 70",
+      "overall score 0.00 < 85"
+     ],
+     "tables": {
+      "address": {
+       "shape": 0.0,
+       "baseline": 38.57142857142857,
+       "diff": -38.57142857142857,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 35.714285714285715,
+        "customer_id": 35.714285714285715,
+        "address_type": 42.857142857142854,
+        "street": 42.857142857142854,
+        "city": 42.857142857142854,
+        "state": 42.857142857142854,
+        "zip_code": 28.57142857142857,
+        "lat": 35.714285714285715,
+        "lng": 35.714285714285715,
+        "is_primary": 42.857142857142854
+       }
+      },
+      "customer": {
+       "shape": 0.0,
+       "baseline": 40.96964285714286,
+       "diff": -40.96964285714286,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 35.714285714285715,
+        "first_name": 42.857142857142854,
+        "last_name": 42.857142857142854,
+        "email": 42.042857142857144,
+        "gender": 42.857142857142854,
+        "loyalty_tier": 42.857142857142854,
+        "signup_date": 35.714285714285715,
+        "is_active": 42.857142857142854
+       }
+      },
+      "order": {
+       "shape": 0.0,
+       "baseline": 34.96178571428571,
+       "diff": -34.96178571428571,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 35.714285714285715,
+        "customer_id": 35.714285714285715,
+        "store_id": 35.714285714285715,
+        "shipping_address_id": 32.534285714285716,
+        "promotion_id": 25.731428571428573,
+        "order_date": 35.714285714285715,
+        "status": 42.857142857142854,
+        "order_total": 35.714285714285715
+       }
+      },
+      "order_line": {
+       "shape": 0.0,
+       "baseline": 34.478,
+       "diff": -34.478,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 35.714285714285715,
+        "order_id": 35.714285714285715,
+        "product_id": 35.714285714285715,
+        "quantity": 35.714285714285715,
+        "promotion_id": 25.823999999999998,
+        "unit_price": 35.714285714285715,
+        "discount_percent": 35.714285714285715,
+        "line_total": 35.714285714285715
+       }
+      },
+      "product": {
+       "shape": 0.0,
+       "baseline": 38.095238095238095,
+       "diff": -38.095238095238095,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 35.714285714285715,
+        "category_id": 35.714285714285715,
+        "product_name": 42.857142857142854,
+        "unit_price": 35.714285714285715,
+        "product_status": 42.857142857142854,
+        "cost": 35.714285714285715
+       }
+      },
+      "product_category": {
+       "shape": 0.0,
+       "baseline": 36.92857142857142,
+       "diff": -36.92857142857142,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 35.714285714285715,
+        "category_name": 42.857142857142854,
+        "parent_category_id": 33.42857142857142,
+        "level": 35.714285714285715
+       }
+      },
+      "promotion": {
+       "shape": 0.0,
+       "baseline": 38.095238095238095,
+       "diff": -38.095238095238095,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 35.714285714285715,
+        "promo_name": 42.857142857142854,
+        "promo_type": 42.857142857142854,
+        "discount_pct": 35.714285714285715,
+        "start_date": 35.714285714285715,
+        "end_date": 35.714285714285715
+       }
+      },
+      "return": {
+       "shape": 0.0,
+       "baseline": 37.142857142857146,
+       "diff": -37.142857142857146,
+       "max_column_diff": {
+        "column": "order_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 35.714285714285715,
+        "order_id": 35.714285714285715,
+        "reason": 42.857142857142854,
+        "refund_amount": 35.714285714285715,
+        "return_date": 35.714285714285715
+       }
+      },
+      "store": {
+       "shape": 0.0,
+       "baseline": 41.42857142857143,
+       "diff": -41.42857142857143,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 35.714285714285715,
+        "store_name": 42.857142857142854,
+        "store_type": 42.857142857142854,
+        "city": 42.857142857142854,
+        "state": 42.857142857142854
+       }
+      }
+     }
+    },
+    "type_mismatch": {
+     "overall": {
+      "shape": 89.85591416387238,
+      "baseline": 89.85591416387237,
+      "diff": 1.4210854715202004e-14
+     },
+     "shape_passed": true,
+     "shape_failures": [],
+     "tables": {
+      "address": {
+       "shape": 85.15768808804567,
+       "baseline": 85.1576880880457,
+       "diff": -2.842170943040401e-14,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 99.03589801354474,
+        "address_type": 96.92079714737143,
+        "street": 42.857142857142854,
+        "city": 45.55259507993284,
+        "state": 71.42857142857143,
+        "zip_code": 98.84012808642328,
+        "lat": 97.88668476339619,
+        "lng": 99.05506350407404,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 78.84115398583083,
+       "baseline": 78.84115398583083,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 45.859187265101774,
+        "last_name": 45.37593082587239,
+        "email": 42.506207928197455,
+        "gender": 98.89800718187412,
+        "loyalty_tier": 100.0,
+        "signup_date": 98.08989868560086,
+        "is_active": 100.0
+       }
+      },
+      "order": {
+       "shape": 98.57547013355423,
+       "baseline": 98.57547013355422,
+       "diff": 1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 1.5631940186722204e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 97.59832461769747,
+        "store_id": 98.48085095135691,
+        "shipping_address_id": 98.55071389355949,
+        "promotion_id": 99.07808308992492,
+        "order_date": 98.5302184780008,
+        "status": 100.0,
+        "order_total": 96.36557003789432
+       }
+      },
+      "order_line": {
+       "shape": 88.12279067209244,
+       "baseline": 88.12279067209244,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.44788926639953,
+        "product_id": 98.0460878003548,
+        "quantity": 97.80081614536091,
+        "promotion_id": 98.4200497906528,
+        "unit_price": 89.29303698327473,
+        "discount_percent": 28.57142857142857,
+        "line_total": 93.40301681926822
+       }
+      },
+      "product": {
+       "shape": 93.9530253407454,
+       "baseline": 93.95302534074538,
+       "diff": 1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 98.26479657071286,
+        "product_name": 70.16866490550701,
+        "unit_price": 98.60221156189587,
+        "product_status": 98.28132898712573,
+        "cost": 98.40115001923085
+       }
+      },
+      "product_category": {
+       "shape": 87.56220318832499,
+       "baseline": 87.56220318832499,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 55.04201680672269,
+        "parent_category_id": 95.20679594657726,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 93.38416432592675,
+       "baseline": 93.38416432592675,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 70.28571428571428,
+        "promo_type": 100.0,
+        "discount_pct": 96.36748612153417,
+        "start_date": 96.84390940597393,
+        "end_date": 96.80787614233809
+       }
+      },
+      "return": {
+       "shape": 97.46481292405107,
+       "baseline": 97.46481292405102,
+       "diff": 5.684341886080802e-14,
+       "max_column_diff": {
+        "column": "return_date",
+        "diff": 2.1316282072803006e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 100.0,
+        "order_id": 96.64772592709102,
+        "reason": 100.0,
+        "refund_amount": 92.02085907159837,
+        "return_date": 98.65547962156596
+       }
+      },
+      "store": {
+       "shape": 85.64191881628008,
+       "baseline": 85.64191881628008,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 100.0,
+        "city": 60.56984252860541,
+        "state": 67.63975155279503
+       }
+      }
+     }
+    },
+    "unit_mismatch": {
+     "overall": {
+      "shape": 90.83247822520816,
+      "baseline": 90.05543153999783,
+      "diff": 0.7770466852103368
+     },
+     "shape_passed": true,
+     "shape_failures": [],
+     "tables": {
+      "address": {
+       "shape": 85.15768808804567,
+       "baseline": 85.1576880880457,
+       "diff": -2.842170943040401e-14,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 99.03589801354474,
+        "address_type": 96.92079714737143,
+        "street": 42.857142857142854,
+        "city": 45.55259507993284,
+        "state": 71.42857142857143,
+        "zip_code": 98.84012808642328,
+        "lat": 97.88668476339619,
+        "lng": 99.05506350407404,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 78.84115398583083,
+       "baseline": 78.84115398583083,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 45.859187265101774,
+        "last_name": 45.37593082587239,
+        "email": 42.506207928197455,
+        "gender": 98.89800718187412,
+        "loyalty_tier": 100.0,
+        "signup_date": 98.08989868560086,
+        "is_active": 100.0
+       }
+      },
+      "order": {
+       "shape": 98.57547013355423,
+       "baseline": 91.58204996666127,
+       "diff": 6.99342016689296,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 55.94736133514366
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 97.59832461769747,
+        "store_id": 98.48085095135691,
+        "shipping_address_id": 98.55071389355949,
+        "promotion_id": 99.07808308992492,
+        "order_date": 98.5302184780008,
+        "status": 100.0,
+        "order_total": 96.36557003789432
+       }
+      },
+      "order_line": {
+       "shape": 96.91186722411449,
+       "baseline": 96.91186722411449,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.44788926639953,
+        "product_id": 98.0460878003548,
+        "quantity": 97.80081614536091,
+        "promotion_id": 98.4200497906528,
+        "unit_price": 89.29303698327473,
+        "discount_percent": 98.88404098760492,
+        "line_total": 93.40301681926822
+       }
+      },
+      "product": {
+       "shape": 93.9530253407454,
+       "baseline": 93.95302534074538,
+       "diff": 1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 98.26479657071286,
+        "product_name": 70.16866490550701,
+        "unit_price": 98.60221156189587,
+        "product_status": 98.28132898712573,
+        "cost": 98.40115001923085
+       }
+      },
+      "product_category": {
+       "shape": 87.56220318832499,
+       "baseline": 87.56220318832499,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 55.04201680672269,
+        "parent_category_id": 95.20679594657726,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 93.38416432592675,
+       "baseline": 93.38416432592675,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 70.28571428571428,
+        "promo_type": 100.0,
+        "discount_pct": 96.36748612153417,
+        "start_date": 96.84390940597393,
+        "end_date": 96.80787614233809
+       }
+      },
+      "return": {
+       "shape": 97.46481292405107,
+       "baseline": 97.46481292405102,
+       "diff": 5.684341886080802e-14,
+       "max_column_diff": {
+        "column": "return_date",
+        "diff": 2.1316282072803006e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 100.0,
+        "order_id": 96.64772592709102,
+        "reason": 100.0,
+        "refund_amount": 92.02085907159837,
+        "return_date": 98.65547962156596
+       }
+      },
+      "store": {
+       "shape": 85.64191881628008,
+       "baseline": 85.64191881628008,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 100.0,
+        "city": 60.56984252860541,
+        "state": 67.63975155279503
+       }
+      }
+     }
+    }
+   },
+   "failures": {}
+  },
+  "medium": {
+   "retail": {
+    "shape1042_vs_refengine42": {
+     "overall": {
+      "shape": 92.10416101149508,
+      "baseline": 92.1041610114951,
+      "diff": -1.4210854715202004e-14
+     },
+     "shape_passed": true,
+     "shape_failures": [],
+     "tables": {
+      "address": {
+       "shape": 88.42709386319987,
+       "baseline": 88.42709386319987,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 99.48617987551643,
+        "address_type": 100.0,
+        "street": 42.865340437686626,
+        "city": 65.49595183348778,
+        "state": 76.9140511913827,
+        "zip_code": 99.81462838496606,
+        "lat": 99.84421858810157,
+        "lng": 99.85056832085755,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 85.659643895842,
+       "baseline": 85.659643895842,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 71.41999942845713,
+        "last_name": 71.42857142857143,
+        "email": 42.81609775749431,
+        "gender": 100.0,
+        "loyalty_tier": 100.0,
+        "signup_date": 99.61248255221314,
+        "is_active": 100.0
+       }
+      },
+      "order": {
+       "shape": 99.43611383699387,
+       "baseline": 99.43611383699393,
+       "diff": -5.684341886080802e-14,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 4.831690603168681e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 99.89532239136172,
+        "store_id": 99.96425975998241,
+        "shipping_address_id": 99.75243736553432,
+        "promotion_id": 99.74792687742689,
+        "order_date": 99.6112456071346,
+        "status": 100.0,
+        "order_total": 96.51771869451098
+       }
+      },
+      "order_line": {
+       "shape": 97.59487096158324,
+       "baseline": 97.59487096158324,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.97316327035074,
+        "product_id": 99.87386307741055,
+        "quantity": 99.98244953428109,
+        "promotion_id": 99.62900986061135,
+        "unit_price": 89.78326880852728,
+        "discount_percent": 97.31284014802607,
+        "line_total": 94.20437299345886
+       }
+      },
+      "product": {
+       "shape": 94.78309344341051,
+       "baseline": 94.78309344341051,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 99.67361821378393,
+        "product_name": 71.42857142857143,
+        "unit_price": 98.44931562510203,
+        "product_status": 100.0,
+        "cost": 99.14705539300567
+       }
+      },
+      "product_category": {
+       "shape": 86.49836493305747,
+       "baseline": 86.49836493305747,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 58.33872010342599,
+        "parent_category_id": 87.65473962880391,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 91.61842816334114,
+       "baseline": 91.61842816334114,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 70.28571428571428,
+        "promo_type": 96.3961224489796,
+        "discount_pct": 94.17468138434211,
+        "start_date": 94.39664052317828,
+        "end_date": 94.4574103378325
+       }
+      },
+      "return": {
+       "shape": 99.50564132018795,
+       "baseline": 99.50564132018803,
+       "diff": -8.526512829121202e-14,
+       "max_column_diff": {
+        "column": "return_date",
+        "diff": 4.405364961712621e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 100.0,
+        "order_id": 99.89319089651725,
+        "reason": 100.0,
+        "refund_amount": 98.42654149013062,
+        "return_date": 99.20847421429185
+       }
+      },
+      "store": {
+       "shape": 85.41419868583964,
+       "baseline": 85.41419868583964,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 98.2,
+        "city": 61.23124187640316,
+        "state": 67.63975155279503
+       }
+      }
+     }
+    },
+    "refengine43_vs_refengine42": {
+     "overall": {
+      "shape": 91.5575335656577,
+      "baseline": 91.5575335656577,
+      "diff": 0.0
+     },
+     "shape_passed": true,
+     "shape_failures": [],
+     "tables": {
+      "address": {
+       "shape": 88.21709880310024,
+       "baseline": 88.21709880310024,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 99.79397042089548,
+        "address_type": 98.07007382698997,
+        "street": 42.865912712913115,
+        "city": 65.46557398851604,
+        "state": 77.07081201904627,
+        "zip_code": 99.62500451897228,
+        "lat": 99.63956043448886,
+        "lng": 99.64008010918056,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 85.1267434525736,
+       "baseline": 85.12674345257362,
+       "diff": -1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 71.41999942845713,
+        "last_name": 71.42857142857143,
+        "email": 42.82372041885761,
+        "gender": 100.0,
+        "loyalty_tier": 95.52342310535991,
+        "signup_date": 99.81823323934287,
+        "is_active": 100.0
+       }
+      },
+      "order": {
+       "shape": 97.09565217355885,
+       "baseline": 97.0956521735588,
+       "diff": 4.263256414560601e-14,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 3.836930773104541e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 99.84140476471293,
+        "store_id": 99.9234085721316,
+        "shipping_address_id": 99.73191238248035,
+        "promotion_id": 99.74127828129643,
+        "order_date": 99.81058435641604,
+        "status": 95.32136010741316,
+        "order_total": 82.39526892402024
+       }
+      },
+      "order_line": {
+       "shape": 93.78110915937475,
+       "baseline": 93.78110915937475,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.96066576028699,
+        "product_id": 99.8185873966255,
+        "quantity": 99.02935466520634,
+        "promotion_id": 99.74832280021504,
+        "unit_price": 73.45919631754262,
+        "discount_percent": 98.46682179530352,
+        "line_total": 79.76592453981807
+       }
+      },
+      "product": {
+       "shape": 94.53456179956054,
+       "baseline": 94.53456179956054,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 99.07094455151476,
+        "product_name": 71.42857142857143,
+        "unit_price": 98.15408802505392,
+        "product_status": 100.0,
+        "cost": 98.55376679222303
+       }
+      },
+      "product_category": {
+       "shape": 87.56220318832499,
+       "baseline": 87.56220318832499,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 55.04201680672269,
+        "parent_category_id": 95.20679594657726,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 93.38416432592675,
+       "baseline": 93.38416432592675,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 70.28571428571428,
+        "promo_type": 100.0,
+        "discount_pct": 96.36748612153417,
+        "start_date": 96.84390940597393,
+        "end_date": 96.80787614233809
+       }
+      },
+      "return": {
+       "shape": 98.67435037221955,
+       "baseline": 98.67435037221965,
+       "diff": -9.947598300641403e-14,
+       "max_column_diff": {
+        "column": "return_date",
+        "diff": 4.405364961712621e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 100.0,
+        "order_id": 99.65598486453345,
+        "reason": 100.0,
+        "refund_amount": 93.86096499843883,
+        "return_date": 99.85480199812547
+       }
+      },
+      "store": {
+       "shape": 85.64191881628008,
+       "baseline": 85.64191881628008,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 100.0,
+        "city": 60.56984252860541,
+        "state": 67.63975155279503
+       }
+      }
+     }
+    },
+    "refengine44_vs_refengine42": {
+     "overall": {
+      "shape": 91.89226996631845,
+      "baseline": 91.89226996631845,
+      "diff": 0.0
+     },
+     "shape_passed": true,
+     "shape_failures": [],
+     "tables": {
+      "address": {
+       "shape": 88.06501509851394,
+       "baseline": 88.06501509851394,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "state",
+        "diff": 1.4210854715202004e-14
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 99.93069060298009,
+        "address_type": 100.0,
+        "street": 42.866675436324165,
+        "city": 65.38576836841786,
+        "state": 72.7625277333013,
+        "zip_code": 99.88654211867399,
+        "lat": 99.86969589772005,
+        "lng": 99.9482508277219,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 85.6264624586216,
+       "baseline": 85.6264624586216,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 71.41999942845713,
+        "last_name": 71.41142857142857,
+        "email": 42.83075672165451,
+        "gender": 100.0,
+        "loyalty_tier": 100.0,
+        "signup_date": 99.34951494743254,
+        "is_active": 100.0
+       }
+      },
+      "order": {
+       "shape": 98.83982772030409,
+       "baseline": 98.83982772030404,
+       "diff": 4.263256414560601e-14,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 4.263256414560601e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 99.88396123499334,
+        "store_id": 99.97242803455498,
+        "shipping_address_id": 99.76753867420327,
+        "promotion_id": 99.8975989818698,
+        "order_date": 99.74434502425837,
+        "status": 100.0,
+        "order_total": 91.45274981255294
+       }
+      },
+      "order_line": {
+       "shape": 95.60342227147683,
+       "baseline": 95.60342227147682,
+       "diff": 1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.97230538532618,
+        "product_id": 99.90495166501502,
+        "quantity": 98.02906461015895,
+        "promotion_id": 99.85383144898378,
+        "unit_price": 81.93940736957069,
+        "discount_percent": 96.73604552920246,
+        "line_total": 88.39177216355746
+       }
+      },
+      "product": {
+       "shape": 94.83827850897619,
+       "baseline": 94.83827850897616,
+       "diff": 2.842170943040401e-14,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 99.55436643749134,
+        "product_name": 71.42857142857143,
+        "unit_price": 98.72357211331709,
+        "product_status": 100.0,
+        "cost": 99.32316107447716
+       }
+      },
+      "product_category": {
+       "shape": 87.73440233562891,
+       "baseline": 87.73440233562891,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 54.29505135387489,
+        "parent_category_id": 96.64255798864075,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 91.81618927591192,
+       "baseline": 91.81618927591192,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 70.28571428571428,
+        "promo_type": 96.7791156462585,
+        "discount_pct": 92.84342142552319,
+        "start_date": 95.50992218318586,
+        "end_date": 95.4789621147897
+       }
+      },
+      "return": {
+       "shape": 98.48447177898535,
+       "baseline": 98.48447177898552,
+       "diff": -1.7053025658242404e-13,
+       "max_column_diff": {
+        "column": "return_date",
+        "diff": 8.526512829121202e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 100.0,
+        "order_id": 99.77804773759547,
+        "reason": 100.0,
+        "refund_amount": 93.21387216203219,
+        "return_date": 99.43043899529913
+       }
+      },
+      "store": {
+       "shape": 86.0223602484472,
+       "baseline": 86.0223602484472,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 100.0,
+        "city": 62.732919254658384,
+        "state": 67.37888198757764
+       }
+      }
+     }
+    },
+    "refengine45_vs_refengine42": {
+     "overall": {
+      "shape": 89.07755109400844,
+      "baseline": 89.07755109400844,
+      "diff": 0.0
+     },
+     "shape_passed": true,
+     "shape_failures": [],
+     "tables": {
+      "address": {
+       "shape": 87.86623720827927,
+       "baseline": 87.86623720827927,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 99.87944909188116,
+        "address_type": 100.0,
+        "street": 42.86686576368643,
+        "city": 65.3966641646404,
+        "state": 71.42857142857143,
+        "zip_code": 99.78399486028484,
+        "lat": 99.7022849718094,
+        "lng": 99.60454180191914,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 85.50874907359503,
+       "baseline": 85.50874907359503,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 71.40857085702855,
+        "last_name": 71.42857142857143,
+        "email": 42.79792064193567,
+        "gender": 100.0,
+        "loyalty_tier": 100.0,
+        "signup_date": 99.85462910638914,
+        "is_active": 98.58030055483543
+       }
+      },
+      "order": {
+       "shape": 91.22607018995426,
+       "baseline": 91.22607018995417,
+       "diff": 8.526512829121202e-14,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 6.679101716144942e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 99.72370968170756,
+        "store_id": 99.91351194228251,
+        "shipping_address_id": 99.83791618883147,
+        "promotion_id": 99.76867265959383,
+        "order_date": 99.61765659847691,
+        "status": 92.79680467658142,
+        "order_total": 38.15028977216032
+       }
+      },
+      "order_line": {
+       "shape": 86.63351792119238,
+       "baseline": 86.63351792119238,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.96420833693439,
+        "product_id": 99.91694799343591,
+        "quantity": 97.99939046112578,
+        "promotion_id": 99.6917743433215,
+        "unit_price": 49.551696294200845,
+        "discount_percent": 95.51812897568246,
+        "line_total": 50.425996964838085
+       }
+      },
+      "product": {
+       "shape": 94.57617572216132,
+       "baseline": 94.57617572216132,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 98.73043932011655,
+        "product_name": 71.42857142857143,
+        "unit_price": 98.97101622395283,
+        "product_status": 100.0,
+        "cost": 98.32702736032711
+       }
+      },
+      "product_category": {
+       "shape": 84.74559762497057,
+       "baseline": 84.74559762497057,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 53.23996265172736,
+        "parent_category_id": 85.74242784815495,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 91.02613006552633,
+       "baseline": 91.02613006552633,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 70.28571428571428,
+        "promo_type": 100.0,
+        "discount_pct": 90.59770338499891,
+        "start_date": 92.64274327181916,
+        "end_date": 92.63061945062562
+       }
+      },
+      "return": {
+       "shape": 94.60023237777868,
+       "baseline": 94.60023237777881,
+       "diff": -1.2789769243681803e-13,
+       "max_column_diff": {
+        "column": "return_date",
+        "diff": 6.110667527536862e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 100.0,
+        "order_id": 99.86961116091408,
+        "reason": 93.2010045222158,
+        "refund_amount": 80.52663189369834,
+        "return_date": 99.40391431206527
+       }
+      },
+      "store": {
+       "shape": 85.51524966261807,
+       "baseline": 85.51524966261809,
+       "diff": -1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 100.0,
+        "city": 60.71910545594756,
+        "state": 66.85714285714285
+       }
+      }
+     }
+    },
+    "refengine46_vs_refengine42": {
+     "overall": {
+      "shape": 92.43466221781279,
+      "baseline": 92.43466221781279,
+      "diff": 0.0
+     },
+     "shape_passed": true,
+     "shape_failures": [],
+     "tables": {
+      "address": {
+       "shape": 90.75216138835583,
+       "baseline": 90.75216138835584,
+       "diff": -1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 99.90418808585038,
+        "address_type": 100.0,
+        "street": 42.8683918260391,
+        "city": 65.34918641652467,
+        "state": 100.0,
+        "zip_code": 99.82100952281505,
+        "lat": 99.75575150727136,
+        "lng": 99.82308652505778,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 85.68393622445117,
+       "baseline": 85.68393622445119,
+       "diff": -1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 71.41999942845713,
+        "last_name": 71.42857142857143,
+        "email": 42.820202267459166,
+        "gender": 100.0,
+        "loyalty_tier": 100.0,
+        "signup_date": 99.80271667112174,
+        "is_active": 100.0
+       }
+      },
+      "order": {
+       "shape": 99.16949204097499,
+       "baseline": 99.16949204097497,
+       "diff": 1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 1.7053025658242404e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 99.96825469808077,
+        "store_id": 99.89532076215485,
+        "shipping_address_id": 99.69116135010714,
+        "promotion_id": 99.90096062649481,
+        "order_date": 99.57109392653139,
+        "status": 100.0,
+        "order_total": 94.32914496443094
+       }
+      },
+      "order_line": {
+       "shape": 97.60403569174412,
+       "baseline": 97.60403569174412,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.96208366905742,
+        "product_id": 99.76577175776507,
+        "quantity": 99.97874173353769,
+        "promotion_id": 99.93427803900929,
+        "unit_price": 89.6675731133079,
+        "discount_percent": 97.15815205274107,
+        "line_total": 94.36568516853453
+       }
+      },
+      "product": {
+       "shape": 94.68957252594487,
+       "baseline": 94.68957252594488,
+       "diff": -1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 99.00544787122517,
+        "product_name": 71.42857142857143,
+        "unit_price": 98.68861192898564,
+        "product_status": 100.0,
+        "cost": 99.01480392688701
+       }
+      },
+      "product_category": {
+       "shape": 87.53686589429493,
+       "baseline": 87.53686589429493,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 54.04533906585891,
+        "parent_category_id": 96.10212451132082,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 92.01188905648381,
+       "baseline": 92.01188905648381,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "end_date",
+        "diff": 1.4210854715202004e-14
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 73.30407868775217,
+        "promo_type": 95.69503401360545,
+        "discount_pct": 93.70165524119854,
+        "start_date": 94.74695258697527,
+        "end_date": 94.62361380937138
+       }
+      },
+      "return": {
+       "shape": 99.08166122311064,
+       "baseline": 99.08166122311071,
+       "diff": -7.105427357601002e-14,
+       "max_column_diff": {
+        "column": "return_date",
+        "diff": 3.268496584496461e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 100.0,
+        "order_id": 99.8571081887889,
+        "reason": 100.0,
+        "refund_amount": 96.33029710014625,
+        "return_date": 99.22090082661806
+       }
+      },
+      "store": {
+       "shape": 85.38234591495461,
+       "baseline": 85.38234591495461,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 100.0,
+        "city": 59.27197802197802,
+        "state": 67.63975155279503
+       }
+      }
+     }
+    }
+   },
+   "edge": {
+    "same_units": {
+     "overall": {
+      "shape": 91.5575335656577,
+      "baseline": 91.5575335656577,
+      "diff": 0.0
+     },
+     "shape_passed": true,
+     "shape_failures": [],
+     "tables": {
+      "address": {
+       "shape": 88.21709880310024,
+       "baseline": 88.21709880310024,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 99.79397042089548,
+        "address_type": 98.07007382698997,
+        "street": 42.865912712913115,
+        "city": 65.46557398851604,
+        "state": 77.07081201904627,
+        "zip_code": 99.62500451897228,
+        "lat": 99.63956043448886,
+        "lng": 99.64008010918056,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 85.1267434525736,
+       "baseline": 85.12674345257362,
+       "diff": -1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 71.41999942845713,
+        "last_name": 71.42857142857143,
+        "email": 42.82372041885761,
+        "gender": 100.0,
+        "loyalty_tier": 95.52342310535991,
+        "signup_date": 99.81823323934287,
+        "is_active": 100.0
+       }
+      },
+      "order": {
+       "shape": 97.09565217355885,
+       "baseline": 97.0956521735588,
+       "diff": 4.263256414560601e-14,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 3.836930773104541e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 99.84140476471293,
+        "store_id": 99.9234085721316,
+        "shipping_address_id": 99.73191238248035,
+        "promotion_id": 99.74127828129643,
+        "order_date": 99.81058435641604,
+        "status": 95.32136010741316,
+        "order_total": 82.39526892402024
+       }
+      },
+      "order_line": {
+       "shape": 93.78110915937475,
+       "baseline": 93.78110915937475,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.96066576028699,
+        "product_id": 99.8185873966255,
+        "quantity": 99.02935466520634,
+        "promotion_id": 99.74832280021504,
+        "unit_price": 73.45919631754262,
+        "discount_percent": 98.46682179530352,
+        "line_total": 79.76592453981807
+       }
+      },
+      "product": {
+       "shape": 94.53456179956054,
+       "baseline": 94.53456179956054,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 99.07094455151476,
+        "product_name": 71.42857142857143,
+        "unit_price": 98.15408802505392,
+        "product_status": 100.0,
+        "cost": 98.55376679222303
+       }
+      },
+      "product_category": {
+       "shape": 87.56220318832499,
+       "baseline": 87.56220318832499,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 55.04201680672269,
+        "parent_category_id": 95.20679594657726,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 93.38416432592675,
+       "baseline": 93.38416432592675,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 70.28571428571428,
+        "promo_type": 100.0,
+        "discount_pct": 96.36748612153417,
+        "start_date": 96.84390940597393,
+        "end_date": 96.80787614233809
+       }
+      },
+      "return": {
+       "shape": 98.67435037221955,
+       "baseline": 98.67435037221965,
+       "diff": -9.947598300641403e-14,
+       "max_column_diff": {
+        "column": "return_date",
+        "diff": 4.405364961712621e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 100.0,
+        "order_id": 99.65598486453345,
+        "reason": 100.0,
+        "refund_amount": 93.86096499843883,
+        "return_date": 99.85480199812547
+       }
+      },
+      "store": {
+       "shape": 85.64191881628008,
+       "baseline": 85.64191881628008,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 100.0,
+        "city": 60.56984252860541,
+        "state": 67.63975155279503
+       }
+      }
+     }
+    },
+    "missing_column": {
+     "overall": {
+      "shape": 90.96275967095134,
+      "baseline": 92.22901012174844,
+      "diff": -1.2662504507971022
+     },
+     "shape_passed": false,
+     "shape_failures": [
+      "table customer: column email is missing from the synthetic data"
+     ],
+     "tables": {
+      "address": {
+       "shape": 88.21709880310024,
+       "baseline": 88.21709880310024,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 99.79397042089548,
+        "address_type": 98.07007382698997,
+        "street": 42.865912712913115,
+        "city": 65.46557398851604,
+        "state": 77.07081201904627,
+        "zip_code": 99.62500451897228,
+        "lat": 99.63956043448886,
+        "lng": 99.64008010918056,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 79.77377840021641,
+       "baseline": 91.1700324573902,
+       "diff": -11.396254057173792,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [
+        "email"
+       ],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 71.41999942845713,
+        "last_name": 71.42857142857143,
+        "email": 0.0,
+        "gender": 100.0,
+        "loyalty_tier": 95.52342310535991,
+        "signup_date": 99.81823323934287,
+        "is_active": 100.0
+       }
+      },
+      "order": {
+       "shape": 97.09565217355885,
+       "baseline": 97.0956521735588,
+       "diff": 4.263256414560601e-14,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 3.836930773104541e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 99.84140476471293,
+        "store_id": 99.9234085721316,
+        "shipping_address_id": 99.73191238248035,
+        "promotion_id": 99.74127828129643,
+        "order_date": 99.81058435641604,
+        "status": 95.32136010741316,
+        "order_total": 82.39526892402024
+       }
+      },
+      "order_line": {
+       "shape": 93.78110915937475,
+       "baseline": 93.78110915937475,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.96066576028699,
+        "product_id": 99.8185873966255,
+        "quantity": 99.02935466520634,
+        "promotion_id": 99.74832280021504,
+        "unit_price": 73.45919631754262,
+        "discount_percent": 98.46682179530352,
+        "line_total": 79.76592453981807
+       }
+      },
+      "product": {
+       "shape": 94.53456179956054,
+       "baseline": 94.53456179956054,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 99.07094455151476,
+        "product_name": 71.42857142857143,
+        "unit_price": 98.15408802505392,
+        "product_status": 100.0,
+        "cost": 98.55376679222303
+       }
+      },
+      "product_category": {
+       "shape": 87.56220318832499,
+       "baseline": 87.56220318832499,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 55.04201680672269,
+        "parent_category_id": 95.20679594657726,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 93.38416432592675,
+       "baseline": 93.38416432592675,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 70.28571428571428,
+        "promo_type": 100.0,
+        "discount_pct": 96.36748612153417,
+        "start_date": 96.84390940597393,
+        "end_date": 96.80787614233809
+       }
+      },
+      "return": {
+       "shape": 98.67435037221955,
+       "baseline": 98.67435037221965,
+       "diff": -9.947598300641403e-14,
+       "max_column_diff": {
+        "column": "return_date",
+        "diff": 4.405364961712621e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 100.0,
+        "order_id": 99.65598486453345,
+        "reason": 100.0,
+        "refund_amount": 93.86096499843883,
+        "return_date": 99.85480199812547
+       }
+      },
+      "store": {
+       "shape": 85.64191881628008,
+       "baseline": 85.64191881628008,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 100.0,
+        "city": 60.56984252860541,
+        "state": 67.63975155279503
+       }
+      }
+     }
+    },
+    "missing_table": {
+     "overall": {
+      "shape": 80.59371685763331,
+      "baseline": 90.66793146483747,
+      "diff": -10.074214607204155
+     },
+     "shape_passed": false,
+     "shape_failures": [
+      "table return: missing from the synthetic data",
+      "table return: column return_id is missing from the synthetic data",
+      "table return: column order_id is missing from the synthetic data",
+      "table return: column reason is missing from the synthetic data",
+      "table return: column refund_amount is missing from the synthetic data",
+      "table return: column return_date is missing from the synthetic data",
+      "overall score 80.59 < 85"
+     ],
+     "tables": {
+      "address": {
+       "shape": 88.21709880310024,
+       "baseline": 88.21709880310024,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 99.79397042089548,
+        "address_type": 98.07007382698997,
+        "street": 42.865912712913115,
+        "city": 65.46557398851604,
+        "state": 77.07081201904627,
+        "zip_code": 99.62500451897228,
+        "lat": 99.63956043448886,
+        "lng": 99.64008010918056,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 85.1267434525736,
+       "baseline": 85.12674345257362,
+       "diff": -1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 71.41999942845713,
+        "last_name": 71.42857142857143,
+        "email": 42.82372041885761,
+        "gender": 100.0,
+        "loyalty_tier": 95.52342310535991,
+        "signup_date": 99.81823323934287,
+        "is_active": 100.0
+       }
+      },
+      "order": {
+       "shape": 97.09565217355885,
+       "baseline": 97.0956521735588,
+       "diff": 4.263256414560601e-14,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 3.836930773104541e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 99.84140476471293,
+        "store_id": 99.9234085721316,
+        "shipping_address_id": 99.73191238248035,
+        "promotion_id": 99.74127828129643,
+        "order_date": 99.81058435641604,
+        "status": 95.32136010741316,
+        "order_total": 82.39526892402024
+       }
+      },
+      "order_line": {
+       "shape": 93.78110915937475,
+       "baseline": 93.78110915937475,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.96066576028699,
+        "product_id": 99.8185873966255,
+        "quantity": 99.02935466520634,
+        "promotion_id": 99.74832280021504,
+        "unit_price": 73.45919631754262,
+        "discount_percent": 98.46682179530352,
+        "line_total": 79.76592453981807
+       }
+      },
+      "product": {
+       "shape": 94.53456179956054,
+       "baseline": 94.53456179956054,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 99.07094455151476,
+        "product_name": 71.42857142857143,
+        "unit_price": 98.15408802505392,
+        "product_status": 100.0,
+        "cost": 98.55376679222303
+       }
+      },
+      "product_category": {
+       "shape": 87.56220318832499,
+       "baseline": 87.56220318832499,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 55.04201680672269,
+        "parent_category_id": 95.20679594657726,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 93.38416432592675,
+       "baseline": 93.38416432592675,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 70.28571428571428,
+        "promo_type": 100.0,
+        "discount_pct": 96.36748612153417,
+        "start_date": 96.84390940597393,
+        "end_date": 96.80787614233809
+       }
+      },
+      "return": {
+       "shape": 0.0,
+       "baseline": null,
+       "diff": null,
+       "missing_columns": [
+        "return_id",
+        "order_id",
+        "reason",
+        "refund_amount",
+        "return_date"
+       ],
+       "shape_columns": {
+        "return_id": 0.0,
+        "order_id": 0.0,
+        "reason": 0.0,
+        "refund_amount": 0.0,
+        "return_date": 0.0
+       }
+      },
+      "store": {
+       "shape": 85.64191881628008,
+       "baseline": 85.64191881628008,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 100.0,
+        "city": 60.56984252860541,
+        "state": 67.63975155279503
+       }
+      }
+     }
+    },
+    "empty_reference": {
+     "overall": {
+      "shape": 0.0,
+      "baseline": 37.85146957671958,
+      "diff": -37.85146957671958
+     },
+     "shape_passed": false,
+     "shape_failures": [
+      "table address: the reference table has no rows",
+      "table address: score 0.00 < 70",
+      "table customer: the reference table has no rows",
+      "table customer: score 0.00 < 70",
+      "table order: the reference table has no rows",
+      "table order: score 0.00 < 70",
+      "table order_line: the reference table has no rows",
+      "table order_line: score 0.00 < 70",
+      "table product: the reference table has no rows",
+      "table product: score 0.00 < 70",
+      "table product_category: the reference table has no rows",
+      "table product_category: score 0.00 < 70",
+      "table promotion: the reference table has no rows",
+      "table promotion: score 0.00 < 70",
+      "table return: the reference table has no rows",
+      "table return: score 0.00 < 70",
+      "table store: the reference table has no rows",
+      "table store: score 0.00 < 70",
+      "overall score 0.00 < 85"
+     ],
+     "tables": {
+      "address": {
+       "shape": 0.0,
+       "baseline": 38.57142857142857,
+       "diff": -38.57142857142857,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 35.714285714285715,
+        "customer_id": 35.714285714285715,
+        "address_type": 42.857142857142854,
+        "street": 42.857142857142854,
+        "city": 42.857142857142854,
+        "state": 42.857142857142854,
+        "zip_code": 28.57142857142857,
+        "lat": 35.714285714285715,
+        "lng": 35.714285714285715,
+        "is_primary": 42.857142857142854
+       }
+      },
+      "customer": {
+       "shape": 0.0,
+       "baseline": 40.980714285714285,
+       "diff": -40.980714285714285,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 35.714285714285715,
+        "first_name": 42.857142857142854,
+        "last_name": 42.857142857142854,
+        "email": 42.13142857142857,
+        "gender": 42.857142857142854,
+        "loyalty_tier": 42.857142857142854,
+        "signup_date": 35.714285714285715,
+        "is_active": 42.857142857142854
+       }
+      },
+      "order": {
+       "shape": 0.0,
+       "baseline": 34.955650000000006,
+       "diff": -34.955650000000006,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 35.714285714285715,
+        "customer_id": 35.714285714285715,
+        "store_id": 35.714285714285715,
+        "shipping_address_id": 32.50562857142857,
+        "promotion_id": 25.711000000000002,
+        "order_date": 35.714285714285715,
+        "status": 42.857142857142854,
+        "order_total": 35.714285714285715
+       }
+      },
+      "order_line": {
+       "shape": 0.0,
+       "baseline": 34.464957142857145,
+       "diff": -34.464957142857145,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 35.714285714285715,
+        "order_id": 35.714285714285715,
+        "product_id": 35.714285714285715,
+        "quantity": 35.714285714285715,
+        "promotion_id": 25.719657142857145,
+        "unit_price": 35.714285714285715,
+        "discount_percent": 35.714285714285715,
+        "line_total": 35.714285714285715
+       }
+      },
+      "product": {
+       "shape": 0.0,
+       "baseline": 38.095238095238095,
+       "diff": -38.095238095238095,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 35.714285714285715,
+        "category_id": 35.714285714285715,
+        "product_name": 42.857142857142854,
+        "unit_price": 35.714285714285715,
+        "product_status": 42.857142857142854,
+        "cost": 35.714285714285715
+       }
+      },
+      "product_category": {
+       "shape": 0.0,
+       "baseline": 36.92857142857142,
+       "diff": -36.92857142857142,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 35.714285714285715,
+        "category_name": 42.857142857142854,
+        "parent_category_id": 33.42857142857142,
+        "level": 35.714285714285715
+       }
+      },
+      "promotion": {
+       "shape": 0.0,
+       "baseline": 38.095238095238095,
+       "diff": -38.095238095238095,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 35.714285714285715,
+        "promo_name": 42.857142857142854,
+        "promo_type": 42.857142857142854,
+        "discount_pct": 35.714285714285715,
+        "start_date": 35.714285714285715,
+        "end_date": 35.714285714285715
+       }
+      },
+      "return": {
+       "shape": 0.0,
+       "baseline": 37.142857142857146,
+       "diff": -37.142857142857146,
+       "max_column_diff": {
+        "column": "order_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 35.714285714285715,
+        "order_id": 35.714285714285715,
+        "reason": 42.857142857142854,
+        "refund_amount": 35.714285714285715,
+        "return_date": 35.714285714285715
+       }
+      },
+      "store": {
+       "shape": 0.0,
+       "baseline": 41.42857142857143,
+       "diff": -41.42857142857143,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 35.714285714285715,
+        "store_name": 42.857142857142854,
+        "store_type": 42.857142857142854,
+        "city": 42.857142857142854,
+        "state": 42.857142857142854
+       }
+      }
+     }
+    },
+    "type_mismatch": {
+     "overall": {
+      "shape": 90.58676421532611,
+      "baseline": 90.58676421532613,
+      "diff": -1.4210854715202004e-14
+     },
+     "shape_passed": true,
+     "shape_failures": [],
+     "tables": {
+      "address": {
+       "shape": 88.21709880310024,
+       "baseline": 88.21709880310024,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 99.79397042089548,
+        "address_type": 98.07007382698997,
+        "street": 42.865912712913115,
+        "city": 65.46557398851604,
+        "state": 77.07081201904627,
+        "zip_code": 99.62500451897228,
+        "lat": 99.63956043448886,
+        "lng": 99.64008010918056,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 85.1267434525736,
+       "baseline": 85.12674345257362,
+       "diff": -1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 71.41999942845713,
+        "last_name": 71.42857142857143,
+        "email": 42.82372041885761,
+        "gender": 100.0,
+        "loyalty_tier": 95.52342310535991,
+        "signup_date": 99.81823323934287,
+        "is_active": 100.0
+       }
+      },
+      "order": {
+       "shape": 97.09565217355885,
+       "baseline": 97.0956521735588,
+       "diff": 4.263256414560601e-14,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 3.836930773104541e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 99.84140476471293,
+        "store_id": 99.9234085721316,
+        "shipping_address_id": 99.73191238248035,
+        "promotion_id": 99.74127828129643,
+        "order_date": 99.81058435641604,
+        "status": 95.32136010741316,
+        "order_total": 82.39526892402024
+       }
+      },
+      "order_line": {
+       "shape": 85.04418500639039,
+       "baseline": 85.04418500639039,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.96066576028699,
+        "product_id": 99.8185873966255,
+        "quantity": 99.02935466520634,
+        "promotion_id": 99.74832280021504,
+        "unit_price": 73.45919631754262,
+        "discount_percent": 28.57142857142857,
+        "line_total": 79.76592453981807
+       }
+      },
+      "product": {
+       "shape": 94.53456179956054,
+       "baseline": 94.53456179956054,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 99.07094455151476,
+        "product_name": 71.42857142857143,
+        "unit_price": 98.15408802505392,
+        "product_status": 100.0,
+        "cost": 98.55376679222303
+       }
+      },
+      "product_category": {
+       "shape": 87.56220318832499,
+       "baseline": 87.56220318832499,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 55.04201680672269,
+        "parent_category_id": 95.20679594657726,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 93.38416432592675,
+       "baseline": 93.38416432592675,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 70.28571428571428,
+        "promo_type": 100.0,
+        "discount_pct": 96.36748612153417,
+        "start_date": 96.84390940597393,
+        "end_date": 96.80787614233809
+       }
+      },
+      "return": {
+       "shape": 98.67435037221955,
+       "baseline": 98.67435037221965,
+       "diff": -9.947598300641403e-14,
+       "max_column_diff": {
+        "column": "return_date",
+        "diff": 4.405364961712621e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 100.0,
+        "order_id": 99.65598486453345,
+        "reason": 100.0,
+        "refund_amount": 93.86096499843883,
+        "return_date": 99.85480199812547
+       }
+      },
+      "store": {
+       "shape": 85.64191881628008,
+       "baseline": 85.64191881628008,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 100.0,
+        "city": 60.56984252860541,
+        "state": 67.63975155279503
+       }
+      }
+     }
+    },
+    "unit_mismatch": {
+     "overall": {
+      "shape": 91.5575335656577,
+      "baseline": 90.7662130699339,
+      "diff": 0.7913204957238094
+     },
+     "shape_passed": true,
+     "shape_failures": [],
+     "tables": {
+      "address": {
+       "shape": 88.21709880310024,
+       "baseline": 88.21709880310024,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "address_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "address_id": 100.0,
+        "customer_id": 99.79397042089548,
+        "address_type": 98.07007382698997,
+        "street": 42.865912712913115,
+        "city": 65.46557398851604,
+        "state": 77.07081201904627,
+        "zip_code": 99.62500451897228,
+        "lat": 99.63956043448886,
+        "lng": 99.64008010918056,
+        "is_primary": 100.0
+       }
+      },
+      "customer": {
+       "shape": 85.1267434525736,
+       "baseline": 85.12674345257362,
+       "diff": -1.4210854715202004e-14,
+       "max_column_diff": {
+        "column": "customer_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "customer_id": 100.0,
+        "first_name": 71.41999942845713,
+        "last_name": 71.42857142857143,
+        "email": 42.82372041885761,
+        "gender": 100.0,
+        "loyalty_tier": 95.52342310535991,
+        "signup_date": 99.81823323934287,
+        "is_active": 100.0
+       }
+      },
+      "order": {
+       "shape": 97.09565217355885,
+       "baseline": 89.97376771204448,
+       "diff": 7.1218844615143695,
+       "max_column_diff": {
+        "column": "order_date",
+        "diff": 56.97507569211498
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_id": 100.0,
+        "customer_id": 99.84140476471293,
+        "store_id": 99.9234085721316,
+        "shipping_address_id": 99.73191238248035,
+        "promotion_id": 99.74127828129643,
+        "order_date": 99.81058435641604,
+        "status": 95.32136010741316,
+        "order_total": 82.39526892402024
+       }
+      },
+      "order_line": {
+       "shape": 93.78110915937475,
+       "baseline": 93.78110915937475,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_percent",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "order_line_id": 100.0,
+        "order_id": 99.96066576028699,
+        "product_id": 99.8185873966255,
+        "quantity": 99.02935466520634,
+        "promotion_id": 99.74832280021504,
+        "unit_price": 73.45919631754262,
+        "discount_percent": 98.46682179530352,
+        "line_total": 79.76592453981807
+       }
+      },
+      "product": {
+       "shape": 94.53456179956054,
+       "baseline": 94.53456179956054,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "product_id": 100.0,
+        "category_id": 99.07094455151476,
+        "product_name": 71.42857142857143,
+        "unit_price": 98.15408802505392,
+        "product_status": 100.0,
+        "cost": 98.55376679222303
+       }
+      },
+      "product_category": {
+       "shape": 87.56220318832499,
+       "baseline": 87.56220318832499,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "category_id",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "category_id": 100.0,
+        "category_name": 55.04201680672269,
+        "parent_category_id": 95.20679594657726,
+        "level": 100.0
+       }
+      },
+      "promotion": {
+       "shape": 93.38416432592675,
+       "baseline": 93.38416432592675,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "discount_pct",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "promotion_id": 100.0,
+        "promo_name": 70.28571428571428,
+        "promo_type": 100.0,
+        "discount_pct": 96.36748612153417,
+        "start_date": 96.84390940597393,
+        "end_date": 96.80787614233809
+       }
+      },
+      "return": {
+       "shape": 98.67435037221955,
+       "baseline": 98.67435037221965,
+       "diff": -9.947598300641403e-14,
+       "max_column_diff": {
+        "column": "return_date",
+        "diff": 4.405364961712621e-13
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "return_id": 100.0,
+        "order_id": 99.65598486453345,
+        "reason": 100.0,
+        "refund_amount": 93.86096499843883,
+        "return_date": 99.85480199812547
+       }
+      },
+      "store": {
+       "shape": 85.64191881628008,
+       "baseline": 85.64191881628008,
+       "diff": 0.0,
+       "max_column_diff": {
+        "column": "city",
+        "diff": 0.0
+       },
+       "missing_columns": [],
+       "shape_columns": {
+        "store_id": 100.0,
+        "store_name": 100.0,
+        "store_type": 100.0,
+        "city": 60.56984252860541,
+        "state": 67.63975155279503
+       }
+      }
+     }
+    }
+   },
+   "failures": {}
+  }
+ },
+ "cli": {
+  "retail_exit": 0,
+  "files": {
+   "json": 27639,
+   "md": 5478,
+   "html": 11393
+  },
+  "json_overall": 90.21058771219802,
+  "alias_exit": 0,
+  "threshold_100_exit": 1,
+  "empty_reference_exit": 1,
+  "ok": true
+ },
+ "max_retail_table_diff": 1.7053025658242404e-13,
+ "passed": true
+}

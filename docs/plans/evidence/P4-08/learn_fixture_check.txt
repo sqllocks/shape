@@ -1,0 +1,3 @@
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6932: RuntimeWarning: invalid value encountered in log
+  lndata = np.log(data - loc)
+fixture equals the baseline

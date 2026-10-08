@@ -1,0 +1,18 @@
+[medium] refengine          warm-up 1: total 0.22s
+[medium] shape            warm-up 1: total 0.06s
+[medium] refengine          run 1: total 0.33s  gen 0.20s  write 0.13s  rss 242MB  load 1.47
+[medium] shape            run 1: total 0.06s  gen 0.06s  write 0.00s  rss 199MB  load 1.47
+[medium] refengine          run 2: total 0.22s  gen 0.15s  write 0.07s  rss 242MB  load 1.47
+[medium] shape            run 2: total 0.09s  gen 0.09s  write 0.00s  rss 187MB  load 1.47
+[medium] refengine          run 3: total 0.22s  gen 0.17s  write 0.06s  rss 242MB  load 1.47
+[medium] shape            run 3: total 0.09s  gen 0.09s  write 0.00s  rss 201MB  load 1.35
+[medium] refengine          run 4: total 0.23s  gen 0.17s  write 0.06s  rss 242MB  load 1.35
+[medium] shape            run 4: total 0.08s  gen 0.08s  write 0.00s  rss 175MB  load 1.35
+[medium] refengine          run 5: total 0.23s  gen 0.16s  write 0.07s  rss 242MB  load 1.35
+[medium] shape            run 5: total 0.10s  gen 0.10s  write 0.00s  rss 187MB  load 1.22
+
+== hr medium: median of 5 fresh-process runs, 4 cores
+tool                     rows  total s   gen s  write s  rows/s total   rows/s gen  peak RSS MB
+refengine                78,460     0.23    0.17     0.07       348,020      472,402          242
+shape                  78,460     0.09    0.09     0.00       921,054      921,054          187
+speedup (shape vs refengine): total 2.65x

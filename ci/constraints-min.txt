@@ -1,0 +1,6 @@
+# Minimum-versions check (BF-76): the oldest numpy and pyarrow the check runs. They are above
+# the floors declared in pyproject.toml [project].dependencies (numpy>=2.0, pyarrow>=14.0.1, T-07):
+# BF-76 found those floors do not work together, and raising them is escalated to the owner
+# (plan section 2.3, INT-18), so the declared floors are not changed here. tzdata is not pinned.
+numpy==2.3.0
+pyarrow==19.0.1

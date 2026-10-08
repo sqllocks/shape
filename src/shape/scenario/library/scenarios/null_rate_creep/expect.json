@@ -1,0 +1,22 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "null_rate_creep",
+  "gates_fail": [],
+  "drift": [
+    {
+      "between": [
+        0,
+        20
+      ],
+      "changes": [
+        {
+          "column": "customer.last_name",
+          "kinds": [
+            "null_rate_change"
+          ]
+        }
+      ]
+    }
+  ]
+}

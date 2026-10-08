@@ -1,0 +1,161 @@
+{
+  "channel": "odbc",
+  "format": 1,
+  "result": {
+    "exit": 0,
+    "tables": [
+      "customer: 3 rows",
+      "order: 6 rows"
+    ]
+  },
+  "scenario": "publish_warehouse",
+  "source": "in-repo fake service",
+  "steps": [
+    {
+      "request": {
+        "op": "execute",
+        "params": [
+          "dbo",
+          "customer"
+        ],
+        "sql": "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "fetchone"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [],
+        "sql": "CREATE TABLE [dbo].[customer] (\n    [customer_id] BIGINT NOT NULL,\n    CONSTRAINT [PK_customer] PRIMARY KEY NONCLUSTERED ([customer_id]) NOT ENFORCED\n)"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "commit"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [],
+        "sql": "COPY INTO [dbo].[customer] FROM 'https://onelake.dfs.fabric.microsoft.com/Analytics/Sales.Lakehouse/Files/staging/000000000000/customer-81398e09/' WITH (FILE_TYPE = 'PARQUET')"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "rowcount"
+      },
+      "response": {
+        "value": 3
+      }
+    },
+    {
+      "request": {
+        "op": "commit"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "close"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [
+          "dbo",
+          "order"
+        ],
+        "sql": "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "fetchone"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [],
+        "sql": "CREATE TABLE [dbo].[order] (\n    [order_id] BIGINT NOT NULL,\n    [customer_id] BIGINT NOT NULL,\n    CONSTRAINT [PK_order] PRIMARY KEY NONCLUSTERED ([order_id]) NOT ENFORCED\n)"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "commit"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [],
+        "sql": "COPY INTO [dbo].[order] FROM 'https://onelake.dfs.fabric.microsoft.com/Analytics/Sales.Lakehouse/Files/staging/000000000000/order-f5299398/' WITH (FILE_TYPE = 'PARQUET')"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "rowcount"
+      },
+      "response": {
+        "value": 6
+      }
+    },
+    {
+      "request": {
+        "op": "commit"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "close"
+      },
+      "response": {
+        "value": null
+      }
+    }
+  ]
+}

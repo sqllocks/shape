@@ -1,0 +1,142 @@
+"""P7-04: a short seeded run of the artifact fuzzer in the normal suite. The nightly job
+(``scripts/fuzz_artifacts.py``, fresh seed, many more iterations) does the real hunting; a
+finding there becomes a regression case in this file."""
+
+from __future__ import annotations
+
+import random
+import sys
+
+import pytest
+
+from shape.validation import fuzz
+
+pytestmark = pytest.mark.security
+
+SMOKE_SEED = 20261002
+SMOKE_ITERATIONS = 40
+# Line tracing (coverage, a debugger) makes pure-Python parsing several times slower: the deeply
+# nested YAML inputs take under 1 s untraced and about 3 s under ``--cov`` here, and past the
+# 5 s budget on slower runners. The property is "no input runs unbounded", so the budget is
+# scaled only while a tracer is attached; an untraced run keeps the 5 s limit.
+TRACED_TIME_LIMIT_FACTOR = 10
+
+
+def _tracing() -> bool:
+    if sys.gettrace() is not None:
+        return True
+    monitoring = getattr(sys, "monitoring", None)  # Python 3.12+: coverage uses sys.monitoring
+    return monitoring is not None and any(monitoring.get_tool(i) for i in range(6))
+
+
+def test_smoke_run_has_no_findings():
+    limit = fuzz.TIME_LIMIT_S * (TRACED_TIME_LIMIT_FACTOR if _tracing() else 1)
+    findings = fuzz.run_fuzz(SMOKE_SEED, SMOKE_ITERATIONS, time_limit=limit)
+    assert not findings, "\n".join(str(f) for f in findings)
+
+
+def test_runs_are_deterministic():
+    rng_a, rng_b = random.Random(7), random.Random(7)
+    data = b"some bytes to mutate" * 4
+    assert fuzz.mutate_bytes(rng_a, data) == fuzz.mutate_bytes(rng_b, data)
+    obj = {"a": [1, 2, {"b": "c"}], "d": 1}
+    assert fuzz.mutate_json(rng_a, obj) == fuzz.mutate_json(rng_b, obj)
+
+
+@pytest.mark.parametrize("use_alarm", [True, False], ids=["sigalrm", "worker-thread"])
+def test_harness_reports_unexpected_exceptions_and_hangs(monkeypatch, use_alarm):
+    # The worker-thread limit is what Windows runs (no SIGALRM); force it on every platform.
+    if not use_alarm:
+        monkeypatch.setattr(fuzz, "_alarm_available", lambda: False)
+
+    def boom(data, scratch, seeds):
+        raise TypeError("a parser bug")
+
+    def hang(data, scratch, seeds):
+        import time
+
+        time.sleep(5)
+
+    def rejects(data, scratch, seeds):
+        raise ValueError("a documented rejection")
+
+    gen = fuzz.TARGETS[0].gen
+    monkeypatch.setattr(
+        fuzz,
+        "TARGETS",
+        (
+            fuzz._TargetSpec("boom", boom, gen),
+            fuzz._TargetSpec("hang", hang, gen),
+            fuzz._TargetSpec("rejects", rejects, gen),
+        ),
+    )
+    found = fuzz.run_fuzz(1, 1, time_limit=0.2)
+    by_target = {f.target: f.error for f in found}
+    assert by_target["boom"].startswith("TypeError")
+    assert by_target["hang"].startswith("timeout")
+    assert "rejects" not in by_target
+
+
+def test_unknown_target_is_an_error():
+    with pytest.raises(ValueError):
+        fuzz.run_fuzz(1, 1, ["nope"])
+
+
+# Regressions for what the fuzzer found.
+
+
+def test_long_string_does_not_stall_the_safe_profile_validator():
+    import time
+
+    from shape.privacy.safe_validator import SafeProfileValidator
+
+    doc = {"schema_version": 1, "tables": {}, "x": "a" * 200_000}
+    start = time.monotonic()
+    SafeProfileValidator().validate_data(doc)
+    assert time.monotonic() - start < 2
+
+
+def test_deeply_nested_yaml_is_a_pack_error(tmp_path):
+    from shape.scenario.loader import PackError, PackLoader
+
+    p = tmp_path / "deep.yaml"
+    p.write_text("[" * 10_000)
+    with pytest.raises(PackError):
+        PackLoader().load(p)
+
+
+def test_oversized_yaml_is_refused(tmp_path):
+    from shape.scenario.loader import PackError, PackLoader
+    from shape.security.yamlsafe import MAX_BYTES as MAX_YAML_BYTES
+
+    p = tmp_path / "big.yaml"
+    p.write_text("a: " + "x" * (MAX_YAML_BYTES + 1))
+    with pytest.raises(PackError):
+        PackLoader().load(p)
+
+
+def test_malformed_signature_member_is_a_signature_error():
+    from shape.artifact.io import ArtifactSignatureError
+    from shape.artifact.signing import verify_manifest_signature
+
+    pytest.importorskip("cryptography")
+    with pytest.raises(ArtifactSignatureError):
+        verify_manifest_signature(b"{}", b"[" * 5000, bytes(32))
+
+
+def test_deeply_nested_yaml_is_refused_in_linear_time(tmp_path):
+    """The fuzzer's ``[`` x 10 000 took seconds on a slow runner (PyYAML's scanner is quadratic in
+    the open flow collections) and tripped the time limit; it is now refused before parsing."""
+    import time
+
+    from shape.security.yamlsafe import MAX_FLOW_DEPTH, safe_load_yaml
+
+    for opener in ("[", "{a: ", "[{a: "):
+        start = time.monotonic()
+        with pytest.raises(ValueError, match="nested too deeply"):
+            safe_load_yaml(opener * 10_000)
+        assert time.monotonic() - start < 0.5, opener
+    assert safe_load_yaml("[" * MAX_FLOW_DEPTH + "]" * MAX_FLOW_DEPTH) is not None
+    # brackets in quoted scalars and comments are not nesting; an apostrophe is not a quote
+    assert safe_load_yaml('a: "' + "[" * 500 + "\"\nb: '" + "{" * 500 + "'\n# " + "[" * 500)
+    assert safe_load_yaml("a: don't\nb: [1, [2]]\n") == {"a": "don't", "b": [1, [2]]}

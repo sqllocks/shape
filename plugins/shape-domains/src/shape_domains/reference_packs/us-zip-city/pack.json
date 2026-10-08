@@ -1,0 +1,26 @@
+{
+  "format": "shape-reference-pack",
+  "version": 1,
+  "name": "us-zip-city",
+  "pack_version": "1.0.0",
+  "source": "GeoNames postal codes, US.zip (https://download.geonames.org/export/zip/US.zip), US.txt sha256 a2e9aa82edb6037deb1c5524c74cd7c948d337fb43c06a216d470989e901647f",
+  "retrieved": "2026-10-03",
+  "license": "CC-BY-4.0",
+  "attribution": "This work includes data from GeoNames (https://www.geonames.org/), licensed under CC-BY-4.0.",
+  "transformation_version": "1",
+  "sensitivity": "public",
+  "datasets": [
+    {
+      "name": "us_zip_city",
+      "file": "us_zip_city.arrow",
+      "fields": [
+        "zip",
+        "city",
+        "state",
+        "county"
+      ],
+      "rows": 40979,
+      "sha256": "f45c55436a66a4ab640187307ece793598b58dd0bb7d1e0956d74cec026db2e0"
+    }
+  ]
+}

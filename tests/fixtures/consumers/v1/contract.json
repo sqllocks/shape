@@ -1,0 +1,24 @@
+{
+  "consumer": "finance",
+  "format": "shape-consumer-contract",
+  "owner": "finance@example.com",
+  "requires": {
+    "tables": {
+      "orders": {
+        "columns": {
+          "amount": {
+            "dtype": "float",
+            "max_null_rate": 0.0
+          }
+        },
+        "required_columns": [
+          "order_id",
+          "amount"
+        ]
+      }
+    }
+  },
+  "since": "2026-10-03",
+  "source": "orders",
+  "version": 1
+}

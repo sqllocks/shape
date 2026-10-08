@@ -1,0 +1,9 @@
+{
+  "asset": "hcc_coefficients",
+  "bytes": 2026,
+  "format": "shape-hcc-coefficients",
+  "release": "compatibility corpus, format version 1 (W8-02)",
+  "rows": 1,
+  "subset": true,
+  "version": 1
+}

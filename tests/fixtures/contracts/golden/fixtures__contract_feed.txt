@@ -1,0 +1,17 @@
+{
+  "passed": false,
+  "violations": [
+    {
+      "column": "note",
+      "rule": "column_exists",
+      "expected": "present",
+      "observed": "missing"
+    },
+    {
+      "column": "status",
+      "rule": "column_exists",
+      "expected": "present",
+      "observed": "missing"
+    }
+  ]
+}

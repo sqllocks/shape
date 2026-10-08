@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "count": {
+      "type": "integer"
+    },
+    "scenarios": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "default_rows": {
+            "type": "integer"
+          },
+          "description": {
+            "type": "string"
+          },
+          "domains": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "supported_modes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "supported_modes",
+          "domains",
+          "default_rows",
+          "tags"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "scenarios",
+    "count"
+  ],
+  "title": "demo_list result",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.0"
+}

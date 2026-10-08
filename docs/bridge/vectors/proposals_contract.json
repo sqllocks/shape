@@ -1,0 +1,166 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "accepted-rules",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "decisions": "${DIR}/rules.json",
+          "output": "${DIR}/contract_rules.json"
+        },
+        "command": "proposals_contract",
+        "id": "accepted-rules"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "proposals_contract",
+        "id": "accepted-rules",
+        "ok": true,
+        "result": {
+          "rules": 3,
+          "written": "${DIR}/contract_rules.json"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "merge",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "decisions": "${DIR}/rules.json",
+          "merge": "${DIR}/contract_base.json",
+          "output": "${DIR}/contract_merged.json"
+        },
+        "command": "proposals_contract",
+        "id": "merge"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "proposals_contract",
+        "id": "merge",
+        "ok": true,
+        "result": {
+          "rules": 3,
+          "written": "${DIR}/contract_merged.json"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "conflict",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "decisions": "${DIR}/rules.json",
+          "merge": "${DIR}/contract_conflicting.json",
+          "output": "${DIR}/contract_conflict.json"
+        },
+        "command": "proposals_contract",
+        "id": "conflict"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "proposals_contract",
+        "error": {
+          "code": "input.contract_conflict",
+          "group": "input",
+          "hint": null,
+          "message": "rule:orders.row_count conflicts with orders.row_count.min in ${DIR}/contract_conflicting.json"
+        },
+        "id": "conflict",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "missing-output",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "decisions": "${DIR}/rules.json"
+        },
+        "command": "proposals_contract",
+        "id": "missing-output"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "proposals_contract",
+        "error": {
+          "code": "usage.missing_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "proposals_contract needs the argument 'output'"
+        },
+        "id": "missing-output",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "proposals_contract",
+  "format": "shape-bridge-vectors",
+  "setup": [
+    {
+      "api_version": "1.2",
+      "args": {
+        "dataset": true,
+        "output": "${DIR}/shop.shape",
+        "source": "${DIR}/shop"
+      },
+      "command": "profile",
+      "id": "setup"
+    },
+    {
+      "api_version": "1.2",
+      "args": {
+        "data": [
+          "${DIR}/shop"
+        ],
+        "decisions": "${DIR}/rules.json",
+        "kinds": [
+          "rule"
+        ],
+        "profile": "${DIR}/shop.shape"
+      },
+      "command": "proposals_propose",
+      "id": "setup"
+    },
+    {
+      "api_version": "1.2",
+      "args": {
+        "actor": "ana",
+        "decisions": "${DIR}/rules.json",
+        "proposal": "rule:customers.customer_id.unique",
+        "verb": "accept"
+      },
+      "command": "proposals_decide",
+      "id": "setup"
+    },
+    {
+      "api_version": "1.2",
+      "args": {
+        "actor": "ana",
+        "decisions": "${DIR}/rules.json",
+        "proposal": "rule:orders.amount.dtype",
+        "verb": "accept"
+      },
+      "command": "proposals_decide",
+      "id": "setup"
+    },
+    {
+      "api_version": "1.2",
+      "args": {
+        "actor": "ana",
+        "decisions": "${DIR}/rules.json",
+        "proposal": "rule:orders.row_count",
+        "verb": "accept"
+      },
+      "command": "proposals_decide",
+      "id": "setup"
+    }
+  ],
+  "version": 1
+}

@@ -1,0 +1,13 @@
+[medium] refengine  warm-up 1: 12.940s
+[medium] shape    warm-up 1: 1.059s
+[medium] refengine  run 1: 13.418s  cpu 13.84s  load 1.23
+[medium] shape    run 1: 1.099s  cpu 2.30s  load 1.18
+[medium] refengine  run 2: 12.078s  cpu 12.66s  load 1.18
+[medium] shape    run 2: 1.047s  cpu 2.30s  load 1.15
+[medium] refengine  run 3: 12.730s  cpu 13.19s  load 1.38
+[medium] shape    run 3: 0.928s  cpu 2.13s  load 1.32
+[medium] refengine  run 4: 12.928s  cpu 13.45s  load 1.32
+[medium] shape    run 4: 1.039s  cpu 2.24s  load 1.32
+[medium] refengine  run 5: 12.533s  cpu 13.07s  load 1.32
+[medium] shape    run 5: 0.986s  cpu 2.15s  load 1.25
+[medium] median refengine 12.730s, shape 1.039s => 12.26x

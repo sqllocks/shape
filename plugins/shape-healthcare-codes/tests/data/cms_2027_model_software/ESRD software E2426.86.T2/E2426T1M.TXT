@@ -1,0 +1,14 @@
+          %&SCOREMAC(PVAR=SCORE_DIAL, RLIST=&MOD_DIAL, CPREF=DI_);
+          %&SCOREMAC(PVAR=SCORE_DIAL_NE, RLIST=&MOD_DIAL_NE, CPREF=DNE_);
+          %&SCOREMAC(PVAR=_SCORE_G_COMM_ND_PBD_GE65, RLIST=&MOD_GRAFT_COMM_A,
+                         CPREF=GNPA_);
+         %&SCOREMAC(PVAR=_SCORE_G_COMM_ND_PBD_LT65, RLIST=&MOD_GRAFT_COMM_NA,
+                         CPREF=GNPN_);
+         %&SCOREMAC(PVAR=_SCORE_G_COMM_FBD_GE65, RLIST=&MOD_GRAFT_COMM_A,
+                         CPREF=GFA_);
+         %&SCOREMAC(PVAR=_SCORE_G_COMM_FBD_LT65, RLIST=&MOD_GRAFT_COMM_NA,
+                         CPREF=GFN_);
+         %&SCOREMAC(PVAR=_SCORE_GRAFT_INST, RLIST=&MOD_GRAFT_INST,
+                         CPREF=GI_);
+          %&SCOREMAC(PVAR=_SCORE_GRAFT_NE, RLIST=&MOD_GRAFT_NE,
+                         CPREF=GNE_);

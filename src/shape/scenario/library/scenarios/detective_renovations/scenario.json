@@ -1,0 +1,40 @@
+{
+  "format": "shape-scenario",
+  "version": 1,
+  "id": "detective_renovations",
+  "domain": "retail",
+  "scale": "small",
+  "seed": 42,
+  "gates": [
+    "schema_conformance",
+    "referential_integrity",
+    "row_count",
+    "null_check",
+    "uniqueness"
+  ],
+  "defects": [
+    {
+      "kind": "rename_column",
+      "table": "order",
+      "column": "status",
+      "to": "order_status"
+    },
+    {
+      "kind": "drop_column",
+      "table": "store",
+      "column": "state"
+    },
+    {
+      "kind": "retype_column",
+      "table": "customer",
+      "column": "is_active",
+      "to": "integer"
+    },
+    {
+      "kind": "add_column",
+      "table": "product",
+      "column": "channel",
+      "value": "web"
+    }
+  ]
+}

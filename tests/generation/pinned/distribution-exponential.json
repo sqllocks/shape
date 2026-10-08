@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "m",
+    "seed": 3
+  },
+  "tables": {
+    "t": {
+      "name": "t",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "v": {
+          "name": "v",
+          "type": "float",
+          "generator": {
+            "strategy": "distribution",
+            "distribution": "exponential"
+          }
+        }
+      }
+    }
+  },
+  "generation": {
+    "scale": "s",
+    "scales": {
+      "s": {
+        "t": 200
+      }
+    }
+  },
+  "generators": {
+    "distribution": 1,
+    "exponential": 1,
+    "sequence": 1
+  }
+}

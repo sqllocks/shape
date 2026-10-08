@@ -1,0 +1,147 @@
+{
+  "files": {
+    "locales/au_places.tsv": {
+      "bytes": 147747,
+      "drawn_by": {
+        "locale": 1
+      },
+      "sha256": "b5bf85f0d74a5ffe2713e43a3c242106870556582e47da303b3420910116d00e"
+    },
+    "locales/ca_places.tsv": {
+      "bytes": 91829,
+      "drawn_by": {
+        "locale": 1
+      },
+      "sha256": "a108f5d11f5e76f658d82319d5136433ba050ebaf7801d122fb411572ef95049"
+    },
+    "locales/de_places.tsv": {
+      "bytes": 364711,
+      "drawn_by": {
+        "locale": 1
+      },
+      "sha256": "a329bbb9a6439ba5a32c18e411a2b68db4c022b65df27d0fd0fac32957692215"
+    },
+    "locales/fr_first_names.txt": {
+      "bytes": 7416,
+      "drawn_by": {
+        "locale": 1
+      },
+      "sha256": "87f1855f3fc50bb1e2a0a94e74b528a8c6c8f3bb36aeb31f82a809d8b0ead963"
+    },
+    "locales/fr_places.tsv": {
+      "bytes": 297337,
+      "drawn_by": {
+        "locale": 1
+      },
+      "sha256": "1ea07022646b6d445f8337f280d67e1e9079ce41d2971a2e18b29504f2d59c4c"
+    },
+    "locales/gb_places.tsv": {
+      "bytes": 112039,
+      "drawn_by": {
+        "locale": 1
+      },
+      "sha256": "2f878382ea5b94249506c1c1eeaedebb8d9b85125caace470a279807c797f677"
+    },
+    "locales/in_places.tsv": {
+      "bytes": 831520,
+      "drawn_by": {
+        "locale": 1
+      },
+      "sha256": "9a3c49db5974ebb27bf271e88b0e851b8beaf99686a96f83ae1a0586ba88df82"
+    },
+    "pools/company_names.txt": {
+      "bytes": 36089,
+      "drawn_by": {
+        "faker": 2,
+        "native": 1
+      },
+      "sha256": "49dbfc0aab604aac2d334a8f56f626fe55dd12ad0f911ab9c085bc0f294f94ee"
+    },
+    "pools/email_domains.txt": {
+      "bytes": 564,
+      "drawn_by": {
+        "faker": 2,
+        "native": 1
+      },
+      "sha256": "417f90e91c93ecf76e01622bc773de13436aa9f68fb8bb0e6de09c1f8eae8b7e"
+    },
+    "pools/first_names.txt": {
+      "bytes": 28872,
+      "drawn_by": {
+        "faker": 2,
+        "locale": 1,
+        "native": 1
+      },
+      "sha256": "183a523eda450536c99eaaa236cee224f1e1c628a7689dc7bb8892a984f9ba8d"
+    },
+    "pools/last_names.txt": {
+      "bytes": 42875,
+      "drawn_by": {
+        "faker": 2,
+        "locale": 1,
+        "native": 1
+      },
+      "sha256": "a0e0a6507067b351884d7922ad225556280953d69e051dfbc618a81612798dd7"
+    },
+    "pools/sentences.txt": {
+      "bytes": 131885,
+      "drawn_by": {
+        "faker": 2,
+        "native": 1
+      },
+      "sha256": "cbdcf9ef7283132c330710d010210d7ec56c90251ffa7cf18946881f0ecd8358"
+    },
+    "pools/street_names.txt": {
+      "bytes": 11808,
+      "drawn_by": {
+        "address": 1,
+        "faker": 2,
+        "native": 1
+      },
+      "sha256": "7c345a8eda9af2714f261d78c9897265d382b01bce2ee332ca64ed2b3a2e429e"
+    },
+    "pools/street_suffixes.txt": {
+      "bytes": 35,
+      "drawn_by": {
+        "address": 1,
+        "faker": 2,
+        "native": 1
+      },
+      "sha256": "b4731eb39e757ad5500d516636de91e2c68629717c9e4d9583c66577a56ed600"
+    },
+    "pools/uri_domains.txt": {
+      "bytes": 1397,
+      "drawn_by": {
+        "faker": 2,
+        "native": 1
+      },
+      "sha256": "babeb4bb007b742f896b4e45ef6b796a7fccff1f4376e01f529f1110e19da130"
+    },
+    "pools/uri_paths.txt": {
+      "bytes": 2539,
+      "drawn_by": {
+        "faker": 2,
+        "native": 1
+      },
+      "sha256": "5c302fe0deef223ce4fe079bf6a6c2bbafbb1e2e659c9174f2808e9e6ef3cf65"
+    },
+    "pools/us_cities.txt": {
+      "bytes": 945,
+      "drawn_by": {
+        "faker": 2,
+        "native": 1
+      },
+      "sha256": "686299b655b722aa297fd2e77cff3b45f04986fec2c27c42760d8ff2ce1d15a0"
+    },
+    "pools/us_states.txt": {
+      "bytes": 150,
+      "drawn_by": {
+        "faker": 2,
+        "native": 1
+      },
+      "sha256": "152614ec4b922b83c6ace959a6a2b99c972764898ed669a1ffe0f79b9b6a4d49"
+    }
+  },
+  "format": "shape-pool-manifest",
+  "version": 1
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "order",
+  "type": "object",
+  "required": ["order_id", "status", "quantity", "placed_at"],
+  "properties": {
+    "order_id": {"type": "integer"},
+    "status": {"enum": ["new", "paid", "shipped"]},
+    "quantity": {"type": "integer", "minimum": 1, "maximum": 20},
+    "unit_price": {"type": "number", "minimum": 0.5, "maximum": 99.5},
+    "code": {"type": "string", "pattern": "^[A-Z0-9]{6}$"},
+    "note": {"type": "string", "maxLength": 30},
+    "email": {"type": "string", "format": "email"},
+    "token": {"type": "string", "format": "uuid"},
+    "placed_at": {"type": "string", "format": "date-time"},
+    "shipped_on": {"type": ["string", "null"], "format": "date"},
+    "express": {"type": "boolean"},
+    "channel": {"const": "web"},
+    "customer": {"$ref": "#/$defs/customer"},
+    "shipping": {
+      "type": "object",
+      "required": ["city"],
+      "properties": {
+        "city": {"type": "string"},
+        "zip": {"type": "string", "maxLength": 5}
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sku"],
+        "properties": {"sku": {"type": "string", "maxLength": 8}, "qty": {"type": "integer", "minimum": 1, "maximum": 5}}
+      }
+    },
+    "tags": {"type": "array", "items": {"type": "string", "enum": ["gift", "fragile"]}}
+  },
+  "$defs": {
+    "customer": {
+      "type": "object",
+      "required": ["customer_id"],
+      "properties": {
+        "customer_id": {"type": "integer"},
+        "name": {"type": "string", "maxLength": 40}
+      }
+    },
+    "unused": {"type": "object", "properties": {"x": {"type": "string"}}}
+  }
+}

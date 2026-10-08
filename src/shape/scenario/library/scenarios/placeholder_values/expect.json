@@ -1,0 +1,11 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "placeholder_values",
+  "gates_fail": [],
+  "defects": {
+    "placeholder_values": {
+      "min": 1
+    }
+  }
+}

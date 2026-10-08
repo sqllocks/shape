@@ -1,0 +1,119 @@
+{
+ "meta": {
+  "cores": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+  "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-10-02 03:26:06",
+  "cpu_mhz": 2800.146,
+  "dataset": "/tmp/claude-0/profile_data/d2.csv",
+  "runs": 5,
+  "warmup": 1,
+  "shape_threads": null,
+  "loadavg_start": 1.078125
+ },
+ "gate": "LEARN-CLI >= 10x (D2 csv, median of 5 fresh-process runs)",
+ "refengine_median_s": 53.11846545900062,
+ "shape_median_s": 3.475621620000311,
+ "ratio": 15.283155437097282,
+ "refengine_runs_s": [
+  51.816,
+  53.357,
+  53.807,
+  53.118,
+  52.982
+ ],
+ "shape_runs_s": [
+  3.459,
+  3.375,
+  3.712,
+  3.545,
+  3.476
+ ],
+ "equivalence": {
+  "explained": [
+   {
+    "column": "d2.wait_time",
+    "rule": "exponential",
+    "reason": "an exponential fit becomes an exponential distribution; the alternative, a normal with the same mean and standard deviation clipped to the observed range, has the wrong shape"
+   },
+   {
+    "column": "d2.order_value",
+    "rule": "truncated_enum",
+    "reason": "a numeric column whose profile lists fewer values than it has distinct ones is generated from its distribution; drawing only the listed values (the 500 most frequent) would leave the rest of the column's values out for good"
+   },
+   {
+    "column": "d2.currency",
+    "rule": "enum_pattern",
+    "reason": "a currency or language code column whose profile lists every value is generated from those values and weights; drawing any code of a fake-data provider would lose the column's own vocabulary (and needs the optional faker package). Other patterns (e-mail, phone, ip address...) are never turned into value lists: the schema would carry personal data"
+   }
+  ],
+  "unexplained": 0
+ },
+ "raw": {
+  "refengine": [
+   {
+    "wall_s": 51.81592677199933,
+    "cpu_s": 51.62816099999999,
+    "loadavg_before": 1.3505859375,
+    "cmd": "/tmp/claude-0/refengine-venv/bin/refengine learn /tmp/claude-0/profile_data/d2.csv -o /tmp/claude-0/bench-out-g0/learn_cli/out.refengine.json"
+   },
+   {
+    "wall_s": 53.35659999800009,
+    "cpu_s": 53.166764,
+    "loadavg_before": 1.45947265625,
+    "cmd": "/tmp/claude-0/refengine-venv/bin/refengine learn /tmp/claude-0/profile_data/d2.csv -o /tmp/claude-0/bench-out-g0/learn_cli/out.refengine.json"
+   },
+   {
+    "wall_s": 53.80723962399952,
+    "cpu_s": 53.814536000000004,
+    "loadavg_before": 1.26220703125,
+    "cmd": "/tmp/claude-0/refengine-venv/bin/refengine learn /tmp/claude-0/profile_data/d2.csv -o /tmp/claude-0/bench-out-g0/learn_cli/out.refengine.json"
+   },
+   {
+    "wall_s": 53.11846545900062,
+    "cpu_s": 53.127872000000025,
+    "loadavg_before": 1.3349609375,
+    "cmd": "/tmp/claude-0/refengine-venv/bin/refengine learn /tmp/claude-0/profile_data/d2.csv -o /tmp/claude-0/bench-out-g0/learn_cli/out.refengine.json"
+   },
+   {
+    "wall_s": 52.98189979000017,
+    "cpu_s": 52.86717900000002,
+    "loadavg_before": 1.48828125,
+    "cmd": "/tmp/claude-0/refengine-venv/bin/refengine learn /tmp/claude-0/profile_data/d2.csv -o /tmp/claude-0/bench-out-g0/learn_cli/out.refengine.json"
+   }
+  ],
+  "shape": [
+   {
+    "wall_s": 3.4587871869998708,
+    "cpu_s": 9.854724000000004,
+    "loadavg_before": 1.15087890625,
+    "cmd": "/tmp/claude-0/kv2/bin/shape learn /tmp/claude-0/profile_data/d2.csv -o /tmp/claude-0/bench-out-g0/learn_cli/out.shape.json"
+   },
+   {
+    "wall_s": 3.374813778999851,
+    "cpu_s": 10.313997999999998,
+    "loadavg_before": 1.19775390625,
+    "cmd": "/tmp/claude-0/kv2/bin/shape learn /tmp/claude-0/profile_data/d2.csv -o /tmp/claude-0/bench-out-g0/learn_cli/out.shape.json"
+   },
+   {
+    "wall_s": 3.7121008809999694,
+    "cpu_s": 11.187725999999998,
+    "loadavg_before": 1.1025390625,
+    "cmd": "/tmp/claude-0/kv2/bin/shape learn /tmp/claude-0/profile_data/d2.csv -o /tmp/claude-0/bench-out-g0/learn_cli/out.shape.json"
+   },
+   {
+    "wall_s": 3.545074095000018,
+    "cpu_s": 10.277369999999962,
+    "loadavg_before": 1.18212890625,
+    "cmd": "/tmp/claude-0/kv2/bin/shape learn /tmp/claude-0/profile_data/d2.csv -o /tmp/claude-0/bench-out-g0/learn_cli/out.shape.json"
+   },
+   {
+    "wall_s": 3.475621620000311,
+    "cpu_s": 10.57660199999998,
+    "loadavg_before": 1.19287109375,
+    "cmd": "/tmp/claude-0/kv2/bin/shape learn /tmp/claude-0/profile_data/d2.csv -o /tmp/claude-0/bench-out-g0/learn_cli/out.shape.json"
+   }
+  ]
+ }
+}

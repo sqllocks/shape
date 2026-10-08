@@ -1,0 +1,497 @@
+{
+  "checks": [
+    {
+      "category": "tables",
+      "column": null,
+      "details": {},
+      "status": "pass",
+      "table": "customer"
+    },
+    {
+      "category": "tables",
+      "column": null,
+      "details": {},
+      "status": "pass",
+      "table": "orders"
+    },
+    {
+      "category": "columns",
+      "column": "customer_id",
+      "details": {},
+      "status": "pass",
+      "table": "customer"
+    },
+    {
+      "category": "columns",
+      "column": "segment",
+      "details": {},
+      "status": "pass",
+      "table": "customer"
+    },
+    {
+      "category": "columns",
+      "column": "age",
+      "details": {},
+      "status": "pass",
+      "table": "customer"
+    },
+    {
+      "category": "columns",
+      "column": "balance",
+      "details": {},
+      "status": "pass",
+      "table": "customer"
+    },
+    {
+      "category": "columns",
+      "column": "order_id",
+      "details": {},
+      "status": "pass",
+      "table": "orders"
+    },
+    {
+      "category": "columns",
+      "column": "customer_id",
+      "details": {},
+      "status": "pass",
+      "table": "orders"
+    },
+    {
+      "category": "columns",
+      "column": "amount",
+      "details": {},
+      "status": "pass",
+      "table": "orders"
+    },
+    {
+      "category": "columns",
+      "column": "status",
+      "details": {},
+      "status": "pass",
+      "table": "orders"
+    },
+    {
+      "category": "columns",
+      "column": "note",
+      "details": {
+        "reason": "missing on B"
+      },
+      "status": "fail",
+      "table": "orders"
+    },
+    {
+      "category": "types",
+      "column": "customer_id",
+      "details": {
+        "type": "integer"
+      },
+      "status": "pass",
+      "table": "customer"
+    },
+    {
+      "category": "types",
+      "column": "segment",
+      "details": {
+        "type": "string"
+      },
+      "status": "pass",
+      "table": "customer"
+    },
+    {
+      "category": "types",
+      "column": "age",
+      "details": {
+        "type": "integer"
+      },
+      "status": "pass",
+      "table": "customer"
+    },
+    {
+      "category": "types",
+      "column": "balance",
+      "details": {
+        "type": "float"
+      },
+      "status": "pass",
+      "table": "customer"
+    },
+    {
+      "category": "types",
+      "column": "order_id",
+      "details": {
+        "type": "integer"
+      },
+      "status": "pass",
+      "table": "orders"
+    },
+    {
+      "category": "types",
+      "column": "customer_id",
+      "details": {
+        "type": "integer"
+      },
+      "status": "pass",
+      "table": "orders"
+    },
+    {
+      "category": "types",
+      "column": "amount",
+      "details": {
+        "type": "float"
+      },
+      "status": "pass",
+      "table": "orders"
+    },
+    {
+      "category": "types",
+      "column": "status",
+      "details": {
+        "type": "string"
+      },
+      "status": "pass",
+      "table": "orders"
+    },
+    {
+      "category": "keys",
+      "column": "customer_id",
+      "details": {
+        "a": [
+          "customer_id"
+        ],
+        "b": [
+          "customer_id"
+        ]
+      },
+      "status": "pass",
+      "table": "customer"
+    },
+    {
+      "category": "keys",
+      "column": "order_id",
+      "details": {
+        "a": [
+          "order_id"
+        ],
+        "b": [
+          "order_id"
+        ]
+      },
+      "status": "pass",
+      "table": "orders"
+    },
+    {
+      "category": "relationships",
+      "column": "customer_id",
+      "details": {
+        "child_columns": [
+          "customer_id"
+        ],
+        "parent": "customer",
+        "reason": "not detected on B",
+        "relationship": "fk_orders_customer_id"
+      },
+      "status": "fail",
+      "table": "orders"
+    },
+    {
+      "category": "nulls",
+      "column": "customer_id",
+      "details": {
+        "a": 0.0,
+        "b": 0.0,
+        "difference": 0.0,
+        "threshold": 0.05
+      },
+      "status": "pass",
+      "table": "customer"
+    },
+    {
+      "category": "nulls",
+      "column": "segment",
+      "details": {
+        "a": 0.0,
+        "b": 0.0,
+        "difference": 0.0,
+        "threshold": 0.05
+      },
+      "status": "pass",
+      "table": "customer"
+    },
+    {
+      "category": "nulls",
+      "column": "age",
+      "details": {
+        "a": 0.0,
+        "b": 0.0,
+        "difference": 0.0,
+        "threshold": 0.05
+      },
+      "status": "pass",
+      "table": "customer"
+    },
+    {
+      "category": "nulls",
+      "column": "balance",
+      "details": {
+        "a": 0.0,
+        "b": 0.0,
+        "difference": 0.0,
+        "threshold": 0.05
+      },
+      "status": "pass",
+      "table": "customer"
+    },
+    {
+      "category": "nulls",
+      "column": "order_id",
+      "details": {
+        "a": 0.0,
+        "b": 0.0,
+        "difference": 0.0,
+        "threshold": 0.05
+      },
+      "status": "pass",
+      "table": "orders"
+    },
+    {
+      "category": "nulls",
+      "column": "customer_id",
+      "details": {
+        "a": 0.0,
+        "b": 0.0,
+        "difference": 0.0,
+        "threshold": 0.05
+      },
+      "status": "pass",
+      "table": "orders"
+    },
+    {
+      "category": "nulls",
+      "column": "amount",
+      "details": {
+        "a": 0.0,
+        "b": 0.0,
+        "difference": 0.0,
+        "threshold": 0.05
+      },
+      "status": "pass",
+      "table": "orders"
+    },
+    {
+      "category": "nulls",
+      "column": "status",
+      "details": {
+        "a": 0.0,
+        "b": 0.0,
+        "difference": 0.0,
+        "threshold": 0.05
+      },
+      "status": "pass",
+      "table": "orders"
+    },
+    {
+      "category": "distributions",
+      "column": "customer_id",
+      "details": {},
+      "status": "pass",
+      "table": "customer"
+    },
+    {
+      "category": "distributions",
+      "column": "segment",
+      "details": {},
+      "status": "pass",
+      "table": "customer"
+    },
+    {
+      "category": "distributions",
+      "column": "age",
+      "details": {},
+      "status": "pass",
+      "table": "customer"
+    },
+    {
+      "category": "distributions",
+      "column": "balance",
+      "details": {},
+      "status": "pass",
+      "table": "customer"
+    },
+    {
+      "category": "distributions",
+      "column": "order_id",
+      "details": {},
+      "status": "pass",
+      "table": "orders"
+    },
+    {
+      "category": "distributions",
+      "column": "customer_id",
+      "details": {
+        "changes": [
+          {
+            "baseline": 199.490625,
+            "current": 1000199.490625,
+            "kind": "mean_shift",
+            "score": 0.9999
+          },
+          {
+            "baseline": {
+              "max": 400.0,
+              "min": 1.0
+            },
+            "current": {
+              "max": 1000400.0,
+              "min": 1000001.0
+            },
+            "kind": "range_change",
+            "score": 0.9999
+          },
+          {
+            "baseline": {
+              "1000022": 0.0,
+              "1000060": 0.0,
+              "1000129": 0.0,
+              "1000178": 0.0,
+              "1000191": 0.0,
+              "1000264": 0.0,
+              "1000275": 0.0,
+              "1000294": 0.0,
+              "22": 0.0056,
+              "294": 0.0056
+            },
+            "current": {
+              "1000022": 0.0056,
+              "1000060": 0.005,
+              "1000129": 0.005,
+              "1000178": 0.005,
+              "1000191": 0.005,
+              "1000264": 0.005,
+              "1000275": 0.005,
+              "1000294": 0.0056,
+              "22": 0.0,
+              "294": 0.0
+            },
+            "kind": "category_shift",
+            "score": 1.0
+          }
+        ]
+      },
+      "status": "fail",
+      "table": "orders"
+    },
+    {
+      "category": "distributions",
+      "column": "amount",
+      "details": {},
+      "status": "pass",
+      "table": "orders"
+    },
+    {
+      "category": "distributions",
+      "column": "status",
+      "details": {},
+      "status": "pass",
+      "table": "orders"
+    },
+    {
+      "category": "row_counts",
+      "column": null,
+      "details": {
+        "a": 400,
+        "b": 400,
+        "difference": 0.0,
+        "mode": "absolute",
+        "tolerance": 0.1
+      },
+      "status": "pass",
+      "table": "customer"
+    },
+    {
+      "category": "row_counts",
+      "column": null,
+      "details": {
+        "a": 1600,
+        "b": 1600,
+        "difference": 0.0,
+        "mode": "absolute",
+        "tolerance": 0.1
+      },
+      "status": "pass",
+      "table": "orders"
+    }
+  ],
+  "format": "shape-parity-report",
+  "inputs": {
+    "a": {
+      "content_id": "53390d324d403782a70ba840f38f5e6515ee7b9502c41e28ae1a97980cb3528f",
+      "kind": "data",
+      "name": "dataset",
+      "path": "prod",
+      "tables": 2
+    },
+    "b": {
+      "content_id": "22410da21f6382bdc3815c0fc12bc42cc4857b7bdf1f9ba56d9a173cfc762ff7",
+      "kind": "data",
+      "name": "dataset",
+      "path": "dev",
+      "tables": 2
+    }
+  },
+  "options": {
+    "project": null,
+    "row_tolerance": 0.1,
+    "scaled": false,
+    "source": null,
+    "tables": null
+  },
+  "parity": false,
+  "summary": {
+    "by_category": {
+      "columns": {
+        "fail": 1,
+        "not_measured": 0,
+        "pass": 8
+      },
+      "distributions": {
+        "fail": 1,
+        "not_measured": 0,
+        "pass": 7
+      },
+      "keys": {
+        "fail": 0,
+        "not_measured": 0,
+        "pass": 2
+      },
+      "nulls": {
+        "fail": 0,
+        "not_measured": 0,
+        "pass": 8
+      },
+      "relationships": {
+        "fail": 1,
+        "not_measured": 0,
+        "pass": 0
+      },
+      "row_counts": {
+        "fail": 0,
+        "not_measured": 0,
+        "pass": 2
+      },
+      "tables": {
+        "fail": 0,
+        "not_measured": 0,
+        "pass": 2
+      },
+      "types": {
+        "fail": 0,
+        "not_measured": 0,
+        "pass": 8
+      }
+    },
+    "fail": 3,
+    "not_measured": 0,
+    "pass": 37
+  },
+  "version": 1
+}

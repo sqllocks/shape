@@ -1,0 +1,63 @@
+{
+  "layout_format": 1,
+  "name": "SYNTHETIC TEST LAYOUT - made-up ids, not the NCPDP standard",
+  "segment_id_field": "X0",
+  "header": [
+    {"name": "tag", "length": 4, "format": {"type": "alphanumeric", "max_length": 4}, "constant": "SYN1"},
+    {"name": "tx_code", "length": 2, "role": "transaction_code",
+     "format": {"type": "alphanumeric", "max_length": 2}, "expr": "transaction_code"},
+    {"name": "tx_count", "length": 2, "role": "transaction_count",
+     "format": {"type": "numeric", "max_length": 2}, "expr": "transaction_count"},
+    {"name": "bin", "length": 6, "format": {"type": "alphanumeric", "max_length": 6},
+     "column": "pharmacy_claim.bin_number"},
+    {"name": "svc_date", "length": 8, "format": {"type": "date", "max_length": 8},
+     "column": "pharmacy_claim.fill_date"}
+  ],
+  "transactions": {
+    "T1": {
+      "kind": "request",
+      "name": "synthetic claim request",
+      "segments": [
+        {"id": "S1", "name": "synthetic patient", "fields": [
+          {"id": "X1", "name": "last name", "format": {"type": "alphanumeric", "max_length": 20, "uppercase": true}, "column": "member.last_name"},
+          {"id": "X2", "name": "birth date", "format": {"type": "date", "max_length": 8}, "column": "member.birth_date"},
+          {"id": "X3", "name": "sex", "usage": "optional", "format": {"type": "alphanumeric", "max_length": 1}, "column": "member.sex",
+           "map": {"M": "1", "F": "2", "*": "0"}}
+        ]},
+        {"id": "S2", "name": "synthetic claim", "fields": [
+          {"id": "X4", "name": "rx number", "format": {"type": "alphanumeric", "max_length": 12}, "column": "pharmacy_claim.rx_number"},
+          {"id": "X5", "name": "product", "format": {"type": "alphanumeric", "max_length": 11}, "column": "pharmacy_claim.ndc"},
+          {"id": "X6", "name": "quantity", "format": {"type": "numeric", "max_length": 10, "decimals": 3}, "column": "pharmacy_claim.quantity"},
+          {"id": "X7", "name": "days", "format": {"type": "numeric", "max_length": 3}, "column": "pharmacy_claim.days_supply"},
+          {"id": "X8", "name": "mail", "usage": "optional", "format": {"type": "alphanumeric", "max_length": 1}, "column": "pharmacy_claim.mail_order",
+           "map": {"true": "M", "false": "R"}},
+          {"id": "X9", "name": "refill", "usage": "optional", "format": {"type": "numeric", "max_length": 2}, "column": "pharmacy_claim.refill_number"},
+          {"id": "Y1", "name": "claim id", "format": {"type": "alphanumeric", "max_length": 20}, "column": "pharmacy_claim.rx_claim_id"}
+        ]},
+        {"id": "S3", "name": "synthetic pricing", "fields": [
+          {"id": "Y2", "name": "ingredient", "usage": "optional", "format": {"type": "amount", "max_length": 8, "overpunch": true}, "column": "pharmacy_claim.ingredient_cost"},
+          {"id": "Y3", "name": "fee", "usage": "optional", "format": {"type": "amount", "max_length": 8}, "column": "pharmacy_claim.dispensing_fee"},
+          {"id": "Y4", "name": "version", "format": {"type": "numeric", "max_length": 1}, "constant": "1"}
+        ]},
+        {"id": "S4", "name": "synthetic prescriber", "usage": "situational", "fields": [
+          {"id": "Y5", "name": "prescriber npi", "usage": "optional", "format": {"type": "alphanumeric", "max_length": 10}, "column": "prescriber.npi"},
+          {"id": "Y6", "name": "prescriber last", "usage": "optional", "format": {"type": "alphanumeric", "max_length": 20}, "column": "prescriber.last_name"}
+        ]}
+      ]
+    },
+    "T2": {
+      "kind": "response",
+      "name": "synthetic claim response",
+      "segments": [
+        {"id": "R1", "name": "synthetic status", "fields": [
+          {"id": "Z1", "name": "status", "format": {"type": "alphanumeric", "max_length": 1}, "column": "pharmacy_claim.claim_status",
+           "map": {"paid": "A", "rejected": "R", "reversed": "V"}},
+          {"id": "Z2", "name": "reject", "usage": "situational", "format": {"type": "alphanumeric", "max_length": 3}, "column": "pharmacy_claim.reject_code"},
+          {"id": "Z3", "name": "plan paid", "usage": "optional", "format": {"type": "amount", "max_length": 9, "overpunch": true}, "column": "pharmacy_claim.plan_paid"},
+          {"id": "Z4", "name": "patient pay", "usage": "optional", "format": {"type": "amount", "max_length": 9, "implied_decimal": false}, "column": "pharmacy_claim.patient_pay"},
+          {"id": "Z5", "name": "claim id", "format": {"type": "alphanumeric", "max_length": 20}, "column": "pharmacy_claim.rx_claim_id"}
+        ]}
+      ]
+    }
+  }
+}

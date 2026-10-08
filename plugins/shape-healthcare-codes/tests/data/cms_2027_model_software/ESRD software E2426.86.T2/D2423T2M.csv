@@ -1,0 +1,10 @@
+Name, Coeff, Label
+ActAdj_DUR4_9,0.905, Actuarial Adjustment for the Functioning Graft New Enrollee Duration Since Transplant of 4-9 Months
+DI_F70_74,0.624, Female 70-74
+DI_HCC85,0.063, Congestive Heart Failure
+GNPA_HCC85,0.251, Congestive Heart Failure
+GNPN_HCC85,0.273, Congestive Heart Failure
+GI_HCC85,0.169, Congestive Heart Failure
+LTI_GE65,0.955, Institutional Status/Aged
+GNE_FBD_ORIGDIS_G_NEF65,1.585, Full Benefit Dual and Originally Disabled Female 65
+TRANSPLANT_KIDNEY_ONLY_1M,5.985, Kidney Transplant/Month 1

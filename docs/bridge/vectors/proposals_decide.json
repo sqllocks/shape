@@ -1,0 +1,158 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "accept",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "actor": "ana",
+          "decisions": "${DIR}/decisions.json",
+          "note": "orders belong to customers",
+          "proposal": "relationship:orders.customer_id->customers.customer_id",
+          "verb": "accept"
+        },
+        "command": "proposals_decide",
+        "id": "accept"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "proposals_decide",
+        "id": "accept",
+        "ok": true,
+        "result": {
+          "claim": {
+            "child": "orders",
+            "child_columns": [
+              "customer_id"
+            ],
+            "parent": "customers",
+            "parent_columns": [
+              "customer_id"
+            ],
+            "type": "one_to_many"
+          },
+          "confidence": 1.0,
+          "decision": {
+            "actor": "ana",
+            "decided_at": "<any>",
+            "note": "orders belong to customers",
+            "status": "accepted"
+          },
+          "evidence": {
+            "cardinality": {
+              "child_distinct": 50,
+              "parent_distinct": 50,
+              "parent_unique": true
+            },
+            "containment": {
+              "child_distinct": 50,
+              "fraction": 1.0
+            },
+            "name": {
+              "rule": "same name as the parent key",
+              "score": 1.0
+            },
+            "range": {
+              "child": null,
+              "parent": null,
+              "within": true
+            },
+            "type": {
+              "child": "integer",
+              "compatible": true,
+              "parent": "integer"
+            }
+          },
+          "id": "relationship:orders.customer_id->customers.customer_id",
+          "kind": "relationship",
+          "proposed_at": "<any>",
+          "redacted": true,
+          "subject": "orders.customer_id->customers.customer_id"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-proposal",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "actor": "ana",
+          "decisions": "${DIR}/decisions.json",
+          "proposal": "pii:nothing.here",
+          "verb": "accept"
+        },
+        "command": "proposals_decide",
+        "id": "unknown-proposal"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "proposals_decide",
+        "error": {
+          "code": "input.unknown_proposal",
+          "group": "input",
+          "hint": "run `proposals_list` for the ids",
+          "message": "no proposal 'pii:nothing.here' in ${DIR}/decisions.json"
+        },
+        "id": "unknown-proposal",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "bad-verb",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "decisions": "${DIR}/decisions.json",
+          "proposal": "relationship:orders.customer_id->customers.customer_id",
+          "verb": "maybe"
+        },
+        "command": "proposals_decide",
+        "id": "bad-verb"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "proposals_decide",
+        "error": {
+          "code": "usage.invalid_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "argument 'verb' must be one of accept, reject, defer, got 'maybe'"
+        },
+        "id": "bad-verb",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "proposals_decide",
+  "format": "shape-bridge-vectors",
+  "setup": [
+    {
+      "api_version": "1.1",
+      "args": {
+        "dataset": true,
+        "output": "${DIR}/shop.shape",
+        "source": "${DIR}/shop"
+      },
+      "command": "profile",
+      "id": "setup"
+    },
+    {
+      "api_version": "1.1",
+      "args": {
+        "data": [
+          "${DIR}/shop"
+        ],
+        "decisions": "${DIR}/decisions.json",
+        "profile": "${DIR}/shop.shape"
+      },
+      "command": "proposals_propose",
+      "id": "setup"
+    }
+  ],
+  "version": 1
+}

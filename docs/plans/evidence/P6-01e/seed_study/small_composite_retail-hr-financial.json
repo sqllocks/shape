@@ -1,0 +1,177 @@
+{
+ "domain": "composite_retail-hr-financial",
+ "scale": "small",
+ "impl": "shape",
+ "seeds": [
+  "1042",
+  "1043",
+  "1044",
+  "1045",
+  "1046",
+  "1047",
+  "1048",
+  "1049"
+ ],
+ "findings_per_seed": {
+  "1042": 3,
+  "1043": 1,
+  "1044": 2,
+  "1045": 6,
+  "1046": 2,
+  "1047": 2,
+  "1048": 8,
+  "1049": 4
+ },
+ "by_finding": {
+  "(b-e) retail_order_line.promotion_id: failed ['ks']": {
+   "seeds": [
+    "1049"
+   ],
+   "count": 1
+  },
+  "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [#,#] days": {
+   "seeds": [
+    "1042",
+    "1044",
+    "1045",
+    "1046",
+    "1048"
+   ],
+   "count": 5
+  },
+  "(h) fidelity financial_card:": {
+   "seeds": [
+    "1045"
+   ],
+   "count": 1
+  },
+  "(h) fidelity financial_fraud_flag:": {
+   "seeds": [
+    "1043",
+    "1045",
+    "1047",
+    "1048"
+   ],
+   "count": 4
+  },
+  "(h) fidelity financial_transaction_category:": {
+   "seeds": [
+    "1048"
+   ],
+   "count": 1
+  },
+  "(h) fidelity hr_performance_review:": {
+   "seeds": [
+    "1048"
+   ],
+   "count": 1
+  },
+  "(h) fidelity hr_position:": {
+   "seeds": [
+    "1048"
+   ],
+   "count": 1
+  },
+  "(h) fidelity hr_termination:": {
+   "seeds": [
+    "1042",
+    "1046",
+    "1047",
+    "1048",
+    "1049"
+   ],
+   "count": 5
+  },
+  "(h) fidelity hr_training:": {
+   "seeds": [
+    "1042"
+   ],
+   "count": 1
+  },
+  "(h) fidelity retail_order:": {
+   "seeds": [
+    "1045",
+    "1048"
+   ],
+   "count": 2
+  },
+  "(h) fidelity retail_order_line:": {
+   "seeds": [
+    "1045",
+    "1048"
+   ],
+   "count": 2
+  },
+  "(h) fidelity retail_product:": {
+   "seeds": [
+    "1044"
+   ],
+   "count": 1
+  },
+  "(h) fidelity retail_product_category:": {
+   "seeds": [
+    "1049"
+   ],
+   "count": 1
+  },
+  "(h) fidelity retail_promotion:": {
+   "seeds": [
+    "1049"
+   ],
+   "count": 1
+  },
+  "(h) fidelity retail_return:": {
+   "seeds": [
+    "1045"
+   ],
+   "count": 1
+  }
+ },
+ "systematic": [],
+ "flagged": {
+  "1042": [
+   "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8455 < floor 0.8460",
+   "(h) fidelity hr_termination: 89.27 < floor 90.33",
+   "(h) fidelity hr_training: 90.30 < floor 90.52"
+  ],
+  "1043": [
+   "(h) fidelity financial_fraud_flag: 96.82 < floor 97.31"
+  ],
+  "1044": [
+   "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8395 < floor 0.8460",
+   "(h) fidelity retail_product: 91.70 < floor 91.75"
+  ],
+  "1045": [
+   "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8355 < floor 0.8460",
+   "(h) fidelity financial_card: 98.02 < floor 98.15",
+   "(h) fidelity financial_fraud_flag: 96.78 < floor 97.31",
+   "(h) fidelity retail_order: 94.37 < floor 95.87",
+   "(h) fidelity retail_order_line: 92.06 < floor 93.39",
+   "(h) fidelity retail_return: 92.12 < floor 93.50"
+  ],
+  "1046": [
+   "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8440 < floor 0.8460",
+   "(h) fidelity hr_termination: 90.15 < floor 90.33"
+  ],
+  "1047": [
+   "(h) fidelity financial_fraud_flag: 97.18 < floor 97.31",
+   "(h) fidelity hr_termination: 88.25 < floor 90.33"
+  ],
+  "1048": [
+   "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8455 < floor 0.8460",
+   "(h) fidelity financial_fraud_flag: 97.12 < floor 97.31",
+   "(h) fidelity financial_transaction_category: 84.05 < floor 85.13",
+   "(h) fidelity hr_performance_review: 90.68 < floor 90.75",
+   "(h) fidelity hr_position: 87.52 < floor 87.83",
+   "(h) fidelity hr_termination: 89.75 < floor 90.33",
+   "(h) fidelity retail_order: 93.88 < floor 95.87",
+   "(h) fidelity retail_order_line: 91.68 < floor 93.39"
+  ],
+  "1049": [
+   "(b-e) retail_order_line.promotion_id: failed ['ks']",
+   "(h) fidelity hr_termination: 88.37 < floor 90.33",
+   "(h) fidelity retail_product_category: 85.71 < floor 86.18",
+   "(h) fidelity retail_promotion: 91.60 < floor 92.12"
+  ]
+ }
+}

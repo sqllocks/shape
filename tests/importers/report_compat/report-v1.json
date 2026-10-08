@@ -1,0 +1,111 @@
+{
+  "format": "shape-import-report",
+  "version": 1,
+  "source": {
+    "file": "refused.schema.json",
+    "format": "jsonschema"
+  },
+  "summary": {
+    "imported": 12,
+    "not_imported": 7
+  },
+  "imported": [
+    {
+      "element": "#/$schema",
+      "kind": "draft",
+      "became": "https://json-schema.org/draft/2020-12/schema"
+    },
+    {
+      "element": "#",
+      "kind": "table",
+      "became": "table refused"
+    },
+    {
+      "element": "#/properties/id",
+      "kind": "column",
+      "became": "refused.id (integer, sequence)"
+    },
+    {
+      "element": "#/properties/mixed",
+      "kind": "column",
+      "became": "refused.mixed (string, faker text)"
+    },
+    {
+      "element": "#/properties/maybe",
+      "kind": "column",
+      "became": "refused.maybe (string, faker text)"
+    },
+    {
+      "element": "#/properties/remote",
+      "kind": "column",
+      "became": "refused.remote (string, faker text)"
+    },
+    {
+      "element": "#/properties/freeform",
+      "kind": "column",
+      "became": "refused.freeform (string, faker text)"
+    },
+    {
+      "element": "#/properties/grid",
+      "kind": "column",
+      "became": "refused.grid (string, faker text)"
+    },
+    {
+      "element": "#/properties/even",
+      "kind": "column",
+      "became": "refused.even (integer, distribution uniform)"
+    },
+    {
+      "element": "#/properties/hex",
+      "kind": "column",
+      "became": "refused.hex (string, faker text)"
+    },
+    {
+      "element": "#/properties/kind",
+      "kind": "column",
+      "became": "refused.kind (string, faker text)"
+    },
+    {
+      "element": "#/properties/upto",
+      "kind": "column",
+      "became": "refused.upto (integer, distribution uniform)"
+    }
+  ],
+  "not_imported": [
+    {
+      "element": "#/properties/mixed",
+      "kind": "property",
+      "reason": "oneOf with 3 non-null branches: imported as string"
+    },
+    {
+      "element": "#/properties/remote",
+      "kind": "$ref",
+      "reason": "reference 'https://example.com/other.json' leaves the document: imported as string"
+    },
+    {
+      "element": "#/properties/freeform",
+      "kind": "object",
+      "reason": "object without properties: imported as string"
+    },
+    {
+      "element": "#/properties/grid",
+      "kind": "array",
+      "reason": "array of arrays is not imported as a table: imported as string"
+    },
+    {
+      "element": "#/properties/even",
+      "kind": "multipleOf",
+      "reason": "multipleOf is not used by a generator"
+    },
+    {
+      "element": "#/properties/kind",
+      "kind": "type",
+      "reason": "type ['string', 'integer'] has several non-null types: imported as string"
+    },
+    {
+      "element": "#/properties/hex",
+      "kind": "pattern",
+      "reason": "pattern '^(?:[0-9a-f]{2}:){5}[0-9a-f]{2}$' is not a simple pattern: imported as text"
+    }
+  ]
+}

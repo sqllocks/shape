@@ -1,0 +1,17 @@
+$ ruff check src tests plugins benchmarks/vs_refengine
+All checks passed!
+exit 0
+$ ruff format --check src tests plugins benchmarks/vs_refengine
+1571 files already formatted
+exit 0
+$ mypy
+Success: no issues found in 565 source files
+exit 0
+$ lint-imports
+Contracts: 1 kept, 0 broken.
+$ python scripts/check_user_facing.py
+check_user_facing: clean
+exit 0
+$ python scripts/check_secrets.py
+Basic secret check OK.
+exit 0

@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sqllocks-shape-databases"
+# Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
+version = "0.9.1"
+description = "Shape plugin: live PostgreSQL, MySQL, Snowflake and Databricks sinks, and a DuckDB file writer"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: OS Independent",
+    "Topic :: Database",
+]
+# The client libraries are extras so that a host that writes to one database does not install
+# the other's driver, and so core never carries them (T-07). Without its driver a sink fails
+# with the pip command that installs it.
+dependencies = ["sqllocks-shape==0.9.1"]
+
+[project.urls]
+Homepage = "https://github.com/sqllocks/shape"
+Repository = "https://github.com/sqllocks/shape"
+Issues = "https://github.com/sqllocks/shape/issues"
+Documentation = "https://github.com/sqllocks/shape/tree/main/plugins/shape-databases"
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.1,<4"]
+mysql = ["pymysql>=1.1.1,<2"]
+# Plugin extras only: core carries no database client (T-07, T-08).
+snowflake = ["snowflake-connector-python>=3.7,<5"]
+databricks = ["databricks-sql-connector>=3.1,<5"]
+duckdb = ["duckdb>=1.2"]
+
+[project.entry-points."shape.sinks"]
+postgres = "shape_databases:PostgresSink"
+mysql = "shape_databases:MySqlSink"
+snowflake = "shape_databases:SnowflakeSink"
+databricks = "shape_databases:DatabricksSink"
+duckdb = "shape_databases:DuckDbSink"
+
+[tool.setuptools.packages.find]
+where = ["src"]

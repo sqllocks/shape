@@ -1,0 +1,23 @@
+{
+  "format": "shape-scenario",
+  "version": 1,
+  "id": "orphaned_foreign_keys",
+  "domain": "retail",
+  "scale": "small",
+  "seed": 42,
+  "gates": [
+    "schema_conformance",
+    "referential_integrity",
+    "row_count",
+    "null_check",
+    "uniqueness"
+  ],
+  "defects": [
+    {
+      "kind": "orphan_keys",
+      "table": "order",
+      "column": "customer_id",
+      "fraction": 0.03
+    }
+  ]
+}

@@ -1,0 +1,1223 @@
+{
+ "schema_version": 1,
+ "model": {
+  "name": "hr_star",
+  "description": "Human resources domain — star schema",
+  "domain": "hr",
+  "schema_mode": "star",
+  "locale": "en_US",
+  "seed": 42,
+  "date_range": {
+   "start": "2020-01-01",
+   "end": "2025-12-31"
+  }
+ },
+ "tables": {
+  "department": {
+   "name": "department",
+   "description": "Organizational departments",
+   "cdm_mapping": null,
+   "primary_key": [
+    "department_id"
+   ],
+   "columns": {
+    "department_id": {
+     "name": "department_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "department_name": {
+     "name": "department_name",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "department_names"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "cost_center": {
+     "name": "cost_center",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "CC-{seq:4}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 10,
+     "precision": null,
+     "scale": null
+    },
+    "is_active": {
+     "name": "is_active",
+     "type": "boolean",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "true": 0.93,
+       "false": 0.07
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "position": {
+   "name": "position",
+   "description": "Job titles and levels",
+   "cdm_mapping": null,
+   "primary_key": [
+    "position_id"
+   ],
+   "columns": {
+    "position_id": {
+     "name": "position_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "position_title": {
+     "name": "position_title",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "position_titles"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 150,
+     "precision": null,
+     "scale": null
+    },
+    "pay_grade": {
+     "name": "pay_grade",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "G1": 0.15,
+       "G2": 0.2,
+       "G3": 0.25,
+       "G4": 0.2,
+       "G5": 0.12,
+       "G6": 0.05,
+       "G7": 0.03
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "is_exempt": {
+     "name": "is_exempt",
+     "type": "boolean",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "true": 0.6,
+       "false": 0.4
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "min_salary": {
+     "name": "min_salary",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 30000.0,
+      "max": 120000.0
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "max_salary": {
+     "name": "max_salary",
+     "type": "float",
+     "generator": {
+      "strategy": "correlated",
+      "source_column": "min_salary",
+      "operation": "multiply",
+      "params": {
+       "factor_min": 1.3,
+       "factor_max": 1.8
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "employee": {
+   "name": "employee",
+   "description": "Employees with department and position assignments",
+   "cdm_mapping": null,
+   "primary_key": [
+    "employee_id"
+   ],
+   "columns": {
+    "employee_id": {
+     "name": "employee_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "first_name": {
+     "name": "first_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "first_name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "last_name": {
+     "name": "last_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "last_name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "email": {
+     "name": "email",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "email"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 255,
+     "precision": null,
+     "scale": null
+    },
+    "phone": {
+     "name": "phone",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "phone_number"
+     },
+     "nullable": true,
+     "null_rate": 0.08,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
+    },
+    "hire_date": {
+     "name": "hire_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2015-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "department_id": {
+     "name": "department_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "department.department_id",
+      "distribution": "zipf",
+      "alpha": 1.3
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "position_id": {
+     "name": "position_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "position.position_id",
+      "distribution": "zipf",
+      "alpha": 1.2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "manager_id": {
+     "name": "manager_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "self_referencing",
+      "pk_column": "employee_id",
+      "root_count": 5,
+      "max_depth": 4
+     },
+     "nullable": true,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "employment_status": {
+     "name": "employment_status",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Active": 0.82,
+       "On Leave": 0.05,
+       "Terminated": 0.1,
+       "Retired": 0.03
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "employment_type": {
+     "name": "employment_type",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Full-Time": 0.75,
+       "Part-Time": 0.12,
+       "Contract": 0.08,
+       "Temporary": 0.05
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "compensation": {
+   "name": "compensation",
+   "description": "Salary history with effective dates",
+   "cdm_mapping": null,
+   "primary_key": [
+    "compensation_id"
+   ],
+   "columns": {
+    "compensation_id": {
+     "name": "compensation_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "employee_id": {
+     "name": "employee_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "employee.employee_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "effective_date": {
+     "name": "effective_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2015-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "base_salary": {
+     "name": "base_salary",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 11.0,
+      "sigma": 0.5,
+      "min": 28000.0,
+      "max": 350000.0
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "bonus_pct": {
+     "name": "bonus_pct",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 0.0,
+      "max": 25.0
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "change_reason": {
+     "name": "change_reason",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Annual Review": 0.4,
+       "Promotion": 0.25,
+       "Market Adjustment": 0.15,
+       "New Hire": 0.12,
+       "Transfer": 0.08
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "performance_review": {
+   "name": "performance_review",
+   "description": "Annual performance reviews with ratings",
+   "cdm_mapping": null,
+   "primary_key": [
+    "review_id"
+   ],
+   "columns": {
+    "review_id": {
+     "name": "review_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "employee_id": {
+     "name": "employee_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "employee.employee_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "review_date": {
+     "name": "review_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2020-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "review_period_year": {
+     "name": "review_period_year",
+     "type": "integer",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "2020": 0.15,
+       "2021": 0.18,
+       "2022": 0.2,
+       "2023": 0.22,
+       "2024": 0.25
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "rating": {
+     "name": "rating",
+     "type": "integer",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "1": 0.05,
+       "2": 0.12,
+       "3": 0.45,
+       "4": 0.28,
+       "5": 0.1
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "reviewer_id": {
+     "name": "reviewer_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "employee.employee_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "comments": {
+     "name": "comments",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "sentence"
+     },
+     "nullable": true,
+     "null_rate": 0.2,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "time_off_request": {
+   "name": "time_off_request",
+   "description": "PTO, sick, and personal leave requests",
+   "cdm_mapping": null,
+   "primary_key": [
+    "request_id"
+   ],
+   "columns": {
+    "request_id": {
+     "name": "request_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "employee_id": {
+     "name": "employee_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "employee.employee_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "leave_type": {
+     "name": "leave_type",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "PTO": 0.45,
+       "Sick": 0.25,
+       "Personal": 0.12,
+       "Bereavement": 0.04,
+       "Jury Duty": 0.03,
+       "Parental": 0.06,
+       "Unpaid": 0.05
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "start_date": {
+     "name": "start_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2020-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "end_date": {
+     "name": "end_date",
+     "type": "date",
+     "generator": {
+      "strategy": "derived",
+      "source": "start_date",
+      "rule": "add_days",
+      "params": {
+       "distribution": "uniform",
+       "min": 1,
+       "max": 14
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "hours_requested": {
+     "name": "hours_requested",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 4.0,
+      "max": 80.0
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "status": {
+     "name": "status",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Approved": 0.75,
+       "Pending": 0.1,
+       "Denied": 0.08,
+       "Cancelled": 0.07
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "training": {
+   "name": "training",
+   "description": "Training course catalog",
+   "cdm_mapping": null,
+   "primary_key": [
+    "training_id"
+   ],
+   "columns": {
+    "training_id": {
+     "name": "training_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "course_name": {
+     "name": "course_name",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "training_courses"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 200,
+     "precision": null,
+     "scale": null
+    },
+    "category": {
+     "name": "category",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Compliance": 0.25,
+       "Technical": 0.22,
+       "Leadership": 0.15,
+       "Safety": 0.13,
+       "Soft Skills": 0.12,
+       "Onboarding": 0.08,
+       "Diversity": 0.05
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "duration_hours": {
+     "name": "duration_hours",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 0.5,
+      "max": 40.0
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "is_mandatory": {
+     "name": "is_mandatory",
+     "type": "boolean",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "true": 0.35,
+       "false": 0.65
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "training_enrollment": {
+   "name": "training_enrollment",
+   "description": "Employee training enrollments",
+   "cdm_mapping": null,
+   "primary_key": [
+    "enrollment_id"
+   ],
+   "columns": {
+    "enrollment_id": {
+     "name": "enrollment_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "employee_id": {
+     "name": "employee_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "employee.employee_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "training_id": {
+     "name": "training_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "training.training_id",
+      "distribution": "zipf",
+      "alpha": 1.2
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "enrollment_date": {
+     "name": "enrollment_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2020-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "completion_date": {
+     "name": "completion_date",
+     "type": "date",
+     "generator": {
+      "strategy": "derived",
+      "source": "enrollment_date",
+      "rule": "add_days",
+      "params": {
+       "distribution": "uniform",
+       "min": 1,
+       "max": 90
+      }
+     },
+     "nullable": true,
+     "null_rate": 0.15,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "status": {
+     "name": "status",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Completed": 0.65,
+       "In Progress": 0.15,
+       "Enrolled": 0.1,
+       "Dropped": 0.07,
+       "Failed": 0.03
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "score": {
+     "name": "score",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 50.0,
+      "max": 100.0
+     },
+     "nullable": true,
+     "null_rate": 0.25,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "termination": {
+   "name": "termination",
+   "description": "Employee terminations",
+   "cdm_mapping": null,
+   "primary_key": [
+    "termination_id"
+   ],
+   "columns": {
+    "termination_id": {
+     "name": "termination_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "employee_id": {
+     "name": "employee_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "employee.employee_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "termination_date": {
+     "name": "termination_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2020-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "termination_type": {
+     "name": "termination_type",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Voluntary": 0.55,
+       "Involuntary": 0.25,
+       "Layoff": 0.1,
+       "Retirement": 0.07,
+       "End of Contract": 0.03
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "reason": {
+     "name": "reason",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Better Opportunity": 0.3,
+       "Relocation": 0.12,
+       "Performance": 0.15,
+       "Conduct": 0.08,
+       "Restructuring": 0.1,
+       "Personal": 0.1,
+       "Retirement": 0.07,
+       "Other": 0.08
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "eligible_for_rehire": {
+     "name": "eligible_for_rehire",
+     "type": "boolean",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "true": 0.7,
+       "false": 0.3
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  }
+ },
+ "relationships": [
+  {
+   "name": "employee_department",
+   "parent": "department",
+   "child": "employee",
+   "parent_columns": [
+    "department_id"
+   ],
+   "child_columns": [
+    "department_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "employee_position",
+   "parent": "position",
+   "child": "employee",
+   "parent_columns": [
+    "position_id"
+   ],
+   "child_columns": [
+    "position_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "employee_compensation",
+   "parent": "employee",
+   "child": "compensation",
+   "parent_columns": [
+    "employee_id"
+   ],
+   "child_columns": [
+    "employee_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "employee_reviews",
+   "parent": "employee",
+   "child": "performance_review",
+   "parent_columns": [
+    "employee_id"
+   ],
+   "child_columns": [
+    "employee_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "employee_time_off",
+   "parent": "employee",
+   "child": "time_off_request",
+   "parent_columns": [
+    "employee_id"
+   ],
+   "child_columns": [
+    "employee_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "employee_training_enrollment",
+   "parent": "employee",
+   "child": "training_enrollment",
+   "parent_columns": [
+    "employee_id"
+   ],
+   "child_columns": [
+    "employee_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "training_enrollment_course",
+   "parent": "training",
+   "child": "training_enrollment",
+   "parent_columns": [
+    "training_id"
+   ],
+   "child_columns": [
+    "training_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "employee_termination",
+   "parent": "employee",
+   "child": "termination",
+   "parent_columns": [
+    "employee_id"
+   ],
+   "child_columns": [
+    "employee_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  }
+ ],
+ "business_rules": [
+  {
+   "name": "max_salary_exceeds_min",
+   "type": "column_comparison",
+   "rule": "",
+   "table": "position",
+   "via": null,
+   "when": null
+  },
+  {
+   "name": "rating_in_range",
+   "type": "constraint",
+   "rule": "rating >= 1 AND rating <= 5",
+   "table": "performance_review",
+   "via": null,
+   "when": null
+  },
+  {
+   "name": "hours_positive",
+   "type": "constraint",
+   "rule": "hours_requested > 0",
+   "table": "time_off_request",
+   "via": null,
+   "when": null
+  }
+ ],
+ "generation": {
+  "scale": "small",
+  "scales": {
+   "fabric_demo": {
+    "employee": 100
+   },
+   "small": {
+    "employee": 500
+   },
+   "medium": {
+    "employee": 5000
+   },
+   "large": {
+    "employee": 50000
+   },
+   "xlarge": {
+    "employee": 500000
+   },
+   "warehouse": {
+    "employee": 5000000
+   },
+   "xxl": {
+    "employee": 20000000
+   },
+   "xxxl": {
+    "employee": 100000000
+   }
+  },
+  "derived_counts": {
+   "department": {
+    "fixed": 30
+   },
+   "position": {
+    "fixed": 80
+   },
+   "training": {
+    "fixed": 100
+   },
+   "compensation": {
+    "per_parent": "employee",
+    "ratio": 3.0
+   },
+   "performance_review": {
+    "per_parent": "employee",
+    "ratio": 2.5
+   },
+   "time_off_request": {
+    "per_parent": "employee",
+    "ratio": 5.0
+   },
+   "training_enrollment": {
+    "per_parent": "employee",
+    "ratio": 4.0
+   },
+   "termination": {
+    "per_parent": "employee",
+    "ratio": 0.15
+   }
+  },
+  "output": {}
+ },
+ "correlated_columns": {}
+}

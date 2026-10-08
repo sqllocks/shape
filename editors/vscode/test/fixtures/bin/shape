@@ -1,0 +1,19 @@
+#!/usr/bin/env node
+// A stand-in for the `shape` executable, for the extension's tests. `--version` prints the version
+// in SHAPE_FAKE_VERSION (default 0.9.0); `cat FILE` prints a text form made from the file's bytes.
+// Every call is appended to the file named by SHAPE_FAKE_LOG, when set.
+const fs = require("fs");
+const path = require("path");
+const args = process.argv.slice(2);
+if (process.env.SHAPE_FAKE_LOG) {
+  fs.appendFileSync(process.env.SHAPE_FAKE_LOG, args.join(" ") + "\n");
+}
+if (args[0] === "--version") {
+  console.log(`shape ${process.env.SHAPE_FAKE_VERSION || "0.9.0"}`);
+} else if (args[0] === "cat" && args[1]) {
+  const body = fs.readFileSync(args[1], "utf8").trim();
+  process.stdout.write(`manifest.kind: "profile"\nsource: ${JSON.stringify(path.basename(args[1]))}\nbody: ${JSON.stringify(body)}\n`);
+} else {
+  process.stderr.write("shape: error: unknown command\n");
+  process.exit(2);
+}

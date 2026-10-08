@@ -1,0 +1,4 @@
+FAILED tests/bridge/test_compat_1_0.py::test_every_1_0_vector_gets_the_recorded_response_from_the_current_bridge[list]
+FAILED tests/bridge/test_compat_1_1.py::test_every_1_1_vector_gets_the_recorded_response_from_the_1_2_bridge[list]
+2 failed, 14382 passed, 23 skipped, 16 deselected, 1192 warnings in 2884.61s (0:48:04)
+exit=1

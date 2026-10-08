@@ -1,0 +1,24 @@
+{
+  "format": "shape-scenario",
+  "version": 1,
+  "id": "late_backfill",
+  "domain": "retail",
+  "scale": "small",
+  "seed": 42,
+  "gates": [
+    "schema_conformance",
+    "referential_integrity",
+    "row_count",
+    "null_check",
+    "uniqueness"
+  ],
+  "defects": [
+    {
+      "kind": "late_arrivals",
+      "table": "order",
+      "column": "order_date",
+      "fraction": 0.2,
+      "days": 200
+    }
+  ]
+}

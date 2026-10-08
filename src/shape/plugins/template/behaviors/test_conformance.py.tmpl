@@ -1,0 +1,18 @@
+"""{{group}} conformance of {{dist}}: runs the Shape plugin conformance kit.
+
+Run it from this folder with `pytest` (tests/conftest.py puts src/ on the path), or after
+`pip install -e .`.
+"""
+
+from shape.plugins import kit
+
+import {{package}}
+from {{package}} import {{class}}
+
+
+def test_module_declares_the_api_version():
+    assert kit.check_module_api({{package}}).startswith("1.")
+
+
+def test_behavior():
+    kit.check_behavior({{class}}())

@@ -1,0 +1,89 @@
+"ICD-10-CM Codes, ESRD, CMS-HCC and RxHCC Models",,,,,,,,,,,
+Includes ICD-10 codes valid in FY2025 and FY2026,,,,,,,,,,,
+,,,,,,,,,,,
+"Diagnosis
+Code",Description,"CMS-HCC
+ESRD
+Model
+Category
+V21","CMS-HCC
+ESRD
+Model
+Category
+V24","CMS-HCC
+Model
+Category
+V22","CMS-HCC
+Model
+Category
+V28","RxHCC
+Model
+Category
+V08","CMS-HCC
+ESRD Model
+Category
+V21 for 2026
+Payment Year","CMS-HCC
+ESRD Model
+Category
+V24 for 2026
+Payment Year","CMS-HCC
+Model
+Category
+V22 for 2026
+Payment Year","CMS-HCC
+Model
+Category
+V28 for 2026
+Payment Year","RxHCC
+Model
+Category
+V08 for 2026
+Payment Year"
+A3681,Diphtheritic cardiomyopathy,85,85,85,227,186,Yes,Yes,Yes,Yes,Yes
+B4481,Allergic bronchopulmonary aspergillosis,112,112,112,280,227,Yes,Yes,Yes,Yes,Yes
+C01,Malignant neoplasm of base of tongue,11,11,11,21,22,Yes,Yes,Yes,Yes,Yes
+C153,Malignant neoplasm of upper third of esophagus,9,9,9,20,,Yes,Yes,Yes,Yes,No
+C180,Malignant neoplasm of cecum,11,11,11,22,,Yes,Yes,Yes,Yes,No
+C3490,Malignant neoplasm of unspecified part of unspecified bronchus or lung,9,9,9,20,20,Yes,Yes,Yes,Yes,Yes
+C430,Malignant melanoma of lip,12,12,12,23,22,Yes,Yes,Yes,Yes,Yes
+C450,Mesothelioma of pleura,9,9,9,19,22,Yes,Yes,Yes,Yes,Yes
+C61,Malignant neoplasm of prostate,12,12,12,23,22,Yes,Yes,Yes,Yes,Yes
+C770,"Secondary and unspecified malignant neoplasm of lymph nodes of head, face and neck",8,8,8,18,20,Yes,Yes,Yes,Yes,Yes
+C771,Secondary and unspecified malignant neoplasm of intrathoracic lymph nodes,8,8,8,17,20,Yes,Yes,Yes,Yes,Yes
+C7951,Secondary malignant neoplasm of bone,8,8,8,18,17,Yes,Yes,Yes,Yes,Yes
+E035,Myxedema coma,23,23,23,202,44,Yes,Yes,Yes,Yes,Yes
+E0800,Diabetes mellitus due to underlying condition with hyperosmolarity without nonketotic hyperglycemic-hyperosmolar coma (NKHHC),17,17,17,36,30,Yes,Yes,Yes,Yes,Yes
+E0821,Diabetes mellitus due to underlying condition with diabetic nephropathy,18,18,18,37,30,Yes,Yes,Yes,Yes,Yes
+E0821,Diabetes mellitus due to underlying condition with diabetic nephropathy,141,,,,,Yes,--,--,--,--
+E08649,Diabetes mellitus due to underlying condition with hypoglycemia without coma,18,18,18,38,30,Yes,Yes,Yes,Yes,Yes
+E089,Diabetes mellitus due to underlying condition without complications,19,19,19,38,31,Yes,Yes,Yes,Yes,Yes
+E1165,Type 2 diabetes mellitus with hyperglycemia,18,18,18,38,30,Yes,Yes,Yes,Yes,Yes
+E119,Type 2 diabetes mellitus without complications,19,19,19,38,31,Yes,Yes,Yes,Yes,Yes
+E840,Cystic fibrosis with pulmonary manifestations,110,110,110,277,225,Yes,Yes,Yes,Yes,Yes
+G931,"Anoxic brain damage, not elsewhere classified",80,80,80,202,,Yes,Yes,Yes,Yes,No
+I0981,Rheumatic heart failure,85,85,85,226,186,Yes,Yes,Yes,Yes,Yes
+I10,Essential (primary) hypertension,,,,,187,No,No,No,No,Yes
+I200,Unstable angina,87,87,87,229,188,Yes,Yes,Yes,Yes,Yes
+I2101,ST elevation (STEMI) myocardial infarction involving left main coronary artery,86,86,86,228,188,Yes,Yes,Yes,Yes,Yes
+I270,Primary pulmonary hypertension,85,85,85,226,183,Yes,Yes,Yes,Yes,Yes
+I271,Kyphoscoliotic heart disease,85,85,85,226,184,Yes,Yes,Yes,Yes,Yes
+I5021,Acute systolic (congestive) heart failure,85,85,85,225,186,Yes,Yes,Yes,Yes,Yes
+I5023,Acute on chronic systolic (congestive) heart failure,85,85,85,224,186,Yes,Yes,Yes,Yes,Yes
+I5084,End stage heart failure,85,85,85,222,186,Yes,Yes,Yes,Yes,Yes
+I509,"Heart failure, unspecified",85,85,85,226,186,Yes,Yes,Yes,Yes,Yes
+I8500,Esophageal varices without bleeding,27,27,27,63,,Yes,Yes,Yes,Yes,No
+J449,"Chronic obstructive pulmonary disease, unspecified",111,111,111,280,229,Yes,Yes,Yes,Yes,Yes
+J4550,"Severe persistent asthma, uncomplicated",,,,279,228,No,No,No,Yes,Yes
+J4A0,Restrictive allograft syndrome,186,186,186,276,396,Yes,Yes,Yes,Yes,Yes
+J84112,Idiopathic pulmonary fibrosis,112,112,112,278,226,Yes,Yes,Yes,Yes,Yes
+J9500,Unspecified tracheostomy complication,82,82,82,211,,Yes,Yes,Yes,Yes,No
+K7030,Alcoholic cirrhosis of liver without ascites,28,28,28,64,,Yes,Yes,Yes,Yes,No
+K7290,"Hepatic failure, unspecified without coma",27,27,27,63,,Yes,Yes,Yes,Yes,No
+N186,End stage renal disease,136,136,136,326,261,Yes,Yes,Yes,Yes,Yes
+R092,Respiratory arrest,83,83,83,212,,Yes,Yes,Yes,Yes,No
+T82512A,"Breakdown (mechanical) of artificial heart, initial encounter",,,,223,,No,No,No,Yes,No
+T8620,Unspecified complication of heart transplant,186,186,186,221,396,Yes,Yes,Yes,Yes,Yes
+T8640,Unspecified complication of liver transplant,186,186,186,62,396,Yes,Yes,Yes,Yes,Yes
+Z944,Liver transplant status,186,186,186,62,396,Yes,Yes,Yes,Yes,Yes
+Z9483,Pancreas transplant status,186,186,186,35,396,Yes,Yes,Yes,Yes,Yes

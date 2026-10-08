@@ -1,0 +1,514 @@
+"""Pure-Python twin of the generation kernel (P4-03, ``rust/shape-kernel/src/gen``).
+
+Every function has the name, arguments and result of its ``shape._kernel`` counterpart. The
+Philox words come from numpy's own ``Philox`` bit generator, which is the known-answer oracle
+of the stream (T-16): the ``j``-th word of the stream keyed ``(k0, k1)`` is word ``j % 4`` of
+``numpy.random.Philox(key=k0 | k1 << 64, counter=j // 4).random_raw(4)``.
+
+Every result is equal to the native kernel's bit for bit. The floating-point results that pass
+through ``log``, ``cos`` or ``exp`` (``philox_normal``, ``hour_weights_peaks``) use the portable
+functions of :mod:`shape.kernel.reference.pmath`, which ``gen/pmath.rs`` mirrors operation for
+operation, so they are the same on every machine too (#768).
+"""
+
+from __future__ import annotations
+
+import bisect
+import json
+import math
+from collections.abc import Callable, Sequence
+from typing import Any
+
+import numpy as np
+import numpy.typing as npt
+import pyarrow as pa  # type: ignore[import-untyped]
+
+from shape.generation.arrowkit import array as arrow_array
+from shape.generation.arrowkit import to_numpy as arrow_numpy
+
+from . import pmath
+
+_TWO_NEG_53 = 2.0**-53
+_MAX_BELOW = 2**32 - 1
+_US_PER_HOUR = 3_600_000_000
+_US_PER_DAY = 86_400_000_000
+_UNIFORM_STD = 1e4  # hours; above it a wrapped peak's hour weights are uniform
+# Same literals as the Rust constants (std::f64::consts::FRAC_2_SQRT_PI and SQRT_2).
+_FRAC_2_SQRT_PI = 1.1283791670955126
+_SQRT_2 = 1.4142135623730951
+
+
+_MAX_PER_CALL = 2**31  # as the native kernel: rows, words or days one call makes
+_MAX_PAD = 1024
+
+
+def _size(what: str, n: int) -> None:
+    if n > _MAX_PER_CALL:
+        raise ValueError(f"{what} is {n}, more than one call makes (2**31): use smaller chunks")
+
+
+def _words(k0: int, k1: int, row_start: int, n_rows: int, per_row: int) -> npt.NDArray[np.uint64]:
+    if per_row < 1:
+        raise ValueError("per_row must be positive")
+    if row_start < 0 or n_rows < 0:
+        raise ValueError("row_start and n_rows must be non-negative")
+    _size("n_rows * words per row", n_rows * per_row)
+    if (row_start + n_rows) * per_row > 2**64:
+        raise ValueError(
+            f"rows {row_start}..{row_start + n_rows} at {per_row} words per row pass the end of "
+            "the stream (2**64 words)"
+        )
+    count = n_rows * per_row
+    if count == 0:
+        return np.empty(0, dtype=np.uint64)
+    first = row_start * per_row
+    block = first // 4
+    total = (first + count + 3) // 4 * 4 - block * 4
+    bits = np.random.Philox(key=int(k0) | (int(k1) << 64), counter=block)
+    raw: npt.NDArray[np.uint64] = bits.random_raw(total)
+    skip = first - block * 4
+    return raw[skip : skip + count]
+
+
+def _unit(w: npt.NDArray[np.uint64]) -> npt.NDArray[np.float64]:
+    return (w >> np.uint64(11)).astype(np.float64) * _TWO_NEG_53
+
+
+def _below(w: npt.NDArray[np.uint64], n: int) -> npt.NDArray[np.int64]:
+    """``floor(w * n / 2**64)``: in 64-bit arithmetic for ``n`` below 2**32, as Python ints
+    above (the native kernel multiplies in 128 bits)."""
+    if not 0 < n < 2**63:
+        raise ValueError(f"range {n} is out of bounds")
+    if n > _MAX_BELOW:
+        return np.array([(int(x) * n) >> 64 for x in w.tolist()], dtype=np.int64)
+    nn = np.uint64(n)
+    hi = w >> np.uint64(32)
+    lo = w & np.uint64(0xFFFFFFFF)
+    return ((hi * nn + ((lo * nn) >> np.uint64(32))) >> np.uint64(32)).astype(np.int64)
+
+
+def _slot(per_row: int, slot: int, width: int) -> None:
+    if per_row < 1 or slot < 0 or slot + width > per_row:
+        raise ValueError(f"slot {slot} (+{width} words) does not fit in {per_row} words per row")
+
+
+def philox_words(k0: int, k1: int, row_start: int, n_rows: int, per_row: int = 1) -> pa.Array:
+    return arrow_array(_words(k0, k1, row_start, n_rows, per_row), type=pa.uint64())
+
+
+def philox_uniform(
+    k0: int, k1: int, row_start: int, n_rows: int, per_row: int = 1, slot: int = 0
+) -> pa.Array:
+    _slot(per_row, slot, 1)
+    w = _words(k0, k1, row_start, n_rows, per_row).reshape(n_rows, per_row)
+    return arrow_array(_unit(w[:, slot]))
+
+
+def philox_normal(
+    k0: int, k1: int, row_start: int, n_rows: int, per_row: int = 2, slot: int = 0
+) -> pa.Array:
+    _slot(per_row, slot, 2)
+    w = _words(k0, k1, row_start, n_rows, per_row).reshape(n_rows, per_row)
+    u1 = 1.0 - _unit(w[:, slot])
+    u2 = _unit(w[:, slot + 1])
+    with np.errstate(all="ignore"):
+        z = np.sqrt(-2.0 * pmath.log(u1)) * pmath.cos_turns(u2)
+    return arrow_array(z)
+
+
+def _f64(a: Any, what: str) -> npt.NDArray[np.float64]:
+    arr = arrow_array(a) if not isinstance(a, pa.Array) else a
+    if not pa.types.is_float64(arr.type):
+        raise ValueError(f"{what} must be a float64 array")
+    if arr.null_count:
+        raise ValueError(f"{what} must not contain nulls")
+    return np.asarray(arrow_numpy(arr), dtype=np.float64)
+
+
+def _build_alias(weights: Sequence[float]) -> tuple[list[float], list[int]]:
+    """Vose's method with exactly the operations of ``alias.rs`` (sequential sum, same order)."""
+    n = len(weights)
+    if n == 0:
+        raise ValueError("alias_build needs at least one weight")
+    total = 0.0
+    for w in weights:
+        if not math.isfinite(w) or w < 0.0:
+            raise ValueError("alias weights must be finite and non-negative")
+        total += w
+    if total <= 0.0 or not math.isfinite(total):
+        raise ValueError("alias weights must have a positive finite sum")
+    nf = float(n)
+    scaled = [w * nf / total for w in weights]
+    prob = [0.0] * n
+    alias = list(range(n))
+    small: list[int] = []
+    large: list[int] = []
+    for i, s in enumerate(scaled):
+        (small if s < 1.0 else large).append(i)
+    while small and large:
+        s = small.pop()
+        big = large.pop()
+        prob[s] = scaled[s]
+        alias[s] = big
+        scaled[big] = (scaled[big] + scaled[s]) - 1.0
+        (small if scaled[big] < 1.0 else large).append(big)
+    for big in large:
+        prob[big] = 1.0
+    for s in small:
+        prob[s] = 1.0
+    return prob, alias
+
+
+def alias_build(weights: Any) -> tuple[pa.Array, pa.Array]:
+    prob, alias = _build_alias([float(w) for w in _f64(weights, "weights")])
+    return arrow_array(prob, type=pa.float64()), arrow_array(alias, type=pa.int64())
+
+
+def _pick(
+    prob: npt.NDArray[np.float64],
+    alias: npt.NDArray[np.int64],
+    w0: npt.NDArray[np.uint64],
+    w1: npt.NDArray[np.uint64],
+) -> npt.NDArray[np.int64]:
+    i = _below(w0, len(prob))
+    return np.where(_unit(w1) < prob[i], i, alias[i]).astype(np.int64)
+
+
+def alias_sample(
+    prob: Any,
+    alias: Any,
+    k0: int,
+    k1: int,
+    row_start: int,
+    n_rows: int,
+    per_row: int = 2,
+    slot: int = 0,
+) -> pa.Array:
+    _slot(per_row, slot, 2)
+    p = _f64(prob, "prob")
+    alias_arr = alias if isinstance(alias, pa.Array) else arrow_array(alias)
+    if alias_arr.null_count:
+        raise ValueError("alias must not contain nulls")
+    a = np.asarray(arrow_numpy(alias_arr), dtype=np.int64)
+    if len(p) == 0 or len(p) != len(a):
+        raise ValueError("prob and alias must be non-empty and equally long")
+    if ((a < 0) | (a >= len(p))).any():
+        raise ValueError("alias entries must lie in 0..len(prob)")
+    w = _words(k0, k1, row_start, n_rows, per_row).reshape(n_rows, per_row)
+    return arrow_array(_pick(p, a, w[:, slot], w[:, slot + 1]), type=pa.int64())
+
+
+# ---------------------------------------------------------------- strings
+
+
+def _values(col: Any) -> list[Any]:
+    arr = col if isinstance(col, pa.Array) else arrow_array(col)
+    t = arr.type
+    if not (pa.types.is_string(t) or pa.types.is_large_string(t) or pa.types.is_int64(t)):
+        raise ValueError(f"expected string, large_string or int64, got {t}")
+    return list(arr.to_pylist())
+
+
+def _fmt(v: Any, width: int) -> str:
+    if isinstance(v, str):
+        return v
+    return format(v, f"0{width}d") if width else str(v)
+
+
+def pool_take(pool: Any, indices: Any) -> pa.Array:
+    values = _values(pool)
+    if pa.types.is_integer(pool.type):
+        raise ValueError("pool_take needs a string pool")
+    idx = arrow_array(indices)
+    if not pa.types.is_int64(idx.type):
+        raise ValueError("indices must be an int64 array")
+    size = len(values)
+    out: list[str | None] = []
+    for v in idx.to_pylist():
+        if v is None:
+            out.append(None)
+            continue
+        if v < 0 or v >= size:
+            raise ValueError(f"pool index {v} out of range 0..{size}")
+        out.append(values[v])
+    return arrow_array(out, type=pa.string())
+
+
+def template_strings(
+    literals: Sequence[str],
+    slots: Sequence[tuple[int, int]],
+    columns: Sequence[Any],
+    n_rows: int,
+) -> pa.Array:
+    _size("n_rows", n_rows)
+    wide = [w for _, w in slots if w > _MAX_PAD]
+    if wide:
+        raise ValueError(f"template pad width {wide[0]} is more than {_MAX_PAD}")
+    if len(literals) != len(slots) + 1:
+        raise ValueError("template needs one more literal than slots")
+    if any(c >= len(columns) for c, _ in slots):
+        raise ValueError("template slot refers to a missing column")
+    cols = [_values(c) for c in columns]
+    if any(len(c) != n_rows for c in cols):
+        raise ValueError("n_rows must equal the column length")
+    out: list[str | None] = []
+    for i in range(n_rows):
+        if any(cols[c][i] is None for c, _ in slots):
+            out.append(None)
+            continue
+        parts = [literals[0]]
+        for k, (c, w) in enumerate(slots):
+            parts.append(_fmt(cols[c][i], w))
+            parts.append(literals[k + 1])
+        out.append("".join(parts))
+    return arrow_array(out, type=pa.string())
+
+
+def join_strings(columns: Sequence[Any], sep: str, skip_nulls: bool = False) -> pa.Array:
+    cols = [_values(c) for c in columns]
+    n = len(cols[0]) if cols else 0
+    if any(len(c) != n for c in cols):
+        raise ValueError("all columns must have the same length")
+    out: list[str | None] = []
+    for i in range(n):
+        row = [c[i] for c in cols]
+        if not skip_nulls and any(v is None for v in row):
+            out.append(None)
+        else:
+            out.append(sep.join(_fmt(v, 0) for v in row if v is not None))
+    return arrow_array(out, type=pa.string())
+
+
+class _UnicodeCase:
+    """The native kernel's word rule and case mappings outside ASCII (``unicode_case.json``).
+
+    The table is read off the native kernel by ``scripts/gen_unicode_case_table.py``, so the
+    twin never depends on the running Python's Unicode version. ``cased`` and
+    ``case_ignorable`` drive the ``Final_Sigma`` rule of ``lower`` (on every code point, ASCII
+    included); ``alnum``, ``upper`` and ``lower`` cover non-ASCII code points only.
+    """
+
+    def __init__(self) -> None:
+        from importlib.resources import files
+
+        raw = json.loads(
+            files("shape.kernel.reference").joinpath("unicode_case.json").read_text("utf-8")
+        )
+        self._alnum = self._ranges(raw["alnum"])
+        self._cased = self._ranges(raw["cased"])
+        self._ignorable = self._ranges(raw["case_ignorable"])
+        self.upper = {r[0]: "".join(map(chr, r[1:])) for r in raw["upper"]}
+        self.lower = {r[0]: "".join(map(chr, r[1:])) for r in raw["lower"]}
+
+    @staticmethod
+    def _ranges(rows: list[list[int]]) -> tuple[list[int], list[int]]:
+        return [r[0] for r in rows], [r[1] for r in rows]
+
+    @staticmethod
+    def _within(ranges: tuple[list[int], list[int]], cp: int) -> bool:
+        starts, ends = ranges
+        i = bisect.bisect_right(starts, cp) - 1
+        return i >= 0 and cp <= ends[i]
+
+    def alnum(self, c: str) -> bool:
+        return c.isalnum() if c.isascii() else self._within(self._alnum, ord(c))
+
+    def to_upper(self, c: str) -> str:
+        return c.upper() if c.isascii() else self.upper.get(ord(c), c)
+
+    def to_lower(self, c: str) -> str:
+        return c.lower() if c.isascii() else self.lower.get(ord(c), c)
+
+    def _cased_next(self, chars: Sequence[str]) -> bool:
+        """The first character that is not case-ignorable exists and is cased."""
+        for c in chars:
+            if not self._within(self._ignorable, ord(c)):
+                return self._within(self._cased, ord(c))
+        return False
+
+    def final_sigma(self, s: str, i: int) -> bool:
+        return self._cased_next(s[i - 1 :: -1] if i else "") and not self._cased_next(s[i + 1 :])
+
+
+_UNICODE: _UnicodeCase | None = None
+
+
+def _unicode() -> _UnicodeCase:
+    global _UNICODE
+    if _UNICODE is None:
+        _UNICODE = _UnicodeCase()
+    return _UNICODE
+
+
+def _upper(s: str) -> str:
+    if s.isascii():
+        return s.upper()
+    u = _unicode()
+    return "".join(u.to_upper(c) for c in s)
+
+
+def _lower(s: str) -> str:
+    if s.isascii():
+        return s.lower()
+    u = _unicode()
+    out: list[str] = []
+    for i, c in enumerate(s):
+        if c == "Σ":  # capital sigma: the one contextual mapping (Final_Sigma)
+            out.append("ς" if u.final_sigma(s, i) else "σ")
+        else:
+            out.append(u.to_lower(c))
+    return "".join(out)
+
+
+def _title(s: str) -> str:
+    """Upper-case the first character of every run of word characters, lower-case the rest."""
+    alnum: Callable[[str], bool]
+    up: Callable[[str], str]
+    low: Callable[[str], str]
+    if s.isascii():
+        alnum, up, low = str.isalnum, str.upper, str.lower
+    else:
+        u = _unicode()
+        alnum, up, low = u.alnum, u.to_upper, u.to_lower
+    out: list[str] = []
+    prev = False
+    for c in s:
+        word = alnum(c)
+        out.append(up(c) if word and not prev else low(c))
+        prev = word
+    return "".join(out)
+
+
+def string_case(array: Any, mode: str) -> pa.Array:
+    fn = {"upper": _upper, "lower": _lower, "title": _title}.get(mode)
+    if fn is None:
+        raise ValueError(f"case mode must be upper, lower or title, got {mode!r}")
+    out = [
+        None if v is None else (str(v) if not isinstance(v, str) else fn(v)) for v in _values(array)
+    ]
+    return arrow_array(out, type=pa.string())
+
+
+def uuid4_strings(k0: int, k1: int, row_start: int, n_rows: int) -> pa.Array:
+    if n_rows * 36 > 2**31 - 1:
+        raise ValueError("string output exceeds 2 GiB: use smaller chunks")
+    w = _words(k0, k1, row_start, n_rows, 2).astype("<u8")
+    raw = w.view(np.uint8).reshape(n_rows, 16).copy()
+    raw[:, 6] = (raw[:, 6] & 0x0F) | 0x40
+    raw[:, 8] = (raw[:, 8] & 0x3F) | 0x80
+    out = []
+    for row in raw:
+        h = row.tobytes().hex()
+        out.append(f"{h[:8]}-{h[8:12]}-{h[12:16]}-{h[16:20]}-{h[20:32]}")
+    return arrow_array(out, type=pa.string())
+
+
+def random_strings(
+    k0: int, k1: int, row_start: int, n_rows: int, length: int, alphabet: str
+) -> pa.Array:
+    if not alphabet:
+        raise ValueError("random_chars needs a non-empty alphabet")
+    _size("n_rows", n_rows)
+    if length == 0:
+        return arrow_array([""] * n_rows, type=pa.string())
+    chars = np.array(list(alphabet), dtype=object)
+    w = _words(k0, k1, row_start, n_rows, length).reshape(n_rows, length)
+    idx = _below(w, len(chars))
+    return arrow_array(["".join(row) for row in chars[idx]], type=pa.string())
+
+
+# ---------------------------------------------------------------- temporal
+
+
+def day_weights(
+    start_day: int,
+    n_days: int,
+    month_weights: Sequence[float],
+    dow_weights: Sequence[float],
+    per_bucket: bool = True,
+) -> pa.Array:
+    if len(month_weights) != 12 or len(dow_weights) != 7:
+        raise ValueError("need 12 month weights and 7 day-of-week weights")
+    _size("n_days", n_days)
+    days = np.arange(start_day, start_day + n_days, dtype=np.int64)
+    months = days.astype("datetime64[D]").astype("datetime64[M]").astype(np.int64) % 12
+    dows = (days + 3) % 7
+    mw = np.asarray(month_weights, dtype=np.float64)
+    dw = np.asarray(dow_weights, dtype=np.float64)
+    base = mw[months] * dw[dows]
+    if per_bucket:
+        count = np.zeros((12, 7), dtype=np.float64)
+        np.add.at(count, (months, dows), 1.0)
+        base = base / count[months, dows]
+    return arrow_array(base, type=pa.float64())
+
+
+def _erf(x: float) -> float:
+    ax = abs(x)
+    if ax >= 6.0:
+        return math.copysign(1.0, x)
+    x2 = ax * ax
+    term = ax
+    total = ax
+    n = 1.0
+    while term > 1e-17 * total:
+        term *= 2.0 * x2 / (2.0 * n + 1.0)
+        total += term
+        n += 1.0
+        if n > 500.0:
+            break
+    r = _FRAC_2_SQRT_PI * pmath.exp_scalar(-x2) * total
+    return -r if x < 0 else r
+
+
+def _cdf(z: float) -> float:
+    return 0.5 * (1.0 + _erf(z / _SQRT_2))
+
+
+def hour_weights_peaks(peaks: Sequence[float], std: float) -> pa.Array:
+    if len(peaks) == 0 or not (math.isfinite(std) and std > 0.0):
+        raise ValueError("hour_weights_peaks needs peaks and a positive std")
+    if not all(math.isfinite(p) for p in peaks):
+        raise ValueError("hour_weights_peaks needs finite peaks")
+    if std > _UNIFORM_STD:  # as the native kernel: uniform far below f64 precision
+        return arrow_array([len(peaks) / 24.0] * 24, type=pa.float64())
+    k = math.ceil(8.0 * std / 24.0) + 1
+    w = [0.0] * 24
+    for h in range(24):
+        for p in peaks:
+            for j in range(-k, k + 1):
+                lo = h + 24.0 * j - p
+                w[h] += _cdf((lo + 1.0) / std) - _cdf(lo / std)
+    return arrow_array(w, type=pa.float64())
+
+
+def temporal_sample(
+    day_weights: Any,
+    hour_weights: Any,
+    start_day: int,
+    k0: int,
+    k1: int,
+    row_start: int,
+    n_rows: int,
+    whole_seconds: bool = False,
+) -> pa.Array:
+    dw = _f64(day_weights, "day_weights")
+    hw = _f64(hour_weights, "hour_weights")
+    if len(hw) != 24:
+        raise ValueError("hour_weights must have 24 entries")
+    end = start_day + len(dw)
+    if start_day * _US_PER_DAY < -(2**63) or end * _US_PER_DAY - 1 > 2**63 - 1:
+        raise ValueError(
+            f"days {start_day}..{end} are outside the timestamp range (int64 microseconds)"
+        )
+    dp, da = _build_alias([float(x) for x in dw])
+    hp, ha = _build_alias([float(x) for x in hw])
+    w = _words(k0, k1, row_start, n_rows, 5).reshape(n_rows, 5)
+    day = _pick(np.asarray(dp), np.asarray(da, dtype=np.int64), w[:, 0], w[:, 1])
+    hour = _pick(np.asarray(hp), np.asarray(ha, dtype=np.int64), w[:, 2], w[:, 3])
+    if whole_seconds:
+        within = _below(w[:, 4], 3600) * 1_000_000
+    else:
+        within = _below(w[:, 4], _US_PER_HOUR)
+    micros = (start_day + day) * _US_PER_DAY + hour * _US_PER_HOUR + within
+    return arrow_array(micros.astype("datetime64[us]"), type=pa.timestamp("us"))

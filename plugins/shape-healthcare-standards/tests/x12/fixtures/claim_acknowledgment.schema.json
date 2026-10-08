@@ -1,0 +1,52 @@
+{
+  "format": "shape.healthcare.contract-table",
+  "version": 1,
+  "table": "claim_acknowledgment",
+  "fields": [
+    {
+      "name": "claim_id",
+      "type": "string",
+      "nullable": true
+    },
+    {
+      "name": "acknowledgment_date",
+      "type": "date32[day]",
+      "nullable": true
+    },
+    {
+      "name": "status_category_code",
+      "type": "string",
+      "nullable": true
+    },
+    {
+      "name": "status_code",
+      "type": "string",
+      "nullable": true
+    },
+    {
+      "name": "line_number",
+      "type": "int64",
+      "nullable": true
+    },
+    {
+      "name": "entity_identifier_code",
+      "type": "string",
+      "nullable": true
+    },
+    {
+      "name": "action_code",
+      "type": "string",
+      "nullable": true
+    },
+    {
+      "name": "reference_number",
+      "type": "string",
+      "nullable": true
+    },
+    {
+      "name": "received_date",
+      "type": "date32[day]",
+      "nullable": true
+    }
+  ]
+}

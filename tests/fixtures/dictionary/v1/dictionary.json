@@ -1,0 +1,83 @@
+{
+  "examples_included": true,
+  "format": "shape-data-dictionary",
+  "profile": "orders",
+  "source": "orders",
+  "tables": [
+    {
+      "columns": [
+        {
+          "annotations": {},
+          "classification": "CONFIDENTIAL",
+          "distinct_estimate": 200,
+          "format_pattern": null,
+          "length_range": null,
+          "name": "id",
+          "null_rate": 0.0,
+          "numeric_range": null,
+          "owner": null,
+          "semantic": null,
+          "type": "integer"
+        },
+        {
+          "annotations": {},
+          "classification": "CONFIDENTIAL",
+          "distinct_estimate": 200,
+          "format_pattern": "email",
+          "length_range": {
+            "max": 22,
+            "min": 19
+          },
+          "name": "email",
+          "null_rate": 0.0,
+          "numeric_range": null,
+          "owner": null,
+          "semantic": {
+            "confidence": 1.0,
+            "label": "email"
+          },
+          "type": "string"
+        },
+        {
+          "annotations": {
+            "note": "a | b <c>",
+            "unit": "EUR"
+          },
+          "classification": "INTERNAL",
+          "distinct_estimate": 40,
+          "examples": [
+            "0",
+            "58.5"
+          ],
+          "format_pattern": null,
+          "length_range": null,
+          "name": "amount",
+          "null_rate": 0.02,
+          "numeric_range": {
+            "max": 58.5,
+            "min": 0
+          },
+          "owner": "finance-data@example.com",
+          "semantic": null,
+          "top_values": [
+            {
+              "share": 0.025,
+              "value": "0"
+            },
+            {
+              "share": 0.025,
+              "value": "1.5"
+            }
+          ],
+          "type": "float"
+        }
+      ],
+      "name": "orders",
+      "primary_key": [
+        "id"
+      ],
+      "row_count": 200
+    }
+  ],
+  "version": 1
+}

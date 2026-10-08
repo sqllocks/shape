@@ -1,0 +1,4513 @@
+{
+ "domain": "capital_markets",
+ "scale": "medium",
+ "impl": "shape",
+ "seed": 42,
+ "impl_seed": 1042,
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "tables": {
+  "exchange": {
+   "rows": {
+    "refengine": 3,
+    "impl": 3
+   },
+   "columns_refengine": [
+    "exchange_id",
+    "exchange_name",
+    "exchange_code",
+    "mic",
+    "timezone",
+    "trading_hours_start",
+    "trading_hours_end"
+   ],
+   "columns_impl": [
+    "exchange_id",
+    "exchange_name",
+    "exchange_code",
+    "mic",
+    "timezone",
+    "trading_hours_start",
+    "trading_hours_end"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "exchange_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "exchange_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "exchange_code": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "mic": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "timezone": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "trading_hours_start": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "trading_hours_end": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "exchange_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.9245008972987527
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 1.591739348379845,
+     "stats": {
+      "mean": {
+       "refengine": 2.0,
+       "impl": 2.0
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 3.0,
+       "impl": 3.0
+      },
+      "std": {
+       "refengine": 0.816496580927726,
+       "impl": 0.816496580927726,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 3,
+      "impl": 3
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "exchange_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.9245008972987527
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.5
+     },
+     "top10": [
+      {
+       "value": "NASDAQ Stock Market",
+       "refengine": 0.6666666666666666,
+       "impl": 0.3333333333333333
+      },
+      {
+       "value": "New York Stock Exchange",
+       "refengine": 0.3333333333333333,
+       "impl": 0.6666666666666666
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.3333333333333333,
+     "tvd_baseline": 0.9999999999999999,
+     "tvd_tol": 1.95441004761168,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "exchange_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.9245008972987527
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.5
+     },
+     "top10": [
+      {
+       "value": "NYSE",
+       "refengine": 0.6666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "AMEX",
+       "refengine": 0.3333333333333333,
+       "impl": 0.3333333333333333
+      },
+      {
+       "value": "NASDAQ",
+       "refengine": 0.0,
+       "impl": 0.6666666666666666
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.6666666666666666,
+     "tvd_baseline": 0.6666666666666666,
+     "tvd_tol": 1.95441004761168,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "mic": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.9245008972987527
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.5
+     },
+     "top10": [
+      {
+       "value": "XNAS",
+       "refengine": 0.6666666666666666,
+       "impl": 0.3333333333333333
+      },
+      {
+       "value": "XNYS",
+       "refengine": 0.3333333333333333,
+       "impl": 0.6666666666666666
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.3333333333333333,
+     "tvd_baseline": 0.9999999999999999,
+     "tvd_tol": 1.95441004761168,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "timezone": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.9245008972987527
+     },
+     "distinct": {
+      "refengine": 1,
+      "impl": 1,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "America/New_York",
+       "refengine": 1.0,
+       "impl": 1.0
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.0,
+     "tvd_baseline": 0.0,
+     "tvd_tol": 1.95441004761168,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "trading_hours_start": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.9245008972987527
+     },
+     "distinct": {
+      "refengine": 1,
+      "impl": 1,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "09:30",
+       "refengine": 1.0,
+       "impl": 1.0
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.0,
+     "tvd_baseline": 0.0,
+     "tvd_tol": 1.95441004761168,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "trading_hours_end": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.9245008972987527
+     },
+     "distinct": {
+      "refengine": 1,
+      "impl": 1,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "16:00",
+       "refengine": 1.0,
+       "impl": 1.0
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.0,
+     "tvd_baseline": 0.0,
+     "tvd_tol": 1.95441004761168,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "sector": {
+   "rows": {
+    "refengine": 11,
+    "impl": 11
+   },
+   "columns_refengine": [
+    "sector_id",
+    "sector_name",
+    "sector_code"
+   ],
+   "columns_impl": [
+    "sector_id",
+    "sector_name",
+    "sector_code"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "sector_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "sector_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "sector_code": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "sector_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.6129089658756747
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.83125876397524,
+     "stats": {
+      "mean": {
+       "refengine": 6.0,
+       "impl": 6.0
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 11.0,
+       "impl": 11.0
+      },
+      "std": {
+       "refengine": 3.1622776601683795,
+       "impl": 3.1622776601683795,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 11,
+      "impl": 11
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "sector_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.6129089658756747
+     },
+     "distinct": {
+      "refengine": 6,
+      "impl": 8,
+      "ratio": 1.3333333333333333,
+      "baseline_max_ratio_dev": 0.33333333333333326
+     },
+     "top10": [
+      {
+       "value": "Health Care",
+       "refengine": 0.36363636363636365,
+       "impl": 0.18181818181818182
+      },
+      {
+       "value": "Materials",
+       "refengine": 0.18181818181818182,
+       "impl": 0.09090909090909091
+      },
+      {
+       "value": "Industrials",
+       "refengine": 0.18181818181818182,
+       "impl": 0.09090909090909091
+      },
+      {
+       "value": "Consumer Staples",
+       "refengine": 0.09090909090909091,
+       "impl": 0.2727272727272727
+      },
+      {
+       "value": "Financials",
+       "refengine": 0.09090909090909091,
+       "impl": 0.09090909090909091
+      },
+      {
+       "value": "Real Estate",
+       "refengine": 0.09090909090909091,
+       "impl": 0.0
+      },
+      {
+       "value": "Utilities",
+       "refengine": 0.0,
+       "impl": 0.09090909090909091
+      },
+      {
+       "value": "Consumer Discretionary",
+       "refengine": 0.0,
+       "impl": 0.09090909090909091
+      },
+      {
+       "value": "Energy",
+       "refengine": 0.0,
+       "impl": 0.09090909090909091
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.45454545454545453,
+     "tvd_baseline": 0.6363636363636364,
+     "tvd_tol": 1.7678304039350659,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "sector_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.6129089658756747
+     },
+     "distinct": {
+      "refengine": 9,
+      "impl": 7,
+      "ratio": 0.7777777777777778,
+      "baseline_max_ratio_dev": 0.33333333333333337
+     },
+     "top10": [
+      {
+       "value": "60",
+       "refengine": 0.18181818181818182,
+       "impl": 0.09090909090909091
+      },
+      {
+       "value": "10",
+       "refengine": 0.18181818181818182,
+       "impl": 0.0
+      },
+      {
+       "value": "50",
+       "refengine": 0.09090909090909091,
+       "impl": 0.09090909090909091
+      },
+      {
+       "value": "25",
+       "refengine": 0.09090909090909091,
+       "impl": 0.09090909090909091
+      },
+      {
+       "value": "35",
+       "refengine": 0.09090909090909091,
+       "impl": 0.2727272727272727
+      },
+      {
+       "value": "15",
+       "refengine": 0.09090909090909091,
+       "impl": 0.18181818181818182
+      },
+      {
+       "value": "40",
+       "refengine": 0.09090909090909091,
+       "impl": 0.0
+      },
+      {
+       "value": "45",
+       "refengine": 0.09090909090909091,
+       "impl": 0.0
+      },
+      {
+       "value": "30",
+       "refengine": 0.09090909090909091,
+       "impl": 0.18181818181818182
+      },
+      {
+       "value": "20",
+       "refengine": 0.0,
+       "impl": 0.09090909090909091
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.45454545454545453,
+     "tvd_baseline": 0.6363636363636364,
+     "tvd_tol": 2.1651412207095926,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "industry": {
+   "rows": {
+    "refengine": 61,
+    "impl": 61
+   },
+   "columns_refengine": [
+    "industry_id",
+    "sector_id",
+    "industry_name"
+   ],
+   "columns_impl": [
+    "industry_id",
+    "sector_id",
+    "industry_name"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "industry_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "sector_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "industry_name": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "industry_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.11496506119971747
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.3529942752413258,
+     "stats": {
+      "mean": {
+       "refengine": 31.0,
+       "impl": 31.0
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 61.0,
+       "impl": 61.0
+      },
+      "std": {
+       "refengine": 17.60681686165901,
+       "impl": 17.60681686165901,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 61,
+      "impl": 61
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "sector_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.11496506119971747
+     },
+     "ks": 0.11475409836065575,
+     "ks_baseline": 0.16393442622950827,
+     "ks_tol": 0.3529942752413258,
+     "stats": {
+      "mean": {
+       "refengine": 6.0,
+       "impl": 5.80327868852459
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 11.0,
+       "impl": 11.0
+      },
+      "std": {
+       "refengine": 3.2391053207156637,
+       "impl": 2.9743144802207344,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 11,
+      "impl": 11
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "industry_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.11496506119971747
+     },
+     "distinct": {
+      "refengine": 1,
+      "impl": 1,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "",
+       "refengine": 1.0,
+       "impl": 1.0
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.0,
+     "tvd_baseline": 0.0,
+     "tvd_tol": 0.433422443808568,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "company": {
+   "rows": {
+    "refengine": 500,
+    "impl": 500
+   },
+   "columns_refengine": [
+    "ticker",
+    "company_name",
+    "cik",
+    "exchange_code",
+    "sector_name",
+    "industry_name",
+    "market_cap_tier",
+    "founding_year",
+    "hq_state",
+    "website"
+   ],
+   "columns_impl": [
+    "ticker",
+    "company_name",
+    "cik",
+    "exchange_code",
+    "sector_name",
+    "industry_name",
+    "market_cap_tier",
+    "founding_year",
+    "hq_state",
+    "website"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "ticker": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "company_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "cik": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "exchange_code": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "sector_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "industry_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "market_cap_tier": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "founding_year": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "hq_state": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "website": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "ticker": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 121,
+      "impl": 123,
+      "ratio": 1.0165289256198347,
+      "baseline_max_ratio_dev": 0.024793388429752095
+     },
+     "top10": [
+      {
+       "value": "TSLA",
+       "refengine": 0.022,
+       "impl": 0.018
+      },
+      {
+       "value": "ALB",
+       "refengine": 0.02,
+       "impl": 0.004
+      },
+      {
+       "value": "VRTX",
+       "refengine": 0.018,
+       "impl": 0.006
+      },
+      {
+       "value": "FRT",
+       "refengine": 0.018,
+       "impl": 0.004
+      },
+      {
+       "value": "NOW",
+       "refengine": 0.018,
+       "impl": 0.006
+      },
+      {
+       "value": "ISRG",
+       "refengine": 0.016,
+       "impl": 0.006
+      },
+      {
+       "value": "DHR",
+       "refengine": 0.016,
+       "impl": 0.01
+      },
+      {
+       "value": "SLB",
+       "refengine": 0.014,
+       "impl": 0.02
+      },
+      {
+       "value": "LRCX",
+       "refengine": 0.014,
+       "impl": 0.012
+      },
+      {
+       "value": "O",
+       "refengine": 0.014,
+       "impl": 0.004
+      },
+      {
+       "value": "PG",
+       "refengine": 0.006,
+       "impl": 0.018
+      },
+      {
+       "value": "ORCL",
+       "refengine": 0.01,
+       "impl": 0.018
+      },
+      {
+       "value": "GOOGL",
+       "refengine": 0.01,
+       "impl": 0.016
+      },
+      {
+       "value": "ADBE",
+       "refengine": 0.006,
+       "impl": 0.016
+      },
+      {
+       "value": "PANW",
+       "refengine": 0.006,
+       "impl": 0.016
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.268,
+     "tvd_baseline": 0.28600000000000003,
+     "tvd_tol": 1.177521916660829,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "company_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 121,
+      "impl": 123,
+      "ratio": 1.0165289256198347,
+      "baseline_max_ratio_dev": 0.024793388429752095
+     },
+     "top10": [
+      {
+       "value": "Tesla Inc.",
+       "refengine": 0.022,
+       "impl": 0.018
+      },
+      {
+       "value": "Albemarle Corporation",
+       "refengine": 0.02,
+       "impl": 0.004
+      },
+      {
+       "value": "Vertex Pharmaceuticals Inc.",
+       "refengine": 0.018,
+       "impl": 0.006
+      },
+      {
+       "value": "Federal Realty Investment Trust",
+       "refengine": 0.018,
+       "impl": 0.004
+      },
+      {
+       "value": "ServiceNow Inc.",
+       "refengine": 0.018,
+       "impl": 0.006
+      },
+      {
+       "value": "Intuitive Surgical Inc.",
+       "refengine": 0.016,
+       "impl": 0.006
+      },
+      {
+       "value": "Danaher Corporation",
+       "refengine": 0.016,
+       "impl": 0.01
+      },
+      {
+       "value": "Schlumberger Limited",
+       "refengine": 0.014,
+       "impl": 0.02
+      },
+      {
+       "value": "Lam Research Corporation",
+       "refengine": 0.014,
+       "impl": 0.012
+      },
+      {
+       "value": "Realty Income Corporation",
+       "refengine": 0.014,
+       "impl": 0.004
+      },
+      {
+       "value": "Procter & Gamble Co.",
+       "refengine": 0.006,
+       "impl": 0.018
+      },
+      {
+       "value": "Oracle Corporation",
+       "refengine": 0.01,
+       "impl": 0.018
+      },
+      {
+       "value": "Alphabet Inc. Class A",
+       "refengine": 0.01,
+       "impl": 0.016
+      },
+      {
+       "value": "Adobe Inc.",
+       "refengine": 0.006,
+       "impl": 0.016
+      },
+      {
+       "value": "Palo Alto Networks Inc.",
+       "refengine": 0.006,
+       "impl": 0.016
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.268,
+     "tvd_baseline": 0.28600000000000003,
+     "tvd_tol": 1.177521916660829,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "cik": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 121,
+      "impl": 123,
+      "ratio": 1.0165289256198347,
+      "baseline_max_ratio_dev": 0.024793388429752095
+     },
+     "top10": [
+      {
+       "value": "0001318605",
+       "refengine": 0.022,
+       "impl": 0.018
+      },
+      {
+       "value": "0000915913",
+       "refengine": 0.02,
+       "impl": 0.004
+      },
+      {
+       "value": "0000875320",
+       "refengine": 0.018,
+       "impl": 0.006
+      },
+      {
+       "value": "0000034903",
+       "refengine": 0.018,
+       "impl": 0.004
+      },
+      {
+       "value": "0001373715",
+       "refengine": 0.018,
+       "impl": 0.006
+      },
+      {
+       "value": "0001035267",
+       "refengine": 0.016,
+       "impl": 0.006
+      },
+      {
+       "value": "0000313616",
+       "refengine": 0.016,
+       "impl": 0.01
+      },
+      {
+       "value": "0000087347",
+       "refengine": 0.014,
+       "impl": 0.02
+      },
+      {
+       "value": "0000707549",
+       "refengine": 0.014,
+       "impl": 0.012
+      },
+      {
+       "value": "0000726728",
+       "refengine": 0.014,
+       "impl": 0.004
+      },
+      {
+       "value": "0000080424",
+       "refengine": 0.006,
+       "impl": 0.018
+      },
+      {
+       "value": "0001341439",
+       "refengine": 0.01,
+       "impl": 0.018
+      },
+      {
+       "value": "0001652044",
+       "refengine": 0.01,
+       "impl": 0.016
+      },
+      {
+       "value": "0000796343",
+       "refengine": 0.006,
+       "impl": 0.016
+      },
+      {
+       "value": "0001327567",
+       "refengine": 0.006,
+       "impl": 0.016
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.268,
+     "tvd_baseline": 0.28600000000000003,
+     "tvd_tol": 1.177521916660829,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "exchange_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "NYSE",
+       "refengine": 0.694,
+       "impl": 0.674
+      },
+      {
+       "value": "NASDAQ",
+       "refengine": 0.306,
+       "impl": 0.326
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.019999999999999962,
+     "tvd_baseline": 0.03199999999999997,
+     "tvd_tol": 0.15138795132120958,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "sector_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 11,
+      "impl": 11,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Information Technology",
+       "refengine": 0.18,
+       "impl": 0.196
+      },
+      {
+       "value": "Health Care",
+       "refengine": 0.176,
+       "impl": 0.142
+      },
+      {
+       "value": "Industrials",
+       "refengine": 0.126,
+       "impl": 0.142
+      },
+      {
+       "value": "Consumer Discretionary",
+       "refengine": 0.118,
+       "impl": 0.092
+      },
+      {
+       "value": "Financials",
+       "refengine": 0.118,
+       "impl": 0.118
+      },
+      {
+       "value": "Consumer Staples",
+       "refengine": 0.068,
+       "impl": 0.076
+      },
+      {
+       "value": "Communication Services",
+       "refengine": 0.056,
+       "impl": 0.076
+      },
+      {
+       "value": "Real Estate",
+       "refengine": 0.046,
+       "impl": 0.02
+      },
+      {
+       "value": "Materials",
+       "refengine": 0.044,
+       "impl": 0.028
+      },
+      {
+       "value": "Utilities",
+       "refengine": 0.034,
+       "impl": 0.044
+      },
+      {
+       "value": "Energy",
+       "refengine": 0.034,
+       "impl": 0.066
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.10199999999999998,
+     "tvd_baseline": 0.07999999999999999,
+     "tvd_tol": 0.35503621636219185,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "industry_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 44,
+      "impl": 45,
+      "ratio": 1.0227272727272727,
+      "baseline_max_ratio_dev": 0.022727272727272707
+     },
+     "top10": [
+      {
+       "value": "Semiconductors & Semiconductor Equipment",
+       "refengine": 0.08,
+       "impl": 0.094
+      },
+      {
+       "value": "Software",
+       "refengine": 0.068,
+       "impl": 0.078
+      },
+      {
+       "value": "Automobiles",
+       "refengine": 0.05,
+       "impl": 0.034
+      },
+      {
+       "value": "Pharmaceuticals",
+       "refengine": 0.048,
+       "impl": 0.042
+      },
+      {
+       "value": "Equity Real Estate Investment Trusts",
+       "refengine": 0.046,
+       "impl": 0.02
+      },
+      {
+       "value": "Biotechnology",
+       "refengine": 0.044,
+       "impl": 0.032
+      },
+      {
+       "value": "Aerospace & Defense",
+       "refengine": 0.038,
+       "impl": 0.036
+      },
+      {
+       "value": "Capital Markets",
+       "refengine": 0.036,
+       "impl": 0.04
+      },
+      {
+       "value": "Health Care Equipment & Supplies",
+       "refengine": 0.034,
+       "impl": 0.02
+      },
+      {
+       "value": "Electric Utilities",
+       "refengine": 0.034,
+       "impl": 0.044
+      },
+      {
+       "value": "Oil, Gas & Consumable Fuels",
+       "refengine": 0.02,
+       "impl": 0.046
+      },
+      {
+       "value": "Financial Services",
+       "refengine": 0.024,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.17400000000000002,
+     "tvd_baseline": 0.16200000000000003,
+     "tvd_tol": 0.7100724327243837,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "market_cap_tier": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "large",
+       "refengine": 0.614,
+       "impl": 0.632
+      },
+      {
+       "value": "mega",
+       "refengine": 0.18,
+       "impl": 0.212
+      },
+      {
+       "value": "mid",
+       "refengine": 0.118,
+       "impl": 0.1
+      },
+      {
+       "value": "small",
+       "refengine": 0.088,
+       "impl": 0.056
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.05,
+     "tvd_baseline": 0.05800000000000001,
+     "tvd_tol": 0.21409489393833253,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "founding_year": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "ks": 0.03199999999999997,
+     "ks_baseline": 0.06,
+     "ks_tol": 0.1232955997555637,
+     "stats": {
+      "mean": {
+       "refengine": 1943.252,
+       "impl": 1944.434
+      },
+      "min": {
+       "refengine": 1792.0,
+       "impl": 1792.0
+      },
+      "max": {
+       "refengine": 2013.0,
+       "impl": 2013.0
+      },
+      "std": {
+       "refengine": 53.95935967003315,
+       "impl": 53.609156344788715,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 87,
+      "impl": 87
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "hq_state": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 26,
+      "impl": 26,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "CA",
+       "refengine": 0.256,
+       "impl": 0.282
+      },
+      {
+       "value": "NY",
+       "refengine": 0.116,
+       "impl": 0.12
+      },
+      {
+       "value": "TX",
+       "refengine": 0.098,
+       "impl": 0.126
+      },
+      {
+       "value": "NC",
+       "refengine": 0.05,
+       "impl": 0.036
+      },
+      {
+       "value": "GA",
+       "refengine": 0.046,
+       "impl": 0.054
+      },
+      {
+       "value": "IL",
+       "refengine": 0.044,
+       "impl": 0.046
+      },
+      {
+       "value": "MI",
+       "refengine": 0.042,
+       "impl": 0.024
+      },
+      {
+       "value": "CT",
+       "refengine": 0.038,
+       "impl": 0.022
+      },
+      {
+       "value": "NJ",
+       "refengine": 0.036,
+       "impl": 0.026
+      },
+      {
+       "value": "VA",
+       "refengine": 0.034,
+       "impl": 0.024
+      },
+      {
+       "value": "OH",
+       "refengine": 0.03,
+       "impl": 0.042
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.12,
+     "tvd_baseline": 0.10800000000000001,
+     "tvd_tol": 0.5458370209760676,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "website": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 121,
+      "impl": 123,
+      "ratio": 1.0165289256198347,
+      "baseline_max_ratio_dev": 0.024793388429752095
+     },
+     "top10": [
+      {
+       "value": "https://www.tesla.com",
+       "refengine": 0.022,
+       "impl": 0.018
+      },
+      {
+       "value": "https://www.albemarle.com",
+       "refengine": 0.02,
+       "impl": 0.004
+      },
+      {
+       "value": "https://www.vrtx.com",
+       "refengine": 0.018,
+       "impl": 0.006
+      },
+      {
+       "value": "https://www.federalrealty.com",
+       "refengine": 0.018,
+       "impl": 0.004
+      },
+      {
+       "value": "https://www.servicenow.com",
+       "refengine": 0.018,
+       "impl": 0.006
+      },
+      {
+       "value": "https://www.intuitive.com",
+       "refengine": 0.016,
+       "impl": 0.006
+      },
+      {
+       "value": "https://www.danaher.com",
+       "refengine": 0.016,
+       "impl": 0.01
+      },
+      {
+       "value": "https://www.slb.com",
+       "refengine": 0.014,
+       "impl": 0.02
+      },
+      {
+       "value": "https://www.lamresearch.com",
+       "refengine": 0.014,
+       "impl": 0.012
+      },
+      {
+       "value": "https://www.realtyincome.com",
+       "refengine": 0.014,
+       "impl": 0.004
+      },
+      {
+       "value": "https://www.pg.com",
+       "refengine": 0.006,
+       "impl": 0.018
+      },
+      {
+       "value": "https://www.oracle.com",
+       "refengine": 0.01,
+       "impl": 0.018
+      },
+      {
+       "value": "https://www.abc.xyz",
+       "refengine": 0.01,
+       "impl": 0.016
+      },
+      {
+       "value": "https://www.adobe.com",
+       "refengine": 0.006,
+       "impl": 0.016
+      },
+      {
+       "value": "https://www.paloaltonetworks.com",
+       "refengine": 0.006,
+       "impl": 0.016
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.268,
+     "tvd_baseline": 0.28600000000000003,
+     "tvd_tol": 1.177521916660829,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "daily_price": {
+   "rows": {
+    "refengine": 126000,
+    "impl": 126000
+   },
+   "columns_refengine": [
+    "price_id",
+    "ticker",
+    "trade_date",
+    "open",
+    "volume",
+    "high",
+    "low",
+    "close",
+    "adj_close"
+   ],
+   "columns_impl": [
+    "price_id",
+    "ticker",
+    "trade_date",
+    "open",
+    "volume",
+    "high",
+    "low",
+    "close",
+    "adj_close"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "price_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "ticker": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "trade_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "open": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "volume": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "high": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "low": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "close": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "adj_close": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "price_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.61193631112452e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.0077668927309947075,
+     "stats": {
+      "mean": {
+       "refengine": 63000.5,
+       "impl": 63000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 126000.0,
+       "impl": 126000.0
+      },
+      "std": {
+       "refengine": 36373.06695780089,
+       "impl": 36373.06695780089,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 126000,
+      "impl": 126000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "ticker": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.61193631112452e-05
+     },
+     "distinct": {
+      "refengine": 121,
+      "impl": 123,
+      "ratio": 1.0165289256198347,
+      "baseline_max_ratio_dev": 0.024793388429752095
+     },
+     "top10": [
+      {
+       "value": "TSLA",
+       "refengine": 0.022087301587301586,
+       "impl": 0.01684126984126984
+      },
+      {
+       "value": "ALB",
+       "refengine": 0.02038095238095238,
+       "impl": 0.004174603174603175
+      },
+      {
+       "value": "NOW",
+       "refengine": 0.017865079365079365,
+       "impl": 0.006142857142857143
+      },
+      {
+       "value": "VRTX",
+       "refengine": 0.017611111111111112,
+       "impl": 0.005658730158730159
+      },
+      {
+       "value": "FRT",
+       "refengine": 0.017261904761904763,
+       "impl": 0.00396031746031746
+      },
+      {
+       "value": "DHR",
+       "refengine": 0.016301587301587303,
+       "impl": 0.0095
+      },
+      {
+       "value": "ISRG",
+       "refengine": 0.015714285714285715,
+       "impl": 0.0057777777777777775
+      },
+      {
+       "value": "SLB",
+       "refengine": 0.014492063492063492,
+       "impl": 0.02011904761904762
+      },
+      {
+       "value": "DE",
+       "refengine": 0.014246031746031746,
+       "impl": 0.009936507936507936
+      },
+      {
+       "value": "JPM",
+       "refengine": 0.013785714285714287,
+       "impl": 0.005833333333333334
+      },
+      {
+       "value": "PG",
+       "refengine": 0.005841269841269842,
+       "impl": 0.017952380952380952
+      },
+      {
+       "value": "ORCL",
+       "refengine": 0.010182539682539682,
+       "impl": 0.01753968253968254
+      },
+      {
+       "value": "NVDA",
+       "refengine": 0.0020952380952380953,
+       "impl": 0.01630952380952381
+      },
+      {
+       "value": "ADBE",
+       "refengine": 0.00596031746031746,
+       "impl": 0.01623809523809524
+      },
+      {
+       "value": "FDX",
+       "refengine": 0.004015873015873016,
+       "impl": 0.01615079365079365
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.2723333333333333,
+     "tvd_baseline": 0.2857460317460318,
+     "tvd_tol": 0.4306190476190477,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "trade_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.61193631112452e-05
+     },
+     "ks": 0.0029206349206349347,
+     "ks_baseline": 0.005246031746031776,
+     "ks_tol": 0.009869047619047664,
+     "stats": {
+      "mean": {
+       "refengine": "2024-01-01 10:48:59.892284416",
+       "impl": "2024-01-02 01:27:15.078416384"
+      },
+      "min": {
+       "refengine": "2022-01-01 00:25:12.677308672",
+       "impl": "2022-01-01 00:15:59.079614976"
+      },
+      "max": {
+       "refengine": "2025-12-30 23:46:57.195396096",
+       "impl": "2025-12-30 23:26:50.581029888"
+      },
+      "std": {
+       "refengine": 421.9493125602372,
+       "impl": 421.0249386410146,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 126000,
+      "impl": 126000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "open": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.61193631112452e-05
+     },
+     "ks": 0.0030476190476190768,
+     "ks_baseline": 0.0043333333333333,
+     "ks_tol": 0.00849999999999995,
+     "stats": {
+      "mean": {
+       "refengine": 111.73458190476191,
+       "impl": 111.67661174603175
+      },
+      "min": {
+       "refengine": 0.3,
+       "impl": 0.21
+      },
+      "max": {
+       "refengine": 10000.0,
+       "impl": 10000.0
+      },
+      "std": {
+       "refengine": 198.30377252952368,
+       "impl": 199.64633723426888,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 32437,
+      "impl": 32578
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "volume": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.61193631112452e-05
+     },
+     "ks": 0.004111111111111065,
+     "ks_baseline": 0.0051825396825396775,
+     "ks_tol": 0.009773809523809516,
+     "stats": {
+      "mean": {
+       "refengine": 4488795.286716489,
+       "impl": 4503763.238221063
+      },
+      "min": {
+       "refengine": 99503.91671680199,
+       "impl": 96587.63520444334
+      },
+      "max": {
+       "refengine": 104025847.59900917,
+       "impl": 123316898.01546621
+      },
+      "std": {
+       "refengine": 4260052.802923454,
+       "impl": 4276523.917061213,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 126000,
+      "impl": 126000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "high": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.61193631112452e-05
+     },
+     "ks": 0.0032063492063492127,
+     "ks_baseline": 0.0042936507936508495,
+     "ks_tol": 0.008440476190476274,
+     "stats": {
+      "mean": {
+       "refengine": 117.30939214285715,
+       "impl": 117.29677174603175
+      },
+      "min": {
+       "refengine": 0.32,
+       "impl": 0.21
+      },
+      "max": {
+       "refengine": 10857.82,
+       "impl": 10641.27
+      },
+      "std": {
+       "refengine": 208.5404111193667,
+       "impl": 210.09090640097475,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 33402,
+      "impl": 33336
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "low": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.61193631112452e-05
+     },
+     "ks": 0.0035476190476190217,
+     "ks_baseline": 0.004722222222222183,
+     "ks_tol": 0.009083333333333275,
+     "stats": {
+      "mean": {
+       "refengine": 106.15328746031747,
+       "impl": 106.1192761111111
+      },
+      "min": {
+       "refengine": 0.28,
+       "impl": 0.19
+      },
+      "max": {
+       "refengine": 9191.04,
+       "impl": 9788.1
+      },
+      "std": {
+       "refengine": 188.4304610540204,
+       "impl": 189.75113168641914,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 31579,
+      "impl": 31703
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "close": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.61193631112452e-05
+     },
+     "ks": 0.002936507936507904,
+     "ks_baseline": 0.004309523809523763,
+     "ks_tol": 0.008464285714285645,
+     "stats": {
+      "mean": {
+       "refengine": 110.59959285714285,
+       "impl": 110.57656626984127
+      },
+      "min": {
+       "refengine": 0.31,
+       "impl": 0.22
+      },
+      "max": {
+       "refengine": 9851.91,
+       "impl": 10244.88
+      },
+      "std": {
+       "refengine": 196.4286967150723,
+       "impl": 198.06529660083555,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 32263,
+      "impl": 32302
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "adj_close": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.61193631112452e-05
+     },
+     "ks": 0.002849206349206379,
+     "ks_baseline": 0.00423015873015864,
+     "ks_tol": 0.00834523809523796,
+     "stats": {
+      "mean": {
+       "refengine": 107.82165873015873,
+       "impl": 107.8015980952381
+      },
+      "min": {
+       "refengine": 0.31,
+       "impl": 0.22
+      },
+      "max": {
+       "refengine": 9701.77,
+       "impl": 9854.68
+      },
+      "std": {
+       "refengine": 191.53374198137595,
+       "impl": 193.00058229558528,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 31833,
+      "impl": 31969
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "dividend": {
+   "rows": {
+    "refengine": 750,
+    "impl": 750
+   },
+   "columns_refengine": [
+    "dividend_id",
+    "ticker",
+    "ex_date",
+    "amount",
+    "frequency",
+    "pay_date"
+   ],
+   "columns_impl": [
+    "dividend_id",
+    "ticker",
+    "ex_date",
+    "amount",
+    "frequency",
+    "pay_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "dividend_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "ticker": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "ex_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "amount": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "frequency": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "pay_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "dividend_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.009421802925680964
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.10067043564385114,
+     "stats": {
+      "mean": {
+       "refengine": 375.5,
+       "impl": 375.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 750.0,
+       "impl": 750.0
+      },
+      "std": {
+       "refengine": 216.5061584959344,
+       "impl": 216.5061584959344,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 750,
+      "impl": 750
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "ticker": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.009421802925680964
+     },
+     "distinct": {
+      "refengine": 121,
+      "impl": 119,
+      "ratio": 0.9834710743801653,
+      "baseline_max_ratio_dev": 0.03305785123966942
+     },
+     "top10": [
+      {
+       "value": "ALB",
+       "refengine": 0.02266666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "LRCX",
+       "refengine": 0.02266666666666667,
+       "impl": 0.009333333333333334
+      },
+      {
+       "value": "VRTX",
+       "refengine": 0.021333333333333333,
+       "impl": 0.008
+      },
+      {
+       "value": "JPM",
+       "refengine": 0.021333333333333333,
+       "impl": 0.0026666666666666666
+      },
+      {
+       "value": "SLB",
+       "refengine": 0.02,
+       "impl": 0.018666666666666668
+      },
+      {
+       "value": "FRT",
+       "refengine": 0.02,
+       "impl": 0.0013333333333333333
+      },
+      {
+       "value": "IBM",
+       "refengine": 0.02,
+       "impl": 0.009333333333333334
+      },
+      {
+       "value": "NOW",
+       "refengine": 0.018666666666666668,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "DE",
+       "refengine": 0.018666666666666668,
+       "impl": 0.009333333333333334
+      },
+      {
+       "value": "BA",
+       "refengine": 0.016,
+       "impl": 0.0013333333333333333
+      },
+      {
+       "value": "EOG",
+       "refengine": 0.009333333333333334,
+       "impl": 0.024
+      },
+      {
+       "value": "PG",
+       "refengine": 0.0026666666666666666,
+       "impl": 0.02
+      },
+      {
+       "value": "ABBV",
+       "refengine": 0.010666666666666666,
+       "impl": 0.018666666666666668
+      },
+      {
+       "value": "ADBE",
+       "refengine": 0.004,
+       "impl": 0.018666666666666668
+      },
+      {
+       "value": "GE",
+       "refengine": 0.009333333333333334,
+       "impl": 0.018666666666666668
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.3293333333333333,
+     "tvd_baseline": 0.3506666666666667,
+     "tvd_tol": 0.9614426189210297,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "ex_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.009421802925680964
+     },
+     "ks": 0.0693333333333333,
+     "ks_baseline": 0.06666666666666671,
+     "ks_tol": 0.10200000000000006,
+     "stats": {
+      "mean": {
+       "refengine": "2024-01-18 10:35:09.927173376",
+       "impl": "2023-12-18 23:26:11.736129792"
+      },
+      "min": {
+       "refengine": "2022-01-04 09:16:51.725292544",
+       "impl": "2022-01-07 00:33:03.366580992"
+      },
+      "max": {
+       "refengine": "2025-12-30 03:45:00.280621056",
+       "impl": "2025-12-27 09:57:06.155475968"
+      },
+      "std": {
+       "refengine": 412.5852782246477,
+       "impl": 426.38042797396025,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 750,
+      "impl": 750
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "amount": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.009421802925680964
+     },
+     "ks": 0.04133333333333333,
+     "ks_baseline": 0.04800000000000004,
+     "ks_tol": 0.10067043564385114,
+     "stats": {
+      "mean": {
+       "refengine": 0.823808,
+       "impl": 0.8052750666666667
+      },
+      "min": {
+       "refengine": 0.0292,
+       "impl": 0.0572
+      },
+      "max": {
+       "refengine": 8.6248,
+       "impl": 5.8664
+      },
+      "std": {
+       "refengine": 0.8132901722853904,
+       "impl": 0.6850771149233218,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 732,
+      "impl": 725
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "frequency": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.009421802925680964
+     },
+     "distinct": {
+      "refengine": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "quarterly",
+       "refengine": 0.7506666666666667,
+       "impl": 0.7586666666666667
+      },
+      {
+       "value": "annual",
+       "refengine": 0.19466666666666665,
+       "impl": 0.192
+      },
+      {
+       "value": "special",
+       "refengine": 0.05466666666666667,
+       "impl": 0.04933333333333333
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.007999999999999997,
+     "tvd_baseline": 0.0386666666666667,
+     "tvd_tol": 0.1513879513212096,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "pay_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.009421802925680964
+     },
+     "ks": 0.06666666666666671,
+     "ks_baseline": 0.064,
+     "ks_tol": 0.10067043564385114,
+     "stats": {
+      "mean": {
+       "refengine": "2024-02-16 11:50:02.727173120",
+       "impl": "2024-01-17 08:35:18.936129792"
+      },
+      "min": {
+       "refengine": "2022-01-25 16:49:50.411968256",
+       "impl": "2022-02-05 20:20:38.285360128"
+      },
+      "max": {
+       "refengine": "2026-02-10 03:45:00.280621056",
+       "impl": "2026-02-08 02:03:40.686159872"
+      },
+      "std": {
+       "refengine": 412.3964827835001,
+       "impl": 426.61364963674714,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 750,
+      "impl": 750
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "split": {
+   "rows": {
+    "refengine": 25,
+    "impl": 25
+   },
+   "columns_refengine": [
+    "split_id",
+    "ticker",
+    "split_date",
+    "ratio_from",
+    "ratio_to"
+   ],
+   "columns_impl": [
+    "split_id",
+    "ticker",
+    "split_date",
+    "ratio_from",
+    "ratio_to"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "split_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "ticker": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "split_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "ratio_from": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "ratio_to": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "split_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.27712812921102037
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.5513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": 13.0,
+       "impl": 13.0
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 25.0,
+       "impl": 25.0
+      },
+      "std": {
+       "refengine": 7.211102550927978,
+       "impl": 7.211102550927978,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 25,
+      "impl": 25
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "ticker": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.27712812921102037
+     },
+     "distinct": {
+      "refengine": 23,
+      "impl": 21,
+      "ratio": 0.9130434782608695,
+      "baseline_max_ratio_dev": 0.04347826086956519
+     },
+     "top10": [
+      {
+       "value": "ALB",
+       "refengine": 0.08,
+       "impl": 0.0
+      },
+      {
+       "value": "UNH",
+       "refengine": 0.08,
+       "impl": 0.0
+      },
+      {
+       "value": "UPS",
+       "refengine": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "AMAT",
+       "refengine": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "KO",
+       "refengine": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "MMM",
+       "refengine": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "GOOGL",
+       "refengine": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "WHR",
+       "refengine": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "CRM",
+       "refengine": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "UBER",
+       "refengine": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "TSLA",
+       "refengine": 0.04,
+       "impl": 0.12
+      },
+      {
+       "value": "NVDA",
+       "refengine": 0.0,
+       "impl": 0.08
+      },
+      {
+       "value": "AVGO",
+       "refengine": 0.0,
+       "impl": 0.08
+      },
+      {
+       "value": "D",
+       "refengine": 0.0,
+       "impl": 0.04
+      },
+      {
+       "value": "GILD",
+       "refengine": 0.0,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.8800000000000001,
+     "tvd_baseline": 0.8800000000000001,
+     "tvd_tol": 2.2959119571977435,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "split_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.27712812921102037
+     },
+     "ks": 0.24,
+     "ks_baseline": 0.24000000000000002,
+     "ks_tol": 0.5513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": "2023-12-31 18:21:48.031008512",
+       "impl": "2024-03-09 17:10:14.999117312"
+      },
+      "min": {
+       "refengine": "2022-01-19 05:25:14.862908672",
+       "impl": "2022-07-13 01:06:10.906205952"
+      },
+      "max": {
+       "refengine": "2025-11-28 10:47:36.179992832",
+       "impl": "2025-07-20 04:41:49.014671872"
+      },
+      "std": {
+       "refengine": 464.11237781062573,
+       "impl": 359.8736442664785,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 25,
+      "impl": 25
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "ratio_from": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.27712812921102037
+     },
+     "ks": 0.16,
+     "ks_baseline": 0.24,
+     "ks_tol": 0.5513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": 3.4,
+       "impl": 2.6
+      },
+      "min": {
+       "refengine": 2.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 10.0,
+       "impl": 10.0
+      },
+      "std": {
+       "refengine": 2.5768197453450252,
+       "impl": 1.7663521732655694,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "ratio_to": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.27712812921102037
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.5513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "std": {
+       "refengine": 0.0,
+       "impl": 0.0,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1,
+      "impl": 1
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "earnings": {
+   "rows": {
+    "refengine": 2000,
+    "impl": 2000
+   },
+   "columns_refengine": [
+    "earnings_id",
+    "ticker",
+    "report_date",
+    "fiscal_quarter",
+    "eps_estimate",
+    "surprise_pct",
+    "eps_actual"
+   ],
+   "columns_impl": [
+    "earnings_id",
+    "ticker",
+    "report_date",
+    "fiscal_quarter",
+    "eps_estimate",
+    "surprise_pct",
+    "eps_actual"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "earnings_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "ticker": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "report_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "fiscal_quarter": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "eps_estimate": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "surprise_pct": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "eps_actual": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "earnings_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "refengine": 1000.5,
+       "impl": 1000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 2000.0,
+       "impl": 2000.0
+      },
+      "std": {
+       "refengine": 577.3501970208376,
+       "impl": 577.3501970208376,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 2000,
+      "impl": 2000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "ticker": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "distinct": {
+      "refengine": 121,
+      "impl": 123,
+      "ratio": 1.0165289256198347,
+      "baseline_max_ratio_dev": 0.03305785123966942
+     },
+     "top10": [
+      {
+       "value": "TSLA",
+       "refengine": 0.0245,
+       "impl": 0.017
+      },
+      {
+       "value": "JPM",
+       "refengine": 0.0185,
+       "impl": 0.008
+      },
+      {
+       "value": "ALB",
+       "refengine": 0.017,
+       "impl": 0.0045
+      },
+      {
+       "value": "NOW",
+       "refengine": 0.017,
+       "impl": 0.004
+      },
+      {
+       "value": "DHR",
+       "refengine": 0.017,
+       "impl": 0.0105
+      },
+      {
+       "value": "ISRG",
+       "refengine": 0.0155,
+       "impl": 0.0055
+      },
+      {
+       "value": "FRT",
+       "refengine": 0.0155,
+       "impl": 0.0045
+      },
+      {
+       "value": "BKNG",
+       "refengine": 0.015,
+       "impl": 0.004
+      },
+      {
+       "value": "DAL",
+       "refengine": 0.0145,
+       "impl": 0.0195
+      },
+      {
+       "value": "VRTX",
+       "refengine": 0.0145,
+       "impl": 0.002
+      },
+      {
+       "value": "SLB",
+       "refengine": 0.0095,
+       "impl": 0.023
+      },
+      {
+       "value": "GE",
+       "refengine": 0.009,
+       "impl": 0.0215
+      },
+      {
+       "value": "PG",
+       "refengine": 0.0075,
+       "impl": 0.0165
+      },
+      {
+       "value": "RTX",
+       "refengine": 0.0085,
+       "impl": 0.0155
+      },
+      {
+       "value": "ORCL",
+       "refengine": 0.008,
+       "impl": 0.0155
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.28600000000000003,
+     "tvd_baseline": 0.31100000000000005,
+     "tvd_tol": 0.5887609583304145,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "report_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.029000000000000026,
+     "ks_baseline": 0.033999999999999975,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "refengine": "2023-12-20 17:34:04.528976896",
+       "impl": "2024-01-05 16:01:56.612794880"
+      },
+      "min": {
+       "refengine": "2022-01-01 22:04:35.377220864",
+       "impl": "2022-01-01 05:22:22.184558080"
+      },
+      "max": {
+       "refengine": "2025-12-30 21:47:20.337690368",
+       "impl": "2025-12-30 16:01:57.692707072"
+      },
+      "std": {
+       "refengine": 421.0217639770288,
+       "impl": 419.28002349427896,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 2000,
+      "impl": 2000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "fiscal_quarter": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Q2",
+       "refengine": 0.2625,
+       "impl": 0.256
+      },
+      {
+       "value": "Q3",
+       "refengine": 0.254,
+       "impl": 0.231
+      },
+      {
+       "value": "Q4",
+       "refengine": 0.25,
+       "impl": 0.255
+      },
+      {
+       "value": "Q1",
+       "refengine": 0.2335,
+       "impl": 0.258
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.0295,
+     "tvd_baseline": 0.04350000000000001,
+     "tvd_tol": 0.10704744696916627,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "eps_estimate": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.025500000000000078,
+     "ks_baseline": 0.0335,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "refengine": 2.4900450000000003,
+       "impl": 2.52827
+      },
+      "min": {
+       "refengine": -3.78,
+       "impl": -3.05
+      },
+      "max": {
+       "refengine": 7.83,
+       "impl": 7.78
+      },
+      "std": {
+       "refengine": 1.5060991494503275,
+       "impl": 1.527881738584502,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 619,
+      "impl": 618
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "surprise_pct": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.0345,
+     "ks_baseline": 0.027500000000000024,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "refengine": 0.036780000000000014,
+       "impl": -0.03679000000000001
+      },
+      "min": {
+       "refengine": -8.58,
+       "impl": -9.06
+      },
+      "max": {
+       "refengine": 9.31,
+       "impl": 7.72
+      },
+      "std": {
+       "refengine": 2.4473838341379963,
+       "impl": 2.4980481572419695,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 846,
+      "impl": 868
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "eps_actual": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.028000000000000025,
+     "ks_baseline": 0.035500000000000004,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "refengine": 2.55446,
+       "impl": 2.5993649999999997
+      },
+      "min": {
+       "refengine": -4.31,
+       "impl": -3.63
+      },
+      "max": {
+       "refengine": 8.85,
+       "impl": 8.15
+      },
+      "std": {
+       "refengine": 1.5821274943568864,
+       "impl": 1.5984661231239778,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 624,
+      "impl": 629
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "insider_transaction": {
+   "rows": {
+    "refengine": 1000,
+    "impl": 1000
+   },
+   "columns_refengine": [
+    "txn_id",
+    "ticker",
+    "txn_date",
+    "insider_name",
+    "insider_title",
+    "txn_type",
+    "shares",
+    "price_per_share"
+   ],
+   "columns_impl": [
+    "txn_id",
+    "ticker",
+    "txn_date",
+    "insider_name",
+    "insider_title",
+    "txn_type",
+    "shares",
+    "price_per_share"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "txn_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "ticker": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "txn_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "insider_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "insider_title": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "txn_type": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "shares": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "price_per_share": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "txn_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.007067531393633848
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.08718315467762154,
+     "stats": {
+      "mean": {
+       "refengine": 500.5,
+       "impl": 500.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 1000.0,
+       "impl": 1000.0
+      },
+      "std": {
+       "refengine": 288.6749902572095,
+       "impl": 288.6749902572095,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1000,
+      "impl": 1000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "ticker": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.007067531393633848
+     },
+     "distinct": {
+      "refengine": 121,
+      "impl": 122,
+      "ratio": 1.0082644628099173,
+      "baseline_max_ratio_dev": 0.04132231404958675
+     },
+     "top10": [
+      {
+       "value": "ALB",
+       "refengine": 0.027,
+       "impl": 0.004
+      },
+      {
+       "value": "ISRG",
+       "refengine": 0.025,
+       "impl": 0.008
+      },
+      {
+       "value": "TSLA",
+       "refengine": 0.025,
+       "impl": 0.019
+      },
+      {
+       "value": "FRT",
+       "refengine": 0.021,
+       "impl": 0.004
+      },
+      {
+       "value": "NOW",
+       "refengine": 0.021,
+       "impl": 0.007
+      },
+      {
+       "value": "O",
+       "refengine": 0.016,
+       "impl": 0.008
+      },
+      {
+       "value": "LRCX",
+       "refengine": 0.016,
+       "impl": 0.015
+      },
+      {
+       "value": "CSCO",
+       "refengine": 0.016,
+       "impl": 0.001
+      },
+      {
+       "value": "SLB",
+       "refengine": 0.015,
+       "impl": 0.018
+      },
+      {
+       "value": "INTC",
+       "refengine": 0.015,
+       "impl": 0.007
+      },
+      {
+       "value": "ACN",
+       "refengine": 0.002,
+       "impl": 0.021
+      },
+      {
+       "value": "CL",
+       "refengine": 0.006,
+       "impl": 0.02
+      },
+      {
+       "value": "CVX",
+       "refengine": 0.003,
+       "impl": 0.019
+      },
+      {
+       "value": "WM",
+       "refengine": 0.009,
+       "impl": 0.019
+      },
+      {
+       "value": "ORCL",
+       "refengine": 0.006,
+       "impl": 0.018
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.34500000000000003,
+     "tvd_baseline": 0.37500000000000006,
+     "tvd_tol": 0.8326337322666528,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "txn_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.007067531393633848
+     },
+     "ks": 0.051000000000000045,
+     "ks_baseline": 0.031000000000000028,
+     "ks_tol": 0.08718315467762154,
+     "stats": {
+      "mean": {
+       "refengine": "2024-01-13 16:34:10.432534272",
+       "impl": "2023-12-13 02:31:29.403281920"
+      },
+      "min": {
+       "refengine": "2022-01-05 12:22:21.021854720",
+       "impl": "2022-01-02 02:49:56.477061888"
+      },
+      "max": {
+       "refengine": "2025-12-27 23:01:12.049620480",
+       "impl": "2025-12-30 14:29:54.233204992"
+      },
+      "std": {
+       "refengine": 421.4387514293286,
+       "impl": 424.47152884132066,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 1000,
+      "impl": 1000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "insider_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.007067531393633848
+     },
+     "distinct": {
+      "refengine": 1000,
+      "impl": 1000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Joah Walberg",
+       "refengine": 0.001,
+       "impl": 0.0
+      },
+      {
+       "value": "Kaden Mayham",
+       "refengine": 0.001,
+       "impl": 0.0
+      },
+      {
+       "value": "Willow Sauway",
+       "refengine": 0.001,
+       "impl": 0.0
+      },
+      {
+       "value": "Elias Meyers",
+       "refengine": 0.001,
+       "impl": 0.0
+      },
+      {
+       "value": "Drisha Pruitton",
+       "refengine": 0.001,
+       "impl": 0.0
+      },
+      {
+       "value": "Chin Mcgrbrook",
+       "refengine": 0.001,
+       "impl": 0.0
+      },
+      {
+       "value": "Feea Gamwell",
+       "refengine": 0.001,
+       "impl": 0.0
+      },
+      {
+       "value": "Ilnor Avilwell",
+       "refengine": 0.001,
+       "impl": 0.0
+      },
+      {
+       "value": "Elella Byrdton",
+       "refengine": 0.001,
+       "impl": 0.0
+      },
+      {
+       "value": "Drion Kenley",
+       "refengine": 0.001,
+       "impl": 0.0
+      },
+      {
+       "value": "Caion Conlsen",
+       "refengine": 0.0,
+       "impl": 0.001
+      },
+      {
+       "value": "Bena Jenstein",
+       "refengine": 0.0,
+       "impl": 0.001
+      },
+      {
+       "value": "Allison Whitebrook",
+       "refengine": 0.0,
+       "impl": 0.001
+      },
+      {
+       "value": "Juie Sloansen",
+       "refengine": 0.0,
+       "impl": 0.001
+      },
+      {
+       "value": "Grson Hooworth",
+       "refengine": 0.0,
+       "impl": 0.001
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "FIRST_NAMES+' '+LAST_NAMES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "insider_title": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.007067531393633848
+     },
+     "distinct": {
+      "refengine": 8,
+      "impl": 8,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Director",
+       "refengine": 0.247,
+       "impl": 0.252
+      },
+      {
+       "value": "CEO",
+       "refengine": 0.172,
+       "impl": 0.139
+      },
+      {
+       "value": "VP",
+       "refengine": 0.147,
+       "impl": 0.152
+      },
+      {
+       "value": "CFO",
+       "refengine": 0.122,
+       "impl": 0.144
+      },
+      {
+       "value": "EVP",
+       "refengine": 0.102,
+       "impl": 0.09
+      },
+      {
+       "value": "SVP",
+       "refengine": 0.085,
+       "impl": 0.105
+      },
+      {
+       "value": "COO",
+       "refengine": 0.077,
+       "impl": 0.072
+      },
+      {
+       "value": "CTO",
+       "refengine": 0.048,
+       "impl": 0.046
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.051999999999999984,
+     "tvd_baseline": 0.059,
+     "tvd_tol": 0.2140948939383325,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "txn_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.007067531393633848
+     },
+     "distinct": {
+      "refengine": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "SELL",
+       "refengine": 0.478,
+       "impl": 0.481
+      },
+      {
+       "value": "BUY",
+       "refengine": 0.475,
+       "impl": 0.467
+      },
+      {
+       "value": "GRANT",
+       "refengine": 0.047,
+       "impl": 0.052
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.007999999999999976,
+     "tvd_baseline": 0.05100000000000002,
+     "tvd_tol": 0.1311058116710495,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "shares": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.007067531393633848
+     },
+     "ks": 0.03700000000000003,
+     "ks_baseline": 0.08100000000000007,
+     "ks_tol": 0.12350000000000011,
+     "stats": {
+      "mean": {
+       "refengine": 10992.156444412472,
+       "impl": 8718.670808692083
+      },
+      "min": {
+       "refengine": 100.0,
+       "impl": 100.0
+      },
+      "max": {
+       "refengine": 589367.0836988539,
+       "impl": 503234.79263960547
+      },
+      "std": {
+       "refengine": 32620.178808995533,
+       "impl": 22668.463781240443,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 991,
+      "impl": 986
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "price_per_share": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.007067531393633848
+     },
+     "ks": 0.039999999999999925,
+     "ks_baseline": 0.052999999999999936,
+     "ks_tol": 0.08718315467762154,
+     "stats": {
+      "mean": {
+       "refengine": 101.67067999999999,
+       "impl": 95.31537999999999
+      },
+      "min": {
+       "refengine": 3.55,
+       "impl": 3.59
+      },
+      "max": {
+       "refengine": 2639.64,
+       "impl": 2480.48
+      },
+      "std": {
+       "refengine": 161.6961017326565,
+       "impl": 142.99292085084352,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 968,
+      "impl": 971
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "trade": {
+   "rows": {
+    "refengine": 500000,
+    "impl": 500000
+   },
+   "columns_refengine": [
+    "trade_id",
+    "ticker",
+    "timestamp",
+    "price",
+    "volume",
+    "side"
+   ],
+   "columns_impl": [
+    "trade_id",
+    "ticker",
+    "timestamp",
+    "price",
+    "volume",
+    "side"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "trade_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "ticker": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "timestamp": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "price": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "volume": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "side": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "trade_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.0038989492070408104,
+     "stats": {
+      "mean": {
+       "refengine": 250000.5,
+       "impl": 250000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500000.0,
+       "impl": 500000.0
+      },
+      "std": {
+       "refengine": 144337.56729711776,
+       "impl": 144337.56729711776,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 500000,
+      "impl": 500000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "ticker": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "refengine": 121,
+      "impl": 123,
+      "ratio": 1.0165289256198347,
+      "baseline_max_ratio_dev": 0.024793388429752095
+     },
+     "top10": [
+      {
+       "value": "SEDG",
+       "refengine": 0.400062,
+       "impl": 0.001086
+      },
+      {
+       "value": "AMAT",
+       "refengine": 0.14058,
+       "impl": 0.000394
+      },
+      {
+       "value": "WHR",
+       "refengine": 0.076864,
+       "impl": 0.00019
+      },
+      {
+       "value": "HON",
+       "refengine": 0.049566,
+       "impl": 0.000748
+      },
+      {
+       "value": "MO",
+       "refengine": 0.03628,
+       "impl": 0.03523
+      },
+      {
+       "value": "BKNG",
+       "refengine": 0.03289,
+       "impl": 0.000108
+      },
+      {
+       "value": "GM",
+       "refengine": 0.027484,
+       "impl": 0.000464
+      },
+      {
+       "value": "ISRG",
+       "refengine": 0.022296,
+       "impl": 0.000282
+      },
+      {
+       "value": "NEE",
+       "refengine": 0.017546,
+       "impl": 0.001216
+      },
+      {
+       "value": "SLB",
+       "refengine": 0.017196,
+       "impl": 0.00418
+      },
+      {
+       "value": "MMC",
+       "refengine": 0.001528,
+       "impl": 0.40823
+      },
+      {
+       "value": "SO",
+       "refengine": 0.0002,
+       "impl": 0.140502
+      },
+      {
+       "value": "BMY",
+       "refengine": 0.001788,
+       "impl": 0.076424
+      },
+      {
+       "value": "NFLX",
+       "refengine": 0.000578,
+       "impl": 0.050538
+      },
+      {
+       "value": "LLY",
+       "refengine": 0.00031,
+       "impl": 0.027528
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.87395,
+     "tvd_baseline": 0.89313,
+     "tvd_tol": 1.3416949999999999,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "timestamp": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0011240000000000139,
+     "ks_baseline": 0.0022100000000000453,
+     "ks_tol": 0.005315000000000068,
+     "stats": {
+      "mean": {
+       "refengine": "2024-01-01 21:18:31.867652864",
+       "impl": "2024-01-02 02:30:02.537074432"
+      },
+      "min": {
+       "refengine": "2022-01-01 00:07:11.380710144",
+       "impl": "2022-01-01 00:00:05.379351040"
+      },
+      "max": {
+       "refengine": "2025-12-30 23:51:46.638206720",
+       "impl": "2025-12-30 23:53:10.768357888"
+      },
+      "std": {
+       "refengine": 421.5915615918587,
+       "impl": 421.4796694387418,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 500000,
+      "impl": 500000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "price": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0009620000000000184,
+     "ks_baseline": 0.0015160000000000728,
+     "ks_tol": 0.004274000000000109,
+     "stats": {
+      "mean": {
+       "refengine": 112.38485294,
+       "impl": 112.22864588
+      },
+      "min": {
+       "refengine": 0.3,
+       "impl": 0.24
+      },
+      "max": {
+       "refengine": 10000.0,
+       "impl": 10000.0
+      },
+      "std": {
+       "refengine": 199.9681407567575,
+       "impl": 198.82261671959142,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 57035,
+      "impl": 56806
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "volume": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0020840000000000303,
+     "ks_baseline": 0.0025600000000000067,
+     "ks_tol": 0.00584000000000001,
+     "stats": {
+      "mean": {
+       "refengine": 148.68589897642363,
+       "impl": 147.84717612757782
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 10880.98055366195,
+       "impl": 6794.682462258838
+      },
+      "std": {
+       "refengine": 195.90234301138267,
+       "impl": 191.90448884048723,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 499998,
+      "impl": 499999
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "side": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "SELL",
+       "refengine": 0.50056,
+       "impl": 0.50011
+      },
+      {
+       "value": "BUY",
+       "refengine": 0.49944,
+       "impl": 0.49989
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.0004499999999999782,
+     "tvd_baseline": 0.0012159999999999949,
+     "tvd_tol": 0.004787307364817191,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  }
+ },
+ "table_order": {
+  "refengine": [
+   "company",
+   "exchange",
+   "sector",
+   "daily_price",
+   "dividend",
+   "earnings",
+   "insider_transaction",
+   "industry",
+   "split",
+   "trade"
+  ],
+  "impl": [
+   "company",
+   "exchange",
+   "sector",
+   "daily_price",
+   "dividend",
+   "earnings",
+   "insider_transaction",
+   "industry",
+   "split",
+   "trade"
+  ]
+ },
+ "fk_integrity": {
+  "refengine": {
+   "industry.sector_id->sector.sector_id": {
+    "integrity": 1.0,
+    "n": 61
+   },
+   "daily_price.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 126000
+   },
+   "dividend.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 750
+   },
+   "split.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 25
+   },
+   "earnings.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 2000
+   },
+   "insider_transaction.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 1000
+   },
+   "trade.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 500000
+   }
+  },
+  "impl": {
+   "industry.sector_id->sector.sector_id": {
+    "integrity": 1.0,
+    "n": 61
+   },
+   "daily_price.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 126000
+   },
+   "dividend.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 750
+   },
+   "split.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 25
+   },
+   "earnings.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 2000
+   },
+   "insider_transaction.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 1000
+   },
+   "trade.ticker->company.ticker": {
+    "integrity": 1.0,
+    "n": 500000
+   }
+  }
+ },
+ "fanout": {
+  "sector->industry.sector_id": {
+   "refengine": {
+    "p50": 6.0,
+    "p90": 9.0,
+    "p99": 9.9,
+    "max": 10,
+    "mean": 5.545454545454546,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 6.0,
+    "p90": 7.0,
+    "p99": 7.9,
+    "max": 8,
+    "mean": 5.545454545454546,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.18181818181818182,
+   "ks_baseline_max": 0.18181818181818182,
+   "ks_tol": 0.83125876397524,
+   "equivalent": true
+  },
+  "company->daily_price.ticker": {
+   "refengine": {
+    "p50": 1219.0,
+    "p90": 2054.0,
+    "p99": 2783.0,
+    "max": 2783,
+    "mean": 1261.31,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 1234.5,
+    "p90": 2046.0,
+    "p99": 2535.0,
+    "max": 2535,
+    "mean": 1273.604,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.08999999999999997,
+   "ks_baseline_max": 0.15200000000000002,
+   "ks_tol": 0.23000000000000004,
+   "equivalent": true
+  },
+  "company->dividend.ticker": {
+   "refengine": {
+    "p50": 7.0,
+    "p90": 15.0,
+    "p99": 17.0,
+    "max": 17,
+    "mean": 7.414,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 7.0,
+    "p90": 13.0,
+    "p99": 18.0,
+    "max": 18,
+    "mean": 7.37,
+    "zero_frac": 0.014
+   },
+   "ks_counts": 0.08599999999999997,
+   "ks_baseline_max": 0.10999999999999999,
+   "ks_tol": 0.16699999999999998,
+   "equivalent": true
+  },
+  "company->split.ticker": {
+   "refengine": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 2,
+    "mean": 0.268,
+    "zero_frac": 0.764
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 3.0,
+    "max": 3,
+    "mean": 0.284,
+    "zero_frac": 0.776
+   },
+   "ks_counts": 0.018000000000000016,
+   "ks_baseline_max": 0.030000000000000027,
+   "ks_tol": 0.1232955997555637,
+   "equivalent": true
+  },
+  "company->earnings.ticker": {
+   "refengine": {
+    "p50": 19.0,
+    "p90": 31.0,
+    "p99": 49.0,
+    "max": 49,
+    "mean": 19.82,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 19.0,
+    "p90": 31.0,
+    "p99": 46.0,
+    "max": 46,
+    "mean": 20.062,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.09199999999999997,
+   "ks_baseline_max": 0.122,
+   "ks_tol": 0.185,
+   "equivalent": true
+  },
+  "company->insider_transaction.ticker": {
+   "refengine": {
+    "p50": 9.0,
+    "p90": 16.0,
+    "p99": 27.0,
+    "max": 27,
+    "mean": 10.148,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 9.0,
+    "p90": 18.0,
+    "p99": 21.0,
+    "max": 21,
+    "mean": 9.96,
+    "zero_frac": 0.002
+   },
+   "ks_counts": 0.07999999999999996,
+   "ks_baseline_max": 0.08800000000000008,
+   "ks_tol": 0.13400000000000012,
+   "equivalent": true
+  },
+  "company->trade.ticker": {
+   "refengine": {
+    "p50": 724.0,
+    "p90": 4735.400000000039,
+    "p99": 71587.40999999882,
+    "max": 200031,
+    "mean": 4674.668,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 607.0,
+    "p90": 6180.800000000002,
+    "p99": 71589.63999999878,
+    "max": 204115,
+    "mean": 4664.15,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.10199999999999998,
+   "ks_baseline_max": 0.10999999999999999,
+   "ks_tol": 0.16699999999999998,
+   "equivalent": true
+  }
+ },
+ "record_coherence": {
+  "company.ticker+company_name+cik+exchange_code+sector_name+industry_name+market_cap_tier+founding_year+hq_state+website in sp500_constituents": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  }
+ },
+ "strategy_semantics": {
+  "dividend.pay_date - ex_date in [14,45] days": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  }
+ },
+ "business_rules": {
+  "refengine_BusinessRulesEngine_violations": {},
+  "refengine_on_refengine": {}
+ },
+ "refengine_fidelity_comparator": {
+  "overall_impl": 88.88654213626133,
+  "overall_baseline_refengine_vs_refengine": [
+   88.28391154639846,
+   88.73570595658376,
+   87.65926126845848,
+   87.4638382941336
+  ],
+  "tables": {
+   "company": {
+    "impl": 84.57615973480344,
+    "baseline": [
+     86.39782465051405,
+     86.33573114092596,
+     85.46280923349248,
+     85.50888681966082
+    ],
+    "floor": 84.96280923349248,
+    "ok": false
+   },
+   "daily_price": {
+    "impl": 96.59985910268504,
+    "baseline": [
+     96.5332494634129,
+     96.40101925789749,
+     96.34049633147875,
+     96.48099515631078
+    ],
+    "floor": 95.84049633147875,
+    "ok": true
+   },
+   "dividend": {
+    "impl": 93.17686663571449,
+    "baseline": [
+     92.83949041105137,
+     94.34815504197331,
+     93.91271654371133,
+     93.43589972583105
+    ],
+    "floor": 92.33949041105137,
+    "ok": true
+   },
+   "earnings": {
+    "impl": 94.50781619533934,
+    "baseline": [
+     95.06977108054853,
+     94.72433303636952,
+     95.08320614765307,
+     94.12510058211555
+    ],
+    "floor": 93.62510058211555,
+    "ok": true
+   },
+   "exchange": {
+    "impl": 84.01360544217687,
+    "baseline": [
+     77.89115646258504,
+     77.21088435374149,
+     68.36734693877551,
+     68.36734693877551
+    ],
+    "floor": 67.86734693877551,
+    "ok": true
+   },
+   "industry": {
+    "impl": 93.72871929215836,
+    "baseline": [
+     93.72423197908462,
+     93.82217642204711,
+     92.86921898508153,
+     92.53313738782425
+    ],
+    "floor": 92.03313738782425,
+    "ok": true
+   },
+   "insider_transaction": {
+    "impl": 86.90937234346441,
+    "baseline": [
+     87.14466539601025,
+     86.33748141141285,
+     86.32068520454182,
+     87.35402970438375
+    ],
+    "floor": 85.82068520454182,
+    "ok": true
+   },
+   "sector": {
+    "impl": 79.70985875029943,
+    "baseline": [
+     80.0188288504702,
+     81.17155505390912,
+     78.83473158342402,
+     80.89881972902278
+    ],
+    "floor": 78.33473158342402,
+    "ok": true
+   },
+   "split": {
+    "impl": 80.63075639217399,
+    "baseline": [
+     78.19406562249097,
+     82.06181099245336,
+     84.58223099396199,
+     81.01558880062058
+    ],
+    "floor": 77.69406562249097,
+    "ok": true
+   },
+   "trade": {
+    "impl": 95.01240747379774,
+    "baseline": [
+     95.02583154781662,
+     94.9439128551072,
+     94.81917072246434,
+     94.9185780967908
+    ],
+    "floor": 94.31917072246434,
+    "ok": true
+   }
+  }
+ },
+ "summary": {
+  "columns_total": 64,
+  "columns_equivalent": 64,
+  "flagged": [
+   "(h) fidelity company: 84.58 < floor 84.96"
+  ],
+  "passed": false,
+  "seconds": 49.89501118659973
+ }
+}

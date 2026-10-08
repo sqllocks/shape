@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "compat",
+    "seed": 7
+  },
+  "tables": {
+    "t": {
+      "name": "t",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "city": {
+          "name": "city",
+          "type": "string",
+          "generator": {
+            "strategy": "locale",
+            "locale": "fr_FR",
+            "provider": "city",
+            "group": "home"
+          }
+        },
+        "postcode": {
+          "name": "postcode",
+          "type": "string",
+          "generator": {
+            "strategy": "locale",
+            "locale": "fr_FR",
+            "provider": "postcode",
+            "group": "home"
+          }
+        },
+        "phone": {
+          "name": "phone",
+          "type": "string",
+          "generator": {
+            "strategy": "locale",
+            "locale": "FR",
+            "provider": "phone_number",
+            "format": "international"
+          }
+        },
+        "first_name": {
+          "name": "first_name",
+          "type": "string",
+          "generator": {
+            "strategy": "locale",
+            "locale": "US",
+            "provider": "first_name"
+          }
+        }
+      }
+    }
+  },
+  "relationships": [],
+  "generation": {
+    "scale": "small",
+    "scales": {
+      "small": {
+        "t": 20
+      }
+    }
+  }
+}

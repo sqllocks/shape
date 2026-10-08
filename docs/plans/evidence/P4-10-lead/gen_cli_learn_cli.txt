@@ -1,0 +1,60 @@
+=== learn_check
+d2: 20 baseline columns, 3 deliberate differences, 0 unexplained
+  allowed d2.wait_time [exponential]: an exponential fit becomes an exponential distribution; the alternative, a normal with the same mean and standard deviation clipped to the observed range, has the wrong shape
+  allowed d2.order_value [truncated_enum]: a numeric column whose profile lists fewer values than it has distinct ones is generated from its distribution; drawing only the listed values (the 500 most frequent) would leave the rest of the column's values out for good
+  allowed d2.currency [enum_pattern]: a currency or language code column whose profile lists every value is generated from those values and weights; drawing any code of a fake-data provider would lose the column's own vocabulary (and needs the optional faker package). Other patterns (e-mail, phone, ip address...) are never turned into value lists: the schema would carry personal data
+mt: 15 baseline columns, 2 deliberate differences, 0 unexplained
+  allowed orders.amount [truncated_enum]: a numeric column whose profile lists fewer values than it has distinct ones is generated from its distribution; drawing only the listed values (the 500 most frequent) would leave the rest of the column's values out for good
+  allowed orders.customer_id [truncated_enum]: a numeric column whose profile lists fewer values than it has distinct ones is generated from its distribution; drawing only the listed values (the 500 most frequent) would leave the rest of the column's values out for good
+--- rc=0
+=== uptime_before
+ 03:02:33 up 44 min,  0 user,  load average: 1.03, 1.28, 1.25
+--- rc=0
+=== gen_cli
+[medium] refengine  warm-up 1: 10.906s
+[medium] shape    warm-up 1: 1.126s
+[medium] refengine  run 1: 11.055s  cpu 11.70s  load 1.02
+[medium] shape    run 1: 1.018s  cpu 2.22s  load 1.02
+[medium] refengine  run 2: 10.440s  cpu 11.00s  load 1.02
+[medium] shape    run 2: 1.008s  cpu 2.18s  load 1.01
+[medium] refengine  run 3: 10.973s  cpu 11.53s  load 1.09
+[medium] shape    run 3: 0.931s  cpu 2.05s  load 1.08
+[medium] refengine  run 4: 10.761s  cpu 11.26s  load 1.08
+[medium] shape    run 4: 1.042s  cpu 2.24s  load 1.07
+[medium] refengine  run 5: 10.537s  cpu 11.03s  load 1.07
+[medium] shape    run 5: 1.041s  cpu 2.23s  load 1.06
+[medium] median refengine 10.761s, shape 1.018s => 10.57x
+[large] refengine  warm-up 1: 208.732s
+[large] shape    warm-up 1: 7.748s
+[large] refengine  run 1: 214.866s  cpu 214.34s  load 1.43
+[large] shape    run 1: 6.754s  cpu 17.98s  load 1.21
+[large] refengine  run 2: 213.674s  cpu 213.66s  load 1.18
+[large] shape    run 2: 7.525s  cpu 19.30s  load 1.00
+[large] refengine  run 3: 213.974s  cpu 213.44s  load 1.16
+[large] shape    run 3: 6.977s  cpu 17.85s  load 1.19
+[large] refengine  run 4: 206.192s  cpu 206.20s  load 1.25
+[large] shape    run 4: 6.713s  cpu 16.47s  load 1.02
+[large] refengine  run 5: 207.078s  cpu 207.62s  load 1.24
+[large] shape    run 5: 6.387s  cpu 16.33s  load 1.00
+[large] median refengine 213.674s, shape 6.754s => 31.64x
+--- rc=0
+=== learn_cli
+refengine  warm-up 1: 51.687s
+shape    warm-up 1: 3.646s
+equivalence: equal except 3 listed columns
+refengine  run 1: 51.816s  cpu 51.63s  load 1.35
+shape    run 1: 3.459s  cpu 9.85s  load 1.15
+refengine  run 2: 53.357s  cpu 53.17s  load 1.46
+shape    run 2: 3.375s  cpu 10.31s  load 1.20
+refengine  run 3: 53.807s  cpu 53.81s  load 1.26
+shape    run 3: 3.712s  cpu 11.19s  load 1.10
+refengine  run 4: 53.118s  cpu 53.13s  load 1.33
+shape    run 4: 3.545s  cpu 10.28s  load 1.18
+refengine  run 5: 52.982s  cpu 52.87s  load 1.49
+shape    run 5: 3.476s  cpu 10.58s  load 1.19
+median refengine 53.118s, shape 3.476s => 15.28x  (/tmp/claude-0/bench-out-g0/bench/learn_cli.json)
+--- rc=0
+=== uptime_after
+ 03:31:44 up  1:14,  0 user,  load average: 1.19, 1.18, 1.12
+--- rc=0
+=== DONE

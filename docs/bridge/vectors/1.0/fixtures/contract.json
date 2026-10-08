@@ -1,0 +1,12 @@
+{
+  "row_count": {
+    "min": 10,
+    "max": 100
+  },
+  "columns": {
+    "id": {
+      "dtype": "integer",
+      "unique": true
+    }
+  }
+}

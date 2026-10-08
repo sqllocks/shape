@@ -1,0 +1,293 @@
+{
+  "format": "shape-scorecard",
+  "version": 2,
+  "shape_version": "SV",
+  "run_at": "RUN_AT",
+  "data_path": "DATA",
+  "overall": 65.22,
+  "dimensions": {
+    "accuracy": {
+      "score": null,
+      "checks": []
+    },
+    "completeness": {
+      "score": 95.65,
+      "checks": [
+        {
+          "gate": "null_constraint",
+          "table": "customer",
+          "column": "id",
+          "check": "null",
+          "score": 100.0,
+          "rows": 115,
+          "failing": 0,
+          "owner": null
+        },
+        {
+          "gate": "null_constraint",
+          "table": "customer",
+          "column": "name",
+          "check": "null",
+          "score": 91.3,
+          "rows": 115,
+          "failing": 10,
+          "owner": null
+        }
+      ]
+    },
+    "conformity": {
+      "score": 0.0,
+      "checks": [
+        {
+          "gate": "schema_conformance",
+          "table": null,
+          "column": null,
+          "check": "gate",
+          "score": 0.0,
+          "rows": null,
+          "failing": null,
+          "owner": null
+        }
+      ]
+    },
+    "consistency": {
+      "score": null,
+      "checks": []
+    },
+    "timeliness": {
+      "score": null,
+      "checks": []
+    },
+    "uniqueness": {
+      "score": 100.0,
+      "checks": [
+        {
+          "gate": "unique_constraint",
+          "table": "customer",
+          "column": "id",
+          "check": "duplicate",
+          "score": 100.0,
+          "rows": 115,
+          "failing": 0,
+          "owner": null
+        }
+      ]
+    }
+  },
+  "known_issues": [],
+  "samples": [
+    {
+      "gate": "null_constraint",
+      "check": "null",
+      "table": "customer",
+      "row": 40,
+      "values": {
+        "name": null
+      },
+      "redacted": false
+    },
+    {
+      "gate": "null_constraint",
+      "check": "null",
+      "table": "customer",
+      "row": 41,
+      "values": {
+        "name": null
+      },
+      "redacted": false
+    },
+    {
+      "gate": "null_constraint",
+      "check": "null",
+      "table": "customer",
+      "row": 42,
+      "values": {
+        "name": null
+      },
+      "redacted": false
+    },
+    {
+      "gate": "null_constraint",
+      "check": "null",
+      "table": "customer",
+      "row": 43,
+      "values": {
+        "name": null
+      },
+      "redacted": false
+    },
+    {
+      "gate": "null_constraint",
+      "check": "null",
+      "table": "customer",
+      "row": 44,
+      "values": {
+        "name": null
+      },
+      "redacted": false
+    }
+  ],
+  "slices": {
+    "by": [
+      "region"
+    ],
+    "min_slice_rows": 30,
+    "skipped_tables": [],
+    "tables": {
+      "customer": {
+        "rows": 115,
+        "slices": [
+          {
+            "slice": "north",
+            "rows": 40,
+            "share": 0.3478,
+            "scores": {
+              "accuracy": null,
+              "completeness": 100.0,
+              "conformity": null,
+              "consistency": null,
+              "timeliness": null,
+              "uniqueness": 100.0
+            },
+            "null_rates": {
+              "id": 0.0,
+              "name": 0.0,
+              "label": 0.0
+            },
+            "reference_share": 0.5,
+            "ratio": 0.6957,
+            "positive_rate": 0.75
+          },
+          {
+            "slice": "south",
+            "rows": 40,
+            "share": 0.3478,
+            "scores": {
+              "accuracy": null,
+              "completeness": 87.5,
+              "conformity": null,
+              "consistency": null,
+              "timeliness": null,
+              "uniqueness": 100.0
+            },
+            "null_rates": {
+              "id": 0.0,
+              "name": 0.25,
+              "label": 0.0
+            },
+            "reference_share": 0.3,
+            "ratio": 1.1594,
+            "positive_rate": 0.25
+          },
+          {
+            "slice": "west",
+            "rows": 35,
+            "share": 0.3043,
+            "scores": {
+              "accuracy": null,
+              "completeness": 100.0,
+              "conformity": null,
+              "consistency": null,
+              "timeliness": null,
+              "uniqueness": 100.0
+            },
+            "null_rates": {
+              "id": 0.0,
+              "name": 0.0,
+              "label": 0.0
+            },
+            "reference_share": 0.0,
+            "ratio": null,
+            "positive_rate": 0.5714
+          }
+        ],
+        "small_slices": {
+          "slices": 0,
+          "rows": 0,
+          "reported": false
+        },
+        "dimensions": {
+          "accuracy": {
+            "gap": null,
+            "worst_slice": null,
+            "scores": {}
+          },
+          "completeness": {
+            "gap": 12.5,
+            "worst_slice": "south",
+            "scores": {
+              "north": 100.0,
+              "south": 87.5,
+              "west": 100.0
+            }
+          },
+          "conformity": {
+            "gap": null,
+            "worst_slice": null,
+            "scores": {}
+          },
+          "consistency": {
+            "gap": null,
+            "worst_slice": null,
+            "scores": {}
+          },
+          "timeliness": {
+            "gap": null,
+            "worst_slice": null,
+            "scores": {}
+          },
+          "uniqueness": {
+            "gap": 0.0,
+            "worst_slice": "north",
+            "scores": {
+              "north": 100.0,
+              "south": 100.0,
+              "west": 100.0
+            }
+          }
+        },
+        "table_null_rates": {
+          "id": 0.0,
+          "name": 0.087,
+          "label": 0.0
+        },
+        "null_rate_flags": [
+          {
+            "slice": "south",
+            "column": "name",
+            "null_rate": 0.25,
+            "table_null_rate": 0.087
+          }
+        ],
+        "missing_from_data": [
+          {
+            "slice": "east",
+            "reference_share": 0.2
+          }
+        ],
+        "label": {
+          "column": "label",
+          "positive_value": true,
+          "rates": {
+            "north": 0.75,
+            "south": 0.25,
+            "west": 0.5714
+          },
+          "threshold": 0.8,
+          "disparity_ratio": 0.3333,
+          "lowest": "south",
+          "highest": "north",
+          "flagged": true
+        }
+      }
+    },
+    "max_slice_gap": 5,
+    "exceeded": [
+      {
+        "table": "customer",
+        "dimension": "completeness",
+        "gap": 12.5
+      }
+    ]
+  }
+}

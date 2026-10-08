@@ -1,0 +1,39 @@
+{
+  "bytes_freed": 8,
+  "cutoff": "2026-06-04T00:00:00Z",
+  "dry_run": false,
+  "format": "shape-registry-prune",
+  "names": {
+    "orders": {
+      "entries_kept": 2,
+      "entries_removed": 2,
+      "kept_because": {
+        "keep_last": [],
+        "ref": [],
+        "tag": [
+          "7692c3ad3540bb803c020b3aee66cd8887123234ea0c6e7143c0add73ff431ed"
+        ]
+      }
+    },
+    "people": {
+      "entries_kept": 1,
+      "entries_removed": 1,
+      "kept_because": {
+        "keep_last": [],
+        "ref": [],
+        "tag": []
+      }
+    }
+  },
+  "objects_removed": [
+    "3fc4ccfe745870e2c0d99f71f30ff0656c8dedd41cc1d7d3d376b0dbe685e2f3",
+    "8b5b9db0c13db24256c829aa364aa90c6d2eba318b9232a4ab9313b954d3555f"
+  ],
+  "skipped": [
+    {
+      "path": "objects/NOTES.md",
+      "reason": "not a content id (64 lowercase hexadecimal characters): left alone"
+    }
+  ],
+  "version": 1
+}

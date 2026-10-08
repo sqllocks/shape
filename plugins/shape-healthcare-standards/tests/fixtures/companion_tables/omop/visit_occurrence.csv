@@ -1,0 +1,5 @@
+"visit_occurrence_id","person_id","visit_concept_id","visit_start_date","visit_start_datetime","visit_end_date","visit_end_datetime","visit_type_concept_id","provider_id","care_site_id","visit_source_value","visit_source_concept_id","admitted_from_concept_id","admitted_from_source_value","discharged_to_concept_id","discharged_to_source_value","preceding_visit_occurrence_id"
+279987297,1266533429,9202,2024-03-14,2024-03-14 00:00:00.000000,2024-03-14,2024-03-14 00:00:00.000000,32810,1767792991,,"CLM-P-0002",0,,,,,
+917105729,621858485,9202,2024-05-02,2024-05-02 00:00:00.000000,2024-05-02,2024-05-02 00:00:00.000000,32810,1767792991,,"CLM-P-0003",0,,,,,
+1306930463,315644540,9202,2024-02-05,2024-02-05 00:00:00.000000,2024-02-05,2024-02-05 00:00:00.000000,32810,1767792991,1059101907,"CLM-P-0001",0,,,,,
+1509165828,621858485,9201,2024-06-10,2024-06-10 00:00:00.000000,2024-06-14,2024-06-14 00:00:00.000000,32810,846166059,1059101907,"CLM-I-0001",0,,,0,"01",

@@ -1,0 +1,149 @@
+# RefEngine 3.0.1 (git 422e78d) module coverage map. Every file under sqllocks_refengine/ must match
+# at least one glob (fnmatch on the path relative to sqllocks_refengine/, with an equal number of path
+# segments, all file types). Column 2 = the work package that ports it; it must appear in plan section 11.
+# Checked by benchmarks/vs_refengine/check_coverage.py (P0-07). __init__.py files belong to their package's WP.
+# glob	wp	note
+cli.py	P4-10	CLI entry point; each section-10 row is built by the WP named in that row; P8-01 completes remaining aliases
+mcp_bridge.py	P6-11	JSON stdio bridge, 17 commands
+mcp_bridge_server.py	P6-11	MCP server: a separate private commercial component built on shape bridge (2026-10-02)
+observability.py	P4-10	structured JSON logging and per-run metrics
+__init__.py	P4-10	package API surface: RefEngine().generate(...) equivalent is shape.api.generate (P4-10)
+chaos/*	P6-02	schema, value, file, referential, temporal, volume
+demo/*	P6-12
+demo/*/*	P6-12
+domains/__init__.py	P4-07	domain discovery
+domains/base.py	P4-07	Domain base: _build_schema, _dist, _ratio, profiles
+domains/retail/*	P4-07
+domains/_shared/*/*	P4-07
+domains/capital_markets/*	P6-01a
+domains/education/*	P6-01a
+domains/financial/*	P6-01a
+domains/healthcare/*	P6-01b
+domains/hr/*	P6-01b
+domains/insurance/*	P6-01b
+domains/iot/*	P6-01c
+domains/manufacturing/*	P6-01c
+domains/marketing/*	P6-01c
+domains/pulse/*	P6-01d
+domains/real_estate/*	P6-01d
+domains/supply_chain/*	P6-01d
+domains/telecom/*	P6-01d
+domains/retail/*/*	P4-07	reference_data and profiles
+domains/capital_markets/*/*	P6-01a	reference_data and profiles
+domains/education/*/*	P6-01a	reference_data and profiles
+domains/financial/*/*	P6-01a	reference_data and profiles
+domains/healthcare/*/*	P6-01b	reference_data and profiles
+domains/hr/*/*	P6-01b	reference_data and profiles
+domains/insurance/*/*	P6-01b	reference_data and profiles
+domains/iot/*/*	P6-01c	reference_data and profiles
+domains/manufacturing/*/*	P6-01c	reference_data and profiles
+domains/marketing/*/*	P6-01c	reference_data and profiles
+domains/pulse/*/*	P6-01d	reference_data and profiles
+domains/real_estate/*/*	P6-01d	reference_data and profiles
+domains/supply_chain/*/*	P6-01d	reference_data and profiles
+domains/telecom/*/*	P6-01d	reference_data and profiles
+domains/composite.py	P6-01e
+domains/shared_registry.py	P6-01e	cross-domain shared entities for composite
+engine/__init__.py	P4-02
+engine/generator.py	P4-02	orchestration, calculate_row_counts (line 263), strategy registry (line 316)
+engine/table_generator.py	P4-02	column ordering, per-table RNG
+engine/id_manager.py	P4-02
+engine/rules/*	P4-02	BusinessRulesEngine validate/fix
+engine/data/*	P4-04b	native name/street/email pools
+engine/correlation.py	P4-02	GaussianCopula post-pass imported by engine/generator.py (also used by P4-04c, P4-08)
+engine/strategies/__init__.py	P4-04a	strategy registry (26 names, engine/generator.py:316-341)
+engine/strategies/base.py	P4-04a
+engine/strategies/sequence.py	P4-04a
+engine/strategies/uuid_strategy.py	P4-04a
+engine/strategies/enum.py	P4-04a
+engine/strategies/distribution.py	P4-04a
+engine/strategies/empirical.py	P4-04a
+engine/strategies/pattern.py	P4-04a
+engine/strategies/faker_strategy.py	P4-04b
+engine/strategies/native.py	P4-04b
+engine/strategies/formula.py	P4-04b
+engine/strategies/computed.py	P4-04b
+engine/strategies/derived.py	P4-04b
+engine/strategies/conditional.py	P4-04c
+engine/strategies/correlated.py	P4-04c
+engine/strategies/lookup.py	P4-04c
+engine/strategies/reference_data.py	P4-04c
+engine/strategies/temporal.py	P4-04c
+engine/strategies/record_field.py	P4-04c
+engine/strategies/record_sample.py	P4-04c
+engine/strategies/foreign_key.py	P4-04d
+engine/strategies/composite_foreign_key.py	P4-04d
+engine/strategies/first_per_parent.py	P4-04d
+engine/strategies/self_referencing.py	P4-04d
+engine/strategies/lifecycle.py	P4-04d
+engine/strategies/scd2.py	P4-04d
+engine/chunked_generator.py	P6-13
+engine/chunk_worker.py	P6-13
+engine/scale_router.py	P6-13	local_single, local_mp, fabric_spark
+engine/spark_router.py	P6-13
+engine/sink_registry.py	P6-13
+engine/sinks/*	P6-13	memory, parquet, lakehouse, warehouse, sql_database, kql
+engine/async_job_store.py	P6-13
+engine/job_tracker.py	P6-13
+engine/stream_manager.py	P6-13
+fabric/__init__.py	P6-07a
+fabric/credentials.py	P6-07b	CredentialResolver (env://, kv://, file://)
+fabric/eventhouse_writer.py	P6-07a
+fabric/eventstream_client.py	P6-07a	uses EventEnvelope
+fabric/lakehouse_files_writer.py	P6-07a
+fabric/multi_writer.py	P6-07a
+fabric/onelake_paths.py	P6-07a
+fabric/sql_database_writer.py	P6-07a	auth modes at line 114 handled in P6-07b
+fabric/stream_writer_convenience.py	P6-07a
+fabric/warehouse_bulk_writer.py	P6-07a
+fabric/notebook_template.py	P6-07c
+fabric/setup_environment.py	P6-07c
+fabric/semantic_model_writer.py	P6-07c	export-model (.bim)
+incremental/*	P6-05
+inference/__init__.py	P1-08
+inference/profiler.py	P1-08	DataProfiler (line 191)
+inference/advanced_profiler.py	P4-11
+inference/tier2_profiler.py	P4-11
+inference/tier3_research.py	P4-11
+inference/profile_io.py	P1-11	profile capture (ProfileIO, ExportedProfile)
+inference/profile_store.py	P6-10
+inference/comparator.py	P4-09	FidelityComparator (line 365)
+inference/schema_builder.py	P4-08	learn
+inference/masker.py	P6-03
+inference/database_profiler.py	P6-08
+inference/lakehouse_profiler.py	P6-07a
+inference/safe_profile.py	P7-01
+inference/safe_profile_adapter.py	P7-01
+inference/safe_validator.py	P7-01
+manifests/*	P6-14	run manifest written by packs/runner.py and by publish (P6-07c)
+notebooks/*	P6-13	refengine_spark_worker.ipynb for fabric_spark mode
+output/__init__.py	P4-06
+output/csv_writer.py	P4-06
+output/pandas_writer.py	P4-06
+output/delta_writer.py	P4-06	[delta] plugin
+output/fabric_utils.py	P6-07a
+output/multi_store_writer.py	P6-13
+packs/*	P6-14	scenario packs: loader, runner, validator
+specs/*	P6-14	GSL (Generation Spec Language) YAML parser
+presets/*	P6-01e
+profiles/*	P6-10	profile export/import/list and registry
+schema/__init__.py	P4-01a
+schema/parser.py	P4-01a
+schema/dependency.py	P4-02	Kahn ordering
+schema/validator.py	P4-10	shape validate for schemas
+schema/ddl_parser.py	P4-01b
+schema/inference/*	P4-01b	--smart DDL inference
+simulation/*	P6-04
+streaming/__init__.py	P5-01
+streaming/anomaly.py	P5-01
+streaming/config.py	P5-01
+streaming/envelope.py	P5-01	--envelope refengine
+streaming/multi_writer.py	P5-02
+streaming/rate_limiter.py	P5-01
+streaming/stream_writer.py	P5-01
+streaming/streamer.py	P5-01	flat-row format, event-time sort, --max-events truncation
+streaming/sinks/*	P5-02	console, file, kafka, eventhub
+transform/*	P6-06
+validation/*	P6-09
+verify/*	P6-09
+py.typed	P0-05	Shape ships its own src/shape/py.typed

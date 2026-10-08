@@ -1,0 +1,189 @@
+"""Pure-Python twins of the native sketch classes ``shape._kernel.{Hll, Kll, SpaceSaving}``.
+
+They give the Python sketches of ``pysketch`` (which define the exact
+semantics) the same batch-oriented API as the Rust classes: ``update_array`` hashes an Arrow
+array with the canonical hash (T-13) and skips nulls and NaN.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+import numpy as np
+import pyarrow as pa  # type: ignore[import-untyped]
+
+from .hashing import hash_array
+
+
+def _sk() -> Any:
+    """The Python sketches define the semantics; imported lazily because they import the
+    kernel's hashing at module level."""
+    from . import pysketch
+
+    return pysketch
+
+
+_NOT_AN_ARRAY = "Expected object with __arrow_c_array__ method or implementing buffer protocol."
+
+
+def _array(obj: Any) -> pa.Array:
+    """An Arrow array from what the native kernel accepts (#749): an object with
+    ``__arrow_c_array__`` (not a chunked array or a list) or a buffer such as a numpy array."""
+    if hasattr(obj, "__arrow_c_array__"):
+        return pa.array(obj)
+    try:
+        memoryview(obj)
+    except TypeError:
+        raise ValueError(_NOT_AN_ARRAY) from None
+    return pa.array(np.asarray(obj))
+
+
+def _uint64(obj: Any, what: str) -> list[int]:
+    arr = _array(obj)
+    if arr.type != pa.uint64():
+        raise ValueError(f"{what} needs a uint64 array")
+    return [int(h) for h in arr.to_pylist() if h is not None]
+
+
+def _valid_hashes(array: Any) -> list[int]:
+    return [int(h) for h in hash_array(_array(array), 0).to_pylist() if h is not None]
+
+
+def _unsigned(value: int) -> int:
+    """As the native kernel converts an argument to an unsigned integer."""
+    if value < 0:
+        raise OverflowError("can't convert negative int to unsigned")
+    return value
+
+
+def _not_itself(a: object, b: object) -> None:
+    if a is b:
+        raise ValueError("cannot merge a sketch into itself")
+
+
+def _check_registers(p: int, registers: bytes | list[int]) -> None:
+    """Restored registers must be ranks ``update_hash`` can produce: at most ``64 - p + 1``."""
+    top = 65 - p
+    if any(r > top for r in registers):
+        raise ValueError(f"an HLL register is above {top}, the largest rank for p={p}")
+
+
+def _check_kll(k: int, levels: list[list[float]]) -> None:
+    """Restored KLL state: ``k >= 8``, at most 64 levels, no NaN item."""
+    if k < 8:
+        raise ValueError(f"KLL k is {k}; it must be >= 8")
+    if len(levels) > 64:
+        raise ValueError(f"KLL has {len(levels)} levels; at most 64")
+    if any(x != x for level in levels for x in level):
+        raise ValueError("KLL holds a NaN item")
+
+
+class Hll:
+    def __init__(self, p: int = 14) -> None:
+        self._s = _sk().HyperLogLog(p)
+
+    @property
+    def p(self) -> int:
+        return int(self._s.p)
+
+    def update_hash(self, h: int) -> None:
+        self._s.update_hashed(_unsigned(h))
+
+    def update_array(self, array: Any) -> None:
+        for h in _valid_hashes(array):
+            self._s.update_hashed(h)
+
+    def update_hashes(self, hashes: Any) -> None:
+        for h in _uint64(hashes, "update_hashes"):
+            self._s.update_hashed(h)
+
+    def merge(self, other: Hll) -> None:
+        _not_itself(self, other)
+        self._s.merge(other._s)
+
+    def estimate(self) -> float:
+        return float(self._s.estimate())
+
+    def registers(self) -> bytes:
+        return bytes(self._s.registers)
+
+    @staticmethod
+    def from_registers(p: int, registers: bytes) -> Hll:
+        out = Hll(p)
+        if len(registers) != len(out._s.registers):
+            raise ValueError("register count does not match p")
+        _check_registers(p, registers)
+        out._s.registers = list(registers)
+        return out
+
+
+class Kll:
+    def __init__(self, k: int = 200) -> None:
+        if k < 8:
+            raise ValueError("k must be >= 8")
+        self._s = _sk().KLL(k)
+
+    @property
+    def k(self) -> int:
+        return int(self._s.k)
+
+    @property
+    def n(self) -> int:
+        return int(self._s.n)
+
+    def update(self, x: float) -> None:
+        self._s.update(x)
+
+    def update_values(self, values: Any) -> None:
+        arr = _array(values)
+        if arr.type != pa.float64():
+            raise ValueError("update_values needs a float64 array")
+        for x in arr.to_pylist():
+            if x is not None and not np.isnan(x):
+                self._s.update(x)
+
+    def merge(self, other: Kll) -> None:
+        _not_itself(self, other)
+        self._s.merge(other._s)
+
+    def quantile(self, q: float) -> float | None:
+        return self._s.quantile(q)  # type: ignore[no-any-return]
+
+    def levels(self) -> list[list[float]]:
+        return [list(v) for v in self._s.levels]
+
+
+class SpaceSaving:
+    def __init__(self, capacity: int = 64) -> None:
+        if _unsigned(capacity) == 0:
+            raise ValueError("capacity must be >= 1")
+        self._s = _sk().SpaceSaving(capacity)
+
+    @property
+    def capacity(self) -> int:
+        return int(self._s.capacity)
+
+    @property
+    def n(self) -> int:
+        return int(self._s.n)
+
+    def __len__(self) -> int:
+        return len(self._s.counts)
+
+    def update(self, key: int, n: int = 1) -> None:
+        self._s.update(key, _unsigned(n))
+
+    def update_array(self, array: Any) -> None:
+        for h in _valid_hashes(array):
+            self._s.update(h)
+
+    def update_keys(self, keys: Any) -> None:
+        for k in _uint64(keys, "update_keys"):
+            self._s.update(k)
+
+    def merge(self, other: SpaceSaving) -> None:
+        _not_itself(self, other)
+        self._s.merge(other._s)
+
+    def top(self) -> list[tuple[int, int, int]]:
+        return [(int(k), c, e) for k, c, e in self._s.top(self._s.capacity)]

@@ -1,0 +1,72 @@
+{
+  "format": "shape-dataset-library",
+  "version": 1,
+  "datasets": [
+    {
+      "name": "abalone",
+      "title": "Abalone",
+      "source_url": "https://archive.ics.uci.edu/static/public/1/data.csv",
+      "license": "CC-BY-4.0",
+      "attribution": "Nash, W., Sellers, T., Talbot, S., Cawthorn, A. and Ford, W. (1994). Abalone. UCI Machine Learning Repository. https://doi.org/10.24432/C55C7W. Licensed under CC BY 4.0.",
+      "retrieved": "2026-10-03",
+      "source_sha256": "25f3dc964447fcb3d68cf1048c04ed69d1474771c4fb34318e10778800a4342f",
+      "rows": 4177,
+      "profile": "abalone.shape"
+    },
+    {
+      "name": "adult-income",
+      "title": "Adult (census income)",
+      "source_url": "https://archive.ics.uci.edu/static/public/2/data.csv",
+      "license": "CC-BY-4.0",
+      "attribution": "Becker, B. and Kohavi, R. (1996). Adult. UCI Machine Learning Repository. https://doi.org/10.24432/C5XW20. Licensed under CC BY 4.0.",
+      "retrieved": "2026-10-03",
+      "source_sha256": "26b38f8623766396e2ba0d1a235a283db8ed993cc32bf32fc8aab09708c3bdf2",
+      "rows": 48842,
+      "profile": "adult-income.shape"
+    },
+    {
+      "name": "breast-cancer-wisconsin",
+      "title": "Breast Cancer Wisconsin (Diagnostic)",
+      "source_url": "https://archive.ics.uci.edu/static/public/17/data.csv",
+      "license": "CC-BY-4.0",
+      "attribution": "Wolberg, W., Mangasarian, O., Street, N. and Street, W. (1993). Breast Cancer Wisconsin (Diagnostic). UCI Machine Learning Repository. https://doi.org/10.24432/C5DW2B. Licensed under CC BY 4.0.",
+      "retrieved": "2026-10-03",
+      "source_sha256": "3487b754ff02c93cdc8a18afafe223961d9cfbfdb932e57483e52581042767d7",
+      "rows": 569,
+      "profile": "breast-cancer-wisconsin.shape"
+    },
+    {
+      "name": "iris",
+      "title": "Iris",
+      "source_url": "https://archive.ics.uci.edu/static/public/53/data.csv",
+      "license": "CC-BY-4.0",
+      "attribution": "Fisher, R. A. (1936). Iris. UCI Machine Learning Repository. https://doi.org/10.24432/C56C76. Licensed under CC BY 4.0.",
+      "retrieved": "2026-10-03",
+      "source_sha256": "daaeb5e3e889d07fbdd44544f5a39fe2372a07172e25899d577be0ad74df9e65",
+      "rows": 150,
+      "profile": "iris.shape"
+    },
+    {
+      "name": "palmer-penguins",
+      "title": "Palmer penguins",
+      "source_url": "https://raw.githubusercontent.com/allisonhorst/palmerpenguins/main/inst/extdata/penguins.csv",
+      "license": "CC0-1.0",
+      "attribution": "Horst AM, Hill AP, Gorman KB (2020). palmerpenguins: Palmer Archipelago (Antarctica) penguin data. R package version 0.1.1; data collected by Kristen Gorman and the Palmer Station LTER, released under CC0 (https://allisonhorst.github.io/palmerpenguins/).",
+      "retrieved": "2026-10-03",
+      "source_sha256": "f204db2c753b0937caac3cb35258562c14f073e4bbc76be24b4c51ce22767a93",
+      "rows": 344,
+      "profile": "palmer-penguins.shape"
+    },
+    {
+      "name": "wine",
+      "title": "Wine",
+      "source_url": "https://archive.ics.uci.edu/static/public/109/data.csv",
+      "license": "CC-BY-4.0",
+      "attribution": "Aeberhard, S. and Forina, M. (1992). Wine. UCI Machine Learning Repository. https://doi.org/10.24432/C5PC7J. Licensed under CC BY 4.0.",
+      "retrieved": "2026-10-03",
+      "source_sha256": "70ba539f750faef04eb4859f68cf67f13676d42fafce8e4f85982705953c219a",
+      "rows": 178,
+      "profile": "wine.shape"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+"""Command `shape {{name}}`: a subcommand of the `shape` program."""
+
+from __future__ import annotations
+
+from typing import Any
+
+SHAPE_API = "1.0"
+
+class {{class}}:
+    """`shape {{name}} [--name NAME]`: prints a greeting. Replace it with your command."""
+
+    name = "{{name}}"
+    help = "print a greeting (replace with what your command does)"
+
+    def configure(self, parser: Any) -> None:
+        parser.add_argument("--name", default="world")
+
+    def run(self, args: Any) -> int:
+        print(f"hello, {args.name}")
+        return 0

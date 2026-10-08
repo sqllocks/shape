@@ -1,0 +1,16 @@
+{
+  "fidelity": "gold",
+  "fields": [
+    {
+      "constraints": {},
+      "kind": "integer",
+      "name": "id",
+      "nullable": false,
+      "semantic_type": null,
+      "sensitivity": "CONFIDENTIAL"
+    }
+  ],
+  "metadata": {},
+  "name": "customer",
+  "version": 1
+}

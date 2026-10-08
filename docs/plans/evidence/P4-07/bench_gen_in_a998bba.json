@@ -1,0 +1,936 @@
+{
+ "meta": {
+  "cores": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+  "platform": "Linux-6.18.44-fc-v50-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-10-01 16:54:44",
+  "impl": "shape",
+  "domain": "retail",
+  "runs": 5,
+  "warmup": 1,
+  "ref_seed": 42,
+  "impl_seed": 1042,
+  "loadavg_start": 0.4970703125
+ },
+ "scales": {
+  "medium": {
+   "summary": {
+    "refengine": {
+     "total_s": 8.323285530001158,
+     "gen_s": 7.23651997700108,
+     "write_s": 1.0544941459993424,
+     "cpu_s": 8.292493,
+     "user_s": 6.673479,
+     "sys_s": 1.619014,
+     "minor_faults": 59802,
+     "import_s": 1.6223219839994272,
+     "peak_rss_mb": 566.4375,
+     "parquet_bytes": 36451714,
+     "rows": 1965400,
+     "rows_per_s_total": 236132.71380823656,
+     "rows_per_s_generate": 271594.63474797044,
+     "runs_total_s": [
+      8.527,
+      8.245,
+      8.549,
+      8.031,
+      8.323
+     ],
+     "loadavg_before": [
+      0.60888671875,
+      0.66943359375,
+      0.7431640625,
+      0.783203125,
+      0.83203125
+     ],
+     "per_table_s_median": {
+      "customer": 0.13653763000002073,
+      "product_category": 0.0024871810001059202,
+      "promotion": 0.0035135429989168188,
+      "store": 0.0013844719996995991,
+      "address": 0.566905437000969,
+      "product": 0.004066449999299948,
+      "order": 3.686139508001361,
+      "order_line": 2.243635816999813,
+      "return": 0.04265747099998407,
+      "_compute_phase+business_rules": 0.5471151290003036,
+      "_construct_domain+RefEngine()": 0.010557578001680668
+     },
+     "row_counts": {
+      "customer": 50000,
+      "product_category": 50,
+      "promotion": 200,
+      "store": 150,
+      "address": 75000,
+      "product": 5000,
+      "order": 500000,
+      "order_line": 1250000,
+      "return": 85000
+     }
+    },
+    "shape": {
+     "total_s": 0.7166291360008472,
+     "gen_s": 0.7166291360008472,
+     "write_s": 0.0,
+     "cpu_s": 1.670779,
+     "user_s": 1.202001,
+     "sys_s": 0.4687779999999999,
+     "minor_faults": 64477,
+     "import_s": 0.6830885569997918,
+     "peak_rss_mb": 407.171875,
+     "parquet_bytes": 37595588,
+     "rows": 1965400,
+     "rows_per_s_total": 2742562.2281671735,
+     "rows_per_s_generate": 2742562.2281671735,
+     "runs_total_s": [
+      0.717,
+      0.651,
+      0.837,
+      0.737,
+      0.639
+     ],
+     "loadavg_before": [
+      0.66943359375,
+      0.720703125,
+      0.783203125,
+      0.81689453125,
+      0.8583984375
+     ],
+     "per_table_s_median": {
+      "_construct_domain+Engine": 0.014510400000290247,
+      "_generate+write": 0.702118736000557
+     },
+     "row_counts": {
+      "customer": 50000,
+      "product_category": 50,
+      "promotion": 200,
+      "store": 150,
+      "address": 75000,
+      "product": 5000,
+      "order": 500000,
+      "order_line": 1250000,
+      "return": 85000
+     },
+     "numpy": "2.4.6",
+     "pyarrow": "25.0.1"
+    }
+   },
+   "raw": {
+    "refengine": [
+     {
+      "import_s": 1.7223195110000233,
+      "gen_s": 7.472163050000745,
+      "write_s": 1.0544941459993424,
+      "total_s": 8.526657196000087,
+      "rows": {
+       "customer": 50000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 75000,
+       "product": 5000,
+       "order": 500000,
+       "order_line": 1250000,
+       "return": 85000
+      },
+      "per_table_s": {
+       "customer": 0.19881718599935994,
+       "product_category": 0.0024871810001059202,
+       "promotion": 0.0035135429989168188,
+       "store": 0.0013464380008372245,
+       "address": 0.596545870999762,
+       "product": 0.004066449999299948,
+       "order": 3.686139508001361,
+       "order_line": 2.337291763000394,
+       "return": 0.0412220599991997,
+       "_compute_phase+business_rules": 0.590175471999828,
+       "_construct_domain+RefEngine()": 0.010557578001680668
+      },
+      "user_s": 6.6665790000000005,
+      "sys_s": 1.7767449999999998,
+      "minor_faults": 58426,
+      "major_faults": 0,
+      "cpu_s": 8.443324,
+      "peak_rss_mb": 566.4375,
+      "parquet_bytes": 36451714,
+      "loadavg_before": 0.60888671875
+     },
+     {
+      "import_s": 1.6223219839994272,
+      "gen_s": 7.22133798699906,
+      "write_s": 1.023218098000143,
+      "total_s": 8.244556084999203,
+      "rows": {
+       "customer": 50000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 75000,
+       "product": 5000,
+       "order": 500000,
+       "order_line": 1250000,
+       "return": 85000
+      },
+      "per_table_s": {
+       "customer": 0.13653763000002073,
+       "product_category": 0.0024876789993868442,
+       "promotion": 0.009087680000448017,
+       "store": 0.0027542120005819015,
+       "address": 0.6009515019995888,
+       "product": 0.0039054860008036485,
+       "order": 3.673547080999924,
+       "order_line": 2.198469805000059,
+       "return": 0.04797743199924298,
+       "_compute_phase+business_rules": 0.5339875999998185,
+       "_construct_domain+RefEngine()": 0.011631879999185912
+      },
+      "user_s": 6.743703,
+      "sys_s": 1.4967890000000001,
+      "minor_faults": 59802,
+      "major_faults": 0,
+      "cpu_s": 8.240492,
+      "peak_rss_mb": 559.2421875,
+      "parquet_bytes": 36451714,
+      "loadavg_before": 0.66943359375
+     },
+     {
+      "import_s": 1.620249084000534,
+      "gen_s": 7.574934292000762,
+      "write_s": 0.9740594119994057,
+      "total_s": 8.548993704000168,
+      "rows": {
+       "customer": 50000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 75000,
+       "product": 5000,
+       "order": 500000,
+       "order_line": 1250000,
+       "return": 85000
+      },
+      "per_table_s": {
+       "customer": 0.21493967000060366,
+       "product_category": 0.0027210610005568014,
+       "promotion": 0.0034118940002372256,
+       "store": 0.0013984069992147852,
+       "address": 0.566905437000969,
+       "product": 0.0037599939987558173,
+       "order": 3.8951815140007966,
+       "order_line": 2.3489040579988796,
+       "return": 0.04265747099998407,
+       "_compute_phase+business_rules": 0.4815457540007628,
+       "_construct_domain+RefEngine()": 0.013509032000001753
+      },
+      "user_s": 6.778484000000001,
+      "sys_s": 1.692545,
+      "minor_faults": 60725,
+      "major_faults": 0,
+      "cpu_s": 8.471029000000001,
+      "peak_rss_mb": 567.38671875,
+      "parquet_bytes": 36451714,
+      "loadavg_before": 0.7431640625
+     },
+     {
+      "import_s": 1.487272362001022,
+      "gen_s": 6.929514183999345,
+      "write_s": 1.1018184300010034,
+      "total_s": 8.031332614000348,
+      "rows": {
+       "customer": 50000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 75000,
+       "product": 5000,
+       "order": 500000,
+       "order_line": 1250000,
+       "return": 85000
+      },
+      "per_table_s": {
+       "customer": 0.11983245000010356,
+       "product_category": 0.0022582329984288663,
+       "promotion": 0.004518981000728672,
+       "store": 0.0013844719996995991,
+       "address": 0.538658708001094,
+       "product": 0.004746580998471472,
+       "order": 3.4878394860006665,
+       "order_line": 2.1576120970003103,
+       "return": 0.041955562999646645,
+       "_compute_phase+business_rules": 0.5603342949998478,
+       "_construct_domain+RefEngine()": 0.010373318000347354
+      },
+      "user_s": 6.5140020000000005,
+      "sys_s": 1.503282,
+      "minor_faults": 59508,
+      "major_faults": 0,
+      "cpu_s": 8.017284,
+      "peak_rss_mb": 558.06640625,
+      "parquet_bytes": 36451714,
+      "loadavg_before": 0.783203125
+     },
+     {
+      "import_s": 1.6283671479995974,
+      "gen_s": 7.23651997700108,
+      "write_s": 1.0867655530000775,
+      "total_s": 8.323285530001158,
+      "rows": {
+       "customer": 50000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 75000,
+       "product": 5000,
+       "order": 500000,
+       "order_line": 1250000,
+       "return": 85000
+      },
+      "per_table_s": {
+       "customer": 0.12039450599877455,
+       "product_category": 0.0022603300003538607,
+       "promotion": 0.003216367000277387,
+       "store": 0.001240322999365162,
+       "address": 0.5154458619999787,
+       "product": 0.00408245400103624,
+       "order": 3.722770180000225,
+       "order_line": 2.243635816999813,
+       "return": 0.0660949539997091,
+       "_compute_phase+business_rules": 0.5471151290003036,
+       "_construct_domain+RefEngine()": 0.010264055001243833
+      },
+      "user_s": 6.673479,
+      "sys_s": 1.619014,
+      "minor_faults": 60181,
+      "major_faults": 0,
+      "cpu_s": 8.292493,
+      "peak_rss_mb": 567.72265625,
+      "parquet_bytes": 36451714,
+      "loadavg_before": 0.83203125
+     }
+    ],
+    "shape": [
+     {
+      "import_s": 0.6261037380008929,
+      "gen_s": 0.7166291360008472,
+      "write_s": 0.0,
+      "total_s": 0.7166291360008472,
+      "overlapped": true,
+      "rows": {
+       "customer": 50000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 75000,
+       "product": 5000,
+       "order": 500000,
+       "order_line": 1250000,
+       "return": 85000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.014510400000290247,
+       "_generate+write": 0.702118736000557
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 1.1910650000000003,
+      "sys_s": 0.598165,
+      "minor_faults": 63275,
+      "major_faults": 0,
+      "cpu_s": 1.78923,
+      "peak_rss_mb": 412.05859375,
+      "parquet_bytes": 37595588,
+      "loadavg_before": 0.66943359375
+     },
+     {
+      "import_s": 0.6881555309992109,
+      "gen_s": 0.6505234179985564,
+      "write_s": 0.0,
+      "total_s": 0.6505234179985564,
+      "overlapped": true,
+      "rows": {
+       "customer": 50000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 75000,
+       "product": 5000,
+       "order": 500000,
+       "order_line": 1250000,
+       "return": 85000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.01401812299991434,
+       "_generate+write": 0.6365052949986421
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 1.2117620000000002,
+      "sys_s": 0.343947,
+      "minor_faults": 64477,
+      "major_faults": 0,
+      "cpu_s": 1.5557089999999998,
+      "peak_rss_mb": 398.73046875,
+      "parquet_bytes": 37595588,
+      "loadavg_before": 0.720703125
+     },
+     {
+      "import_s": 0.7367817399990599,
+      "gen_s": 0.8371180750000349,
+      "write_s": 0.0,
+      "total_s": 0.8371180750000349,
+      "overlapped": true,
+      "rows": {
+       "customer": 50000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 75000,
+       "product": 5000,
+       "order": 500000,
+       "order_line": 1250000,
+       "return": 85000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.01567027900091489,
+       "_generate+write": 0.82144779599912
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 1.24588,
+      "sys_s": 0.644613,
+      "minor_faults": 65754,
+      "major_faults": 0,
+      "cpu_s": 1.8904930000000004,
+      "peak_rss_mb": 407.171875,
+      "parquet_bytes": 37595588,
+      "loadavg_before": 0.783203125
+     },
+     {
+      "import_s": 0.6207546339992405,
+      "gen_s": 0.7367711660008354,
+      "write_s": 0.0,
+      "total_s": 0.7367711660008354,
+      "overlapped": true,
+      "rows": {
+       "customer": 50000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 75000,
+       "product": 5000,
+       "order": 500000,
+       "order_line": 1250000,
+       "return": 85000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.013306597000337206,
+       "_generate+write": 0.7234645690004982
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 1.202001,
+      "sys_s": 0.4687779999999999,
+      "minor_faults": 66290,
+      "major_faults": 0,
+      "cpu_s": 1.670779,
+      "peak_rss_mb": 421.8203125,
+      "parquet_bytes": 37595588,
+      "loadavg_before": 0.81689453125
+     },
+     {
+      "import_s": 0.6830885569997918,
+      "gen_s": 0.6386288309986412,
+      "write_s": 0.0,
+      "total_s": 0.6386288309986412,
+      "overlapped": true,
+      "rows": {
+       "customer": 50000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 75000,
+       "product": 5000,
+       "order": 500000,
+       "order_line": 1250000,
+       "return": 85000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.016446136000013212,
+       "_generate+write": 0.622182694998628
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 1.1898389999999999,
+      "sys_s": 0.303106,
+      "minor_faults": 63810,
+      "major_faults": 0,
+      "cpu_s": 1.4929449999999997,
+      "peak_rss_mb": 403.203125,
+      "parquet_bytes": 37595588,
+      "loadavg_before": 0.8583984375
+     }
+    ]
+   }
+  },
+  "large": {
+   "summary": {
+    "refengine": {
+     "total_s": 214.25401418399997,
+     "gen_s": 204.533002442,
+     "write_s": 9.348504248000609,
+     "cpu_s": 211.800796,
+     "user_s": 183.097825,
+     "sys_s": 28.216915,
+     "minor_faults": 600114,
+     "import_s": 1.7458560850009235,
+     "peak_rss_mb": 3381.37109375,
+     "parquet_bytes": 374761369,
+     "rows": 19625400,
+     "rows_per_s_total": 91598.75055197721,
+     "rows_per_s_generate": 95952.24127981611,
+     "runs_total_s": [
+      211.175,
+      218.704,
+      212.686,
+      214.254,
+      217.797
+     ],
+     "loadavg_before": [
+      1.4794921875,
+      1.39013671875,
+      1.0068359375,
+      1.47412109375,
+      1.18505859375
+     ],
+     "per_table_s_median": {
+      "customer": 1.2952480999992986,
+      "product_category": 0.002801639000608702,
+      "promotion": 0.0038049359991418896,
+      "store": 0.0016385190010623774,
+      "address": 4.8603671840010065,
+      "product": 0.00988157199935813,
+      "order": 153.91878124899995,
+      "order_line": 30.875522820999322,
+      "return": 0.35110869299933256,
+      "_compute_phase+business_rules": 12.63231672800066,
+      "_construct_domain+RefEngine()": 0.011578617999475682
+     },
+     "row_counts": {
+      "customer": 500000,
+      "product_category": 50,
+      "promotion": 200,
+      "store": 150,
+      "address": 750000,
+      "product": 25000,
+      "order": 5000000,
+      "order_line": 12500000,
+      "return": 850000
+     }
+    },
+    "shape": {
+     "total_s": 6.45475185900068,
+     "gen_s": 6.45475185900068,
+     "write_s": 0.0,
+     "cpu_s": 15.675704,
+     "user_s": 12.238132,
+     "sys_s": 3.524588,
+     "minor_faults": 808347,
+     "import_s": 0.7282735729986598,
+     "peak_rss_mb": 1874.69921875,
+     "parquet_bytes": 386321658,
+     "rows": 19625400,
+     "rows_per_s_total": 3040457.701349714,
+     "rows_per_s_generate": 3040457.701349714,
+     "runs_total_s": [
+      6.455,
+      6.572,
+      6.325,
+      6.716,
+      6.422
+     ],
+     "loadavg_before": [
+      1.009765625,
+      1.0087890625,
+      1.080078125,
+      1.0087890625,
+      1.001953125
+     ],
+     "per_table_s_median": {
+      "_construct_domain+Engine": 0.0195455260000017,
+      "_generate+write": 6.441350686000078
+     },
+     "row_counts": {
+      "customer": 500000,
+      "product_category": 50,
+      "promotion": 200,
+      "store": 150,
+      "address": 750000,
+      "product": 25000,
+      "order": 5000000,
+      "order_line": 12500000,
+      "return": 850000
+     },
+     "numpy": "2.4.6",
+     "pyarrow": "25.0.1"
+    }
+   },
+   "raw": {
+    "refengine": [
+     {
+      "import_s": 1.7036443879987928,
+      "gen_s": 201.4644386430009,
+      "write_s": 9.710950009999578,
+      "total_s": 211.17538865300048,
+      "rows": {
+       "customer": 500000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 750000,
+       "product": 25000,
+       "order": 5000000,
+       "order_line": 12500000,
+       "return": 850000
+      },
+      "per_table_s": {
+       "customer": 1.2733818819997396,
+       "product_category": 0.0027333470006851712,
+       "promotion": 0.003517416998874978,
+       "store": 0.0015482600010727765,
+       "address": 4.720564088000174,
+       "product": 0.012464269999327371,
+       "order": 153.91878124899995,
+       "order_line": 29.006494893999843,
+       "return": 0.3398768850001943,
+       "_compute_phase+business_rules": 12.174391328000638,
+       "_construct_domain+RefEngine()": 0.010685023000405636
+      },
+      "user_s": 182.677283,
+      "sys_s": 26.069516999999998,
+      "minor_faults": 601168,
+      "major_faults": 0,
+      "cpu_s": 208.74679999999998,
+      "peak_rss_mb": 3381.37109375,
+      "parquet_bytes": 374761369,
+      "loadavg_before": 1.4794921875
+     },
+     {
+      "import_s": 1.7458560850009235,
+      "gen_s": 209.7137967480012,
+      "write_s": 8.990282013999604,
+      "total_s": 218.7040787620008,
+      "rows": {
+       "customer": 500000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 750000,
+       "product": 25000,
+       "order": 5000000,
+       "order_line": 12500000,
+       "return": 850000
+      },
+      "per_table_s": {
+       "customer": 1.2952480999992986,
+       "product_category": 0.0028291590006119804,
+       "promotion": 0.004355416000180412,
+       "store": 0.0017579399991518585,
+       "address": 4.8603671840010065,
+       "product": 0.009145438998530153,
+       "order": 153.85188229900086,
+       "order_line": 37.01904161499988,
+       "return": 0.36873453999942285,
+       "_compute_phase+business_rules": 12.288250778001384,
+       "_construct_domain+RefEngine()": 0.012184278000859194
+      },
+      "user_s": 182.703673,
+      "sys_s": 32.895973000000005,
+      "minor_faults": 600114,
+      "major_faults": 0,
+      "cpu_s": 215.59964600000004,
+      "peak_rss_mb": 3380.5703125,
+      "parquet_bytes": 374761369,
+      "loadavg_before": 1.39013671875
+     },
+     {
+      "import_s": 1.6393591519990878,
+      "gen_s": 203.53883651400065,
+      "write_s": 9.14733061899824,
+      "total_s": 212.6861671329989,
+      "rows": {
+       "customer": 500000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 750000,
+       "product": 25000,
+       "order": 5000000,
+       "order_line": 12500000,
+       "return": 850000
+      },
+      "per_table_s": {
+       "customer": 1.4795341310000367,
+       "product_category": 0.0067460270001902245,
+       "promotion": 0.006078381000406807,
+       "store": 0.002665257999979076,
+       "address": 4.985270416998901,
+       "product": 0.009702018000098178,
+       "order": 154.11558587699983,
+       "order_line": 29.93825036600174,
+       "return": 0.35110869299933256,
+       "_compute_phase+business_rules": 12.63231672800066,
+       "_construct_domain+RefEngine()": 0.011578617999475682
+      },
+      "user_s": 183.25504800000002,
+      "sys_s": 26.698318,
+      "minor_faults": 599209,
+      "major_faults": 0,
+      "cpu_s": 209.95336600000002,
+      "peak_rss_mb": 3383.04296875,
+      "parquet_bytes": 374761369,
+      "loadavg_before": 1.0068359375
+     },
+     {
+      "import_s": 1.775597668998671,
+      "gen_s": 204.533002442,
+      "write_s": 9.721011741999973,
+      "total_s": 214.25401418399997,
+      "rows": {
+       "customer": 500000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 750000,
+       "product": 25000,
+       "order": 5000000,
+       "order_line": 12500000,
+       "return": 850000
+      },
+      "per_table_s": {
+       "customer": 1.1258829079997668,
+       "product_category": 0.002801639000608702,
+       "promotion": 0.0038049359991418896,
+       "store": 0.0016385190010623774,
+       "address": 4.946999998999672,
+       "product": 0.012052017000314663,
+       "order": 153.22773193899957,
+       "order_line": 30.875522820999322,
+       "return": 0.4015921830014122,
+       "_compute_phase+business_rules": 13.923376782999185,
+       "_construct_domain+RefEngine()": 0.011598697999943397
+      },
+      "user_s": 183.097825,
+      "sys_s": 28.702971,
+      "minor_faults": 599973,
+      "major_faults": 0,
+      "cpu_s": 211.800796,
+      "peak_rss_mb": 3355.40234375,
+      "parquet_bytes": 374761369,
+      "loadavg_before": 1.47412109375
+     },
+     {
+      "import_s": 1.7510280900005455,
+      "gen_s": 208.4482645879998,
+      "write_s": 9.348504248000609,
+      "total_s": 217.7967688360004,
+      "rows": {
+       "customer": 500000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 750000,
+       "product": 25000,
+       "order": 5000000,
+       "order_line": 12500000,
+       "return": 850000
+      },
+      "per_table_s": {
+       "customer": 1.3806864179987315,
+       "product_category": 0.0027191440003662137,
+       "promotion": 0.003544536999470438,
+       "store": 0.0013478780001605628,
+       "address": 4.720458846000838,
+       "product": 0.00988157199935813,
+       "order": 157.8687598659999,
+       "order_line": 31.460662368999692,
+       "return": 0.32828527800120355,
+       "_compute_phase+business_rules": 12.661389496999618,
+       "_construct_domain+RefEngine()": 0.010529183000471676
+      },
+      "user_s": 186.987159,
+      "sys_s": 28.216915,
+      "minor_faults": 600149,
+      "major_faults": 0,
+      "cpu_s": 215.204074,
+      "peak_rss_mb": 3382.5078125,
+      "parquet_bytes": 374761369,
+      "loadavg_before": 1.18505859375
+     }
+    ],
+    "shape": [
+     {
+      "import_s": 0.6995865919998323,
+      "gen_s": 6.45475185900068,
+      "write_s": 0.0,
+      "total_s": 6.45475185900068,
+      "overlapped": true,
+      "rows": {
+       "customer": 500000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 750000,
+       "product": 25000,
+       "order": 5000000,
+       "order_line": 12500000,
+       "return": 850000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.013401173000602284,
+       "_generate+write": 6.441350686000078
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 11.654219999999999,
+      "sys_s": 3.989428,
+      "minor_faults": 802270,
+      "major_faults": 0,
+      "cpu_s": 15.643648,
+      "peak_rss_mb": 1874.125,
+      "parquet_bytes": 386321658,
+      "loadavg_before": 1.009765625
+     },
+     {
+      "import_s": 0.6506235439992452,
+      "gen_s": 6.571778497000196,
+      "write_s": 0.0,
+      "total_s": 6.571778497000196,
+      "overlapped": true,
+      "rows": {
+       "customer": 500000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 750000,
+       "product": 25000,
+       "order": 5000000,
+       "order_line": 12500000,
+       "return": 850000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.015711811000073794,
+       "_generate+write": 6.556066686000122
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 12.447553000000001,
+      "sys_s": 3.524588,
+      "minor_faults": 812697,
+      "major_faults": 0,
+      "cpu_s": 15.972141,
+      "peak_rss_mb": 1865.23046875,
+      "parquet_bytes": 386321658,
+      "loadavg_before": 1.0087890625
+     },
+     {
+      "import_s": 0.86743750900132,
+      "gen_s": 6.324679641998955,
+      "write_s": 0.0,
+      "total_s": 6.324679641998955,
+      "overlapped": true,
+      "rows": {
+       "customer": 500000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 750000,
+       "product": 25000,
+       "order": 5000000,
+       "order_line": 12500000,
+       "return": 850000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.02895390999947267,
+       "_generate+write": 6.295725731999482
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 11.848585,
+      "sys_s": 3.461198,
+      "minor_faults": 808347,
+      "major_faults": 0,
+      "cpu_s": 15.309783000000001,
+      "peak_rss_mb": 1874.69921875,
+      "parquet_bytes": 386321658,
+      "loadavg_before": 1.080078125
+     },
+     {
+      "import_s": 0.7282735729986598,
+      "gen_s": 6.716430782000316,
+      "write_s": 0.0,
+      "total_s": 6.716430782000316,
+      "overlapped": true,
+      "rows": {
+       "customer": 500000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 750000,
+       "product": 25000,
+       "order": 5000000,
+       "order_line": 12500000,
+       "return": 850000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.0267518190012197,
+       "_generate+write": 6.689678962999096
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 12.845793,
+      "sys_s": 3.761866,
+      "minor_faults": 804847,
+      "major_faults": 0,
+      "cpu_s": 16.607659,
+      "peak_rss_mb": 1876.640625,
+      "parquet_bytes": 386321658,
+      "loadavg_before": 1.0087890625
+     },
+     {
+      "import_s": 0.7860047090016451,
+      "gen_s": 6.421816391999528,
+      "write_s": 0.0,
+      "total_s": 6.421816391999528,
+      "overlapped": true,
+      "rows": {
+       "customer": 500000,
+       "product_category": 50,
+       "promotion": 200,
+       "store": 150,
+       "address": 750000,
+       "product": 25000,
+       "order": 5000000,
+       "order_line": 12500000,
+       "return": 850000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.0195455260000017,
+       "_generate+write": 6.402270865999526
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 12.238132,
+      "sys_s": 3.437572,
+      "minor_faults": 811672,
+      "major_faults": 0,
+      "cpu_s": 15.675704,
+      "peak_rss_mb": 1885.79296875,
+      "parquet_bytes": 386321658,
+      "loadavg_before": 1.001953125
+     }
+    ]
+   }
+  }
+ }
+}

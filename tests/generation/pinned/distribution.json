@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "m",
+    "seed": 3
+  },
+  "tables": {
+    "t": {
+      "name": "t",
+      "primary_key": [
+        "k"
+      ],
+      "columns": {
+        "k": {
+          "name": "k",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "x": {
+          "name": "x",
+          "type": "string",
+          "generator": {
+            "strategy": "distribution",
+            "distribution": "normal",
+            "params": {
+              "mean": 50,
+              "std_dev": 9
+            }
+          }
+        }
+      }
+    }
+  },
+  "generation": {
+    "scale": "s",
+    "scales": {
+      "s": {
+        "t": 20000
+      }
+    }
+  },
+  "generators": {
+    "distribution": 1,
+    "normal": 1,
+    "sequence": 1
+  }
+}

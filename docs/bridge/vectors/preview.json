@@ -1,0 +1,91 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "two-stores",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "domain": "retail",
+          "rows": 2,
+          "seed": 1,
+          "tables": [
+            "store"
+          ]
+        },
+        "command": "preview",
+        "id": "two-stores"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "preview",
+        "id": "two-stores",
+        "ok": true,
+        "result": {
+          "domain": "retail",
+          "seed": 1,
+          "tables": {
+            "store": {
+              "columns": [
+                "store_id",
+                "store_name",
+                "store_type",
+                "city",
+                "state"
+              ],
+              "data": [
+                {
+                  "city": "Memphis",
+                  "state": "NJ",
+                  "store_id": 1,
+                  "store_name": "Store #0001",
+                  "store_type": "online"
+                },
+                {
+                  "city": "Cincinnati",
+                  "state": "AL",
+                  "store_id": 2,
+                  "store_name": "Store #0002",
+                  "store_type": "physical"
+                }
+              ],
+              "preview_rows": 2,
+              "total_rows": 150
+            }
+          }
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-table",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "domain": "retail",
+          "tables": [
+            "ghost"
+          ]
+        },
+        "command": "preview",
+        "id": "unknown-table"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "preview",
+        "error": {
+          "code": "input.invalid_value",
+          "group": "input",
+          "hint": null,
+          "message": "no such table(s): ghost (the tables are: customer, address, product_category, product, store, promotion, order, order_line, return)"
+        },
+        "id": "unknown-table",
+        "ok": false,
+        "warnings": []
+      }
+    }
+  ],
+  "command": "preview",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

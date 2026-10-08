@@ -1,0 +1,23 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "new_category_values",
+  "gates_fail": [],
+  "drift": [
+    {
+      "between": [
+        0,
+        10
+      ],
+      "changes": [
+        {
+          "column": "order.status",
+          "kinds": [
+            "new_categorical_values",
+            "category_shift"
+          ]
+        }
+      ]
+    }
+  ]
+}

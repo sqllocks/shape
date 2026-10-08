@@ -1,0 +1,1 @@
+ContractError: the contract has a 'tables' object but the profile is a single table ('visits'): profile the tables together as a dataset, one table per file (`shape profile --dataset FOLDER`, or `shape.profile({name: source, ...})`)

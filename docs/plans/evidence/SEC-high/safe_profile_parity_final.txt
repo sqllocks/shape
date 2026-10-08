@@ -1,0 +1,18 @@
+$ source scripts/env.sh && python benchmarks/vs_refengine/safe_profile_1to1/verify.py   # lane/SEC-high after merging int/INT-18 (validators fix), with the #395 named difference
+d2.csv
+  mapper[default]: PASS
+  mapper[k11]: PASS
+  mapper[sensitive]: PASS
+  mapper[unsafe]: PASS
+  mapper[no_pii_gate]: PASS
+  mapper[widen_bounds]: PASS
+  validator: 28 artifacts, PASS
+PARITY OK
+exit 0
+
+# Negative control: the same harness against plain int/INT-18 (which releases small-cohort statistics) on D2 and edge/e3.csv
+d2.csv: PARITY OK (no D2 column is below k)
+edge/e3.csv: exit 1, 90 mismatches '... rows < k but the product releases it', for example:
+  MISMATCH default.tables.e3.columns.paid.mean: 3 rows < k but the product releases it
+  MISMATCH default.tables.e3.columns.paid.std: 3 rows < k but the product releases it
+  MISMATCH default.tables.e3.columns.const_int.mean: 3 rows < k but the product releases it

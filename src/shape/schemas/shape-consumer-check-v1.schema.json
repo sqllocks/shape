@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sqllocks.github.io/shape/schemas/shape-consumer-check-v1.schema.json",
+  "title": "Shape consumer check report, version 1",
+  "description": "The result of `shape contracts check-consumers`: each consumer contract of a source, pass or fail, with its violations and owners.",
+  "type": "object",
+  "required": ["format", "version", "source", "profile", "consumers", "summary", "passed"],
+  "properties": {
+    "format": {"const": "shape-consumer-check"},
+    "version": {"type": "integer", "minimum": 1},
+    "source": {"type": ["string", "null"]},
+    "directory": {"type": ["string", "null"]},
+    "profile": {"$ref": "#/$defs/profile"},
+    "baseline": {"$ref": "#/$defs/profile"},
+    "consumers": {"type": "array", "items": {"$ref": "#/$defs/consumer"}},
+    "summary": {
+      "type": "object",
+      "required": ["consumers", "passed", "failed"],
+      "properties": {
+        "consumers": {"type": "integer", "minimum": 0},
+        "passed": {"type": "integer", "minimum": 0},
+        "failed": {"type": "integer", "minimum": 0},
+        "broken_by_change": {"type": "integer", "minimum": 0}
+      }
+    },
+    "passed": {"type": "boolean"}
+  },
+  "$defs": {
+    "profile": {
+      "type": "object",
+      "required": ["name", "path"],
+      "properties": {
+        "name": {"type": "string"},
+        "path": {"type": "string"},
+        "content_id": {"type": ["string", "null"]}
+      }
+    },
+    "consumer": {
+      "type": "object",
+      "required": ["consumer", "owner", "source", "since", "file", "status", "violations"],
+      "properties": {
+        "consumer": {"type": "string"},
+        "owner": {"type": "string"},
+        "source": {"type": "string"},
+        "since": {"type": "string"},
+        "file": {"type": "string"},
+        "status": {"enum": ["pass", "fail"]},
+        "violations": {"type": "array", "items": {"$ref": "#/$defs/violation"}},
+        "broken_by_change": {"type": "boolean"},
+        "already_failing": {"type": "boolean"}
+      }
+    },
+    "violation": {
+      "type": "object",
+      "required": ["table", "column", "rule", "expected", "observed"],
+      "properties": {
+        "table": {"type": ["string", "null"]},
+        "column": {"type": ["string", "null"]},
+        "rule": {"type": "string"},
+        "producer_owner": {"type": "string"},
+        "new": {"type": "boolean"}
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "format": "shape-scenario",
+  "version": 1,
+  "id": "detective_clocks_and_keys",
+  "domain": "retail",
+  "scale": "small",
+  "seed": 42,
+  "gates": [
+    "schema_conformance",
+    "referential_integrity",
+    "row_count",
+    "null_check",
+    "uniqueness"
+  ],
+  "defects": [
+    {
+      "kind": "late_arrivals",
+      "table": "order",
+      "column": "order_date",
+      "fraction": 0.2,
+      "days": 200
+    },
+    {
+      "kind": "shift_hours",
+      "table": "order",
+      "column": "order_date",
+      "fraction": 1.0,
+      "hours": 8
+    },
+    {
+      "kind": "duplicate_keys",
+      "table": "return",
+      "fraction": 0.1
+    },
+    {
+      "kind": "shuffle_column",
+      "table": "address",
+      "column": "city",
+      "fraction": 1.0
+    }
+  ]
+}

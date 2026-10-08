@@ -1,0 +1,11 @@
+{
+  "passed": false,
+  "violations": [
+    {
+      "column": null,
+      "rule": "row_count.min",
+      "expected": 1000,
+      "observed": 300
+    }
+  ]
+}

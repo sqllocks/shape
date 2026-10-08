@@ -1,0 +1,14 @@
+{
+  "changes": [],
+  "command": "diff",
+  "drifted": false,
+  "exit_code": 0,
+  "format": "shape-result",
+  "project": {
+    "file": "shape.yml",
+    "format": "shape-project",
+    "source": "orders",
+    "version": 1
+  },
+  "version": 1
+}

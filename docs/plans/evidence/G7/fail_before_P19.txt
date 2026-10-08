@@ -1,0 +1,5 @@
+$ git worktree at 06300e7^ (the commit before the P19 fix); current tests/artifact/test_signing.py copied in; PYTHONPATH=src SHAPE_KERNEL=python PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 pytest -q tests/artifact/test_signing.py
+ERROR tests/artifact/test_signing.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.21s
+E   ImportError: cannot import name 'ArtifactSignatureError' from 'shape.artifact' (<worktree>/src/shape/artifact/__init__.py)

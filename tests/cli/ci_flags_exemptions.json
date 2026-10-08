@@ -1,0 +1,11 @@
+{
+  "format": "shape-ci-flags-exemptions",
+  "version": 1,
+  "json": {
+    "version": "already prints exactly one JSON document and has no other mode",
+    "bridge": "a long-running server: its standard output is the JSON protocol, one document per line (`bridge schema` has --json)"
+  },
+  "dry_run": {
+    "bridge": "a long-running server: there is no run to preview (`bridge schema --out` has --dry-run)"
+  }
+}

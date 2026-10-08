@@ -1,0 +1,46 @@
+$ ruff check src tests plugins benchmarks/vs_refengine
+All checks passed!
+exit=0
+$ ruff format --check src tests plugins benchmarks/vs_refengine
+1718 files already formatted
+exit=0
+$ mypy
+Success: no issues found in 638 source files
+exit=0
+$ python -m compileall -q src/shape
+exit=0
+$ vulture src/shape scripts/vulture_whitelist.py --min-confidence 80
+exit=0
+$ lint-imports
+Built-ins load only through the plugin registry (plan 4.3) KEPT (1 ignored import)
+
+Contracts: 1 kept, 0 broken.
+exit=0
+$ python scripts/check_requirements.py
+Requirement registry OK: 89 requirements.
+exit=0
+$ python scripts/check_secrets.py
+Basic secret check OK.
+exit=0
+$ python scripts/check_user_facing.py
+check_user_facing: clean
+exit=0
+$ python scripts/gen_exit_codes.py --check
+exit=0
+$ python scripts/check_shipped_data.py
+shape/security/redirects.py: imports urllib.request, a network client, outside an explicit fetch module
+exit=1
+$ python scripts/check_plugin_skeletons.py
+plugin skeletons OK (11 distributions, version 0.9.0)
+exit=0
+$ python scripts/check_conformance_coverage.py
+32 normative statements, 32 conformance tests
+exit=0
+$ python scripts/cli_surface.py --check
+CLI surface: 0 breaking change(s), 0 note(s)
+exit=0
+$ python scripts/check_v1_done.py
+v1 definition of done: 29 item(s), 0 problem(s)
+exit=0
+$ bandit -q -r src -ll
+exit=0

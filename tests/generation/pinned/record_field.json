@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "compat",
+    "seed": 7
+  },
+  "tables": {
+    "t": {
+      "name": "t",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "v": {
+          "name": "v",
+          "type": "string",
+          "generator": {
+            "strategy": "record_sample",
+            "dataset": "compat_places",
+            "field": "city"
+          }
+        },
+        "zip": {
+          "name": "zip",
+          "type": "string",
+          "generator": {
+            "strategy": "record_field",
+            "dataset": "compat_places",
+            "field": "zip"
+          }
+        }
+      }
+    }
+  },
+  "relationships": [],
+  "generation": {
+    "scale": "small",
+    "scales": {
+      "small": {
+        "t": 20
+      }
+    }
+  },
+  "generators": {
+    "record_field": 1,
+    "record_sample": 1,
+    "sequence": 1
+  }
+}

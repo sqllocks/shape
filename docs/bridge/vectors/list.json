@@ -1,0 +1,209 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "domains",
+      "request": {
+        "api_version": "1.0",
+        "args": {},
+        "command": "list",
+        "id": "domains"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "list",
+        "id": "domains",
+        "ok": true,
+        "result": {
+          "count": 14,
+          "domains": [
+            {
+              "description": "Capital Markets domain with companies, daily prices, dividends, earnings, insider trades, and tick-level trades",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "capital_markets",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Education domain with students, courses, enrollments, grades, and financial aid",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "education",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Banking domain with accounts, transactions, loans, and fraud detection",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "financial",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Healthcare domain with patients, encounters, diagnoses, procedures, and claims",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "healthcare",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Human resources domain with employees, departments, compensation, and performance",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "hr",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Insurance domain with policies, claims, underwriting, and premium management",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "insurance",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "IoT domain with devices, sensors, readings, alerts, and maintenance",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "iot",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Manufacturing domain with production lines, work orders, quality control, and equipment",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "manufacturing",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Marketing domain with campaigns, contacts, leads, opportunities, and conversions",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "marketing",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Pulse rideshare \u2014 riders, drivers, vehicles, seasonal trips across 4 US metros",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "pulse",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Real estate domain with properties, listings, offers, transactions, and inspections",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "real_estate",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Retail / E-Commerce domain with customers, products, orders, and returns",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "retail",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Supply chain domain with warehouses, purchasing, inventory, and logistics",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "supply_chain",
+              "profiles": [
+                "default"
+              ]
+            },
+            {
+              "description": "Telecom domain with subscribers, service lines, usage records, billing, and churn",
+              "modes": [
+                "3nf",
+                "star"
+              ],
+              "name": "telecom",
+              "profiles": [
+                "default"
+              ]
+            }
+          ],
+          "version": "<any>"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "takes-no-arguments",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "x": 1
+        },
+        "command": "list",
+        "id": "takes-no-arguments"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "list",
+        "error": {
+          "code": "usage.unknown_argument",
+          "group": "usage",
+          "hint": "it takes: no arguments",
+          "message": "list does not take argument(s): x"
+        },
+        "id": "takes-no-arguments",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "list",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

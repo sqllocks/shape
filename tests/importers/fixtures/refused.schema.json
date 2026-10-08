@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "refused",
+  "type": "object",
+  "required": ["id"],
+  "properties": {
+    "id": {"type": "integer"},
+    "mixed": {"oneOf": [{"type": "string"}, {"type": "integer"}, {"type": "boolean"}]},
+    "maybe": {"anyOf": [{"type": "string", "maxLength": 12}, {"type": "null"}]},
+    "remote": {"$ref": "https://example.com/other.json"},
+    "freeform": {"type": "object", "additionalProperties": {"type": "string"}},
+    "grid": {"type": "array", "items": {"type": "array", "items": {"type": "integer"}}},
+    "even": {"type": "integer", "multipleOf": 2, "minimum": 0, "maximum": 10},
+    "hex": {"type": "string", "pattern": "^(?:[0-9a-f]{2}:){5}[0-9a-f]{2}$"},
+    "kind": {"type": ["string", "integer"]},
+    "upto": {"type": "integer", "exclusiveMaximum": 10, "exclusiveMinimum": 0}
+  }
+}

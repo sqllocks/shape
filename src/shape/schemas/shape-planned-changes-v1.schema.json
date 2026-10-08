@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shape-as-code.org/schema/1.0/shape-planned-changes-v1.json",
+  "title": "Shape planned-change file (shape-changes.yml), version 1",
+  "description": "A reviewable list of changes that are planned for a feed, kept in git next to shape.yml. `shape diff`, `shape check` and `shape verify` read it: a change inside its window is reported as planned and does not fail, a suppressed one is not reported, and an expired entry stops matching. The file is YAML (JSON works too). Rules the schema language cannot state are enforced by `shape changes validate`: ids are unique and match [a-z0-9][a-z0-9._-]*, kinds are drift kinds (docs/DRIFT.md) or contract rules, dates are real calendar dates, `until` is not before `from`, and `severity` goes with (and only with) the severity action.",
+  "type": "object",
+  "required": ["format", "version", "changes"],
+  "additionalProperties": false,
+  "properties": {
+    "format": {"const": "shape-planned-changes"},
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "The format version. A file with a newer version than the installed Shape understands is refused."
+    },
+    "changes": {"type": "array", "items": {"$ref": "#/$defs/change"}}
+  },
+  "$defs": {
+    "change": {
+      "type": "object",
+      "required": ["id", "column", "kinds", "until", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$"},
+        "source": {"type": "string", "minLength": 1, "description": "A source name from shape.yml. Without it the entry applies to every source."},
+        "column": {"type": "string", "minLength": 1, "description": "A column name, table.column or a glob; * for every column and for table-level kinds."},
+        "kinds": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "description": "Drift kinds (docs/DRIFT.md) or contract rule names."},
+        "from": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$", "description": "ISO date (UTC), inclusive. Without it the entry is active from the beginning."},
+        "until": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$", "description": "ISO date (UTC), inclusive. Required."},
+        "action": {"enum": ["expect", "suppress", "severity"], "description": "expect (default): reported as planned, not failing. suppress: not reported. severity: reported with `severity`."},
+        "severity": {"enum": ["low", "medium", "high"]},
+        "class": {"enum": ["breaking", "additive", "cosmetic"], "description": "Optional. The change class (docs/DRIFT.md, Change classes) of the changes this entry matches, instead of the class of their kind. A file without it reads as before."},
+        "reason": {"type": "string", "minLength": 1},
+        "owner": {"type": "string", "minLength": 1},
+        "ticket": {"type": "string", "minLength": 1},
+        "acknowledged_by": {"type": "string", "minLength": 1},
+        "acknowledged_at": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}"}
+      }
+    }
+  }
+}

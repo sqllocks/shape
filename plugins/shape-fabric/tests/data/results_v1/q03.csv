@@ -1,0 +1,4 @@
+category[region],[item.Items],[item.Revenue],[item.Cheapest],[item.Priciest],[item.Mean Price],[item.Revenue per Item],[category.Categories]
+,49,241.27,1.57,9.04,4.923878,4.923878,1
+north,114,575.88,1.00,9.13,5.051579,5.051579,2
+south,137,682.85,1.04,9.13,4.984307,4.984307,3

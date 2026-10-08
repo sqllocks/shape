@@ -1,0 +1,14 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "detective_text_trouble",
+  "gates_fail": [],
+  "defects": {
+    "corrupt_encoding": {
+      "min": 1
+    },
+    "truncate_strings": {
+      "min": 1
+    }
+  }
+}

@@ -1,0 +1,16 @@
+# Extra packages the L2 (Fabric) tests need beyond the repo's [dev] extra.
+# pyspark / delta-spark belong in [dev] (owned by lane L1's pyproject edit); listed here until then.
+numpy>=2.0
+pandas
+pyarrow>=14
+deltalake
+nbformat
+ipython
+jsonschema
+fsspec
+pyspark>=4.0
+delta-spark>=4.0
+fabric-user-data-functions
+pytest
+# PF-06: the generation notebooks and generateSample need an installed domain (run from the repo root).
+-e plugins/shape-domains

@@ -1,0 +1,10 @@
+$ source scripts/env.sh && TMPDIR=<private> SHAPE_KERNEL=python "$SHAPE_VENV/bin/python" -m pytest -q -p no:cacheprovider -m "not emulator and not live"
+FAILED tests/bridge/test_vectors.py::test_a_live_bridge_gives_the_responses_of_the_vectors[report_card]
+FAILED tests/bridge/test_vectors.py::test_a_live_bridge_gives_the_responses_of_the_vectors[report_card_read]
+FAILED tests/generation/test_w1_06_spec_schema.py::test_the_shipped_file_is_what_the_builder_makes
+FAILED tests/plugins/test_trust_reach.py::test_no_plugin_starts_a_subprocess_or_opens_a_socket
+FAILED tests/test_removed_modules.py::test_removed_module_is_not_importable[history]
+5 failed, 12011 passed, 23 skipped, 16 deselected, 1120 warnings in 11060.18s (3:04:20)
+exit 1
+
+Same 5 as SHAPE_KERNEL=rust; all fail on int/INT-18 f94de92 without this lane. The run includes the heavy tests, which CI never runs under the python kernel (tests/profile/test_engine.py::test_bounded_mode_memory_does_not_grow_with_rows alone took over an hour).

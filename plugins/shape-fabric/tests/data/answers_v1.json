@@ -1,0 +1,245 @@
+{
+  "format": "shape-dax-answers",
+  "version": 1,
+  "source": {
+    "domain": "shop",
+    "scale": "small",
+    "seed": 5
+  },
+  "places": 6,
+  "tables": {
+    "category": 6,
+    "item": 300
+  },
+  "plants": [
+    {
+      "table": "item",
+      "column": "price",
+      "total": "1500"
+    }
+  ],
+  "measures": [
+    {
+      "id": "item.Items",
+      "name": "Items",
+      "table": "item",
+      "kind": "count",
+      "column": null,
+      "expression": "COUNTROWS('item')",
+      "exact": true
+    },
+    {
+      "id": "item.Revenue",
+      "name": "Revenue",
+      "table": "item",
+      "kind": "sum",
+      "column": "price",
+      "expression": "SUM('item'[price])",
+      "exact": true
+    },
+    {
+      "id": "item.Cheapest",
+      "name": "Cheapest",
+      "table": "item",
+      "kind": "min",
+      "column": "price",
+      "expression": "MIN('item'[price])",
+      "exact": true
+    },
+    {
+      "id": "item.Priciest",
+      "name": "Priciest",
+      "table": "item",
+      "kind": "max",
+      "column": "price",
+      "expression": "MAX('item'[price])",
+      "exact": true
+    },
+    {
+      "id": "item.Mean Price",
+      "name": "Mean Price",
+      "table": "item",
+      "kind": "avg",
+      "column": "price",
+      "expression": "AVERAGE('item'[price])",
+      "exact": false
+    },
+    {
+      "id": "item.Revenue per Item",
+      "name": "Revenue per Item",
+      "table": "item",
+      "kind": "ratio",
+      "column": null,
+      "expression": "DIVIDE('item'[Revenue], 'item'[Items])",
+      "exact": false,
+      "numerator": "Revenue",
+      "denominator": "Items"
+    },
+    {
+      "id": "category.Categories",
+      "name": "Categories",
+      "table": "category",
+      "kind": "count",
+      "column": null,
+      "expression": "COUNTROWS('category')",
+      "exact": true
+    }
+  ],
+  "queries": [
+    {
+      "id": "q01",
+      "slice": null,
+      "slice_type": null,
+      "measures": [
+        "item.Items",
+        "item.Revenue",
+        "item.Cheapest",
+        "item.Priciest",
+        "item.Mean Price",
+        "item.Revenue per Item",
+        "category.Categories"
+      ],
+      "rows": [
+        {
+          "key": [],
+          "values": {
+            "item.Items": "300",
+            "item.Revenue": "1500.00",
+            "item.Cheapest": "1.00",
+            "item.Priciest": "9.13",
+            "item.Mean Price": "5.000000",
+            "item.Revenue per Item": "5.000000",
+            "category.Categories": "6"
+          },
+          "fractions": {
+            "item.Mean Price": "5/1",
+            "item.Revenue per Item": "5/1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q02",
+      "slice": "category.label",
+      "slice_type": "string",
+      "measures": [
+        "item.Items",
+        "item.Revenue",
+        "item.Cheapest",
+        "item.Priciest",
+        "item.Mean Price",
+        "item.Revenue per Item",
+        "category.Categories"
+      ],
+      "rows": [
+        {
+          "key": [
+            "books"
+          ],
+          "values": {
+            "item.Items": "150",
+            "item.Revenue": "760.13",
+            "item.Cheapest": "1.00",
+            "item.Priciest": "9.13",
+            "item.Mean Price": "5.067533",
+            "item.Revenue per Item": "5.067533",
+            "category.Categories": "3"
+          },
+          "fractions": {
+            "item.Mean Price": "76013/15000",
+            "item.Revenue per Item": "76013/15000"
+          }
+        },
+        {
+          "key": [
+            "toys"
+          ],
+          "values": {
+            "item.Items": "150",
+            "item.Revenue": "739.87",
+            "item.Cheapest": "1.04",
+            "item.Priciest": "9.13",
+            "item.Mean Price": "4.932467",
+            "item.Revenue per Item": "4.932467",
+            "category.Categories": "3"
+          },
+          "fractions": {
+            "item.Mean Price": "73987/15000",
+            "item.Revenue per Item": "73987/15000"
+          }
+        }
+      ]
+    },
+    {
+      "id": "q03",
+      "slice": "category.region",
+      "slice_type": "string",
+      "measures": [
+        "item.Items",
+        "item.Revenue",
+        "item.Cheapest",
+        "item.Priciest",
+        "item.Mean Price",
+        "item.Revenue per Item",
+        "category.Categories"
+      ],
+      "rows": [
+        {
+          "key": [
+            null
+          ],
+          "values": {
+            "item.Items": "49",
+            "item.Revenue": "241.27",
+            "item.Cheapest": "1.57",
+            "item.Priciest": "9.04",
+            "item.Mean Price": "4.923878",
+            "item.Revenue per Item": "4.923878",
+            "category.Categories": "1"
+          },
+          "fractions": {
+            "item.Mean Price": "24127/4900",
+            "item.Revenue per Item": "24127/4900"
+          }
+        },
+        {
+          "key": [
+            "north"
+          ],
+          "values": {
+            "item.Items": "114",
+            "item.Revenue": "575.88",
+            "item.Cheapest": "1.00",
+            "item.Priciest": "9.13",
+            "item.Mean Price": "5.051579",
+            "item.Revenue per Item": "5.051579",
+            "category.Categories": "2"
+          },
+          "fractions": {
+            "item.Mean Price": "4799/950",
+            "item.Revenue per Item": "4799/950"
+          }
+        },
+        {
+          "key": [
+            "south"
+          ],
+          "values": {
+            "item.Items": "137",
+            "item.Revenue": "682.85",
+            "item.Cheapest": "1.04",
+            "item.Priciest": "9.13",
+            "item.Mean Price": "4.984307",
+            "item.Revenue per Item": "4.984307",
+            "category.Categories": "3"
+          },
+          "fractions": {
+            "item.Mean Price": "13657/2740",
+            "item.Revenue per Item": "13657/2740"
+          }
+        }
+      ]
+    }
+  ],
+  "skipped": []
+}

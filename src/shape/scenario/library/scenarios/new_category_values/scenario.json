@@ -1,0 +1,30 @@
+{
+  "format": "shape-scenario",
+  "version": 1,
+  "id": "new_category_values",
+  "domain": "retail",
+  "scale": "small",
+  "seed": 42,
+  "gates": [],
+  "drift": {
+    "plan": {
+      "start": "2026-01-01",
+      "days": 30,
+      "events": [
+        {
+          "kind": "new_category",
+          "column": "order.status",
+          "value": "lost",
+          "share": 0.15,
+          "start": 5
+        }
+      ]
+    },
+    "compare": [
+      [
+        0,
+        10
+      ]
+    ]
+  }
+}

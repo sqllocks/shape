@@ -1,0 +1,229 @@
+# Writing a Shape plugin
+
+A plugin is an ordinary Python distribution that registers objects in one or more **entry-point
+groups**. Shape finds it through the installed metadata; nothing in core changes. First-party
+features use exactly the same route (see [builtins.md](builtins.md)).
+
+Plugins are trusted, in-process code: the host checks that a plugin is compatible, not that it
+is safe. Install only plugins you trust.
+
+Read first: [api-v1.md](api-v1.md) (every Protocol) and [host.md](host.md) (how the host loads
+plugins). A complete small plugin, with a source, a detector and a command, is in
+[`examples/plugin/`](../../examples/plugin/).
+
+## Start from a template
+
+```bash
+shape plugins new acme-iban --group shape.detectors      # a folder ./acme-iban
+cd acme-iban
+pip install -e . pytest
+pytest
+python -m shape.plugins.kit acme-iban
+```
+
+`shape plugins new NAME --group GROUP [-o DIR] [--author TEXT] [--dry-run]` writes a package that
+works and conforms from the first minute: `pyproject.toml` with the entry point in `GROUP`, a module
+that implements the group's Protocol from `shape.plugins.api.v1` and declares `SHAPE_API`, a test that
+runs the conformance kit (`tests/test_conformance.py`, which also runs before the plugin is
+installed), a README and a `.github/workflows/ci.yml` that runs the tests and
+`python -m shape.plugins.kit NAME`. There is a template for every group (`shape.sources`,
+`shape.sinks`, `shape.detectors`, and the rest of the table in section 2); the sample code does the
+least that passes, and you replace its body.
+
+`NAME` is lowercase letters, digits and single hyphens, starting with a letter, at most 48
+characters; it is the distribution name and the entry-point name, and with hyphens as underscores the
+Python package. An invalid name, an unknown group or a folder that is not empty exits with code 2 and
+writes nothing. `--dry-run` lists the files without writing them. The sections below explain what
+the generated files do; [`examples/plugin/`](../../examples/plugin/) stays as the worked example
+with three plugins in one package.
+
+## 1. The shape of a plugin
+
+```
+my-plugin/
+  pyproject.toml
+  src/my_plugin/__init__.py
+  tests/test_conformance.py
+```
+
+```python
+# src/my_plugin/__init__.py
+SHAPE_API = "1.0"           # required: the host rejects a different major version
+
+class IbanDetector:
+    name = "iban"           # the registry key; lowercase letters, digits, "_" and "-"
+
+    def detect(self, values, column):   # a pyarrow Array in, a Detection or None out
+        ...
+```
+
+```toml
+# pyproject.toml
+[project]
+name = "my-plugin"
+version = "0.1.0"
+dependencies = ["sqllocks-shape"]
+
+[project.entry-points."shape.detectors"]
+iban = "my_plugin:IbanDetector"
+```
+
+- The entry-point **name** must equal the object's `name`.
+- The entry-point **value** names a class (instantiated with no arguments), a zero-argument
+  callable that returns the object, or a ready object.
+- The module that holds the entry point declares `SHAPE_API = "1.x"`. A plugin does not import
+  or subclass the Protocols; it only has to match them structurally.
+- Hooks take and return whole Arrow arrays and batches, never single values or rows.
+- Be deterministic: the same input (and the same seed or context) gives the same output.
+  Do not modify what you are given.
+- A plugin that fails to import or build never affects core or other plugins. `shape plugins
+  doctor` reports it, and `shape plugins list` shows what is installed.
+
+## 2. The groups
+
+| Group | You implement | Kit check | Sample you give the check |
+|---|---|---|---|
+| `shape.sources` | `Source` | `check_source` | `uri` the source can read |
+| `shape.sinks` | `Sink` | `check_sink` | `uri`, `batches` (optionally `read_back`) |
+| `shape.detectors` | `SemanticDetector` | `check_detector` | `positives`, `negatives` |
+| `shape.fitters` | `DistributionFitter` | `check_fitter` | `sample` |
+| `shape.strategies` | `Strategy` | `check_strategy` | `spec` |
+| `shape.distributions` | `Distribution` | `check_distribution` | `params` |
+| `shape.calendars` | `Calendar` | `check_calendar` | none (optional `start`, `end`) |
+| `shape.domains` | `Domain` | `check_domain` | none |
+| `shape.chaos` | `ChaosMutator` | `check_chaos` | `batch` |
+| `shape.emitters` | `Emitter` | `check_emitter` | `uri`, `batches` |
+| `shape.stream_sources` | `StreamSource` | `check_stream_source` | `uri` |
+| `shape.transforms` | `Transform` | `check_transform` | `tables` |
+| `shape.commands` | `Command` | `check_command` | `argv` (optional `expect_exit`) |
+| `shape.reports` | `ReportFormat` | `check_report_format` | `report` |
+| `shape.behaviors` | `Behavior` | `check_behavior` | none (optional `population`, `seed`, `years`) |
+
+A behavior is a state-machine module for a simulator on a virtual clock
+([behavior.md](behavior.md)): it has `name`, `version`, the `states` it uses, the `attributes` and
+`events` it emits, and `simulate(population, seed, years)`, which returns the events as one Arrow
+table. `check_behavior` runs a small population twice, so a behavior that is not deterministic
+for a seed or emits an event or state it did not declare fails.
+
+A command adds `shape <name>`: it has `name`, `help`, `configure(parser)` and `run(args)`, and
+`run` returns the exit code. A built-in command always wins over a plugin command with the same
+name.
+
+## 3. Test it with the conformance kit
+
+`shape.plugins.kit` has one check per Protocol. Call the check for your Protocol from any test
+runner (the kit has no test-framework dependency); it raises `ConformanceError`, an
+`AssertionError`, that names the first rule that broke:
+
+```python
+from shape.plugins import kit
+from my_plugin import IbanDetector
+
+def test_detector():
+    kit.check_detector(
+        IbanDetector(),
+        positives=[["DE89370400440532013000", "GB29NWBK60161331926819"]],
+        negatives=[["hello", "world"]],
+    )
+```
+
+Each check covers what the Protocols and the host promise: the object implements its Protocol
+and has a usable `name`; it returns the documented types; it is deterministic; it leaves its
+inputs alone; and the group-specific rules (for example that a source only claims URIs it can
+read, that a sink returns the number of rows written, that a stream source resumes right after
+the offset it reports, that a calendar returns one non-negative factor per day).
+
+Two more checks work on the plugin as a user gets it:
+
+```python
+kit.check_module_api(my_plugin)        # SHAPE_API is declared and its major version matches
+
+kit.check_installed(                   # every shape.* entry point of an installed distribution:
+    "my-plugin",                       # loaded through the host, then checked
+    samples={"shape.detectors:iban": {"positives": [[...]]}},
+)
+```
+
+or, from a shell, with no samples (the shared rules only):
+
+```bash
+python -m shape.plugins.kit my-plugin
+```
+
+`check_plugin(group, obj, **sample)` picks the check from a group name.
+
+A strategy or distribution is keyed by `(seed, table, column, chunk)`. If your plugin promises
+that its values do not depend on how rows are split into chunks, pass
+`layout_independent=True` and the kit checks that one chunk equals two half chunks.
+
+The kit tells you the plugin is well-formed. Whether it is *correct* (the right IBANs, the right
+rows) is up to your own tests.
+
+## 4. Install and try it
+
+```bash
+pip install -e .
+shape plugins list --group shape.detectors
+shape plugins info shape.detectors:iban
+shape plugins doctor
+```
+
+The acceptance test for the kit does exactly this for `examples/plugin/`: it installs the
+example into a scratch directory outside the repository, runs the kit and the plugin's own
+tests against it, and checks that `shape plugins list` shows it next to every built-in.
+
+## 5. First-party plugins (monorepo)
+
+Features that ship with Shape but are not part of core live under `plugins/<dist-name>/`, one
+distribution each (decision T-09, with the additions of 2026-10-03): `shape-kafka`,
+`shape-eventhubs`, `shape-fabric`, `shape-sqlserver`, `shape-databases`, `shape-domains`, `shape-simulation`,
+`shape-dbt`, `shape-behavior`, `shape-healthcare-codes` and `shape-healthcare-standards`. They
+publish as `sqllocks-shape-<name>` and are all MIT licensed. Install them with the extras
+`pip install 'sqllocks-shape[fabric]'`, `pip install 'sqllocks-shape[dbt]'` and `pip install 'sqllocks-shape[healthcare]'` (the three
+healthcare distributions), or one by one.
+
+```
+plugins/shape-kafka/
+  pyproject.toml           name sqllocks-shape-kafka, version = core's, depends on sqllocks-shape==<that version>
+  LICENSE                  the repository LICENSE
+  README.md
+  src/shape_kafka/__init__.py      SHAPE_API = "1.0"
+  tests/                   uses shape.plugins.kit
+```
+
+Each one starts as a **skeleton**: it builds and installs, declares `SHAPE_API` and registers
+nothing. The work package that implements a plugin adds its entry points to `pyproject.toml`,
+its code under `src/`, and kit-based tests. `shape-sqlserver` is the first one implemented; its
+guide is [sqlserver.md](sqlserver.md). `shape-kafka` and `shape-eventhubs` follow it; their guide
+is [streaming.md](streaming.md). The guides of the later four are [DBT.md](../DBT.md),
+[behavior.md](behavior.md), [healthcare-codes.md](healthcare-codes.md) and the README of
+`plugins/shape-healthcare-standards` (X12, FHIR and OMOP writers).
+`shape-integrations` (OpenLineage, MLflow, Presidio, SDMetrics, Anonymeter, Ibis and DuckDB, one
+extra each) is described in [integrations.md](integrations.md).
+
+Rules that `python scripts/check_plugin_skeletons.py` enforces (and CI runs):
+
+- every T-09 distribution exists, named `sqllocks-shape-<name>`;
+- its version equals core's, and it depends on exactly that core version (lockstep: one
+  release, atomic API changes);
+- it ships core's `LICENSE`, and a package that declares `SHAPE_API`;
+- any entry-point group it declares is a real plugin API group;
+- with `--build OUT`, each one builds a pure-Python `py3-none-any` wheel.
+
+When core's version changes, change all eleven `pyproject.toml` files in the same commit; the
+script fails until they match.
+
+## 6. Versioning
+
+`SHAPE_API` is `"MAJOR.MINOR"`. The host loads a plugin whose major version equals its own
+(`shape.plugins.api.v1.SHAPE_API`), so a plugin written for API 1.0 keeps loading on every 1.x
+release, and a future 2.0 host reports a clear error for it instead of misbehaving.
+
+What is stable within 1.x, what counts as a breaking change, and the deprecation process are
+in [stability.md](stability.md).
+
+A strategy or distribution may also declare `generator_version` (an integer, default 1), the version
+of its algorithm; it is optional and additive in API v1, so a plugin that does not declare it keeps
+loading and counts as version 1. A plugin that raises it keeps the older versions selectable
+(`generate_versioned` / `sample_versioned`) so specs that pin them keep their data. See
+[GENERATION_STABILITY.md](../GENERATION_STABILITY.md).

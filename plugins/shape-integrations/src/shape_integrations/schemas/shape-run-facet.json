@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sqllocks/shape/blob/main/plugins/shape-integrations/src/shape_integrations/schemas/shape-run-facet.json",
+  "$defs": {
+    "ShapeRunFacet": {
+      "allOf": [
+        {"$ref": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/RunFacet"},
+        {
+          "type": "object",
+          "properties": {
+            "version": {"type": "integer", "description": "version of this facet; 1"},
+            "runId": {"type": "string", "description": "the Shape run id of the manifest"},
+            "engineVersion": {"type": "string"},
+            "reproducibility": {
+              "type": "object",
+              "description": "the reproducibility tuple recorded in the manifest"
+            },
+            "datasetId": {
+              "type": "string",
+              "description": "content address of the output tables (sha256:...)"
+            }
+          },
+          "required": ["version", "runId"]
+        }
+      ],
+      "type": "object"
+    }
+  },
+  "type": "object",
+  "properties": {"shape": {"$ref": "#/$defs/ShapeRunFacet"}}
+}

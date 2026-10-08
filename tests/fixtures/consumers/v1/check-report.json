@@ -1,0 +1,56 @@
+{
+  "baseline": {
+    "content_id": "70ce34f438ada8262f08e826bc7d7082d0d1653ecf4c8bef6e71cb6a544b6384",
+    "name": "orders",
+    "path": "base.shape"
+  },
+  "consumers": [
+    {
+      "already_failing": false,
+      "broken_by_change": true,
+      "consumer": "finance",
+      "file": "contracts/consumers/finance.json",
+      "owner": "finance@example.com",
+      "since": "2026-10-03",
+      "source": "orders",
+      "status": "fail",
+      "violations": [
+        {
+          "column": "amount",
+          "expected": "present",
+          "new": true,
+          "observed": "missing",
+          "rule": "required_column",
+          "table": "orders"
+        }
+      ]
+    },
+    {
+      "already_failing": false,
+      "broken_by_change": false,
+      "consumer": "marketing",
+      "file": "contracts/consumers/marketing.json",
+      "owner": "marketing@example.com",
+      "since": "2026-10-03",
+      "source": "orders",
+      "status": "pass",
+      "violations": []
+    }
+  ],
+  "directory": "contracts/consumers",
+  "format": "shape-consumer-check",
+  "passed": false,
+  "profile": {
+    "content_id": "1357bc08cb4e001a3dbe19e09a1671d8193d6968f1fef152c7d760ae01803f23",
+    "name": "orders",
+    "path": "new.shape"
+  },
+  "source": "orders",
+  "summary": {
+    "broken_by_change": 1,
+    "consumers": 2,
+    "failed": 1,
+    "passed": 1
+  },
+  "version": 1
+}

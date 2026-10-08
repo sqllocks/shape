@@ -1,0 +1,341 @@
+{
+ "meta": {
+  "cores": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.80GHz",
+  "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-10-02 05:42:16",
+  "impl": "shape",
+  "domain": "financial",
+  "runs": 3,
+  "warmup": 1,
+  "ref_seed": 42,
+  "impl_seed": 1042,
+  "loadavg_start": 0.90869140625
+ },
+ "scales": {
+  "large": {
+   "summary": {
+    "refengine": {
+     "total_s": 62.80836418200033,
+     "gen_s": 57.35925229500026,
+     "write_s": 5.602183635000074,
+     "cpu_s": 61.99022099999999,
+     "user_s": 49.600213,
+     "sys_s": 12.390008,
+     "minor_faults": 282870,
+     "import_s": 1.4512740969998958,
+     "peak_rss_mb": 2145.98046875,
+     "parquet_bytes": 704505775,
+     "rows": 16780240,
+     "rows_per_s_total": 267165.69072513585,
+     "rows_per_s_generate": 292546.35178469116,
+     "runs_total_s": [
+      60.991,
+      62.808,
+      63.495
+     ],
+     "loadavg_before": [
+      1.45361328125,
+      1.1982421875,
+      1.08935546875
+     ],
+     "per_table_s_median": {
+      "branch": 0.12278837900021244,
+      "transaction_category": 0.0015572689999316935,
+      "customer": 2.0982340519999525,
+      "account": 1.1227127749998544,
+      "loan": 0.10023306399989451,
+      "card": 1.6966370810000626,
+      "loan_payment": 2.965300045999811,
+      "statement": 6.164946960000179,
+      "transaction": 43.272482299999865,
+      "fraud_flag": 0.048229243000150746,
+      "_compute_phase+business_rules": 0.00016846800008352147,
+      "_construct_domain+RefEngine()": 0.008606332999988808
+     },
+     "row_counts": {
+      "branch": 200,
+      "transaction_category": 40,
+      "customer": 500000,
+      "account": 1100000,
+      "loan": 200000,
+      "card": 880000,
+      "loan_payment": 2400000,
+      "statement": 6600000,
+      "transaction": 5000000,
+      "fraud_flag": 100000
+     }
+    },
+    "shape": {
+     "total_s": 3.355111692999799,
+     "gen_s": 3.355111692999799,
+     "write_s": 0.0,
+     "cpu_s": 9.099767,
+     "user_s": 7.8072349999999995,
+     "sys_s": 1.29145,
+     "minor_faults": 349497,
+     "import_s": 0.4316319059998932,
+     "peak_rss_mb": 1420.296875,
+     "parquet_bytes": 689088916,
+     "rows": 16780240,
+     "rows_per_s_total": 5001395.3440091945,
+     "rows_per_s_generate": 5001395.3440091945,
+     "runs_total_s": [
+      3.343,
+      3.355,
+      3.377
+     ],
+     "loadavg_before": [
+      1.1513671875,
+      1.09765625,
+      1.02783203125
+     ],
+     "per_table_s_median": {
+      "_construct_domain+Engine": 0.010901302000092983,
+      "_generate+write": 3.3461793889996443
+     },
+     "row_counts": {
+      "branch": 200,
+      "transaction_category": 40,
+      "customer": 500000,
+      "account": 1100000,
+      "loan": 200000,
+      "card": 880000,
+      "loan_payment": 2400000,
+      "statement": 6600000,
+      "transaction": 5000000,
+      "fraud_flag": 100000
+     },
+     "numpy": "2.4.6",
+     "pyarrow": "25.0.1"
+    }
+   },
+   "raw": {
+    "refengine": [
+     {
+      "import_s": 1.4732078520000869,
+      "gen_s": 55.36388938000027,
+      "write_s": 5.627087836999635,
+      "total_s": 60.99097721699991,
+      "rows": {
+       "branch": 200,
+       "transaction_category": 40,
+       "customer": 500000,
+       "account": 1100000,
+       "loan": 200000,
+       "card": 880000,
+       "loan_payment": 2400000,
+       "statement": 6600000,
+       "transaction": 5000000,
+       "fraud_flag": 100000
+      },
+      "per_table_s": {
+       "branch": 0.11259736800002429,
+       "transaction_category": 0.0015572689999316935,
+       "customer": 2.1884792840000955,
+       "account": 1.1227127749998544,
+       "loan": 0.11272019000034561,
+       "card": 1.8451778489998105,
+       "loan_payment": 2.90945283200017,
+       "statement": 6.02367730900005,
+       "transaction": 40.991540896999595,
+       "fraud_flag": 0.04718448500034356,
+       "_compute_phase+business_rules": 0.0001827890000640764,
+       "_construct_domain+RefEngine()": 0.008606332999988808
+      },
+      "user_s": 48.020321,
+      "sys_s": 12.153352,
+      "minor_faults": 277459,
+      "major_faults": 0,
+      "cpu_s": 60.17367300000001,
+      "peak_rss_mb": 2145.98046875,
+      "parquet_bytes": 704505775,
+      "loadavg_before": 1.45361328125
+     },
+     {
+      "import_s": 1.4512740969998958,
+      "gen_s": 57.35925229500026,
+      "write_s": 5.449111887000072,
+      "total_s": 62.80836418200033,
+      "rows": {
+       "branch": 200,
+       "transaction_category": 40,
+       "customer": 500000,
+       "account": 1100000,
+       "loan": 200000,
+       "card": 880000,
+       "loan_payment": 2400000,
+       "statement": 6600000,
+       "transaction": 5000000,
+       "fraud_flag": 100000
+      },
+      "per_table_s": {
+       "branch": 0.12752994899983605,
+       "transaction_category": 0.0015119439999580209,
+       "customer": 1.8521703050000724,
+       "account": 1.1196828739998637,
+       "loan": 0.0963005950002298,
+       "card": 1.6898244069998327,
+       "loan_payment": 2.977945453999837,
+       "statement": 6.164946960000179,
+       "transaction": 43.272482299999865,
+       "fraud_flag": 0.048229243000150746,
+       "_compute_phase+business_rules": 0.00016846800008352147,
+       "_construct_domain+RefEngine()": 0.008459796000352071
+      },
+      "user_s": 49.600213,
+      "sys_s": 12.390008,
+      "minor_faults": 282870,
+      "major_faults": 0,
+      "cpu_s": 61.99022099999999,
+      "peak_rss_mb": 2148.140625,
+      "parquet_bytes": 704505775,
+      "loadavg_before": 1.1982421875
+     },
+     {
+      "import_s": 1.318940338000175,
+      "gen_s": 57.89278892599987,
+      "write_s": 5.602183635000074,
+      "total_s": 63.49497256099994,
+      "rows": {
+       "branch": 200,
+       "transaction_category": 40,
+       "customer": 500000,
+       "account": 1100000,
+       "loan": 200000,
+       "card": 880000,
+       "loan_payment": 2400000,
+       "statement": 6600000,
+       "transaction": 5000000,
+       "fraud_flag": 100000
+      },
+      "per_table_s": {
+       "branch": 0.12278837900021244,
+       "transaction_category": 0.0018238040001961053,
+       "customer": 2.0982340519999525,
+       "account": 1.1379096030000255,
+       "loan": 0.10023306399989451,
+       "card": 1.6966370810000626,
+       "loan_payment": 2.965300045999811,
+       "statement": 6.284036992999972,
+       "transaction": 43.42799604599986,
+       "fraud_flag": 0.04865623800014873,
+       "_compute_phase+business_rules": 0.00014492699983748025,
+       "_construct_domain+RefEngine()": 0.009028692999891064
+      },
+      "user_s": 50.152178,
+      "sys_s": 12.428602999999999,
+      "minor_faults": 283496,
+      "major_faults": 0,
+      "cpu_s": 62.580780999999995,
+      "peak_rss_mb": 2145.49609375,
+      "parquet_bytes": 704505775,
+      "loadavg_before": 1.08935546875
+     }
+    ],
+    "shape": [
+     {
+      "import_s": 0.4316319059998932,
+      "gen_s": 3.3429900969999835,
+      "write_s": 0.0,
+      "total_s": 3.3429900969999835,
+      "overlapped": true,
+      "rows": {
+       "branch": 200,
+       "transaction_category": 40,
+       "customer": 500000,
+       "account": 1100000,
+       "loan": 200000,
+       "card": 880000,
+       "loan_payment": 2400000,
+       "statement": 6600000,
+       "transaction": 5000000,
+       "fraud_flag": 100000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.010901302000092983,
+       "_generate+write": 3.3320887949998905
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 8.098903,
+      "sys_s": 1.29145,
+      "minor_faults": 349542,
+      "major_faults": 0,
+      "cpu_s": 9.390353,
+      "peak_rss_mb": 1425.703125,
+      "parquet_bytes": 689088916,
+      "loadavg_before": 1.1513671875
+     },
+     {
+      "import_s": 0.4087347590002537,
+      "gen_s": 3.355111692999799,
+      "write_s": 0.0,
+      "total_s": 3.355111692999799,
+      "overlapped": true,
+      "rows": {
+       "branch": 200,
+       "transaction_category": 40,
+       "customer": 500000,
+       "account": 1100000,
+       "loan": 200000,
+       "card": 880000,
+       "loan_payment": 2400000,
+       "statement": 6600000,
+       "transaction": 5000000,
+       "fraud_flag": 100000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.008932304000154545,
+       "_generate+write": 3.3461793889996443
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 7.8072349999999995,
+      "sys_s": 1.2788869999999999,
+      "minor_faults": 349497,
+      "major_faults": 0,
+      "cpu_s": 9.086122,
+      "peak_rss_mb": 1419.01953125,
+      "parquet_bytes": 689088916,
+      "loadavg_before": 1.09765625
+     },
+     {
+      "import_s": 0.43536208700015777,
+      "gen_s": 3.376514479999969,
+      "write_s": 0.0,
+      "total_s": 3.376514479999969,
+      "overlapped": true,
+      "rows": {
+       "branch": 200,
+       "transaction_category": 40,
+       "customer": 500000,
+       "account": 1100000,
+       "loan": 200000,
+       "card": 880000,
+       "loan_payment": 2400000,
+       "statement": 6600000,
+       "transaction": 5000000,
+       "fraud_flag": 100000
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.013963464999960706,
+       "_generate+write": 3.362551015000008
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 7.717604999999999,
+      "sys_s": 1.3821620000000001,
+      "minor_faults": 345348,
+      "major_faults": 0,
+      "cpu_s": 9.099767,
+      "peak_rss_mb": 1420.296875,
+      "parquet_bytes": 689088916,
+      "loadavg_before": 1.02783203125
+     }
+    ]
+   }
+  }
+ }
+}

@@ -1,0 +1,26 @@
+{
+  "format": "shape-detective-pack",
+  "version": 1,
+  "name": "text-trouble",
+  "level": "intermediate",
+  "brief": "Two columns of the customer table hold text, and both are wrong, in different ways. Support tickets mention strange characters in one and surnames that stop short in the other.",
+  "hints": [
+    "There are two problems, in two different columns of one table.",
+    "One of them changes the length of the values, the other changes what they look like.",
+    "The email column has a recognisable format: has the format changed? The surname column has no format, only lengths."
+  ],
+  "scenario": "library:detective_text_trouble",
+  "seed": 7104,
+  "findings": [
+    {
+      "table": "customer",
+      "column": "email",
+      "mode": "encoding-corruption"
+    },
+    {
+      "table": "customer",
+      "column": "last_name",
+      "mode": "truncated-strings"
+    }
+  ]
+}

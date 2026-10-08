@@ -1,0 +1,1 @@
+{"algorithm":"Ed25519","format":"shape-plugin-signature","key_id":"56475aa75463474c","signature":"f7sigsgpj/XzjKrRG6ixDFKG2c9q3O1EF/WoVXFs5C00emyAX2/0ikoGxNbi4TzchCrtynSY6NWOzgoT7JJNAQ==","version":1}

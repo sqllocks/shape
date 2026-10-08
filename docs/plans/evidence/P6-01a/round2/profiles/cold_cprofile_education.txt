@@ -1,0 +1,35 @@
+# cold, single thread (SHAPE_THREADS=1), cProfile, top 25 by own time
+single-thread generate s 0.128
+         11295 function calls (11150 primitive calls) in 0.127 seconds
+
+   Ordered by: internal time
+   List reduced from 336 to 25 due to restriction <25>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       24    0.016    0.001    0.016    0.001 {built-in method shape._kernel.pool_take}
+        9    0.015    0.002    0.015    0.002 {method 'searchsorted' of 'numpy.ndarray' objects}
+       26    0.011    0.000    0.011    0.000 {built-in method shape._kernel.alias_sample}
+       37    0.008    0.000    0.008    0.000 {built-in method shape._kernel.philox_uniform}
+       10    0.005    0.001    0.007    0.001 /root/.venvs/shape/lib/python3.11/site-packages/pyarrow/compute.py:256(wrapper)
+       63    0.005    0.000    0.005    0.000 {method 'astype' of 'numpy.ndarray' objects}
+        8    0.005    0.001    0.005    0.001 /root/.venvs/shape/lib/python3.11/site-packages/pyarrow/compute.py:246(wrapper)
+       75    0.005    0.000    0.118    0.002 /home/user/shape/src/shape/generation/engine.py:654(_column)
+        4    0.004    0.001    0.004    0.001 {built-in method shape._kernel.template_strings}
+        5    0.004    0.001    0.004    0.001 {built-in method shape._kernel.philox_normal}
+      243    0.004    0.000    0.009    0.000 /home/user/shape/src/shape/generation/arrowkit.py:97(array)
+        9    0.003    0.000    0.021    0.002 /home/user/shape/src/shape/builtins/strategies/_relational.py:101(zipf_index)
+       99    0.003    0.000    0.003    0.000 /home/user/shape/src/shape/generation/arrowkit.py:29(_from_numpy)
+       11    0.002    0.000    0.004    0.000 /home/user/shape/src/shape/builtins/strategies/__init__.py:41(generate)
+       17    0.002    0.000    0.032    0.002 /home/user/shape/src/shape/builtins/strategies/keys.py:60(_indices)
+       23    0.002    0.000    0.034    0.001 /home/user/shape/src/shape/builtins/strategies/basic.py:55(generate)
+     1097    0.002    0.000    0.002    0.000 {built-in method builtins.isinstance}
+       17    0.001    0.000    0.003    0.000 /home/user/shape/src/shape/generation/engine.py:310(take)
+       11    0.001    0.000    0.001    0.000 /root/.venvs/shape/lib/python3.11/site-packages/pyarrow/compute.py:348(cast)
+       11    0.001    0.000    0.124    0.011 /home/user/shape/src/shape/generation/engine.py:586(generate_chunk)
+        3    0.001    0.000    0.001    0.000 /root/.venvs/shape/lib/python3.11/site-packages/pyarrow/compute.py:467(take)
+       70    0.001    0.000    0.003    0.000 /home/user/shape/src/shape/generation/arrowkit.py:130(to_numpy)
+       20    0.001    0.000    0.001    0.000 {built-in method numpy.arange}
+        3    0.001    0.000    0.004    0.001 /home/user/shape/src/shape/builtins/distributions/families.py:155(draw)
+       75    0.001    0.000    0.002    0.000 /home/user/shape/src/shape/generation/engine.py:537(_strategy)
+
+

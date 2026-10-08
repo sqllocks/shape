@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sqllocks.github.io/shape/schemas/shape-parity-report-v1.schema.json",
+  "title": "Shape parity report, version 1",
+  "description": "The result of `shape parity A B`: every check between two environments, and whether parity holds (nothing failed).",
+  "type": "object",
+  "required": ["format", "version", "inputs", "options", "summary", "checks", "parity"],
+  "properties": {
+    "format": {"const": "shape-parity-report"},
+    "version": {"type": "integer", "minimum": 1},
+    "inputs": {
+      "type": "object",
+      "required": ["a", "b"],
+      "properties": {"a": {"$ref": "#/$defs/side"}, "b": {"$ref": "#/$defs/side"}}
+    },
+    "options": {
+      "type": "object",
+      "properties": {
+        "scaled": {"type": "boolean"},
+        "row_tolerance": {"type": "number", "minimum": 0},
+        "tables": {"type": ["array", "null"], "items": {"type": "string"}},
+        "source": {"type": ["string", "null"]},
+        "project": {"type": ["string", "null"]}
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["pass", "fail", "not_measured", "by_category"],
+      "properties": {
+        "pass": {"type": "integer", "minimum": 0},
+        "fail": {"type": "integer", "minimum": 0},
+        "not_measured": {"type": "integer", "minimum": 0},
+        "by_category": {"type": "object"}
+      }
+    },
+    "checks": {"type": "array", "items": {"$ref": "#/$defs/check"}},
+    "parity": {"type": "boolean"}
+  },
+  "$defs": {
+    "side": {
+      "type": "object",
+      "required": ["kind", "content_id", "name", "path", "tables"],
+      "properties": {
+        "kind": {"enum": ["data", "profile", "profile-export", "safe-profile"]},
+        "content_id": {"type": "string"},
+        "name": {"type": "string"},
+        "path": {"type": "string"},
+        "tables": {"type": "integer", "minimum": 0}
+      }
+    },
+    "check": {
+      "type": "object",
+      "required": ["category", "status", "table", "column", "details"],
+      "properties": {
+        "category": {"enum": ["tables", "columns", "types", "keys", "relationships", "nulls", "distributions", "row_counts"]},
+        "status": {"enum": ["pass", "fail", "not_measured"]},
+        "table": {"type": ["string", "null"]},
+        "column": {"type": ["string", "null"]},
+        "details": {"type": "object"},
+        "owner": {"type": "string", "description": "the column owner from shape.yml, when it names one"}
+      }
+    }
+  }
+}

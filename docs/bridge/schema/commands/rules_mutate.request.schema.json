@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "api_version": {
+      "pattern": "^(0|[1-9][0-9]{0,3})\\.(0|[1-9][0-9]{0,3})$",
+      "type": "string"
+    },
+    "args": {
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "description": "the contract file (format contract v1)",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.2"
+        },
+        "data": {
+          "description": "a data file, or a folder of files with one table each",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.2"
+        },
+        "min_score": {
+          "description": "the mutation score to reach: the report then says whether it was met",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number",
+          "x-since": "1.2"
+        },
+        "plan": {
+          "description": "a mutation plan file (format shape-mutation-plan); default: every applicable corruption of every table and column",
+          "type": "string",
+          "x-path": "read",
+          "x-since": "1.2"
+        },
+        "rate": {
+          "description": "the share of rows each mutant changes (default 0.05)",
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number",
+          "x-since": "1.2"
+        },
+        "seed": {
+          "description": "the seed (default 0); the same seed gives the same report",
+          "type": "integer",
+          "x-since": "1.2"
+        }
+      },
+      "required": [
+        "data",
+        "contract"
+      ],
+      "type": "object"
+    },
+    "command": {
+      "const": "rules_mutate"
+    },
+    "id": {
+      "maxLength": 128,
+      "type": [
+        "string",
+        "integer",
+        "null"
+      ]
+    },
+    "options": {
+      "additionalProperties": false,
+      "properties": {
+        "async": {
+          "default": false,
+          "description": "for a command that can run as a job: return a job id at once and run in the background",
+          "type": "boolean",
+          "x-since": "1.0"
+        },
+        "include_raw_values": {
+          "default": false,
+          "description": "return raw values (minimum, maximum, category values, offending values) even for classified columns; off by default",
+          "type": "boolean",
+          "x-since": "1.0"
+        },
+        "max_inline_bytes": {
+          "default": 262144,
+          "description": "a result part larger than this is written to a file and returned as a reference",
+          "minimum": 1024,
+          "type": "integer",
+          "x-since": "1.0"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "command",
+    "args"
+  ],
+  "title": "rules_mutate request",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.2"
+}

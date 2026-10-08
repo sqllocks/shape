@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "golden_providers",
+    "seed": 42
+  },
+  "tables": {
+    "people": {
+      "name": "people",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "city": {
+          "name": "city",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "city"
+          }
+        },
+        "company": {
+          "name": "company",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "company"
+          }
+        },
+        "company_email": {
+          "name": "company_email",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "company_email"
+          }
+        },
+        "email": {
+          "name": "email",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "email"
+          }
+        },
+        "first_name": {
+          "name": "first_name",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "first_name"
+          }
+        },
+        "ipv4": {
+          "name": "ipv4",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "ipv4"
+          }
+        },
+        "last_name": {
+          "name": "last_name",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "last_name"
+          }
+        },
+        "name": {
+          "name": "name",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "name"
+          }
+        },
+        "phone_number": {
+          "name": "phone_number",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "phone_number"
+          }
+        },
+        "postcode": {
+          "name": "postcode",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "postcode"
+          }
+        },
+        "pystr": {
+          "name": "pystr",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "pystr"
+          }
+        },
+        "sentence": {
+          "name": "sentence",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "sentence"
+          }
+        },
+        "ssn": {
+          "name": "ssn",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "ssn"
+          }
+        },
+        "state_abbr": {
+          "name": "state_abbr",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "state_abbr"
+          }
+        },
+        "street_address": {
+          "name": "street_address",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "street_address"
+          }
+        },
+        "uri": {
+          "name": "uri",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "uri"
+          }
+        },
+        "word": {
+          "name": "word",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "word"
+          }
+        },
+        "zip_plus4": {
+          "name": "zip_plus4",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "zip_plus4"
+          }
+        },
+        "digits": {
+          "name": "digits",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "digits",
+            "width": 9
+          }
+        },
+        "digit_ids": {
+          "name": "digit_ids",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "digit_ids",
+            "width": 7
+          }
+        }
+      }
+    }
+  },
+  "generators": {
+    "native": 1,
+    "sequence": 1
+  }
+}

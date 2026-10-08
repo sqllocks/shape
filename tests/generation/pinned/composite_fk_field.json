@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "relational_case",
+    "description": "",
+    "domain": "relational_case",
+    "schema_mode": "3nf",
+    "locale": "en_US",
+    "seed": 42,
+    "date_range": {
+      "start": "2022-01-01",
+      "end": "2025-12-31"
+    }
+  },
+  "tables": {
+    "line": {
+      "name": "line",
+      "description": "",
+      "cdm_mapping": null,
+      "primary_key": [
+        "a",
+        "b"
+      ],
+      "columns": {
+        "a": {
+          "name": "a",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence",
+            "start": 1000
+          },
+          "nullable": false,
+          "null_rate": 0.0,
+          "max_length": null,
+          "precision": null,
+          "scale": null
+        },
+        "b": {
+          "name": "b",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence",
+            "start": 7,
+            "step": 2
+          },
+          "nullable": false,
+          "null_rate": 0.0,
+          "max_length": null,
+          "precision": null,
+          "scale": null
+        }
+      }
+    },
+    "ret": {
+      "name": "ret",
+      "description": "",
+      "cdm_mapping": null,
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence",
+            "start": 1
+          },
+          "nullable": false,
+          "null_rate": 0.0,
+          "max_length": null,
+          "precision": null,
+          "scale": null
+        },
+        "a": {
+          "name": "a",
+          "type": "integer",
+          "generator": {
+            "strategy": "composite_foreign_key",
+            "ref_table": "line",
+            "ref_columns": [
+              "a",
+              "b"
+            ]
+          },
+          "nullable": false,
+          "null_rate": 0.0,
+          "max_length": null,
+          "precision": null,
+          "scale": null
+        },
+        "b": {
+          "name": "b",
+          "type": "integer",
+          "generator": {
+            "strategy": "composite_fk_field",
+            "source_column": "a",
+            "ref_column": "b"
+          },
+          "nullable": false,
+          "null_rate": 0.0,
+          "max_length": null,
+          "precision": null,
+          "scale": null
+        }
+      }
+    }
+  },
+  "relationships": [],
+  "business_rules": [],
+  "generation": {
+    "scale": "s",
+    "scales": {
+      "s": {
+        "line": 60,
+        "ret": 60
+      }
+    },
+    "derived_counts": {},
+    "output": {}
+  },
+  "correlated_columns": {},
+  "generators": {
+    "composite_fk_field": 1,
+    "composite_foreign_key": 1,
+    "sequence": 1
+  }
+}

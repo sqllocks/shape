@@ -1,0 +1,60 @@
+{
+ "args": {
+  "domain": "composite_capital_markets-marketing-education",
+  "scale": "small",
+  "table": "marketing_industry",
+  "column": "shared_organization_education_department_id",
+  "parent_table": "education_department",
+  "parent_column": "department_id",
+  "n": 100,
+  "out": "docs/plans/evidence/P6-01e-seed/fk/fk_bridge_marketing_industry_education_department.json"
+ },
+ "pooled_chi2": {
+  "chi2": 13.575065479701527,
+  "dof": 24,
+  "p": 0.955673034447118,
+  "bins": 25
+ },
+ "per_run": {
+  "max_share": {
+   "refengine_mean": 0.12680000000000002,
+   "refengine_sd": 0.03011358967025159,
+   "shape_mean": 0.134,
+   "shape_sd": 0.028069178610689482,
+   "p_mannwhitney": 0.10195321754608767,
+   "p_ks": 0.5830090612540064
+  },
+  "top10_share": {
+   "refengine_mean": 0.7415999999999999,
+   "refengine_sd": 0.06290477009742663,
+   "shape_mean": 0.7555999999999998,
+   "shape_sd": 0.0617312520102053,
+   "p_mannwhitney": 0.07590063527643363,
+   "p_ks": 0.11119526053829192
+  },
+  "distinct": {
+   "refengine_mean": 16.46,
+   "refengine_sd": 1.572619252435666,
+   "shape_mean": 16.11,
+   "shape_sd": 1.5432813002551324,
+   "p_mannwhitney": 0.07590063527643363,
+   "p_ks": 0.11119526053829192
+  },
+  "mean_rank": {
+   "refengine_mean": 0.47601600000000005,
+   "refengine_sd": 0.047049715206471776,
+   "shape_mean": 0.47102399999999994,
+   "shape_sd": 0.06199313927501749,
+   "p_mannwhitney": 0.5883204363050198,
+   "p_ks": 0.36818778606286096
+  },
+  "null_rate": {
+   "refengine_mean": 0.0,
+   "refengine_sd": 0.0,
+   "shape_mean": 0.0,
+   "shape_sd": 0.0,
+   "p_mannwhitney": 1.0,
+   "p_ks": 1.0
+  }
+ }
+}

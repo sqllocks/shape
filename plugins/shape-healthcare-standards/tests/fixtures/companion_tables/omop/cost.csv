@@ -1,0 +1,6 @@
+"cost_id","cost_event_id","cost_domain_id","cost_type_concept_id","currency_concept_id","total_charge","total_cost","total_paid","paid_by_payer","paid_by_patient","paid_patient_copay","paid_patient_coinsurance","paid_patient_deductible","paid_by_primary","paid_ingredient_cost","paid_dispensing_fee","payer_plan_period_id","amount_allowed","revenue_code_concept_id","revenue_code_source_value","drg_concept_id","drg_source_value"
+759778189,1722759121,"Drug",32814,44818668,6.000,6.000,6.000,1.000,5.000,,,,,4.500,1.500,1516442804,,,,,
+1492436507,1306930463,"Visit",32814,44818668,300.000,210.000,210.000,170.000,40.000,30.000,0.000,10.000,,,,1516442804,210.000,,,,
+1615424942,279987297,"Visit",32814,44818668,450.500,150.000,150.000,120.000,30.000,20.000,10.000,0.000,,,,1644542166,150.000,,,,
+1842278235,917105729,"Visit",32814,44818668,1200.000,800.000,800.000,700.000,100.000,0.000,100.000,0.000,,,,1425457633,800.000,,,,
+2109845123,1509165828,"Visit",32814,44818668,42000.000,18000.000,18000.000,17000.000,1000.000,0.000,1000.000,0.000,,,,1425457633,18000.000,,,0,"871"

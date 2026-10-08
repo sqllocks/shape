@@ -1,0 +1,183 @@
+{
+  "properties": {
+    "description": "Shape: run a dbt job, profile the model outputs, read the dbt run results and check the contract and drift in one report. [VERIFY] the dbt job activity.",
+    "parameters": {
+      "dbtCommand": {
+        "type": "string",
+        "defaultValue": "build"
+      },
+      "models": {
+        "type": "string",
+        "defaultValue": "orders,customers"
+      },
+      "tableRoot": {
+        "type": "string",
+        "defaultValue": "/lakehouse/default/Tables"
+      },
+      "contractPath": {
+        "type": "string",
+        "defaultValue": "contracts/dbt_models.json"
+      },
+      "baselinePath": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "runResultsPath": {
+        "type": "string",
+        "defaultValue": "dbt/run_results.json"
+      },
+      "manifestPath": {
+        "type": "string",
+        "defaultValue": "dbt/manifest.json"
+      },
+      "outputDir": {
+        "type": "string",
+        "defaultValue": "shape"
+      },
+      "failOnDrift": {
+        "type": "bool",
+        "defaultValue": false
+      }
+    },
+    "activities": [
+      {
+        "name": "RunDbt",
+        "type": "DbtJob",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "typeProperties": {
+          "dbtJobId": "<<DBT_JOB_ID>>",
+          "workspaceId": "<<WORKSPACE_ID>>",
+          "command": {
+            "value": "@pipeline().parameters.dbtCommand",
+            "type": "Expression"
+          }
+        }
+      },
+      {
+        "name": "ProfileDbtOutputs",
+        "type": "TridentNotebook",
+        "dependsOn": [
+          {
+            "activity": "RunDbt",
+            "dependencyConditions": [
+              "Completed"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "typeProperties": {
+          "notebookId": "<<NOTEBOOK_ID:shape_profile_dbt>>",
+          "workspaceId": "<<WORKSPACE_ID>>",
+          "parameters": {
+            "models": {
+              "value": {
+                "value": "@pipeline().parameters.models",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "tableRoot": {
+              "value": {
+                "value": "@pipeline().parameters.tableRoot",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "contractPath": {
+              "value": {
+                "value": "@pipeline().parameters.contractPath",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "baselinePath": {
+              "value": {
+                "value": "@pipeline().parameters.baselinePath",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "runResultsPath": {
+              "value": {
+                "value": "@pipeline().parameters.runResultsPath",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "manifestPath": {
+              "value": {
+                "value": "@pipeline().parameters.manifestPath",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "outputDir": {
+              "value": {
+                "value": "@pipeline().parameters.outputDir",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "failOnDrift": {
+              "value": {
+                "value": "@pipeline().parameters.failOnDrift",
+                "type": "Expression"
+              },
+              "type": "bool"
+            },
+            "_inlineInstallationEnabled": {
+              "value": true,
+              "type": "bool"
+            }
+          }
+        }
+      },
+      {
+        "name": "CheckGate",
+        "type": "IfCondition",
+        "dependsOn": [
+          {
+            "activity": "ProfileDbtOutputs",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "typeProperties": {
+          "expression": {
+            "value": "@json(activity('ProfileDbtOutputs').output.result.exitValue).passed",
+            "type": "Expression"
+          },
+          "ifTrueActivities": [],
+          "ifFalseActivities": [
+            {
+              "name": "FailGate",
+              "type": "Fail",
+              "dependsOn": [],
+              "typeProperties": {
+                "message": {
+                  "value": "@concat('dbt or Shape gate failed (see ', string(json(activity('ProfileDbtOutputs').output.result.exitValue).reportPath), '): ', string(json(activity('ProfileDbtOutputs').output.result.exitValue).dbtFailed), ' dbt failure(s); ', string(json(activity('ProfileDbtOutputs').output.result.exitValue).violations))",
+                  "type": "Expression"
+                },
+                "errorCode": "ShapeDbtGateFailed"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

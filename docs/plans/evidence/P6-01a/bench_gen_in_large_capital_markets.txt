@@ -1,0 +1,14 @@
+[large] refengine          warm-up 1: total 2.25s
+[large] shape            warm-up 1: total 0.30s
+[large] refengine          run 1: total 1.93s  gen 1.22s  write 0.71s  rss 428MB  load 0.82
+[large] shape            run 1: total 0.36s  gen 0.36s  write 0.00s  rss 290MB  load 0.82
+[large] refengine          run 2: total 2.20s  gen 1.66s  write 0.54s  rss 432MB  load 0.83
+[large] shape            run 2: total 0.27s  gen 0.27s  write 0.00s  rss 272MB  load 0.83
+[large] refengine          run 3: total 2.08s  gen 1.49s  write 0.59s  rss 432MB  load 0.83
+[large] shape            run 3: total 0.30s  gen 0.30s  write 0.00s  rss 299MB  load 0.85
+
+== capital_markets large: median of 3 fresh-process runs, 4 cores
+tool                     rows  total s   gen s  write s  rows/s total   rows/s gen  peak RSS MB
+refengine             1,260,625     2.08    1.49     0.59       604,629      844,221          432
+shape               1,260,625     0.30    0.30     0.00     4,207,775    4,207,775          290
+speedup (shape vs refengine): total 6.96x

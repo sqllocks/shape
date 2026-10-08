@@ -1,0 +1,407 @@
+"""``shape pack run|validate|list``: scenario packs and generation specs (P6-14).
+
+A *pack* is a YAML file that bundles a domain, a simulation kind, chaos, validation gates and the
+landing paths of a run; a *spec* (GSL, ``*.gsl.yaml``) points at a pack and sets the schema, scale,
+seed, chaos and gates around it. ``run`` and ``validate`` take either. Shape ships no packs of its
+own: ``list`` looks in the directories you give it (default: ``./packs``). The starter scenario
+library (``library:NAME``, ``list --library``) is a separate set of named scenarios with answer
+keys (``docs/SCENARIO_LIBRARY.md``).
+
+Nothing heavy loads at import time (T-18).
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+from typing import Any
+
+DEFAULT_ROOT = "packs"
+LIBRARY_PREFIX = "library:"
+
+
+def add_arguments(sub: Any) -> None:
+    """Register ``pack`` on the subparsers."""
+    pk = sub.add_parser(
+        "pack",
+        help="run, validate and list scenario packs and generation specs",
+        description="Scenario packs bundle a domain, a simulation kind (file_drop, stream or "
+        "hybrid), chaos and validation gates. A generation spec (*.gsl.yaml) points at a pack and "
+        "adds schema, scale, seed, chaos, outputs and gates.",
+    )
+    actions = pk.add_subparsers(
+        dest="pack_cmd", required=True, metavar="{run,replay,validate,list}"
+    )
+
+    def target(p: argparse.ArgumentParser) -> None:
+        p.add_argument(
+            "target",
+            metavar="PACK.yaml|SPEC.gsl.yaml",
+            help="a pack file or a generation spec; DOMAIN/PACK_ID with --root; "
+            "library:NAME for a starter scenario",
+        )
+        p.add_argument("--root", metavar="DIR", help="a pack directory: <DIR>/<domain>/<id>.yaml")
+        p.add_argument(
+            "--domain", help="the domain to use (default: the pack's domain, or the spec's schema)"
+        )
+        p.add_argument("--json", action="store_true", help="print the result as JSON")
+
+    ru = actions.add_parser(
+        "run",
+        help="run a pack or a spec and write its output and run manifest",
+        description="Generate the domain, apply chaos, write the files or events the pack asks "
+        "for, check its validation gates and write <run_id>_manifest.json. Exit 0 on success, 1 "
+        "when the pack is invalid, a gate fails (without chaos) or generation fails, 2 for bad "
+        "input.",
+    )
+    target(ru)
+    ru.add_argument(
+        "--scale", metavar="PRESET", help="scale preset (default: the spec's, or small)"
+    )
+    ru.add_argument("--seed", type=int, help="seed (default: the spec's, or 42)")
+    ru.add_argument(
+        "--identifiers",
+        choices=("reserved", "realistic"),
+        help="reserved: e-mail, URI, phone and SSN values that cannot belong to a real person; "
+        "realistic: values that can (never for data that leaves a test system). Default: the "
+        "spec's scenario.identifiers, else the schema's, else reserved",
+    )
+    ru.add_argument(
+        "-o",
+        "--output",
+        metavar="DIR",
+        default="pack_output",
+        help="output directory (default: pack_output)",
+    )
+    rp = actions.add_parser(
+        "replay",
+        help="regenerate a run from its manifest and check its dataset id",
+        description="Regenerate the run that MANIFEST records (its domain, scale and seed) from "
+        "the pack or spec it used, into a scratch directory, and compare the dataset id with the "
+        "recorded one. Exit 0 when they match, 1 on a mismatch, 2 when the run cannot be replayed "
+        "(no dataset id, another pack, a spec that changed). Differences between the recorded "
+        "reproducibility tuple and this environment are listed.",
+    )
+    rp.add_argument("manifest", metavar="MANIFEST.json", help="a <run_id>_manifest.json")
+    target(rp)
+    va = actions.add_parser(
+        "validate",
+        help="check a pack or a spec against its domain without running it",
+        description="Check a pack (or a spec, its pack and its schema) against the domain: "
+        "entities, kind, sections, gates, chaos. Exit 0 when valid (warnings allowed), 1 when "
+        "there are errors, 2 for bad input.",
+    )
+    target(va)
+    li = actions.add_parser(
+        "list",
+        help="list the packs and specs in a directory",
+        description="List the pack and spec files under each directory (searched recursively). "
+        "Shape ships no packs of its own; --library lists the starter scenarios instead.",
+    )
+    li.add_argument(
+        "--library",
+        action="store_true",
+        help="list the starter scenario library (run one with `shape pack run library:NAME`)",
+    )
+    li.add_argument(
+        "paths", nargs="*", metavar="DIR", help=f"directories to search (default: ./{DEFAULT_ROOT})"
+    )
+    li.add_argument("--json", action="store_true", help="print the list as JSON")
+
+
+def run(a: argparse.Namespace) -> int:
+    if a.pack_cmd == "list":
+        return _list_library(a) if a.library else _list(a)
+    if a.pack_cmd in ("run", "validate") and str(a.target).startswith(LIBRARY_PREFIX):
+        return _library(a)
+    if a.pack_cmd == "validate":
+        return _validate(a)
+    if a.pack_cmd == "replay":
+        return _replay(a)
+    return _run(a)
+
+
+def _emit(obj: Any) -> None:
+    print(json.dumps(obj, indent=2, sort_keys=True, default=str))
+
+
+def _resolve(a: argparse.Namespace) -> Path:
+    """The file named by TARGET: a path, or DOMAIN/PACK_ID under --root."""
+    path = Path(a.target)
+    if path.is_file():
+        return path
+    if a.root:
+        domain, _, pack_id = str(a.target).partition("/")
+        if pack_id and Path(a.root).is_dir():
+            from shape.scenario.loader import PackLoader
+
+            PackLoader(a.root).load_from_root(domain, pack_id)  # raises with the choices
+            return Path(str(a.root)) / domain / f"{pack_id}.yaml"
+    raise FileNotFoundError(f"no pack or spec at {a.target}")
+
+
+def _pack_domain(a: argparse.Namespace, declared: str) -> Any:
+    from shape.scenario.resolve import load_pack_domain
+
+    name = a.domain or declared
+    if not name:
+        raise ValueError("the pack names no domain: give --domain (see `shape list`)")
+    return load_pack_domain(name)
+
+
+def _validate(a: argparse.Namespace) -> int:
+    from shape.scenario.gsl import GSLParser, is_spec_document
+    from shape.scenario.loader import PackLoader
+    from shape.scenario.resolve import validate_spec
+    from shape.scenario.validator import PackValidator
+
+    path = _resolve(a)
+    if is_spec_document(path):
+        spec = GSLParser().parse(path)
+        result = validate_spec(spec, _pack_domain(a, "") if a.domain else None)
+        kind, ident = "spec", spec.name or path.name
+    else:
+        pack = PackLoader().load(path)
+        result = PackValidator().validate(pack, _pack_domain(a, pack.domain))
+        kind, ident = "pack", pack.id
+    if a.json:
+        _emit(
+            {
+                "kind": kind,
+                "id": ident,
+                "valid": result.is_valid,
+                "errors": result.errors,
+                "warnings": result.warnings,
+            }
+        )
+    else:
+        print(f"{kind} {ident}")
+        print(result.summary())
+    return 0 if result.is_valid else 1
+
+
+def _failed_json(ident: str, errors: list[str], warnings: list[str]) -> dict[str, Any]:
+    """The ``--json`` of a run that did not start (an invalid spec): the keys of a failed run."""
+    return {
+        "success": False,
+        "valid": False,
+        "pack": ident,
+        "domain": "",
+        "scale": "",
+        "elapsed_seconds": 0.0,
+        "files": [],
+        "events": 0,
+        "gates": {},
+        "gate_messages": {},
+        "errors": errors,
+        "warnings": warnings,
+        "manifest": None,
+    }
+
+
+def _run(a: argparse.Namespace) -> int:
+    from shape.scenario.gsl import GSLParser, is_spec_document
+    from shape.scenario.loader import PackLoader
+    from shape.scenario.resolve import spec_domain, spec_pack, validate_spec
+    from shape.scenario.runner import PackRunner
+
+    path = _resolve(a)
+    if is_spec_document(path):
+        spec = GSLParser().parse(path)
+        given = _pack_domain(a, "") if a.domain else None
+        checked = validate_spec(spec, given)
+        if not checked.is_valid:
+            if a.json:
+                _emit(_failed_json(spec.name or path.name, checked.errors, checked.warnings))
+            else:
+                print(checked.summary())
+            return 1
+        pack = spec_pack(spec)
+        domain = given if given is not None else spec_domain(spec)
+        ref = spec.scenario
+        scale = a.scale or (ref.scale if ref else None) or "small"
+        seed = a.seed if a.seed is not None else (ref.seed if ref else 42)
+        identifiers = a.identifiers or (ref.identifiers if ref else None)
+        _announce(domain, identifiers)
+        result = PackRunner().run(
+            pack, domain, scale, seed, a.output, spec=spec, identifiers=identifiers
+        )
+    else:
+        pack = PackLoader().load(path)
+        domain = _pack_domain(a, pack.domain)
+        _announce(domain, a.identifiers)
+        result = PackRunner().run(
+            pack,
+            domain,
+            a.scale or "small",
+            a.seed if a.seed is not None else 42,
+            a.output,
+            identifiers=a.identifiers,
+        )
+    if a.json:
+        _emit(
+            {
+                "success": result.is_success,
+                "pack": result.pack_id,
+                "domain": result.domain,
+                "scale": result.scale,
+                "elapsed_seconds": round(result.elapsed_time, 3),
+                "files": result.files_written,
+                "events": result.events_emitted,
+                "gates": result.validation_results,
+                "gate_messages": result.gate_messages,
+                "errors": result.errors,
+                "warnings": result.warnings,
+                "manifest": result.manifest.to_dict() if result.manifest else None,
+            }
+        )
+    else:
+        print(result.summary())
+        for warning in result.warnings:
+            print(f"  warning: {warning}")
+    return 0 if result.is_success else 1
+
+
+def _announce(domain: Any, identifiers: str | None) -> None:
+    """Say once on standard error when the run's identifiers are realistic."""
+    from shape.generation.identifiers import DEFAULT_IDENTIFIERS, announce
+    from shape.scenario.validator import schema_of
+
+    announce(identifiers or schema_of(domain).identifiers or DEFAULT_IDENTIFIERS)
+
+
+def _replay(a: argparse.Namespace) -> int:
+    from shape.scenario.gsl import GSLParser, is_spec_document
+    from shape.scenario.loader import PackLoader
+    from shape.scenario.manifest import ManifestBuilder
+    from shape.scenario.replay import replay
+    from shape.scenario.resolve import spec_domain, spec_pack, validate_spec
+
+    manifest = ManifestBuilder.from_file(a.manifest)
+    path = _resolve(a)
+    spec = None
+    if is_spec_document(path):
+        spec = GSLParser().parse(path)
+        given = _pack_domain(a, "") if a.domain else None
+        checked = validate_spec(spec, given)
+        if not checked.is_valid:
+            raise ValueError("the spec is not valid: " + "; ".join(checked.errors))
+        pack = spec_pack(spec)
+        domain = given if given is not None else spec_domain(spec)
+    else:
+        pack = PackLoader().load(path)
+        domain = _pack_domain(a, manifest.domain or pack.domain)
+    result = replay(manifest, pack, domain, spec=spec, spec_path=path if spec else None)
+    if a.json:
+        _emit(result.to_dict())
+    else:
+        print(f"Replay of run {result.run_id}")
+        print(f"  Recorded dataset id: {result.expected}")
+        print(f"  Replayed dataset id: {result.actual}")
+        for d in result.differences:
+            print(f"  {d['field']}: recorded {d['recorded']}, now {d['current']}")
+        print(f"Result: {'MATCH' if result.match else 'MISMATCH'}")
+    return 0 if result.match else 1
+
+
+def _library(a: argparse.Namespace) -> int:
+    """``run`` or ``validate`` of ``library:NAME``: run the scenario and compare it with its
+    answer key (exit 0 when met, 1 when not); ``validate`` only loads the scenario and its key."""
+    from shape.scenario.library import load_expect, load_scenario, run_scenario
+
+    name = str(a.target)[len(LIBRARY_PREFIX) :]
+    if a.pack_cmd == "validate":
+        spec, _expect = load_scenario(name), load_expect(name)
+        if a.json:
+            _emit({"kind": "library", "id": name, "valid": True, "errors": [], "warnings": []})
+        else:
+            print(f"library scenario {name}\nvalid: {spec['domain']}, gates {spec['gates']}")
+        return 0
+    if a.root or a.domain:
+        raise ValueError("a library scenario has its own domain: --root and --domain do not apply")
+    result = run_scenario(name, scale=a.scale, seed=a.seed, output=a.output)
+    if a.json:
+        _emit(
+            {
+                "met": result.met,
+                "mismatches": [
+                    {"expected": m.expected, "observed": m.observed} for m in result.mismatches
+                ],
+                "outcome": result.outcome.to_dict(),
+            }
+        )
+    else:
+        print(result.outcome.summary())
+        for m in result.mismatches:
+            print(f"  NOT MET: {m}")
+        print("answer key: " + ("met" if result.met else "NOT met"))
+    return 0 if result.met else 1
+
+
+def _list_library(a: argparse.Namespace) -> int:
+    from shape.scenario.library import list_scenarios, list_suites
+
+    if a.paths:
+        raise ValueError("--library lists the shipped scenarios: it takes no directories")
+    rows = list_scenarios()
+    suites = list_suites()
+    if a.json:
+        _emit({"scenarios": rows, "suites": suites})
+        return 0
+    print(f"{'domain':<10}{'id':<28}description")
+    for r in rows:
+        first = r["description"].split(". ")[0].rstrip(".")
+        print(f"{r['domain']:<10}{r['id']:<28}{first}")
+    print(f"suites: {', '.join(suites)} (shape suite run NAME)")
+    return 0
+
+
+def _list(a: argparse.Namespace) -> int:
+    from shape.scenario.gsl import is_spec_document
+    from shape.scenario.loader import PackError, PackLoader
+
+    roots = [Path(p) for p in a.paths] or (
+        [Path(DEFAULT_ROOT)] if Path(DEFAULT_ROOT).is_dir() else []
+    )
+    for root in roots:
+        if not root.is_dir():
+            raise FileNotFoundError(f"not a directory: {root}")
+    rows: list[dict[str, str]] = []
+    for root in roots:
+        for file in sorted([*root.rglob("*.yaml"), *root.rglob("*.yml")]):
+            if file.is_dir():  # a folder that happens to be named like a pack
+                continue
+            try:
+                if is_spec_document(file):
+                    rows.append({"kind": "spec", "id": file.stem, "domain": "", "path": str(file)})
+                    continue
+                pack = PackLoader().load(file)
+            except (PackError, OSError) as exc:  # unreadable, or a link to nothing
+                rows.append(
+                    {
+                        "kind": "invalid",
+                        "id": file.stem,
+                        "domain": "",
+                        "path": str(file),
+                        "error": str(exc),
+                    }
+                )
+                continue
+            rows.append(
+                {"kind": pack.kind, "id": pack.id, "domain": pack.domain, "path": str(file)}
+            )
+    if a.json:
+        _emit(rows)
+        return 0
+    if not rows:
+        where = ", ".join(str(r) for r in roots) or f"./{DEFAULT_ROOT}"
+        print(
+            f"no packs found in {where} (Shape ships none: write one, see docs/SCENARIO_PACKS.md; "
+            "the starter scenarios are listed by `shape pack list --library`)"
+        )
+        return 0
+    print(f"{'kind':<10}{'domain':<14}{'id':<28}path")
+    for r in rows:
+        print(f"{r['kind']:<10}{r['domain']:<14}{r['id']:<28}{r['path']}")
+    return 0

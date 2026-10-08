@@ -1,0 +1,24 @@
+{
+  "format": "shape-scenario",
+  "version": 1,
+  "id": "dst_boundary",
+  "domain": "retail",
+  "scale": "small",
+  "seed": 42,
+  "gates": [
+    "schema_conformance",
+    "referential_integrity",
+    "row_count",
+    "null_check",
+    "uniqueness"
+  ],
+  "defects": [
+    {
+      "kind": "chaos_temporal",
+      "table": "order",
+      "column": "order_date",
+      "action": "dst_boundary",
+      "intensity": 15
+    }
+  ]
+}

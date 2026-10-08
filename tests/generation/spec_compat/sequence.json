@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "t",
+    "seed": 5
+  },
+  "tables": {
+    "t": {
+      "name": "t",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          },
+          "nullable": false,
+          "null_rate": 0.0
+        }
+      }
+    }
+  },
+  "relationships": [],
+  "generation": {
+    "scale": "small",
+    "scales": {
+      "small": {
+        "t": 10
+      }
+    }
+  }
+}

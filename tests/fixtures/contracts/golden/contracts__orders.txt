@@ -1,0 +1,41 @@
+{
+  "passed": false,
+  "violations": [
+    {
+      "column": null,
+      "rule": "row_count.min",
+      "expected": 100000,
+      "observed": 300
+    },
+    {
+      "column": "order_id",
+      "rule": "required_column",
+      "expected": "present",
+      "observed": "missing"
+    },
+    {
+      "column": "customer_id",
+      "rule": "required_column",
+      "expected": "present",
+      "observed": "missing"
+    },
+    {
+      "column": "order_date",
+      "rule": "required_column",
+      "expected": "present",
+      "observed": "missing"
+    },
+    {
+      "column": "status",
+      "rule": "required_column",
+      "expected": "present",
+      "observed": "missing"
+    },
+    {
+      "column": "order_total",
+      "rule": "required_column",
+      "expected": "present",
+      "observed": "missing"
+    }
+  ]
+}

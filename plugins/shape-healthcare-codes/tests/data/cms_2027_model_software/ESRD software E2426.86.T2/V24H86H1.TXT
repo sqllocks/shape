@@ -1,0 +1,30 @@
+ %MACRO V24H86H1; 
+ %**********************************************************************
+ 1  MACRO NAME: V24H86H1
+ 2  PURPOSE:    HCC HIERARCHIES: version 24 of HCCs,
+                only 86 CMS HCCs are included
+ 3  COMMENT:    it is assumed that:
+                 -MAX number of CCs are placed into global macro 
+                  variable N_CC in the main program
+                 -the following arrays are set in the main program
+                  ARRAY C(&N_CC)   CC1-CC&N_CC
+                  ARRAY HCC(&N_CC) HCC1-HCC&N_CC
+                 -format ICD to CC creates only 86 out of &N_CC CMS CCs
+ **********************************************************************;
+ %* set to 0 HCCs in HIER parameter;
+ %MACRO SET0( CC=, HIER= );
+     IF HCC&CC=1 THEN DO I = &HIER; HCC(I) = 0; END;
+ %MEND SET0;
+
+ %*to copy CC into HCC;
+  DO K=1 TO &N_CC;
+     HCC(K)=C(K);
+  END;
+
+ %*imposing hierarchies;
+ /*Arrest 1 */     %SET0(CC=82    , HIER=%STR(83, 84 ));
+ /*Arrest 2 */     %SET0(CC=83    , HIER=%STR(84 ));
+ /*Heart 2 */      %SET0(CC=86    , HIER=%STR(87, 88 ));
+ /*Heart 3 */      %SET0(CC=87    , HIER=%STR(88 ));
+
+ %MEND V24H86H1;

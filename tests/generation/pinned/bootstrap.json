@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "compat",
+    "seed": 7
+  },
+  "tables": {
+    "t": {
+      "name": "t",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "v": {
+          "name": "v",
+          "type": "float",
+          "generator": {
+            "strategy": "bootstrap",
+            "dataset": "compat_people",
+            "field": "income",
+            "jitter": 0.0
+          }
+        }
+      }
+    }
+  },
+  "relationships": [],
+  "generation": {
+    "scale": "small",
+    "scales": {
+      "small": {
+        "t": 20
+      }
+    }
+  },
+  "generators": {
+    "bootstrap": 1,
+    "sequence": 1
+  }
+}

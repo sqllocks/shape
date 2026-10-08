@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "additionalProperties": true,
+      "properties": {
+        "baseline_failed_rules": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "diff": {
+          "type": "boolean"
+        },
+        "format": {
+          "const": "shape-mutation-report"
+        },
+        "min_score": {
+          "additionalProperties": true,
+          "properties": {
+            "met": {
+              "type": "boolean"
+            },
+            "required": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "required",
+            "met"
+          ],
+          "type": "object"
+        },
+        "mutants": {
+          "items": {
+            "additionalProperties": true,
+            "properties": {
+              "column": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "id": {
+                "type": "string"
+              },
+              "killed": {
+                "type": "boolean"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "table",
+              "status",
+              "killed"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "rate": {
+          "type": "number"
+        },
+        "rules": {
+          "additionalProperties": {},
+          "type": "object"
+        },
+        "rules_killed_none": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "score": {
+          "additionalProperties": true,
+          "properties": {
+            "by_kind": {
+              "additionalProperties": {
+                "additionalProperties": true,
+                "properties": {
+                  "applicable": {
+                    "type": "integer"
+                  },
+                  "killed": {
+                    "type": "integer"
+                  },
+                  "score": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "killed",
+                  "applicable",
+                  "score"
+                ],
+                "type": "object"
+              },
+              "type": "object"
+            },
+            "by_table": {
+              "additionalProperties": {
+                "additionalProperties": true,
+                "properties": {
+                  "applicable": {
+                    "type": "integer"
+                  },
+                  "killed": {
+                    "type": "integer"
+                  },
+                  "score": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "killed",
+                  "applicable",
+                  "score"
+                ],
+                "type": "object"
+              },
+              "type": "object"
+            },
+            "overall": {
+              "additionalProperties": true,
+              "properties": {
+                "applicable": {
+                  "type": "integer"
+                },
+                "killed": {
+                  "type": "integer"
+                },
+                "score": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "killed",
+                "applicable",
+                "score"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "overall",
+            "by_kind",
+            "by_table"
+          ],
+          "type": "object"
+        },
+        "seed": {
+          "type": "integer"
+        },
+        "version": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "format",
+        "version",
+        "seed",
+        "rate",
+        "diff",
+        "mutants",
+        "score",
+        "rules",
+        "rules_killed_none",
+        "baseline_failed_rules"
+      ],
+      "type": "object"
+    },
+    {
+      "properties": {
+        "bytes": {
+          "type": "integer"
+        },
+        "content_id": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "spilled": {
+          "const": true
+        }
+      },
+      "required": [
+        "spilled",
+        "content_id",
+        "path",
+        "bytes"
+      ],
+      "type": "object"
+    }
+  ],
+  "title": "rules_mutate result",
+  "x-api-version": "1.2",
+  "x-since": "1.2"
+}

@@ -1,0 +1,36 @@
+{
+  "format": "shape-scenario",
+  "version": 1,
+  "id": "schema_retype_column",
+  "domain": "retail",
+  "scale": "small",
+  "seed": 42,
+  "gates": [],
+  "drift": {
+    "plan": {
+      "start": "2026-01-01",
+      "days": 30,
+      "events": [
+        {
+          "kind": "type_change",
+          "column": "customer.is_active",
+          "to": {
+            "type": "integer",
+            "generator": {
+              "strategy": "distribution",
+              "distribution": "bernoulli",
+              "probability": 0.85
+            }
+          },
+          "start": 5
+        }
+      ]
+    },
+    "compare": [
+      [
+        0,
+        10
+      ]
+    ]
+  }
+}

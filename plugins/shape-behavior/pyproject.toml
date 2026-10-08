@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sqllocks-shape-behavior"
+# Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
+version = "0.9.1"
+description = "Shape plugin: behavior models (state machines on a virtual clock)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: OS Independent",
+    "Topic :: Database",
+]
+dependencies = ["sqllocks-shape==0.9.1"]
+
+# Entry points (shape.* groups, plugin API v1); see docs/plugins/authoring.md.
+[project.urls]
+Homepage = "https://github.com/sqllocks/shape"
+Repository = "https://github.com/sqllocks/shape"
+Issues = "https://github.com/sqllocks/shape/issues"
+Documentation = "https://github.com/sqllocks/shape/tree/main/plugins/shape-behavior"
+
+[project.entry-points."shape.commands"]
+behave = "shape_behavior.cli:BehaveCommand"
+
+[project.entry-points."shape.behaviors"]
+subscription = "shape_behavior.behaviors:Subscription"
+equipment_maintenance = "shape_behavior.behaviors:EquipmentMaintenance"
+healthcare_screening = "shape_behavior.behaviors:HealthcareScreening"
+event_sequence = "shape_behavior.behaviors:EventSequence"
+telemetry_series = "shape_behavior.behaviors:TelemetrySeries"
+transaction_stream = "shape_behavior.behaviors:TransactionStream"
+file_arrival = "shape_behavior.behaviors:FileArrival"
+entity_lifecycle = "shape_behavior.behaviors:EntityLifecycle"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+shape_behavior = ["examples/*.json"]

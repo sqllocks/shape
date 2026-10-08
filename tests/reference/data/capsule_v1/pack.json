@@ -1,0 +1,24 @@
+{
+  "format": "shape-reference-pack",
+  "version": 1,
+  "name": "capsule",
+  "pack_version": "1.0.0",
+  "source": "W3-12 compatibility corpus (synthetic)",
+  "retrieved": "2026-10-03",
+  "license": "CC0-1.0",
+  "attribution": "Synthetic test data, public domain.",
+  "transformation_version": "1",
+  "sensitivity": "public",
+  "datasets": [
+    {
+      "name": "capsule_codes",
+      "file": "capsule_codes.arrow",
+      "fields": [
+        "code",
+        "label"
+      ],
+      "rows": 3,
+      "sha256": "0c5ac9b27e8dad793e1cea018016793371ffae842e696ade2e5d3fc882dc9287"
+    }
+  ]
+}

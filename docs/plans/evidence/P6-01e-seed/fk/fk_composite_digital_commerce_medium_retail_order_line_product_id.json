@@ -1,0 +1,59 @@
+{
+ "args": {
+  "domain": "composite_digital_commerce",
+  "scale": "medium",
+  "table": "retail_order_line",
+  "column": "product_id",
+  "parent_table": "retail_product",
+  "n": 30,
+  "out": "docs/plans/evidence/P6-01e-seed/fk/fk_composite_digital_commerce_medium_retail_order_line_product_id.json"
+ },
+ "pooled_chi2": {
+  "chi2": 4726.594936793245,
+  "dof": 4642,
+  "p": 0.18953924262163088,
+  "bins": 4643
+ },
+ "per_run": {
+  "max_share": {
+   "refengine_mean": 0.3869630666666667,
+   "refengine_sd": 0.00040455830774786003,
+   "shape_mean": 0.3870357866666667,
+   "shape_sd": 0.0004998355341463849,
+   "p_mannwhitney": 0.7901413614260696,
+   "p_ks": 0.9578462903438838
+  },
+  "top10_share": {
+   "refengine_mean": 0.7722096800000001,
+   "refengine_sd": 0.0003949322197629567,
+   "shape_mean": 0.7721079466666666,
+   "shape_sd": 0.0004419303079191005,
+   "p_mannwhitney": 0.34028846509891686,
+   "p_ks": 0.8079631540901643
+  },
+  "distinct": {
+   "refengine_mean": 4682.766666666666,
+   "refengine_sd": 16.687148334578616,
+   "shape_mean": 4678.833333333333,
+   "shape_sd": 16.122555058339714,
+   "p_mannwhitney": 0.17793414218412928,
+   "p_ks": 0.23907300248018645
+  },
+  "mean_rank": {
+   "refengine_mean": 0.010633203722666665,
+   "refengine_sd": 5.909109813366665e-05,
+   "shape_mean": 0.01064877625066667,
+   "shape_sd": 4.701110268020168e-05,
+   "p_mannwhitney": 0.31118764341027494,
+   "p_ks": 0.39294501397971776
+  },
+  "null_rate": {
+   "refengine_mean": 0.0,
+   "refengine_sd": 0.0,
+   "shape_mean": 0.0,
+   "shape_sd": 0.0,
+   "p_mannwhitney": 1.0,
+   "p_ks": 1.0
+  }
+ }
+}

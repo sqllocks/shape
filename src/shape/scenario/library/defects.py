@@ -1,0 +1,409 @@
+"""Defects planted into generated tables, deterministically: the data side of a scenario.
+
+Each defect is a mapping with a ``kind`` and a ``table``; the rows it touches are drawn with a
+generator seeded from the run seed and the defect's position, so a rerun plants the same defects.
+Every function returns the table and the number of rows it changed.
+
+``inject_nulls``      ``column``, ``fraction``: that share of the rows get a null in the column.
+``duplicate_keys``    ``column`` (default: the single-column primary key), ``fraction``: that
+                      share of the rows take the key of another row.
+``orphan_keys``       ``column``, ``fraction``: that share of the rows get a key no parent has.
+``late_arrivals``     ``column``, ``fraction``, ``days``: that share of the rows get a timestamp
+                      ``days`` earlier, so they arrive behind newer data.
+``chaos_temporal``    ``column``, ``action`` (``out_of_order``, ``timezone_mismatch``,
+                      ``dst_boundary``), ``intensity``: the temporal chaos mutator of that name on
+                      the column (``docs/CHAOS.md``).
+``chaos_volume``      ``action`` (``spike``, ``empty``, ``single_row``), ``intensity``: the volume
+                      chaos mutator of that name on the table.
+``shuffle_column``    ``column``, ``fraction``: that share of the rows swap the column's values
+                      among themselves. Every value stays, so the column alone looks the same; its
+                      relationship to the other columns is gone (a changed relationship, or events
+                      whose times no longer follow their order).
+``scale_values``      ``column``, ``fraction``, ``factor``: the *last* ``fraction`` of the rows
+                      (by position) are multiplied by ``factor``, as when a feed switches unit
+                      part way through.
+``shift_hours``       ``column``, ``fraction``, ``hours``: that share of the timestamps move by
+                      ``hours`` (a writer that stopped converting to the local zone).
+``truncate_strings``  ``column``, ``fraction``, ``length``: that share of the values are cut to
+                      ``length`` characters.
+``placeholder_values`` ``column``, ``fraction``, ``value``: that share of the values are replaced
+                      by a placeholder text (default ``N/A``).
+``corrupt_encoding``  ``column``, ``fraction``: that share of the values end in ``Ã©``, the
+                      result of reading UTF-8 text as Latin-1.
+``rename_column``     ``column``, ``to``: the column gets the new name, in its place.
+``drop_column``       ``column``: the column is gone.
+``retype_column``     ``column``, ``to`` (``string``, ``integer`` or ``float``): the column changes
+                      type; the texts ``true`` and ``false`` become 1 and 0.
+``add_column``        ``column`` (a name the table does not have), ``value``: a new text column,
+                      the same value in every row (default ``web``).
+"""
+
+from __future__ import annotations
+
+import datetime as dt
+from collections.abc import Callable, Mapping
+from typing import Any
+
+import numpy as np
+import pyarrow as pa  # type: ignore[import-untyped]
+import pyarrow.compute as pc  # type: ignore[import-untyped]
+
+from shape.errors import ShapeError
+from shape.generation.schema import GenSchema
+
+ORPHAN_BASE = 900_000_000
+
+
+class DefectError(ShapeError, ValueError):
+    """A defect names something the tables do not have, or has a bad value."""
+
+
+def _rows(defect: Mapping[str, Any], n: int, rng: np.random.Generator) -> np.ndarray:
+    fraction = float(defect.get("fraction", 0.05))
+    if not 0 < fraction <= 1:
+        raise DefectError(f"{defect['kind']}: 'fraction' must be above 0 and at most 1")
+    count = min(n, max(1, round(n * fraction)))
+    return np.sort(rng.choice(n, size=count, replace=False))
+
+
+def _column(table: pa.Table, defect: Mapping[str, Any], name: str) -> int:
+    if name not in table.column_names:
+        raise DefectError(f"{defect['kind']}: the table has no column {name!r}")
+    return int(table.column_names.index(name))
+
+
+def _replace(table: pa.Table, index: int, values: pa.Array | pa.ChunkedArray) -> pa.Table:
+    return table.set_column(index, table.schema.field(index), values)
+
+
+def inject_nulls(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    i = _column(table, defect, str(defect["column"]))
+    rows = _rows(defect, table.num_rows, rng)
+    mask = np.zeros(table.num_rows, dtype=bool)
+    mask[rows] = True
+    values = pc.if_else(pa.array(mask), pa.scalar(None, table.schema.field(i).type), table[i])
+    out = table.set_column(i, table.schema.field(i).with_nullable(True), values)
+    return out, int(len(rows))
+
+
+def duplicate_keys(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    name = defect.get("column")
+    if name is None:
+        key = schema.tables[str(defect["table"])].primary_key
+        if len(key) != 1:
+            raise DefectError(f"duplicate_keys: {defect['table']} needs a single-column key")
+        name = key[0]
+    i = _column(table, defect, str(name))
+    if table.num_rows < 2:
+        raise DefectError("duplicate_keys: the table needs at least two rows")
+    rows = _rows(defect, table.num_rows, rng)
+    keep = np.setdiff1d(np.arange(table.num_rows), rows)
+    if len(keep) == 0:
+        raise DefectError("duplicate_keys: 'fraction' leaves no row to copy a key from")
+    source = rng.choice(keep, size=len(rows))
+    order = np.arange(table.num_rows)
+    order[rows] = source
+    return _replace(table, i, table[i].take(pa.array(order))), int(len(rows))
+
+
+def orphan_keys(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    i = _column(table, defect, str(defect["column"]))
+    typ = table.schema.field(i).type
+    if not pa.types.is_integer(typ):
+        raise DefectError(f"orphan_keys: {defect['table']}.{defect['column']} is not an integer")
+    rows = _rows(defect, table.num_rows, rng)
+    orphans = ORPHAN_BASE + np.arange(len(rows))
+    values = np.asarray(table[i].fill_null(0).to_numpy(zero_copy_only=False))
+    values = values.astype(np.int64)
+    values[rows] = orphans
+    valid = np.asarray(table[i].is_valid().to_numpy(zero_copy_only=False), dtype=bool)
+    valid[rows] = True
+    return _replace(table, i, pa.array(values, mask=~valid).cast(typ)), int(len(rows))
+
+
+def late_arrivals(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    i = _column(table, defect, str(defect["column"]))
+    typ = table.schema.field(i).type
+    if not (pa.types.is_timestamp(typ) or pa.types.is_date(typ)):
+        raise DefectError(f"late_arrivals: {defect['table']}.{defect['column']} is not a date")
+    days = int(defect.get("days", 30))
+    if days < 1:
+        raise DefectError("late_arrivals: 'days' must be at least 1")
+    rows = _rows(defect, table.num_rows, rng)
+    mask = np.zeros(table.num_rows, dtype=bool)
+    mask[rows] = True
+    shifted = pc.subtract(table[i], pa.scalar(dt.timedelta(days=days))).cast(typ)
+    return _replace(table, i, pc.if_else(pa.array(mask), shifted, table[i])), int(len(rows))
+
+
+def _mask_of(n: int, rows: np.ndarray) -> np.ndarray:
+    mask = np.zeros(n, dtype=bool)
+    mask[rows] = True
+    return mask
+
+
+def _column_of(
+    table: pa.Table, defect: Mapping[str, Any], check: Callable[[pa.DataType], bool], what: str
+) -> tuple[int, pa.DataType]:
+    i = _column(table, defect, str(defect["column"]))
+    typ = table.schema.field(i).type
+    if not check(typ):
+        raise DefectError(f"{defect['kind']}: {defect['table']}.{defect['column']} is not {what}")
+    return i, typ
+
+
+def _is_text(typ: pa.DataType) -> bool:
+    return bool(pa.types.is_string(typ) or pa.types.is_large_string(typ))
+
+
+def _is_number(typ: pa.DataType) -> bool:
+    return bool(pa.types.is_integer(typ) or pa.types.is_floating(typ))
+
+
+def _is_moment(typ: pa.DataType) -> bool:
+    return bool(pa.types.is_timestamp(typ))
+
+
+def _events_rows(events: list[Any]) -> int:
+    return int(sum(e.rows for e in events))  # rows the mutator reports it changed
+
+
+def chaos_temporal(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    from shape.chaos.categories import TemporalChaosMutator
+
+    action = str(defect.get("action"))
+    if action not in ("out_of_order", "timezone_mismatch", "dst_boundary"):
+        raise DefectError(
+            "chaos_temporal: 'action' is out_of_order, timezone_mismatch or dst_boundary"
+        )
+    column = str(defect["column"])
+    _column_of(table, defect, _is_moment, "a timestamp")
+    out, events = TemporalChaosMutator().apply_one(
+        action, table, [column], rng, float(defect.get("intensity", 1.0))
+    )
+    return out, _events_rows(events)
+
+
+def chaos_volume(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    from shape.chaos.categories import VolumeChaosMutator
+
+    action = str(defect.get("action"))
+    if action not in VolumeChaosMutator.SUB_MUTATIONS:
+        raise DefectError(
+            f"chaos_volume: 'action' is {', '.join(VolumeChaosMutator.SUB_MUTATIONS)}"
+        )
+    if table.num_rows == 0:
+        raise DefectError("chaos_volume: the table has no rows")
+    out, events = VolumeChaosMutator().apply_one(
+        action, table, rng, float(defect.get("intensity", 1.0))
+    )
+    return out, max(1, abs(out.num_rows - table.num_rows))
+
+
+def shuffle_column(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    i = _column(table, defect, str(defect["column"]))
+    rows = _rows(defect, table.num_rows, rng)
+    order = np.arange(table.num_rows)
+    order[rows] = rows[rng.permutation(len(rows))]
+    return _replace(table, i, table[i].take(pa.array(order))), int(len(rows))
+
+
+def scale_values(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    i, typ = _column_of(table, defect, _is_number, "a number")
+    if "factor" not in defect or float(defect["factor"]) <= 0:
+        raise DefectError("scale_values: 'factor' must be a number above 0")
+    fraction = float(defect.get("fraction", 0.5))
+    if not 0 < fraction <= 1:
+        raise DefectError("scale_values: 'fraction' must be above 0 and at most 1")
+    n = table.num_rows
+    count = min(n, max(1, round(n * fraction)))
+    mask = _mask_of(n, np.arange(n - count, n))
+    scaled = pc.multiply(pc.cast(table[i], pa.float64()), pa.scalar(float(defect["factor"])))
+    if pa.types.is_integer(typ):
+        scaled = pc.round(scaled)
+    values = pc.if_else(pa.array(mask), scaled, pc.cast(table[i], pa.float64()))
+    return _replace(table, i, values.cast(typ)), count
+
+
+def shift_hours(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    i, typ = _column_of(table, defect, _is_moment, "a timestamp")
+    hours = float(defect.get("hours", 5))
+    if hours == 0:
+        raise DefectError("shift_hours: 'hours' must not be 0")
+    rows = _rows(defect, table.num_rows, rng)
+    mask = _mask_of(table.num_rows, rows)
+    shifted = pc.add(table[i], pa.scalar(dt.timedelta(hours=hours))).cast(typ)
+    return _replace(table, i, pc.if_else(pa.array(mask), shifted, table[i])), int(len(rows))
+
+
+def truncate_strings(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    i, typ = _column_of(table, defect, _is_text, "text")
+    length = int(defect.get("length", 3))
+    if length < 1:
+        raise DefectError("truncate_strings: 'length' must be at least 1")
+    rows = _rows(defect, table.num_rows, rng)
+    mask = _mask_of(table.num_rows, rows)
+    cut = pc.utf8_slice_codeunits(table[i], 0, length)
+    longer = pc.fill_null(pc.greater(pc.utf8_length(table[i]), length), False)
+    changed = int(pc.sum(pc.and_(pa.array(mask), longer)).as_py() or 0)
+    return _replace(table, i, pc.if_else(pa.array(mask), cut, table[i])), changed
+
+
+def placeholder_values(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    i, typ = _column_of(table, defect, _is_text, "text")
+    rows = _rows(defect, table.num_rows, rng)
+    mask = _mask_of(table.num_rows, rows)
+    fill = pa.scalar(str(defect.get("value", "N/A")), typ)
+    return _replace(table, i, pc.if_else(pa.array(mask), fill, table[i])), int(len(rows))
+
+
+def corrupt_encoding(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    i, typ = _column_of(table, defect, _is_text, "text")
+    rows = _rows(defect, table.num_rows, rng)
+    mask = _mask_of(table.num_rows, rows)
+    broken = pc.binary_join_element_wise(table[i], pa.scalar("\u00c3\u00a9", typ), "")
+    present = pc.is_valid(table[i])
+    changed = int(pc.sum(pc.and_(pa.array(mask), present)).as_py() or 0)
+    return _replace(table, i, pc.if_else(pa.array(mask), broken, table[i])), changed
+
+
+def rename_column(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    i = _column(table, defect, str(defect["column"]))
+    new = defect.get("to")
+    if not isinstance(new, str) or not new:
+        raise DefectError("rename_column needs 'to', the new name")
+    if new in table.column_names:
+        raise DefectError(f"rename_column: the table already has a column {new!r}")
+    names = list(table.column_names)
+    names[i] = new
+    return table.rename_columns(names), table.num_rows
+
+
+def drop_column(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    i = _column(table, defect, str(defect["column"]))
+    return table.remove_column(i), table.num_rows
+
+
+def retype_column(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    i = _column(table, defect, str(defect["column"]))
+    target = {"string": pa.string(), "integer": pa.int64(), "float": pa.float64()}.get(
+        str(defect.get("to"))
+    )
+    if target is None:
+        raise DefectError("retype_column: 'to' is string, integer or float")
+    values = table[i]
+    if _is_text(values.type) and _is_number(target):
+        lowered = pc.utf8_lower(values)  # a flag kept as text: true and false become 1 and 0
+        one, zero = pa.scalar("1"), pa.scalar("0")
+        values = pc.if_else(
+            pc.equal(lowered, "true"), one, pc.if_else(pc.equal(lowered, "false"), zero, values)
+        )
+    try:
+        cast = pc.cast(values, target)
+    except pa.ArrowInvalid as exc:
+        raise DefectError(
+            f"retype_column: {defect['table']}.{defect['column']} cannot become {defect['to']}"
+        ) from exc
+    return table.set_column(i, pa.field(table.column_names[i], target), cast), table.num_rows
+
+
+def add_column(
+    table: pa.Table, defect: Mapping[str, Any], rng: np.random.Generator, schema: GenSchema
+) -> tuple[pa.Table, int]:
+    name = str(defect["column"])
+    if name in table.column_names:
+        raise DefectError(f"add_column: the table already has a column {name!r}")
+    value = str(defect.get("value", "web"))
+    return table.append_column(
+        name, pa.array([value] * table.num_rows, pa.string())
+    ), table.num_rows
+
+
+DEFECTS: dict[str, Callable[..., tuple[pa.Table, int]]] = {
+    "inject_nulls": inject_nulls,
+    "duplicate_keys": duplicate_keys,
+    "orphan_keys": orphan_keys,
+    "late_arrivals": late_arrivals,
+    "chaos_temporal": chaos_temporal,
+    "chaos_volume": chaos_volume,
+    "shuffle_column": shuffle_column,
+    "scale_values": scale_values,
+    "shift_hours": shift_hours,
+    "truncate_strings": truncate_strings,
+    "placeholder_values": placeholder_values,
+    "corrupt_encoding": corrupt_encoding,
+    "rename_column": rename_column,
+    "drop_column": drop_column,
+    "retype_column": retype_column,
+    "add_column": add_column,
+}
+
+#: defects that act on the whole table and need no ``column``
+_TABLE_WIDE = ("duplicate_keys", "chaos_volume")
+
+
+def check_defect(defect: Any, schema: GenSchema) -> None:
+    """Raise :class:`DefectError` when ``defect`` is malformed or names no table or column of
+    ``schema``."""
+    if not isinstance(defect, Mapping) or defect.get("kind") not in DEFECTS:
+        raise DefectError(f"a defect needs a 'kind' of {', '.join(DEFECTS)}: {defect!r}")
+    table = schema.tables.get(str(defect.get("table")))
+    if table is None:
+        raise DefectError(f"{defect['kind']}: the schema has no table {defect.get('table')!r}")
+    column = defect.get("column")
+    if column is None and defect["kind"] not in _TABLE_WIDE:
+        raise DefectError(f"{defect['kind']} needs a 'column'")
+    if defect["kind"] == "add_column":
+        if column in table.columns:
+            raise DefectError(f"add_column: {defect['table']} already has a column {column!r}")
+        return
+    if column is not None and column not in table.columns:
+        raise DefectError(f"{defect['kind']}: no column {defect['table']}.{column}")
+
+
+def apply_defects(
+    tables: Mapping[str, pa.Table],
+    defects: list[Mapping[str, Any]],
+    schema: GenSchema,
+    seed: int,
+) -> tuple[dict[str, pa.Table], dict[str, int]]:
+    """The tables with every defect planted, and the rows changed per defect kind."""
+    out = dict(tables)
+    changed: dict[str, int] = {}
+    for position, defect in enumerate(defects):
+        check_defect(defect, schema)
+        name = str(defect["table"])
+        rng = np.random.default_rng([seed, position])
+        out[name], rows = DEFECTS[str(defect["kind"])](out[name], defect, rng, schema)
+        changed[str(defect["kind"])] = changed.get(str(defect["kind"]), 0) + rows
+    return out, changed

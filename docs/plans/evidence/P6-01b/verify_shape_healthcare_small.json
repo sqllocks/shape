@@ -1,0 +1,6361 @@
+{
+ "domain": "healthcare",
+ "scale": "small",
+ "impl": "shape",
+ "seed": 42,
+ "impl_seed": 1042,
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "tables": {
+  "provider": {
+   "rows": {
+    "refengine": 100,
+    "impl": 100
+   },
+   "columns_refengine": [
+    "provider_id",
+    "npi",
+    "first_name",
+    "last_name",
+    "credential",
+    "specialty",
+    "is_active"
+   ],
+   "columns_impl": [
+    "provider_id",
+    "npi",
+    "first_name",
+    "last_name",
+    "credential",
+    "specialty",
+    "is_active"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "provider_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "npi": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "first_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "last_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "credential": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "specialty": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "is_active": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "provider_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.2756973423800469,
+     "stats": {
+      "mean": {
+       "refengine": 50.5,
+       "impl": 50.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "refengine": 28.86607004772212,
+       "impl": 28.86607004772212,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "npi": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "refengine": 100,
+      "impl": 100,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "0000000001",
+       "refengine": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0000000002",
+       "refengine": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0000000003",
+       "refengine": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0000000004",
+       "refengine": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0000000005",
+       "refengine": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0000000006",
+       "refengine": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0000000007",
+       "refengine": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0000000008",
+       "refengine": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0000000009",
+       "refengine": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "0000000010",
+       "refengine": 0.01,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "{seq:10}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "first_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "refengine": 98,
+      "impl": 99,
+      "ratio": 1.010204081632653,
+      "baseline_max_ratio_dev": 0.020408163265306145
+     },
+     "top10": [
+      {
+       "value": "Elya",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Dein",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Laine",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Muria",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Muya",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Juan",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Waia",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Dalton",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Breanna",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Rosalie",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Nuisa",
+       "refengine": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "Maddox",
+       "refengine": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Kous",
+       "refengine": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Tian",
+       "refengine": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Isaiah",
+       "refengine": 0.0,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.9899999999999998,
+     "tvd_baseline": 0.9999999999999998,
+     "tvd_tol": 2.3695962509005764,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "last_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "refengine": 97,
+      "impl": 100,
+      "ratio": 1.0309278350515463,
+      "baseline_max_ratio_dev": 0.030927835051546282
+     },
+     "top10": [
+      {
+       "value": "Underidge",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Henley",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Portton",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "LeArthur",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Scottridge",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Weibrook",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Gardnwell",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Maynburg",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Hurstein",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Mccaham",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Cookwick",
+       "refengine": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Bolwick",
+       "refengine": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Snowwood",
+       "refengine": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Marqwick",
+       "refengine": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "DeKay",
+       "refengine": 0.0,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.96,
+     "tvd_baseline": 0.9899999999999999,
+     "tvd_tol": 2.357475474478788,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "credential": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "MD",
+       "refengine": 0.52,
+       "impl": 0.59
+      },
+      {
+       "value": "DO",
+       "refengine": 0.17,
+       "impl": 0.1
+      },
+      {
+       "value": "NP",
+       "refengine": 0.14,
+       "impl": 0.17
+      },
+      {
+       "value": "PA",
+       "refengine": 0.1,
+       "impl": 0.12
+      },
+      {
+       "value": "RN",
+       "refengine": 0.07,
+       "impl": 0.02
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.11999999999999997,
+     "tvd_baseline": 0.15999999999999998,
+     "tvd_tol": 0.5352372348458314,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "specialty": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "refengine": 32,
+      "impl": 32,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.03125
+     },
+     "top10": [
+      {
+       "value": "Pain Management",
+       "refengine": 0.08,
+       "impl": 0.08
+      },
+      {
+       "value": "Nephrology",
+       "refengine": 0.08,
+       "impl": 0.06
+      },
+      {
+       "value": "Urology",
+       "refengine": 0.07,
+       "impl": 0.04
+      },
+      {
+       "value": "Geriatrics",
+       "refengine": 0.05,
+       "impl": 0.03
+      },
+      {
+       "value": "Ophthalmology",
+       "refengine": 0.05,
+       "impl": 0.02
+      },
+      {
+       "value": "Rheumatology",
+       "refengine": 0.05,
+       "impl": 0.03
+      },
+      {
+       "value": "Cardiology",
+       "refengine": 0.05,
+       "impl": 0.02
+      },
+      {
+       "value": "Psychiatry",
+       "refengine": 0.04,
+       "impl": 0.05
+      },
+      {
+       "value": "Emergency Medicine",
+       "refengine": 0.04,
+       "impl": 0.01
+      },
+      {
+       "value": "Endocrinology",
+       "refengine": 0.04,
+       "impl": 0.03
+      },
+      {
+       "value": "Internal Medicine",
+       "refengine": 0.02,
+       "impl": 0.07
+      },
+      {
+       "value": "Gastroenterology",
+       "refengine": 0.02,
+       "impl": 0.05
+      },
+      {
+       "value": "Neonatology",
+       "refengine": 0.02,
+       "impl": 0.05
+      },
+      {
+       "value": "Pediatrics",
+       "refengine": 0.03,
+       "impl": 0.05
+      },
+      {
+       "value": "Neurology",
+       "refengine": 0.02,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.26,
+     "tvd_baseline": 0.34,
+     "tvd_tol": 1.3540550005146152,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_active": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "refengine": 0.9,
+       "impl": 0.94
+      },
+      {
+       "value": "false",
+       "refengine": 0.1,
+       "impl": 0.06
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.039999999999999966,
+     "tvd_baseline": 0.030000000000000013,
+     "tvd_tol": 0.3385137501286538,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "facility": {
+   "rows": {
+    "refengine": 50,
+    "impl": 50
+   },
+   "columns_refengine": [
+    "facility_id",
+    "facility_name",
+    "facility_type",
+    "bed_count",
+    "street",
+    "city",
+    "phone",
+    "state",
+    "zip_code",
+    "lat",
+    "lng"
+   ],
+   "columns_impl": [
+    "facility_id",
+    "facility_name",
+    "facility_type",
+    "bed_count",
+    "street",
+    "city",
+    "phone",
+    "state",
+    "zip_code",
+    "lat",
+    "lng"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "facility_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "facility_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "facility_type": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "bed_count": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "street": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "city": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "phone": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "state": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "zip_code": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "lat": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "lng": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "facility_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.38989492070408105,
+     "stats": {
+      "mean": {
+       "refengine": 25.5,
+       "impl": 25.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 50.0,
+       "impl": 50.0
+      },
+      "std": {
+       "refengine": 14.430869689661812,
+       "impl": 14.430869689661812,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 50,
+      "impl": 50
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "facility_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "refengine": 50,
+      "impl": 50,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Medical Center #0001",
+       "refengine": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "Medical Center #0002",
+       "refengine": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "Medical Center #0003",
+       "refengine": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "Medical Center #0004",
+       "refengine": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "Medical Center #0005",
+       "refengine": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "Medical Center #0006",
+       "refengine": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "Medical Center #0007",
+       "refengine": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "Medical Center #0008",
+       "refengine": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "Medical Center #0009",
+       "refengine": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "Medical Center #0010",
+       "refengine": 0.02,
+       "impl": 0.02
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "Medical Center #{seq:4}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "facility_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "refengine": 7,
+      "impl": 7,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.1428571428571429
+     },
+     "top10": [
+      {
+       "value": "Clinic",
+       "refengine": 0.32,
+       "impl": 0.3
+      },
+      {
+       "value": "Hospital",
+       "refengine": 0.26,
+       "impl": 0.22
+      },
+      {
+       "value": "Urgent Care",
+       "refengine": 0.16,
+       "impl": 0.18
+      },
+      {
+       "value": "Rehabilitation",
+       "refengine": 0.12,
+       "impl": 0.14
+      },
+      {
+       "value": "Surgery Center",
+       "refengine": 0.06,
+       "impl": 0.1
+      },
+      {
+       "value": "Long-Term Care",
+       "refengine": 0.04,
+       "impl": 0.02
+      },
+      {
+       "value": "Psychiatric",
+       "refengine": 0.04,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.08000000000000003,
+     "tvd_baseline": 0.2,
+     "tvd_tol": 0.8956231982162769,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "bed_count": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "ks": 0.21999999999999997,
+     "ks_baseline": 0.27999999999999997,
+     "ks_tol": 0.42199999999999993,
+     "stats": {
+      "mean": {
+       "refengine": 159.61644638880173,
+       "impl": 106.71728703398082
+      },
+      "min": {
+       "refengine": 11.447114844896442,
+       "impl": 9.302304893330936
+      },
+      "max": {
+       "refengine": 1338.119978567474,
+       "impl": 427.09924498844543
+      },
+      "std": {
+       "refengine": 239.0985116258649,
+       "impl": 79.7693655721531,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 50,
+      "impl": 50
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "street": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "refengine": 50,
+      "impl": 50,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "165 Little Seventh Way",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "8739 Spring Way",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "4923 Old Countryside Ln",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "2581 Long Commerce Ct",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "5676 Upper Spring Dr",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "3660 Little Ivory Dr",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "2130 New Columbus Ct",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "4132 Long Cherry St",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "5028 Long Broad St",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "1602 Technology Dr",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "5740 Short Meadow Rd",
+       "refengine": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "2698 Old Opal Ct",
+       "refengine": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "8683 Long Linden St",
+       "refengine": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "8569 New Northgate Rd",
+       "refengine": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "7235 Birch Blvd",
+       "refengine": 0.0,
+       "impl": 0.02
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "number(100..9998)+' '+STREET_NAMES+' '+_STREET_SUFFIXES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "city": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "refengine": 49,
+      "impl": 50,
+      "ratio": 1.0204081632653061,
+      "baseline_max_ratio_dev": 0.020408163265306145
+     },
+     "top10": [
+      {
+       "value": "El Paso",
+       "refengine": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "Tucson",
+       "refengine": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "Perkasie",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Grenada",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Gulf Breeze",
+       "refengine": 0.02,
+       "impl": 0.02
+      },
+      {
+       "value": "Mayer",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Houlton",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Duluth",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Woodford",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Powersite",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "West Newbury",
+       "refengine": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "Sand Fork",
+       "refengine": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "Boyne Falls",
+       "refengine": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "Goochland",
+       "refengine": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "Aiken",
+       "refengine": 0.0,
+       "impl": 0.02
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.94,
+     "tvd_baseline": 0.9999999999999998,
+     "tvd_tol": 2.3695962509005764,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "phone": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "refengine": 50,
+      "impl": 50,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "(551) 312-4557",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "(460) 716-4227",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "(536) 500-1664",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "(342) 916-7339",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "(465) 279-8869",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "(903) 552-2730",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "(953) 239-1876",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "(520) 712-8499",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "(917) 419-7473",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "(653) 340-2356",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "(518) 351-1838",
+       "refengine": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "(636) 525-8596",
+       "refengine": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "(980) 623-7518",
+       "refengine": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "(626) 783-8037",
+       "refengine": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "(813) 530-7123",
+       "refengine": 0.0,
+       "impl": 0.02
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "(AAA) EEE-SSSS, AAA/EEE 200..998, SSSS 1000..9998",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "state": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "refengine": 25,
+      "impl": 31,
+      "ratio": 1.24,
+      "baseline_max_ratio_dev": 0.15999999999999992
+     },
+     "top10": [
+      {
+       "value": "TX",
+       "refengine": 0.14,
+       "impl": 0.12
+      },
+      {
+       "value": "NY",
+       "refengine": 0.1,
+       "impl": 0.06
+      },
+      {
+       "value": "MN",
+       "refengine": 0.08,
+       "impl": 0.04
+      },
+      {
+       "value": "WI",
+       "refengine": 0.08,
+       "impl": 0.04
+      },
+      {
+       "value": "AZ",
+       "refengine": 0.06,
+       "impl": 0.02
+      },
+      {
+       "value": "PA",
+       "refengine": 0.06,
+       "impl": 0.04
+      },
+      {
+       "value": "MS",
+       "refengine": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "FL",
+       "refengine": 0.04,
+       "impl": 0.04
+      },
+      {
+       "value": "OH",
+       "refengine": 0.04,
+       "impl": 0.04
+      },
+      {
+       "value": "NJ",
+       "refengine": 0.04,
+       "impl": 0.02
+      },
+      {
+       "value": "MI",
+       "refengine": 0.02,
+       "impl": 0.06
+      },
+      {
+       "value": "MO",
+       "refengine": 0.02,
+       "impl": 0.06
+      },
+      {
+       "value": "CO",
+       "refengine": 0.02,
+       "impl": 0.04
+      },
+      {
+       "value": "CA",
+       "refengine": 0.04,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.34,
+     "tvd_baseline": 0.56,
+     "tvd_tol": 1.692568750643269,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "zip_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "refengine": 50,
+      "impl": 50,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.020000000000000018
+     },
+     "top10": [
+      {
+       "value": "85742",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "18944",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "38902",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "32563",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "55360",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "88525",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "54082",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "55802",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "53599",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "65731",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "01985",
+       "refengine": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "26430",
+       "refengine": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "49713",
+       "refengine": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "23063",
+       "refengine": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "29804",
+       "refengine": 0.0,
+       "impl": 0.02
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.9999999999999999,
+     "tvd_baseline": 1.0,
+     "tvd_tol": 2.393653682408596,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lat": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "ks": 0.08000000000000002,
+     "ks_baseline": 0.21999999999999997,
+     "ks_tol": 0.38989492070408105,
+     "stats": {
+      "mean": {
+       "refengine": 38.337810000000005,
+       "impl": 39.327034
+      },
+      "min": {
+       "refengine": 21.4531,
+       "impl": 28.5511
+      },
+      "max": {
+       "refengine": 47.7205,
+       "impl": 62.1039
+      },
+      "std": {
+       "refengine": 5.801589935879646,
+       "impl": 5.940730147468744,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 50,
+      "impl": 50
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lng": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "ks": 0.12,
+     "ks_baseline": 0.22000000000000003,
+     "ks_tol": 0.38989492070408105,
+     "stats": {
+      "mean": {
+       "refengine": -93.85158399999999,
+       "impl": -92.077094
+      },
+      "min": {
+       "refengine": -158.0174,
+       "impl": -145.6617
+      },
+      "max": {
+       "refengine": -70.0139,
+       "impl": -69.5481
+      },
+      "std": {
+       "refengine": 16.914445897792337,
+       "impl": 14.854421901728925,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 50,
+      "impl": 50
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "patient": {
+   "rows": {
+    "refengine": 500,
+    "impl": 500
+   },
+   "columns_refengine": [
+    "patient_id",
+    "mrn",
+    "first_name",
+    "last_name",
+    "date_of_birth",
+    "gender",
+    "race",
+    "street",
+    "city",
+    "phone",
+    "email",
+    "insurance_plan",
+    "insurance_member_id",
+    "registration_date",
+    "is_active",
+    "state",
+    "zip_code"
+   ],
+   "columns_impl": [
+    "patient_id",
+    "mrn",
+    "first_name",
+    "last_name",
+    "date_of_birth",
+    "gender",
+    "race",
+    "street",
+    "city",
+    "phone",
+    "email",
+    "insurance_plan",
+    "insurance_member_id",
+    "registration_date",
+    "is_active",
+    "state",
+    "zip_code"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "patient_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "mrn": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "first_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "last_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "date_of_birth": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "gender": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "race": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "street": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "city": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "phone": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "email": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "insurance_plan": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "insurance_member_id": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "registration_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "is_active": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "state": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "zip_code": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "patient_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.1232955997555637,
+     "stats": {
+      "mean": {
+       "refengine": 250.5,
+       "impl": 250.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500.0,
+       "impl": 500.0
+      },
+      "std": {
+       "refengine": 144.33727862198316,
+       "impl": 144.33727862198316,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 500,
+      "impl": 500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "mrn": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 500,
+      "impl": 500,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "MRN00000001",
+       "refengine": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "MRN00000002",
+       "refengine": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "MRN00000003",
+       "refengine": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "MRN00000004",
+       "refengine": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "MRN00000005",
+       "refengine": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "MRN00000006",
+       "refengine": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "MRN00000007",
+       "refengine": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "MRN00000008",
+       "refengine": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "MRN00000009",
+       "refengine": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "MRN00000010",
+       "refengine": 0.002,
+       "impl": 0.002
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "MRN{seq:8}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "first_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 481,
+      "impl": 472,
+      "ratio": 0.9812889812889813,
+      "baseline_max_ratio_dev": 0.02494802494802495
+     },
+     "top10": [
+      {
+       "value": "Jaane",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Paul",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Wiila",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Toea",
+       "refengine": 0.004,
+       "impl": 0.002
+      },
+      {
+       "value": "Bob",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Leia",
+       "refengine": 0.004,
+       "impl": 0.002
+      },
+      {
+       "value": "Gaene",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Clia",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Diamond",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Tien",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Frdra",
+       "refengine": 0.0,
+       "impl": 0.006
+      },
+      {
+       "value": "Indigo",
+       "refengine": 0.0,
+       "impl": 0.006
+      },
+      {
+       "value": "Doey",
+       "refengine": 0.0,
+       "impl": 0.004
+      },
+      {
+       "value": "Flira",
+       "refengine": 0.0,
+       "impl": 0.004
+      },
+      {
+       "value": "Irin",
+       "refengine": 0.0,
+       "impl": 0.004
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.8800000000000003,
+     "tvd_baseline": 0.9320000000000004,
+     "tvd_tol": 2.3477337986148514,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "last_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 472,
+      "impl": 477,
+      "ratio": 1.0105932203389831,
+      "baseline_max_ratio_dev": 0.02330508474576276
+     },
+     "top10": [
+      {
+       "value": "Litworth",
+       "refengine": 0.006,
+       "impl": 0.002
+      },
+      {
+       "value": "DiCarthy",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "McLaughlin",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Underidge",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Brastein",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Fleland",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Duranridge",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Edwards",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Maynard",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Bergway",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Norwell",
+       "refengine": 0.0,
+       "impl": 0.006
+      },
+      {
+       "value": "Shaberg",
+       "refengine": 0.0,
+       "impl": 0.004
+      },
+      {
+       "value": "Decdale",
+       "refengine": 0.0,
+       "impl": 0.004
+      },
+      {
+       "value": "Hollfield",
+       "refengine": 0.0,
+       "impl": 0.004
+      },
+      {
+       "value": "Marquez",
+       "refengine": 0.0,
+       "impl": 0.004
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.8880000000000003,
+     "tvd_baseline": 0.9320000000000004,
+     "tvd_tol": 2.3256658371388985,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "date_of_birth": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "ks": 0.06800000000000006,
+     "ks_baseline": 0.07599999999999996,
+     "ks_tol": 0.1232955997555637,
+     "stats": {
+      "mean": {
+       "refengine": "1976-08-04 15:22:34.402605024",
+       "impl": "1975-09-17 11:08:11.635706816"
+      },
+      "min": {
+       "refengine": "1930-02-23 01:08:03.065000448",
+       "impl": "1930-03-23 12:31:52.108797952"
+      },
+      "max": {
+       "refengine": "2020-12-18 16:54:43.015130368",
+       "impl": "2020-10-10 12:02:06.368216064"
+      },
+      "std": {
+       "refengine": 9896.369368445692,
+       "impl": 9374.042293940323,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 500,
+      "impl": 500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "gender": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "M",
+       "refengine": 0.522,
+       "impl": 0.488
+      },
+      {
+       "value": "F",
+       "refengine": 0.474,
+       "impl": 0.508
+      },
+      {
+       "value": "NB",
+       "refengine": 0.004,
+       "impl": 0.004
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.03400000000000003,
+     "tvd_baseline": 0.07600000000000004,
+     "tvd_tol": 0.185411616971131,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "race": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "White",
+       "refengine": 0.588,
+       "impl": 0.548
+      },
+      {
+       "value": "Hispanic",
+       "refengine": 0.176,
+       "impl": 0.206
+      },
+      {
+       "value": "Black",
+       "refengine": 0.108,
+       "impl": 0.13
+      },
+      {
+       "value": "Asian",
+       "refengine": 0.078,
+       "impl": 0.06
+      },
+      {
+       "value": "Other",
+       "refengine": 0.05,
+       "impl": 0.056
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.05799999999999997,
+     "tvd_baseline": 0.05000000000000002,
+     "tvd_tol": 0.2393653682408596,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "street": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 500,
+      "impl": 500,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "196 Magnolia Dr",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "4978 Upper Hill Ct",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "2353 Creekside Ave",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "4663 Hemlock St",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "5543 Big Crane Dr",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "8487 Lower North Blvd",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "314 Long Second Dr",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "5151 Big Cove Ln",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "5469 Old Lincoln Cir",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "1306 Lower Prince Ln",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "8855 Old Mountain Blvd",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "6486 New Bayview Rd",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "1972 Upper Riverside Cir",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "8647 Long Westwood Dr",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "4200 Lower Spring Blvd",
+       "refengine": 0.0,
+       "impl": 0.002
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "number(100..9998)+' '+STREET_NAMES+' '+_STREET_SUFFIXES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "city": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 461,
+      "impl": 457,
+      "ratio": 0.9913232104121475,
+      "baseline_max_ratio_dev": 0.017353579175705014
+     },
+     "top10": [
+      {
+       "value": "Fort Lauderdale",
+       "refengine": 0.006,
+       "impl": 0.002
+      },
+      {
+       "value": "Jacksonville",
+       "refengine": 0.006,
+       "impl": 0.0
+      },
+      {
+       "value": "Oklahoma City",
+       "refengine": 0.006,
+       "impl": 0.0
+      },
+      {
+       "value": "Portland",
+       "refengine": 0.006,
+       "impl": 0.002
+      },
+      {
+       "value": "Miami",
+       "refengine": 0.006,
+       "impl": 0.002
+      },
+      {
+       "value": "Washington",
+       "refengine": 0.006,
+       "impl": 0.008
+      },
+      {
+       "value": "Inglewood",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Norfolk",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Lincoln",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Port Saint Lucie",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Orlando",
+       "refengine": 0.0,
+       "impl": 0.006
+      },
+      {
+       "value": "Marion",
+       "refengine": 0.0,
+       "impl": 0.006
+      },
+      {
+       "value": "Arlington",
+       "refengine": 0.0,
+       "impl": 0.006
+      },
+      {
+       "value": "Boise",
+       "refengine": 0.0,
+       "impl": 0.006
+      },
+      {
+       "value": "Albany",
+       "refengine": 0.002,
+       "impl": 0.006
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.8880000000000003,
+     "tvd_baseline": 0.9200000000000004,
+     "tvd_tol": 2.2984061588644833,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "phone": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 500,
+      "impl": 500,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "(266) 731-9800",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "(623) 847-1630",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "(261) 390-7508",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "(897) 460-1126",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "(395) 537-9887",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "(369) 944-4605",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "(761) 366-5713",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "(937) 252-1901",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "(942) 392-5911",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "(244) 972-3514",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "(806) 311-8684",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "(692) 375-7145",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "(667) 431-9607",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "(794) 992-6869",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "(380) 292-7352",
+       "refengine": 0.0,
+       "impl": 0.002
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "(AAA) EEE-SSSS, AAA/EEE 200..998, SSSS 1000..9998",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "email": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.148,
+      "impl": 0.166,
+      "baseline_max_abs_diff": 0.032,
+      "tol": 0.11229247525992114
+     },
+     "distinct": {
+      "refengine": 426,
+      "impl": 417,
+      "ratio": 0.9788732394366197,
+      "baseline_max_ratio_dev": 0.03755868544600938
+     },
+     "top10": [
+      {
+       "value": "corey.strickland548@lawyer.com",
+       "refengine": 0.002347417840375587,
+       "impl": 0.0
+      },
+      {
+       "value": "clron.odomton893@doctor.com",
+       "refengine": 0.002347417840375587,
+       "impl": 0.0
+      },
+      {
+       "value": "zeaya.berrywell869@icloud.com",
+       "refengine": 0.002347417840375587,
+       "impl": 0.0
+      },
+      {
+       "value": "kro.daviridge808@inbox.com",
+       "refengine": 0.002347417840375587,
+       "impl": 0.0
+      },
+      {
+       "value": "jaane.huefield860@verizon.net",
+       "refengine": 0.002347417840375587,
+       "impl": 0.0
+      },
+      {
+       "value": "niina.holdeham329@doctor.com",
+       "refengine": 0.002347417840375587,
+       "impl": 0.0
+      },
+      {
+       "value": "arana.pottestein673@icloud.com",
+       "refengine": 0.002347417840375587,
+       "impl": 0.0
+      },
+      {
+       "value": "anne.dicarthy481@consultant.com",
+       "refengine": 0.002347417840375587,
+       "impl": 0.0
+      },
+      {
+       "value": "naella.chrisham760@optonline.net",
+       "refengine": 0.002347417840375587,
+       "impl": 0.0
+      },
+      {
+       "value": "paul.mclaughlin960@optonline.net",
+       "refengine": 0.002347417840375587,
+       "impl": 0.0
+      },
+      {
+       "value": "frisha.shaberg470@accountant.com",
+       "refengine": 0.0,
+       "impl": 0.002398081534772182
+      },
+      {
+       "value": "feia.dafarlane36@earthlink.net",
+       "refengine": 0.0,
+       "impl": 0.002398081534772182
+      },
+      {
+       "value": "vier.barnes797@verizon.net",
+       "refengine": 0.0,
+       "impl": 0.002398081534772182
+      },
+      {
+       "value": "doey.hessdale751@zoho.com",
+       "refengine": 0.0,
+       "impl": 0.002398081534772182
+      },
+      {
+       "value": "niin.parham11@rediffmail.com",
+       "refengine": 0.0,
+       "impl": 0.002398081534772182
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS",
+     "distinct_ratio_tol": 0.056338028169014065,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "insurance_plan": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 23,
+      "impl": 23,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Molina Healthcare",
+       "refengine": 0.066,
+       "impl": 0.07
+      },
+      {
+       "value": "Cigna PPO",
+       "refengine": 0.062,
+       "impl": 0.046
+      },
+      {
+       "value": "Workers Compensation",
+       "refengine": 0.056,
+       "impl": 0.038
+      },
+      {
+       "value": "Medicare Advantage",
+       "refengine": 0.052,
+       "impl": 0.054
+      },
+      {
+       "value": "Medicare Part B",
+       "refengine": 0.05,
+       "impl": 0.036
+      },
+      {
+       "value": "Self-Pay",
+       "refengine": 0.05,
+       "impl": 0.044
+      },
+      {
+       "value": "UnitedHealthcare HMO",
+       "refengine": 0.05,
+       "impl": 0.044
+      },
+      {
+       "value": "Aetna HMO",
+       "refengine": 0.048,
+       "impl": 0.048
+      },
+      {
+       "value": "Anthem HMO",
+       "refengine": 0.048,
+       "impl": 0.058
+      },
+      {
+       "value": "Aetna PPO",
+       "refengine": 0.044,
+       "impl": 0.044
+      },
+      {
+       "value": "Medicare Part A",
+       "refengine": 0.034,
+       "impl": 0.054
+      },
+      {
+       "value": "Kaiser Permanente HMO",
+       "refengine": 0.042,
+       "impl": 0.05
+      },
+      {
+       "value": "Humana PPO",
+       "refengine": 0.038,
+       "impl": 0.048
+      },
+      {
+       "value": "UnitedHealthcare PPO",
+       "refengine": 0.036,
+       "impl": 0.044
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.09200000000000003,
+     "tvd_baseline": 0.16600000000000004,
+     "tvd_tol": 0.5133815206648742,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "insurance_member_id": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 500,
+      "impl": 500,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "INS000000001",
+       "refengine": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "INS000000002",
+       "refengine": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "INS000000003",
+       "refengine": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "INS000000004",
+       "refengine": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "INS000000005",
+       "refengine": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "INS000000006",
+       "refengine": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "INS000000007",
+       "refengine": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "INS000000008",
+       "refengine": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "INS000000009",
+       "refengine": 0.002,
+       "impl": 0.002
+      },
+      {
+       "value": "INS000000010",
+       "refengine": 0.002,
+       "impl": 0.002
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "INS{seq:9}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "registration_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "ks": 0.11400000000000005,
+     "ks_baseline": 0.09000000000000002,
+     "ks_tol": 0.13700000000000004,
+     "stats": {
+      "mean": {
+       "refengine": "2023-11-24 23:24:34.057737728",
+       "impl": "2024-02-09 19:08:29.541140480"
+      },
+      "min": {
+       "refengine": "2022-01-01 17:26:34.042671872",
+       "impl": "2022-01-02 16:49:17.820687104"
+      },
+      "max": {
+       "refengine": "2025-12-29 10:14:21.775074816",
+       "impl": "2025-12-30 07:48:01.833167872"
+      },
+      "std": {
+       "refengine": 428.68823891351377,
+       "impl": 418.4039668188613,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 500,
+      "impl": 500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_active": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "refengine": 0.868,
+       "impl": 0.876
+      },
+      {
+       "value": "false",
+       "refengine": 0.132,
+       "impl": 0.124
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.008000000000000007,
+     "tvd_baseline": 0.026000000000000016,
+     "tvd_tol": 0.15138795132120958,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "state": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 51,
+      "impl": 50,
+      "ratio": 0.9803921568627451,
+      "baseline_max_ratio_dev": 0.05882352941176472
+     },
+     "top10": [
+      {
+       "value": "CA",
+       "refengine": 0.086,
+       "impl": 0.07
+      },
+      {
+       "value": "PA",
+       "refengine": 0.054,
+       "impl": 0.036
+      },
+      {
+       "value": "NY",
+       "refengine": 0.05,
+       "impl": 0.066
+      },
+      {
+       "value": "FL",
+       "refengine": 0.05,
+       "impl": 0.032
+      },
+      {
+       "value": "TX",
+       "refengine": 0.046,
+       "impl": 0.054
+      },
+      {
+       "value": "OH",
+       "refengine": 0.042,
+       "impl": 0.034
+      },
+      {
+       "value": "MO",
+       "refengine": 0.032,
+       "impl": 0.026
+      },
+      {
+       "value": "NC",
+       "refengine": 0.032,
+       "impl": 0.02
+      },
+      {
+       "value": "VA",
+       "refengine": 0.03,
+       "impl": 0.034
+      },
+      {
+       "value": "WI",
+       "refengine": 0.03,
+       "impl": 0.018
+      },
+      {
+       "value": "IL",
+       "refengine": 0.03,
+       "impl": 0.05
+      },
+      {
+       "value": "MI",
+       "refengine": 0.026,
+       "impl": 0.044
+      },
+      {
+       "value": "MN",
+       "refengine": 0.026,
+       "impl": 0.032
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.182,
+     "tvd_baseline": 0.174,
+     "tvd_tol": 0.764471680988537,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "zip_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 498,
+      "impl": 497,
+      "ratio": 0.9979919678714859,
+      "baseline_max_ratio_dev": 0.0060240963855421326
+     },
+     "top10": [
+      {
+       "value": "34953",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "47853",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "63022",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "10916",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "67013",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "48302",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "90304",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "17229",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "71483",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "90254",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "49411",
+       "refengine": 0.0,
+       "impl": 0.004
+      },
+      {
+       "value": "17235",
+       "refengine": 0.0,
+       "impl": 0.004
+      },
+      {
+       "value": "33602",
+       "refengine": 0.0,
+       "impl": 0.004
+      },
+      {
+       "value": "44610",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "38679",
+       "refengine": 0.0,
+       "impl": 0.002
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.9860000000000004,
+     "tvd_baseline": 0.9960000000000004,
+     "tvd_tol": 2.3888615781377958,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "encounter": {
+   "rows": {
+    "refengine": 2500,
+    "impl": 2500
+   },
+   "columns_refengine": [
+    "encounter_id",
+    "patient_id",
+    "provider_id",
+    "facility_id",
+    "encounter_type",
+    "encounter_date",
+    "status"
+   ],
+   "columns_impl": [
+    "encounter_id",
+    "patient_id",
+    "provider_id",
+    "facility_id",
+    "encounter_type",
+    "encounter_date",
+    "status"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "encounter_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "patient_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "provider_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "facility_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "encounter_type": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "encounter_date": {
+     "refengine": "timestamp[us]",
+     "impl": "timestamp[us]"
+    },
+    "status": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "encounter_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.05513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": 1250.5,
+       "impl": 1250.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 2500.0,
+       "impl": 2500.0
+      },
+      "std": {
+       "refengine": 721.6877787520029,
+       "impl": 721.6877787520029,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 2500,
+      "impl": 2500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "patient_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.02760000000000007,
+     "ks_baseline": 0.07240000000000002,
+     "ks_tol": 0.11060000000000003,
+     "stats": {
+      "mean": {
+       "refengine": 141.1308,
+       "impl": 134.568
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500.0,
+       "impl": 500.0
+      },
+      "std": {
+       "refengine": 158.26973207584575,
+       "impl": 156.00103517605262,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 472,
+      "impl": 468
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "provider_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.0232,
+     "ks_baseline": 0.021999999999999964,
+     "ks_tol": 0.05513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": 13.6276,
+       "impl": 14.4068
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "refengine": 20.66835547981503,
+       "impl": 21.657453999951144,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 100,
+      "impl": 99
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "facility_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.029200000000000004,
+     "ks_baseline": 0.02200000000000002,
+     "ks_tol": 0.05513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": 6.8088,
+       "impl": 6.2136
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 50.0,
+       "impl": 50.0
+      },
+      "std": {
+       "refengine": 10.082353026947628,
+       "impl": 9.341304782523691,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 50,
+      "impl": 49
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "encounter_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Outpatient",
+       "refengine": 0.7128,
+       "impl": 0.7168
+      },
+      {
+       "value": "Emergency",
+       "refengine": 0.1068,
+       "impl": 0.0928
+      },
+      {
+       "value": "Inpatient",
+       "refengine": 0.0776,
+       "impl": 0.0728
+      },
+      {
+       "value": "Telehealth",
+       "refengine": 0.07,
+       "impl": 0.078
+      },
+      {
+       "value": "Observation",
+       "refengine": 0.0328,
+       "impl": 0.0396
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.018800000000000004,
+     "tvd_baseline": 0.031199999999999995,
+     "tvd_tol": 0.10704744696916627,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "encounter_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.06240000000000001,
+     "ks_baseline": 0.09360000000000002,
+     "ks_tol": 0.14240000000000003,
+     "stats": {
+      "mean": {
+       "refengine": "2024-08-10 05:42:37.478208256",
+       "impl": "2024-09-19 12:38:24.439141120"
+      },
+      "min": {
+       "refengine": "2022-02-16 16:15:11.807500032",
+       "impl": "2022-02-06 00:22:11.100194048"
+      },
+      "max": {
+       "refengine": "2025-12-31 23:50:45",
+       "impl": "2025-12-31 18:37:18"
+      },
+      "std": {
+       "refengine": 369.8639346053042,
+       "impl": 349.21840373885055,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 1703,
+      "impl": 1545
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Completed",
+       "refengine": 0.8424,
+       "impl": 0.8384
+      },
+      {
+       "value": "In Progress",
+       "refengine": 0.0556,
+       "impl": 0.0544
+      },
+      {
+       "value": "Cancelled",
+       "refengine": 0.0524,
+       "impl": 0.0568
+      },
+      {
+       "value": "No Show",
+       "refengine": 0.0496,
+       "impl": 0.0504
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.005200000000000003,
+     "tvd_baseline": 0.015599999999999996,
+     "tvd_tol": 0.09574614729634384,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "diagnosis": {
+   "rows": {
+    "refengine": 4500,
+    "impl": 4500
+   },
+   "columns_refengine": [
+    "diagnosis_id",
+    "encounter_id",
+    "icd10_code",
+    "diagnosis_type",
+    "is_chronic",
+    "description"
+   ],
+   "columns_impl": [
+    "diagnosis_id",
+    "encounter_id",
+    "icd10_code",
+    "diagnosis_type",
+    "is_chronic",
+    "description"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "diagnosis_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "encounter_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "icd10_code": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "diagnosis_type": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "is_chronic": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "description": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "diagnosis_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0015711737986690533
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.04109853325185457,
+     "stats": {
+      "mean": {
+       "refengine": 2250.5,
+       "impl": 2250.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 4500.0,
+       "impl": 4500.0
+      },
+      "std": {
+       "refengine": 1299.0380736016427,
+       "impl": 1299.0380736016427,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 4500,
+      "impl": 4500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "encounter_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0015711737986690533
+     },
+     "ks": 0.01200000000000001,
+     "ks_baseline": 0.02377777777777773,
+     "ks_tol": 0.04109853325185457,
+     "stats": {
+      "mean": {
+       "refengine": 1233.335111111111,
+       "impl": 1238.1953333333333
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 2500.0,
+       "impl": 2500.0
+      },
+      "std": {
+       "refengine": 721.1397572442675,
+       "impl": 723.3322201684215,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 2078,
+      "impl": 2092
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "icd10_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0015711737986690533
+     },
+     "distinct": {
+      "refengine": 48,
+      "impl": 48,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "M25.50",
+       "refengine": 0.026,
+       "impl": 0.020666666666666667
+      },
+      {
+       "value": "Z00.00",
+       "refengine": 0.025111111111111112,
+       "impl": 0.021777777777777778
+      },
+      {
+       "value": "F32.9",
+       "refengine": 0.02422222222222222,
+       "impl": 0.02266666666666667
+      },
+      {
+       "value": "G47.00",
+       "refengine": 0.023777777777777776,
+       "impl": 0.023333333333333334
+      },
+      {
+       "value": "I10",
+       "refengine": 0.023555555555555555,
+       "impl": 0.01911111111111111
+      },
+      {
+       "value": "K21.0",
+       "refengine": 0.023555555555555555,
+       "impl": 0.019333333333333334
+      },
+      {
+       "value": "C50.919",
+       "refengine": 0.02311111111111111,
+       "impl": 0.021111111111111112
+      },
+      {
+       "value": "S93.401A",
+       "refengine": 0.02266666666666667,
+       "impl": 0.021111111111111112
+      },
+      {
+       "value": "Z87.39",
+       "refengine": 0.022222222222222223,
+       "impl": 0.021111111111111112
+      },
+      {
+       "value": "R05.9",
+       "refengine": 0.022222222222222223,
+       "impl": 0.016888888888888887
+      },
+      {
+       "value": "N39.0",
+       "refengine": 0.019555555555555555,
+       "impl": 0.025111111111111112
+      },
+      {
+       "value": "J02.9",
+       "refengine": 0.01711111111111111,
+       "impl": 0.024444444444444446
+      },
+      {
+       "value": "G89.29",
+       "refengine": 0.020666666666666667,
+       "impl": 0.023777777777777776
+      },
+      {
+       "value": "C34.90",
+       "refengine": 0.02,
+       "impl": 0.023777777777777776
+      },
+      {
+       "value": "E11.9",
+       "refengine": 0.017555555555555557,
+       "impl": 0.02266666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.05333333333333333,
+     "tvd_baseline": 0.05888888888888889,
+     "tvd_tol": 0.24721548929484138,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "diagnosis_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0015711737986690533
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Secondary",
+       "refengine": 0.39555555555555555,
+       "impl": 0.39644444444444443
+      },
+      {
+       "value": "Primary",
+       "refengine": 0.35088888888888886,
+       "impl": 0.34933333333333333
+      },
+      {
+       "value": "Admitting",
+       "refengine": 0.1491111111111111,
+       "impl": 0.15533333333333332
+      },
+      {
+       "value": "External Cause",
+       "refengine": 0.10444444444444445,
+       "impl": 0.09888888888888889
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.007111111111111096,
+     "tvd_baseline": 0.018666666666666665,
+     "tvd_tol": 0.07136496464611086,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_chronic": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0015711737986690533
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "false",
+       "refengine": 0.71,
+       "impl": 0.7035555555555556
+      },
+      {
+       "value": "true",
+       "refengine": 0.29,
+       "impl": 0.29644444444444445
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.006444444444444419,
+     "tvd_baseline": 0.01577777777777778,
+     "tvd_tol": 0.05046265044040321,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "description": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0015711737986690533
+     },
+     "distinct": {
+      "refengine": 48,
+      "impl": 48,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Pain in unspecified joint",
+       "refengine": 0.026,
+       "impl": 0.020666666666666667
+      },
+      {
+       "value": "Encounter for general adult medical examination",
+       "refengine": 0.025111111111111112,
+       "impl": 0.021777777777777778
+      },
+      {
+       "value": "Major depressive disorder, single episode, unspecified",
+       "refengine": 0.02422222222222222,
+       "impl": 0.02266666666666667
+      },
+      {
+       "value": "Insomnia, unspecified",
+       "refengine": 0.023777777777777776,
+       "impl": 0.023333333333333334
+      },
+      {
+       "value": "Essential (primary) hypertension",
+       "refengine": 0.023555555555555555,
+       "impl": 0.01911111111111111
+      },
+      {
+       "value": "Gastro-esophageal reflux disease with esophagitis",
+       "refengine": 0.023555555555555555,
+       "impl": 0.019333333333333334
+      },
+      {
+       "value": "Malignant neoplasm of unspecified site of unspecified female breast",
+       "refengine": 0.02311111111111111,
+       "impl": 0.021111111111111112
+      },
+      {
+       "value": "Sprain of unspecified ligament of right ankle, initial encounter",
+       "refengine": 0.02266666666666667,
+       "impl": 0.021111111111111112
+      },
+      {
+       "value": "Personal history of other diseases of musculoskeletal system",
+       "refengine": 0.022222222222222223,
+       "impl": 0.021111111111111112
+      },
+      {
+       "value": "Cough, unspecified",
+       "refengine": 0.022222222222222223,
+       "impl": 0.016888888888888887
+      },
+      {
+       "value": "Urinary tract infection, site not specified",
+       "refengine": 0.019555555555555555,
+       "impl": 0.025111111111111112
+      },
+      {
+       "value": "Acute pharyngitis, unspecified",
+       "refengine": 0.01711111111111111,
+       "impl": 0.024444444444444446
+      },
+      {
+       "value": "Other chronic pain",
+       "refengine": 0.020666666666666667,
+       "impl": 0.023777777777777776
+      },
+      {
+       "value": "Malignant neoplasm of unspecified part of unspecified bronchus or lung",
+       "refengine": 0.02,
+       "impl": 0.023777777777777776
+      },
+      {
+       "value": "Type 2 diabetes mellitus without complications",
+       "refengine": 0.017555555555555557,
+       "impl": 0.02266666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.05333333333333333,
+     "tvd_baseline": 0.058888888888888886,
+     "tvd_tol": 0.24721548929484138,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "procedure": {
+   "rows": {
+    "refengine": 3000,
+    "impl": 3000
+   },
+   "columns_refengine": [
+    "procedure_id",
+    "encounter_id",
+    "performing_provider_id",
+    "cpt_code",
+    "modifier",
+    "cpt_description",
+    "standard_charge"
+   ],
+   "columns_impl": [
+    "procedure_id",
+    "encounter_id",
+    "performing_provider_id",
+    "cpt_code",
+    "modifier",
+    "cpt_description",
+    "standard_charge"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "procedure_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "encounter_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "performing_provider_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "cpt_code": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "modifier": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "cpt_description": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "standard_charge": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "procedure_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002356629734112617
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.05033521782192557,
+     "stats": {
+      "mean": {
+       "refengine": 1500.5,
+       "impl": 1500.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 3000.0,
+       "impl": 3000.0
+      },
+      "std": {
+       "refengine": 866.0253556719149,
+       "impl": 866.0253556719149,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 3000,
+      "impl": 3000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "encounter_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002356629734112617
+     },
+     "ks": 0.03066666666666673,
+     "ks_baseline": 0.04633333333333334,
+     "ks_tol": 0.07150000000000001,
+     "stats": {
+      "mean": {
+       "refengine": 1263.3913333333333,
+       "impl": 1253.2203333333334
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 2.0
+      },
+      "max": {
+       "refengine": 2499.0,
+       "impl": 2499.0
+      },
+      "std": {
+       "refengine": 722.4953685144901,
+       "impl": 721.8507600512419,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1762,
+      "impl": 1722
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "performing_provider_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002356629734112617
+     },
+     "ks": 0.014333333333333365,
+     "ks_baseline": 0.023333333333333317,
+     "ks_tol": 0.05033521782192557,
+     "stats": {
+      "mean": {
+       "refengine": 11.572,
+       "impl": 11.421333333333333
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "refengine": 19.158883474774825,
+       "impl": 19.216723920122863,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 100,
+      "impl": 99
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "cpt_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002356629734112617
+     },
+     "distinct": {
+      "refengine": 49,
+      "impl": 49,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "73630",
+       "refengine": 0.025333333333333333,
+       "impl": 0.02033333333333333
+      },
+      {
+       "value": "74177",
+       "refengine": 0.024333333333333332,
+       "impl": 0.020666666666666667
+      },
+      {
+       "value": "99215",
+       "refengine": 0.024,
+       "impl": 0.015666666666666666
+      },
+      {
+       "value": "99221",
+       "refengine": 0.023666666666666666,
+       "impl": 0.021333333333333333
+      },
+      {
+       "value": "99284",
+       "refengine": 0.023666666666666666,
+       "impl": 0.021333333333333333
+      },
+      {
+       "value": "99231",
+       "refengine": 0.023666666666666666,
+       "impl": 0.022
+      },
+      {
+       "value": "81001",
+       "refengine": 0.023333333333333334,
+       "impl": 0.022
+      },
+      {
+       "value": "99223",
+       "refengine": 0.023,
+       "impl": 0.015666666666666666
+      },
+      {
+       "value": "99442",
+       "refengine": 0.02266666666666667,
+       "impl": 0.024333333333333332
+      },
+      {
+       "value": "99203",
+       "refengine": 0.02266666666666667,
+       "impl": 0.017333333333333333
+      },
+      {
+       "value": "43239",
+       "refengine": 0.017,
+       "impl": 0.026
+      },
+      {
+       "value": "99395",
+       "refengine": 0.022333333333333334,
+       "impl": 0.025333333333333333
+      },
+      {
+       "value": "45380",
+       "refengine": 0.02033333333333333,
+       "impl": 0.024333333333333332
+      },
+      {
+       "value": "83036",
+       "refengine": 0.021333333333333333,
+       "impl": 0.024333333333333332
+      },
+      {
+       "value": "99222",
+       "refengine": 0.018666666666666668,
+       "impl": 0.023666666666666666
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.06233333333333333,
+     "tvd_baseline": 0.07633333333333332,
+     "tvd_tol": 0.3059135605657821,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "modifier": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.6906666666666667,
+      "impl": 0.7046666666666667,
+      "baseline_max_abs_diff": 0.02866666666666673,
+      "tol": 0.059672190929865906
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "26",
+       "refengine": 0.30711206896551724,
+       "impl": 0.29345372460496616
+      },
+      {
+       "value": "TC",
+       "refengine": 0.23060344827586207,
+       "impl": 0.26297968397291194
+      },
+      {
+       "value": "59",
+       "refengine": 0.19288793103448276,
+       "impl": 0.2076749435665914
+      },
+      {
+       "value": "25",
+       "refengine": 0.1810344827586207,
+       "impl": 0.14446952595936793
+      },
+      {
+       "value": "76",
+       "refengine": 0.08836206896551724,
+       "impl": 0.09142212189616253
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.05022330115980382,
+     "tvd_baseline": 0.06001419083291502,
+     "tvd_tol": 0.097720502380584,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "cpt_description": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002356629734112617
+     },
+     "distinct": {
+      "refengine": 49,
+      "impl": 49,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Foot X-ray, complete",
+       "refengine": 0.025333333333333333,
+       "impl": 0.02033333333333333
+      },
+      {
+       "value": "CT abdomen and pelvis with contrast",
+       "refengine": 0.024333333333333332,
+       "impl": 0.020666666666666667
+      },
+      {
+       "value": "Office visit, established patient, high complexity",
+       "refengine": 0.024,
+       "impl": 0.015666666666666666
+      },
+      {
+       "value": "Initial hospital care, low severity",
+       "refengine": 0.023666666666666666,
+       "impl": 0.021333333333333333
+      },
+      {
+       "value": "Emergency department visit, high severity",
+       "refengine": 0.023666666666666666,
+       "impl": 0.021333333333333333
+      },
+      {
+       "value": "Subsequent hospital care, stable",
+       "refengine": 0.023666666666666666,
+       "impl": 0.022
+      },
+      {
+       "value": "Urinalysis, automated with microscopy",
+       "refengine": 0.023333333333333334,
+       "impl": 0.022
+      },
+      {
+       "value": "Initial hospital care, high severity",
+       "refengine": 0.023,
+       "impl": 0.015666666666666666
+      },
+      {
+       "value": "Telephone E/M, 11-20 minutes",
+       "refengine": 0.02266666666666667,
+       "impl": 0.024333333333333332
+      },
+      {
+       "value": "Office visit, new patient, low complexity",
+       "refengine": 0.02266666666666667,
+       "impl": 0.017333333333333333
+      },
+      {
+       "value": "Upper GI endoscopy with biopsy",
+       "refengine": 0.017,
+       "impl": 0.026
+      },
+      {
+       "value": "Periodic preventive visit, 18-39 years",
+       "refengine": 0.022333333333333334,
+       "impl": 0.025333333333333333
+      },
+      {
+       "value": "Colonoscopy with biopsy",
+       "refengine": 0.02033333333333333,
+       "impl": 0.024333333333333332
+      },
+      {
+       "value": "Hemoglobin A1c",
+       "refengine": 0.021333333333333333,
+       "impl": 0.024333333333333332
+      },
+      {
+       "value": "Initial hospital care, moderate severity",
+       "refengine": 0.018666666666666668,
+       "impl": 0.023666666666666666
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.06233333333333334,
+     "tvd_baseline": 0.07633333333333332,
+     "tvd_tol": 0.3059135605657821,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "standard_charge": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002356629734112617
+     },
+     "ks": 0.014666666666666717,
+     "ks_baseline": 0.028333333333333433,
+     "ks_tol": 0.05033521782192557,
+     "stats": {
+      "mean": {
+       "refengine": 1819.135,
+       "impl": 1772.0883333333334
+      },
+      "min": {
+       "refengine": 20.0,
+       "impl": 20.0
+      },
+      "max": {
+       "refengine": 24000.0,
+       "impl": 24000.0
+      },
+      "std": {
+       "refengine": 4793.648766174017,
+       "impl": 4653.938154638201,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 36,
+      "impl": 36
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "medication": {
+   "rows": {
+    "refengine": 2250,
+    "impl": 2250
+   },
+   "columns_refengine": [
+    "medication_id",
+    "encounter_id",
+    "medication_name",
+    "dosage",
+    "frequency",
+    "days_supply",
+    "patient_id"
+   ],
+   "columns_impl": [
+    "medication_id",
+    "encounter_id",
+    "medication_name",
+    "dosage",
+    "frequency",
+    "days_supply",
+    "patient_id"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "medication_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "encounter_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "medication_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "dosage": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "frequency": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "days_supply": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "patient_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    }
+   },
+   "columns": {
+    "medication_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.003141998350591006
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.058122103118414356,
+     "stats": {
+      "mean": {
+       "refengine": 1125.5,
+       "impl": 1125.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 2250.0,
+       "impl": 2250.0
+      },
+      "std": {
+       "refengine": 649.518988688296,
+       "impl": 649.518988688296,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 2250,
+      "impl": 2250
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "encounter_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.003141998350591006
+     },
+     "ks": 0.01288888888888895,
+     "ks_baseline": 0.03999999999999998,
+     "ks_tol": 0.06199999999999997,
+     "stats": {
+      "mean": {
+       "refengine": 1243.344,
+       "impl": 1245.9631111111112
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 3.0
+      },
+      "max": {
+       "refengine": 2499.0,
+       "impl": 2498.0
+      },
+      "std": {
+       "refengine": 725.5514217917294,
+       "impl": 727.3680400940923,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1482,
+      "impl": 1480
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "medication_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.003141998350591006
+     },
+     "distinct": {
+      "refengine": 40,
+      "impl": 40,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Pantoprazole",
+       "refengine": 0.035555555555555556,
+       "impl": 0.02311111111111111
+      },
+      {
+       "value": "Azithromycin",
+       "refengine": 0.03155555555555556,
+       "impl": 0.020444444444444446
+      },
+      {
+       "value": "Warfarin",
+       "refengine": 0.03155555555555556,
+       "impl": 0.028444444444444446
+      },
+      {
+       "value": "Metoprolol",
+       "refengine": 0.030666666666666665,
+       "impl": 0.028444444444444446
+      },
+      {
+       "value": "Doxycycline",
+       "refengine": 0.029777777777777778,
+       "impl": 0.021333333333333333
+      },
+      {
+       "value": "Rosuvastatin",
+       "refengine": 0.029333333333333333,
+       "impl": 0.024
+      },
+      {
+       "value": "Losartan",
+       "refengine": 0.028888888888888888,
+       "impl": 0.015111111111111112
+      },
+      {
+       "value": "Ciprofloxacin",
+       "refengine": 0.027555555555555555,
+       "impl": 0.021333333333333333
+      },
+      {
+       "value": "Escitalopram",
+       "refengine": 0.02711111111111111,
+       "impl": 0.022222222222222223
+      },
+      {
+       "value": "Trazodone",
+       "refengine": 0.02711111111111111,
+       "impl": 0.02266666666666667
+      },
+      {
+       "value": "Albuterol",
+       "refengine": 0.020444444444444446,
+       "impl": 0.03244444444444444
+      },
+      {
+       "value": "Duloxetine",
+       "refengine": 0.022222222222222223,
+       "impl": 0.03155555555555556
+      },
+      {
+       "value": "Clopidogrel",
+       "refengine": 0.022222222222222223,
+       "impl": 0.030222222222222223
+      },
+      {
+       "value": "Gabapentin",
+       "refengine": 0.02311111111111111,
+       "impl": 0.029777777777777778
+      },
+      {
+       "value": "Meloxicam",
+       "refengine": 0.026222222222222223,
+       "impl": 0.028
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.08888888888888888,
+     "tvd_baseline": 0.08044444444444444,
+     "tvd_tol": 0.3191538243211462,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "dosage": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.003141998350591006
+     },
+     "distinct": {
+      "refengine": 8,
+      "impl": 8,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "10mg",
+       "refengine": 0.18888888888888888,
+       "impl": 0.2111111111111111
+      },
+      {
+       "value": "50mg",
+       "refengine": 0.16266666666666665,
+       "impl": 0.14622222222222223
+      },
+      {
+       "value": "20mg",
+       "refengine": 0.14755555555555555,
+       "impl": 0.1608888888888889
+      },
+      {
+       "value": "100mg",
+       "refengine": 0.1288888888888889,
+       "impl": 0.116
+      },
+      {
+       "value": "25mg",
+       "refengine": 0.12666666666666668,
+       "impl": 0.12577777777777777
+      },
+      {
+       "value": "500mg",
+       "refengine": 0.09955555555555555,
+       "impl": 0.09466666666666666
+      },
+      {
+       "value": "250mg",
+       "refengine": 0.09288888888888888,
+       "impl": 0.08577777777777777
+      },
+      {
+       "value": "1000mg",
+       "refengine": 0.05288888888888889,
+       "impl": 0.059555555555555556
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.042222222222222223,
+     "tvd_baseline": 0.05377777777777778,
+     "tvd_tol": 0.1427299292922217,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "frequency": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.003141998350591006
+     },
+     "distinct": {
+      "refengine": 7,
+      "impl": 7,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Once daily",
+       "refengine": 0.3422222222222222,
+       "impl": 0.3551111111111111
+      },
+      {
+       "value": "Twice daily",
+       "refengine": 0.2568888888888889,
+       "impl": 0.25244444444444447
+      },
+      {
+       "value": "As needed",
+       "refengine": 0.1537777777777778,
+       "impl": 0.1431111111111111
+      },
+      {
+       "value": "Three times daily",
+       "refengine": 0.104,
+       "impl": 0.09288888888888888
+      },
+      {
+       "value": "Four times daily",
+       "refengine": 0.04888888888888889,
+       "impl": 0.05422222222222222
+      },
+      {
+       "value": "Weekly",
+       "refengine": 0.04711111111111111,
+       "impl": 0.050666666666666665
+      },
+      {
+       "value": "Monthly",
+       "refengine": 0.04711111111111111,
+       "impl": 0.051555555555555556
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.02622222222222222,
+     "tvd_baseline": 0.03422222222222224,
+     "tvd_tol": 0.1335116235624909,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "days_supply": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.003141998350591006
+     },
+     "ks": 0.014222222222222136,
+     "ks_baseline": 0.04222222222222216,
+     "ks_tol": 0.06533333333333324,
+     "stats": {
+      "mean": {
+       "refengine": 45.044444444444444,
+       "impl": 44.01511111111111
+      },
+      "min": {
+       "refengine": 7.0,
+       "impl": 7.0
+      },
+      "max": {
+       "refengine": 90.0,
+       "impl": 90.0
+      },
+      "std": {
+       "refengine": 29.46230401758646,
+       "impl": 29.311776065239812,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "patient_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.003141998350591006
+     },
+     "ks": 0.03511111111111109,
+     "ks_baseline": 0.08133333333333337,
+     "ks_tol": 0.12400000000000005,
+     "stats": {
+      "mean": {
+       "refengine": 142.57066666666665,
+       "impl": 133.48133333333334
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500.0,
+       "impl": 500.0
+      },
+      "std": {
+       "refengine": 160.24408779386806,
+       "impl": 155.04380988897586,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 408,
+      "impl": 410
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "claim": {
+   "rows": {
+    "refengine": 2375,
+    "impl": 2375
+   },
+   "columns_refengine": [
+    "claim_id",
+    "encounter_id",
+    "claim_number",
+    "claim_type",
+    "status",
+    "patient_id",
+    "filing_date",
+    "total_amount",
+    "allowed_amount",
+    "paid_amount"
+   ],
+   "columns_impl": [
+    "claim_id",
+    "encounter_id",
+    "claim_number",
+    "claim_type",
+    "status",
+    "patient_id",
+    "filing_date",
+    "total_amount",
+    "allowed_amount",
+    "paid_amount"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "claim_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "encounter_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "claim_number": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "claim_type": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "status": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "patient_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "filing_date": {
+     "refengine": "timestamp[us]",
+     "impl": "timestamp[us]"
+    },
+    "total_amount": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "allowed_amount": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "paid_amount": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "claim_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002976664846011698
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.05657190100186741,
+     "stats": {
+      "mean": {
+       "refengine": 1188.0,
+       "impl": 1188.0
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 2375.0,
+       "impl": 2375.0
+      },
+      "std": {
+       "refengine": 685.6033838889654,
+       "impl": 685.6033838889654,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 2375,
+      "impl": 2375
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "encounter_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002976664846011698
+     },
+     "ks": 0.033684210526315816,
+     "ks_baseline": 0.029894736842105307,
+     "ks_tol": 0.05657190100186741,
+     "stats": {
+      "mean": {
+       "refengine": 1243.056842105263,
+       "impl": 1286.0711578947369
+      },
+      "min": {
+       "refengine": 2.0,
+       "impl": 4.0
+      },
+      "max": {
+       "refengine": 2497.0,
+       "impl": 2500.0
+      },
+      "std": {
+       "refengine": 718.7068666274145,
+       "impl": 718.8223851987846,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1532,
+      "impl": 1553
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "claim_number": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002976664846011698
+     },
+     "distinct": {
+      "refengine": 2375,
+      "impl": 2375,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "CLM000000001",
+       "refengine": 0.0004210526315789474,
+       "impl": 0.0004210526315789474
+      },
+      {
+       "value": "CLM000000002",
+       "refengine": 0.0004210526315789474,
+       "impl": 0.0004210526315789474
+      },
+      {
+       "value": "CLM000000003",
+       "refengine": 0.0004210526315789474,
+       "impl": 0.0004210526315789474
+      },
+      {
+       "value": "CLM000000004",
+       "refengine": 0.0004210526315789474,
+       "impl": 0.0004210526315789474
+      },
+      {
+       "value": "CLM000000005",
+       "refengine": 0.0004210526315789474,
+       "impl": 0.0004210526315789474
+      },
+      {
+       "value": "CLM000000006",
+       "refengine": 0.0004210526315789474,
+       "impl": 0.0004210526315789474
+      },
+      {
+       "value": "CLM000000007",
+       "refengine": 0.0004210526315789474,
+       "impl": 0.0004210526315789474
+      },
+      {
+       "value": "CLM000000008",
+       "refengine": 0.0004210526315789474,
+       "impl": 0.0004210526315789474
+      },
+      {
+       "value": "CLM000000009",
+       "refengine": 0.0004210526315789474,
+       "impl": 0.0004210526315789474
+      },
+      {
+       "value": "CLM000000010",
+       "refengine": 0.0004210526315789474,
+       "impl": 0.0004210526315789474
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "CLM{seq:9}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "claim_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002976664846011698
+     },
+     "distinct": {
+      "refengine": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Professional",
+       "refengine": 0.5583157894736842,
+       "impl": 0.5397894736842105
+      },
+      {
+       "value": "Institutional",
+       "refengine": 0.29389473684210526,
+       "impl": 0.30736842105263157
+      },
+      {
+       "value": "Pharmacy",
+       "refengine": 0.14778947368421053,
+       "impl": 0.1528421052631579
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.018526315789473696,
+     "tvd_baseline": 0.014315789473684198,
+     "tvd_tol": 0.08507268435111905,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002976664846011698
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Paid",
+       "refengine": 0.7208421052631578,
+       "impl": 0.7115789473684211
+      },
+      {
+       "value": "Denied",
+       "refengine": 0.14442105263157895,
+       "impl": 0.15663157894736843
+      },
+      {
+       "value": "Partially Paid",
+       "refengine": 0.051789473684210524,
+       "impl": 0.05052631578947368
+      },
+      {
+       "value": "Pending",
+       "refengine": 0.05136842105263158,
+       "impl": 0.053052631578947365
+      },
+      {
+       "value": "Appealed",
+       "refengine": 0.031578947368421054,
+       "impl": 0.028210526315789474
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.013894736842105218,
+     "tvd_baseline": 0.013473684210526263,
+     "tvd_tol": 0.10982836323634812,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "patient_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002976664846011698
+     },
+     "ks": 0.021894736842105245,
+     "ks_baseline": 0.06863157894736849,
+     "ks_tol": 0.10494736842105273,
+     "stats": {
+      "mean": {
+       "refengine": 142.74357894736843,
+       "impl": 143.38315789473685
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500.0,
+       "impl": 500.0
+      },
+      "std": {
+       "refengine": 160.08831620416862,
+       "impl": 159.49283478552394,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 420,
+      "impl": 415
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "filing_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002976664846011698
+     },
+     "ks": 0.0648421052631579,
+     "ks_baseline": 0.09852631578947368,
+     "ks_tol": 0.14978947368421053,
+     "stats": {
+      "mean": {
+       "refengine": "2024-08-14 22:02:38.446903808",
+       "impl": "2024-09-25 04:55:14.593587200"
+      },
+      "min": {
+       "refengine": "2022-02-17 16:15:11.807500032",
+       "impl": "2022-02-07 00:22:11.100194048"
+      },
+      "max": {
+       "refengine": "2026-01-04 23:50:45",
+       "impl": "2026-01-10 16:45:03"
+      },
+      "std": {
+       "refengine": 368.5376136508496,
+       "impl": 342.56586967206647,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 1496,
+      "impl": 1391
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "total_amount": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002976664846011698
+     },
+     "ks": 0.3157894736842105,
+     "ks_baseline": 0.3216842105263158,
+     "ks_tol": 0.4845263157894737,
+     "stats": {
+      "mean": {
+       "refengine": 5470.242105263158,
+       "impl": 2620.717894736842
+      },
+      "min": {
+       "refengine": 0.0,
+       "impl": 0.0
+      },
+      "max": {
+       "refengine": 62035.0,
+       "impl": 49400.0
+      },
+      "std": {
+       "refengine": 7475.608535998277,
+       "impl": 6079.4378826366565,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 725,
+      "impl": 589
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "allowed_amount": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002976664846011698
+     },
+     "ks": 0.3086315789473685,
+     "ks_baseline": 0.30863157894736837,
+     "ks_tol": 0.46494736842105255,
+     "stats": {
+      "mean": {
+       "refengine": 3978.462475789473,
+       "impl": 1893.948429473684
+      },
+      "min": {
+       "refengine": 0.0,
+       "impl": 0.0
+      },
+      "max": {
+       "refengine": 40554.06,
+       "impl": 38719.44
+      },
+      "std": {
+       "refengine": 5510.924248745758,
+       "impl": 4431.317974303995,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 2169,
+      "impl": 2145
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "paid_amount": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002976664846011698
+     },
+     "ks": 0.30357894736842106,
+     "ks_baseline": 0.30063157894736847,
+     "ks_tol": 0.4529473684210527,
+     "stats": {
+      "mean": {
+       "refengine": 3386.973229473684,
+       "impl": 1603.4120336842107
+      },
+      "min": {
+       "refengine": 0.0,
+       "impl": 0.0
+      },
+      "max": {
+       "refengine": 37199.73,
+       "impl": 32911.05
+      },
+      "std": {
+       "refengine": 4724.518634359572,
+       "impl": 3765.976162119021,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 2167,
+      "impl": 2144
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "claim_line": {
+   "rows": {
+    "refengine": 5937,
+    "impl": 5937
+   },
+   "columns_refengine": [
+    "claim_line_id",
+    "claim_id",
+    "procedure_id",
+    "patient_copay",
+    "cpt_code",
+    "charge_amount",
+    "allowed_amount",
+    "paid_amount"
+   ],
+   "columns_impl": [
+    "claim_line_id",
+    "claim_id",
+    "procedure_id",
+    "patient_copay",
+    "cpt_code",
+    "charge_amount",
+    "allowed_amount",
+    "paid_amount"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "claim_line_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "claim_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "procedure_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "patient_copay": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "cpt_code": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "charge_amount": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "allowed_amount": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "paid_amount": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "claim_line_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011909166714328913
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.03578071833457227,
+     "stats": {
+      "mean": {
+       "refengine": 2969.0,
+       "impl": 2969.0
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 5937.0,
+       "impl": 5937.0
+      },
+      "std": {
+       "refengine": 1713.8642497778715,
+       "impl": 1713.8642497778715,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 5937,
+      "impl": 5937
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "claim_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011909166714328913
+     },
+     "ks": 0.027791814047498753,
+     "ks_baseline": 0.02442310931446867,
+     "ks_tol": 0.03863466397170301,
+     "stats": {
+      "mean": {
+       "refengine": 1189.866093986862,
+       "impl": 1166.039076974903
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 2375.0,
+       "impl": 2375.0
+      },
+      "std": {
+       "refengine": 692.0641638580439,
+       "impl": 684.9517360637607,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 2182,
+      "impl": 2161
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "procedure_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011909166714328913
+     },
+     "ks": 0.006063668519454279,
+     "ks_baseline": 0.01852787603166578,
+     "ks_tol": 0.03578071833457227,
+     "stats": {
+      "mean": {
+       "refengine": 104.16102408623884,
+       "impl": 104.48357756442648
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 2994.0,
+       "impl": 2963.0
+      },
+      "std": {
+       "refengine": 338.904520309135,
+       "impl": 342.49569894819786,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 672,
+      "impl": 670
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "patient_copay": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011909166714328913
+     },
+     "ks": 0.007916456122620819,
+     "ks_baseline": 0.016338217955196244,
+     "ks_tol": 0.03578071833457227,
+     "stats": {
+      "mean": {
+       "refengine": 34.96547077648644,
+       "impl": 35.24759979787772
+      },
+      "min": {
+       "refengine": 0.0,
+       "impl": 0.0
+      },
+      "max": {
+       "refengine": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "refengine": 24.48481436861464,
+       "impl": 24.788769171238588,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 8,
+      "impl": 8
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "cpt_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011909166714328913
+     },
+     "distinct": {
+      "refengine": 49,
+      "impl": 49,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "99232",
+       "refengine": 0.33636516759306045,
+       "impl": 0.012464207512211554
+      },
+      {
+       "value": "59510",
+       "refengine": 0.11773623041940375,
+       "impl": 0.004210880916287687
+      },
+      {
+       "value": "81001",
+       "refengine": 0.07225871652349672,
+       "impl": 0.006400538992757285
+      },
+      {
+       "value": "47562",
+       "refengine": 0.06602661276739094,
+       "impl": 0.00606366851945427
+      },
+      {
+       "value": "99283",
+       "refengine": 0.04025602155971029,
+       "impl": 0.004210880916287687
+      },
+      {
+       "value": "85025",
+       "refengine": 0.028802425467407782,
+       "impl": 0.0035371399696816574
+      },
+      {
+       "value": "93000",
+       "refengine": 0.02492841502442311,
+       "impl": 0.01751726461175678
+      },
+      {
+       "value": "99285",
+       "refengine": 0.02004379316152939,
+       "impl": 0.04379316152939195
+      },
+      {
+       "value": "99215",
+       "refengine": 0.01751726461175678,
+       "impl": 0.005053057099545225
+      },
+      {
+       "value": "99442",
+       "refengine": 0.01482230082533266,
+       "impl": 0.00538992757284824
+      },
+      {
+       "value": "99385",
+       "refengine": 0.013306383695469092,
+       "impl": 0.29796193363651674
+      },
+      {
+       "value": "99231",
+       "refengine": 0.0038740104429846726,
+       "impl": 0.11840997136600977
+      },
+      {
+       "value": "96372",
+       "refengine": 0.004547751389590703,
+       "impl": 0.0651844365841334
+      },
+      {
+       "value": "99281",
+       "refengine": 0.00606366851945427,
+       "impl": 0.054236146201785414
+      },
+      {
+       "value": "45380",
+       "refengine": 0.009769243725787434,
+       "impl": 0.04345629105608893
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.699343102577059,
+     "tvd_baseline": 0.697995620683847,
+     "tvd_tol": 1.0489934310257705,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "charge_amount": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011909166714328913
+     },
+     "ks": 0.4428162371568132,
+     "ks_baseline": 0.41334007074279944,
+     "ks_tol": 0.6220101061141992,
+     "stats": {
+      "mean": {
+       "refengine": 2188.2811184099714,
+       "impl": 1048.3754421424962
+      },
+      "min": {
+       "refengine": 20.0,
+       "impl": 20.0
+      },
+      "max": {
+       "refengine": 24000.0,
+       "impl": 24000.0
+      },
+      "std": {
+       "refengine": 4221.319687965237,
+       "impl": 3686.229530511523,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 36,
+      "impl": 36
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "allowed_amount": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011909166714328913
+     },
+     "ks": 0.236314637022065,
+     "ks_baseline": 0.31564763348492497,
+     "ks_tol": 0.47547145022738746,
+     "stats": {
+      "mean": {
+       "refengine": 1591.5190129695131,
+       "impl": 757.6431733198584
+      },
+      "min": {
+       "refengine": 11.04,
+       "impl": 11.12
+      },
+      "max": {
+       "refengine": 21537.55,
+       "impl": 21537.19
+      },
+      "std": {
+       "refengine": 3115.1813410541686,
+       "impl": 2690.5989468154635,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 5440,
+      "impl": 5234
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "paid_amount": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0011909166714328913
+     },
+     "ks": 0.20987030486777836,
+     "ks_baseline": 0.2854977261243052,
+     "ks_tol": 0.43024658918645775,
+     "stats": {
+      "mean": {
+       "refengine": 1354.9033889169614,
+       "impl": 641.4188276907529
+      },
+      "min": {
+       "refengine": 7.89,
+       "impl": 9.02
+      },
+      "max": {
+       "refengine": 21002.78,
+       "impl": 21090.59
+      },
+      "std": {
+       "refengine": 2674.220468704453,
+       "impl": 2295.348986529303,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 5435,
+      "impl": 5197
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  }
+ },
+ "table_order": {
+  "refengine": [
+   "facility",
+   "patient",
+   "provider",
+   "encounter",
+   "claim",
+   "diagnosis",
+   "medication",
+   "procedure",
+   "claim_line"
+  ],
+  "impl": [
+   "facility",
+   "patient",
+   "provider",
+   "encounter",
+   "claim",
+   "diagnosis",
+   "medication",
+   "procedure",
+   "claim_line"
+  ]
+ },
+ "fk_integrity": {
+  "refengine": {
+   "encounter.patient_id->patient.patient_id": {
+    "integrity": 1.0,
+    "n": 2500
+   },
+   "encounter.provider_id->provider.provider_id": {
+    "integrity": 1.0,
+    "n": 2500
+   },
+   "encounter.facility_id->facility.facility_id": {
+    "integrity": 1.0,
+    "n": 2500
+   },
+   "diagnosis.encounter_id->encounter.encounter_id": {
+    "integrity": 1.0,
+    "n": 4500
+   },
+   "procedure.encounter_id->encounter.encounter_id": {
+    "integrity": 1.0,
+    "n": 3000
+   },
+   "medication.encounter_id->encounter.encounter_id": {
+    "integrity": 1.0,
+    "n": 2250
+   },
+   "claim.encounter_id->encounter.encounter_id": {
+    "integrity": 1.0,
+    "n": 2375
+   },
+   "claim_line.claim_id->claim.claim_id": {
+    "integrity": 1.0,
+    "n": 5937
+   },
+   "claim_line.procedure_id->procedure.procedure_id": {
+    "integrity": 1.0,
+    "n": 5937
+   },
+   "procedure.performing_provider_id->provider.provider_id": {
+    "integrity": 1.0,
+    "n": 3000
+   },
+   "medication.patient_id->patient.patient_id": {
+    "integrity": 1.0,
+    "n": 2250
+   },
+   "claim.patient_id->patient.patient_id": {
+    "integrity": 1.0,
+    "n": 2375
+   }
+  },
+  "impl": {
+   "encounter.patient_id->patient.patient_id": {
+    "integrity": 1.0,
+    "n": 2500
+   },
+   "encounter.provider_id->provider.provider_id": {
+    "integrity": 1.0,
+    "n": 2500
+   },
+   "encounter.facility_id->facility.facility_id": {
+    "integrity": 1.0,
+    "n": 2500
+   },
+   "diagnosis.encounter_id->encounter.encounter_id": {
+    "integrity": 1.0,
+    "n": 4500
+   },
+   "procedure.encounter_id->encounter.encounter_id": {
+    "integrity": 1.0,
+    "n": 3000
+   },
+   "medication.encounter_id->encounter.encounter_id": {
+    "integrity": 1.0,
+    "n": 2250
+   },
+   "claim.encounter_id->encounter.encounter_id": {
+    "integrity": 1.0,
+    "n": 2375
+   },
+   "claim_line.claim_id->claim.claim_id": {
+    "integrity": 1.0,
+    "n": 5937
+   },
+   "claim_line.procedure_id->procedure.procedure_id": {
+    "integrity": 1.0,
+    "n": 5937
+   },
+   "procedure.performing_provider_id->provider.provider_id": {
+    "integrity": 1.0,
+    "n": 3000
+   },
+   "medication.patient_id->patient.patient_id": {
+    "integrity": 1.0,
+    "n": 2250
+   },
+   "claim.patient_id->patient.patient_id": {
+    "integrity": 1.0,
+    "n": 2375
+   }
+  }
+ },
+ "fanout": {
+  "patient->encounter.patient_id": {
+   "refengine": {
+    "p50": 3.0,
+    "p90": 7.0,
+    "p99": 80.0,
+    "max": 80,
+    "mean": 5.0,
+    "zero_frac": 0.056
+   },
+   "impl": {
+    "p50": 3.0,
+    "p90": 6.0,
+    "p99": 80.0,
+    "max": 80,
+    "mean": 5.0,
+    "zero_frac": 0.064
+   },
+   "ks_counts": 0.030000000000000027,
+   "ks_baseline_max": 0.064,
+   "ks_tol": 0.1232955997555637,
+   "equivalent": true
+  },
+  "provider->encounter.provider_id": {
+   "refengine": {
+    "p50": 6.0,
+    "p90": 39.300000000000026,
+    "p99": 327.5600000000018,
+    "max": 680,
+    "mean": 25.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 8.0,
+    "p90": 35.000000000000085,
+    "p99": 334.45000000000175,
+    "max": 676,
+    "mean": 25.0,
+    "zero_frac": 0.01
+   },
+   "ks_counts": 0.10999999999999999,
+   "ks_baseline_max": 0.05999999999999994,
+   "ks_tol": 0.2756973423800469,
+   "equivalent": true
+  },
+  "facility->encounter.facility_id": {
+   "refengine": {
+    "p50": 10.5,
+    "p90": 83.70000000000005,
+    "p99": 668.1199999999988,
+    "max": 968,
+    "mean": 50.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 10.0,
+    "p90": 81.90000000000003,
+    "p99": 676.4299999999988,
+    "max": 967,
+    "mean": 50.0,
+    "zero_frac": 0.02
+   },
+   "ks_counts": 0.12,
+   "ks_baseline_max": 0.13999999999999999,
+   "ks_tol": 0.38989492070408105,
+   "equivalent": true
+  },
+  "encounter->diagnosis.encounter_id": {
+   "refengine": {
+    "p50": 2.0,
+    "p90": 4.0,
+    "p99": 5.0,
+    "max": 7,
+    "mean": 1.8,
+    "zero_frac": 0.1688
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 4.0,
+    "p99": 6.0,
+    "max": 8,
+    "mean": 1.8,
+    "zero_frac": 0.1632
+   },
+   "ks_counts": 0.012800000000000034,
+   "ks_baseline_max": 0.019199999999999995,
+   "ks_tol": 0.05513946847600938,
+   "equivalent": true
+  },
+  "encounter->procedure.encounter_id": {
+   "refengine": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 4.0,
+    "max": 6,
+    "mean": 1.2,
+    "zero_frac": 0.2952
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 4.0,
+    "max": 6,
+    "mean": 1.2,
+    "zero_frac": 0.3112
+   },
+   "ks_counts": 0.01599999999999996,
+   "ks_baseline_max": 0.015600000000000058,
+   "ks_tol": 0.05513946847600938,
+   "equivalent": true
+  },
+  "encounter->medication.encounter_id": {
+   "refengine": {
+    "p50": 1.0,
+    "p90": 2.0,
+    "p99": 4.0,
+    "max": 5,
+    "mean": 0.9,
+    "zero_frac": 0.4072
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 2.0,
+    "p99": 4.0,
+    "max": 6,
+    "mean": 0.9,
+    "zero_frac": 0.408
+   },
+   "ks_counts": 0.007199999999999984,
+   "ks_baseline_max": 0.011199999999999988,
+   "ks_tol": 0.05513946847600938,
+   "equivalent": true
+  },
+  "encounter->claim.encounter_id": {
+   "refengine": {
+    "p50": 1.0,
+    "p90": 2.0,
+    "p99": 4.0,
+    "max": 6,
+    "mean": 0.95,
+    "zero_frac": 0.3872
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 2.0,
+    "p99": 4.0,
+    "max": 6,
+    "mean": 0.95,
+    "zero_frac": 0.3788
+   },
+   "ks_counts": 0.00880000000000003,
+   "ks_baseline_max": 0.010399999999999965,
+   "ks_tol": 0.05513946847600938,
+   "equivalent": true
+  },
+  "claim->claim_line.claim_id": {
+   "refengine": {
+    "p50": 2.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 10,
+    "mean": 2.4997894736842103,
+    "zero_frac": 0.08126315789473684
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 10,
+    "mean": 2.4997894736842103,
+    "zero_frac": 0.09010526315789473
+   },
+   "ks_counts": 0.011368421052631583,
+   "ks_baseline_max": 0.015578947368421137,
+   "ks_tol": 0.05657190100186741,
+   "equivalent": true
+  },
+  "procedure->claim_line.procedure_id": {
+   "refengine": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 19.009999999999764,
+    "max": 1628,
+    "mean": 1.979,
+    "zero_frac": 0.776
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 18.0,
+    "max": 1637,
+    "mean": 1.979,
+    "zero_frac": 0.7766666666666666
+   },
+   "ks_counts": 0.0033333333333332993,
+   "ks_baseline_max": 0.008333333333333304,
+   "ks_tol": 0.05033521782192557,
+   "equivalent": true
+  },
+  "provider->procedure.performing_provider_id": {
+   "refengine": {
+    "p50": 6.0,
+    "p90": 43.50000000000004,
+    "p99": 365.5400000000034,
+    "max": 1013,
+    "mean": 30.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 7.0,
+    "p90": 50.20000000000002,
+    "p99": 410.6500000000029,
+    "max": 970,
+    "mean": 30.0,
+    "zero_frac": 0.01
+   },
+   "ks_counts": 0.07,
+   "ks_baseline_max": 0.10000000000000003,
+   "ks_tol": 0.2756973423800469,
+   "equivalent": true
+  },
+  "patient->medication.patient_id": {
+   "refengine": {
+    "p50": 2.0,
+    "p90": 7.0,
+    "p99": 68.04999999999995,
+    "max": 80,
+    "mean": 4.5,
+    "zero_frac": 0.184
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 8.0,
+    "p99": 67.0,
+    "max": 79,
+    "mean": 4.5,
+    "zero_frac": 0.18
+   },
+   "ks_counts": 0.026000000000000023,
+   "ks_baseline_max": 0.08599999999999997,
+   "ks_tol": 0.13099999999999995,
+   "equivalent": true
+  },
+  "patient->claim.patient_id": {
+   "refengine": {
+    "p50": 2.0,
+    "p90": 7.100000000000023,
+    "p99": 69.04999999999995,
+    "max": 87,
+    "mean": 4.75,
+    "zero_frac": 0.16
+   },
+   "impl": {
+    "p50": 3.0,
+    "p90": 8.0,
+    "p99": 62.069999999999936,
+    "max": 81,
+    "mean": 4.75,
+    "zero_frac": 0.17
+   },
+   "ks_counts": 0.03600000000000003,
+   "ks_baseline_max": 0.062,
+   "ks_tol": 0.1232955997555637,
+   "equivalent": true
+  }
+ },
+ "record_coherence": {
+  "facility.city+state+zip_code+lat+lng in us_zip_locations": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "patient.city+state+zip_code in us_zip_locations": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "diagnosis.icd10_code+description in icd10_codes": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "procedure.cpt_code+cpt_description+standard_charge in cpt_codes": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  }
+ },
+ "strategy_semantics": {
+  "medication.patient_id == lookup encounter.patient_id via encounter_id": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "claim.patient_id == lookup encounter.patient_id via encounter_id": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "claim.filing_date - encounter.encounter_date in [0,30] days": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "claim.total_amount == sum(claim_line.charge_amount)": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "claim.allowed_amount == sum(claim_line.allowed_amount)": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "claim.paid_amount == sum(claim_line.paid_amount)": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "claim_line.cpt_code == lookup procedure.cpt_code via procedure_id": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "claim_line.charge_amount == lookup procedure.standard_charge via procedure_id": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  }
+ },
+ "business_rules": {
+  "refengine_BusinessRulesEngine_violations": {},
+  "refengine_on_refengine": {}
+ },
+ "refengine_fidelity_comparator": {
+  "overall_impl": 89.129746102858,
+  "overall_baseline_refengine_vs_refengine": [
+   88.19692545526705,
+   88.53199158372766,
+   89.08840748499014,
+   89.44255410225888
+  ],
+  "tables": {
+   "claim": {
+    "impl": 93.37362468631905,
+    "baseline": [
+     92.40369634505905,
+     93.69517177606892,
+     96.67137571972846,
+     96.5846714097685
+    ],
+    "floor": 91.90369634505905,
+    "ok": true
+   },
+   "claim_line": {
+    "impl": 92.80718139647657,
+    "baseline": [
+     91.09198209692994,
+     90.96138101202044,
+     91.8473864226026,
+     95.04299588960936
+    ],
+    "floor": 90.46138101202044,
+    "ok": true
+   },
+   "diagnosis": {
+    "impl": 91.91689217044876,
+    "baseline": [
+     90.10713412910413,
+     93.33949889130808,
+     91.39957293167261,
+     90.35316155724762
+    ],
+    "floor": 89.60713412910413,
+    "ok": true
+   },
+   "encounter": {
+    "impl": 97.58520613412288,
+    "baseline": [
+     97.70477220446087,
+     97.42851824098828,
+     98.41698598072591,
+     97.44978984819622
+    ],
+    "floor": 96.92851824098828,
+    "ok": true
+   },
+   "facility": {
+    "impl": 77.29266959347731,
+    "baseline": [
+     77.10400954819738,
+     76.8902697739079,
+     78.164111421129,
+     77.26235097641893
+    ],
+    "floor": 76.3902697739079,
+    "ok": true
+   },
+   "medication": {
+    "impl": 94.53652232306165,
+    "baseline": [
+     94.1282501345846,
+     93.81529504115905,
+     93.85717012581337,
+     95.40328394753838
+    ],
+    "floor": 93.31529504115905,
+    "ok": true
+   },
+   "patient": {
+    "impl": 77.6526291219447,
+    "baseline": [
+     76.48708127310171,
+     76.08440769768444,
+     76.7807582460406,
+     77.16709033227335
+    ],
+    "floor": 75.58440769768444,
+    "ok": true
+   },
+   "procedure": {
+    "impl": 95.59997863639578,
+    "baseline": [
+     95.5279231717285,
+     95.17287161633006,
+     94.99265369891725,
+     95.38939711383242
+    ],
+    "floor": 94.49265369891725,
+    "ok": true
+   },
+   "provider": {
+    "impl": 81.40301086347532,
+    "baseline": [
+     79.21748019423725,
+     79.40051020408164,
+     79.6656528182815,
+     80.33024584544526
+    ],
+    "floor": 78.71748019423725,
+    "ok": true
+   }
+  }
+ },
+ "summary": {
+  "columns_total": 80,
+  "columns_equivalent": 80,
+  "flagged": [],
+  "passed": true,
+  "seconds": 15.085510015487671
+ }
+}

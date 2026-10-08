@@ -1,0 +1,42 @@
+%MACRO R08X84H1; 
+%***********************************************************************
+************************************************************************
+
+  MACRO NAME:    R08X84H1
+  PURPOSE:       RXHCC hierarchies for RXHCCs that are included
+                 in software
+  COMMENT:       it is assumed that:
+                  -MAX number of RXCCs are placed into global macro 
+                   variable N_RX in the main macro
+                  -the following arrays are set in the main macro
+                   ARRAY R(&N_RX)  RXCC1-RXCC&N_RX
+                   ARRAY RX(&N_RX) RXHCC1-RXHCC&N_RX
+                  -format ICD to RXCC creates only 84 out of &N_RX CMS
+                   RXCCs
+
+***********************************************************************;
+ %* set to 0 RXHCCs in HIER parameter - taken from software hierarchy 
+    variable;
+ %MACRO SET0( CC=, HIER= );  
+     %LET K=1;                                                                                                                          
+     IF RXHCC&CC=1 THEN DO;                                                                                                                
+        %DO %UNTIL(%SCAN(&HIER,&K)=);                                                                                                   
+          RXHCC%SCAN(&HIER,&K) = 0;                                                                                                     
+          %LET K=%EVAL(&K+1);                                                                                                           
+        %END;              
+    END;        
+ %MEND SET0; 
+ 
+ 
+ %*to copy RXCC into RXHCC;
+  DO J=1 TO &N_RX;
+     RX(J)=R(J);
+  END;
+
+ %*imposing hierarchies;
+ /*Diabetes 1 */   %SET0(CC=30    , HIER=%STR(31 ));
+ /*Heart 1 */      %SET0(CC=183   , HIER=%STR(184 ,186 ,187 ));
+ /*Heart 2 */      %SET0(CC=184   , HIER=%STR(186 ,187 ));
+ /*Heart 3 */      %SET0(CC=186   , HIER=%STR(187 ));
+
+ %MEND R08X84H1;

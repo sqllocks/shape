@@ -1,0 +1,578 @@
+generating refengine hr/medium/seed42
+generating refengine hr/medium/seed43
+generating refengine hr/medium/seed44
+generating refengine hr/medium/seed45
+generating refengine hr/medium/seed46
+generating shape hr/medium/seed1042
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+loaded and baselined in 19.7s
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+/root/refengine/sqllocks_refengine/inference/comparator.py:348: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(non_null, errors="coerce")
+RefEngine hr (seed 42) vs shape (seed 1042) - scale=medium  (baseline = max distance of RefEngine seeds [43, 44, 45, 46] to RefEngine seed 42)
+table order identical: True
+
+table.column                       kind        type         null s/i       dist  baseline     tol  vocab  verdict
+-- department: rows 30 / 30  cols identical+ordered=True  types identical=True
+department.department_id           numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.5034         EQUIVALENT
+department.department_name         categorical ok    0.0000/0.0000 TVD  0.3667    0.6000  1.7481 1.0000  EQUIVALENT
+department.cost_center             categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+department.is_active               categorical ok    0.0000/0.0000 TVD  0.0333    0.0667  0.6180 1.0000  EQUIVALENT
+-- position: rows 80 / 80  cols identical+ordered=True  types identical=True
+position.position_id               numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3082         EQUIVALENT
+position.position_title            categorical ok    0.0000/0.0000 TVD  0.4625    0.5625  1.9112 1.0000  EQUIVALENT
+position.pay_grade                 categorical ok    0.0000/0.0000 TVD  0.1750    0.1750  0.7081 1.0000  EQUIVALENT
+position.is_exempt                 categorical ok    0.0000/0.0000 TVD  0.0875    0.0875  0.3785 1.0000  EQUIVALENT
+position.min_salary                numeric     ok    0.0000/0.0000  KS  0.1125    0.1250  0.3082         EQUIVALENT
+position.max_salary                numeric     ok    0.0000/0.0000  KS  0.1375    0.1375  0.3082         EQUIVALENT
+-- employee: rows 5,000 / 5,000  cols identical+ordered=True  types identical=True
+employee.employee_id               numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0390         EQUIVALENT
+employee.department_id             numeric     ok    0.0000/0.0000  KS  0.0222    0.0158  0.0390         EQUIVALENT
+employee.position_id               numeric     ok    0.0000/0.0000  KS  0.0136    0.0122  0.0390         EQUIVALENT
+employee.first_name                categorical ok    0.0000/0.0000 |dR-1|  0.0038    0.0176  0.0264 1.0000  EQUIVALENT
+employee.last_name                 categorical ok    0.0000/0.0000 |dR-1|  0.0038    0.0073  0.0200 1.0000  EQUIVALENT
+employee.email                     categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+employee.phone                     categorical ok    0.0822/0.0846 |dR-1|  0.0026    0.0020  0.0200 1.0000  EQUIVALENT
+employee.hire_date                 datetime    ok    0.0000/0.0000  KS  0.0224    0.0300  0.0470         EQUIVALENT
+employee.manager_id                numeric     ok    0.0010/0.0010  KS  0.0098    0.0186  0.0390         EQUIVALENT
+employee.employment_status         categorical ok    0.0000/0.0000 TVD  0.0068    0.0088  0.0677 1.0000  EQUIVALENT
+employee.employment_type           categorical ok    0.0000/0.0000 TVD  0.0178    0.0168  0.0677 1.0000  EQUIVALENT
+-- compensation: rows 15,000 / 15,000  cols identical+ordered=True  types identical=True
+compensation.compensation_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0225         EQUIVALENT
+compensation.employee_id           numeric     ok    0.0000/0.0000  KS  0.0109    0.0212  0.0338         EQUIVALENT
+compensation.effective_date        datetime    ok    0.0000/0.0000  KS  0.0111    0.0141  0.0231         EQUIVALENT
+compensation.base_salary           numeric     ok    0.0000/0.0000  KS  0.0129    0.0113  0.0225         EQUIVALENT
+compensation.bonus_pct             numeric     ok    0.0000/0.0000  KS  0.0127    0.0171  0.0277         EQUIVALENT
+compensation.change_reason         categorical ok    0.0000/0.0000 TVD  0.0069    0.0091  0.0437 1.0000  EQUIVALENT
+-- performance_review: rows 12,500 / 12,500  cols identical+ordered=True  types identical=True
+performance_review.review_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0247         EQUIVALENT
+performance_review.employee_id     numeric     ok    0.0000/0.0000  KS  0.0065    0.0119  0.0247         EQUIVALENT
+performance_review.reviewer_id     numeric     ok    0.0000/0.0000  KS  0.0086    0.0122  0.0247         EQUIVALENT
+performance_review.review_date     datetime    ok    0.0000/0.0000  KS  0.0080    0.0132  0.0247         EQUIVALENT
+performance_review.review_period_year numeric     ok    0.0000/0.0000  KS  0.0047    0.0114  0.0247         EQUIVALENT
+performance_review.rating          numeric     ok    0.0000/0.0000  KS  0.0028    0.0180  0.0290         EQUIVALENT
+performance_review.comments        categorical ok    0.2049/0.2014 |dR-1|  0.0030    0.0025  0.0200 1.0000  EQUIVALENT
+-- time_off_request: rows 25,000 / 25,000  cols identical+ordered=True  types identical=True
+time_off_request.request_id        numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0174         EQUIVALENT
+time_off_request.employee_id       numeric     ok    0.0000/0.0000  KS  0.0063    0.0088  0.0174         EQUIVALENT
+time_off_request.leave_type        categorical ok    0.0000/0.0000 TVD  0.0081    0.0079  0.0401 1.0000  EQUIVALENT
+time_off_request.start_date        datetime    ok    0.0000/0.0000  KS  0.0060    0.0093  0.0174         EQUIVALENT
+time_off_request.hours_requested   numeric     ok    0.0000/0.0000  KS  0.0065    0.0072  0.0174         EQUIVALENT
+time_off_request.status            categorical ok    0.0000/0.0000 TVD  0.0066    0.0070  0.0303 1.0000  EQUIVALENT
+time_off_request.end_date          datetime    ok    0.0000/0.0000  KS  0.0063    0.0091  0.0174         EQUIVALENT
+-- training: rows 100 / 100  cols identical+ordered=True  types identical=True
+training.training_id               numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.2757         EQUIVALENT
+training.course_name               categorical ok    0.0000/0.0000 TVD  0.4300    0.4100  1.5513 1.0000  EQUIVALENT
+training.category                  categorical ok    0.0000/0.0000 TVD  0.0800    0.1300  0.6333 1.0000  EQUIVALENT
+training.duration_hours            numeric     ok    0.0000/0.0000  KS  0.2400    0.1800  0.2757         EQUIVALENT
+training.is_mandatory              categorical ok    0.0000/0.0000 TVD  0.0500    0.0600  0.3385 1.0000  EQUIVALENT
+-- training_enrollment: rows 20,000 / 20,000  cols identical+ordered=True  types identical=True
+training_enrollment.enrollment_id  numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0195         EQUIVALENT
+training_enrollment.employee_id    numeric     ok    0.0000/0.0000  KS  0.0066    0.0103  0.0195         EQUIVALENT
+training_enrollment.training_id    numeric     ok    0.0000/0.0000  KS  0.0047    0.0109  0.0195         EQUIVALENT
+training_enrollment.enrollment_date datetime    ok    0.0000/0.0000  KS  0.0101    0.0076  0.0195         EQUIVALENT
+training_enrollment.status         categorical ok    0.0000/0.0000 TVD  0.0082    0.0121  0.0378 1.0000  EQUIVALENT
+training_enrollment.score          numeric     ok    0.2497/0.2487  KS  0.0108    0.0079  0.0225         EQUIVALENT
+training_enrollment.completion_date datetime    ok    0.1492/0.1487  KS  0.0090    0.0094  0.0211         EQUIVALENT
+-- termination: rows 750 / 750  cols identical+ordered=True  types identical=True
+termination.termination_id         numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1007         EQUIVALENT
+termination.employee_id            numeric     ok    0.0000/0.0000  KS  0.0320    0.0520  0.1007         EQUIVALENT
+termination.termination_date       datetime    ok    0.0000/0.0000  KS  0.0347    0.0507  0.1007         EQUIVALENT
+termination.termination_type       categorical ok    0.0000/0.0000 TVD  0.0293    0.0480  0.1954 1.0000  EQUIVALENT
+termination.reason                 categorical ok    0.0000/0.0000 TVD  0.0853    0.0747  0.2472 1.0000  EQUIVALENT
+termination.eligible_for_rehire    categorical ok    0.0000/0.0000 TVD  0.0027    0.0107  0.1236 1.0000  EQUIVALENT
+
+FK integrity (refengine / impl):
+  employee.department_id->department.department_id        1.0000 / 1.0000
+  employee.position_id->position.position_id              1.0000 / 1.0000
+  compensation.employee_id->employee.employee_id          1.0000 / 1.0000
+  performance_review.employee_id->employee.employee_id    1.0000 / 1.0000
+  time_off_request.employee_id->employee.employee_id      1.0000 / 1.0000
+  training_enrollment.employee_id->employee.employee_id   1.0000 / 1.0000
+  training_enrollment.training_id->training.training_id   1.0000 / 1.0000
+  termination.employee_id->employee.employee_id           1.0000 / 1.0000
+  employee.manager_id->employee.employee_id               1.0000 / 1.0000
+FK fan-out (children per parent)  refengine p50/p90/p99/max/zero% | impl | KS (baseline max, tol)
+  department->employee.department_id       55/319/1507/1823/0.000 | 52/347/1522/1836/0.000 | 0.2333 (0.2000, 0.5034)
+  position->employee.position_id           17/102/784/1441/0.000 | 18/99/785/1373/0.000 | 0.0500 (0.1000, 0.3082)
+  employee->compensation.employee_id       3/5/8/12/0.052 | 3/5/8/12/0.051 | 0.0028 (0.0066, 0.0390)
+  employee->performance_review.employee_id 2/5/7/11/0.081 | 2/5/7/11/0.079 | 0.0044 (0.0114, 0.0390)
+  employee->time_off_request.employee_id   5/8/11/15/0.006 | 5/8/11/15/0.007 | 0.0080 (0.0124, 0.0390)
+  employee->training_enrollment.employee_id 4/7/9/12/0.021 | 4/7/9/14/0.021 | 0.0094 (0.0130, 0.0390)
+  training->training_enrollment.training_id 51/307/2426/5610/0.000 | 50/324/2500/5558/0.000 | 0.0600 (0.0900, 0.2757)
+  employee->termination.employee_id        0/1/2/3/0.863 | 0/1/2/3/0.864 | 0.0010 (0.0042, 0.0390)
+record_coherence (impl / min over RefEngine seeds, floor):
+strategy_semantics (impl / min over RefEngine seeds, floor):
+  time_off_request.end_date - start_date in [1,14] days        1.0000 / 1.0000  floor 0.9950
+  training_enrollment.completion_date - enrollment_date in [1,90] days 0.8512 / 0.8468  floor 0.8417
+RefEngine BusinessRulesEngine violations on impl output: {}
+RefEngine FidelityComparator (real=RefEngine seed 42, synthetic=impl): overall impl=93.56  RefEngine-vs-RefEngine baselines=[93.5, 93.88, 93.77, 93.62]
+  compensation       impl  99.62  floor  98.98  baselines [99.73, 99.48, 99.5, 99.59]  ok
+  department         impl  89.42  floor  86.49  baselines [86.99, 89.57, 88.95, 88.96]  ok
+  employee           impl  80.86  floor  80.43  baselines [81.06, 80.93, 80.99, 81.32]  ok
+  performance_review impl  95.69  floor  94.97  baselines [95.47, 95.48, 95.47, 95.5]  ok
+  position           impl  89.77  floor  89.40  baselines [89.9, 90.6, 90.71, 90.82]  ok
+  termination        impl  98.22  floor  97.92  baselines [98.45, 98.42, 98.46, 98.49]  ok
+  time_off_request   impl  98.90  floor  98.50  baselines [99.51, 99.82, 99.38, 99.0]  ok
+  training           impl  89.82  floor  88.65  baselines [91.36, 91.77, 91.46, 89.15]  ok
+  training_enrollment impl  99.74  floor  98.31  baselines [99.07, 98.81, 98.97, 99.73]  ok
+
+COLUMNS EQUIVALENT: 59/59
+VERDICT: PASS
+

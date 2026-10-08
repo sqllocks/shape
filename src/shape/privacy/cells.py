@@ -1,0 +1,381 @@
+"""Minimum-cohort enforcement: small-cell suppression for released evidence.
+
+A *cell* is one category of a value count or enum, one bin of a histogram, or one top-value
+entry: a count of rows. A released cell must either be absent (zero) or stand for at least ``k``
+rows. This module turns that rule into code for every surface that carries cells:
+
+* category weights (``suppress_weights``): cells below ``k`` fold into one ``__OTHER__``
+  bucket; if that bucket is itself below ``k``, the smallest surviving cells join it until it
+  reaches ``k`` (complementary suppression), and when the whole column has fewer than ``k``
+  rows nothing is released;
+* histograms (``suppress_bins``): a bin below ``k`` is zeroed, and proportion histograms are
+  renormalized so they still sum to what they did; with no bin left the histogram is dropped;
+* ``suppress_column_cells``: all of the above on a column dict, for ``release_for`` and
+  ``suppress_shape``. A value list that carries no counts cannot be checked, so it is removed.
+
+Evidence that stores proportions (rounded to six places) is converted to counts with a lower
+bound: ``ceil(p * base - 5e-7 * base)``. A cell is released only when that lower bound reaches
+``k``, so the true count is at least ``k`` however the proportion was rounded. For a base of up
+to one million rows the bound equals the exact count.
+"""
+
+from __future__ import annotations
+
+import math
+from collections.abc import Mapping, Sequence
+from typing import Any
+
+OTHER_BUCKET = "__OTHER__"
+PROPORTION_ROUNDING = 5e-7  # proportions are stored rounded to six decimal places
+
+_COUNT_LIST_KEYS = ("histogram", "hour_histogram", "dow_histogram")
+_COUNT_MAP_KEYS = ("value_counts_ext", "enum_values")
+
+
+def columns_of(shape: Mapping[str, Any]) -> Mapping[str, Mapping[str, Any]]:
+    """The ``columns`` of a capture or profile document: a mapping of column name to column
+    mapping, else a ``ValueError`` that names the field."""
+    columns = shape.get("columns", {})
+    if not isinstance(columns, Mapping) or any(
+        not isinstance(c, Mapping) for c in columns.values()
+    ):
+        raise ValueError("columns must be a mapping of column name to column profile")
+    return columns
+
+
+def _is_int(x: Any) -> bool:
+    return isinstance(x, int) and not isinstance(x, bool)
+
+
+def _is_num(x: Any) -> bool:
+    return isinstance(x, int | float) and not isinstance(x, bool)
+
+
+def count_lower_bound(proportion: float, base: int) -> int:
+    """A count the cell is certain to reach, from a proportion of ``base`` rows."""
+    return max(0, math.ceil(proportion * base - PROPORTION_ROUNDING * base - 1e-9))
+
+
+def non_null_base(
+    row_count: int | None, null_count: int | None = None, null_rate: float = 0.0
+) -> int:
+    """Rows a column's proportions are taken over: its non-null rows."""
+    if not row_count or row_count <= 0:
+        return 0
+    if null_count is not None:
+        return max(0, int(row_count) - int(null_count))
+    return max(0, int(row_count) - int(round(float(null_rate) * int(row_count))))
+
+
+def suppress_weights(
+    weights: Mapping[str, float], k: int, base: int | None
+) -> tuple[dict[str, float], int]:
+    """Fold every category below ``k`` rows into ``__OTHER__``.
+
+    ``weights`` maps category to a proportion of ``base`` non-null rows. Returns
+    ``(released weights, categories folded)``. The ``__OTHER__`` bucket is released only when it
+    stands for at least ``k`` rows; smaller buckets absorb the smallest surviving category until
+    they do. With no usable ``base``, or ``k <= 1``, nothing can be judged and the weights pass
+    through. When the whole column has fewer than ``k`` rows the result is empty. The input is
+    never modified.
+    """
+    if not weights:
+        return {}, 0
+    if not base or base <= 0 or k <= 1:
+        return dict(weights), 0
+    surviving: dict[str, float] = {}
+    other_w = 0.0
+    other_n = 0
+    folded = 0
+    for key, w in weights.items():
+        w = float(w)
+        if key == OTHER_BUCKET:
+            other_w += w
+            other_n += count_lower_bound(w, base)
+        elif count_lower_bound(w, base) < k:
+            other_w += w
+            other_n += count_lower_bound(w, base)
+            folded += 1
+        else:
+            surviving[key] = w
+    while other_w > 0.0 and other_n < k and surviving:
+        smallest = min(surviving, key=lambda c: surviving[c])
+        w = surviving.pop(smallest)
+        other_w += w
+        other_n += count_lower_bound(w, base)
+        folded += 1
+    if other_w > 0.0 and other_n < k:
+        return {}, folded
+    if folded > 0 or other_w > 0.0:
+        surviving[OTHER_BUCKET] = other_w
+    return surviving, folded
+
+
+def suppress_counts(counts: Mapping[str, int], k: int) -> tuple[dict[str, int], int]:
+    """``suppress_weights`` for integer row counts. Returns ``(released counts, folded)``."""
+    if not counts:
+        return {}, 0
+    if k <= 1:
+        return dict(counts), 0
+    surviving: dict[str, int] = {}
+    other = 0
+    folded = 0
+    for key, n in counts.items():
+        if key == OTHER_BUCKET:
+            other += n
+        elif n < k:
+            other += n
+            folded += 1
+        else:
+            surviving[key] = n
+    while 0 < other < k and surviving:
+        smallest = min(surviving, key=lambda c: surviving[c])
+        other += surviving.pop(smallest)
+        folded += 1
+    if 0 < other < k:
+        return {}, folded
+    if folded > 0 or other > 0:
+        surviving[OTHER_BUCKET] = other
+    return surviving, folded
+
+
+def suppress_bins(
+    bins: Sequence[float], k: int, base: int | None, *, proportions: bool = True
+) -> tuple[list[float] | None, int]:
+    """Zero every histogram bin that stands for fewer than ``k`` rows.
+
+    Proportion histograms (``proportions=True``, over ``base`` rows) are renormalized so the
+    survivors keep the total they had; count histograms keep their counts. Returns
+    ``(released bins, bins suppressed)``, or ``(None, n)`` when no bin survives. With no usable
+    ``base`` (proportions) or ``k <= 1`` the bins pass through.
+    """
+    if k <= 1 or (proportions and (not base or base <= 0)):
+        return list(bins), 0
+    keep: list[bool] = []
+    for b in bins:
+        if b <= 0:
+            keep.append(True)
+        elif proportions:
+            keep.append(count_lower_bound(float(b), int(base or 0)) >= k)
+        else:
+            keep.append(b >= k)
+    dropped = keep.count(False)
+    if dropped == 0:
+        return list(bins), 0
+    survivors = [b for b, ok in zip(bins, keep, strict=True) if ok and b > 0]
+    if not survivors:
+        return None, dropped
+    out = [b if ok else 0 for b, ok in zip(bins, keep, strict=True)]
+    if proportions:
+        out = _renormalize(out, sum(bins))
+    return out, dropped
+
+
+def _renormalize(bins: list[float], total: float) -> list[float]:
+    """Scale ``bins`` to ``total`` at 6 decimals, the released total exactly ``round(total, 6)``.
+
+    Rounding each bin on its own lets the error of many bins add up; the units left over are
+    given to the bins with the largest remainders (ties to the earlier bin), so no bin moves by
+    more than one unit in the last place and zero bins stay zero.
+    """
+    unit = 10**6
+    scale = total / sum(bins)
+    exact = [b * scale * unit for b in bins]
+    floors = [int(e // 1) for e in exact]
+    short = round(total * unit) - sum(floors)
+    order = sorted(
+        (i for i, b in enumerate(bins) if b > 0), key=lambda i: (floors[i] - exact[i], i)
+    )
+    for i in order[: max(short, 0)]:
+        floors[i] += 1
+    return [f / unit for f in floors]
+
+
+def _cells_in_map(values: Mapping[Any, Any]) -> str:
+    """``counts`` when every value is an integer, ``proportions`` when all are numbers."""
+    if all(_is_int(v) for v in values.values()):
+        return "counts"
+    if all(_is_num(v) for v in values.values()):
+        return "proportions"
+    return "unknown"
+
+
+def suppress_column_cells(
+    column: Mapping[str, Any], k: int, base: int
+) -> tuple[dict[str, Any], int, list[str]]:
+    """Apply the minimum cell count to every cell surface of a column dict.
+
+    ``base`` is the column's non-null row count, used for evidence that stores proportions.
+    Returns ``(column, cells suppressed, surfaces removed outright)``. A value list that carries
+    no counts, or a cell structure of an unknown shape, cannot be checked and is removed.
+    """
+    out = dict(column)
+    cells = 0
+    removed: list[str] = []
+
+    top = out.get("topk")
+    if isinstance(top, list):
+        keep = [i for i in top if isinstance(i, list | tuple) and len(i) > 1 and _is_num(i[1])]
+        keep = [i for i in keep if i[1] >= k]
+        cells += len(top) - len(keep)
+        out["topk"] = keep
+
+    for key in _COUNT_MAP_KEYS:
+        v = out.get(key)
+        if v is None:
+            continue
+        mode = _cells_in_map(v) if isinstance(v, Mapping) else "unknown"
+        if mode == "counts":
+            out[key], n = suppress_counts(v, k)
+            cells += n
+        elif mode == "proportions":
+            out[key], n = suppress_weights(v, k, base)
+            cells += n
+        else:
+            del out[key]
+            removed.append(key)
+
+    for key in _COUNT_LIST_KEYS:
+        v = out.get(key)
+        if v is None:
+            continue
+        if not (isinstance(v, list) and all(_is_num(b) for b in v)):
+            del out[key]
+            removed.append(key)
+            continue
+        bins, n = suppress_bins(v, k, base, proportions=not all(_is_int(b) for b in v))
+        cells += n
+        if bins is None:
+            del out[key]
+            removed.append(key)
+        else:
+            out[key] = bins
+
+    temporal = out.get("temporal_histogram")
+    if isinstance(temporal, Mapping):
+        t = dict(temporal)
+        for part in ("year_weights", "month_weights"):
+            w = t.get(part)
+            if isinstance(w, list) and all(_is_num(b) for b in w):
+                bins, n = suppress_bins(w, k, base)
+                cells += n
+                if bins is None:
+                    del t[part]
+                else:
+                    t[part] = bins
+        out["temporal_histogram"] = t
+    elif temporal is not None:
+        del out["temporal_histogram"]
+        removed.append("temporal_histogram")
+
+    return out, cells, removed
+
+
+# The joint block (``profile.joint``): conditional tables store shares rounded to four places.
+JOINT_SHARE_ROUNDING = 5e-5
+# Joint entries whose cells (category levels with their counts, outlier rows) are not checked
+# cell by cell: they are withheld, as a value list without counts is.
+JOINT_UNCHECKED_KEYS = ("cohorts", "copula", "multivariate_outliers")
+
+
+def _share_lower_bound(share: float, n: int) -> int:
+    return max(0, math.ceil((share - JOINT_SHARE_ROUNDING) * n - 1e-9))
+
+
+def _conditional_row(row: Any, k: int) -> dict[str, Any] | None:
+    """One row of a conditional table (``{"n": rows, "p": {target: share}}``) with every target
+    below ``k`` rows folded into ``__OTHER__``; ``None`` when the row cannot be released."""
+    if not isinstance(row, Mapping) or not _is_int(row.get("n")) or row["n"] < k:
+        return None
+    shares = row.get("p")
+    if not isinstance(shares, Mapping) or not all(_is_num(v) for v in shares.values()):
+        return None
+    n = int(row["n"])
+    counts = {t: _share_lower_bound(float(p), n) for t, p in shares.items()}
+    released, _ = suppress_counts(counts, k)
+    if not released:
+        return None
+    p = {t: shares[t] for t in released if t != OTHER_BUCKET}
+    if OTHER_BUCKET in released:
+        p[OTHER_BUCKET] = round(sum(float(v) for t, v in shares.items() if t not in p), 4)
+    return {**row, "p": p}
+
+
+def _violation(entry: Any, k: int) -> dict[str, Any] | None:
+    """One dependency violation (a determinant value, its rows and its dependent values with
+    counts) with the dependent values below ``k`` rows folded; ``None`` when it cannot be
+    released."""
+    if not isinstance(entry, Mapping) or not _is_int(entry.get("rows")) or entry["rows"] < k:
+        return None
+    values = entry.get("dependent_values")
+    if not isinstance(values, Mapping) or _cells_in_map(values) != "counts":
+        return None
+    released, _ = suppress_counts(values, k)
+    if not released:
+        return None
+    return {**entry, "dependent_values": released}
+
+
+def suppress_joint(joint: Mapping[str, Any], k: int) -> tuple[dict[str, Any], list[str]]:
+    """The minimum cell count applied to a profile's ``joint`` block (#650).
+
+    A row of a conditional table (``conditionals[].table``) with fewer than ``k`` rows is
+    withheld, and inside a row each target value below ``k`` rows folds into ``__OTHER__``
+    (shares are read with a lower bound for their four-place rounding); a dependency violation
+    (``dependencies[].violations``) of fewer than ``k`` rows is withheld, and its dependent
+    values below ``k`` fold. Entries whose cells are not checked (``JOINT_UNCHECKED_KEYS``) are
+    withheld. Returns ``(joint, removed paths)``. With ``k <= 1`` the block passes through."""
+    out = dict(joint)
+    removed: list[str] = []
+    if k <= 1:
+        return out, removed
+    conditionals = out.get("conditionals")
+    if isinstance(conditionals, list):
+        kept_conditionals = []
+        for i, entry in enumerate(conditionals):
+            table = entry.get("table") if isinstance(entry, Mapping) else None
+            if not isinstance(table, Mapping):
+                removed.append(f"joint.conditionals.{i}")
+                continue
+            rows = {}
+            for given, row in table.items():
+                released = _conditional_row(row, k)
+                if released is None:
+                    removed.append(f"joint.conditionals.{i}.table.{given}")
+                    continue
+                if released != row:
+                    removed.append(f"joint.conditionals.{i}.table.{given}.p")
+                rows[given] = released
+            if rows:
+                kept_conditionals.append({**entry, "table": rows})
+            else:
+                removed.append(f"joint.conditionals.{i}")
+        out["conditionals"] = kept_conditionals
+    elif conditionals is not None:
+        del out["conditionals"]
+        removed.append("joint.conditionals")
+    dependencies = out.get("dependencies")
+    if isinstance(dependencies, list):
+        kept_dependencies = []
+        for i, entry in enumerate(dependencies):
+            if not isinstance(entry, Mapping):
+                removed.append(f"joint.dependencies.{i}")
+                continue
+            violations = entry.get("violations") or []
+            released_violations = []
+            for j, violation in enumerate(violations if isinstance(violations, list) else []):
+                released = _violation(violation, k)
+                if released is None or released != violation:
+                    removed.append(f"joint.dependencies.{i}.violations.{j}")
+                if released is not None:
+                    released_violations.append(released)
+            kept_dependencies.append({**entry, "violations": released_violations})
+        out["dependencies"] = kept_dependencies
+    elif dependencies is not None:
+        del out["dependencies"]
+        removed.append("joint.dependencies")
+    for key in JOINT_UNCHECKED_KEYS:
+        if key in out:
+            del out[key]
+            removed.append(f"joint.{key}")
+    return out, removed

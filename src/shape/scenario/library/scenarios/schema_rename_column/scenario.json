@@ -1,0 +1,29 @@
+{
+  "format": "shape-scenario",
+  "version": 1,
+  "id": "schema_rename_column",
+  "domain": "retail",
+  "scale": "small",
+  "seed": 42,
+  "gates": [],
+  "drift": {
+    "plan": {
+      "start": "2026-01-01",
+      "days": 30,
+      "events": [
+        {
+          "kind": "rename_column",
+          "column": "order.status",
+          "to": "order_status",
+          "start": 5
+        }
+      ]
+    },
+    "compare": [
+      [
+        0,
+        10
+      ]
+    ]
+  }
+}

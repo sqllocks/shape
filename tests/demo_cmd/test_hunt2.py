@@ -1,0 +1,326 @@
+"""HUNT2-scenario: regression tests for defects found in the second audit of ``shape demo``."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+from test_run_local import session_of  # noqa: E402  (the helper of the sibling module)
+
+from shape.demo.connections import ConnectionProfile, check_profile
+from shape.demo.errors import DemoError
+
+# ---- #662: a relative local folder is recorded as an absolute path -----------------------------
+
+
+def test_662_cleanup_from_another_directory_removes_a_relative_session_folder(
+    run, home, tmp_path, schema_file, monkeypatch
+):
+    start, elsewhere = tmp_path / "start", tmp_path / "elsewhere"
+    start.mkdir()
+    elsewhere.mkdir()
+    monkeypatch.chdir(start)
+    assert run("demo", "init", "--name", "rel", "--local-path", "land")[0] == 0
+    code, out, _ = run(
+        "demo", "run", "retail", "--mode", "seeding", "--connection", "rel",
+        "--domain", schema_file, "--rows", "1000", "--seed", "3",
+    )  # fmt: skip
+    assert code == 0, out
+    session = session_of(out)
+    folder = start / "land" / session
+    assert folder.is_dir()
+    record = json.loads((home / "sessions" / f"demo-{session}.json").read_text())
+    assert all(Path(a["detail"]).is_absolute() for a in record["artifacts"])
+
+    monkeypatch.chdir(elsewhere)
+    code, out, _ = run("demo", "cleanup", session)
+    assert code == 0, out
+    assert "already gone" not in out
+    assert not folder.exists()
+
+
+# ---- #664: a profile never stores a secret in a URL, a token or a key=value part ------------
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("eventhouse_uri", "https://user:pw@h.kusto.windows.net"),
+        ("eventhouse_uri", "https://h.kusto.windows.net/?sig=abc%3D&sv=1"),
+        ("warehouse_staging_path", "https://acct.blob.core.windows.net/c?sv=1&sig=abc%3D"),
+        ("warehouse_staging_path", "abfss://c@acct.dfs.core.windows.net/p?sas_token=xyz"),
+        ("sql_db_conn_str", "Server=x;User ID=a;Pass=abc"),
+        ("sql_db_conn_str", "Server=x;Access Token=abc"),
+        ("warehouse_conn_str", "Server=x;Uid=a;Pwd=abc"),
+    ],
+)
+def test_664_a_profile_with_a_secret_in_any_field_is_refused(field, value):
+    with pytest.raises(DemoError, match="credential reference|env://"):
+        check_profile(ConnectionProfile(name="a", **{field: value}))
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("eventhouse_uri", "https://h.kusto.windows.net"),
+        ("warehouse_staging_path", "abfss://c@acct.dfs.core.windows.net/staging/path"),
+        ("warehouse_staging_path", "onelake://ws/lh/Files/staging"),
+        (
+            "sql_db_conn_str",
+            "Server=tcp:x.database.windows.net;Database=d;Authentication=ActiveDirectoryDefault",
+        ),
+        ("eventhouse_uri", "env://EVENTHOUSE_URI"),
+        ("local_path", "/tmp/a?b"),
+    ],
+)
+def test_664_a_profile_without_a_secret_is_accepted(field, value):
+    assert check_profile(ConnectionProfile(name="a", **{field: value})).name == "a"
+
+
+# ---- #663: the comparison page does not print the values of a personal-data column --------------
+
+
+def people_csv(path: Path) -> Path:
+    import csv
+
+    names = ["Alice", "Bob", "Carla", "Dmitri"]
+    with path.open("w", newline="") as fh:
+        out = csv.writer(fh)
+        out.writerow(["id", "email", "ssn", "plan", "city"])
+        for i in range(400):
+            who = names[i % 4]
+            ssn = f"{100 + i % 800}-{10 + i % 80}-{1000 + i}"
+            plan, city = ["basic", "plus", "pro"][i % 3], ["Springfield", "Gotham"][i % 2]
+            out.writerow([i, f"{who.lower()}@secretcorp.example", ssn, plan, city])
+    return path
+
+
+def test_663_the_page_withholds_the_values_of_a_classified_column(tmp_path):
+    from shape.demo.charts import render_html
+    from shape.generation.learn import as_dataset
+    from shape.profile.reference import profile
+
+    real = as_dataset(profile(people_csv(tmp_path / "people.csv")))
+    page = render_html(real, real, 1.0, "people")
+    assert "secretcorp.example" not in page and "alice@" not in page
+    # the shape of the column stays; the values of ordinary categories stay
+    assert "<td>email</td>" in page
+    assert "basic" in page and "Springfield" in page
+
+
+def test_663_the_page_says_a_column_is_withheld(tmp_path):
+    from shape.demo.charts import render_html
+    from shape.generation.learn import as_dataset
+    from shape.profile.reference import profile
+
+    real = as_dataset(profile(people_csv(tmp_path / "people.csv")))
+    assert "values withheld" in render_html(real, real, 1.0, "people")
+
+
+# ---- #701: a dry run shows what the real cleanup would do ------------------------------------
+
+
+def write_session(home: Path, session: str, artifacts: list[dict]) -> None:
+    (home / "sessions").mkdir(parents=True, exist_ok=True)
+    record = {
+        "session_id": session, "scenario": "retail", "mode": "seeding", "started_at": "t",
+        "finished_at": "t", "success": True, "error": None, "artifacts": artifacts,
+        "params": {}, "metrics": {}, "scale_mode": None, "fabric_run_id": None,
+        "workspace_id": None, "notebook_item_id": None,
+    }  # fmt: skip
+    (home / "sessions" / f"demo-{session}.json").write_text(json.dumps(record))
+
+
+def test_701_a_dry_run_leaves_alone_what_the_real_cleanup_leaves_alone(run, home, tmp_path):
+    precious = tmp_path / "precious.txt"
+    precious.write_text("keep")
+    gone = tmp_path / "gone.txt"
+    write_session(
+        home,
+        "abc12345",
+        [
+            {"target": "file", "name": "precious.txt", "row_count": 0, "detail": str(precious)},
+            {"target": "file", "name": "gone.txt", "row_count": 0, "detail": str(gone)},
+        ],
+    )
+    code, dry, _ = run("demo", "cleanup", "abc12345", "--dry-run")
+    assert code == 0
+    assert "Would remove: file/precious.txt" not in dry
+    assert "Left alone: file/precious.txt (not inside a folder this session created)" in dry
+    code, real, _ = run("demo", "cleanup", "abc12345")
+    assert code == 0 and precious.read_text() == "keep"
+    assert "Left alone: file/precious.txt (not inside a folder this session created)" in real
+    assert "Left alone: file/gone.txt (already gone)" in dry and "already gone" in real
+
+
+def test_701_a_dry_run_still_lists_the_session_folder_it_would_remove(
+    run, home, tmp_path, schema_file
+):
+    from test_run_local import session_of
+
+    assert run("demo", "init", "--name", "loc", "--local-path", tmp_path / "land")[0] == 0
+    code, out, _ = run(
+        "demo", "run", "retail", "--mode", "seeding", "--connection", "loc",
+        "--domain", schema_file, "--rows", "1000", "--seed", "3",
+    )  # fmt: skip
+    session = session_of(out)
+    code, dry, _ = run("demo", "cleanup", session, "--dry-run")
+    assert code == 0 and "[dry-run] Would remove: file/customer" in dry
+    assert (tmp_path / "land" / session / "customer").is_dir()  # nothing was removed
+    code, real, _ = run("demo", "cleanup", session)
+    assert "Removed: file/customer" in real and not (tmp_path / "land" / session).exists()
+
+
+# ---- #716: an input file that cannot be read is a message that names the file ---------------
+
+
+def test_716_a_repeated_column_name_runs_without_a_traceback(run, home, tmp_path, caplog):
+    path = tmp_path / "dup.csv"
+    path.write_text("a,a\n1,2\n", encoding="utf-8")
+    code, out, err = run("demo", "run", "retail", "--input-file", path, "--rows", "200")
+    # the CSV reader makes a repeated header name unique (`a`, `a.1`, #167), so the run goes on
+    assert code == 0, err
+    assert "Traceback" not in out + err and "inference demo failed" not in caplog.text
+    assert "Fidelity" in out
+
+
+def test_716_a_file_that_is_not_utf8_says_so_and_names_the_file(run, home, tmp_path):
+    path = tmp_path / "u16.csv"
+    path.write_bytes("a\n1\n".encode("utf-16"))
+    code, out, err = run("demo", "run", "retail", "--input-file", path, "--rows", "200", "--json")
+    result = json.loads(out)
+    assert code == 1 and result["success"] is False
+    assert str(path) in result["error"] and "UTF-8" in result["error"]
+    assert "codec can't decode" not in result["error"]
+
+
+def test_716_a_readable_file_still_runs(run, home, tmp_path):
+    path = tmp_path / "ok.csv"
+    path.write_text("a,b\n" + "\n".join(f"{i},x{i % 3}" for i in range(50)), encoding="utf-8")
+    code, out, _ = run("demo", "run", "retail", "--input-file", path, "--rows", "200")
+    assert code == 0 and "Fidelity" in out
+
+
+# ---- #727: a cleanup of a composite run leaves nothing it made --------------------------------
+
+
+def two_schema_files(tmp_path: Path) -> tuple[Path, Path]:
+    from demo_helpers import write_schema
+
+    return (
+        write_schema(tmp_path / "alpha.json", name="alpha"),
+        write_schema(tmp_path / "beta.json", name="beta"),
+    )
+
+
+def test_727_cleanup_of_a_composite_run_removes_the_domain_folders_and_the_session_folder(
+    run, home, tmp_path
+):
+    from test_run_local import session_of
+
+    alpha, beta = two_schema_files(tmp_path)
+    land = tmp_path / "land"
+    assert run("demo", "init", "--name", "loc", "--local-path", land)[0] == 0
+    code, out, _ = run(
+        "demo", "run", "retail", "--mode", "seeding", "--connection", "loc",
+        "--domains", f"{alpha},{beta}", "--rows", "1000", "--seed", "3",
+    )  # fmt: skip
+    assert code == 0, out
+    session = session_of(out)
+    assert sorted(p.name for p in (land / session).iterdir() if p.is_dir()) == ["alpha", "beta"]
+    code, out, _ = run("demo", "cleanup", session)
+    assert code == 0, out
+    assert land.is_dir() and list(land.iterdir()) == []
+
+
+def test_727_cleanup_never_removes_a_file_it_did_not_make(run, home, tmp_path):
+    from test_run_local import session_of
+
+    alpha, beta = two_schema_files(tmp_path)
+    land = tmp_path / "land"
+    assert run("demo", "init", "--name", "loc", "--local-path", land)[0] == 0
+    code, out, _ = run(
+        "demo", "run", "retail", "--mode", "seeding", "--connection", "loc",
+        "--domains", f"{alpha},{beta}", "--rows", "1000", "--seed", "3",
+    )  # fmt: skip
+    session = session_of(out)
+    keep = land / session / "alpha" / "notes.txt"
+    keep.write_text("mine")
+    assert run("demo", "cleanup", session)[0] == 0
+    assert keep.read_text() == "mine"
+
+
+# ---- #728: a session record with a field of a later release is read --------------------------
+
+
+def test_728_a_record_with_unknown_fields_is_read_and_cleaned_up(run, home, tmp_path, schema_file):
+    from test_run_local import session_of
+
+    land = tmp_path / "land"
+    assert run("demo", "init", "--name", "loc", "--local-path", land)[0] == 0
+    code, out, _ = run(
+        "demo", "run", "retail", "--mode", "seeding", "--connection", "loc",
+        "--domain", schema_file, "--rows", "1000", "--seed", "3",
+    )  # fmt: skip
+    session = session_of(out)
+    path = home / "sessions" / f"demo-{session}.json"
+    doc = json.loads(path.read_text())
+    doc["field_of_a_later_release"] = {"a": 1}
+    doc["artifacts"][0]["extra"] = "x"
+    path.write_text(json.dumps(doc))
+
+    code, out, err = run("demo", "status", session, "--json")
+    assert code == 0, err
+    assert json.loads(out)["manifest"]["session_id"] == session
+    assert run("demo", "report", session)[0] == 0
+    code, out, _ = run("demo", "cleanup", session)
+    assert code == 0 and not (land / session).exists()
+
+
+def test_728_a_record_that_misses_a_field_or_holds_the_wrong_type_is_still_refused(
+    run, home, tmp_path
+):
+    (home / "sessions").mkdir(parents=True)
+    (home / "sessions" / "demo-bad00001.json").write_text(
+        json.dumps({"scenario": 5, "artifacts": 3})
+    )
+    code, _, err = run("demo", "status", "bad00001")
+    assert code == 2 and "is not a demo session record" in err
+    (home / "sessions" / "demo-bad00002.json").write_text(json.dumps({"artifacts": [5]}))
+    code, _, err = run("demo", "status", "bad00002")
+    assert code == 2 and "is not a demo session record" in err
+
+
+# ---- #730: a damaged connection profile entry is a message that names it ---------------------
+
+
+def write_connections(home: Path, doc: object) -> None:
+    home.mkdir(parents=True, exist_ok=True)
+    (home / "connections.json").write_text(json.dumps(doc))
+
+
+def test_730_an_entry_that_is_not_a_table_names_the_profile(run, home):
+    write_connections(home, {"a": 5})
+    code, _, err = run("demo", "preflight", "--connection", "a")
+    assert code == 2 and "connection profile 'a'" in err and "AttributeError" not in err
+
+
+def test_730_an_entry_without_a_name_takes_the_key_as_its_name(run, home, tmp_path):
+    write_connections(home, {"a": {"local_path": str(tmp_path), "auth_method": "cli"}})
+    code, out, err = run("demo", "preflight", "--connection", "a", "--json")
+    assert code == 0, err
+    assert json.loads(out)["profiles"][0]["name"] == "a"
+
+
+def test_730_a_field_of_the_wrong_type_names_the_field(run, home):
+    write_connections(home, {"a": {"name": "a", "local_path": 7}})
+    code, _, err = run("demo", "preflight", "--connection", "a")
+    assert code == 2 and "local_path" in err and "connection profile 'a'" in err
+    assert "TypeError" not in err
+
+
+def test_730_a_well_formed_file_is_unchanged(run, home, tmp_path):
+    assert run("demo", "init", "--name", "ok", "--local-path", tmp_path / "x")[0] == 0
+    code, out, _ = run("demo", "preflight", "--connection", "ok", "--json")
+    assert code == 0 and json.loads(out)["ok"] is True

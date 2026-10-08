@@ -1,0 +1,997 @@
+"""Contract format v1 (``shape.check``) and profile drift (``shape.diff``).
+
+Both operate on :class:`shape.profile.reference.Profile` objects. The rule vocabulary
+(``dtype``, ``pattern``, ``distribution``) is the profiler's own.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+from dataclasses import dataclass, field, replace
+from pathlib import Path
+from typing import Any
+
+from shape import compat
+from shape.drift.engine import DEFAULT_THRESHOLDS as DRIFT_DEFAULTS
+from shape.drift.engine import (
+    SEVERITY_RANK,
+    Policy,
+    diff_records,
+    resolve_policy,
+    sampling_notes,
+    tables_of,
+    view_of_profile_column,
+)
+from shape.drift.semver import check_fail_on, classify, summarise
+from shape.drift.semver import fails as semver_fails
+from shape.profile.reference.profile import Profile
+
+from .joint import check_joint_rules, check_no_placeholder, check_valid_as
+
+# --- contract check ---------------------------------------------------------------
+
+_CONTRACT_KEYS = {
+    "row_count",
+    "columns",
+    "required_columns",
+    "allow_extra_columns",
+    "tables",
+    "drift",  # the drift policy (thresholds, ignore, per-column thresholds): ignored by check
+    "timeseries",  # time-series rules (gaps, stuck values, daylight saving): need `data=`
+    "reconcile",  # source/target reconciliation rules: need `data=`
+    # joint rules (#47), all optional like every rule: absent from a contract, nothing changes
+    "fd",  # [{"determinant": "zip", "dependent": "city", "min_confidence": 0.99}]
+    "implies",  # [{"if": {"column": "state", "equals": "CA"}, "then": {...}, "min_confidence": 1}]
+    "reference_pair",  # [{"columns": ["city", "zip"], "reference": "...", "min_match_rate": 0.99}]
+    "max_implausible_rate",  # the share of rows that break a dependency or hold a placeholder
+}
+_DATA_RULES = ("timeseries", "reconcile")
+_ROW_COUNT_KEYS = {"min", "max", "strength"}
+STRENGTHS = ("hard", "soft", "learned")
+"""Rule strengths (W7-03): ``hard`` fails the check, ``soft`` is a warning, ``learned`` (a rule
+inferred from data) is a warning unless ``enforce_learned``; ``strict`` fails on every rule."""
+_RANK = {"soft": 0, "learned": 1, "hard": 2}
+_COLUMN_RULES = {
+    "dtype",
+    "nullable",
+    "unique",
+    "max_null_rate",
+    "pattern",
+    "allowed_values",
+    "min",
+    "max",
+    "distribution",
+    "min_true_rate",  # the share of true values of a boolean (or 0/1) column
+    "max_true_rate",
+    "no_placeholder",  # true, or {"max_share": 0.01, "allow": ["N/A"]} (#47)
+    "valid_as",  # {"kind": "iban", "min_valid_rate": 1.0}: values are valid codes (W3-12)
+    "strength",  # "hard" | "soft" | "learned", or {rule name: strength} (W7-03)
+}
+
+
+class ContractError(ValueError):
+    """The contract itself is malformed."""
+
+
+@dataclass
+class CheckResult:
+    """Outcome of :func:`check`."""
+
+    passed: bool
+    violations: list[dict[str, Any]] = field(default_factory=list)
+    # rules that need a value a safe capture left out (W1-11): not passed, not violated
+    not_evaluable: list[dict[str, Any]] = field(default_factory=list)
+    warnings: list[dict[str, Any]] = field(default_factory=list)
+    """Broken rules that do not fail the check: ``soft`` ones, and ``learned`` ones unless
+    ``enforce_learned`` (W7-03). Each carries its ``strength``."""
+    has_strength: bool = False
+    """True when the contract declares a ``strength`` anywhere: only then do the violations carry
+    ``strength`` and ``to_dict`` carry ``warnings``, so a contract without one gives the result it
+    always did."""
+
+    def to_dict(self) -> dict[str, Any]:
+        out: dict[str, Any] = {
+            "passed": self.passed,
+            "violations": [dict(v) for v in self.violations],
+        }
+        if self.has_strength:
+            out["warnings"] = [dict(v) for v in self.warnings]
+        if self.not_evaluable:  # present only when a safe capture left out what a rule needs
+            out["not_evaluable"] = [dict(n) for n in self.not_evaluable]
+        return out
+
+    def _repr_html_(self) -> str:
+        """Notebook display: expected and observed values only for aggregate rules."""
+        from shape.report.display import check_html
+
+        return check_html(self)
+
+    def _repr_markdown_(self) -> str:
+        from shape.report.display import check_markdown
+
+        return check_markdown(self)
+
+
+def _gap(column: str, rule: str) -> dict[str, Any]:
+    return {
+        "column": column,
+        "rule": rule,
+        "reason": f"{column} was captured safe (statistics and formats only); "
+        "re-profile with --capture full",
+    }
+
+
+def _violation(column: str | None, rule: str, expected: Any, observed: Any) -> dict[str, Any]:
+    return {"column": column, "rule": rule, "expected": expected, "observed": observed}
+
+
+def _strong(v: dict[str, Any], strength: str = "hard") -> dict[str, Any]:
+    v["strength"] = strength
+    return v
+
+
+def _load_contract(contract: dict[str, Any] | str | Path) -> dict[str, Any]:
+    if isinstance(contract, (str, Path)):
+        try:
+            with open(contract, encoding="utf-8") as fh:
+                contract = json.load(fh)
+        except json.JSONDecodeError as exc:
+            raise ContractError(f"contract {contract} is not valid JSON: {exc}") from exc
+    if not isinstance(contract, dict):
+        raise ContractError("a contract must be a JSON object")
+    return contract
+
+
+def _validate_data_rules(contract: dict[str, Any], *, top: bool) -> None:
+    from shape.quality.reconcile import validate_reconcile_rules
+    from shape.quality.timeseries import validate_timeseries_rules
+
+    validators = {"timeseries": validate_timeseries_rules, "reconcile": validate_reconcile_rules}
+    for key in _DATA_RULES:
+        if key not in contract:
+            continue
+        if not top:
+            raise ContractError(
+                f"'{key}' rules belong at the top level of the contract (they name their own "
+                "tables), not inside a table's contract"
+            )
+        try:
+            validators[key](contract[key])
+        except ValueError as exc:
+            raise ContractError(str(exc)) from exc
+
+
+def _validate_contract(contract: dict[str, Any], *, top: bool = True) -> None:
+    compat.check_format("contract", contract, error=ContractError)
+    compat.check_readable("contract", contract, error=ContractError)
+    unknown = {
+        k
+        for k in contract
+        if k not in _CONTRACT_KEYS
+        and k not in compat.BOOKKEEPING_KEYS
+        and not str(k).startswith("x_")
+    }
+    if unknown:
+        raise ContractError(f"unknown contract keys: {sorted(unknown)}")
+    _validate_data_rules(contract, top=top)
+    rc = contract.get("row_count", {})
+    if not isinstance(rc, dict) or set(rc) - _ROW_COUNT_KEYS:
+        raise ContractError("row_count accepts only 'min', 'max' and 'strength'")
+    if "strength" in rc:
+        _check_strength(rc["strength"], "row_count")
+    for key, value in rc.items():
+        if key != "strength" and not _is_finite_number(value):
+            raise ContractError(f"row_count.{key} must be a number, not {value!r}")
+    columns = contract.get("columns", {})
+    if not isinstance(columns, dict):
+        raise ContractError("'columns' must be an object")
+    for name, rules in columns.items():
+        if not isinstance(rules, dict):
+            raise ContractError(f"rules for column {name!r} must be an object")
+        bad = set(rules) - _COLUMN_RULES
+        if bad:
+            raise ContractError(f"unknown rules for column {name!r}: {sorted(bad)}")
+        if "strength" in rules:
+            _validate_column_strength(name, rules)
+        _validate_column_rules(name, rules)
+    if "allow_extra_columns" in contract and not isinstance(contract["allow_extra_columns"], bool):
+        raise ContractError(
+            f"allow_extra_columns must be true or false, not {contract['allow_extra_columns']!r}"
+        )
+    required = contract.get("required_columns", [])
+    if not isinstance(required, list) or not all(isinstance(c, str) for c in required):
+        raise ContractError("'required_columns' must be a list of column names")
+    for name, rules in columns.items():
+        _validate_no_placeholder(name, rules)
+        _validate_valid_as(name, rules)
+    _validate_joint_rules(contract)
+    if "tables" in contract:
+        _validate_tables(contract, top=top)
+
+
+def _validate_column_rules(name: str, rules: dict[str, Any]) -> None:
+    """The values of one column's rules. Nothing is coerced: ``"false"`` is not ``false``."""
+    if "allowed_values" in rules and not isinstance(rules["allowed_values"], list):
+        raise ContractError(f"allowed_values for column {name!r} must be a list")
+    for key in ("nullable", "unique"):
+        if key in rules and not isinstance(rules[key], bool):
+            raise ContractError(
+                f"{key} for column {name!r} must be true or false, not {rules[key]!r}"
+            )
+    for key in ("max_null_rate", "min_true_rate", "max_true_rate"):
+        if key in rules and not (_is_finite_number(rules[key]) and 0 <= rules[key] <= 1):
+            raise ContractError(
+                f"{key} for column {name!r} must be a number from 0 to 1, not {rules[key]!r}"
+            )
+    # A column's ``min`` and ``max`` take any value: one the profile's bound cannot be compared
+    # with is a violation in ``check`` (and is "not expressed" by ``shape contract emit``), so it
+    # never passes untested.
+
+
+# Keys that may stand beside ``tables``: they are not rules of one table.
+_BESIDE_TABLES = {"tables", "drift", *_DATA_RULES}
+
+
+def _validate_tables(contract: dict[str, Any], *, top: bool) -> None:
+    """A dataset contract: ``tables`` maps each table name to that table's own contract.
+
+    Table rules belong in a table's contract; beside ``tables`` they would apply to no table, so
+    they are refused rather than ignored. Every table's contract is validated here, before any
+    profile is checked.
+    """
+    if not top:
+        raise ContractError("a table's contract cannot hold 'tables'")
+    per_table = contract["tables"]
+    if not isinstance(per_table, dict):
+        raise ContractError("'tables' must be an object mapping table names to contracts")
+    beside = sorted(k for k in contract if k in _CONTRACT_KEYS and k not in _BESIDE_TABLES)
+    if beside:
+        raise ContractError(
+            f"the contract has a 'tables' object and table rules beside it ({', '.join(beside)}): "
+            "put each table's rules in that table's contract under 'tables'"
+        )
+    for tname, sub in per_table.items():
+        if not isinstance(tname, str):
+            raise ContractError(f"'tables' maps table names to contracts, not {tname!r}")
+        if not isinstance(sub, dict):
+            raise ContractError(f"the contract of table {tname!r} must be an object")
+        try:
+            _validate_contract(sub, top=False)
+        except ContractError as exc:
+            raise ContractError(f"table {tname!r}: {exc}") from exc
+
+
+def validate_contract(contract: dict[str, Any]) -> None:
+    """Raise :class:`ContractError` for the first thing wrong with a v1 contract body."""
+    _validate_contract(contract)
+
+
+def _check_strength(value: Any, where: str) -> None:
+    if not isinstance(value, str) or value not in STRENGTHS:
+        raise ContractError(
+            f"unknown strength {value!r} for {where}: use one of {', '.join(STRENGTHS)}"
+        )
+
+
+def _rule_label(key: str, rule: dict[str, Any]) -> str:
+    if key == "fd":
+        return f"{rule.get('determinant')!r} -> {rule.get('dependent')!r}"
+    return f"{rule.get('if')!r} => {rule.get('then')!r}"
+
+
+def _validate_column_strength(name: str, rules: dict[str, Any]) -> None:
+    value = rules["strength"]
+    if isinstance(value, str):
+        _check_strength(value, f"column {name!r}")
+        return
+    if not isinstance(value, dict):
+        raise ContractError(
+            f"strength for column {name!r} must be one of {', '.join(STRENGTHS)} or an object "
+            "from rule name to strength"
+        )
+    for rule, strength in value.items():
+        if rule not in _COLUMN_RULES or rule == "strength":
+            raise ContractError(f"strength for column {name!r} names unknown rule {rule!r}")
+        _check_strength(strength, f"rule {rule!r} of column {name!r}")
+
+
+def _validate_no_placeholder(name: str, rules: dict[str, Any]) -> None:
+    if "no_placeholder" not in rules:
+        return
+    rule = rules["no_placeholder"]
+    if isinstance(rule, bool):
+        return
+    if not isinstance(rule, dict) or set(rule) - {"max_share", "allow"}:
+        raise ContractError(
+            f"no_placeholder for column {name!r} must be true or an object with 'max_share' "
+            "and 'allow'"
+        )
+    if "max_share" in rule and not (_is_number(rule["max_share"]) and 0 <= rule["max_share"] <= 1):
+        raise ContractError(f"no_placeholder.max_share for column {name!r} must be from 0 to 1")
+    if "allow" in rule and not (
+        isinstance(rule["allow"], list) and all(isinstance(v, str) for v in rule["allow"])
+    ):
+        raise ContractError(f"no_placeholder.allow for column {name!r} must be a list of texts")
+
+
+def _validate_valid_as(name: str, rules: dict[str, Any]) -> None:
+    if "valid_as" not in rules:
+        return
+    from shape.validation.valid_as import KINDS
+
+    rule = rules["valid_as"]
+    if not isinstance(rule, dict) or set(rule) - {"kind", "min_valid_rate"}:
+        raise ContractError(
+            f"valid_as for column {name!r} must be an object with 'kind' and 'min_valid_rate'"
+        )
+    if rule.get("kind") not in KINDS:
+        raise ContractError(
+            f"valid_as for column {name!r}: 'kind' must be one of {', '.join(KINDS)}"
+        )
+    if "min_valid_rate" in rule and not (
+        _is_number(rule["min_valid_rate"]) and 0 <= rule["min_valid_rate"] <= 1
+    ):
+        raise ContractError(f"valid_as.min_valid_rate for column {name!r} must be from 0 to 1")
+
+
+def _names(value: Any) -> list[str] | None:
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, list) and value and all(isinstance(v, str) for v in value):
+        return list(value)
+    return None
+
+
+def _validate_reference_pair(contract: dict[str, Any]) -> None:
+    if "reference_pair" not in contract:
+        return
+    rules = contract["reference_pair"]
+    if not isinstance(rules, list):
+        raise ContractError("'reference_pair' must be a list of rules")
+    for rule in rules:
+        if not isinstance(rule, dict) or set(rule) - {
+            "columns",
+            "reference",
+            "min_match_rate",
+            "strength",
+        }:
+            raise ContractError(
+                "each 'reference_pair' rule is an object with 'columns', 'reference' and "
+                "'min_match_rate' (and optionally 'strength')"
+            )
+        if "strength" in rule:
+            _check_strength(
+                rule["strength"], f"the 'reference_pair' rule on {rule.get('columns')!r}"
+            )
+        if _names(rule.get("columns")) is None or not isinstance(rule.get("reference"), str):
+            raise ContractError(
+                "reference_pair: 'columns' is a list of column names, 'reference' the name the "
+                "profile gave the reference"
+            )
+        rate: Any = rule.get("min_match_rate")
+        if not (_is_number(rate) and 0 < rate <= 1):
+            raise ContractError("reference_pair needs 'min_match_rate' above 0 and up to 1")
+
+
+def _validate_joint_rules(contract: dict[str, Any]) -> None:
+    if "max_implausible_rate" in contract and not (
+        _is_number(contract["max_implausible_rate"]) and 0 <= contract["max_implausible_rate"] <= 1
+    ):
+        raise ContractError("max_implausible_rate must be a number from 0 to 1")
+    _validate_reference_pair(contract)
+    for key, needs in (("fd", ("determinant", "dependent")), ("implies", ("if", "then"))):
+        if key not in contract:
+            continue
+        rules = contract[key]
+        if not isinstance(rules, list):
+            raise ContractError(f"'{key}' must be a list of rules")
+        for rule in rules:
+            if not isinstance(rule, dict) or set(rule) - {*needs, "min_confidence", "strength"}:
+                raise ContractError(
+                    f"each '{key}' rule is an object with {', '.join(repr(n) for n in needs)} "
+                    "and 'min_confidence' (and optionally 'strength')"
+                )
+            if "strength" in rule:
+                _check_strength(rule["strength"], f"the '{key}' rule {_rule_label(key, rule)}")
+            if any(n not in rule for n in needs):
+                raise ContractError(f"a '{key}' rule needs {', '.join(repr(n) for n in needs)}")
+            conf: Any = rule.get("min_confidence")
+            if not (_is_number(conf) and 0 < conf <= 1):
+                raise ContractError(f"a '{key}' rule needs 'min_confidence' above 0 and up to 1")
+            if key == "fd":
+                if _names(rule["determinant"]) is None or not isinstance(rule["dependent"], str):
+                    raise ContractError(
+                        "fd: 'determinant' is a column name or a list of them, 'dependent' a name"
+                    )
+            else:
+                for side in ("if", "then"):
+                    cond = rule[side]
+                    if (
+                        not isinstance(cond, dict)
+                        or set(cond) != {"column", "equals"}
+                        or not isinstance(cond["column"], str)
+                    ):
+                        raise ContractError(
+                            f"implies: '{side}' is an object with 'column' and 'equals'"
+                        )
+
+
+def _is_number(v: Any) -> bool:
+    # an int is never NaN, and may be too large for a float (math.isnan would overflow)
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        return False
+    return isinstance(v, int) or not math.isnan(v)
+
+
+def _is_finite_number(v: Any) -> bool:
+    return _is_number(v) and (isinstance(v, int) or math.isfinite(v))
+
+
+def _plain(tagged: Any) -> Any:
+    """``["int", 5]`` -> ``5`` (the profile stores min/max type-tagged). A decimal is stored as
+    text (``["Decimal", "1.50"]``); it is compared as the number it is."""
+    if not (isinstance(tagged, list) and len(tagged) == 2):
+        return None
+    if tagged[0] == "Decimal" and isinstance(tagged[1], str):
+        try:
+            return float(tagged[1])
+        except ValueError:
+            return tagged[1]
+    return tagged[1]
+
+
+def _key(value: Any) -> str:
+    """The profiler's ``str(key)`` form of a value (``True`` -> ``"True"``)."""
+    return str(value)
+
+
+def _column_strength(rules: dict[str, Any], rule: str) -> str:
+    """The strength of a column rule's violation: the column's ``strength`` when it is one word,
+    else that of the named rule (``hard`` when the object does not name it). A true-rate
+    violation takes the harder of the two bounds' strengths."""
+    value = rules.get("strength")
+    if value is None:
+        return "hard"
+    if isinstance(value, str):
+        return str(value)
+    names = ("min_true_rate", "max_true_rate") if rule == "true_rate" else (rule,)
+    present = [value.get(n, "hard") for n in names if n in rules or rule != "true_rate"]
+    return str(max(present or ["hard"], key=_RANK.__getitem__))
+
+
+def _check_column(
+    name: str,
+    rules: dict[str, Any],
+    col: dict[str, Any],
+    row_count: int,
+    gaps: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    out = _check_column_rules(name, rules, col, row_count, gaps)
+    for v in out:
+        v["strength"] = _column_strength(rules, v["rule"])
+    return out
+
+
+def _check_column_rules(
+    name: str,
+    rules: dict[str, Any],
+    col: dict[str, Any],
+    row_count: int,
+    gaps: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    cut = frozenset(col["redacted"]) if isinstance(col.get("redacted"), dict) else frozenset()
+    folded = bool(cut & {"enum_values", "value_counts_ext"}) or "__OTHER__" in (
+        col.get("enum_values") or {}
+    )
+
+    def blind(rule: str) -> None:
+        if gaps is not None:
+            gaps.append(_gap(name, rule))
+
+    if "dtype" in rules and col["dtype"] != rules["dtype"]:
+        out.append(_violation(name, "dtype", rules["dtype"], col["dtype"]))
+    if rules.get("nullable") is False and col["null_count"] > 0:
+        out.append(_violation(name, "nullable", False, {"null_count": col["null_count"]}))
+    # is_unique / null_rate are None when unknown (no rows were read): no evidence, no violation
+    if rules.get("unique") is True and col["is_unique"] is False:
+        out.append(
+            _violation(
+                name,
+                "unique",
+                True,
+                {
+                    "cardinality": col["cardinality"],
+                    "null_count": col["null_count"],
+                    "row_count": row_count,
+                },
+            )
+        )
+    if (
+        "max_null_rate" in rules
+        and col["null_rate"] is not None
+        and col["null_rate"] > rules["max_null_rate"]
+    ):
+        out.append(_violation(name, "max_null_rate", rules["max_null_rate"], col["null_rate"]))
+    if "pattern" in rules and col["pattern"] != rules["pattern"]:
+        out.append(_violation(name, "pattern", rules["pattern"], col["pattern"]))
+    if "distribution" in rules:
+        if "distribution_params" in cut:
+            blind("distribution")
+        elif col["distribution"] != rules["distribution"]:
+            out.append(_violation(name, "distribution", rules["distribution"], col["distribution"]))
+    if "allowed_values" in rules:
+        found = _check_allowed(name, rules["allowed_values"], col)
+        out.extend(found)
+        if not found and folded:  # the values that were left out could be outside the set
+            blind("allowed_values")
+    if "min_true_rate" in rules or "max_true_rate" in rules:
+        if folded:
+            blind("true_rate")
+        else:
+            out.extend(_check_true_rate(name, rules, col, row_count))
+    if "no_placeholder" in rules and rules["no_placeholder"] is not False:
+        if "placeholders" in cut:
+            blind("no_placeholder")
+        else:
+            out.extend(check_no_placeholder(name, rules["no_placeholder"], col))
+    if "valid_as" in rules:
+        out.extend(check_valid_as(name, rules["valid_as"], col))
+    for bound in ("min", "max"):
+        if bound not in rules:
+            continue
+        if f"{bound}_value" in cut:
+            blind(bound)
+            continue
+        observed = _plain(col["min_value" if bound == "min" else "max_value"])
+        expected = rules[bound]
+        if observed is None:
+            continue  # an all-null column has no bound to violate
+        comparable = (_is_number(observed) and _is_number(expected)) or (
+            isinstance(observed, str) and isinstance(expected, str)
+        )
+        if not comparable:
+            out.append(_violation(name, bound, expected, observed))
+            continue
+        beyond = observed < expected if bound == "min" else observed > expected
+        if beyond:
+            out.append(_violation(name, bound, expected, observed))
+    return out
+
+
+def _check_true_rate(
+    name: str, rules: dict[str, Any], col: dict[str, Any], row_count: int
+) -> list[dict[str, Any]]:
+    if "min_true_rate" not in rules and "max_true_rate" not in rules:
+        return []
+    rate = view_of_profile_column(col, row_count).true_rate
+    if rate is None:
+        return [
+            _violation(
+                name,
+                "true_rate",
+                {k: rules[k] for k in ("min_true_rate", "max_true_rate") if k in rules},
+                "not a boolean column",
+            )
+        ]
+    out = []
+    if "min_true_rate" in rules and rate < rules["min_true_rate"]:
+        out.append(_violation(name, "min_true_rate", rules["min_true_rate"], rate))
+    if "max_true_rate" in rules and rate > rules["max_true_rate"]:
+        out.append(_violation(name, "max_true_rate", rules["max_true_rate"], rate))
+    return out
+
+
+def _check_allowed(name: str, allowed: list[Any], col: dict[str, Any]) -> list[dict[str, Any]]:
+    allowed_keys = {_key(v) for v in allowed}
+    seen = col.get("value_counts_ext") or {}
+    outside = [k for k in seen if k not in allowed_keys]
+    if outside:
+        return [_violation(name, "allowed_values", allowed, {"unexpected_values": outside[:20]})]
+    if col["cardinality"] > len(allowed_keys):
+        # more distinct values than the set holds: some value must be outside it, even
+        # when the profile only stored the most frequent ones
+        return [
+            _violation(
+                name,
+                "allowed_values",
+                allowed,
+                {"cardinality": col["cardinality"], "unexpected_values": []},
+            )
+        ]
+    return []
+
+
+def _check_table(
+    table: dict[str, Any],
+    contract: dict[str, Any],
+    prefix: str = "",
+    gaps: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    violations: list[dict[str, Any]] = []
+    columns = table["columns"]
+    rc = contract.get("row_count", {})
+    if "min" in rc and table["row_count"] < rc["min"]:
+        violations.append(_violation(None, f"{prefix}row_count.min", rc["min"], table["row_count"]))
+    if "max" in rc and table["row_count"] > rc["max"]:
+        violations.append(_violation(None, f"{prefix}row_count.max", rc["max"], table["row_count"]))
+    for v in violations:
+        v["strength"] = rc.get("strength", "hard")
+    required = contract.get("required_columns", [])
+    for name in required:
+        if name not in columns:
+            violations.append(_strong(_violation(name, "required_column", "present", "missing")))
+    for name, rules in contract.get("columns", {}).items():
+        if name not in columns:
+            if name not in required:
+                violations.append(
+                    _strong(
+                        _violation(name, "column_exists", "present", "missing"),
+                        _column_strength(rules, "column_exists"),
+                    )
+                )
+            continue
+        violations.extend(_check_column(name, rules, columns[name], table["row_count"], gaps))
+    violations.extend(check_joint_rules(contract, table))
+    if contract.get("allow_extra_columns", True) is False:
+        known = set(contract.get("columns", {})) | set(required)
+        for name in columns:
+            if name not in known:
+                violations.append(_strong(_violation(name, "extra_column", "absent", "present")))
+    return violations
+
+
+def _data_violations(contract: dict[str, Any], data: Any) -> list[dict[str, Any]]:
+    """The violations of the contract's ``timeseries`` and ``reconcile`` rules over ``data``."""
+    from shape.quality import load_tables
+    from shape.quality.gates import ValidationContext
+    from shape.quality.reconcile import ReconciliationGate
+    from shape.quality.timeseries import check_timeseries
+
+    present = [k for k in _DATA_RULES if k in contract]
+    if not present:
+        return []
+    if data is None:
+        raise ContractError(
+            f"the contract has {' and '.join(repr(k) for k in present)} rules, which check "
+            "data rather than a profile: pass the tables as data= (`shape check PROFILE "
+            "CONTRACT --data DATA`)"
+        )
+    tables = load_tables(data) if isinstance(data, (str, Path)) else dict(data)
+    violations: list[dict[str, Any]] = []
+    if "timeseries" in contract:
+        for f in check_timeseries(tables, contract["timeseries"]):
+            if f["severity"] == "error":
+                column = f"{f['table']}.{f['column']}" if f["column"] else None
+                violations.append(
+                    _strong(_violation(column, f["rule"], f["expected"], f["observed"]))
+                )
+    if "reconcile" in contract:
+        ctx = ValidationContext(tables=tables, config={"reconcile": contract["reconcile"]})
+        for f in ReconciliationGate().check(ctx).details["findings"]:
+            # a reconciliation's name says which of the contract's rules this violation is of
+            v = _strong(_violation(f["column"], f["rule"], f["expected"], f["observed"]))
+            violations.append({**v, "reconciliation": f["table"]})
+    return violations
+
+
+def _declares_strength(contract: dict[str, Any]) -> bool:
+    """True when ``strength`` appears anywhere a contract may hold it."""
+    if "strength" in contract.get("row_count", {}):
+        return True
+    if any("strength" in rules for rules in contract.get("columns", {}).values()):
+        return True
+    if any(
+        "strength" in rule
+        for key in ("fd", "implies", "reference_pair")
+        for rule in contract.get(key, ())
+    ):
+        return True
+    tables = contract.get("tables")
+    return isinstance(tables, dict) and any(_declares_strength(t) for t in tables.values())
+
+
+def _finish(
+    violations: list[dict[str, Any]],
+    contract: dict[str, Any],
+    strict: bool,
+    enforce_learned: bool,
+    not_evaluable: list[dict[str, Any]] | None = None,
+) -> CheckResult:
+    """Split the broken rules into the ones that fail the check and the warnings."""
+    declared = _declares_strength(contract)
+    failing: list[dict[str, Any]] = []
+    warnings: list[dict[str, Any]] = []
+    for v in violations:
+        # a rule kind that sets no strength is hard; with no strength in the contract the
+        # result is what it always was (no strength key)
+        strength = v.setdefault("strength", "hard")
+        if not declared:
+            del v["strength"]
+        hard = strict or strength == "hard" or (strength == "learned" and enforce_learned)
+        (failing if hard else warnings).append(v)
+    return CheckResult(
+        passed=not failing and not not_evaluable,
+        violations=failing,
+        not_evaluable=list(not_evaluable or ()),
+        warnings=warnings,
+        has_strength=declared,
+    )
+
+
+def check(
+    profile: Profile,
+    contract: dict[str, Any] | str | Path,
+    data: Any = None,
+    *,
+    strict: bool = False,
+    enforce_learned: bool = False,
+) -> CheckResult:
+    """Check ``profile`` against a v1 contract (a dict, or the path to a JSON file).
+
+    The optional ``timeseries`` and ``reconcile`` rules check data, not a profile (see
+    ``docs/VERIFY.md``): ``data`` is the tables (``{name: pyarrow.Table}``, or a path that
+    :func:`shape.quality.load_tables` reads), and a contract with such rules and no ``data``
+    raises :class:`ContractError` rather than pass without testing them.
+
+    The contract and the profile must describe the same tables. A ``tables`` contract against a
+    single-table profile raises :class:`ContractError`; against a dataset, a table the contract
+    names and the profile lacks is a ``table_exists`` violation. Every rule is optional (§12.3), so
+    a profile table the contract does not name is not checked. Table rules beside ``tables`` apply
+    to no table and raise :class:`ContractError`, as does a table's contract that is not an object
+    or holds its own ``tables``.
+
+    The whole contract, every table's contract included, is validated before the profile is
+    checked: a rule value of the wrong type (``"nullable": "false"``, ``"max_null_rate": 2``) is a
+    :class:`ContractError` naming the rule and its column or table, never coerced or skipped.
+
+    A rule that needs a value a safe capture left out (an ``allowed_values`` set on a sensitive
+    column, a ``min`` or ``max`` whose extremes were removed) is neither passed nor violated: it is
+    listed in ``not_evaluable`` and ``passed`` is false (re-profile with ``capture="full"``).
+
+
+    A rule may carry a ``strength`` (``docs/CONTRACTS.md``, "Rule strength"): a broken ``hard``
+    rule (the default) fails the check, a broken ``soft`` one is a warning, and a ``learned`` one
+    is a warning unless ``enforce_learned``. ``strict`` makes every broken rule fail.
+    """
+    contract = _load_contract(contract)
+    _validate_contract(contract)
+    if profile.is_dataset:
+        per_table = contract.get("tables")
+        if not isinstance(per_table, dict):
+            raise ContractError(
+                "the profile has several tables: give the contract a 'tables' object "
+                "mapping table names to contracts"
+            )
+        violations: list[dict[str, Any]] = []
+        blind: list[dict[str, Any]] = []
+        for tname, sub in per_table.items():
+            if tname not in profile.tables:
+                violations.append(_strong(_violation(None, "table_exists", tname, "missing")))
+                continue
+            gaps: list[dict[str, Any]] = []
+            found = _check_table(profile.tables[tname], sub, gaps=gaps)
+            blind.extend(_gap(f"{tname}.{g['column']}", g["rule"]) for g in gaps)
+            for v in found:
+                if v["column"] is not None:
+                    v["column"] = f"{tname}.{v['column']}"
+                else:
+                    v["rule"] = f"{tname}:{v['rule']}"
+                violations.append(v)
+        violations.extend(_data_violations(contract, data))
+        return _finish(violations, contract, strict, enforce_learned, blind)
+    if "tables" in contract:
+        # A multi-table contract has nothing to say about one table: checking it would pass
+        # without testing a single rule.
+        raise ContractError(
+            "the contract has a 'tables' object but the profile is a single table "
+            f"({profile.name!r}): profile the tables together as a dataset, one table per file "
+            "(`shape profile --dataset FOLDER`, or `shape.profile({name: source, ...})`)"
+        )
+    gaps = []
+    violations = _check_table(next(iter(profile.tables.values())), contract, gaps=gaps)
+    violations.extend(_data_violations(contract, data))
+    return _finish(violations, contract, strict, enforce_learned, gaps)
+
+
+# --- drift ------------------------------------------------------------------------
+#
+# The rules live in ``shape.drift.engine`` (one engine for ``shape.diff``, ``ShapeMonitor`` and
+# ``ShapeTimeline.changes``); ``diff`` is its front end for profiles.
+
+DEFAULT_THRESHOLDS: dict[str, Any] = DRIFT_DEFAULTS
+
+
+@dataclass
+class DiffResult:
+    """Outcome of :func:`diff`. Each change carries its ``class`` and ``class_reason``
+    (``docs/DRIFT.md``, "Change classes"); ``semver`` summarises them as a version bump. With
+    ``planned=`` the result also lists the planned entries that matched (``planned``), the active
+    ``expect`` entries that matched nothing (``planned_not_observed``) and the entries past their
+    ``until`` that would have matched (``expired``); ``drifted`` then counts only unplanned
+    changes (``counted`` says which). ``failed`` is set by ``fail_on``."""
+
+    drifted: bool
+    changes: list[dict[str, Any]] = field(default_factory=list)
+    planned: list[dict[str, Any]] | None = None
+    planned_not_observed: list[dict[str, Any]] | None = None
+    expired: list[dict[str, Any]] | None = None
+    counted: list[bool] | None = None
+    fail_on: str | None = None
+    failed: bool = False
+    # comparisons a safe capture made impossible (W1-11): listed, never counted as drift
+    not_evaluable: list[dict[str, Any]] = field(default_factory=list)
+    # things to know when reading the changes (profiles read differently: one sampled, the other
+    # not, or by different methods); empty, and then absent from ``to_dict``, otherwise
+    notes: list[str] = field(default_factory=list)
+
+    @property
+    def semver(self) -> dict[str, Any]:
+        """``{"bump", "breaking", "additive", "cosmetic"}`` over the unplanned changes, and with
+        planned changes ``planned``: the same counts for the others."""
+        return summarise(self.changes, self.counted, planned=self.planned is not None)
+
+    def fails(self, fail_on: str) -> bool:
+        """True when an unplanned change of class ``fail_on`` or a stricter one is reported."""
+        return semver_fails(self.changes, self.counted, fail_on)
+
+    def to_dict(self, *, semver: bool = False) -> dict[str, Any]:
+        """The result as JSON-ready dicts. ``{"drifted", "changes"}`` is the shipped contract
+        (``docs/plans`` section 12.2) and stays as it is; ``semver=True`` adds the summary."""
+        out: dict[str, Any] = {"drifted": self.drifted, "changes": [dict(c) for c in self.changes]}
+        if semver:
+            out["semver"] = self.semver
+        if self.fail_on is not None:
+            out["fail_on"] = self.fail_on
+            out["failed"] = self.failed
+        if self.notes:
+            out["notes"] = list(self.notes)
+        if self.not_evaluable:  # present only when a safe capture made a comparison impossible
+            out["not_evaluable"] = [dict(n) for n in self.not_evaluable]
+        if self.planned is not None:
+            out["planned"] = [dict(e) for e in self.planned]
+            out["planned_not_observed"] = [dict(e) for e in self.planned_not_observed or []]
+            out["expired"] = [dict(e) for e in self.expired or []]
+        return out
+
+    def _repr_html_(self) -> str:
+        """Notebook display: the narrative's rows, with no extremes or category values."""
+        from shape.report.display import diff_html
+
+        return diff_html(self)
+
+    def _repr_markdown_(self) -> str:
+        from shape.report.display import diff_markdown
+
+        return diff_markdown(self)
+
+
+def diff(
+    baseline: Any,
+    current: Any,
+    *,
+    thresholds: dict[str, Any] | None = None,
+    ignore_columns: list[str] | None = None,
+    column_thresholds: dict[str, dict[str, Any]] | None = None,
+    only_columns: list[str] | None = None,
+    policy: dict[str, Any] | str | Path | None = None,
+    planned: Any = None,
+    on: Any = None,
+    source: str | None = None,
+    fail_on: str | None = None,
+) -> DiffResult:
+    """Compare two profiles with the documented defaults (``docs/DRIFT.md``).
+
+    ``baseline`` and ``current`` are profiles; a window of the stream profiler works too. A
+    comparison that needs a value a safe capture left out (see ``shape.save(capture=)``) is listed
+    in ``not_evaluable`` and never counted as drift.
+    ``thresholds`` overrides the defaults for every column, ``column_thresholds`` for the columns
+    its patterns match (``{"order_total": {"mean_shift_std": 0.25}, "*": {...}}``),
+    ``ignore_columns`` drops columns (a name, ``table.column`` or a glob) and ``only_columns``
+    keeps only those. ``policy`` is a dict or JSON file holding the same four settings (a
+    contract's ``"drift"`` object works), so a team keeps one policy file.
+
+    ``planned`` is a planned-change file (a path, a list of entries or a loaded
+    ``shape.project.changes.PlannedChanges``; ``docs/PLANNED_CHANGES.md``): a change that matches
+    an entry active on ``on`` (a date or ``YYYY-MM-DD``; default today, UTC) carries
+    ``planned: {"id", "action"}`` and does not count as drift; ``source`` is the source name the
+    entries' ``source`` key is matched against.
+
+    Every change carries its ``class`` (``breaking``, ``additive`` or ``cosmetic``) and
+    ``class_reason``; the policy's ``classes`` and ``column_classes`` and a planned entry's
+    ``class`` change them (``docs/DRIFT.md``). ``fail_on`` (one of those classes) sets
+    ``DiffResult.failed`` when an unplanned change of that class or a stricter one is reported.
+    """
+    from shape.project.changes import coerce
+
+    if fail_on is not None:
+        check_fail_on(fail_on)
+
+    resolved = resolve_policy(
+        thresholds,
+        ignore_columns=ignore_columns,
+        column_thresholds=column_thresholds,
+        only_columns=only_columns,
+        policy=policy,
+    )
+    plan = coerce(planned)
+    skipped: list[dict[str, Any]] = []
+    if plan is None:
+        changes = [
+            _classified(record, resolved, scope, column)
+            for scope, column, record in diff_records(baseline, current, resolved, skipped)
+        ]
+        result = DiffResult(drifted=bool(changes), changes=changes)
+    else:
+        result = _diff_planned(baseline, current, resolved, plan.applier(on, source), skipped)
+    result.not_evaluable = skipped
+    result.notes = sampling_notes(baseline, current)
+    if fail_on is not None:
+        result.fail_on = fail_on
+        result.failed = result.fails(fail_on)
+    return result
+
+
+def _classified(
+    record: dict[str, Any],
+    policy: Policy,
+    scope: str | None,
+    column: str | None,
+    entry_class: str | None = None,
+) -> dict[str, Any]:
+    """``record`` with ``class`` and ``class_reason``: the planned entry's class if it has one,
+    else the policy's for this column, else the default of the kind."""
+    found = classify(record, policy.classes_for(scope, column))
+    if entry_class is not None:
+        return {**record, "class": entry_class, "class_reason": "set by the planned change"}
+    return {**record, "class": found.class_, "class_reason": found.reason}
+
+
+def _diff_planned(
+    baseline: Any,
+    current: Any,
+    resolved: Policy,
+    applier: Any,
+    skipped: list[dict[str, Any]] | None = None,
+) -> DiffResult:
+    """The engine's changes with the planned ones marked, suppressed or re-rated. The engine is
+    asked for every severity, so that an entry can raise a change over ``min_severity``."""
+    relaxed = replace(
+        resolved,
+        thresholds={**resolved.thresholds, "min_severity": "low"},
+        columns={k: {**v, "min_severity": "low"} for k, v in resolved.columns.items()},
+    )
+    tables, dataset = tables_of(current)
+    only_table = None if dataset else next(iter(tables), None)
+    changes: list[dict[str, Any]] = []
+    counted: list[bool] = []
+    for scope, column, record in diff_records(baseline, current, relaxed, skipped):
+        floor = SEVERITY_RANK[resolved.for_column(scope, column)["min_severity"]]
+        was = SEVERITY_RANK[record["severity"]]
+        hit = applier.match(scope or only_table, column, record["kind"])
+        record = _classified(record, resolved, scope, column, hit.class_ if hit else None)
+        if hit is None:
+            if was >= floor:
+                changes.append(record)
+                counted.append(True)
+        elif hit.action == "suppress":
+            continue
+        elif hit.action == "severity":
+            now = SEVERITY_RANK[hit.severity]
+            if max(was, now) >= floor:
+                rated = {**record, "severity": hit.severity, "severity_was": record["severity"]}
+                changes.append({**rated, "planned": {"id": hit.id, "action": "severity"}})
+                counted.append(now >= floor)
+        elif was >= floor:
+            changes.append({**record, "planned": {"id": hit.id, "action": "expect"}})
+            counted.append(False)
+    report = applier.report()
+    return DiffResult(
+        drifted=any(counted),
+        changes=changes,
+        planned=report["planned"],
+        planned_not_observed=report["planned_not_observed"],
+        expired=report["expired"],
+        counted=counted,
+    )

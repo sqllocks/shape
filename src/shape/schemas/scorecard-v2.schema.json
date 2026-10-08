@@ -1,0 +1,508 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Shape data quality scorecard, version 2",
+  "description": "Version 1 plus `slices`: the scores by slice, representation, outcome rates and null rates written when `--slice-by` is given (docs/FAIRNESS_AND_SKEW.md). A scorecard without slices is still written as version 1.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "shape_version",
+    "run_at",
+    "data_path",
+    "overall",
+    "dimensions",
+    "known_issues",
+    "slices"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "shape-scorecard"
+    },
+    "version": {
+      "const": 2
+    },
+    "shape_version": {
+      "type": "string"
+    },
+    "run_at": {
+      "type": "string"
+    },
+    "data_path": {
+      "type": "string"
+    },
+    "overall": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "dimensions": {
+      "type": "object",
+      "required": [
+        "accuracy",
+        "completeness",
+        "conformity",
+        "consistency",
+        "timeliness",
+        "uniqueness"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "accuracy": {
+          "$ref": "#/$defs/dimension"
+        },
+        "completeness": {
+          "$ref": "#/$defs/dimension"
+        },
+        "conformity": {
+          "$ref": "#/$defs/dimension"
+        },
+        "consistency": {
+          "$ref": "#/$defs/dimension"
+        },
+        "timeliness": {
+          "$ref": "#/$defs/dimension"
+        },
+        "uniqueness": {
+          "$ref": "#/$defs/dimension"
+        }
+      }
+    },
+    "known_issues": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "samples": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "trend": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/trend_entry"
+      }
+    },
+    "slices": {
+      "type": "object",
+      "required": [
+        "by",
+        "min_slice_rows",
+        "skipped_tables",
+        "tables"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "by": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "min_slice_rows": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "skipped_tables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tables": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/table"
+          }
+        },
+        "max_slice_gap": {
+          "type": "number"
+        },
+        "exceeded": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "table",
+              "dimension",
+              "gap"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "table": {
+                "type": "string"
+              },
+              "dimension": {
+                "type": "string"
+              },
+              "gap": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "trend": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/trend_entry"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "check": {
+      "type": "object",
+      "required": [
+        "gate",
+        "table",
+        "column",
+        "check",
+        "score",
+        "rows",
+        "failing",
+        "owner"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "gate": {
+          "type": "string"
+        },
+        "table": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "column": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "check": {
+          "type": "string"
+        },
+        "score": {
+          "type": "number"
+        },
+        "rows": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "failing": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "owner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "dimension": {
+      "type": "object",
+      "required": [
+        "score",
+        "checks"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "score": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/check"
+          }
+        }
+      }
+    },
+    "trend_entry": {
+      "type": "object",
+      "required": [
+        "previous",
+        "change",
+        "direction"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "previous": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "change": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "direction": {
+          "type": "string"
+        }
+      }
+    },
+    "gap": {
+      "type": "object",
+      "required": [
+        "gap",
+        "worst_slice",
+        "scores"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "gap": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "worst_slice": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scores": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "slice": {
+      "type": "object",
+      "required": [
+        "slice",
+        "rows",
+        "share",
+        "scores",
+        "null_rates"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "slice": {
+          "type": "string"
+        },
+        "rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "share": {
+          "type": "number"
+        },
+        "scores": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "null_rates": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "reference_share": {
+          "type": "number"
+        },
+        "ratio": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "positive_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "label": {
+      "type": "object",
+      "required": [
+        "column",
+        "positive_value",
+        "rates",
+        "threshold",
+        "disparity_ratio",
+        "lowest",
+        "highest",
+        "flagged"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "column": {
+          "type": "string"
+        },
+        "positive_value": {
+          "type": [
+            "boolean",
+            "integer",
+            "number",
+            "string"
+          ]
+        },
+        "rates": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "threshold": {
+          "type": "number"
+        },
+        "disparity_ratio": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "lowest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "highest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "flagged": {
+          "type": "boolean"
+        }
+      }
+    },
+    "table": {
+      "type": "object",
+      "required": [
+        "rows",
+        "slices",
+        "small_slices",
+        "dimensions",
+        "table_null_rates",
+        "null_rate_flags"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "slices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/slice"
+          }
+        },
+        "small_slices": {
+          "type": "object",
+          "required": [
+            "slices",
+            "rows",
+            "reported"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "slices": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "rows": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "reported": {
+              "type": "boolean"
+            }
+          }
+        },
+        "dimensions": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/gap"
+          }
+        },
+        "table_null_rates": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "null_rate_flags": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "slice",
+              "column",
+              "null_rate",
+              "table_null_rate"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "slice": {
+                "type": "string"
+              },
+              "column": {
+                "type": "string"
+              },
+              "null_rate": {
+                "type": "number"
+              },
+              "table_null_rate": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "missing_from_data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "slice",
+              "reference_share"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "slice": {
+                "type": "string"
+              },
+              "reference_share": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "label": {
+          "$ref": "#/$defs/label"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+retail: PASS (1051 comparisons)
+retail_no_sample: PASS (1051 comparisons)
+retail_small_sample: PASS (1051 comparisons)
+retail_subset: PASS (522 comparisons)
+Could not sample product: The SELECT permission was denied on the object 'product'.
+Could not sample product: The SELECT permission was denied on the object 'product'.
+Could not sample product: The SELECT permission was denied on the object 'product'.
+retail_unreadable: PASS (1051 comparisons)
+warehouse: PASS (310 comparisons)
+warehouse_empty: PASS (310 comparisons)
+name_only: PASS (144 comparisons)
+id_named: PASS (144 comparisons)
+retail_one_row_sample: PASS (1051 comparisons)
+mixed_keys: PASS (287 comparisons)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/.venvs/refengine/lib/python3.11/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: overflow encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+key_names: PASS (372 comparisons)
+
+Intentional, documented differences from the baseline (fields changed):
+  FIX-1: cardinality_ratio=134, enum_values=7, is_enum=23, is_unique=63, null_rate=31
+  FIX-2: dataset.relationships=1, fk_ref_table=1, is_foreign_key=1, table.detected_fks=1
+  FIX-3: fk_ref_table=7, is_foreign_key=7
+  FIX-4: cardinality=47, enum_values=34, max_value=50, mean=69, min_value=50, null_count=30, std=52
+  FIX-5: cardinality_ratio=69, is_unique=69, null_rate=69
+  FIX-6: is_unique=53
+  FIX-7: dataset.relationships=2, fk_evidence=27, fk_ref_table=2, is_foreign_key=2, relationships.evidence=27, table.detected_fks=2
+  FIX-8: dataset.relationships=2, table.detected_fks=2
+  FIX-9: is_primary_key=3, table.primary_key=2
+  P1-18 enum rule (is_enum, enum_values): 54 columns no longer enums, 38 stay enums
+
+12/12 cases match (7344 field comparisons)
+exit=0

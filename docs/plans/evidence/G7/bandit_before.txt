@@ -1,0 +1,38 @@
+$ bandit -q -r src -ll   (as .github/workflows/security.yml)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b506_yaml_load.html
+   Location: src/shape/project/changes.py:451:14
+450	            _expanded_size(root, {}, set())
+451	        doc = yaml.load(text, Loader=_DatesAsText)  # noqa: S506 - a SafeLoader subclass
+452	        _refuse_duplicate_keys(text)
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 100203
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 6
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 147
+		Medium: 1
+		High: 1
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 8
+		High: 141
+Files skipped (0):
+exit 1
+
+$ bandit -q -r src -lll  (high severity only)
+		Medium: 1
+		High: 1
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 8
+		High: 141
+Files skipped (0):
+exit 1

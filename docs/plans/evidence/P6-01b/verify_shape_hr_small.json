@@ -1,0 +1,4054 @@
+{
+ "domain": "hr",
+ "scale": "small",
+ "impl": "shape",
+ "seed": 42,
+ "impl_seed": 1042,
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "tables": {
+  "department": {
+   "rows": {
+    "refengine": 30,
+    "impl": 30
+   },
+   "columns_refengine": [
+    "department_id",
+    "department_name",
+    "cost_center",
+    "is_active"
+   ],
+   "columns_impl": [
+    "department_id",
+    "department_name",
+    "cost_center",
+    "is_active"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "department_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "department_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "cost_center": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "is_active": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "department_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.23174059571793568
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.5033521782192557,
+     "stats": {
+      "mean": {
+       "refengine": 15.5,
+       "impl": 15.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 30.0,
+       "impl": 30.0
+      },
+      "std": {
+       "refengine": 8.65544144839919,
+       "impl": 8.65544144839919,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 30,
+      "impl": 30
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "department_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.23174059571793568
+     },
+     "distinct": {
+      "refengine": 16,
+      "impl": 15,
+      "ratio": 0.9375,
+      "baseline_max_ratio_dev": 0.5
+     },
+     "top10": [
+      {
+       "value": "Sales",
+       "refengine": 0.13333333333333333,
+       "impl": 0.13333333333333333
+      },
+      {
+       "value": "Marketing",
+       "refengine": 0.1,
+       "impl": 0.1
+      },
+      {
+       "value": "Engineering",
+       "refengine": 0.1,
+       "impl": 0.06666666666666667
+      },
+      {
+       "value": "Operations",
+       "refengine": 0.1,
+       "impl": 0.1
+      },
+      {
+       "value": "Data Analytics",
+       "refengine": 0.1,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "Information Technology",
+       "refengine": 0.1,
+       "impl": 0.0
+      },
+      {
+       "value": "Finance & Accounting",
+       "refengine": 0.06666666666666667,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "Project Management Office",
+       "refengine": 0.03333333333333333,
+       "impl": 0.06666666666666667
+      },
+      {
+       "value": "Legal",
+       "refengine": 0.03333333333333333,
+       "impl": 0.0
+      },
+      {
+       "value": "Health & Safety",
+       "refengine": 0.03333333333333333,
+       "impl": 0.0
+      },
+      {
+       "value": "Customer Service",
+       "refengine": 0.03333333333333333,
+       "impl": 0.13333333333333333
+      },
+      {
+       "value": "Compliance",
+       "refengine": 0.03333333333333333,
+       "impl": 0.1
+      },
+      {
+       "value": "Procurement",
+       "refengine": 0.03333333333333333,
+       "impl": 0.06666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.3666666666666667,
+     "tvd_baseline": 0.6000000000000001,
+     "tvd_tol": 1.7480774889473265,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "cost_center": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.23174059571793568
+     },
+     "distinct": {
+      "refengine": 30,
+      "impl": 30,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "CC-0001",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0002",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0003",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0004",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0005",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0006",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0007",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0008",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0009",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0010",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "CC-{seq:4}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_active": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.23174059571793568
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "refengine": 0.9,
+       "impl": 0.9333333333333333
+      },
+      {
+       "value": "false",
+       "refengine": 0.1,
+       "impl": 0.06666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.03333333333333333,
+     "tvd_baseline": 0.06666666666666667,
+     "tvd_tol": 0.6180387232371032,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "position": {
+   "rows": {
+    "refengine": 80,
+    "impl": 80
+   },
+   "columns_refengine": [
+    "position_id",
+    "position_title",
+    "pay_grade",
+    "is_exempt",
+    "min_salary",
+    "max_salary"
+   ],
+   "columns_impl": [
+    "position_id",
+    "position_title",
+    "pay_grade",
+    "is_exempt",
+    "min_salary",
+    "max_salary"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "position_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "position_title": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "pay_grade": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "is_exempt": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "min_salary": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "max_salary": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "position_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.3082389993889093,
+     "stats": {
+      "mean": {
+       "refengine": 40.5,
+       "impl": 40.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 80.0,
+       "impl": 80.0
+      },
+      "std": {
+       "refengine": 23.092206477510977,
+       "impl": 23.092206477510977,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 80,
+      "impl": 80
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "position_title": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "distinct": {
+      "refengine": 51,
+      "impl": 50,
+      "ratio": 0.9803921568627451,
+      "baseline_max_ratio_dev": 0.1568627450980392
+     },
+     "top10": [
+      {
+       "value": "Data Scientist",
+       "refengine": 0.05,
+       "impl": 0.0125
+      },
+      {
+       "value": "Sales Representative",
+       "refengine": 0.05,
+       "impl": 0.025
+      },
+      {
+       "value": "Training Specialist",
+       "refengine": 0.0375,
+       "impl": 0.025
+      },
+      {
+       "value": "Account Executive",
+       "refengine": 0.0375,
+       "impl": 0.0125
+      },
+      {
+       "value": "Security Specialist",
+       "refengine": 0.0375,
+       "impl": 0.0125
+      },
+      {
+       "value": "Accountant",
+       "refengine": 0.0375,
+       "impl": 0.0375
+      },
+      {
+       "value": "Data Engineer",
+       "refengine": 0.025,
+       "impl": 0.0125
+      },
+      {
+       "value": "Compliance Officer",
+       "refengine": 0.025,
+       "impl": 0.0375
+      },
+      {
+       "value": "Scrum Master",
+       "refengine": 0.025,
+       "impl": 0.0
+      },
+      {
+       "value": "Logistics Coordinator",
+       "refengine": 0.025,
+       "impl": 0.0125
+      },
+      {
+       "value": "Administrative Assistant",
+       "refengine": 0.0125,
+       "impl": 0.0375
+      },
+      {
+       "value": "Senior Accountant",
+       "refengine": 0.0,
+       "impl": 0.0375
+      },
+      {
+       "value": "Technical Support Specialist",
+       "refengine": 0.025,
+       "impl": 0.0375
+      },
+      {
+       "value": "Graphic Designer",
+       "refengine": 0.0125,
+       "impl": 0.0375
+      },
+      {
+       "value": "Procurement Specialist",
+       "refengine": 0.0125,
+       "impl": 0.0375
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.4624999999999999,
+     "tvd_baseline": 0.5625,
+     "tvd_tol": 1.9111792024713428,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "pay_grade": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "distinct": {
+      "refengine": 7,
+      "impl": 7,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "G3",
+       "refengine": 0.2375,
+       "impl": 0.3125
+      },
+      {
+       "value": "G2",
+       "refengine": 0.2125,
+       "impl": 0.1625
+      },
+      {
+       "value": "G4",
+       "refengine": 0.2125,
+       "impl": 0.1875
+      },
+      {
+       "value": "G5",
+       "refengine": 0.1625,
+       "impl": 0.0875
+      },
+      {
+       "value": "G1",
+       "refengine": 0.1,
+       "impl": 0.1875
+      },
+      {
+       "value": "G7",
+       "refengine": 0.0375,
+       "impl": 0.0125
+      },
+      {
+       "value": "G6",
+       "refengine": 0.0375,
+       "impl": 0.05
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.17500000000000002,
+     "tvd_baseline": 0.175,
+     "tvd_tol": 0.7080523079119723,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_exempt": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "refengine": 0.625,
+       "impl": 0.7125
+      },
+      {
+       "value": "false",
+       "refengine": 0.375,
+       "impl": 0.2875
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.08750000000000002,
+     "tvd_baseline": 0.08750000000000002,
+     "tvd_tol": 0.37846987830302403,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "min_salary": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "ks": 0.11249999999999993,
+     "ks_baseline": 0.125,
+     "ks_tol": 0.3082389993889093,
+     "stats": {
+      "mean": {
+       "refengine": 74754.16363281265,
+       "impl": 78574.53512959833
+      },
+      "min": {
+       "refengine": 32036.271559988054,
+       "impl": 30657.73104064174
+      },
+      "max": {
+       "refengine": 118677.33105068424,
+       "impl": 118051.1064764808
+      },
+      "std": {
+       "refengine": 24810.11643494131,
+       "impl": 25226.474569069964,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 80,
+      "impl": 80
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "max_salary": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "ks": 0.13749999999999996,
+     "ks_baseline": 0.13749999999999996,
+     "ks_tol": 0.3082389993889093,
+     "stats": {
+      "mean": {
+       "refengine": 115161.07949999999,
+       "impl": 122126.73162499999
+      },
+      "min": {
+       "refengine": 45679.97,
+       "impl": 49940.87
+      },
+      "max": {
+       "refengine": 200698.2,
+       "impl": 207006.52
+      },
+      "std": {
+       "refengine": 38950.56835509223,
+       "impl": 40745.33161806946,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 80,
+      "impl": 80
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "employee": {
+   "rows": {
+    "refengine": 500,
+    "impl": 500
+   },
+   "columns_refengine": [
+    "employee_id",
+    "department_id",
+    "position_id",
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "hire_date",
+    "manager_id",
+    "employment_status",
+    "employment_type"
+   ],
+   "columns_impl": [
+    "employee_id",
+    "department_id",
+    "position_id",
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "hire_date",
+    "manager_id",
+    "employment_status",
+    "employment_type"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "employee_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "department_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "position_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "first_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "last_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "email": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "phone": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "hire_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "manager_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "employment_status": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "employment_type": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "employee_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.1232955997555637,
+     "stats": {
+      "mean": {
+       "refengine": 250.5,
+       "impl": 250.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500.0,
+       "impl": 500.0
+      },
+      "std": {
+       "refengine": 144.33727862198316,
+       "impl": 144.33727862198316,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 500,
+      "impl": 500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "department_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "ks": 0.03200000000000003,
+     "ks_baseline": 0.08200000000000002,
+     "ks_tol": 0.12500000000000003,
+     "stats": {
+      "mean": {
+       "refengine": 5.088,
+       "impl": 5.116
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 30.0,
+       "impl": 29.0
+      },
+      "std": {
+       "refengine": 6.414378847558039,
+       "impl": 6.051325805143861,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 29,
+      "impl": 29
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "position_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "ks": 0.03599999999999992,
+     "ks_baseline": 0.062000000000000055,
+     "ks_tol": 0.1232955997555637,
+     "stats": {
+      "mean": {
+       "refengine": 12.102,
+       "impl": 12.326
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 77.0,
+       "impl": 79.0
+      },
+      "std": {
+       "refengine": 17.419517674149304,
+       "impl": 17.200922184580687,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 66,
+      "impl": 65
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "first_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 480,
+      "impl": 480,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.025000000000000022
+     },
+     "top10": [
+      {
+       "value": "Jeen",
+       "refengine": 0.006,
+       "impl": 0.0
+      },
+      {
+       "value": "Logan",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Hian",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Waon",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Danielle",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Walter",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Vaoa",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Proa",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Gra",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Chlyn",
+       "refengine": 0.004,
+       "impl": 0.002
+      },
+      {
+       "value": "Maverick",
+       "refengine": 0.0,
+       "impl": 0.006
+      },
+      {
+       "value": "Clis",
+       "refengine": 0.0,
+       "impl": 0.004
+      },
+      {
+       "value": "Haira",
+       "refengine": 0.0,
+       "impl": 0.004
+      },
+      {
+       "value": "Naria",
+       "refengine": 0.0,
+       "impl": 0.004
+      },
+      {
+       "value": "Kea",
+       "refengine": 0.0,
+       "impl": 0.004
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.9220000000000004,
+     "tvd_baseline": 0.9360000000000004,
+     "tvd_tol": 2.345292057134016,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "last_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 480,
+      "impl": 473,
+      "ratio": 0.9854166666666667,
+      "baseline_max_ratio_dev": 0.02083333333333337
+     },
+     "top10": [
+      {
+       "value": "Beaslwood",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Frye",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Park",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Hammridge",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Dowfield",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Valeham",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Martiman",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Torres",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Odom",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Barbfield",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Mcgewell",
+       "refengine": 0.0,
+       "impl": 0.006
+      },
+      {
+       "value": "Underidge",
+       "refengine": 0.0,
+       "impl": 0.004
+      },
+      {
+       "value": "Brady",
+       "refengine": 0.0,
+       "impl": 0.004
+      },
+      {
+       "value": "Burgridge",
+       "refengine": 0.0,
+       "impl": 0.004
+      },
+      {
+       "value": "Mcleashire",
+       "refengine": 0.0,
+       "impl": 0.004
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.9160000000000004,
+     "tvd_baseline": 0.9200000000000004,
+     "tvd_tol": 2.345292057134016,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "email": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 500,
+      "impl": 500,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "gedra.marqwick712@mail.ru",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "asria.dillland3@sky.com",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "niron.monrwood817@seznam.cz",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "ziane.homan156@post.com",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "ine.deldermott153@mail.ru",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "jinna.callaham362@mailfence.com",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "geos.andreham670@aol.com",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "ziin.morworth194@consultant.com",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "hiin.beaslwood361@outlook.com",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "juria.ford623@earthlink.net",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "ashton.underidge517@web.de",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "veana.johton382@msn.com",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "muos.cunniwood106@icloud.com",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "ludra.grimwood29@comcast.net",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "mais.walter90@virginmedia.com",
+       "refengine": 0.0,
+       "impl": 0.002
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "phone": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.09,
+      "impl": 0.078,
+      "baseline_max_abs_diff": 0.018000000000000002,
+      "tol": 0.09049861877399014
+     },
+     "distinct": {
+      "refengine": 455,
+      "impl": 461,
+      "ratio": 1.0131868131868131,
+      "baseline_max_ratio_dev": 0.01978021978021971
+     },
+     "top10": [
+      {
+       "value": "(398) 499-6103",
+       "refengine": 0.002197802197802198,
+       "impl": 0.0
+      },
+      {
+       "value": "(807) 992-5874",
+       "refengine": 0.002197802197802198,
+       "impl": 0.0
+      },
+      {
+       "value": "(592) 205-7103",
+       "refengine": 0.002197802197802198,
+       "impl": 0.0
+      },
+      {
+       "value": "(630) 439-7322",
+       "refengine": 0.002197802197802198,
+       "impl": 0.0
+      },
+      {
+       "value": "(996) 856-2800",
+       "refengine": 0.002197802197802198,
+       "impl": 0.0
+      },
+      {
+       "value": "(203) 773-4921",
+       "refengine": 0.002197802197802198,
+       "impl": 0.0
+      },
+      {
+       "value": "(676) 336-9691",
+       "refengine": 0.002197802197802198,
+       "impl": 0.0
+      },
+      {
+       "value": "(422) 942-5213",
+       "refengine": 0.002197802197802198,
+       "impl": 0.0
+      },
+      {
+       "value": "(757) 370-5467",
+       "refengine": 0.002197802197802198,
+       "impl": 0.0
+      },
+      {
+       "value": "(598) 816-6731",
+       "refengine": 0.002197802197802198,
+       "impl": 0.0
+      },
+      {
+       "value": "(953) 626-4024",
+       "refengine": 0.0,
+       "impl": 0.0021691973969631237
+      },
+      {
+       "value": "(245) 839-3981",
+       "refengine": 0.0,
+       "impl": 0.0021691973969631237
+      },
+      {
+       "value": "(345) 558-7576",
+       "refengine": 0.0,
+       "impl": 0.0021691973969631237
+      },
+      {
+       "value": "(691) 607-4815",
+       "refengine": 0.0,
+       "impl": 0.0021691973969631237
+      },
+      {
+       "value": "(609) 902-3592",
+       "refengine": 0.0,
+       "impl": 0.0021691973969631237
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "(AAA) EEE-SSSS, AAA/EEE 200..998, SSSS 1000..9998",
+     "distinct_ratio_tol": 0.029670329670329565,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "hire_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "ks": 0.05399999999999999,
+     "ks_baseline": 0.07400000000000007,
+     "ks_tol": 0.1232955997555637,
+     "stats": {
+      "mean": {
+       "refengine": "2020-05-07 19:59:58.959769344",
+       "impl": "2020-03-06 11:06:52.606495744"
+      },
+      "min": {
+       "refengine": "2015-01-20 10:49:29.173253888",
+       "impl": "2015-01-11 17:35:27.411271936"
+      },
+      "max": {
+       "refengine": "2025-12-24 11:50:27.196530944",
+       "impl": "2025-12-28 18:17:23.251324928"
+      },
+      "std": {
+       "refengine": 1083.9117502015908,
+       "impl": 1145.0319714846137,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 500,
+      "impl": 500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "manager_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.01,
+      "impl": 0.01,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03146426544510455
+     },
+     "ks": 0.03434343434343434,
+     "ks_baseline": 0.05252525252525253,
+     "ks_tol": 0.12391674020940599,
+     "stats": {
+      "mean": {
+       "refengine": 116.13939393939394,
+       "impl": 113.57575757575758
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 335.0,
+       "impl": 335.0
+      },
+      "std": {
+       "refengine": 109.2997489237016,
+       "impl": 110.06852694765239,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 221,
+      "impl": 219
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employment_status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Active",
+       "refengine": 0.798,
+       "impl": 0.822
+      },
+      {
+       "value": "Terminated",
+       "refengine": 0.116,
+       "impl": 0.094
+      },
+      {
+       "value": "On Leave",
+       "refengine": 0.064,
+       "impl": 0.054
+      },
+      {
+       "value": "Retired",
+       "refengine": 0.022,
+       "impl": 0.03
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.03199999999999996,
+     "tvd_baseline": 0.04599999999999997,
+     "tvd_tol": 0.21409489393833253,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employment_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Full-Time",
+       "refengine": 0.758,
+       "impl": 0.75
+      },
+      {
+       "value": "Part-Time",
+       "refengine": 0.104,
+       "impl": 0.13
+      },
+      {
+       "value": "Contract",
+       "refengine": 0.094,
+       "impl": 0.062
+      },
+      {
+       "value": "Temporary",
+       "refengine": 0.044,
+       "impl": 0.058
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.04000000000000001,
+     "tvd_baseline": 0.050000000000000024,
+     "tvd_tol": 0.21409489393833253,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "compensation": {
+   "rows": {
+    "refengine": 1500,
+    "impl": 1500
+   },
+   "columns_refengine": [
+    "compensation_id",
+    "employee_id",
+    "effective_date",
+    "base_salary",
+    "bonus_pct",
+    "change_reason"
+   ],
+   "columns_impl": [
+    "compensation_id",
+    "employee_id",
+    "effective_date",
+    "base_salary",
+    "bonus_pct",
+    "change_reason"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "compensation_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "employee_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "effective_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "base_salary": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "bonus_pct": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "change_reason": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "compensation_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.004712473597528946
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.07118474770877106,
+     "stats": {
+      "mean": {
+       "refengine": 750.5,
+       "impl": 750.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 1500.0,
+       "impl": 1500.0
+      },
+      "std": {
+       "refengine": 433.01260566716377,
+       "impl": 433.01260566716377,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1500,
+      "impl": 1500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employee_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.004712473597528946
+     },
+     "ks": 0.033333333333333326,
+     "ks_baseline": 0.03466666666666662,
+     "ks_tol": 0.07118474770877106,
+     "stats": {
+      "mean": {
+       "refengine": 251.48933333333332,
+       "impl": 247.176
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500.0,
+       "impl": 500.0
+      },
+      "std": {
+       "refengine": 143.39005272178247,
+       "impl": 143.6221420626592,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 472,
+      "impl": 477
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "effective_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.004712473597528946
+     },
+     "ks": 0.028000000000000025,
+     "ks_baseline": 0.03400000000000003,
+     "ks_tol": 0.07118474770877106,
+     "stats": {
+      "mean": {
+       "refengine": "2020-07-11 22:38:20.300888832",
+       "impl": "2020-08-16 11:06:50.737278464"
+      },
+      "min": {
+       "refengine": "2015-01-06 21:07:12.626599424",
+       "impl": "2015-01-08 12:43:27.972526080"
+      },
+      "max": {
+       "refengine": "2025-12-22 09:35:52.908441344",
+       "impl": "2025-12-29 00:14:12.845323008"
+      },
+      "std": {
+       "refengine": 1163.8869780689338,
+       "impl": 1151.7554013159238,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 1500,
+      "impl": 1500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "base_salary": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.004712473597528946
+     },
+     "ks": 0.03266666666666673,
+     "ks_baseline": 0.03200000000000003,
+     "ks_tol": 0.07118474770877106,
+     "stats": {
+      "mean": {
+       "refengine": 69012.29730495349,
+       "impl": 67203.07933296062
+      },
+      "min": {
+       "refengine": 28000.0,
+       "impl": 28000.0
+      },
+      "max": {
+       "refengine": 306850.98933082493,
+       "impl": 312016.0488940503
+      },
+      "std": {
+       "refengine": 36081.200947569654,
+       "impl": 34084.13077185223,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1404,
+      "impl": 1408
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "bonus_pct": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.004712473597528946
+     },
+     "ks": 0.02533333333333332,
+     "ks_baseline": 0.05399999999999999,
+     "ks_tol": 0.08299999999999999,
+     "stats": {
+      "mean": {
+       "refengine": 12.268256051311539,
+       "impl": 12.404598717923609
+      },
+      "min": {
+       "refengine": 0.0023453679892815327,
+       "impl": 0.03486526232344134
+      },
+      "max": {
+       "refengine": 24.989776582878516,
+       "impl": 24.99691593226735
+      },
+      "std": {
+       "refengine": 7.241218222808286,
+       "impl": 7.189651190389927,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1500,
+      "impl": 1500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "change_reason": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.004712473597528946
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Annual Review",
+       "refengine": 0.4073333333333333,
+       "impl": 0.384
+      },
+      {
+       "value": "Promotion",
+       "refengine": 0.23466666666666666,
+       "impl": 0.2773333333333333
+      },
+      {
+       "value": "Market Adjustment",
+       "refengine": 0.15066666666666667,
+       "impl": 0.13666666666666666
+      },
+      {
+       "value": "New Hire",
+       "refengine": 0.114,
+       "impl": 0.124
+      },
+      {
+       "value": "Transfer",
+       "refengine": 0.09333333333333334,
+       "impl": 0.078
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.05266666666666666,
+     "tvd_baseline": 0.03333333333333331,
+     "tvd_tol": 0.1381976597885342,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "performance_review": {
+   "rows": {
+    "refengine": 1250,
+    "impl": 1250
+   },
+   "columns_refengine": [
+    "review_id",
+    "employee_id",
+    "reviewer_id",
+    "review_date",
+    "review_period_year",
+    "rating",
+    "comments"
+   ],
+   "columns_impl": [
+    "review_id",
+    "employee_id",
+    "reviewer_id",
+    "review_date",
+    "review_period_year",
+    "rating",
+    "comments"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "review_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "employee_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "reviewer_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "review_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "review_period_year": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "rating": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "comments": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "review_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.005654591055063133
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.07797898414081621,
+     "stats": {
+      "mean": {
+       "refengine": 625.5,
+       "impl": 625.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 1250.0,
+       "impl": 1250.0
+      },
+      "std": {
+       "refengine": 360.84380277344377,
+       "impl": 360.84380277344377,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1250,
+      "impl": 1250
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employee_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.005654591055063133
+     },
+     "ks": 0.02639999999999998,
+     "ks_baseline": 0.04959999999999998,
+     "ks_tol": 0.07797898414081621,
+     "stats": {
+      "mean": {
+       "refengine": 242.9928,
+       "impl": 246.8896
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500.0,
+       "impl": 500.0
+      },
+      "std": {
+       "refengine": 144.86921256139968,
+       "impl": 147.22217432112595,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 457,
+      "impl": 464
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "reviewer_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.005654591055063133
+     },
+     "ks": 0.018399999999999972,
+     "ks_baseline": 0.040000000000000036,
+     "ks_tol": 0.07797898414081621,
+     "stats": {
+      "mean": {
+       "refengine": 251.52,
+       "impl": 252.2216
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500.0,
+       "impl": 499.0
+      },
+      "std": {
+       "refengine": 143.78416046282706,
+       "impl": 142.9837238759713,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 446,
+      "impl": 469
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "review_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.005654591055063133
+     },
+     "ks": 0.031200000000000006,
+     "ks_baseline": 0.040000000000000036,
+     "ks_tol": 0.07797898414081621,
+     "stats": {
+      "mean": {
+       "refengine": "2022-12-26 23:05:14.573978624",
+       "impl": "2023-01-05 07:19:51.542818816"
+      },
+      "min": {
+       "refengine": "2020-01-01 04:23:23.520121344",
+       "impl": "2020-01-04 23:06:22.183738880"
+      },
+      "max": {
+       "refengine": "2025-12-30 10:00:06.964896256",
+       "impl": "2025-12-28 03:35:55.080918016"
+      },
+      "std": {
+       "refengine": 628.0210476670717,
+       "impl": 628.3605076013278,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 1250,
+      "impl": 1250
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "review_period_year": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.005654591055063133
+     },
+     "ks": 0.021599999999999953,
+     "ks_baseline": 0.024800000000000044,
+     "ks_tol": 0.07797898414081621,
+     "stats": {
+      "mean": {
+       "refengine": 2022.2112,
+       "impl": 2022.1632
+      },
+      "min": {
+       "refengine": 2020.0,
+       "impl": 2020.0
+      },
+      "max": {
+       "refengine": 2024.0,
+       "impl": 2024.0
+      },
+      "std": {
+       "refengine": 1.4125843550032684,
+       "impl": 1.3927547379204996,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "rating": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.005654591055063133
+     },
+     "ks": 0.022399999999999975,
+     "ks_baseline": 0.03520000000000001,
+     "ks_tol": 0.07797898414081621,
+     "stats": {
+      "mean": {
+       "refengine": 3.2856,
+       "impl": 3.2456
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 5.0,
+       "impl": 5.0
+      },
+      "std": {
+       "refengine": 1.0131301199747247,
+       "impl": 0.9869552370801828,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "comments": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.1968,
+      "impl": 0.1976,
+      "baseline_max_abs_diff": 0.009599999999999997,
+      "tol": 0.07951597575330382
+     },
+     "distinct": {
+      "refengine": 791,
+      "impl": 805,
+      "ratio": 1.0176991150442478,
+      "baseline_max_ratio_dev": 0.030341340075853318
+     },
+     "top10": [
+      {
+       "value": "Customer revenue has been consolidated through our automated program.",
+       "refengine": 0.00398406374501992,
+       "impl": 0.0
+      },
+      {
+       "value": "The secondary quality was completed by the engagement.",
+       "refengine": 0.00398406374501992,
+       "impl": 0.0009970089730807576
+      },
+      {
+       "value": "The new sustainable project framework supports scalability objectives.",
+       "refengine": 0.00398406374501992,
+       "impl": 0.0
+      },
+      {
+       "value": "The comprehensive workflow platform enables seamless profitability integration.",
+       "refengine": 0.00398406374501992,
+       "impl": 0.0009970089730807576
+      },
+      {
+       "value": "Please review the automated deliverable report and provide feedback.",
+       "refengine": 0.00398406374501992,
+       "impl": 0.0
+      },
+      {
+       "value": "Customer margin has been updated through our customized program.",
+       "refengine": 0.00398406374501992,
+       "impl": 0.0
+      },
+      {
+       "value": "The approved forecast project exceeded satisfaction expectations.",
+       "refengine": 0.00398406374501992,
+       "impl": 0.0019940179461615153
+      },
+      {
+       "value": "Our operational milestone strategy will improve accountability significantly.",
+       "refengine": 0.00398406374501992,
+       "impl": 0.0009970089730807576
+      },
+      {
+       "value": "The team streamlined the final assessment successfully.",
+       "refengine": 0.00398406374501992,
+       "impl": 0.0
+      },
+      {
+       "value": "This analysis requires optimized security to be effective.",
+       "refengine": 0.00398406374501992,
+       "impl": 0.0009970089730807576
+      },
+      {
+       "value": "We need to streamlined the pending report before the deadline.",
+       "refengine": 0.0,
+       "impl": 0.003988035892323031
+      },
+      {
+       "value": "The interim process initiative will drive acquisition growth.",
+       "refengine": 0.00099601593625498,
+       "impl": 0.003988035892323031
+      },
+      {
+       "value": "We are committed to delivering technical plan to all stakeholders.",
+       "refengine": 0.0,
+       "impl": 0.003988035892323031
+      },
+      {
+       "value": "The team documented the pending product successfully.",
+       "refengine": 0.0,
+       "impl": 0.0029910269192422734
+      },
+      {
+       "value": "Regular system updates ensure primary compliance with standards.",
+       "refengine": 0.0,
+       "impl": 0.0029910269192422734
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.6782362077115267,
+     "tvd_baseline": 0.6886767446343657,
+     "tvd_tol": 1.9041210380613545,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "time_off_request": {
+   "rows": {
+    "refengine": 2500,
+    "impl": 2500
+   },
+   "columns_refengine": [
+    "request_id",
+    "employee_id",
+    "leave_type",
+    "start_date",
+    "hours_requested",
+    "status",
+    "end_date"
+   ],
+   "columns_impl": [
+    "request_id",
+    "employee_id",
+    "leave_type",
+    "start_date",
+    "hours_requested",
+    "status",
+    "end_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "request_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "employee_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "leave_type": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "start_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "hours_requested": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "status": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "end_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "request_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.05513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": 1250.5,
+       "impl": 1250.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 2500.0,
+       "impl": 2500.0
+      },
+      "std": {
+       "refengine": 721.6877787520029,
+       "impl": 721.6877787520029,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 2500,
+      "impl": 2500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employee_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.024799999999999933,
+     "ks_baseline": 0.03560000000000002,
+     "ks_tol": 0.05540000000000003,
+     "stats": {
+      "mean": {
+       "refengine": 253.4268,
+       "impl": 249.0468
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500.0,
+       "impl": 500.0
+      },
+      "std": {
+       "refengine": 144.37353442289898,
+       "impl": 143.52132597548004,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 494,
+      "impl": 497
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "leave_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "distinct": {
+      "refengine": 7,
+      "impl": 7,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "PTO",
+       "refengine": 0.4584,
+       "impl": 0.4428
+      },
+      {
+       "value": "Sick",
+       "refengine": 0.2488,
+       "impl": 0.2596
+      },
+      {
+       "value": "Personal",
+       "refengine": 0.1128,
+       "impl": 0.1224
+      },
+      {
+       "value": "Parental",
+       "refengine": 0.0556,
+       "impl": 0.0608
+      },
+      {
+       "value": "Unpaid",
+       "refengine": 0.052,
+       "impl": 0.0504
+      },
+      {
+       "value": "Bereavement",
+       "refengine": 0.042,
+       "impl": 0.038
+      },
+      {
+       "value": "Jury Duty",
+       "refengine": 0.0304,
+       "impl": 0.026
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.025599999999999977,
+     "tvd_baseline": 0.032399999999999984,
+     "tvd_tol": 0.12666024736934256,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "start_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.0228,
+     "ks_baseline": 0.029600000000000015,
+     "ks_tol": 0.05513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": "2022-12-18 14:56:55.872997632",
+       "impl": "2023-01-06 10:43:52.962394880"
+      },
+      "min": {
+       "refengine": "2020-01-01 18:02:54.104164864",
+       "impl": "2020-01-01 08:04:12.272041984"
+      },
+      "max": {
+       "refengine": "2025-12-30 05:17:48.452417280",
+       "impl": "2025-12-30 10:22:58.282308096"
+      },
+      "std": {
+       "refengine": 638.62779518671,
+       "impl": 629.1821503995169,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 2500,
+      "impl": 2500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "hours_requested": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.018799999999999997,
+     "ks_baseline": 0.03319999999999998,
+     "ks_tol": 0.05513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": 41.550657353455236,
+       "impl": 41.91398747890209
+      },
+      "min": {
+       "refengine": 4.003888714712728,
+       "impl": 4.016679059523545
+      },
+      "max": {
+       "refengine": 79.98493635948331,
+       "impl": 79.99185738185452
+      },
+      "std": {
+       "refengine": 22.394753553166474,
+       "impl": 22.088046295913017,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 2500,
+      "impl": 2500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Approved",
+       "refengine": 0.7628,
+       "impl": 0.734
+      },
+      {
+       "value": "Pending",
+       "refengine": 0.0924,
+       "impl": 0.1116
+      },
+      {
+       "value": "Denied",
+       "refengine": 0.0728,
+       "impl": 0.0828
+      },
+      {
+       "value": "Cancelled",
+       "refengine": 0.072,
+       "impl": 0.0716
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.029200000000000025,
+     "tvd_baseline": 0.022399999999999996,
+     "tvd_tol": 0.09574614729634384,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "end_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.023599999999999996,
+     "ks_baseline": 0.029200000000000004,
+     "ks_tol": 0.05513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": "2022-12-26 01:10:22.272997632",
+       "impl": "2023-01-14 00:55:47.202394880"
+      },
+      "min": {
+       "refengine": "2020-01-05 18:02:54.104164864",
+       "impl": "2020-01-03 08:04:12.272041984"
+      },
+      "max": {
+       "refengine": "2026-01-07 21:40:22.134324736",
+       "impl": "2026-01-10 13:44:59.046407936"
+      },
+      "std": {
+       "refengine": 638.7483451088348,
+       "impl": 629.1001566262119,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 2500,
+      "impl": 2500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "training": {
+   "rows": {
+    "refengine": 100,
+    "impl": 100
+   },
+   "columns_refengine": [
+    "training_id",
+    "course_name",
+    "category",
+    "duration_hours",
+    "is_mandatory"
+   ],
+   "columns_impl": [
+    "training_id",
+    "course_name",
+    "category",
+    "duration_hours",
+    "is_mandatory"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "training_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "course_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "category": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "duration_hours": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "is_mandatory": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "training_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.2756973423800469,
+     "stats": {
+      "mean": {
+       "refengine": 50.5,
+       "impl": 50.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "refengine": 28.86607004772212,
+       "impl": 28.86607004772212,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "course_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "refengine": 42,
+      "impl": 47,
+      "ratio": 1.119047619047619,
+      "baseline_max_ratio_dev": 0.04761904761904767
+     },
+     "top10": [
+      {
+       "value": "Fire Safety & Emergency Procedures",
+       "refengine": 0.07,
+       "impl": 0.01
+      },
+      {
+       "value": "Data Privacy & GDPR Compliance",
+       "refengine": 0.06,
+       "impl": 0.02
+      },
+      {
+       "value": "New Employee Orientation",
+       "refengine": 0.06,
+       "impl": 0.06
+      },
+      {
+       "value": "Code of Conduct Review",
+       "refengine": 0.05,
+       "impl": 0.03
+      },
+      {
+       "value": "Python Programming Basics",
+       "refengine": 0.04,
+       "impl": 0.01
+      },
+      {
+       "value": "Workplace Harassment Prevention",
+       "refengine": 0.04,
+       "impl": 0.02
+      },
+      {
+       "value": "Quality Management Systems",
+       "refengine": 0.04,
+       "impl": 0.01
+      },
+      {
+       "value": "Leadership Essentials",
+       "refengine": 0.04,
+       "impl": 0.01
+      },
+      {
+       "value": "First Aid & CPR Certification",
+       "refengine": 0.04,
+       "impl": 0.01
+      },
+      {
+       "value": "Effective Communication Skills",
+       "refengine": 0.03,
+       "impl": 0.02
+      },
+      {
+       "value": "Cybersecurity Awareness",
+       "refengine": 0.02,
+       "impl": 0.06
+      },
+      {
+       "value": "Conflict Resolution Workshop",
+       "refengine": 0.0,
+       "impl": 0.06
+      },
+      {
+       "value": "Financial Literacy for Managers",
+       "refengine": 0.02,
+       "impl": 0.04
+      },
+      {
+       "value": "Stress Management & Wellness",
+       "refengine": 0.0,
+       "impl": 0.04
+      },
+      {
+       "value": "Business Writing Skills",
+       "refengine": 0.0,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.42999999999999994,
+     "tvd_baseline": 0.41000000000000003,
+     "tvd_tol": 1.551264883747923,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "category": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "refengine": 7,
+      "impl": 7,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Compliance",
+       "refengine": 0.26,
+       "impl": 0.27
+      },
+      {
+       "value": "Technical",
+       "refengine": 0.22,
+       "impl": 0.16
+      },
+      {
+       "value": "Leadership",
+       "refengine": 0.18,
+       "impl": 0.17
+      },
+      {
+       "value": "Safety",
+       "refengine": 0.13,
+       "impl": 0.14
+      },
+      {
+       "value": "Soft Skills",
+       "refengine": 0.1,
+       "impl": 0.15
+      },
+      {
+       "value": "Onboarding",
+       "refengine": 0.07,
+       "impl": 0.06
+      },
+      {
+       "value": "Diversity",
+       "refengine": 0.04,
+       "impl": 0.05
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.08,
+     "tvd_baseline": 0.13,
+     "tvd_tol": 0.6333012368467129,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "duration_hours": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.24000000000000005,
+     "ks_baseline": 0.17999999999999994,
+     "ks_tol": 0.2756973423800469,
+     "stats": {
+      "mean": {
+       "refengine": 17.884914493647535,
+       "impl": 22.044208513287877
+      },
+      "min": {
+       "refengine": 0.5390210999645715,
+       "impl": 1.421500770783385
+      },
+      "max": {
+       "refengine": 39.17334725047743,
+       "impl": 39.63583698618316
+      },
+      "std": {
+       "refengine": 10.930230129545462,
+       "impl": 11.021170727471464,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_mandatory": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "false",
+       "refengine": 0.59,
+       "impl": 0.64
+      },
+      {
+       "value": "true",
+       "refengine": 0.41,
+       "impl": 0.36
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.05000000000000002,
+     "tvd_baseline": 0.060000000000000026,
+     "tvd_tol": 0.3385137501286538,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "training_enrollment": {
+   "rows": {
+    "refengine": 2000,
+    "impl": 2000
+   },
+   "columns_refengine": [
+    "enrollment_id",
+    "employee_id",
+    "training_id",
+    "enrollment_date",
+    "status",
+    "score",
+    "completion_date"
+   ],
+   "columns_impl": [
+    "enrollment_id",
+    "employee_id",
+    "training_id",
+    "enrollment_date",
+    "status",
+    "score",
+    "completion_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "enrollment_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "employee_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "training_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "enrollment_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "status": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "score": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "completion_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "enrollment_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "refengine": 1000.5,
+       "impl": 1000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 2000.0,
+       "impl": 2000.0
+      },
+      "std": {
+       "refengine": 577.3501970208376,
+       "impl": 577.3501970208376,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 2000,
+      "impl": 2000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employee_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.031000000000000028,
+     "ks_baseline": 0.044999999999999984,
+     "ks_tol": 0.06949999999999998,
+     "stats": {
+      "mean": {
+       "refengine": 244.297,
+       "impl": 251.702
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500.0,
+       "impl": 500.0
+      },
+      "std": {
+       "refengine": 145.63932776211237,
+       "impl": 145.17257728648343,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 488,
+      "impl": 495
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "training_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.024500000000000022,
+     "ks_baseline": 0.04149999999999998,
+     "ks_tol": 0.06424999999999997,
+     "stats": {
+      "mean": {
+       "refengine": 12.9695,
+       "impl": 13.923
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "refengine": 19.90408424796278,
+       "impl": 21.267088916915732,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 96,
+      "impl": 97
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "enrollment_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.03350000000000003,
+     "ks_baseline": 0.040000000000000036,
+     "ks_tol": 0.062000000000000055,
+     "stats": {
+      "mean": {
+       "refengine": "2022-12-25 01:43:11.618463488",
+       "impl": "2023-01-09 09:06:05.213592832"
+      },
+      "min": {
+       "refengine": "2020-01-01 21:07:38.285173248",
+       "impl": "2020-01-01 02:13:50.092323072"
+      },
+      "max": {
+       "refengine": "2025-12-28 20:42:32.629492736",
+       "impl": "2025-12-29 11:13:36.731612928"
+      },
+      "std": {
+       "refengine": 635.3036767642117,
+       "impl": 628.8388723570271,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 2000,
+      "impl": 2000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Completed",
+       "refengine": 0.6375,
+       "impl": 0.6615
+      },
+      {
+       "value": "In Progress",
+       "refengine": 0.1565,
+       "impl": 0.129
+      },
+      {
+       "value": "Enrolled",
+       "refengine": 0.112,
+       "impl": 0.113
+      },
+      {
+       "value": "Dropped",
+       "refengine": 0.069,
+       "impl": 0.0675
+      },
+      {
+       "value": "Failed",
+       "refengine": 0.025,
+       "impl": 0.029
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.029000000000000012,
+     "tvd_baseline": 0.036500000000000005,
+     "tvd_tol": 0.1196826841204298,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "score": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.2515,
+      "impl": 0.2395,
+      "baseline_max_abs_diff": 0.012500000000000011,
+      "tol": 0.06860170369604533
+     },
+     "ks": 0.03372820591874087,
+     "ks_baseline": 0.057268706845232165,
+     "ks_tol": 0.08790306026784825,
+     "stats": {
+      "mean": {
+       "refengine": 75.57431664315426,
+       "impl": 74.90775805925458
+      },
+      "min": {
+       "refengine": 50.022055098653006,
+       "impl": 50.11231715818257
+      },
+      "max": {
+       "refengine": 99.97868675918045,
+       "impl": 99.96087673603228
+      },
+      "std": {
+       "refengine": 14.152854128241952,
+       "impl": 14.264625628503564,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1497,
+      "impl": 1521
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "completion_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.1545,
+      "impl": 0.1515,
+      "baseline_max_abs_diff": 0.009500000000000008,
+      "tol": 0.05714668625563516
+     },
+     "ks": 0.03194108502603299,
+     "ks_baseline": 0.03606392050256013,
+     "ks_tol": 0.06698484514776777,
+     "stats": {
+      "mean": {
+       "refengine": "2023-02-09 09:45:44.866302720",
+       "impl": "2023-02-24 11:56:05.476599552"
+      },
+      "min": {
+       "refengine": "2020-01-10 16:30:38.672824832",
+       "impl": "2020-01-12 21:16:30.407756032"
+      },
+      "max": {
+       "refengine": "2026-03-23 15:33:07.281810944",
+       "impl": "2026-02-24 02:22:23.257895936"
+      },
+      "std": {
+       "refengine": 638.4595000088093,
+       "impl": 632.7951074700809,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 1691,
+      "impl": 1697
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "termination": {
+   "rows": {
+    "refengine": 75,
+    "impl": 75
+   },
+   "columns_refengine": [
+    "termination_id",
+    "employee_id",
+    "termination_date",
+    "termination_type",
+    "reason",
+    "eligible_for_rehire"
+   ],
+   "columns_impl": [
+    "termination_id",
+    "employee_id",
+    "termination_date",
+    "termination_type",
+    "reason",
+    "eligible_for_rehire"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "termination_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "employee_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "termination_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "termination_type": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "reason": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "eligible_for_rehire": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "termination_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.09365025558091324
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.31834786967596906,
+     "stats": {
+      "mean": {
+       "refengine": 38.0,
+       "impl": 38.0
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 75.0,
+       "impl": 75.0
+      },
+      "std": {
+       "refengine": 21.64871050817269,
+       "impl": 21.64871050817269,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 75,
+      "impl": 75
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employee_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.09365025558091324
+     },
+     "ks": 0.09333333333333338,
+     "ks_baseline": 0.2666666666666667,
+     "ks_tol": 0.4020000000000001,
+     "stats": {
+      "mean": {
+       "refengine": 235.88,
+       "impl": 240.18666666666667
+      },
+      "min": {
+       "refengine": 9.0,
+       "impl": 4.0
+      },
+      "max": {
+       "refengine": 485.0,
+       "impl": 500.0
+      },
+      "std": {
+       "refengine": 141.24455954124392,
+       "impl": 148.37867711440964,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 69,
+      "impl": 71
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "termination_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.09365025558091324
+     },
+     "ks": 0.1466666666666666,
+     "ks_baseline": 0.15999999999999992,
+     "ks_tol": 0.31834786967596906,
+     "stats": {
+      "mean": {
+       "refengine": "2022-09-16 07:09:10.135813120",
+       "impl": "2023-01-12 08:09:03.266494720"
+      },
+      "min": {
+       "refengine": "2020-02-01 08:41:37.663062528",
+       "impl": "2020-01-05 06:56:23.811162112"
+      },
+      "max": {
+       "refengine": "2025-12-06 09:20:35.636139520",
+       "impl": "2025-12-23 16:16:06.352222976"
+      },
+      "std": {
+       "refengine": 638.2147962939162,
+       "impl": 643.265863533791,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 75,
+      "impl": 75
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "termination_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.09365025558091324
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Voluntary",
+       "refengine": 0.4533333333333333,
+       "impl": 0.6133333333333333
+      },
+      {
+       "value": "Involuntary",
+       "refengine": 0.3333333333333333,
+       "impl": 0.22666666666666666
+      },
+      {
+       "value": "Retirement",
+       "refengine": 0.08,
+       "impl": 0.05333333333333334
+      },
+      {
+       "value": "Layoff",
+       "refengine": 0.08,
+       "impl": 0.06666666666666667
+      },
+      {
+       "value": "End of Contract",
+       "refengine": 0.05333333333333334,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.15999999999999998,
+     "tvd_baseline": 0.22666666666666668,
+     "tvd_tol": 0.6180387232371032,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "reason": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.09365025558091324
+     },
+     "distinct": {
+      "refengine": 8,
+      "impl": 8,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Better Opportunity",
+       "refengine": 0.30666666666666664,
+       "impl": 0.18666666666666668
+      },
+      {
+       "value": "Performance",
+       "refengine": 0.18666666666666668,
+       "impl": 0.18666666666666668
+      },
+      {
+       "value": "Relocation",
+       "refengine": 0.14666666666666667,
+       "impl": 0.17333333333333334
+      },
+      {
+       "value": "Personal",
+       "refengine": 0.12,
+       "impl": 0.17333333333333334
+      },
+      {
+       "value": "Restructuring",
+       "refengine": 0.06666666666666667,
+       "impl": 0.08
+      },
+      {
+       "value": "Retirement",
+       "refengine": 0.06666666666666667,
+       "impl": 0.06666666666666667
+      },
+      {
+       "value": "Conduct",
+       "refengine": 0.05333333333333334,
+       "impl": 0.08
+      },
+      {
+       "value": "Other",
+       "refengine": 0.05333333333333334,
+       "impl": 0.05333333333333334
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.12,
+     "tvd_baseline": 0.17333333333333328,
+     "tvd_tol": 0.7817640190446717,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "eligible_for_rehire": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.09365025558091324
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "refengine": 0.7466666666666667,
+       "impl": 0.68
+      },
+      {
+       "value": "false",
+       "refengine": 0.25333333333333335,
+       "impl": 0.32
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.06666666666666665,
+     "tvd_baseline": 0.1466666666666667,
+     "tvd_tol": 0.39088200952233587,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  }
+ },
+ "table_order": {
+  "refengine": [
+   "department",
+   "position",
+   "training",
+   "employee",
+   "compensation",
+   "performance_review",
+   "termination",
+   "time_off_request",
+   "training_enrollment"
+  ],
+  "impl": [
+   "department",
+   "position",
+   "training",
+   "employee",
+   "compensation",
+   "performance_review",
+   "termination",
+   "time_off_request",
+   "training_enrollment"
+  ]
+ },
+ "fk_integrity": {
+  "refengine": {
+   "employee.department_id->department.department_id": {
+    "integrity": 1.0,
+    "n": 500
+   },
+   "employee.position_id->position.position_id": {
+    "integrity": 1.0,
+    "n": 500
+   },
+   "compensation.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 1500
+   },
+   "performance_review.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 1250
+   },
+   "time_off_request.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 2500
+   },
+   "training_enrollment.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 2000
+   },
+   "training_enrollment.training_id->training.training_id": {
+    "integrity": 1.0,
+    "n": 2000
+   },
+   "termination.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 75
+   },
+   "employee.manager_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 495
+   }
+  },
+  "impl": {
+   "employee.department_id->department.department_id": {
+    "integrity": 1.0,
+    "n": 500
+   },
+   "employee.position_id->position.position_id": {
+    "integrity": 1.0,
+    "n": 500
+   },
+   "compensation.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 1500
+   },
+   "performance_review.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 1250
+   },
+   "time_off_request.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 2500
+   },
+   "training_enrollment.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 2000
+   },
+   "training_enrollment.training_id->training.training_id": {
+    "integrity": 1.0,
+    "n": 2000
+   },
+   "termination.employee_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 75
+   },
+   "employee.manager_id->employee.employee_id": {
+    "integrity": 1.0,
+    "n": 495
+   }
+  }
+ },
+ "fanout": {
+  "department->employee.department_id": {
+   "refengine": {
+    "p50": 5.0,
+    "p90": 30.50000000000002,
+    "p99": 157.5200000000001,
+    "max": 190,
+    "mean": 16.666666666666668,
+    "zero_frac": 0.03333333333333333
+   },
+   "impl": {
+    "p50": 5.5,
+    "p90": 30.900000000000013,
+    "p99": 152.6500000000001,
+    "max": 186,
+    "mean": 16.666666666666668,
+    "zero_frac": 0.03333333333333333
+   },
+   "ks_counts": 0.09999999999999998,
+   "ks_baseline_max": 0.23333333333333334,
+   "ks_tol": 0.5033521782192557,
+   "equivalent": true
+  },
+  "position->employee.position_id": {
+   "refengine": {
+    "p50": 2.0,
+    "p90": 10.300000000000026,
+    "p99": 82.32999999999954,
+    "max": 140,
+    "mean": 6.25,
+    "zero_frac": 0.175
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 8.200000000000017,
+    "p99": 74.69999999999956,
+    "max": 130,
+    "mean": 6.25,
+    "zero_frac": 0.1875
+   },
+   "ks_counts": 0.08750000000000002,
+   "ks_baseline_max": 0.08750000000000002,
+   "ks_tol": 0.3082389993889093,
+   "equivalent": true
+  },
+  "employee->compensation.employee_id": {
+   "refengine": {
+    "p50": 3.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 8,
+    "mean": 3.0,
+    "zero_frac": 0.056
+   },
+   "impl": {
+    "p50": 3.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 9,
+    "mean": 3.0,
+    "zero_frac": 0.046
+   },
+   "ks_counts": 0.019999999999999907,
+   "ks_baseline_max": 0.040000000000000036,
+   "ks_tol": 0.1232955997555637,
+   "equivalent": true
+  },
+  "employee->performance_review.employee_id": {
+   "refengine": {
+    "p50": 2.0,
+    "p90": 5.0,
+    "p99": 6.0,
+    "max": 8,
+    "mean": 2.5,
+    "zero_frac": 0.086
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 8,
+    "mean": 2.5,
+    "zero_frac": 0.072
+   },
+   "ks_counts": 0.03200000000000003,
+   "ks_baseline_max": 0.02999999999999997,
+   "ks_tol": 0.1232955997555637,
+   "equivalent": true
+  },
+  "employee->time_off_request.employee_id": {
+   "refengine": {
+    "p50": 5.0,
+    "p90": 8.0,
+    "p99": 10.0,
+    "max": 16,
+    "mean": 5.0,
+    "zero_frac": 0.012
+   },
+   "impl": {
+    "p50": 5.0,
+    "p90": 8.0,
+    "p99": 10.0,
+    "max": 11,
+    "mean": 5.0,
+    "zero_frac": 0.006
+   },
+   "ks_counts": 0.020000000000000018,
+   "ks_baseline_max": 0.04600000000000004,
+   "ks_tol": 0.1232955997555637,
+   "equivalent": true
+  },
+  "employee->training_enrollment.employee_id": {
+   "refengine": {
+    "p50": 4.0,
+    "p90": 7.0,
+    "p99": 9.0,
+    "max": 10,
+    "mean": 4.0,
+    "zero_frac": 0.024
+   },
+   "impl": {
+    "p50": 4.0,
+    "p90": 7.0,
+    "p99": 9.0,
+    "max": 12,
+    "mean": 4.0,
+    "zero_frac": 0.01
+   },
+   "ks_counts": 0.04400000000000004,
+   "ks_baseline_max": 0.03600000000000003,
+   "ks_tol": 0.1232955997555637,
+   "equivalent": true
+  },
+  "training->training_enrollment.training_id": {
+   "refengine": {
+    "p50": 5.0,
+    "p90": 31.10000000000001,
+    "p99": 263.04000000000156,
+    "max": 564,
+    "mean": 20.0,
+    "zero_frac": 0.04
+   },
+   "impl": {
+    "p50": 6.0,
+    "p90": 31.200000000000017,
+    "p99": 248.9400000000015,
+    "max": 540,
+    "mean": 20.0,
+    "zero_frac": 0.03
+   },
+   "ks_counts": 0.10000000000000003,
+   "ks_baseline_max": 0.11000000000000001,
+   "ks_tol": 0.2756973423800469,
+   "equivalent": true
+  },
+  "employee->termination.employee_id": {
+   "refengine": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 2,
+    "mean": 0.15,
+    "zero_frac": 0.862
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 1.0,
+    "max": 2,
+    "mean": 0.15,
+    "zero_frac": 0.858
+   },
+   "ks_counts": 0.0040000000000000036,
+   "ks_baseline_max": 0.006000000000000005,
+   "ks_tol": 0.1232955997555637,
+   "equivalent": true
+  }
+ },
+ "record_coherence": {},
+ "strategy_semantics": {
+  "time_off_request.end_date - start_date in [1,14] days": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "training_enrollment.completion_date - enrollment_date in [1,90] days": {
+   "impl": 0.8485,
+   "refengine": [
+    0.8455,
+    0.8545,
+    0.855,
+    0.8485,
+    0.8475
+   ],
+   "floor": 0.8405
+  }
+ },
+ "business_rules": {
+  "refengine_BusinessRulesEngine_violations": {},
+  "refengine_on_refengine": {}
+ },
+ "refengine_fidelity_comparator": {
+  "overall_impl": 92.44473149411945,
+  "overall_baseline_refengine_vs_refengine": [
+   92.26067589040082,
+   92.79240042062186,
+   92.31569262096667,
+   92.66559274015619
+  ],
+  "tables": {
+   "compensation": {
+    "impl": 97.90456429017685,
+    "baseline": [
+     99.03966980923208,
+     98.16274121302148,
+     98.39848144651876,
+     98.99387441584928
+    ],
+    "floor": 97.66274121302148,
+    "ok": true
+   },
+   "department": {
+    "impl": 89.41964285714286,
+    "baseline": [
+     86.98979591836735,
+     89.57270408163265,
+     88.94604037267081,
+     88.96103896103897
+    ],
+    "floor": 86.48979591836735,
+    "ok": true
+   },
+   "employee": {
+    "impl": 78.45251910112098,
+    "baseline": [
+     77.83742743619932,
+     78.48660657997989,
+     78.14360432427355,
+     78.61216335729647
+    ],
+    "floor": 77.33742743619932,
+    "ok": true
+   },
+   "performance_review": {
+    "impl": 91.77655618950641,
+    "baseline": [
+     91.87523657024191,
+     91.84571497329578,
+     91.44124741901676,
+     91.37851969224155
+    ],
+    "floor": 90.87851969224155,
+    "ok": true
+   },
+   "position": {
+    "impl": 89.77146838596029,
+    "baseline": [
+     89.89664841164654,
+     90.60153497257045,
+     90.71395372216766,
+     90.82128990227466
+    ],
+    "floor": 89.39664841164654,
+    "ok": true
+   },
+   "termination": {
+    "impl": 98.2013807856704,
+    "baseline": [
+     96.98547954851541,
+     97.43777388505275,
+     94.8522134760676,
+     97.73982428025295
+    ],
+    "floor": 94.3522134760676,
+    "ok": true
+   },
+   "time_off_request": {
+    "impl": 98.61285528912045,
+    "baseline": [
+     98.14082706533557,
+     98.87910505549105,
+     98.9883885908638,
+     99.61951795158747
+    ],
+    "floor": 97.64082706533557,
+    "ok": true
+   },
+   "training": {
+    "impl": 89.81538478946065,
+    "baseline": [
+     91.35898158522275,
+     91.76736378322175,
+     91.46473950623452,
+     89.15085417015145
+    ],
+    "floor": 88.65085417015145,
+    "ok": true
+   },
+   "training_enrollment": {
+    "impl": 98.0482117589161,
+    "baseline": [
+     98.22201666884654,
+     98.3780592413309,
+     97.89256473088649,
+     98.7132519307129
+    ],
+    "floor": 97.39256473088649,
+    "ok": true
+   }
+  }
+ },
+ "summary": {
+  "columns_total": 59,
+  "columns_equivalent": 59,
+  "flagged": [],
+  "passed": true,
+  "seconds": 3.4920825958251953
+ }
+}

@@ -1,0 +1,342 @@
+"""The run manifest: what a pack run produced, written next to its output (P6-14).
+
+The keys are ``run_id``, ``spec_hash``, ``pack_id``, ``domain``, ``scale``, ``seed``,
+``engine_version``, ``outputs``, ``tables`` (``rows``, ``columns``, ``file_paths`` each),
+``validation``, ``chaos``, ``timestamps`` (``started`` and ``finished`` in UTC ISO 8601 with
+``Z``, ``elapsed_seconds``), ``workspace_id``, ``lakehouse_id``, ``sbom``, ``reproducibility``
+(the tuple of ``shape.repro``, plus ``generators``: the generator version of every strategy and
+distribution the run used, ``writers``: the byte format version of every writer the run used
+that declares one, ``docs/GENERATION_STABILITY.md``, and ``identifiers``: the run's identifier
+mode, ``reserved`` or ``realistic``; a manifest without it reads as ``reserved``) and
+``dataset_id`` (the content address of the output tables), then the declaration every persisted
+file carries (``format`` =
+``shape-run-manifest``, ``version``, ``shape_version``, ``min_shape_version``;
+``docs/specs/STATE_AND_COMPATIBILITY.md``). The run id is
+``YYYYMMDD_HHMMSS_{domain}_{scale}_s{seed}``, with every character of the domain and scale that is
+not a letter, digit, ``.``, ``_`` or ``-`` replaced by ``_`` (the id is a file name). A manifest
+written before ``format`` and ``version`` existed loads with an empty ``reproducibility`` and
+``dataset_id``.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+import time
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
+
+from shape import compat
+from shape.generation.identifiers import DEFAULT_IDENTIFIERS
+from shape.repro import dataset_id, reproducibility_tuple
+
+MANIFEST_FORMAT = compat.KINDS["run-manifest"].format
+MANIFEST_VERSION = compat.KINDS["run-manifest"].current
+SBOM_PACKAGES = ("sqllocks-shape", "pandas", "numpy", "faker", "pyarrow", "scipy")
+NOT_INSTALLED = "not installed"
+IDENTIFIERS_KEY = "identifiers"  # in ``reproducibility``: the run's identifier mode
+
+
+_KNOWN = frozenset(
+    {
+        "run_id",
+        "spec_hash",
+        "pack_id",
+        "domain",
+        "scale",
+        "seed",
+        "engine_version",
+        "outputs",
+        "tables",
+        "validation",
+        "chaos",
+        "timestamps",
+        "workspace_id",
+        "lakehouse_id",
+        "sbom",
+        "reproducibility",
+        "dataset_id",
+    }
+)
+
+
+class ManifestVersionError(ValueError):
+    """A manifest was written by a newer Shape than this one reads (compat raises it combined
+    with :class:`shape.compat.UnsupportedVersionError`)."""
+
+
+@dataclass
+class RunManifest:
+    """The metadata of one run."""
+
+    run_id: str
+    spec_hash: str  # sha256 of the generation spec file (empty when the run had no spec)
+    pack_id: str
+    domain: str
+    scale: str
+    seed: int
+    engine_version: str
+    outputs: dict[str, Any] = field(default_factory=dict)
+    tables: dict[str, dict[str, Any]] = field(default_factory=dict)
+    validation: dict[str, bool] = field(default_factory=dict)
+    chaos: dict[str, Any] = field(default_factory=dict)
+    timestamps: dict[str, Any] = field(default_factory=dict)
+    workspace_id: str = ""
+    lakehouse_id: str = ""
+    sbom: dict[str, str] = field(default_factory=dict)
+    reproducibility: dict[str, Any] = field(default_factory=dict)
+    dataset_id: str = ""
+    # Fields a newer release wrote that this one does not know: ignored, and written back as read.
+    extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @property
+    def identifiers(self) -> str:
+        """The identifier mode of the run (``reproducibility.identifiers``): a manifest written
+        before the run switch existed had only reserved identifiers."""
+        return str(self.reproducibility.get(IDENTIFIERS_KEY) or DEFAULT_IDENTIFIERS)
+
+    def summary(self) -> str:
+        lines = [
+            f"Run Manifest: {self.run_id}",
+            f"  Engine:  Shape v{self.engine_version}",
+            f"  Pack:    {self.pack_id}",
+            f"  Domain:  {self.domain}",
+            f"  Scale:   {self.scale}",
+            f"  Seed:    {self.seed}",
+        ]
+        if self.dataset_id:
+            lines.append(f"  Dataset: {self.dataset_id}")
+        if self.tables:
+            total_rows = sum(int(t.get("rows", 0)) for t in self.tables.values())
+            lines.append(f"  Tables:  {len(self.tables)} ({total_rows:,} total rows)")
+        if self.validation:
+            passed = sum(1 for v in self.validation.values() if v)
+            lines.append(f"  Gates:   {passed}/{len(self.validation)} passed")
+        if self.timestamps:
+            lines.append(f"  Elapsed: {self.timestamps.get('elapsed_seconds', '?')}s")
+        return "\n".join(lines)
+
+    def to_dict(self) -> dict[str, Any]:
+        out = compat.stamp("run-manifest", self._body(), aliases=False)
+        return {**out, **{k: v for k, v in self.extra.items() if k not in out}}
+
+    def _body(self) -> dict[str, Any]:
+        return {
+            "run_id": self.run_id,
+            "spec_hash": self.spec_hash,
+            "pack_id": self.pack_id,
+            "domain": self.domain,
+            "scale": self.scale,
+            "seed": self.seed,
+            "engine_version": self.engine_version,
+            "outputs": self.outputs,
+            "tables": self.tables,
+            "validation": self.validation,
+            "chaos": self.chaos,
+            "timestamps": self.timestamps,
+            "workspace_id": self.workspace_id,
+            "lakehouse_id": self.lakehouse_id,
+            "sbom": self.sbom,
+            "reproducibility": self.reproducibility,
+            "dataset_id": self.dataset_id,
+        }
+
+
+class ManifestBuilder:
+    """Build a :class:`RunManifest` during a run: ``start``, the ``record_*`` calls, ``finish``."""
+
+    def __init__(self) -> None:
+        self._m = RunManifest("", "", "", "", "", 0, "")
+        self._started = 0.0
+        self._started_iso = ""
+        self._workspace_id = ""
+        self._lakehouse_id = ""
+
+    def start(
+        self,
+        spec_path: str | Path | None,
+        pack: Any,
+        domain_name: str,
+        scale: str,
+        seed: int,
+    ) -> None:
+        """Begin a run. ``spec_path`` is the generation spec file, hashed into ``spec_hash``."""
+        from shape import __version__
+
+        now = datetime.now(UTC)
+        self._started_iso = compat.utc_iso(now)
+        self._started = time.perf_counter()
+        self._m = RunManifest(
+            run_id=f"{now.strftime('%Y%m%d_%H%M%S')}_{plain(domain_name)}_{plain(scale)}_s{seed}",
+            spec_hash=hash_file(Path(spec_path)) if spec_path is not None else "",
+            pack_id=str(getattr(pack, "id", "")) if pack is not None else "",
+            domain=domain_name,
+            scale=scale,
+            seed=seed,
+            engine_version=__version__,
+            sbom=collect_sbom(),
+            reproducibility=reproducibility_tuple(seed, scale),
+        )
+
+    def record_output(
+        self, table_name: str, rows: int, columns: int, paths: list[str] | None = None
+    ) -> None:
+        self._m.tables[table_name] = {"rows": rows, "columns": columns, "file_paths": paths or []}
+
+    def record_generators(self, versions: Mapping[str, int]) -> None:
+        """Record the generator version of every strategy and distribution the run used, in
+        ``reproducibility`` (``generators``)."""
+        self._m.reproducibility["generators"] = {k: int(v) for k, v in sorted(versions.items())}
+
+    def record_writers(self, versions: Mapping[str, int]) -> None:
+        """Record the byte format version of every writer the run used that declares one, in
+        ``reproducibility`` (``writers``); a later call adds to it."""
+        found = {**self._m.reproducibility.get("writers", {}), **versions}
+        self._m.reproducibility["writers"] = {k: int(v) for k, v in sorted(found.items())}
+
+    def record_identifiers(self, mode: str) -> None:
+        """Record the run's identifier mode (``reserved`` or ``realistic``) in
+        ``reproducibility`` (``identifiers``), so a replay generates the same values."""
+        self._m.reproducibility[IDENTIFIERS_KEY] = mode
+
+    def record_dataset(self, tables: Mapping[str, Any]) -> None:
+        """Record the dataset id of the run's output tables."""
+        self._m.dataset_id = dataset_id(tables)
+
+    def record_validation(self, gate: str, result: bool) -> None:
+        self._m.validation[gate] = result
+
+    def record_chaos(self, category: str, count: int) -> None:
+        self._m.chaos[category] = self._m.chaos.get(category, 0) + count
+
+    def record_outputs(self, outputs: dict[str, Any]) -> None:
+        self._m.outputs.update(outputs)
+
+    def set_fabric_ids(self, workspace_id: str = "", lakehouse_id: str = "") -> None:
+        self._workspace_id = workspace_id
+        self._lakehouse_id = lakehouse_id
+
+    def finish(self) -> RunManifest:
+        elapsed = time.perf_counter() - self._started if self._started else 0.0
+        m = self._m
+        m.timestamps = {
+            "started": self._started_iso,
+            "finished": compat.utc_iso(),
+            "elapsed_seconds": round(elapsed, 2),
+        }
+        m.workspace_id = self._workspace_id
+        m.lakehouse_id = self._lakehouse_id
+        return m
+
+    # ---- serialization ---------------------------------------------------------------------
+
+    @staticmethod
+    def to_json(manifest: RunManifest) -> str:
+        return json.dumps(manifest.to_dict(), indent=2, default=compat.json_default)
+
+    @staticmethod
+    def to_file(manifest: RunManifest, path: str | Path) -> None:
+        target = Path(path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(ManifestBuilder.to_json(manifest), encoding="utf-8", newline="\n")
+
+    @staticmethod
+    def from_file(path: str | Path) -> RunManifest:
+        try:
+            raw = json.loads(Path(path).read_text(encoding="utf-8"))
+        except (ValueError, UnicodeDecodeError) as exc:
+            raise ValueError(f"{path} is not a run manifest: it is not JSON ({exc})") from exc
+        if not isinstance(raw, dict):
+            raise ValueError(f"{path} is not a run manifest")
+        try:
+            compat.check_format("run-manifest", raw)
+            compat.check_readable("run-manifest", raw, path, error=ManifestVersionError)
+            unknown = compat.check_unknown("run-manifest", raw, _KNOWN)
+        except compat.UnsupportedVersionError:
+            raise  # its message names the file already
+        except compat.FormatError as exc:  # a malformed declaration: name the file (#519)
+            raise type(exc)(f"{path} is not a run manifest: {exc}") from exc
+        _check_types(raw, path)
+        return RunManifest(
+            extra={k: raw[k] for k in unknown},
+            run_id=raw.get("run_id", ""),
+            spec_hash=raw.get("spec_hash", ""),
+            pack_id=raw.get("pack_id", ""),
+            domain=raw.get("domain", ""),
+            scale=raw.get("scale", ""),
+            seed=raw.get("seed", 0),
+            engine_version=raw.get("engine_version", ""),
+            outputs=raw.get("outputs", {}),
+            tables=raw.get("tables", {}),
+            validation=raw.get("validation", {}),
+            chaos=raw.get("chaos", {}),
+            timestamps=raw.get("timestamps", {}),
+            workspace_id=raw.get("workspace_id", ""),
+            lakehouse_id=raw.get("lakehouse_id", ""),
+            sbom=raw.get("sbom", {}),
+            reproducibility=raw.get("reproducibility", {}),
+            dataset_id=raw.get("dataset_id", ""),
+        )
+
+
+def plain(text: str) -> str:
+    """``text`` as part of a file name: anything but letters, digits, ``.``, ``_`` and ``-``
+    becomes ``_`` (a path separator in a domain or scale name never reaches the file system)."""
+    return re.sub(r"[^A-Za-z0-9._-]", "_", str(text))
+
+
+_TEXT_FIELDS = (
+    "run_id", "spec_hash", "pack_id", "domain", "scale", "engine_version", "workspace_id",
+    "lakehouse_id", "dataset_id",
+)  # fmt: skip
+_MAPPING_FIELDS = (
+    "outputs", "tables", "validation", "chaos", "timestamps", "sbom", "reproducibility",
+)  # fmt: skip
+
+
+def _check_types(raw: dict[str, Any], path: str | Path) -> None:
+    """A field a manifest holds has the type the writer gave it; a missing one takes its default."""
+
+    def refuse(key: str, what: str, value: Any) -> ValueError:
+        return ValueError(
+            f"{path} is not a run manifest: {key} must be {what}, got {type(value).__name__}"
+        )
+
+    for key in _TEXT_FIELDS:
+        if key in raw and not isinstance(raw[key], str):
+            raise refuse(key, "text", raw[key])
+    for key in _MAPPING_FIELDS:
+        if key in raw and not isinstance(raw[key], dict):
+            raise refuse(key, "a mapping", raw[key])
+    seed = raw.get("seed", 0)
+    if isinstance(seed, bool) or not isinstance(seed, int):
+        raise refuse("seed", "an integer", seed)
+    for name, entry in raw.get("tables", {}).items():
+        if not isinstance(entry, dict):
+            raise refuse(f"tables.{name}", "a mapping", entry)
+
+
+def collect_sbom() -> dict[str, str]:
+    """The installed version of each key dependency (``not installed`` for one that is absent)."""
+    from importlib.metadata import PackageNotFoundError
+    from importlib.metadata import version as installed_version
+
+    sbom: dict[str, str] = {}
+    for package in SBOM_PACKAGES:
+        try:
+            sbom[package] = installed_version(package)
+        except PackageNotFoundError:
+            sbom[package] = NOT_INSTALLED
+    return sbom
+
+
+def hash_file(path: Path) -> str:
+    """The SHA-256 of a file's bytes; empty when the file cannot be read."""
+    try:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError:
+        return ""

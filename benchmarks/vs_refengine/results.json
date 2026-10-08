@@ -1,0 +1,370 @@
+{
+ "schema_version": 1,
+ "mode": "quick",
+ "runs": 3,
+ "generated_utc": "2026-09-30T13:39:09Z",
+ "machine": {
+  "cores": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "platform": "Linux-6.18.44-fc-v50-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-09-30 13:39:08",
+  "loadavg_start": 0.8515625,
+  "refengine_venv": {
+   "python": "3.11.15",
+   "pandas": "3.0.6",
+   "numpy": "2.4.6",
+   "pyarrow": "25.0.1"
+  },
+  "shape_venv": {
+   "python": "3.11.15",
+   "numpy": "2.4.6",
+   "pyarrow": "25.0.1"
+  }
+ },
+ "refengine_commit": "422e78df2267e73bb2fa976267e48cb437861e2f",
+ "shape_commit": "79b4250efba8ea5d191bc692eab32cba39bddc8b",
+ "shape_tree_dirty": false,
+ "refengine": {
+  "workloads": {
+   "profile:d1.csv": {
+    "kind": "profile",
+    "dataset": "d1.csv",
+    "median_s": 1.5453310889997738,
+    "runs_s": [
+     1.5082396220000192,
+     1.6056794769997396,
+     1.5453310889997738
+    ],
+    "verifier": null,
+    "peak_rss_mb": 342.109375
+   },
+   "profile:d1.parquet": {
+    "kind": "profile",
+    "dataset": "d1.parquet",
+    "median_s": 1.3279347910001889,
+    "runs_s": [
+     1.5328712010000345,
+     1.3095730190002541,
+     1.3279347910001889
+    ],
+    "verifier": null,
+    "peak_rss_mb": 377.81640625
+   },
+   "profile:d2.csv": {
+    "kind": "profile",
+    "dataset": "d2.csv",
+    "median_s": 31.729446144999656,
+    "runs_s": [
+     31.911229881000054,
+     31.206306796999797,
+     31.729446144999656
+    ],
+    "verifier": null,
+    "peak_rss_mb": 1222.1484375
+   },
+   "profile:d2.parquet": {
+    "kind": "profile",
+    "dataset": "d2.parquet",
+    "median_s": 26.29645397100012,
+    "runs_s": [
+     27.02959072299973,
+     25.700570208000045,
+     26.29645397100012
+    ],
+    "verifier": null,
+    "peak_rss_mb": 1050.9765625
+   },
+   "generate:retail:small": {
+    "kind": "generate",
+    "domain": "retail",
+    "scale": "small",
+    "median_s": 0.24506958599977224,
+    "runs_s": [
+     0.245,
+     0.299,
+     0.228
+    ],
+    "verifier": null,
+    "gen_s": 0.19644337399995493,
+    "write_s": 0.048626211999817315,
+    "rows": 21750,
+    "peak_rss_mb": 286.7265625
+   },
+   "generate:retail:medium": {
+    "kind": "generate",
+    "domain": "retail",
+    "scale": "medium",
+    "median_s": 5.786742598999808,
+    "runs_s": [
+     5.853,
+     5.489,
+     5.787
+    ],
+    "verifier": null,
+    "gen_s": 5.060142508999888,
+    "write_s": 0.6835051459997885,
+    "rows": 1965400,
+    "peak_rss_mb": 613.19140625
+   }
+  }
+ },
+ "reference_port": {
+  "workloads": {
+   "profile:d1.csv": {
+    "kind": "profile",
+    "dataset": "d1.csv",
+    "verifier": {
+     "status": "pass",
+     "exit_code": 0,
+     "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl reference_port d1.csv d1.parquet d2.csv d2.parquet"
+    },
+    "median_s": 0.32749910700022156,
+    "median_s_1t": 0.4036246549999305,
+    "runs_s": [
+     0.3010236430000077,
+     0.32749910700022156,
+     0.4116777809999803
+    ],
+    "speedup_vs_refengine": 4.718581076921008,
+    "peak_rss_mb": 247.546875
+   },
+   "profile:d1.parquet": {
+    "kind": "profile",
+    "dataset": "d1.parquet",
+    "verifier": {
+     "status": "pass",
+     "exit_code": 0,
+     "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl reference_port d1.csv d1.parquet d2.csv d2.parquet"
+    },
+    "median_s": 0.3440850529996169,
+    "median_s_1t": 0.3675548239998534,
+    "runs_s": [
+     0.3951971040000899,
+     0.3440850529996169,
+     0.3027661870000884
+    ],
+    "speedup_vs_refengine": 3.85932134925276,
+    "peak_rss_mb": 271.0
+   },
+   "profile:d2.csv": {
+    "kind": "profile",
+    "dataset": "d2.csv",
+    "verifier": {
+     "status": "pass",
+     "exit_code": 0,
+     "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl reference_port d1.csv d1.parquet d2.csv d2.parquet"
+    },
+    "median_s": 2.8563739730002453,
+    "median_s_1t": 6.134024993999901,
+    "runs_s": [
+     2.741169451999667,
+     3.2470371990002604,
+     2.8563739730002453
+    ],
+    "speedup_vs_refengine": 11.10829549804084,
+    "peak_rss_mb": 766.80859375
+   },
+   "profile:d2.parquet": {
+    "kind": "profile",
+    "dataset": "d2.parquet",
+    "verifier": {
+     "status": "pass",
+     "exit_code": 0,
+     "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl reference_port d1.csv d1.parquet d2.csv d2.parquet"
+    },
+    "median_s": 2.2664350540003397,
+    "median_s_1t": 5.043679761000021,
+    "runs_s": [
+     2.3082860280001114,
+     2.2664350540003397,
+     2.1239329230002113
+    ],
+    "speedup_vs_refengine": 11.602562325616137,
+    "peak_rss_mb": 667.4296875
+   },
+   "generate:retail:small": {
+    "kind": "generate",
+    "domain": "retail",
+    "scale": "small",
+    "verifier": {
+     "status": "pass",
+     "exit_code": 0,
+     "command": "$REFENGINE_PY $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --domain retail --scale small --impl reference_port --no-generate",
+     "first_run": {
+      "status": "pass",
+      "exit_code": 0,
+      "command": "$REFENGINE_PY $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --domain retail --scale small --impl reference_port"
+     }
+    },
+    "median_s": 0.12690795900016383,
+    "runs_s": [
+     0.106,
+     0.164,
+     0.127
+    ],
+    "speedup_vs_refengine": 1.9310812964808288,
+    "gen_s": 0.08563961500021833,
+    "write_s": 0.0412683439999455,
+    "rows": 21750,
+    "peak_rss_mb": 188.78125
+   },
+   "generate:retail:medium": {
+    "kind": "generate",
+    "domain": "retail",
+    "scale": "medium",
+    "verifier": {
+     "status": "pass",
+     "exit_code": 0,
+     "command": "$REFENGINE_PY $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --domain retail --scale medium --impl reference_port --no-generate",
+     "first_run": {
+      "status": "pass",
+      "exit_code": 0,
+      "command": "$REFENGINE_PY $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --domain retail --scale medium --impl reference_port"
+     }
+    },
+    "median_s": 0.9795445529998688,
+    "runs_s": [
+     0.958,
+     0.98,
+     1.051
+    ],
+    "speedup_vs_refengine": 5.907584888587078,
+    "gen_s": 0.518768528000237,
+    "write_s": 0.4884715929997583,
+    "rows": 1965400,
+    "peak_rss_mb": 430.30859375
+   }
+  }
+ },
+ "shape": null,
+ "kernel_microbench": {
+  "measured_utc": "2026-10-01T10:52:13Z",
+  "machine": {
+   "cores": 4,
+   "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+   "platform": "Linux-6.18.44-fc-v50-x86_64-with-glibc2.39",
+   "python": "3.11.15",
+   "started": "2026-10-01 10:52:13",
+   "loadavg_start": 0.33154296875,
+   "threads": 4
+  },
+  "rows": 1000000,
+  "runs": 5,
+  "kernels": {
+   "philox_words": {
+    "rows": 1000000,
+    "native_s": 0.001501067000049261,
+    "equivalent_to_reference": true,
+    "reference_s": 0.004719510000086302,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 3.14410349433531,
+    "baseline_s": 0.003982077999921785,
+    "speedup_vs_baseline": 2.6528316189691092,
+    "native_rows_per_s": 666192781.5128723
+   },
+   "philox_uniform": {
+    "rows": 1000000,
+    "native_s": 0.0016329830000358925,
+    "equivalent_to_reference": true,
+    "reference_s": 0.005562829999234964,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 3.406544954303073,
+    "baseline_s": 0.005152933999966081,
+    "speedup_vs_baseline": 3.1555343808556615,
+    "native_rows_per_s": 612376246.4018427
+   },
+   "philox_normal": {
+    "rows": 1000000,
+    "native_s": 0.009109141000067211,
+    "equivalent_to_reference": true,
+    "reference_s": 0.037101600000823964,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 4.073007542703556,
+    "baseline_s": 0.01347615500003485,
+    "speedup_vs_baseline": 1.479410078286791,
+    "native_rows_per_s": 109779835.44141227
+   },
+   "alias_sample": {
+    "rows": 1000000,
+    "native_s": 0.004125294999994367,
+    "equivalent_to_reference": true,
+    "reference_s": 0.023818900000378562,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 5.77386586908599,
+    "baseline_s": 0.051789551999945616,
+    "speedup_vs_baseline": 12.554145097506078,
+    "native_rows_per_s": 242406906.6579155
+   },
+   "pool_take": {
+    "rows": 1000000,
+    "native_s": 0.006898250999938682,
+    "equivalent_to_reference": true,
+    "reference_s": 0.09441082000080314,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 13.686196689804756,
+    "baseline_s": 0.005190530999925613,
+    "speedup_vs_baseline": 0.7524415971485745,
+    "native_rows_per_s": 144964281.52714202
+   },
+   "template_strings": {
+    "rows": 1000000,
+    "native_s": 0.023154087999955664,
+    "equivalent_to_reference": true,
+    "reference_s": 1.1898522500007402,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 51.38843084655369,
+    "native_rows_per_s": 43188917.654710256
+   },
+   "join_strings": {
+    "rows": 1000000,
+    "native_s": 0.013393235999956232,
+    "equivalent_to_reference": true,
+    "reference_s": 0.9179099499999664,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 68.53533753925983,
+    "baseline_s": 0.028057288000013614,
+    "speedup_vs_baseline": 2.0948849105701792,
+    "native_rows_per_s": 74664554.5559914
+   },
+   "string_case_title": {
+    "rows": 1000000,
+    "native_s": 0.011735714999986158,
+    "equivalent_to_reference": true,
+    "reference_s": 0.7443936200002099,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 63.42976290759344,
+    "baseline_s": 0.07923315600010028,
+    "speedup_vs_baseline": 6.751455365113564,
+    "native_rows_per_s": 85209976.55457546
+   },
+   "uuid4_strings": {
+    "rows": 1000000,
+    "native_s": 0.026720407999960116,
+    "equivalent_to_reference": true,
+    "reference_s": 0.5183293999994021,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 19.398259188264483,
+    "native_rows_per_s": 37424578.247513756
+   },
+   "random_strings_len6": {
+    "rows": 1000000,
+    "native_s": 0.012556294999967577,
+    "equivalent_to_reference": true,
+    "reference_s": 0.8252841199998785,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 65.72672273166643,
+    "native_rows_per_s": 79641327.318495
+   },
+   "temporal_sample": {
+    "rows": 1000000,
+    "native_s": 0.00798568699997304,
+    "equivalent_to_reference": true,
+    "reference_s": 0.07118308000030993,
+    "reference_rows_measured": 100000,
+    "speedup_vs_reference": 8.913832961465962,
+    "native_rows_per_s": 125224041.46360557
+   }
+  }
+ }
+}

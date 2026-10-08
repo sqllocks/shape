@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "met": {
+      "type": "boolean"
+    },
+    "passed": {
+      "type": "boolean"
+    },
+    "scale": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "scenarios": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "met": {
+            "type": "boolean"
+          },
+          "mismatches": {
+            "items": {
+              "additionalProperties": true,
+              "properties": {
+                "expected": {
+                  "type": "string"
+                },
+                "observed": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expected",
+                "observed"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "outcome": {
+            "additionalProperties": true,
+            "properties": {
+              "defects": {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              "domain": {
+                "type": "string"
+              },
+              "drift": {
+                "items": {},
+                "type": "array"
+              },
+              "elapsed_seconds": {
+                "type": "number"
+              },
+              "files": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "gate_messages": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "gates": {
+                "additionalProperties": {
+                  "type": "boolean"
+                },
+                "type": "object"
+              },
+              "scale": {
+                "type": "string"
+              },
+              "scenario": {
+                "type": "string"
+              },
+              "seed": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "scenario",
+              "domain",
+              "scale",
+              "seed",
+              "gates",
+              "gate_messages",
+              "defects",
+              "drift",
+              "files",
+              "elapsed_seconds"
+            ],
+            "type": "object"
+          },
+          "scenario": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "scenario",
+          "met",
+          "mismatches",
+          "outcome"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "suite": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "suite",
+    "scale",
+    "met",
+    "passed",
+    "scenarios"
+  ],
+  "title": "suite_run result",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.2"
+}

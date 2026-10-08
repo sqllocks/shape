@@ -1,0 +1,225 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "retail",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "domain": "retail"
+        },
+        "command": "profile_info",
+        "id": "retail"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "profile_info",
+        "id": "retail",
+        "ok": true,
+        "result": {
+          "available_profiles": [
+            "default"
+          ],
+          "distribution_keys": [
+            "address.address_type",
+            "customer.gender",
+            "customer.is_active",
+            "customer.loyalty_tier",
+            "order.customer_id",
+            "order.order_date.day_of_week",
+            "order.order_date.hour_of_day",
+            "order.order_date.month",
+            "order.status",
+            "order.store_id",
+            "order_line.product_id",
+            "order_line.quantity",
+            "product.product_status",
+            "product.unit_price",
+            "promotion.discount_pct",
+            "promotion.promo_type",
+            "return.reason",
+            "return.refund_amount",
+            "store.store_type"
+          ],
+          "distributions": {
+            "address.address_type": {
+              "billing": 0.5,
+              "both": 0.1,
+              "shipping": 0.4
+            },
+            "customer.gender": {
+              "F": 0.51,
+              "M": 0.49
+            },
+            "customer.is_active": {
+              "false": 0.15,
+              "true": 0.85
+            },
+            "customer.loyalty_tier": {
+              "Basic": 0.55,
+              "Gold": 0.13,
+              "Platinum": 0.07,
+              "Silver": 0.25
+            },
+            "order.customer_id": {
+              "alpha": 1.16,
+              "distribution": "pareto",
+              "max_per_parent": 50
+            },
+            "order.order_date.day_of_week": {
+              "Fri": 0.147,
+              "Mon": 0.155,
+              "Sat": 0.115,
+              "Sun": 0.13,
+              "Thu": 0.153,
+              "Tue": 0.152,
+              "Wed": 0.148
+            },
+            "order.order_date.hour_of_day": {
+              "peaks": [
+                12,
+                20
+              ],
+              "std_dev": 2
+            },
+            "order.order_date.month": {
+              "Apr": 0.079,
+              "Aug": 0.088,
+              "Dec": 0.106,
+              "Feb": 0.068,
+              "Jan": 0.071,
+              "Jul": 0.085,
+              "Jun": 0.083,
+              "Mar": 0.079,
+              "May": 0.083,
+              "Nov": 0.096,
+              "Oct": 0.083,
+              "Sep": 0.079
+            },
+            "order.status": {
+              "cancelled": 0.04,
+              "completed": 0.77,
+              "processing": 0.02,
+              "returned": 0.09,
+              "shipped": 0.08
+            },
+            "order.store_id": {
+              "alpha": 1.3,
+              "distribution": "zipf"
+            },
+            "order_line.product_id": {
+              "alpha": 1.5,
+              "distribution": "zipf"
+            },
+            "order_line.quantity": {
+              "distribution": "geometric",
+              "max": 20,
+              "min": 1,
+              "p": 0.6
+            },
+            "product.product_status": {
+              "phases": [
+                {
+                  "name": "active",
+                  "weight": 0.75
+                },
+                {
+                  "name": "discontinued",
+                  "weight": 0.15
+                },
+                {
+                  "name": "introduced",
+                  "weight": 0.1
+                }
+              ]
+            },
+            "product.unit_price": {
+              "distribution": "log_normal",
+              "max": 999.99,
+              "mean": 3.0,
+              "min": 0.99,
+              "sigma": 1.0
+            },
+            "promotion.discount_pct": {
+              "10.0": 0.25,
+              "15.0": 0.2,
+              "20.0": 0.25,
+              "25.0": 0.1,
+              "5.0": 0.05,
+              "50.0": 0.15
+            },
+            "promotion.promo_type": {
+              "bogo": 0.15,
+              "bundle": 0.1,
+              "fixed_amount": 0.2,
+              "free_shipping": 0.15,
+              "percent_off": 0.4
+            },
+            "return.reason": {
+              "arrived_late": 0.05,
+              "changed_mind": 0.22,
+              "damaged_shipping": 0.1,
+              "defective": 0.15,
+              "not_as_described": 0.2,
+              "other": 0.03,
+              "wrong_size": 0.25
+            },
+            "return.refund_amount": {
+              "distribution": "log_normal",
+              "max": 2000.0,
+              "mean": 3.5,
+              "min": 5.0,
+              "sigma": 1.0
+            },
+            "store.store_type": {
+              "online": 0.1,
+              "physical": 0.85,
+              "warehouse": 0.05
+            }
+          },
+          "domain": "retail",
+          "profile": "default",
+          "ratio_keys": [
+            "address_per_customer",
+            "order_line_per_order",
+            "return_per_order"
+          ],
+          "ratios": {
+            "address_per_customer": 1.5,
+            "order_line_per_order": 2.5,
+            "return_per_order": 0.17
+          }
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-profile",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "domain": "retail",
+          "profile": "ghost"
+        },
+        "command": "profile_info",
+        "id": "unknown-profile"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "profile_info",
+        "error": {
+          "code": "input.invalid_value",
+          "group": "input",
+          "hint": null,
+          "message": "domain 'retail' has no profile 'ghost' (it has: default)"
+        },
+        "id": "unknown-profile",
+        "ok": false,
+        "warnings": []
+      }
+    }
+  ],
+  "command": "profile_info",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

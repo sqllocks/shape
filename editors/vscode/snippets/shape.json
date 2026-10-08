@@ -1,0 +1,128 @@
+{
+  "Shape project file": {
+    "prefix": "shape-project",
+    "description": "A starting shape.yml: one source with a baseline and one gate",
+    "body": [
+      "format: shape-project",
+      "version: 1",
+      "name: ${1:my-project}",
+      "",
+      "sources:",
+      "  ${2:orders}:",
+      "    path: ${3:data/orders}",
+      "    baseline:",
+      "      kind: previous_run",
+      "",
+      "gates:",
+      "  schema_conformance: {mode: ${4|enforce,observe|}}",
+      "$0"
+    ]
+  },
+  "Shape source": {
+    "prefix": "shape-source",
+    "description": "A named source (put it under `sources:`)",
+    "body": [
+      "${1:orders}:",
+      "  path: ${2:data/orders}",
+      "  dataset: ${3|false,true|}",
+      "$0"
+    ]
+  },
+  "Shape baseline: previous run": {
+    "prefix": "shape-baseline-previous",
+    "description": "Baseline: the newest committed profile",
+    "body": [
+      "baseline:",
+      "  kind: previous_run",
+      "$0"
+    ]
+  },
+  "Shape baseline: same weekday": {
+    "prefix": "shape-baseline-weekday",
+    "description": "Baseline: the newest profile from the same weekday",
+    "body": [
+      "baseline:",
+      "  kind: same_weekday",
+      "$0"
+    ]
+  },
+  "Shape baseline: rolling window": {
+    "prefix": "shape-baseline-window",
+    "description": "Baseline: the last N profiles (changes must show against every one)",
+    "body": [
+      "baseline:",
+      "  kind: rolling_window",
+      "  window: ${1:7}",
+      "$0"
+    ]
+  },
+  "Shape baseline: month end": {
+    "prefix": "shape-baseline-monthend",
+    "description": "Baseline: the newest profile of the previous month",
+    "body": [
+      "baseline:",
+      "  kind: month_end",
+      "$0"
+    ]
+  },
+  "Shape baseline: pinned artifact": {
+    "prefix": "shape-baseline-pinned-artifact",
+    "description": "Baseline: one committed .shape file",
+    "body": [
+      "baseline:",
+      "  kind: pinned",
+      "  artifact: ${1:shapes/baseline.shape}",
+      "$0"
+    ]
+  },
+  "Shape baseline: pinned ref": {
+    "prefix": "shape-baseline-pinned-ref",
+    "description": "Baseline: a registry ref, tag or content id",
+    "body": [
+      "baseline:",
+      "  kind: pinned",
+      "  ref: ${1:production}",
+      "$0"
+    ]
+  },
+  "Shape column threshold": {
+    "prefix": "shape-column-threshold",
+    "description": "A drift threshold for one column",
+    "body": [
+      "columns:",
+      "  ${1:amount}:",
+      "    thresholds: {${2:mean_shift_std}: ${3:1.0}}",
+      "$0"
+    ]
+  },
+  "Shape gate: observe": {
+    "prefix": "shape-gate-observe",
+    "description": "A gate that runs and reports but does not fail the run",
+    "body": [
+      "gates:",
+      "  ${1:distribution}: {mode: observe}",
+      "$0"
+    ]
+  },
+  "Shape gate: enforce": {
+    "prefix": "shape-gate-enforce",
+    "description": "A gate that fails the run when it fails",
+    "body": [
+      "gates:",
+      "  ${1:schema_conformance}: {mode: enforce}",
+      "$0"
+    ]
+  },
+  "Shape owner with annotations": {
+    "prefix": "shape-owner",
+    "description": "A column's owner and annotations",
+    "body": [
+      "columns:",
+      "  ${1:amount}:",
+      "    owner: ${2:data-team@example.com}",
+      "    annotations:",
+      "      ${3:unit}: ${4:EUR}",
+      "$0"
+    ]
+  }
+}

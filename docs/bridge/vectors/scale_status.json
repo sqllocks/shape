@@ -1,0 +1,139 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "finished-job",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "job_id": "job-000000000001"
+        },
+        "command": "scale_status",
+        "id": "finished-job"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "scale_status",
+        "id": "finished-job",
+        "ok": true,
+        "result": {
+          "cancellable": false,
+          "command": "scale_generate",
+          "created_at": "<any>",
+          "error": null,
+          "job_id": "job-000000000001",
+          "progress": {},
+          "result": {
+            "rows_generated": 10
+          },
+          "status": "succeeded",
+          "updated_at": "<any>"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "not-a-scale-job",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "job_id": "job-000000000003"
+        },
+        "command": "scale_status",
+        "id": "not-a-scale-job"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "scale_status",
+        "error": {
+          "code": "input.unknown_job",
+          "group": "input",
+          "hint": null,
+          "message": "job-000000000003 is not a scale_generate job"
+        },
+        "id": "not-a-scale-job",
+        "ok": false,
+        "warnings": []
+      }
+    }
+  ],
+  "command": "scale_status",
+  "format": "shape-bridge-vectors",
+  "jobs": {
+    "job-000000000001": {
+      "cancellable": false,
+      "command": "scale_generate",
+      "created_at": "2026-01-01T00:00:00.000+00:00",
+      "error": null,
+      "external": null,
+      "format": "shape-bridge-job",
+      "job_id": "job-000000000001",
+      "progress": {},
+      "request": {
+        "args": {},
+        "options": {}
+      },
+      "result": {
+        "rows_generated": 10
+      },
+      "status": "succeeded",
+      "updated_at": "2026-01-01T00:00:01.000+00:00",
+      "version": 1,
+      "worker": {
+        "pid": 1
+      }
+    },
+    "job-000000000002": {
+      "cancellable": false,
+      "command": "stream",
+      "created_at": "2026-01-01T00:00:00.000+00:00",
+      "error": null,
+      "external": null,
+      "format": "shape-bridge-job",
+      "job_id": "job-000000000002",
+      "progress": {},
+      "request": {
+        "args": {},
+        "options": {}
+      },
+      "result": {
+        "chunks_written": 2,
+        "rows_written": 100,
+        "stopped": false
+      },
+      "status": "succeeded",
+      "updated_at": "2026-01-01T00:00:01.000+00:00",
+      "version": 1,
+      "worker": {
+        "pid": 1
+      }
+    },
+    "job-000000000003": {
+      "cancellable": false,
+      "command": "verify",
+      "created_at": "2026-01-01T00:00:00.000+00:00",
+      "error": {
+        "code": "input.not_found",
+        "group": "input",
+        "hint": null,
+        "message": "file not found: x.csv"
+      },
+      "external": null,
+      "format": "shape-bridge-job",
+      "job_id": "job-000000000003",
+      "progress": {},
+      "request": {
+        "args": {},
+        "options": {}
+      },
+      "result": null,
+      "status": "failed",
+      "updated_at": "2026-01-01T00:00:01.000+00:00",
+      "version": 1,
+      "worker": {
+        "pid": 1
+      }
+    }
+  },
+  "version": 1
+}

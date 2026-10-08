@@ -1,0 +1,30 @@
+         13101 function calls in 0.466 seconds
+
+   Ordered by: internal time
+   List reduced from 88 to 22 due to restriction <22>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       40    0.109    0.003    0.109    0.003 {method 'searchsorted' of 'numpy.ndarray' objects}
+       40    0.071    0.002    0.071    0.002 {built-in method shape._kernel.pool_take}
+       60    0.054    0.001    0.054    0.001 {built-in method shape._kernel.alias_sample}
+       80    0.044    0.001    0.044    0.001 {built-in method shape._kernel.philox_uniform}
+      120    0.030    0.000    0.030    0.000 {method 'astype' of 'numpy.ndarray' objects}
+       40    0.022    0.001    0.152    0.004 /home/user/shape/src/shape/builtins/strategies/_relational.py:101(zipf_index)
+      140    0.014    0.000    0.432    0.003 /home/user/shape/src/shape/generation/engine.py:654(_column)
+       60    0.013    0.000    0.156    0.003 /home/user/shape/src/shape/builtins/strategies/basic.py:55(generate)
+       60    0.013    0.000    0.218    0.004 /home/user/shape/src/shape/builtins/strategies/keys.py:60(_indices)
+       20    0.012    0.001    0.020    0.001 /home/user/shape/src/shape/builtins/strategies/__init__.py:41(generate)
+       60    0.010    0.000    0.014    0.000 /home/user/shape/src/shape/generation/engine.py:310(take)
+       20    0.009    0.000    0.009    0.000 /root/.venvs/shape/lib/python3.11/site-packages/pyarrow/compute.py:246(wrapper)
+      340    0.008    0.000    0.017    0.000 /home/user/shape/src/shape/generation/arrowkit.py:97(array)
+      160    0.007    0.000    0.008    0.000 /home/user/shape/src/shape/generation/arrowkit.py:29(_from_numpy)
+       20    0.006    0.000    0.006    0.000 {built-in method numpy.arange}
+       20    0.004    0.000    0.466    0.023 /home/user/shape/src/shape/generation/engine.py:586(generate_chunk)
+      140    0.003    0.000    0.006    0.000 /home/user/shape/src/shape/generation/engine.py:537(_strategy)
+      140    0.003    0.000    0.007    0.000 /home/user/shape/src/shape/generation/arrowkit.py:130(to_numpy)
+       20    0.002    0.000    0.026    0.001 /home/user/shape/src/shape/generation/engine.py:697(_mask_nulls)
+      140    0.002    0.000    0.002    0.000 /home/user/shape/src/shape/generation/arrowkit.py:118(_numpy_dtype)
+      140    0.002    0.000    0.003    0.000 /home/user/shape/src/shape/plugins/host.py:217(get)
+      140    0.002    0.000    0.002    0.000 {built-in method numpy.frombuffer}
+
+

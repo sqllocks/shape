@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "additionalProperties": false,
+      "properties": {
+        "api_version": {
+          "pattern": "^(0|[1-9][0-9]{0,3})\\.(0|[1-9][0-9]{0,3})$",
+          "type": "string"
+        },
+        "command": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "maxLength": 128,
+          "type": [
+            "string",
+            "integer",
+            "null"
+          ]
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {},
+        "warnings": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "api_version",
+        "id",
+        "command",
+        "ok",
+        "result",
+        "warnings"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": false,
+      "properties": {
+        "api_version": {
+          "pattern": "^(0|[1-9][0-9]{0,3})\\.(0|[1-9][0-9]{0,3})$",
+          "type": "string"
+        },
+        "command": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "error": {
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "enum": [
+                "auth.missing_credentials",
+                "auth.rejected",
+                "input.contract_conflict",
+                "input.invalid_schema",
+                "input.invalid_value",
+                "input.job_interrupted",
+                "input.job_state",
+                "input.not_found",
+                "input.unknown_domain",
+                "input.unknown_format",
+                "input.unknown_job",
+                "input.unknown_proposal",
+                "input.unknown_source",
+                "input.unsupported_format_version",
+                "internal.error",
+                "io.read_failed",
+                "io.sink_failed",
+                "io.write_failed",
+                "policy.capability_unavailable",
+                "policy.not_permitted",
+                "policy.signature_invalid",
+                "policy.unverified_input",
+                "privacy.raw_values_withheld",
+                "usage.invalid_argument",
+                "usage.invalid_json",
+                "usage.invalid_request",
+                "usage.missing_argument",
+                "usage.request_too_large",
+                "usage.unknown_argument",
+                "usage.unknown_command",
+                "usage.unsupported_version"
+              ]
+            },
+            "group": {
+              "enum": [
+                "usage",
+                "input",
+                "policy",
+                "privacy",
+                "io",
+                "auth",
+                "internal"
+              ]
+            },
+            "hint": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "message": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "group",
+            "message",
+            "hint"
+          ],
+          "type": "object"
+        },
+        "id": {
+          "maxLength": 128,
+          "type": [
+            "string",
+            "integer",
+            "null"
+          ]
+        },
+        "ok": {
+          "const": false
+        },
+        "warnings": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "api_version",
+        "id",
+        "command",
+        "ok",
+        "error",
+        "warnings"
+      ],
+      "type": "object"
+    }
+  ],
+  "title": "bridge response",
+  "x-api-version": "1.2"
+}

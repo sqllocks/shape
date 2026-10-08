@@ -1,0 +1,211 @@
+{
+  "name": "shape_generate_gate_batch",
+  "properties": {
+    "description": "Shape on an Azure Batch pool: the container generates a domain, profiles the tables and checks the profile against the domain's contract; the exit code fails the Custom activity; the gate document in ADLS is read back by a Lookup to branch.",
+    "activities": [
+      {
+        "name": "GenerateAndCheck",
+        "type": "Custom",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.02:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "userProperties": [],
+        "linkedServiceName": {
+          "referenceName": "ShapeBatch",
+          "type": "LinkedServiceReference"
+        },
+        "typeProperties": {
+          "command": {
+            "value": "@concat('docker run --rm --user \"$(id -u):$(id -g)\" -e HOME=/tmp -v \"$AZ_BATCH_TASK_WORKING_DIR:/work\" -w /work ', '''', replace(pipeline().parameters.image, '''', ''), '''', ' python /work/run_generate_gate.py --activity /work/activity.json')",
+            "type": "Expression"
+          },
+          "resourceLinkedService": {
+            "referenceName": "ShapeBatchStorage",
+            "type": "LinkedServiceReference"
+          },
+          "folderPath": {
+            "value": "@pipeline().parameters.scriptsFolder",
+            "type": "Expression"
+          },
+          "extendedProperties": {
+            "domain": {
+              "value": "@pipeline().parameters.domain",
+              "type": "Expression"
+            },
+            "scale": {
+              "value": "@pipeline().parameters.scale",
+              "type": "Expression"
+            },
+            "seed": {
+              "value": "@pipeline().parameters.seed",
+              "type": "Expression"
+            },
+            "mode": {
+              "value": "@pipeline().parameters.mode",
+              "type": "Expression"
+            },
+            "baselineUrl": {
+              "value": "@pipeline().parameters.baselineUrl",
+              "type": "Expression"
+            },
+            "failOnDrift": {
+              "value": "@pipeline().parameters.failOnDrift",
+              "type": "Expression"
+            },
+            "managedIdentityClientId": {
+              "value": "@pipeline().parameters.managedIdentityClientId",
+              "type": "Expression"
+            },
+            "outputUrl": {
+              "value": "@concat('abfss://', pipeline().parameters.outputFileSystem, '@', pipeline().parameters.storageAccount, '.dfs.core.windows.net/', pipeline().parameters.outputFolder, '/', pipeline().RunId)",
+              "type": "Expression"
+            }
+          },
+          "retentionTimeInDays": 1,
+          "autoUserSpecification": "pool-admin"
+        }
+      },
+      {
+        "name": "ReadGate",
+        "type": "Lookup",
+        "dependsOn": [
+          {
+            "activity": "GenerateAndCheck",
+            "dependencyConditions": [
+              "Completed"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.00:10:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "source": {
+            "type": "JsonSource",
+            "storeSettings": {
+              "type": "AzureBlobFSReadSettings",
+              "recursive": false,
+              "enablePartitionDiscovery": false
+            },
+            "formatSettings": {
+              "type": "JsonReadSettings"
+            }
+          },
+          "dataset": {
+            "referenceName": "ShapeGateJson",
+            "type": "DatasetReference",
+            "parameters": {
+              "fileSystem": {
+                "value": "@pipeline().parameters.outputFileSystem",
+                "type": "Expression"
+              },
+              "folderPath": {
+                "value": "@concat(pipeline().parameters.outputFolder, '/', pipeline().RunId)",
+                "type": "Expression"
+              }
+            }
+          },
+          "firstRowOnly": true
+        }
+      },
+      {
+        "name": "CheckGate",
+        "type": "IfCondition",
+        "dependsOn": [
+          {
+            "activity": "ReadGate",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "userProperties": [],
+        "typeProperties": {
+          "expression": {
+            "value": "@activity('ReadGate').output.firstRow.passed",
+            "type": "Expression"
+          },
+          "ifTrueActivities": [],
+          "ifFalseActivities": [
+            {
+              "name": "FailGate",
+              "type": "Fail",
+              "dependsOn": [],
+              "userProperties": [],
+              "typeProperties": {
+                "message": {
+                  "value": "@concat('Shape generated data broke the contract of ', pipeline().parameters.domain, ': ', if(empty(activity('ReadGate').output.firstRow.error), string(activity('ReadGate').output.firstRow.violations), activity('ReadGate').output.firstRow.error))",
+                  "type": "Expression"
+                },
+                "errorCode": "ShapeContractFailed"
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "parameters": {
+      "domain": {
+        "type": "string",
+        "defaultValue": "retail"
+      },
+      "scale": {
+        "type": "string",
+        "defaultValue": "small"
+      },
+      "seed": {
+        "type": "int",
+        "defaultValue": 42
+      },
+      "mode": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "baselineUrl": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "failOnDrift": {
+        "type": "bool",
+        "defaultValue": false
+      },
+      "storageAccount": {
+        "type": "string",
+        "defaultValue": "<<STORAGE_ACCOUNT>>"
+      },
+      "outputFileSystem": {
+        "type": "string",
+        "defaultValue": "shape"
+      },
+      "outputFolder": {
+        "type": "string",
+        "defaultValue": "generated/retail"
+      },
+      "image": {
+        "type": "string",
+        "defaultValue": "ghcr.io/sqllocks/shape:0.9.1"
+      },
+      "scriptsFolder": {
+        "type": "string",
+        "defaultValue": "shape-batch"
+      },
+      "managedIdentityClientId": {
+        "type": "string",
+        "defaultValue": ""
+      }
+    },
+    "annotations": [
+      "shape"
+    ]
+  }
+}

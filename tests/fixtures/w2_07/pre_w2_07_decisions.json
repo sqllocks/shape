@@ -1,0 +1,77 @@
+{
+  "format": "shape-decisions",
+  "version": 1,
+  "proposals": [
+    {
+      "claim": {
+        "child": "orders",
+        "child_columns": [
+          "customer_id"
+        ],
+        "parent": "customer",
+        "parent_columns": [
+          "customer_id"
+        ],
+        "type": "one_to_many"
+      },
+      "confidence": 0.85,
+      "evidence": {
+        "cardinality": {
+          "child_distinct": 98,
+          "parent_distinct": 100,
+          "parent_unique": true
+        },
+        "name": {
+          "rule": "same name as the parent key",
+          "score": 1.0
+        },
+        "profiler_detected": true,
+        "range": {
+          "child": [
+            1,
+            100
+          ],
+          "parent": [
+            1,
+            100
+          ],
+          "within": true
+        },
+        "type": {
+          "child": "integer",
+          "compatible": true,
+          "parent": "integer"
+        }
+      },
+      "id": "relationship:orders.customer_id->customer.customer_id",
+      "kind": "relationship",
+      "proposed_at": "2026-10-03T13:18:49Z",
+      "subject": "orders.customer_id->customer.customer_id"
+    },
+    {
+      "claim": {
+        "semantic": "region"
+      },
+      "confidence": 0.55,
+      "evidence": {
+        "name": {
+          "confidence": 0.55,
+          "hint": "region"
+        }
+      },
+      "id": "semantic:customer.region",
+      "kind": "semantic",
+      "proposed_at": "2026-10-03T13:18:49Z",
+      "subject": "customer.region"
+    }
+  ],
+  "decisions": [
+    {
+      "actor": "ana",
+      "at": "2026-10-03T12:00:00Z",
+      "note": "",
+      "proposal": "relationship:orders.customer_id->customer.customer_id",
+      "status": "accepted"
+    }
+  ]
+}

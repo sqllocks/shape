@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sqllocks-shape-fabric"
+# Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
+version = "0.9.1"
+description = "Shape plugin: Microsoft Fabric, Synapse and Azure Data Factory pipeline integration"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: OS Independent",
+    "Topic :: Database",
+]
+dependencies = ["sqllocks-shape==0.9.1"]
+
+[project.urls]
+Homepage = "https://github.com/sqllocks/shape"
+Repository = "https://github.com/sqllocks/shape"
+Issues = "https://github.com/sqllocks/shape/issues"
+Documentation = "https://github.com/sqllocks/shape/tree/main/plugins/shape-fabric"
+
+[project.optional-dependencies]
+# The Eventstream emitter and writer: the Event Hubs plugin (azure-eventhub).
+eventhubs = ["sqllocks-shape-eventhubs==0.9.1"]
+# The SQL database, Warehouse, Synapse and SQL Server targets: the SQL Server plugin (pyodbc,
+# which needs unixODBC and the Microsoft ODBC driver on Linux).
+sqlserver = ["sqllocks-shape-sqlserver==0.9.1"]
+# Microsoft Entra sign-in to an Eventhouse instead of a bearer token.
+entra = ["azure-identity>=1.16.1"]
+# Reading and writing OneLake / ADLS Gen2 paths (abfss://, onelake://): adlfs and azure-identity.
+onelake = ["sqllocks-shape[azure]==0.9.1"]
+# Reading a semantic model (semantic-model://, shape profile-model): sempy runs inside a Fabric notebook.
+semantic-link = ["semantic-link-sempy>=0.8"]
+
+# Entry points (shape.* groups, plugin API v1) are added here by the work package that
+# implements each part of this plugin; see docs/plugins/authoring.md.
+[project.entry-points."shape.emitters"]
+eventstream = "shape_fabric:EventstreamEmitter"
+eventhouse = "shape_fabric:EventhouseEmitter"
+
+[project.entry-points."shape.commands"]
+fabric = "shape_fabric.commands:FabricCommand"
+publish = "shape_fabric.commands:PublishCommand"
+notebook = "shape_fabric.commands:NotebookCommand"
+deploy-notebook = "shape_fabric.commands:DeployNotebookCommand"
+setup-fabric = "shape_fabric.commands:SetupFabricCommand"
+export-model = "shape_fabric.commands:ExportModelCommand"
+profile-model = "shape_fabric.commands:ProfileModelCommand"
+known-answer = "shape_fabric.commands:KnownAnswerCommand"
+check-answers = "shape_fabric.commands:CheckAnswersCommand"
+publish-report = "shape_fabric.commands:PublishReportCommand"
+
+[project.entry-points."shape.sinks"]
+sqlserver = "shape_fabric:SqlServerSink"
+warehouse = "shape_fabric:WarehouseSink"
+synapse = "shape_fabric:SynapseSink"
+
+[project.entry-points."shape.sources"]
+onelake = "shape_fabric:LakehouseSource"
+semantic-model = "shape_fabric.semantic_source:SemanticModelSource"
+
+[tool.setuptools.packages.find]
+where = ["src"]

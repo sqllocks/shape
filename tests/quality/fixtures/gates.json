@@ -1,0 +1,50 @@
+{
+  "format": "shape-gates",
+  "version": 1,
+  "tables": {
+    "customer": {
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string",
+          "nullable": false
+        },
+        "age": {
+          "type": "integer",
+          "nullable": true
+        }
+      }
+    },
+    "order": {
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "integer"
+        },
+        "customer_id": {
+          "type": "integer"
+        }
+      }
+    }
+  },
+  "relationships": [
+    {
+      "name": "placed_by",
+      "parent": "customer",
+      "child": "order",
+      "parent_columns": [
+        "id"
+      ],
+      "child_columns": [
+        "customer_id"
+      ]
+    }
+  ]
+}

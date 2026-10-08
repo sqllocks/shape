@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "daily",
+    "seed": 11
+  },
+  "tables": {
+    "customer": {
+      "name": "customer",
+      "primary_key": [
+        "customer_id"
+      ],
+      "columns": {
+        "customer_id": {
+          "name": "customer_id",
+          "type": "string",
+          "generator": {
+            "strategy": "pattern",
+            "format": "C{seq:9}"
+          }
+        },
+        "segment": {
+          "name": "segment",
+          "type": "string",
+          "generator": {
+            "strategy": "weighted_enum",
+            "values": {
+              "a": 0.5,
+              "b": 0.3,
+              "c": 0.2
+            }
+          }
+        },
+        "notes": {
+          "name": "notes",
+          "type": "string",
+          "generator": {
+            "strategy": "weighted_enum",
+            "values": {
+              "call back": 0.7,
+              "vip": 0.3
+            }
+          }
+        },
+        "order_total": {
+          "name": "order_total",
+          "type": "float",
+          "generator": {
+            "strategy": "computed",
+            "rule": "sum_children",
+            "child_table": "order",
+            "child_column": "amount"
+          }
+        }
+      }
+    },
+    "order": {
+      "name": "order",
+      "primary_key": [
+        "order_id"
+      ],
+      "columns": {
+        "order_id": {
+          "name": "order_id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "customer_id": {
+          "name": "customer_id",
+          "type": "string",
+          "generator": {
+            "strategy": "foreign_key",
+            "ref": "customer.customer_id"
+          }
+        },
+        "amount": {
+          "name": "amount",
+          "type": "float",
+          "generator": {
+            "strategy": "distribution",
+            "low": 5.0,
+            "high": 500.0
+          }
+        },
+        "status": {
+          "name": "status",
+          "type": "string",
+          "generator": {
+            "strategy": "weighted_enum",
+            "values": {
+              "open": 0.5,
+              "shipped": 0.3,
+              "closed": 0.2
+            }
+          }
+        },
+        "order_date": {
+          "name": "order_date",
+          "type": "timestamp",
+          "generator": {
+            "strategy": "temporal",
+            "start": "2026-01-01",
+            "end": "2026-01-31"
+          }
+        },
+        "double": {
+          "name": "double",
+          "type": "float",
+          "generator": {
+            "strategy": "derived",
+            "source": "amount"
+          }
+        }
+      }
+    }
+  },
+  "relationships": [
+    {
+      "name": "o_c",
+      "parent": "customer",
+      "child": "order",
+      "parent_columns": [
+        "customer_id"
+      ],
+      "child_columns": [
+        "customer_id"
+      ]
+    }
+  ],
+  "generation": {
+    "scale": "small",
+    "scales": {
+      "small": {
+        "customer": 10,
+        "order": 20
+      }
+    }
+  },
+  "generators": {
+    "computed": 1,
+    "derived": 1,
+    "distribution": 1,
+    "foreign_key": 1,
+    "pattern": 1,
+    "sequence": 1,
+    "temporal": 1,
+    "uniform": 1,
+    "weighted_enum": 1
+  }
+}

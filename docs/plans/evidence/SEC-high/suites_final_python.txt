@@ -1,0 +1,4 @@
+$ SHAPE_KERNEL=python pytest -m "not emulator and not live" tests/security plugins/shape-fabric/tests tests/privacy tests/bridge tests/benchmarks   # final tree, private TMPDIR
+FAILED plugins/shape-fabric/tests/test_lakehouse.py::test_parquet_to_a_local_folder_round_trips
+1 failed, 2568 passed, 42 deselected, 16 warnings in 217.74s (0:03:37)
+python exit 1

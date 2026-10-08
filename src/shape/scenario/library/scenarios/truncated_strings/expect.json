@@ -1,0 +1,11 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "truncated_strings",
+  "gates_fail": [],
+  "defects": {
+    "truncate_strings": {
+      "min": 1
+    }
+  }
+}

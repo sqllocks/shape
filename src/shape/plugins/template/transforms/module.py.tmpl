@@ -1,0 +1,19 @@
+"""Transform `{{name}}`: tables to tables."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any
+
+import pyarrow as pa
+
+SHAPE_API = "1.0"
+
+class {{class}}:
+    """Returns the tables as they are. Replace it with your transformation; build new tables,
+    never change the ones you are given."""
+
+    name = "{{name}}"
+
+    def apply(self, tables: Mapping[str, pa.Table], **options: Any) -> dict[str, pa.Table]:
+        return dict(tables)

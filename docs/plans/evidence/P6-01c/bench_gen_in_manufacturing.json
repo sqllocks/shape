@@ -1,0 +1,477 @@
+{
+ "meta": {
+  "cores": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-10-02 07:03:05",
+  "impl": "shape",
+  "domain": "manufacturing",
+  "runs": 5,
+  "warmup": 1,
+  "ref_seed": 42,
+  "impl_seed": 1042,
+  "loadavg_start": 0.51318359375
+ },
+ "scales": {
+  "medium": {
+   "summary": {
+    "refengine": {
+     "total_s": 0.17061396000008244,
+     "gen_s": 0.11563116199999968,
+     "write_s": 0.05618479000008847,
+     "cpu_s": 0.164088,
+     "user_s": 0.1474120000000001,
+     "sys_s": 0.01902899999999999,
+     "minor_faults": 1850,
+     "import_s": 1.314458046000027,
+     "peak_rss_mb": 277.88671875,
+     "parquet_bytes": 2449991,
+     "rows": 50520,
+     "rows_per_s_total": 296107.07119145227,
+     "rows_per_s_generate": 436906.4456863293,
+     "runs_total_s": [
+      0.171,
+      0.163,
+      0.158,
+      0.202,
+      0.226
+     ],
+     "loadavg_before": [
+      0.51318359375,
+      0.55224609375,
+      0.55224609375,
+      0.90869140625,
+      0.90869140625
+     ],
+     "per_table_s_median": {
+      "product": 0.008301915999936682,
+      "production_line": 0.001295669999990423,
+      "bom": 0.0014475119999133312,
+      "equipment": 0.0021952100000817154,
+      "work_order": 0.06291258600003857,
+      "downtime_event": 0.0014650989999154262,
+      "production_metric": 0.008838857999990068,
+      "quality_check": 0.016285393000089243,
+      "defect": 0.002820929000108663,
+      "_compute_phase+business_rules": 7.415999994009326e-05,
+      "_construct_domain+RefEngine()": 0.00857679199998529
+     },
+     "row_counts": {
+      "product": 100,
+      "production_line": 20,
+      "bom": 500,
+      "equipment": 80,
+      "work_order": 5000,
+      "downtime_event": 320,
+      "production_metric": 25000,
+      "quality_check": 15000,
+      "defect": 4500
+     }
+    },
+    "shape": {
+     "total_s": 0.11449580800012882,
+     "gen_s": 0.11449580800012882,
+     "write_s": 0.0,
+     "cpu_s": 0.1691999999999999,
+     "user_s": 0.06608899999999995,
+     "sys_s": 0.09151299999999998,
+     "minor_faults": 1819,
+     "import_s": 0.4117621110001437,
+     "peak_rss_mb": 209.70703125,
+     "parquet_bytes": 2311850,
+     "rows": 50520,
+     "rows_per_s_total": 441238.8617751242,
+     "rows_per_s_generate": 441238.8617751242,
+     "runs_total_s": [
+      0.071,
+      0.185,
+      0.114,
+      0.119,
+      0.059
+     ],
+     "loadavg_before": [
+      0.55224609375,
+      0.55224609375,
+      0.55224609375,
+      0.90869140625,
+      0.916015625
+     ],
+     "per_table_s_median": {
+      "_construct_domain+Engine": 0.006107188999976643,
+      "_generate+write": 0.1090710640000907
+     },
+     "row_counts": {
+      "product": 100,
+      "production_line": 20,
+      "bom": 500,
+      "equipment": 80,
+      "work_order": 5000,
+      "downtime_event": 320,
+      "production_metric": 25000,
+      "quality_check": 15000,
+      "defect": 4500
+     },
+     "numpy": "2.4.6",
+     "pyarrow": "25.0.1"
+    }
+   },
+   "raw": {
+    "refengine": [
+     {
+      "import_s": 1.3448316260000865,
+      "gen_s": 0.11930631199993513,
+      "write_s": 0.05130764800014731,
+      "total_s": 0.17061396000008244,
+      "rows": {
+       "product": 100,
+       "production_line": 20,
+       "bom": 500,
+       "equipment": 80,
+       "work_order": 5000,
+       "downtime_event": 320,
+       "production_metric": 25000,
+       "quality_check": 15000,
+       "defect": 4500
+      },
+      "per_table_s": {
+       "product": 0.008462178999934622,
+       "production_line": 0.003173408000066047,
+       "bom": 0.002109243999939281,
+       "equipment": 0.00215388200012967,
+       "work_order": 0.06291258600003857,
+       "downtime_event": 0.0019208869998692535,
+       "production_metric": 0.008838857999990068,
+       "quality_check": 0.017438785999956963,
+       "defect": 0.002820929000108663,
+       "_compute_phase+business_rules": 7.19249999292515e-05,
+       "_construct_domain+RefEngine()": 0.009403627999972741
+      },
+      "user_s": 0.14054299999999986,
+      "sys_s": 0.02354500000000001,
+      "minor_faults": 1850,
+      "major_faults": 0,
+      "cpu_s": 0.164088,
+      "peak_rss_mb": 278.06640625,
+      "parquet_bytes": 2449991,
+      "loadavg_before": 0.51318359375
+     },
+     {
+      "import_s": 1.3128396419999717,
+      "gen_s": 0.10670363599979282,
+      "write_s": 0.05618479000008847,
+      "total_s": 0.1628884259998813,
+      "rows": {
+       "product": 100,
+       "production_line": 20,
+       "bom": 500,
+       "equipment": 80,
+       "work_order": 5000,
+       "downtime_event": 320,
+       "production_metric": 25000,
+       "quality_check": 15000,
+       "defect": 4500
+      },
+      "per_table_s": {
+       "product": 0.004818087999865384,
+       "production_line": 0.0012401430001318658,
+       "bom": 0.0014475119999133312,
+       "equipment": 0.0021952100000817154,
+       "work_order": 0.059221818999958487,
+       "downtime_event": 0.0013515329999336245,
+       "production_metric": 0.009199904000070092,
+       "quality_check": 0.016285393000089243,
+       "defect": 0.0027651609998429194,
+       "_compute_phase+business_rules": 6.317199995464762e-05,
+       "_construct_domain+RefEngine()": 0.008115700999951514
+      },
+      "user_s": 0.14816900000000022,
+      "sys_s": 0.008100000000000024,
+      "minor_faults": 1848,
+      "major_faults": 0,
+      "cpu_s": 0.15626900000000044,
+      "peak_rss_mb": 277.984375,
+      "parquet_bytes": 2449991,
+      "loadavg_before": 0.55224609375
+     },
+     {
+      "import_s": 1.2675746669999626,
+      "gen_s": 0.10684923700000581,
+      "write_s": 0.05157394999991993,
+      "total_s": 0.15842318699992575,
+      "rows": {
+       "product": 100,
+       "production_line": 20,
+       "bom": 500,
+       "equipment": 80,
+       "work_order": 5000,
+       "downtime_event": 320,
+       "production_metric": 25000,
+       "quality_check": 15000,
+       "defect": 4500
+      },
+      "per_table_s": {
+       "product": 0.012196640999945885,
+       "production_line": 0.0011975840000104654,
+       "bom": 0.0014425510000819486,
+       "equipment": 0.002150586999960069,
+       "work_order": 0.05480940500001452,
+       "downtime_event": 0.0012642159999813884,
+       "production_metric": 0.008027833000141982,
+       "quality_check": 0.015907516999959626,
+       "defect": 0.002721887000006973,
+       "_compute_phase+business_rules": 7.415999994009326e-05,
+       "_construct_domain+RefEngine()": 0.007056855999962863
+      },
+      "user_s": 0.14698499999999992,
+      "sys_s": 0.011866999999999989,
+      "minor_faults": 1851,
+      "major_faults": 0,
+      "cpu_s": 0.158852,
+      "peak_rss_mb": 277.44921875,
+      "parquet_bytes": 2449991,
+      "loadavg_before": 0.55224609375
+     },
+     {
+      "import_s": 1.5597970940000323,
+      "gen_s": 0.11563116199999968,
+      "write_s": 0.08589681500006918,
+      "total_s": 0.20152797700006886,
+      "rows": {
+       "product": 100,
+       "production_line": 20,
+       "bom": 500,
+       "equipment": 80,
+       "work_order": 5000,
+       "downtime_event": 320,
+       "production_metric": 25000,
+       "quality_check": 15000,
+       "defect": 4500
+      },
+      "per_table_s": {
+       "product": 0.005311551999966468,
+       "production_line": 0.001295669999990423,
+       "bom": 0.0014428350000343926,
+       "equipment": 0.0027302799999233685,
+       "work_order": 0.06535642900007588,
+       "downtime_event": 0.0014650989999154262,
+       "production_metric": 0.008261298999968858,
+       "quality_check": 0.015725709000207644,
+       "defect": 0.0028809909999836236,
+       "_compute_phase+business_rules": 7.891199993537157e-05,
+       "_construct_domain+RefEngine()": 0.011082385999998223
+      },
+      "user_s": 0.1474120000000001,
+      "sys_s": 0.049149,
+      "minor_faults": 1854,
+      "major_faults": 0,
+      "cpu_s": 0.19656099999999999,
+      "peak_rss_mb": 277.88671875,
+      "parquet_bytes": 2449991,
+      "loadavg_before": 0.90869140625
+     },
+     {
+      "import_s": 1.314458046000027,
+      "gen_s": 0.15673519300003136,
+      "write_s": 0.06966788799991264,
+      "total_s": 0.226403080999944,
+      "rows": {
+       "product": 100,
+       "production_line": 20,
+       "bom": 500,
+       "equipment": 80,
+       "work_order": 5000,
+       "downtime_event": 320,
+       "production_metric": 25000,
+       "quality_check": 15000,
+       "defect": 4500
+      },
+      "per_table_s": {
+       "product": 0.008301915999936682,
+       "production_line": 0.0015128710001590662,
+       "bom": 0.0018555749998085957,
+       "equipment": 0.003148826000142435,
+       "work_order": 0.0949891079999361,
+       "downtime_event": 0.0024400120000791503,
+       "production_metric": 0.0117789979999543,
+       "quality_check": 0.020369953999988866,
+       "defect": 0.0036654610000823595,
+       "_compute_phase+business_rules": 9.567999995852006e-05,
+       "_construct_domain+RefEngine()": 0.00857679199998529
+      },
+      "user_s": 0.20095399999999985,
+      "sys_s": 0.01902899999999999,
+      "minor_faults": 1842,
+      "major_faults": 0,
+      "cpu_s": 0.2199829999999996,
+      "peak_rss_mb": 277.7890625,
+      "parquet_bytes": 2449991,
+      "loadavg_before": 0.90869140625
+     }
+    ],
+    "shape": [
+     {
+      "import_s": 0.42790658000012627,
+      "gen_s": 0.07123997300004703,
+      "write_s": 0.0,
+      "total_s": 0.07123997300004703,
+      "overlapped": true,
+      "rows": {
+       "product": 100,
+       "production_line": 20,
+       "bom": 500,
+       "equipment": 80,
+       "work_order": 5000,
+       "downtime_event": 320,
+       "production_metric": 25000,
+       "quality_check": 15000,
+       "defect": 4500
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.006107188999976643,
+       "_generate+write": 0.06513278400007039
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.06101000000000001,
+      "sys_s": 0.078476,
+      "minor_faults": 1819,
+      "major_faults": 0,
+      "cpu_s": 0.139486,
+      "peak_rss_mb": 209.70703125,
+      "parquet_bytes": 2311850,
+      "loadavg_before": 0.55224609375
+     },
+     {
+      "import_s": 0.3886617149998983,
+      "gen_s": 0.18479572699993696,
+      "write_s": 0.0,
+      "total_s": 0.18479572699993696,
+      "overlapped": true,
+      "rows": {
+       "product": 100,
+       "production_line": 20,
+       "bom": 500,
+       "equipment": 80,
+       "work_order": 5000,
+       "downtime_event": 320,
+       "production_metric": 25000,
+       "quality_check": 15000,
+       "defect": 4500
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.006515733000014734,
+       "_generate+write": 0.17827999399992223
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.06608899999999995,
+      "sys_s": 0.30336199999999997,
+      "minor_faults": 1836,
+      "major_faults": 0,
+      "cpu_s": 0.36945099999999986,
+      "peak_rss_mb": 229.83203125,
+      "parquet_bytes": 2311850,
+      "loadavg_before": 0.55224609375
+     },
+     {
+      "import_s": 0.4117621110001437,
+      "gen_s": 0.11449580800012882,
+      "write_s": 0.0,
+      "total_s": 0.11449580800012882,
+      "overlapped": true,
+      "rows": {
+       "product": 100,
+       "production_line": 20,
+       "bom": 500,
+       "equipment": 80,
+       "work_order": 5000,
+       "downtime_event": 320,
+       "production_metric": 25000,
+       "quality_check": 15000,
+       "defect": 4500
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.0054247440000381175,
+       "_generate+write": 0.1090710640000907
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.062007000000000034,
+      "sys_s": 0.137311,
+      "minor_faults": 1839,
+      "major_faults": 0,
+      "cpu_s": 0.1993180000000001,
+      "peak_rss_mb": 213.9609375,
+      "parquet_bytes": 2311850,
+      "loadavg_before": 0.55224609375
+     },
+     {
+      "import_s": 0.43302879299994856,
+      "gen_s": 0.11940556800004742,
+      "write_s": 0.0,
+      "total_s": 0.11940556800004742,
+      "overlapped": true,
+      "rows": {
+       "product": 100,
+       "production_line": 20,
+       "bom": 500,
+       "equipment": 80,
+       "work_order": 5000,
+       "downtime_event": 320,
+       "production_metric": 25000,
+       "quality_check": 15000,
+       "defect": 4500
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.005605743999922197,
+       "_generate+write": 0.11379982400012523
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.07768699999999995,
+      "sys_s": 0.09151299999999998,
+      "minor_faults": 1812,
+      "major_faults": 0,
+      "cpu_s": 0.1691999999999999,
+      "peak_rss_mb": 205.83203125,
+      "parquet_bytes": 2311850,
+      "loadavg_before": 0.90869140625
+     },
+     {
+      "import_s": 0.379393403999984,
+      "gen_s": 0.058710021000024426,
+      "write_s": 0.0,
+      "total_s": 0.058710021000024426,
+      "overlapped": true,
+      "rows": {
+       "product": 100,
+       "production_line": 20,
+       "bom": 500,
+       "equipment": 80,
+       "work_order": 5000,
+       "downtime_event": 320,
+       "production_metric": 25000,
+       "quality_check": 15000,
+       "defect": 4500
+      },
+      "per_table_s": {
+       "_construct_domain+Engine": 0.006446234999884837,
+       "_generate+write": 0.05226378600013959
+      },
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "user_s": 0.073874,
+      "sys_s": 0.013114,
+      "minor_faults": 1770,
+      "major_faults": 0,
+      "cpu_s": 0.08698800000000007,
+      "peak_rss_mb": 195.52734375,
+      "parquet_bytes": 2311850,
+      "loadavg_before": 0.916015625
+     }
+    ]
+   }
+  }
+ }
+}

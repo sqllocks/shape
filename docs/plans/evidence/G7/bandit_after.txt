@@ -1,0 +1,2 @@
+$ bandit -q -r src -ll   (as .github/workflows/security.yml), after the fix
+exit 0

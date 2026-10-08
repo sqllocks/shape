@@ -1,0 +1,7124 @@
+{
+ "commands": {
+  "badge": {
+   "flags": {
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--label": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "RESULT.json",
+     "nargs": "*"
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "bisect": {
+   "flags": {
+    "--bad": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--cardinality-ratio-max": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--cardinality-ratio-min": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--coarse": {
+     "choices": [
+      "month",
+      "week"
+     ],
+     "takes_value": true
+    },
+    "--column": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--column-threshold": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--contract": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--good": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--ignore": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--kind": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--mean-shift-std": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--min-severity": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--no-project": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--null-rate": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--only": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--policy": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--project": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--source": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--threshold": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--verify-all": {
+     "choices": null,
+     "takes_value": false
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "REGISTRY",
+     "nargs": null
+    },
+    {
+     "choices": null,
+     "name": "NAME",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "bridge": {
+   "flags": {
+    "--jobs-dir": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--once": {
+     "choices": null,
+     "takes_value": false
+    }
+   },
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "schema": {
+     "flags": {
+      "--check": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--out": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "canary": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "check": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--result": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "canary.json",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "make": {
+     "flags": {
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--format": {
+       "choices": [
+        "csv",
+        "jsonl",
+        "parquet"
+       ],
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--marker": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--rows": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--seed": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "library:NAME|ID",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "capture": {
+   "flags": {
+    "--as-of": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dataset": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--passphrase-env": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--passphrase-stdin": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--sign": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--version": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "SRC",
+     "nargs": null
+    }
+   ],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "cat": {
+   "flags": {
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--verify": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "FILE",
+     "nargs": null
+    }
+   ],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "certify-shapes": {
+   "flags": {
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--threshold": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "TARGET",
+     "nargs": null
+    },
+    {
+     "choices": null,
+     "name": "OBSERVED",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "changes": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "ack": {
+     "flags": {
+      "--all": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--by": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--change": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--file": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--reason": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--until": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "RESULT.json",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "add": {
+     "flags": {
+      "--action": {
+       "choices": [
+        "expect",
+        "severity",
+        "suppress"
+       ],
+       "takes_value": true
+      },
+      "--column": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--file": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--from": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--id": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--kind": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--owner": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--reason": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--severity": {
+       "choices": [
+        "high",
+        "low",
+        "medium"
+       ],
+       "takes_value": true
+      },
+      "--source": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--ticket": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--until": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "list": {
+     "flags": {
+      "--active-on": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "FILE",
+       "nargs": "?"
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "validate": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "FILE",
+       "nargs": "?"
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "chaos": {
+   "flags": {
+    "--allow-real-input": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--batch": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--batch-date": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--corrupt": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--format": {
+     "choices": [
+      "csv",
+      "jsonl",
+      "parquet"
+     ],
+     "takes_value": true
+    },
+    "--ground-truth": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--input": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--mode": {
+     "choices": [
+      "3nf",
+      "star"
+     ],
+     "takes_value": true
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--path-template": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--scale": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--seed": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--start-date": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--table-format": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-f": {
+     "choices": [
+      "csv",
+      "jsonl",
+      "parquet"
+     ],
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-s": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "DOMAIN|SCHEMA.json",
+     "nargs": "?"
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "check": {
+   "flags": {
+    "--changes": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--data": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--enforce-learned": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--format": {
+     "choices": [
+      "auto",
+      "csv",
+      "jsonl",
+      "parquet"
+     ],
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--junit": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--no-changes": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-project": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--notify": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--on": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--project": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sarif": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--source": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--strict": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--verify": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "PROFILE.shape",
+     "nargs": null
+    },
+    {
+     "choices": null,
+     "name": "CONTRACT.json",
+     "nargs": "?"
+    }
+   ],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "ci": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "comment": {
+     "flags": {
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--max-findings": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--title": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "RESULT.json",
+       "nargs": "+"
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "post-comment": {
+     "flags": {
+      "--body-file": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--pr": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--repo": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "compare": {
+   "flags": {
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--expected-anomaly-rate": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--format": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--input-format": {
+     "choices": [
+      "auto",
+      "csv",
+      "jsonl",
+      "parquet"
+     ],
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--junit": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--max-auc": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--min-column-score": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--min-edge-overlap": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--min-pass-rate": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--min-score": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--min-table-score": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--no-project": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--notify": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--project": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sarif": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--tier": {
+     "choices": [
+      "1",
+      "2",
+      "3"
+     ],
+     "takes_value": true
+    },
+    "--tolerance": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "REFERENCE",
+     "nargs": null
+    },
+    {
+     "choices": null,
+     "name": "SYNTHETIC",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "compatibility": {
+   "flags": {
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--mode": {
+     "choices": [
+      "backward",
+      "forward",
+      "full"
+     ],
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "BEFORE",
+     "nargs": null
+    },
+    {
+     "choices": null,
+     "name": "AFTER",
+     "nargs": null
+    }
+   ],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "composite": {
+   "flags": {
+    "--batch-date": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--batch-size": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--chaos-log": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--chunk-rows": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--commit-rows": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--delta-mode": {
+     "choices": [
+      "append",
+      "overwrite"
+     ],
+     "takes_value": true
+    },
+    "--drift-plan": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--format": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--identifiers": {
+     "choices": [
+      "realistic",
+      "reserved"
+     ],
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--manifest": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-sql-ddl": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-sql-drop": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-sql-go": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--out": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--partition-by": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--path-template": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--roll-rows": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--roll-seconds": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--scale": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--schema-name": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--seed": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sql-constraints": {
+     "choices": [
+      "disable",
+      "keep"
+     ],
+     "takes_value": true
+    },
+    "--sql-ddl": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--sql-dialect": {
+     "choices": [
+      "mysql",
+      "postgres",
+      "tsql",
+      "tsql-fabric-warehouse"
+     ],
+     "takes_value": true
+    },
+    "--sql-drop": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--sql-go": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--table-format": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--to": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--write-mode": {
+     "choices": [
+      "append",
+      "create",
+      "fail",
+      "overwrite",
+      "replace",
+      "truncate",
+      "upsert"
+     ],
+     "takes_value": true
+    },
+    "--yes": {
+     "choices": null,
+     "takes_value": false
+    },
+    "-f": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "PRESET|DOMAIN+DOMAIN",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "conformance": {
+   "flags": {
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    }
+   },
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "continue": {
+   "flags": {
+    "--as-of": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--batch-date": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--daily-rows": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--date-column": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--delete-fraction": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--end-date": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--format": {
+     "choices": [
+      "csv",
+      "jsonl",
+      "parquet"
+     ],
+     "takes_value": true
+    },
+    "--input": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--inserts": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--mode": {
+     "choices": [
+      "3nf",
+      "star"
+     ],
+     "takes_value": true
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--path-template": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--scale": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--seed": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--start-date": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--table-format": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--transitions": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--update-fraction": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-f": {
+     "choices": [
+      "csv",
+      "jsonl",
+      "parquet"
+     ],
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-s": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "DOMAIN|SCHEMA.json",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "contract": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "emit": {
+     "flags": {
+      "--dialect": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--strict": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--table": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--to": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "CONTRACT.json",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "contracts": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "check-consumers": {
+     "flags": {
+      "--baseline": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--consumers": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--no-project": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--project": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--require-consumers": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--source": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "PROFILE.shape",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "validate": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "FILE",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "demo": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "cleanup": {
+     "flags": {
+      "--connection": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "session_id",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "init": {
+     "flags": {
+      "--auth": {
+       "choices": [
+        "cli",
+        "device-code",
+        "fabric",
+        "msi",
+        "spn",
+        "sql"
+       ],
+       "takes_value": true
+      },
+      "--client-id": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--client-secret": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--eventhouse-database": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--eventhouse-uri": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--lakehouse-id": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--local-path": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--name": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--sql-db-conn": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--tenant-id": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--warehouse-conn": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--warehouse-staging-path": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--workspace-id": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "list": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "notebook": {
+     "flags": {
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--mode": {
+       "choices": [
+        "inference",
+        "seeding",
+        "streaming"
+       ],
+       "takes_value": true
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "scenario",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "preflight": {
+     "flags": {
+      "--connection": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "report": {
+     "flags": {
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--format": {
+       "choices": [
+        "html",
+        "md"
+       ],
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "session_id",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "run": {
+     "flags": {
+      "--connection": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--db-schema": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--db-tables": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--domain": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--domains": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--env-name": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--estimate": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--identifiers": {
+       "choices": [
+        "realistic",
+        "reserved"
+       ],
+       "takes_value": true
+      },
+      "--input-file": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--max-events": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--mode": {
+       "choices": [
+        "inference",
+        "seeding",
+        "streaming"
+       ],
+       "takes_value": true
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--output-dir": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--rows": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--sample-rows": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--scale-mode": {
+       "choices": [
+        "auto",
+        "local",
+        "spark"
+       ],
+       "takes_value": true
+      },
+      "--seed": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--table-prefix": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "scenario",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "status": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "session_id",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "describe": {
+   "flags": {
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--mode": {
+     "choices": [
+      "3nf",
+      "star"
+     ],
+     "takes_value": true
+    },
+    "--scale": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "DOMAIN|SCHEMA.json",
+     "nargs": null
+    }
+   ],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "design": {
+   "flags": {
+    "--dialect": {
+     "choices": [
+      "mysql",
+      "postgres",
+      "tsql",
+      "tsql-fabric-warehouse"
+     ],
+     "takes_value": true
+    },
+    "--drop": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--from-data": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--lint": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--mode": {
+     "choices": [
+      "3nf",
+      "snowflake",
+      "star"
+     ],
+     "takes_value": true
+    },
+    "--name": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--schema-name": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--strict": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--tmdl": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "INPUT",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "detective": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "check": {
+     "flags": {
+      "--answer": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "NAME",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "hint": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "NAME",
+       "nargs": null
+      },
+      {
+       "choices": null,
+       "name": "N",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "list": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "start": {
+     "flags": {
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "NAME",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "dictionary": {
+   "flags": {
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--examples": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--format": {
+     "choices": [
+      "html",
+      "json",
+      "md"
+     ],
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-project": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--project": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--source": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "PROFILE.shape",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "diff": {
+   "flags": {
+    "--baseline-date": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--cardinality-ratio-max": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--cardinality-ratio-min": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--changes": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--column-threshold": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--fail-on": {
+     "choices": [
+      "additive",
+      "breaking",
+      "cosmetic"
+     ],
+     "takes_value": true
+    },
+    "--fail-on-drift": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--ignore": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--junit": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--mean-shift-std": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--min-severity": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--no-changes": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-project": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--notify": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--null-rate": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--on": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--only": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--policy": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--project": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sarif": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--source": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--threshold": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--verify": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--version-from": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "BASE.shape",
+     "nargs": null
+    },
+    {
+     "choices": null,
+     "name": "CURRENT.shape",
+     "nargs": "?"
+    }
+   ],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "doctor": {
+   "flags": {
+    "--auth": {
+     "choices": [
+      "cli",
+      "device-code",
+      "fabric",
+      "kerberos",
+      "msi",
+      "spn",
+      "sql"
+     ],
+     "takes_value": true
+    },
+    "--broker": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--client-id": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--client-secret": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--delta-table": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--fabric": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--keytab": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--no-auth-check": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--principal": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sql-password": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sql-user": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--tenant-id": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--timeout": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "drift": {
+   "flags": {
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--input-format": {
+     "choices": [
+      "auto",
+      "csv",
+      "jsonl",
+      "parquet"
+     ],
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--psi": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--pvalue": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--threshold": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "REFERENCE",
+     "nargs": null
+    },
+    {
+     "choices": null,
+     "name": "CURRENT",
+     "nargs": null
+    }
+   ],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "emit": {
+   "flags": {
+    "--anomaly-fraction": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--anomaly-mutator": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--answer-key": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--arrivals": {
+     "choices": [
+      "constant",
+      "poisson"
+     ],
+     "takes_value": true
+    },
+    "--auth": {
+     "choices": [
+      "cli",
+      "device-code",
+      "fabric",
+      "kerberos",
+      "msi",
+      "spn",
+      "sql"
+     ],
+     "takes_value": true
+    },
+    "--batch-date": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--batch-events": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--burst": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--checkpoint": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--checkpoint-every": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--checkpoint-seconds": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--client-id": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--client-secret": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--commit-rows": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--connection-string": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--daily-curve": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--day-seconds": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dead-letter": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--drift-plan": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--duplicate-fraction": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--duplicate-window": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--duration": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--envelope": {
+     "choices": [
+      "cloudevents",
+      "flat"
+     ],
+     "takes_value": true
+    },
+    "--event-format": {
+     "choices": [
+      "avro",
+      "json",
+      "json-schema",
+      "protobuf"
+     ],
+     "takes_value": true
+    },
+    "--format": {
+     "choices": [
+      "csv",
+      "ipc",
+      "jsonl",
+      "parquet",
+      "tsv"
+     ],
+     "takes_value": true
+    },
+    "--fresh": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--keytab": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-alerts": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-drop": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-fail": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--live-interval": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-interval-seconds": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-key-cap": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-min-column-score": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-min-events": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-min-progress": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-min-score": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-min-table-score": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-profile": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-report": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-sample": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-target": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-target-scale": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-target-seed": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--manifest": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--max-dead-letter": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--max-events": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--max-rate": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--mode": {
+     "choices": [
+      "3nf",
+      "star"
+     ],
+     "takes_value": true
+    },
+    "--no-live-profile": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-progress": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-realtime": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-synthetic-header": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--ooo-window": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--out-of-order": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--path-template": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--poison-fraction": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--principal": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--progress": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--queue-batches": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--ramp": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--rate": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--realtime": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--retries": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--roll-rows": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--roll-seconds": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--rows": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--scale": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--seed": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sink": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sink-config": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--speed": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sql-constraints": {
+     "choices": [
+      "disable",
+      "keep"
+     ],
+     "takes_value": true
+    },
+    "--sql-password": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sql-user": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--synthetic-header": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--table": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--table-format": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--tenant-id": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--to": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--write-mode": {
+     "choices": [
+      "append",
+      "create",
+      "fail",
+      "overwrite",
+      "replace",
+      "truncate",
+      "upsert"
+     ],
+     "takes_value": true
+    },
+    "--yes": {
+     "choices": null,
+     "takes_value": false
+    },
+    "-f": {
+     "choices": [
+      "csv",
+      "ipc",
+      "jsonl",
+      "parquet",
+      "tsv"
+     ],
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "DOMAIN|SCHEMA.json",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "explain": {
+   "flags": {
+    "--baseline": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--classified": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--current": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "DIFF.json",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "failure-modes": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "list": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "show": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "ID",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "fd": {
+   "flags": {
+    "--dependent": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--determinant": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "DATA",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "fidelity": {
+   "flags": {
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--expected-anomaly-rate": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--format": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--input-format": {
+     "choices": [
+      "auto",
+      "csv",
+      "jsonl",
+      "parquet"
+     ],
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--junit": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--max-auc": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--min-column-score": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--min-edge-overlap": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--min-pass-rate": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--min-score": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--min-table-score": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--no-project": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--notify": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--project": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sarif": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--tier": {
+     "choices": [
+      "1",
+      "2",
+      "3"
+     ],
+     "takes_value": true
+    },
+    "--tolerance": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "REFERENCE",
+     "nargs": null
+    },
+    {
+     "choices": null,
+     "name": "SYNTHETIC",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "fingerprint": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "embed": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--key": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--passphrase-env": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--passphrase-stdin": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--profile": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--run": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "FILE|DELTA_DIR",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "show": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "FILE|DELTA_DIR",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "verify": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--public-key": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "FILE|DELTA_DIR",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "from-ddl": {
+   "flags": {
+    "--domain": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--explain": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-smart": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--scale": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--smart": {
+     "choices": null,
+     "takes_value": false
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-s": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "FILE",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "gameday": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "run": {
+     "flags": {
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--seed": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "PLAN.json",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "generate": {
+   "flags": {
+    "--auth": {
+     "choices": [
+      "cli",
+      "device-code",
+      "fabric",
+      "kerberos",
+      "msi",
+      "spn",
+      "sql"
+     ],
+     "takes_value": true
+    },
+    "--batch-date": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--batch-size": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--chaos-log": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--chunk-rows": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--chunk-size": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--client-id": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--client-secret": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--commit-rows": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--connection-string": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--decisions": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--delta-mode": {
+     "choices": [
+      "append",
+      "overwrite"
+     ],
+     "takes_value": true
+    },
+    "--drift-plan": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--fabric-lakehouse": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--fabric-notebook": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--fabric-workspace": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--fingerprint": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--format": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--from": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--identifiers": {
+     "choices": [
+      "realistic",
+      "reserved"
+     ],
+     "takes_value": true
+    },
+    "--jobs-dir": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--kek": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--keytab": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--manifest": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--max-workers": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--mixed-copula": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--mode": {
+     "choices": [
+      "3nf",
+      "star"
+     ],
+     "takes_value": true
+    },
+    "--no-sql-ddl": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-sql-drop": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-sql-go": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--out": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--partition-by": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--path-template": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--principal": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--processes": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--roll-rows": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--roll-seconds": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--rows": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--scale": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--scale-mode": {
+     "choices": [
+      "fabric_spark",
+      "local_mp",
+      "local_single"
+     ],
+     "takes_value": true
+    },
+    "--schema-name": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--seed": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sink": {
+     "choices": [
+      "kql",
+      "lakehouse",
+      "memory",
+      "parquet",
+      "sql_database",
+      "warehouse"
+     ],
+     "takes_value": true
+    },
+    "--sink-config": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sql-constraints": {
+     "choices": [
+      "disable",
+      "keep"
+     ],
+     "takes_value": true
+    },
+    "--sql-ddl": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--sql-dialect": {
+     "choices": [
+      "mysql",
+      "postgres",
+      "tsql",
+      "tsql-fabric-warehouse"
+     ],
+     "takes_value": true
+    },
+    "--sql-drop": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--sql-go": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--sql-password": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sql-user": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--table-format": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--table-prefix": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--tenant-id": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--to": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--vault": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--verify": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--write-mode": {
+     "choices": [
+      "append",
+      "create",
+      "fail",
+      "overwrite",
+      "replace",
+      "truncate",
+      "upsert"
+     ],
+     "takes_value": true
+    },
+    "--yes": {
+     "choices": null,
+     "takes_value": false
+    },
+    "-f": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "DOMAIN|SCHEMA.json",
+     "nargs": "?"
+    }
+   ],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "generate-drift": {
+   "flags": {
+    "--days": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--format": {
+     "choices": [
+      "csv",
+      "jsonl",
+      "parquet"
+     ],
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--mode": {
+     "choices": [
+      "3nf",
+      "star"
+     ],
+     "takes_value": true
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--rows": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--scale": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--seed": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--start": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-f": {
+     "choices": [
+      "csv",
+      "jsonl",
+      "parquet"
+     ],
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-s": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "DOMAIN|SCHEMA.json",
+     "nargs": null
+    },
+    {
+     "choices": null,
+     "name": "PLAN.json",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "git-setup": {
+   "flags": {
+    "--command": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--pattern": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--repo": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "import-schema": {
+   "flags": {
+    "--allow-import": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--from": {
+     "choices": [
+      "avro",
+      "jsonschema",
+      "openapi",
+      "protobuf",
+      "pydantic",
+      "tmdl"
+     ],
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--report": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--strict": {
+     "choices": null,
+     "takes_value": false
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "FILE",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "init": {
+   "flags": {
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--force": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--name": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--source": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "DIR",
+     "nargs": "?"
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "inspect": {
+   "flags": {
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--pretty": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--verify": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "ARTIFACT.shape",
+     "nargs": null
+    }
+   ],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "jobs": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "cancel": {
+     "flags": {
+      "--auth": {
+       "choices": [
+        "cli",
+        "device-code",
+        "fabric",
+        "kerberos",
+        "msi",
+        "spn",
+        "sql"
+       ],
+       "takes_value": true
+      },
+      "--client-id": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--client-secret": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--jobs-dir": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--keytab": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--principal": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--sql-password": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--sql-user": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--tenant-id": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "JOB",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "list": {
+     "flags": {
+      "--auth": {
+       "choices": [
+        "cli",
+        "device-code",
+        "fabric",
+        "kerberos",
+        "msi",
+        "spn",
+        "sql"
+       ],
+       "takes_value": true
+      },
+      "--client-id": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--client-secret": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--jobs-dir": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--keytab": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--principal": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--sql-password": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--sql-user": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--tenant-id": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "resume": {
+     "flags": {
+      "--auth": {
+       "choices": [
+        "cli",
+        "device-code",
+        "fabric",
+        "kerberos",
+        "msi",
+        "spn",
+        "sql"
+       ],
+       "takes_value": true
+      },
+      "--client-id": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--client-secret": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--jobs-dir": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--keytab": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--principal": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--sink-config": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--sql-password": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--sql-user": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--tenant-id": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "JOB",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "status": {
+     "flags": {
+      "--auth": {
+       "choices": [
+        "cli",
+        "device-code",
+        "fabric",
+        "kerberos",
+        "msi",
+        "spn",
+        "sql"
+       ],
+       "takes_value": true
+      },
+      "--client-id": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--client-secret": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--jobs-dir": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--keytab": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--principal": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--sql-password": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--sql-user": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--tenant-id": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "JOB",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "key": {
+   "flags": {
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "DATA",
+     "nargs": null
+    },
+    {
+     "choices": null,
+     "name": "FIELD",
+     "nargs": "+"
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "keygen": {
+   "flags": {
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-passphrase": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--passphrase-env": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--passphrase-stdin": {
+     "choices": null,
+     "takes_value": false
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "prefix",
+     "nargs": null
+    }
+   ],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "learn": {
+   "flags": {
+    "--domain": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--format": {
+     "choices": [
+      "csv",
+      "jsonl",
+      "parquet"
+     ],
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "PATH",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "library": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "get": {
+     "flags": {
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "NAME",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "list": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "show": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "NAME",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "list": {
+   "flags": {
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    }
+   },
+   "positionals": [],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "mask": {
+   "flags": {
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--exclude": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--format": {
+     "choices": [
+      "csv",
+      "parquet"
+     ],
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--key-env": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--key-file": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--pii": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--seed": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "PATH",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "migrate": {
+   "flags": {
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "rest",
+     "nargs": "..."
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "notify": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "test": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--project": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "pack": {
+   "flags": {},
+   "positionals": [],
+   "stability": "stable",
+   "subcommands": {
+    "list": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--library": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "DIR",
+       "nargs": "*"
+      }
+     ],
+     "stability": "stable",
+     "subcommands": {}
+    },
+    "replay": {
+     "flags": {
+      "--domain": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--root": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "MANIFEST.json",
+       "nargs": null
+      },
+      {
+       "choices": null,
+       "name": "PACK.yaml|SPEC.gsl.yaml",
+       "nargs": null
+      }
+     ],
+     "stability": "stable",
+     "subcommands": {}
+    },
+    "run": {
+     "flags": {
+      "--domain": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--identifiers": {
+       "choices": [
+        "realistic",
+        "reserved"
+       ],
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--root": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--scale": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--seed": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "PACK.yaml|SPEC.gsl.yaml",
+       "nargs": null
+      }
+     ],
+     "stability": "stable",
+     "subcommands": {}
+    },
+    "validate": {
+     "flags": {
+      "--domain": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--root": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "PACK.yaml|SPEC.gsl.yaml",
+       "nargs": null
+      }
+     ],
+     "stability": "stable",
+     "subcommands": {}
+    }
+   }
+  },
+  "parity": {
+   "flags": {
+    "--dataset": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-project": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--project": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--row-tolerance": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--scaled": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--source": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--tables": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "A",
+     "nargs": null
+    },
+    {
+     "choices": null,
+     "name": "B",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "pin": {
+   "flags": {
+    "--check": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "SPEC",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "plan": {
+   "flags": {
+    "--decisions": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--kek": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--mixed-copula": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--rows": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--status": {
+     "choices": [
+      "approximate",
+      "not_modelled",
+      "preserved",
+      "unavailable",
+      "vault"
+     ],
+     "takes_value": true
+    },
+    "--vault": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--verify": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "PROFILE.shape",
+     "nargs": null
+    }
+   ],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "plugins": {
+   "flags": {},
+   "positionals": [],
+   "stability": "stable",
+   "subcommands": {
+    "allowlist": {
+     "flags": {},
+     "positionals": [],
+     "stability": "stable",
+     "subcommands": {
+      "init": {
+       "flags": {
+        "--dry-run": {
+         "choices": null,
+         "takes_value": false
+        },
+        "--json": {
+         "choices": null,
+         "takes_value": false
+        },
+        "--output": {
+         "choices": null,
+         "takes_value": true
+        },
+        "--pin-hashes": {
+         "choices": null,
+         "takes_value": false
+        },
+        "-o": {
+         "choices": null,
+         "takes_value": true
+        }
+       },
+       "positionals": [],
+       "stability": "stable",
+       "subcommands": {}
+      }
+     }
+    },
+    "doctor": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [],
+     "stability": "stable",
+     "subcommands": {}
+    },
+    "info": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "[GROUP:]NAME",
+       "nargs": null
+      }
+     ],
+     "stability": "stable",
+     "subcommands": {}
+    },
+    "list": {
+     "flags": {
+      "--group": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [],
+     "stability": "stable",
+     "subcommands": {}
+    },
+    "new": {
+     "flags": {
+      "--author": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--group": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "NAME",
+       "nargs": null
+      }
+     ],
+     "stability": "stable",
+     "subcommands": {}
+    },
+    "sign": {
+     "flags": {
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--key": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--passphrase-env": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--passphrase-stdin": {
+       "choices": null,
+       "takes_value": false
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "WHEEL",
+       "nargs": null
+      }
+     ],
+     "stability": "stable",
+     "subcommands": {}
+    },
+    "verify": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--key": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "DIST_OR_WHEEL",
+       "nargs": null
+      }
+     ],
+     "stability": "stable",
+     "subcommands": {}
+    }
+   }
+  },
+  "presets": {
+   "flags": {
+    "--composites": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--mode": {
+     "choices": [
+      "3nf",
+      "star"
+     ],
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "DOMAIN|SCHEMA.json",
+     "nargs": "?"
+    }
+   ],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "privacy-k": {
+   "flags": {
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "DATA",
+     "nargs": null
+    },
+    {
+     "choices": null,
+     "name": "FIELD",
+     "nargs": "+"
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "profile": {
+   "flags": {
+    "--as-of": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--auth": {
+     "choices": [
+      "cli",
+      "device-code",
+      "fabric",
+      "kerberos",
+      "msi",
+      "spn",
+      "sql"
+     ],
+     "takes_value": true
+    },
+    "--capture": {
+     "choices": [
+      "full",
+      "safe"
+     ],
+     "takes_value": true
+    },
+    "--classify": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--client-id": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--client-secret": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--column-k": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dataset": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--decisions": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--delimiter": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--encoding": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--fail-on-empty": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--header": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--html": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--include-hidden": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--infer-types": {
+     "choices": [
+      "auto",
+      "off"
+     ],
+     "takes_value": true
+    },
+    "--joint": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--k": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--kek": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--keytab": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--multivariate": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--name": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--no-header": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-joint": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-project": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--passphrase-env": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--passphrase-stdin": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--principal": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--project": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--quotechar": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--reference-pair": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sample": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sample-method": {
+     "choices": [
+      "head",
+      "random",
+      "systematic"
+     ],
+     "takes_value": true
+    },
+    "--sample-seed": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sheet": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sign": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sketches": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--sql-password": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sql-user": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--string-columns": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--tenant-id": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--time-column": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--types": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--univariate": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--validate": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--vault": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--vault-policy": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--version": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "SRC",
+     "nargs": null
+    }
+   ],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "project": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "validate": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "FILE",
+       "nargs": "?"
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "proposals": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "contract": {
+     "flags": {
+      "--decisions": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--merge": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-d": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "decide": {
+     "flags": {
+      "--actor": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--decisions": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--note": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-d": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "PROPOSAL_ID",
+       "nargs": null
+      },
+      {
+       "choices": [
+        "accept",
+        "defer",
+        "reject"
+       ],
+       "name": "verb",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "list": {
+     "flags": {
+      "--decisions": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--kind": {
+       "choices": [
+        "pii",
+        "relationship",
+        "rule",
+        "semantic",
+        "type"
+       ],
+       "takes_value": true
+      },
+      "--min-confidence": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--status": {
+       "choices": [
+        "accepted",
+        "deferred",
+        "pending",
+        "rejected",
+        "stale"
+       ],
+       "takes_value": true
+      },
+      "-d": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "propose": {
+     "flags": {
+      "--auto-accept": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--data": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--decisions": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--kinds": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--min-confidence": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-d": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "PROFILE.shape",
+       "nargs": "+"
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "quality": {
+   "flags": {
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--reference": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "DATA",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "query": {
+   "flags": {
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--verify": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "EVIDENCE",
+     "nargs": null
+    },
+    {
+     "choices": null,
+     "name": "EXPRESSION",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "reference": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "list": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "show": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "NAME",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "registry": {
+   "flags": {},
+   "positionals": [
+    {
+     "choices": null,
+     "name": "ROOT",
+     "nargs": null
+    }
+   ],
+   "stability": "stable",
+   "subcommands": {
+    "checkout": {
+     "flags": {
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "NAME",
+       "nargs": null
+      },
+      {
+       "choices": null,
+       "name": "REF",
+       "nargs": "?"
+      },
+      {
+       "choices": null,
+       "name": "OUT",
+       "nargs": "?"
+      }
+     ],
+     "stability": "stable",
+     "subcommands": {}
+    },
+    "commit": {
+     "flags": {
+      "--allow-raw": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--business-date": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--k": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--meta": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--safe": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--sensitive": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "NAME",
+       "nargs": null
+      },
+      {
+       "choices": null,
+       "name": "ARTIFACT",
+       "nargs": null
+      }
+     ],
+     "stability": "stable",
+     "subcommands": {}
+    },
+    "diff": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "NAME",
+       "nargs": null
+      },
+      {
+       "choices": null,
+       "name": "REF1",
+       "nargs": null
+      },
+      {
+       "choices": null,
+       "name": "REF2",
+       "nargs": null
+      }
+     ],
+     "stability": "stable",
+     "subcommands": {}
+    },
+    "list": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [],
+     "stability": "stable",
+     "subcommands": {}
+    },
+    "log": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "NAME",
+       "nargs": null
+      }
+     ],
+     "stability": "stable",
+     "subcommands": {}
+    },
+    "promote": {
+     "flags": {
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "NAME",
+       "nargs": null
+      },
+      {
+       "choices": null,
+       "name": "SOURCE",
+       "nargs": null
+      },
+      {
+       "choices": null,
+       "name": "TARGET",
+       "nargs": null
+      }
+     ],
+     "stability": "stable",
+     "subcommands": {}
+    },
+    "prune": {
+     "flags": {
+      "--before": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--keep-last": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--name": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [],
+     "stability": "stable",
+     "subcommands": {}
+    },
+    "show": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "NAME",
+       "nargs": null
+      },
+      {
+       "choices": null,
+       "name": "REF",
+       "nargs": "?"
+      }
+     ],
+     "stability": "stable",
+     "subcommands": {}
+    },
+    "tag": {
+     "flags": {
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "NAME",
+       "nargs": null
+      },
+      {
+       "choices": null,
+       "name": "TAG",
+       "nargs": null
+      },
+      {
+       "choices": null,
+       "name": "REF",
+       "nargs": "?"
+      }
+     ],
+     "stability": "stable",
+     "subcommands": {}
+    }
+   }
+  },
+  "report-card": {
+   "flags": {
+    "--config": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--holdout": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--manifest": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--require": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--tiers": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "REAL",
+     "nargs": null
+    },
+    {
+     "choices": null,
+     "name": "SYNTHETIC",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "resolve": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "run": {
+     "flags": {
+      "--block": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--cluster": {
+       "choices": [
+        "center",
+        "connected"
+       ],
+       "takes_value": true
+      },
+      "--clusters": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--config": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--golden": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--match": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--max-block": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--report": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--survive": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--threshold": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--truth": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "input",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "synth": {
+     "flags": {
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--fuzz": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--id-column": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--max-copies": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--rate": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--seed": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--skip": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--truth": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "input",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "rules": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "backtest": {
+     "flags": {
+      "--compare": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--fail-on-miss": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--incidents": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--since": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--until": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--window": {
+       "choices": [
+        "day",
+        "month",
+        "week"
+       ],
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "REGISTRY",
+       "nargs": null
+      },
+      {
+       "choices": null,
+       "name": "NAME",
+       "nargs": null
+      },
+      {
+       "choices": null,
+       "name": "CONTRACT.json",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "mutate": {
+     "flags": {
+      "--diff": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--min-score": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--plan": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--rate": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--seed": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "DATA",
+       "nargs": null
+      },
+      {
+       "choices": null,
+       "name": "CONTRACT.json",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "scorecard": {
+   "flags": {
+    "--classified": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--config": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--flag-column": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--flag-output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--format": {
+     "choices": [
+      "auto",
+      "csv",
+      "jsonl",
+      "parquet"
+     ],
+     "takes_value": true
+    },
+    "--history": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--label": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--max-slice-gap": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--min-slice-rows": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--name": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--no-project": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--project": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--record": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--reference": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--samples": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--schema": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--show-classified": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--slice-by": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--source": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--suppressions": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "DATA",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "seed": {
+   "flags": {
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--mode": {
+     "choices": [
+      "append",
+      "create",
+      "truncate"
+     ],
+     "takes_value": true
+    },
+    "--scale": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--seed": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--target": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-s": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "SPEC|DOMAIN",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "share-bundle": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "create": {
+     "flags": {
+      "--classifications": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--key": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--passphrase-env": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--passphrase-stdin": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--source": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--top-k": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "DATA_DIR",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "verify": {
+     "flags": {
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--public-key": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "BUNDLE.zip",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "show": {
+   "flags": {
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--pretty": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--verify": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "ARTIFACT.shape",
+     "nargs": null
+    }
+   ],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "sign": {
+   "flags": {
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--key": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--passphrase-env": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--passphrase-stdin": {
+     "choices": null,
+     "takes_value": false
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "ARTIFACT.shape",
+     "nargs": null
+    }
+   ],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "skew": {
+   "flags": {
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--features": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--format": {
+     "choices": [
+      "auto",
+      "csv",
+      "jsonl",
+      "parquet"
+     ],
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--label": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--project": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--slice-by": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--source": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--threshold": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "TRAIN",
+     "nargs": null
+    },
+    {
+     "choices": null,
+     "name": "SERVING",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "skew-rehearsal": {
+   "flags": {
+    "--columns": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--scale": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--schema": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--seed": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--tolerance": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "PROFILE.shape",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "stream": {
+   "flags": {
+    "--anomaly-fraction": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--anomaly-mutator": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--answer-key": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--arrivals": {
+     "choices": [
+      "constant",
+      "poisson"
+     ],
+     "takes_value": true
+    },
+    "--auth": {
+     "choices": [
+      "cli",
+      "device-code",
+      "fabric",
+      "kerberos",
+      "msi",
+      "spn",
+      "sql"
+     ],
+     "takes_value": true
+    },
+    "--batch-date": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--batch-events": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--burst": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--checkpoint": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--checkpoint-every": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--checkpoint-seconds": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--client-id": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--client-secret": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--commit-rows": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--connection-string": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--daily-curve": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--day-seconds": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dead-letter": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--drift-plan": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--duplicate-fraction": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--duplicate-window": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--duration": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--envelope": {
+     "choices": [
+      "cloudevents",
+      "flat"
+     ],
+     "takes_value": true
+    },
+    "--event-format": {
+     "choices": [
+      "avro",
+      "json",
+      "json-schema",
+      "protobuf"
+     ],
+     "takes_value": true
+    },
+    "--format": {
+     "choices": [
+      "csv",
+      "ipc",
+      "jsonl",
+      "parquet",
+      "tsv"
+     ],
+     "takes_value": true
+    },
+    "--fresh": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--keytab": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-alerts": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-drop": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-fail": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--live-interval": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-interval-seconds": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-key-cap": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-min-column-score": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-min-events": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-min-progress": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-min-score": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-min-table-score": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-profile": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-report": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-sample": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-target": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-target-scale": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--live-target-seed": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--manifest": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--max-dead-letter": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--max-events": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--max-rate": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--mode": {
+     "choices": [
+      "3nf",
+      "star"
+     ],
+     "takes_value": true
+    },
+    "--no-live-profile": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-progress": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-realtime": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-synthetic-header": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--ooo-window": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--out-of-order": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--path-template": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--poison-fraction": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--principal": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--progress": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--queue-batches": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--ramp": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--rate": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--realtime": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--retries": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--roll-rows": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--roll-seconds": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--rows": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--scale": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--seed": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sink": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sink-config": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--speed": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sql-constraints": {
+     "choices": [
+      "disable",
+      "keep"
+     ],
+     "takes_value": true
+    },
+    "--sql-password": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sql-user": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--synthetic-header": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--table": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--table-format": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--tenant-id": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--to": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--write-mode": {
+     "choices": [
+      "append",
+      "create",
+      "fail",
+      "overwrite",
+      "replace",
+      "truncate",
+      "upsert"
+     ],
+     "takes_value": true
+    },
+    "--yes": {
+     "choices": null,
+     "takes_value": false
+    },
+    "-f": {
+     "choices": [
+      "csv",
+      "ipc",
+      "jsonl",
+      "parquet",
+      "tsv"
+     ],
+     "takes_value": true
+    },
+    "-m": {
+     "choices": [
+      "3nf",
+      "star"
+     ],
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-s": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-t": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "DOMAIN|SCHEMA.json",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "stream-profile": {
+   "flags": {
+    "--allowed-lateness": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--batch-size": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--checkpoint": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--checkpoint-every": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--event-time": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--event-time-unit": {
+     "choices": [
+      "ms",
+      "s",
+      "us"
+     ],
+     "takes_value": true
+    },
+    "--follow": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--gap": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--idle-timeout": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--max-events": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--max-partition-skew": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--max-reconnects": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--name": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--option": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--options-file": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--order": {
+     "choices": [
+      "event-time",
+      "file"
+     ],
+     "takes_value": true
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--partition-idle-timeout": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--size": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--slide": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--start": {
+     "choices": [
+      "earliest",
+      "latest"
+     ],
+     "takes_value": true
+    },
+    "--top-n": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--window": {
+     "choices": [
+      "global",
+      "session",
+      "sliding",
+      "tumbling"
+     ],
+     "takes_value": true
+    },
+    "--windows": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "URI",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "suite": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "run": {
+     "flags": {
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--scale": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--seed": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "NAME|FILE",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "time-travel": {
+   "flags": {
+    "--churn-rate": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--format": {
+     "choices": [
+      "csv",
+      "parquet"
+     ],
+     "takes_value": true
+    },
+    "--growth-rate": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--mode": {
+     "choices": [
+      "3nf",
+      "star"
+     ],
+     "takes_value": true
+    },
+    "--months": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--scale": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--seasonality": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--seed": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--start-date": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--update-fraction": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-f": {
+     "choices": [
+      "csv",
+      "parquet"
+     ],
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    },
+    "-s": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "DOMAIN|SCHEMA.json",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "timelapse": {
+   "flags": {
+    "--cardinality-ratio-max": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--cardinality-ratio-min": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--column": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--column-threshold": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--format": {
+     "choices": [
+      "json",
+      "text"
+     ],
+     "takes_value": true
+    },
+    "--ignore": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--mean-shift-std": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--min-severity": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--no-project": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--null-rate": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--only": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--policy": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--project": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--since": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--source": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--table": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--threshold": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--until": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--window": {
+     "choices": [
+      "day",
+      "month",
+      "week"
+     ],
+     "takes_value": true
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "REGISTRY",
+     "nargs": null
+    },
+    {
+     "choices": null,
+     "name": "NAME",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "transform": {
+   "flags": {},
+   "positionals": [],
+   "stability": "experimental",
+   "subcommands": {
+    "cdm": {
+     "flags": {
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--format": {
+       "choices": [
+        "csv",
+        "parquet"
+       ],
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--map": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--model-name": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--scale": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--seed": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "SOURCE",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    },
+    "star": {
+     "flags": {
+      "--dry-run": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--format": {
+       "choices": [
+        "csv",
+        "parquet"
+       ],
+       "takes_value": true
+      },
+      "--json": {
+       "choices": null,
+       "takes_value": false
+      },
+      "--map": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--output": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--scale": {
+       "choices": null,
+       "takes_value": true
+      },
+      "--seed": {
+       "choices": null,
+       "takes_value": true
+      },
+      "-o": {
+       "choices": null,
+       "takes_value": true
+      }
+     },
+     "positionals": [
+      {
+       "choices": null,
+       "name": "SOURCE",
+       "nargs": null
+      }
+     ],
+     "stability": "experimental",
+     "subcommands": {}
+    }
+   }
+  },
+  "types": {
+   "flags": {
+    "--contract": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--min-confidence": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "PROFILE.shape",
+     "nargs": null
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "validate": {
+   "flags": {
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "FILE",
+     "nargs": null
+    }
+   ],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "vault": {
+   "flags": {
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "rest",
+     "nargs": "..."
+    }
+   ],
+   "stability": "experimental",
+   "subcommands": {}
+  },
+  "verify": {
+   "flags": {
+    "--changes": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--config": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--dry-run": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--format": {
+     "choices": [
+      "auto",
+      "csv",
+      "jsonl",
+      "parquet"
+     ],
+     "takes_value": true
+    },
+    "--json": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--junit": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--key": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--no-changes": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--no-project": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--notify": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--on": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--output": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--project": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--sarif": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--schema": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--source": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--statistical": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--strict": {
+     "choices": null,
+     "takes_value": false
+    },
+    "-o": {
+     "choices": null,
+     "takes_value": true
+    }
+   },
+   "positionals": [
+    {
+     "choices": null,
+     "name": "DATA|ARTIFACT.shape",
+     "nargs": null
+    }
+   ],
+   "stability": "stable",
+   "subcommands": {}
+  },
+  "version": {
+   "flags": {},
+   "positionals": [],
+   "stability": "stable",
+   "subcommands": {}
+  }
+ },
+ "format": "shape-cli-surface",
+ "global_flags": {
+  "--debug": {
+   "choices": null,
+   "takes_value": false
+  },
+  "--log-json": {
+   "choices": null,
+   "takes_value": false
+  },
+  "--log-level": {
+   "choices": null,
+   "takes_value": true
+  },
+  "--metrics": {
+   "choices": null,
+   "takes_value": true
+  },
+  "--version": {
+   "choices": null,
+   "takes_value": false
+  },
+  "-V": {
+   "choices": null,
+   "takes_value": false
+  }
+ },
+ "version": 1
+}

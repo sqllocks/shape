@@ -1,0 +1,22 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "detective_clocks_and_keys",
+  "gates_fail": [
+    "uniqueness"
+  ],
+  "defects": {
+    "duplicate_keys": {
+      "min": 1
+    },
+    "late_arrivals": {
+      "min": 1
+    },
+    "shift_hours": {
+      "min": 1
+    },
+    "shuffle_column": {
+      "min": 1
+    }
+  }
+}

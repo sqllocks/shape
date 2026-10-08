@@ -1,0 +1,105 @@
++ git rev-parse HEAD
+ae7a8a8c161904828e9e823476d8bab929ee32f2
++ git status --short
++ head
+ M docs/plans/evidence/P4-10/round2/suite_heavy.txt
+ M docs/plans/evidence/P4-10/round2/suite_python.txt
+ M docs/plans/evidence/P4-10/round2/suite_rust.txt
+?? docs/plans/evidence/P4-10/round2/checks.txt
+?? docs/plans/evidence/P4-10/round2/final_bench.log
++ /root/.venvs/shape/bin/python benchmarks/vs_refengine/domain_1to1/bench_cli.py --scales medium,large --runs 1 --warmup 0 --report docs/plans/evidence/P4-10/round2/prepare_cli_outputs.json
+[medium] refengine  run 1: 7.431s  cpu 8.28s  load 0.57
+[medium] shape    run 1: 0.664s  cpu 1.65s  load 0.61
+[medium] median refengine 7.431s, shape 0.664s => 11.19x
+[large] refengine  run 1: 104.245s  cpu 105.66s  load 0.61
+[large] shape    run 1: 4.473s  cpu 11.77s  load 0.93
+[large] median refengine 104.245s, shape 4.473s => 23.31x
++ for S in medium large
++ /root/.venvs/refengine/bin/python benchmarks/vs_refengine/domain_1to1/verify.py --domain retail --scale medium --impl shape
++ rc=0
++ echo 'verify medium exit 0'
+verify medium exit 0
++ '[' 0 -eq 0 ']'
++ cp /root/bench-out/verify/shape_retail_medium.json docs/plans/evidence/P4-10/round2/verify_cli_retail_medium.json
++ for S in medium large
++ /root/.venvs/refengine/bin/python benchmarks/vs_refengine/domain_1to1/verify.py --domain retail --scale large --impl shape
++ rc=0
++ echo 'verify large exit 0'
+verify large exit 0
++ '[' 0 -eq 0 ']'
++ cp /root/bench-out/verify/shape_retail_large.json docs/plans/evidence/P4-10/round2/verify_cli_retail_large.json
++ /root/.venvs/shape/bin/python benchmarks/vs_refengine/domain_1to1/bench_cli.py --scales medium,large --runs 5 --warmup 1 --report docs/plans/evidence/P4-10/round2/bench_cli_round2.json
+[medium] refengine  warm-up 1: 6.301s
+[medium] shape    warm-up 1: 0.665s
+[medium] refengine  run 1: 6.759s  cpu 7.61s  load 1.23
+[medium] shape    run 1: 0.643s  cpu 1.66s  load 1.29
+[medium] refengine  run 2: 7.353s  cpu 8.20s  load 1.29
+[medium] shape    run 2: 0.646s  cpu 1.64s  load 1.25
+[medium] refengine  run 3: 7.037s  cpu 7.88s  load 1.25
+[medium] shape    run 3: 0.648s  cpu 1.65s  load 1.23
+[medium] refengine  run 4: 6.922s  cpu 7.77s  load 1.23
+[medium] shape    run 4: 0.701s  cpu 1.68s  load 1.41
+[medium] refengine  run 5: 6.717s  cpu 7.58s  load 1.41
+[medium] shape    run 5: 0.646s  cpu 1.65s  load 1.38
+[medium] median refengine 6.922s, shape 0.646s => 10.71x
+[large] refengine  warm-up 1: 102.370s
+[large] shape    warm-up 1: 4.410s
+[large] refengine  run 1: 102.397s  cpu 104.17s  load 1.28
+[large] shape    run 1: 4.431s  cpu 11.59s  load 1.05
+[large] refengine  run 2: 99.750s  cpu 101.53s  load 1.29
+[large] shape    run 2: 4.232s  cpu 11.23s  load 1.05
+[large] refengine  run 3: 99.201s  cpu 100.91s  load 1.05
+[large] shape    run 3: 4.131s  cpu 11.25s  load 1.05
+[large] refengine  run 4: 100.795s  cpu 102.37s  load 1.19
+[large] shape    run 4: 4.187s  cpu 11.24s  load 1.03
+[large] refengine  run 5: 101.067s  cpu 102.97s  load 1.43
+[large] shape    run 5: 4.338s  cpu 11.84s  load 1.15
+[large] median refengine 100.795s, shape 4.232s => 23.82x
++ /root/.venvs/shape/bin/python benchmarks/vs_refengine/domain_1to1/bench_cli.py --scales medium,large --runs 5 --warmup 1 --shape-threads 1 --report docs/plans/evidence/P4-10/round2/bench_cli_round2_threads1.json
+[medium] refengine  warm-up 1: 6.712s
+[medium] shape    warm-up 1: 0.994s
+[medium] refengine  run 1: 6.943s  cpu 7.79s  load 1.32
+[medium] shape    run 1: 1.041s  cpu 1.68s  load 1.30
+[medium] refengine  run 2: 6.926s  cpu 7.77s  load 1.30
+[medium] shape    run 2: 1.010s  cpu 1.66s  load 1.25
+[medium] refengine  run 3: 7.072s  cpu 7.93s  load 1.25
+[medium] shape    run 3: 1.005s  cpu 1.66s  load 1.23
+[medium] refengine  run 4: 7.046s  cpu 7.91s  load 1.21
+[medium] shape    run 4: 1.001s  cpu 1.65s  load 1.19
+[medium] refengine  run 5: 6.811s  cpu 7.66s  load 1.19
+[medium] shape    run 5: 1.003s  cpu 1.65s  load 1.24
+[medium] median refengine 6.943s, shape 1.005s => 6.91x
+[large] refengine  warm-up 1: 100.907s
+[large] shape    warm-up 1: 8.708s
+[large] refengine  run 1: 101.734s  cpu 103.35s  load 1.11
+[large] shape    run 1: 8.467s  cpu 12.57s  load 1.02
+[large] refengine  run 2: 99.320s  cpu 100.91s  load 0.94
+[large] shape    run 2: 8.452s  cpu 12.52s  load 1.06
+[large] refengine  run 3: 102.525s  cpu 104.23s  load 1.14
+[large] shape    run 3: 8.501s  cpu 12.76s  load 1.16
+[large] refengine  run 4: 103.361s  cpu 105.13s  load 1.14
+[large] shape    run 4: 8.208s  cpu 12.16s  load 1.04
+[large] refengine  run 5: 101.132s  cpu 102.82s  load 1.11
+[large] shape    run 5: 8.824s  cpu 13.00s  load 1.02
+[large] median refengine 101.734s, shape 8.467s => 12.01x
++ /root/.venvs/shape/bin/python benchmarks/vs_refengine/domain_1to1/bench.py --impl shape --domain retail --scales medium --runs 5 --warmup 1 --report docs/plans/evidence/P4-10/round2/bench_gen_in_medium.json
+[medium] refengine          warm-up 1: total 5.18s
+[medium] shape            warm-up 1: total 0.41s
+[medium] refengine          run 1: total 5.28s  gen 4.68s  write 0.60s  rss 606MB  load 1.14
+[medium] shape            run 1: total 0.40s  gen 0.40s  write 0.00s  rss 452MB  load 1.13
+[medium] refengine          run 2: total 5.26s  gen 4.65s  write 0.61s  rss 606MB  load 1.13
+[medium] shape            run 2: total 0.41s  gen 0.41s  write 0.00s  rss 442MB  load 1.11
+[medium] refengine          run 3: total 5.24s  gen 4.65s  write 0.60s  rss 614MB  load 1.11
+[medium] shape            run 3: total 0.42s  gen 0.42s  write 0.00s  rss 450MB  load 1.10
+[medium] refengine          run 4: total 5.47s  gen 4.84s  write 0.64s  rss 615MB  load 1.10
+[medium] shape            run 4: total 0.43s  gen 0.43s  write 0.00s  rss 448MB  load 1.09
+[medium] refengine          run 5: total 5.67s  gen 5.05s  write 0.62s  rss 614MB  load 1.09
+[medium] shape            run 5: total 0.42s  gen 0.42s  write 0.00s  rss 447MB  load 1.08
+
+== retail medium: median of 5 fresh-process runs, 4 cores
+tool                     rows  total s   gen s  write s  rows/s total   rows/s gen  peak RSS MB
+refengine             1,965,400     5.28    4.68     0.61       372,132      420,249          614
+shape               1,965,400     0.42    0.42     0.00     4,692,794    4,692,794          448
+speedup (shape vs refengine): total 12.61x
++ echo ALL_DONE
+ALL_DONE

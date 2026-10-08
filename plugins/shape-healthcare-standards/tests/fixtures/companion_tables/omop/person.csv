@@ -1,0 +1,5 @@
+"person_id","gender_concept_id","year_of_birth","month_of_birth","day_of_birth","birth_datetime","race_concept_id","ethnicity_concept_id","location_id","provider_id","care_site_id","person_source_value","gender_source_value","gender_source_concept_id","race_source_value","race_source_concept_id","ethnicity_source_value","ethnicity_source_concept_id"
+69000285,8507,2012,1,20,2012-01-20 00:00:00.000000,8527,38003563,712999999,1928831411,,"SYN100001-02","M",0,"White",0,"Hispanic or Latino",0
+315644540,8507,1978,4,12,1978-04-12 00:00:00.000000,8527,38003564,712999999,1928831411,,"SYN100001-00","M",0,"White",0,"Not Hispanic or Latino",0
+621858485,8532,1951,11,30,1951-11-30 00:00:00.000000,8515,38003564,1967844886,1928831411,,"SYN200001-00","F",0,"Asian",0,"Not Hispanic or Latino",0
+1266533429,8532,1980,9,3,1980-09-03 00:00:00.000000,8516,38003564,712999999,1928831411,,"SYN100001-01","F",0,"Black or African American",0,"Not Hispanic or Latino",0

@@ -1,0 +1,23 @@
+{
+  "passed": false,
+  "violations": [
+    {
+      "column": null,
+      "rule": "row_count.min",
+      "expected": 10000,
+      "observed": 300
+    },
+    {
+      "column": "customer_id",
+      "rule": "required_column",
+      "expected": "present",
+      "observed": "missing"
+    },
+    {
+      "column": "email",
+      "rule": "required_column",
+      "expected": "present",
+      "observed": "missing"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "format": "shape-verify-config",
+  "no_future": [
+    "orders.placed"
+  ],
+  "ranges": {
+    "orders.amount": {
+      "max": 1000,
+      "min": 0
+    }
+  },
+  "version": 1
+}

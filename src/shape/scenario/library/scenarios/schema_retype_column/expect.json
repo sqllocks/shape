@@ -1,0 +1,22 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "schema_retype_column",
+  "gates_fail": [],
+  "drift": [
+    {
+      "between": [
+        0,
+        10
+      ],
+      "changes": [
+        {
+          "column": "customer.is_active",
+          "kinds": [
+            "dtype_change"
+          ]
+        }
+      ]
+    }
+  ]
+}

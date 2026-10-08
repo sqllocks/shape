@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "m",
+    "seed": 3
+  },
+  "tables": {
+    "t": {
+      "name": "t",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "city": {
+          "name": "city",
+          "type": "string",
+          "generator": {
+            "strategy": "hierarchy",
+            "dataset": "compat_places",
+            "field": "city",
+            "levels": [
+              "city",
+              "zip"
+            ]
+          }
+        },
+        "zip": {
+          "name": "zip",
+          "type": "string",
+          "generator": {
+            "strategy": "hierarchy_field",
+            "dataset": "compat_places",
+            "field": "zip"
+          }
+        }
+      }
+    }
+  },
+  "generation": {
+    "scale": "s",
+    "scales": {
+      "s": {
+        "t": 200
+      }
+    }
+  },
+  "generators": {
+    "hierarchy": 1,
+    "hierarchy_field": 1,
+    "sequence": 1
+  }
+}

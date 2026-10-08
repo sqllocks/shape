@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Shape data quality scorecard, version 1",
+  "description": "Written by `shape scorecard` and `shape.quality.scorecard.Scorecard.to_dict()` when no slice column is given. `samples` is left out of the copies kept in a history registry.",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "shape_version",
+    "run_at",
+    "data_path",
+    "overall",
+    "dimensions",
+    "known_issues"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "shape-scorecard"
+    },
+    "version": {
+      "const": 1
+    },
+    "shape_version": {
+      "type": "string"
+    },
+    "run_at": {
+      "type": "string"
+    },
+    "data_path": {
+      "type": "string"
+    },
+    "overall": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "dimensions": {
+      "type": "object",
+      "required": [
+        "accuracy",
+        "completeness",
+        "conformity",
+        "consistency",
+        "timeliness",
+        "uniqueness"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "accuracy": {
+          "$ref": "#/$defs/dimension"
+        },
+        "completeness": {
+          "$ref": "#/$defs/dimension"
+        },
+        "conformity": {
+          "$ref": "#/$defs/dimension"
+        },
+        "consistency": {
+          "$ref": "#/$defs/dimension"
+        },
+        "timeliness": {
+          "$ref": "#/$defs/dimension"
+        },
+        "uniqueness": {
+          "$ref": "#/$defs/dimension"
+        }
+      }
+    },
+    "known_issues": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "samples": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "trend": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/trend_entry"
+      }
+    }
+  },
+  "$defs": {
+    "check": {
+      "type": "object",
+      "required": [
+        "gate",
+        "table",
+        "column",
+        "check",
+        "score",
+        "rows",
+        "failing",
+        "owner"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "gate": {
+          "type": "string"
+        },
+        "table": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "column": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "check": {
+          "type": "string"
+        },
+        "score": {
+          "type": "number"
+        },
+        "rows": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "failing": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "owner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "dimension": {
+      "type": "object",
+      "required": [
+        "score",
+        "checks"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "score": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/check"
+          }
+        }
+      }
+    },
+    "trend_entry": {
+      "type": "object",
+      "required": [
+        "previous",
+        "change",
+        "direction"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "previous": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "change": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "direction": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

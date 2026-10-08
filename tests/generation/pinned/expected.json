@@ -1,0 +1,514 @@
+{
+  "format": "generator-pinned-ids",
+  "version": 1,
+  "seed": 42,
+  "rows": 200,
+  "specs": {
+    "address": [
+      {
+        "generators": {
+          "address": 1,
+          "sequence": 1
+        },
+        "id": "sha256:028cfd4f3a20097d6e79b9132482046d28160065938c7a95da6a3362566a41a7"
+      }
+    ],
+    "bootstrap": [
+      {
+        "generators": {
+          "bootstrap": 1,
+          "sequence": 1
+        },
+        "id": "sha256:290824658a34c1316771609693c469bda629f9a34148c989039e8767c8ba06a8"
+      }
+    ],
+    "choice": [
+      {
+        "generators": {
+          "choice": 1,
+          "sequence": 1
+        },
+        "id": "sha256:29423b9a0f9a7d7de5eb2d953a02905b67eaff58e5c87f04dace0fc2e9a9fe57"
+      }
+    ],
+    "composite_fk_field": [
+      {
+        "generators": {
+          "composite_fk_field": 1,
+          "composite_foreign_key": 1,
+          "sequence": 1
+        },
+        "id": "sha256:04a6b42ae662aa6e3bdc008d5703f12498d10aa472a8bbef81b287982dc81cb4"
+      }
+    ],
+    "composite_foreign_key": [
+      {
+        "generators": {
+          "composite_fk_field": 1,
+          "composite_foreign_key": 1,
+          "sequence": 1
+        },
+        "id": "sha256:04a6b42ae662aa6e3bdc008d5703f12498d10aa472a8bbef81b287982dc81cb4"
+      }
+    ],
+    "computed": [
+      {
+        "generators": {
+          "computed": 1,
+          "distribution": 1,
+          "foreign_key": 1,
+          "sequence": 1,
+          "uniform": 1
+        },
+        "id": "sha256:4bc3fa02239506e7c7864d5211c7be77fd006a8fb2c5448b25208c17caaf9c66"
+      }
+    ],
+    "conditional": [
+      {
+        "generators": {
+          "conditional": 1,
+          "sequence": 1,
+          "weighted_enum": 1
+        },
+        "id": "sha256:a9b0325a771514a28aefdb431b6597a83ef51dd5e0332d37a19985dce2047d2a"
+      }
+    ],
+    "conditional_table": [
+      {
+        "generators": {
+          "choice": 1,
+          "conditional_table": 1,
+          "sequence": 1
+        },
+        "id": "sha256:2ed8f3a1f100f4e2d4fc12dcbbb4766f9e28dd4b511736b74a9ebfcc303ca65a"
+      }
+    ],
+    "constant": [
+      {
+        "generators": {
+          "constant": 1,
+          "sequence": 1
+        },
+        "id": "sha256:aebde655aff902d59affa41c521f90e84a87bd0035cdf7dc4554c68ce0d6d825"
+      }
+    ],
+    "correlated": [
+      {
+        "generators": {
+          "correlated": 1,
+          "distribution": 1,
+          "log_normal": 1,
+          "sequence": 1
+        },
+        "id": "sha256:2df6066a9626edfdf5f84892ab60cbb5e2b55077b0ec2582f57aabf9b3cbcd27"
+      }
+    ],
+    "derived": [
+      {
+        "generators": {
+          "computed": 1,
+          "derived": 1,
+          "distribution": 1,
+          "foreign_key": 1,
+          "pattern": 1,
+          "sequence": 1,
+          "temporal": 1,
+          "uniform": 1,
+          "weighted_enum": 1
+        },
+        "id": "sha256:ff22784875f38cbac25881cb5f2da6b1975496e02d098eb707deac2363585cc7"
+      }
+    ],
+    "distribution": [
+      {
+        "generators": {
+          "distribution": 1,
+          "normal": 1,
+          "sequence": 1
+        },
+        "id": "sha256:374d9f0cc8f7507ea27f4fdbb2b70e15d291e74ee9afbc60496b51c474b0dff3"
+      }
+    ],
+    "distribution-bernoulli": [
+      {
+        "generators": {
+          "bernoulli": 1,
+          "distribution": 1,
+          "sequence": 1
+        },
+        "id": "sha256:6a73a86834f2629707dd4bfdfd1280bfa734711c39bf136669a5a69bec065026"
+      }
+    ],
+    "distribution-beta": [
+      {
+        "generators": {
+          "beta": 1,
+          "distribution": 1,
+          "sequence": 1
+        },
+        "id": "sha256:f7fd08b9c2df2ff6575c3fb48a45f526bae8f8ca05d5e08cf8efcf87569627ec"
+      }
+    ],
+    "distribution-exponential": [
+      {
+        "generators": {
+          "distribution": 1,
+          "exponential": 1,
+          "sequence": 1
+        },
+        "id": "sha256:7a23816c9399dfd693f69c641efc0b0fcc37117d0e7cd1b9b24d07be36d58c8f"
+      }
+    ],
+    "distribution-gamma": [
+      {
+        "generators": {
+          "distribution": 1,
+          "gamma": 1,
+          "sequence": 1
+        },
+        "id": "sha256:9e0670bb35f0ed0dffe795459d01179902a4c023be733d488b7e9f6e40878d89"
+      }
+    ],
+    "distribution-geometric": [
+      {
+        "generators": {
+          "distribution": 1,
+          "geometric": 1,
+          "sequence": 1
+        },
+        "id": "sha256:dc17ecc9cc4fc894e6232062ed3f6be8e76b9138a5bb9f18fb581dccfae7bb53"
+      }
+    ],
+    "distribution-log_normal": [
+      {
+        "generators": {
+          "distribution": 1,
+          "log_normal": 1,
+          "sequence": 1
+        },
+        "id": "sha256:d858145cef12c8e0207c39a88de647192a023651afca039e59e745622dff24c6"
+      }
+    ],
+    "distribution-negative_binomial": [
+      {
+        "generators": {
+          "distribution": 1,
+          "negative_binomial": 1,
+          "sequence": 1
+        },
+        "id": "sha256:faee991ca78e4ffee479ef89e45ee406ef76a6b54a286d107c7cd14ace68f248"
+      }
+    ],
+    "distribution-normal": [
+      {
+        "generators": {
+          "distribution": 1,
+          "normal": 1,
+          "sequence": 1
+        },
+        "id": "sha256:835d0dfbd7f21f08b076e01ff3a6d3357815579efc4389b10371173d736910ac"
+      }
+    ],
+    "distribution-pareto": [
+      {
+        "generators": {
+          "distribution": 1,
+          "pareto": 1,
+          "sequence": 1
+        },
+        "id": "sha256:43d6f781c9b11f988d138e116a84e60b5ba3a8dd31bc50139eb8468748b6ad75"
+      }
+    ],
+    "distribution-poisson": [
+      {
+        "generators": {
+          "distribution": 1,
+          "poisson": 1,
+          "sequence": 1
+        },
+        "id": "sha256:61fa53d2359ecf6a6871fe98fc7eb80eed0ce878ba0ebde98ba4348cc30c44b5"
+      }
+    ],
+    "distribution-power_law_cutoff": [
+      {
+        "generators": {
+          "distribution": 1,
+          "power_law_cutoff": 1,
+          "sequence": 1
+        },
+        "id": "sha256:4ab63daff5c52e4cd587a259f26f56a1ed9b50262684a1637e9548f2eb10acbd"
+      }
+    ],
+    "distribution-triangular": [
+      {
+        "generators": {
+          "distribution": 1,
+          "sequence": 1,
+          "triangular": 1
+        },
+        "id": "sha256:9eda64b9e6a3ac2a3ac5961c6106c825732ddc81575ba037c51b5d7f358f630a"
+      }
+    ],
+    "distribution-uniform": [
+      {
+        "generators": {
+          "distribution": 1,
+          "sequence": 1,
+          "uniform": 1
+        },
+        "id": "sha256:b71d54937271eb56e631151807b2f0eab0eab399981fcc0e53b20db9f74fa12f"
+      }
+    ],
+    "distribution-weibull": [
+      {
+        "generators": {
+          "distribution": 1,
+          "sequence": 1,
+          "weibull": 1
+        },
+        "id": "sha256:7a23816c9399dfd693f69c641efc0b0fcc37117d0e7cd1b9b24d07be36d58c8f"
+      }
+    ],
+    "distribution-zipf": [
+      {
+        "generators": {
+          "distribution": 1,
+          "sequence": 1,
+          "zipf": 1
+        },
+        "id": "sha256:bba21e29ea343d22cc1db168713343ef959018cb721c13a57fc7af28218b493d"
+      }
+    ],
+    "empirical": [
+      {
+        "generators": {
+          "empirical": 1,
+          "sequence": 1
+        },
+        "id": "sha256:2bbf8dfa1b61f96b4428ce9646f7fd10c79cf23f79e6d51f74d3a4d05ac56161"
+      }
+    ],
+    "faker": [
+      {
+        "generators": {
+          "faker": 1,
+          "sequence": 1
+        },
+        "id": "sha256:cfc1327456a4e00b0b28a55044b880e3d1851892181088f42a8e89dd07e52e1a"
+      },
+      {
+        "generators": {
+          "faker": 2,
+          "sequence": 1
+        },
+        "id": "sha256:cfc1327456a4e00b0b28a55044b880e3d1851892181088f42a8e89dd07e52e1a"
+      }
+    ],
+    "first_per_parent": [
+      {
+        "generators": {
+          "first_per_parent": 1,
+          "foreign_key": 1,
+          "sequence": 1
+        },
+        "id": "sha256:a74dd41a6d04831c21f57f6903452c97f13779b621514cfb6775f6d18f959ba2"
+      }
+    ],
+    "foreign_key": [
+      {
+        "generators": {
+          "foreign_key": 1,
+          "uuid": 1
+        },
+        "id": "sha256:4221a86facb09a23588763f091d68cddcb0b25ff780c7d2d1d8b1477adbad2e6"
+      }
+    ],
+    "formula": [
+      {
+        "generators": {
+          "formula": 1,
+          "sequence": 1
+        },
+        "id": "sha256:6aeb67061e4939af63a43478d8cd186edafaa3259db953d3be830f567b0c96a3"
+      }
+    ],
+    "hierarchy": [
+      {
+        "generators": {
+          "hierarchy": 1,
+          "sequence": 1
+        },
+        "id": "sha256:03a0e2cfb7241641a2dbaac7aba3a3032911f1d2807c05eb207718b009a3f54c"
+      }
+    ],
+    "hierarchy_field": [
+      {
+        "generators": {
+          "hierarchy": 1,
+          "hierarchy_field": 1,
+          "sequence": 1
+        },
+        "id": "sha256:b9dd451510590b20812f0bb768618e7d75a259176b96079af150776a96382cb9"
+      }
+    ],
+    "lifecycle": [
+      {
+        "generators": {
+          "lifecycle": 1,
+          "sequence": 1
+        },
+        "id": "sha256:2e3cda12f512852578cce846ff7c3e1e872cf313589816184e44e50f6821024a"
+      }
+    ],
+    "locale": [
+      {
+        "generators": {
+          "locale": 1,
+          "sequence": 1
+        },
+        "id": "sha256:c94a95eb29df0c75f31b1cfbcf8bcb584701f44cf9f37bd05482af73bb3b9687"
+      }
+    ],
+    "lookup": [
+      {
+        "generators": {
+          "distribution": 1,
+          "lookup": 1,
+          "normal": 1,
+          "sequence": 1
+        },
+        "id": "sha256:a3a2f7567bf83bd46c4c79c7e69ecc8f59d78bcf20733315cfee23994b392a72"
+      }
+    ],
+    "native": [
+      {
+        "generators": {
+          "native": 1,
+          "sequence": 1
+        },
+        "id": "sha256:07358c7e098466c25038378d5ca27adb8b389abfc021d7a942d87e40c68a9445"
+      }
+    ],
+    "normal": [
+      {
+        "generators": {
+          "normal": 1,
+          "sequence": 1
+        },
+        "id": "sha256:c47dd14e90d6082c507a2c26faee0b0b5c5d1b94ad98e06b53bbc171accc7438"
+      }
+    ],
+    "pattern": [
+      {
+        "generators": {
+          "pattern": 1,
+          "sequence": 1
+        },
+        "id": "sha256:62350bc82a1d5662f036500dfc3105c178240444786e39ecd31849322a8b680f"
+      }
+    ],
+    "record_field": [
+      {
+        "generators": {
+          "record_field": 1,
+          "record_sample": 1,
+          "sequence": 1
+        },
+        "id": "sha256:e6a3c2c8dba5ff6ed0a583cf3caa6e64d1b52fc04871d739f1d5a0c88330c97d"
+      }
+    ],
+    "record_sample": [
+      {
+        "generators": {
+          "record_field": 1,
+          "record_sample": 1,
+          "sequence": 1
+        },
+        "id": "sha256:e6a3c2c8dba5ff6ed0a583cf3caa6e64d1b52fc04871d739f1d5a0c88330c97d"
+      }
+    ],
+    "reference_data": [
+      {
+        "generators": {
+          "reference_data": 1,
+          "sequence": 1
+        },
+        "id": "sha256:05a1de4745ede3722cdd5a0bbd9585ca4e1e930bf99fbb44d13265cae3e0fd64"
+      }
+    ],
+    "scd2": [
+      {
+        "generators": {
+          "foreign_key": 1,
+          "scd2": 1,
+          "sequence": 1
+        },
+        "id": "sha256:626fb7eff49e8d8c46383920a0bb322541097a89cd24d81460073cf950dc41f5"
+      }
+    ],
+    "self_ref_field": [
+      {
+        "generators": {
+          "self_ref_field": 1,
+          "self_referencing": 1,
+          "sequence": 1
+        },
+        "id": "sha256:70b8fc7225dc781a76fb38f43b0b345abcc59fbc3e80eafd084a927111d54c20"
+      }
+    ],
+    "self_referencing": [
+      {
+        "generators": {
+          "self_ref_field": 1,
+          "self_referencing": 1,
+          "sequence": 1
+        },
+        "id": "sha256:70b8fc7225dc781a76fb38f43b0b345abcc59fbc3e80eafd084a927111d54c20"
+      }
+    ],
+    "sequence": [
+      {
+        "generators": {
+          "sequence": 1
+        },
+        "id": "sha256:7b98c9d44d67f09b199c3e3e9b7162ca15ea085c1a811159357900862b797e09"
+      }
+    ],
+    "temporal": [
+      {
+        "generators": {
+          "sequence": 1,
+          "temporal": 1
+        },
+        "id": "sha256:490c58d3f0746a8f822120e564e48dc37f0394d476b9937f3d62259a5158c0c4"
+      }
+    ],
+    "uniform": [
+      {
+        "generators": {
+          "sequence": 1,
+          "uniform": 1
+        },
+        "id": "sha256:4ff34a05a3357ea5ed41a1c9951f33de501a66d205638e7f6a5e0df0acd67945"
+      }
+    ],
+    "uuid": [
+      {
+        "generators": {
+          "sequence": 1,
+          "uuid": 1
+        },
+        "id": "sha256:7adfed301776ce9cef4a0142d4ce82368630c2a195b77a391ddc988a981f8342"
+      }
+    ],
+    "weighted_enum": [
+      {
+        "generators": {
+          "sequence": 1,
+          "weighted_enum": 1
+        },
+        "id": "sha256:8a06edcd938c31a0fc6081843c8e2345429c56181c2ef6717acea2b6d20e9908"
+      }
+    ]
+  }
+}

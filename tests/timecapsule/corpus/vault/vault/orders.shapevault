@@ -1,0 +1,26 @@
+{
+  "algorithm": "AES-256-GCM",
+  "columns": {
+    "orders.amount": {
+      "ciphertext": "bK1Q++Ws9WFc+st5bXp6UI3WugmZrEhVU9pi5QDIu83xVa98Tghs3FbW7QryqO+ljjBzVHgz4H5H5n+rozc=",
+      "nonce": "FK/O4jD3biOqrYil",
+      "policy": "extremes"
+    },
+    "orders.status": {
+      "ciphertext": "Th+jyy3A6uKY7lLtpyNuizfuQHeZ+RBukDzUZCOm31JT8WsZHvo9GGjXBX4sYLRKl8P1dZQuNA==",
+      "nonce": "Qcw8Qs4efFgP49mH",
+      "policy": "categories"
+    }
+  },
+  "format": "shape-vault",
+  "kek_id": "648aa5c579fb30f3",
+  "min_shape_version": "0.9.0",
+  "profile_content_id": "ca74532449d4aaa3fefe246f4cbc6496d2d935d148838ba9b951d2625734ea9e",
+  "shape_version": "0.9.0",
+  "vault_id": "513c324f6b924f56b5c38d61ece1fda5",
+  "version": 1,
+  "wrapped_key": {
+    "ciphertext": "7h4cDRExV4Deer9CsWinjWr1vCmHLLURUlZe1cUdRyhS7fpn6X+na7ALTFuKfLmU",
+    "nonce": "dnJLa0QMnMkocPlj"
+  }
+}

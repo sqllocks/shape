@@ -1,0 +1,37 @@
+[medium] refengine          warm-up 1: total 9.25s
+[medium] shape            warm-up 1: total 1.12s
+[medium] refengine          run 1: total 8.72s  gen 7.65s  write 1.07s  rss 560MB  load 0.68
+[medium] shape            run 1: total 1.22s  gen 1.22s  write 0.00s  rss 351MB  load 0.73
+[medium] refengine          run 2: total 8.48s  gen 7.40s  write 1.07s  rss 558MB  load 0.73
+[medium] shape            run 2: total 1.11s  gen 1.11s  write 0.00s  rss 355MB  load 0.77
+[medium] refengine          run 3: total 8.65s  gen 7.58s  write 1.07s  rss 568MB  load 0.79
+[medium] shape            run 3: total 1.17s  gen 1.17s  write 0.00s  rss 353MB  load 0.82
+[medium] refengine          run 4: total 8.89s  gen 7.67s  write 1.22s  rss 558MB  load 0.82
+[medium] shape            run 4: total 1.13s  gen 1.13s  write 0.00s  rss 347MB  load 0.86
+[medium] refengine          run 5: total 8.87s  gen 7.88s  write 0.99s  rss 567MB  load 0.86
+[medium] shape            run 5: total 1.09s  gen 1.09s  write 0.00s  rss 355MB  load 0.89
+[large] refengine          warm-up 1: total 212.65s
+[large] shape            warm-up 1: total 11.33s
+[large] refengine          run 1: total 216.22s  gen 206.36s  write 9.86s  rss 3382MB  load 1.08
+[large] shape            run 1: total 11.79s  gen 11.79s  write 0.00s  rss 1831MB  load 1.04
+[large] refengine          run 2: total 218.33s  gen 209.43s  write 8.91s  rss 3375MB  load 1.19
+[large] shape            run 2: total 11.35s  gen 11.35s  write 0.00s  rss 1837MB  load 1.02
+[large] refengine          run 3: total 214.49s  gen 204.47s  write 10.02s  rss 3383MB  load 1.10
+[large] shape            run 3: total 11.53s  gen 11.53s  write 0.00s  rss 1830MB  load 1.07
+[large] refengine          run 4: total 212.88s  gen 203.45s  write 9.43s  rss 3383MB  load 1.13
+[large] shape            run 4: total 11.92s  gen 11.92s  write 0.00s  rss 1830MB  load 1.06
+[large] refengine          run 5: total 213.72s  gen 203.93s  write 9.78s  rss 3383MB  load 1.50
+[large] shape            run 5: total 11.75s  gen 11.75s  write 0.00s  rss 1832MB  load 1.01
+
+== retail medium: median of 5 fresh-process runs, 4 cores
+tool                     rows  total s   gen s  write s  rows/s total   rows/s gen  peak RSS MB
+refengine             1,965,400     8.72    7.65     1.07       225,346      256,783          560
+shape               1,965,400     1.13    1.13     0.00     1,739,153    1,739,153          353
+speedup (shape vs refengine): total 7.72x
+
+== retail large: median of 5 fresh-process runs, 4 cores
+tool                     rows  total s   gen s  write s  rows/s total   rows/s gen  peak RSS MB
+refengine            19,625,400   214.49  204.47     9.78        91,499       95,981         3383
+shape              19,625,400    11.75   11.75     0.00     1,670,336    1,670,336         1831
+speedup (shape vs refengine): total 18.26x
+exit 0

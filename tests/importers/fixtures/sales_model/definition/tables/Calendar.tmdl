@@ -1,0 +1,10 @@
+table Calendar
+	dataCategory: Time
+
+	column Date
+		dataType: dateTime
+		formatString: Short Date
+		isKey
+
+	column Year
+		dataType: int64

@@ -1,0 +1,8 @@
+Name, Coeff, Label
+Rx_CE_NoLowAged_M65_69, 0.168, Rx_CE_NoLowAged_M65_69 -- Male/  Age 65 - 69
+Rx_CE_NoLowAged_F70_74, 0.114, Rx_CE_NoLowAged_F70_74 -- Female/Age 70 - 74
+Rx_CE_NoLowAged_RXHCC30, 0.499, Rx_CE_NoLowAged_RXHCC30 -- Diabetes with Complications
+Rx_CE_NoLowAged_RXHCC31, 0.172, Rx_CE_NoLowAged_RXHCC31 -- Diabetes without Complication
+Rx_CE_NoLowAged_RXHCC186, 0.110, Rx_CE_NoLowAged_RXHCC186 -- Heart Failure
+Rx_CE_NoLowAged_RXHCC187, 0.057, Rx_CE_NoLowAged_RXHCC187 -- Hypertension
+Rx_CE_LTI_RXHCC30, 0.908, Rx_CE_LTI_RXHCC30 -- Diabetes with Complications

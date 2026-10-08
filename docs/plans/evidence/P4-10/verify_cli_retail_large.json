@@ -1,0 +1,4323 @@
+{
+ "domain": "retail",
+ "scale": "large",
+ "impl": "shape",
+ "seed": 42,
+ "impl_seed": 1042,
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "tables": {
+  "customer": {
+   "rows": {
+    "refengine": 500000,
+    "impl": 500000
+   },
+   "columns_refengine": [
+    "customer_id",
+    "first_name",
+    "last_name",
+    "email",
+    "gender",
+    "loyalty_tier",
+    "signup_date",
+    "is_active"
+   ],
+   "columns_impl": [
+    "customer_id",
+    "first_name",
+    "last_name",
+    "email",
+    "gender",
+    "loyalty_tier",
+    "signup_date",
+    "is_active"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "customer_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "first_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "last_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "email": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "gender": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "loyalty_tier": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "signup_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "is_active": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "customer_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.0038989492070408104,
+     "stats": {
+      "mean": {
+       "refengine": 250000.5,
+       "impl": 250000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500000.0,
+       "impl": 500000.0
+      },
+      "std": {
+       "refengine": 144337.56729711776,
+       "impl": 144337.56729711776,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 500000,
+      "impl": 500000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "first_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "refengine": 5000,
+      "impl": 5000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Thon",
+       "refengine": 0.000274,
+       "impl": 0.000206
+      },
+      {
+       "value": "Heesa",
+       "refengine": 0.000272,
+       "impl": 0.000188
+      },
+      {
+       "value": "Nuasha",
+       "refengine": 0.000268,
+       "impl": 0.0002
+      },
+      {
+       "value": "Adrienne",
+       "refengine": 0.000264,
+       "impl": 0.000224
+      },
+      {
+       "value": "Jim",
+       "refengine": 0.000262,
+       "impl": 0.000192
+      },
+      {
+       "value": "Tous",
+       "refengine": 0.000262,
+       "impl": 0.000184
+      },
+      {
+       "value": "Then",
+       "refengine": 0.000262,
+       "impl": 0.000212
+      },
+      {
+       "value": "Debra",
+       "refengine": 0.00026,
+       "impl": 0.000186
+      },
+      {
+       "value": "Jion",
+       "refengine": 0.00026,
+       "impl": 0.000196
+      },
+      {
+       "value": "Joya",
+       "refengine": 0.00026,
+       "impl": 0.000182
+      },
+      {
+       "value": "Deea",
+       "refengine": 0.00017,
+       "impl": 0.000272
+      },
+      {
+       "value": "Earl",
+       "refengine": 0.0002,
+       "impl": 0.000268
+      },
+      {
+       "value": "Arria",
+       "refengine": 0.000198,
+       "impl": 0.000268
+      },
+      {
+       "value": "Hoton",
+       "refengine": 0.000224,
+       "impl": 0.000268
+      },
+      {
+       "value": "Noien",
+       "refengine": 0.00021,
+       "impl": 0.000266
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "last_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "refengine": 5000,
+      "impl": 5000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Blacgate",
+       "refengine": 0.00027,
+       "impl": 0.00021
+      },
+      {
+       "value": "Patrford",
+       "refengine": 0.000266,
+       "impl": 0.000164
+      },
+      {
+       "value": "Bender",
+       "refengine": 0.000266,
+       "impl": 0.000198
+      },
+      {
+       "value": "Simmons",
+       "refengine": 0.000264,
+       "impl": 0.0002
+      },
+      {
+       "value": "Deckway",
+       "refengine": 0.000264,
+       "impl": 0.00018
+      },
+      {
+       "value": "Hintstein",
+       "refengine": 0.000264,
+       "impl": 0.00024
+      },
+      {
+       "value": "Kellford",
+       "refengine": 0.000262,
+       "impl": 0.00017
+      },
+      {
+       "value": "Carney",
+       "refengine": 0.000262,
+       "impl": 0.000208
+      },
+      {
+       "value": "Goldridge",
+       "refengine": 0.00026,
+       "impl": 0.000188
+      },
+      {
+       "value": "Beaslwood",
+       "refengine": 0.000256,
+       "impl": 0.000232
+      },
+      {
+       "value": "StBride",
+       "refengine": 0.000194,
+       "impl": 0.00029
+      },
+      {
+       "value": "Corteman",
+       "refengine": 0.000208,
+       "impl": 0.000274
+      },
+      {
+       "value": "Romaberg",
+       "refengine": 0.000228,
+       "impl": 0.000272
+      },
+      {
+       "value": "Hintshire",
+       "refengine": 0.000198,
+       "impl": 0.000266
+      },
+      {
+       "value": "Morwick",
+       "refengine": 0.000182,
+       "impl": 0.000264
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "email": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.050128,
+      "impl": 0.050118,
+      "baseline_max_abs_diff": 0.0002020000000000008,
+      "tol": 0.0021820903651315633
+     },
+     "distinct": {
+      "refengine": 474936,
+      "impl": 474941,
+      "ratio": 1.0000105277342632,
+      "baseline_max_ratio_dev": 0.00021476577896806237
+     },
+     "top10": [
+      {
+       "value": "krisa.wyatridge2@engineer.com",
+       "refengine": 2.1055468526285646e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "carlos.aguircroft905@mac.com",
+       "refengine": 2.1055468526285646e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "iris.gilstein476@outlook.com",
+       "refengine": 2.1055468526285646e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "hoea.trujillo418@accountant.com",
+       "refengine": 2.1055468526285646e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "brnor.archebrook390@frontier.com",
+       "refengine": 2.1055468526285646e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "sia.hancoberg254@workmail.com",
+       "refengine": 2.1055468526285646e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "debra.dadonald299@verizon.net",
+       "refengine": 2.1055468526285646e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "evea.gooridge571@charter.net",
+       "refengine": 2.1055468526285646e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "arion.livingston906@sbcglobal.net",
+       "refengine": 2.1055468526285646e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "daisha.halman751@comcast.net",
+       "refengine": 2.1055468526285646e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "kiea.lucerman307@rocketmail.com",
+       "refengine": 0.0,
+       "impl": 2.1055246862241838e-06
+      },
+      {
+       "value": "waia.floydwick110@live.com",
+       "refengine": 0.0,
+       "impl": 2.1055246862241838e-06
+      },
+      {
+       "value": "diol.gilmore937@msn.com",
+       "refengine": 0.0,
+       "impl": 2.1055246862241838e-06
+      },
+      {
+       "value": "soea.walsh963@yahoo.com",
+       "refengine": 0.0,
+       "impl": 2.1055246862241838e-06
+      },
+      {
+       "value": "alnor.shoham723@mail.com",
+       "refengine": 0.0,
+       "impl": 2.1055246862241838e-06
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "gender": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "F",
+       "refengine": 0.510762,
+       "impl": 0.51098
+      },
+      {
+       "value": "M",
+       "refengine": 0.489238,
+       "impl": 0.48902
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.00021799999999996822,
+     "tvd_baseline": 0.0012920000000000431,
+     "tvd_tol": 0.004787307364817191,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "loyalty_tier": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Basic",
+       "refengine": 0.549226,
+       "impl": 0.550388
+      },
+      {
+       "value": "Silver",
+       "refengine": 0.250712,
+       "impl": 0.249096
+      },
+      {
+       "value": "Gold",
+       "refengine": 0.12994,
+       "impl": 0.130362
+      },
+      {
+       "value": "Platinum",
+       "refengine": 0.070122,
+       "impl": 0.070154
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.0016159999999999855,
+     "tvd_baseline": 0.0018420000000000103,
+     "tvd_tol": 0.006770275002573076,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "signup_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "ks": 0.0012260000000000604,
+     "ks_baseline": 0.0023440000000000127,
+     "ks_tol": 0.005516000000000019,
+     "stats": {
+      "mean": {
+       "refengine": "2023-12-31 13:14:46.357949184",
+       "impl": "2023-12-31 12:13:04.888355072"
+      },
+      "min": {
+       "refengine": "2022-01-01 00:09:25.267217664",
+       "impl": "2022-01-01 00:00:40.274246912"
+      },
+      "max": {
+       "refengine": "2025-12-30 23:55:12.993826304",
+       "impl": "2025-12-30 23:55:37.428956928"
+      },
+      "std": {
+       "refengine": 421.17634023922045,
+       "impl": 421.53596900093527,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 500000,
+      "impl": 500000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_active": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142121481588257e-05
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "refengine": 0.850156,
+       "impl": 0.849068
+      },
+      {
+       "value": "false",
+       "refengine": 0.149844,
+       "impl": 0.150932
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.0010879999999999918,
+     "tvd_baseline": 0.0009020000000000278,
+     "tvd_tol": 0.004787307364817191,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "address": {
+   "rows": {
+    "refengine": 750000,
+    "impl": 750000
+   },
+   "columns_refengine": [
+    "address_id",
+    "customer_id",
+    "address_type",
+    "street",
+    "city",
+    "state",
+    "zip_code",
+    "lat",
+    "lng",
+    "is_primary"
+   ],
+   "columns_impl": [
+    "address_id",
+    "customer_id",
+    "address_type",
+    "street",
+    "city",
+    "state",
+    "zip_code",
+    "lat",
+    "lng",
+    "is_primary"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "address_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "customer_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "address_type": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "street": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "city": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "state": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "zip_code": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "lat": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "lng": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "is_primary": {
+     "refengine": "bool",
+     "impl": "bool"
+    }
+   },
+   "columns": {
+    "address_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.0031834786967596903,
+     "stats": {
+      "mean": {
+       "refengine": 375000.5,
+       "impl": 375000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 750000.0,
+       "impl": 750000.0
+      },
+      "std": {
+       "refengine": 216506.35094591722,
+       "impl": 216506.35094591722,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 750000,
+      "impl": 750000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "customer_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "ks": 0.0014973333333333505,
+     "ks_baseline": 0.0015373333333333905,
+     "ks_tol": 0.004306000000000086,
+     "stats": {
+      "mean": {
+       "refengine": 249956.099444,
+       "impl": 250177.04366133333
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500000.0,
+       "impl": 500000.0
+      },
+      "std": {
+       "refengine": 144296.61693057453,
+       "impl": 144462.47396559492,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 388660,
+      "impl": 388328
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "address_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "distinct": {
+      "refengine": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "billing",
+       "refengine": 0.50084,
+       "impl": 0.5006666666666667
+      },
+      {
+       "value": "shipping",
+       "refengine": 0.399384,
+       "impl": 0.39976266666666666
+      },
+      {
+       "value": "both",
+       "refengine": 0.099776,
+       "impl": 0.09957066666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.00037866666666661053,
+     "tvd_baseline": 0.0016546666666666515,
+     "tvd_tol": 0.004787307364817192,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "street": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "distinct": {
+      "refengine": 747070,
+      "impl": 747141,
+      "ratio": 1.0000950379482512,
+      "baseline_max_ratio_dev": 0.00023558702665082976
+     },
+     "top10": [
+      {
+       "value": "8541 Lower Seventh Ave",
+       "refengine": 4e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "9981 Long Crystal Pl",
+       "refengine": 4e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "8043 Lower Owl Cir",
+       "refengine": 4e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "4767 New Hawk Dr",
+       "refengine": 4e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "2840 Short Walnut St",
+       "refengine": 4e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "3564 Jade Ln",
+       "refengine": 4e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "581 Short Lakewood Way",
+       "refengine": 4e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "1883 Little Sunset Dr",
+       "refengine": 4e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "6966 Upper Industrial Rd",
+       "refengine": 4e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "2535 Little Center Rd",
+       "refengine": 4e-06,
+       "impl": 0.0
+      },
+      {
+       "value": "3559 Lower Sparrow Blvd",
+       "refengine": 0.0,
+       "impl": 4e-06
+      },
+      {
+       "value": "1765 Old Columbus Dr",
+       "refengine": 0.0,
+       "impl": 4e-06
+      },
+      {
+       "value": "6731 Long Sycamore Way",
+       "refengine": 0.0,
+       "impl": 4e-06
+      },
+      {
+       "value": "2320 Short Tenth Ave",
+       "refengine": 0.0,
+       "impl": 4e-06
+      },
+      {
+       "value": "3522 Lower Ash Ave",
+       "refengine": 0.0,
+       "impl": 4e-06
+      }
+     ],
+     "vocab_overlap": 0.007526666666666667,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "number(100..9998)+' '+STREET_NAMES+' '+_STREET_SUFFIXES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "city": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "distinct": {
+      "refengine": 18573,
+      "impl": 18573,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Washington",
+       "refengine": 0.0072373333333333335,
+       "impl": 0.00722
+      },
+      {
+       "value": "Houston",
+       "refengine": 0.004717333333333333,
+       "impl": 0.004574666666666667
+      },
+      {
+       "value": "New York",
+       "refengine": 0.0036133333333333334,
+       "impl": 0.0035266666666666667
+      },
+      {
+       "value": "El Paso",
+       "refengine": 0.003524,
+       "impl": 0.0033733333333333332
+      },
+      {
+       "value": "Dallas",
+       "refengine": 0.0027026666666666666,
+       "impl": 0.002802666666666667
+      },
+      {
+       "value": "Miami",
+       "refengine": 0.002588,
+       "impl": 0.0025066666666666666
+      },
+      {
+       "value": "Atlanta",
+       "refengine": 0.002497333333333333,
+       "impl": 0.002462666666666667
+      },
+      {
+       "value": "Springfield",
+       "refengine": 0.0024933333333333335,
+       "impl": 0.0026333333333333334
+      },
+      {
+       "value": "Sacramento",
+       "refengine": 0.0024786666666666668,
+       "impl": 0.0024853333333333333
+      },
+      {
+       "value": "Philadelphia",
+       "refengine": 0.0022693333333333333,
+       "impl": 0.0022266666666666667
+      },
+      {
+       "value": "Los Angeles",
+       "refengine": 0.002245333333333333,
+       "impl": 0.002390666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "state": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "distinct": {
+      "refengine": 51,
+      "impl": 51,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "TX",
+       "refengine": 0.06391066666666667,
+       "impl": 0.06373733333333333
+      },
+      {
+       "value": "CA",
+       "refengine": 0.0631,
+       "impl": 0.063524
+      },
+      {
+       "value": "PA",
+       "refengine": 0.05300266666666666,
+       "impl": 0.053144
+      },
+      {
+       "value": "NY",
+       "refengine": 0.05256,
+       "impl": 0.052381333333333335
+      },
+      {
+       "value": "IL",
+       "refengine": 0.03824266666666667,
+       "impl": 0.038601333333333335
+      },
+      {
+       "value": "FL",
+       "refengine": 0.035888,
+       "impl": 0.036389333333333336
+      },
+      {
+       "value": "OH",
+       "refengine": 0.034326666666666665,
+       "impl": 0.03426933333333333
+      },
+      {
+       "value": "VA",
+       "refengine": 0.029958666666666668,
+       "impl": 0.029490666666666665
+      },
+      {
+       "value": "MI",
+       "refengine": 0.028633333333333334,
+       "impl": 0.028229333333333332
+      },
+      {
+       "value": "MO",
+       "refengine": 0.028022666666666668,
+       "impl": 0.028004
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.0035080000000000063,
+     "tvd_baseline": 0.003899999999999994,
+     "tvd_tol": 0.01973857392743862,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "zip_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "distinct": {
+      "refengine": 40977,
+      "impl": 40977,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "99603",
+       "refengine": 6e-05,
+       "impl": 2.9333333333333333e-05
+      },
+      {
+       "value": "99017",
+       "refengine": 5.2e-05,
+       "impl": 3.2e-05
+      },
+      {
+       "value": "32443",
+       "refengine": 4.933333333333333e-05,
+       "impl": 2.6666666666666667e-05
+      },
+      {
+       "value": "15078",
+       "refengine": 4.8e-05,
+       "impl": 2.2666666666666668e-05
+      },
+      {
+       "value": "97536",
+       "refengine": 4.8e-05,
+       "impl": 2.1333333333333335e-05
+      },
+      {
+       "value": "82005",
+       "refengine": 4.8e-05,
+       "impl": 2.6666666666666667e-05
+      },
+      {
+       "value": "76020",
+       "refengine": 4.6666666666666665e-05,
+       "impl": 2.8e-05
+      },
+      {
+       "value": "31722",
+       "refengine": 4.6666666666666665e-05,
+       "impl": 2.8e-05
+      },
+      {
+       "value": "63852",
+       "refengine": 4.6666666666666665e-05,
+       "impl": 1.7333333333333332e-05
+      },
+      {
+       "value": "74084",
+       "refengine": 4.6666666666666665e-05,
+       "impl": 3.3333333333333335e-05
+      },
+      {
+       "value": "23459",
+       "refengine": 3.066666666666667e-05,
+       "impl": 5.2e-05
+      },
+      {
+       "value": "56063",
+       "refengine": 2.8e-05,
+       "impl": 5.066666666666667e-05
+      },
+      {
+       "value": "29568",
+       "refengine": 2.8e-05,
+       "impl": 5.066666666666667e-05
+      },
+      {
+       "value": "33778",
+       "refengine": 1.8666666666666665e-05,
+       "impl": 4.933333333333333e-05
+      },
+      {
+       "value": "12541",
+       "refengine": 2.1333333333333335e-05,
+       "impl": 4.933333333333333e-05
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lat": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "ks": 0.0011413333333333275,
+     "ks_baseline": 0.0020560000000000023,
+     "ks_tol": 0.0050840000000000034,
+     "stats": {
+      "mean": {
+       "refengine": 38.5949618304,
+       "impl": 38.586988547733334
+      },
+      "min": {
+       "refengine": 19.0668,
+       "impl": 19.0668
+      },
+      "max": {
+       "refengine": 71.2346,
+       "impl": 71.2346
+      },
+      "std": {
+       "refengine": 5.236349786499112,
+       "impl": 5.2366701357617345,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 33296,
+      "impl": 33296
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lng": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "ks": 0.0005799999999999694,
+     "ks_baseline": 0.0022079999999999878,
+     "ks_tol": 0.005311999999999982,
+     "stats": {
+      "mean": {
+       "refengine": -91.14408242999998,
+       "impl": -91.14488198773334
+      },
+      "min": {
+       "refengine": -176.634,
+       "impl": -176.634
+      },
+      "max": {
+       "refengine": 166.6419,
+       "impl": 166.6419
+      },
+      "std": {
+       "refengine": 15.320582007156789,
+       "impl": 15.328589088318399,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 35570,
+      "impl": 35570
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_primary": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 9.428084130424929e-06
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "True",
+       "refengine": 0.5182133333333333,
+       "impl": 0.5177706666666667
+      },
+      {
+       "value": "False",
+       "refengine": 0.48178666666666664,
+       "impl": 0.48222933333333334
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.0004426666666666468,
+     "tvd_baseline": 0.0005773333333333464,
+     "tvd_tol": 0.003908820095223359,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "product_category": {
+   "rows": {
+    "refengine": 50,
+    "impl": 50
+   },
+   "columns_refengine": [
+    "category_id",
+    "category_name",
+    "parent_category_id",
+    "level"
+   ],
+   "columns_impl": [
+    "category_id",
+    "category_name",
+    "parent_category_id",
+    "level"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "category_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "category_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "parent_category_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "level": {
+     "refengine": "int64",
+     "impl": "int64"
+    }
+   },
+   "columns": {
+    "category_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.38989492070408105,
+     "stats": {
+      "mean": {
+       "refengine": 25.5,
+       "impl": 25.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 50.0,
+       "impl": 50.0
+      },
+      "std": {
+       "refengine": 14.430869689661812,
+       "impl": 14.430869689661812,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 50,
+      "impl": 50
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "category_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "distinct": {
+      "refengine": 34,
+      "impl": 29,
+      "ratio": 0.8529411764705882,
+      "baseline_max_ratio_dev": 0.1470588235294118
+     },
+     "top10": [
+      {
+       "value": "Hair Care",
+       "refengine": 0.06,
+       "impl": 0.04
+      },
+      {
+       "value": "Cameras & Photography",
+       "refengine": 0.06,
+       "impl": 0.02
+      },
+      {
+       "value": "Smartphones & Tablets",
+       "refengine": 0.06,
+       "impl": 0.04
+      },
+      {
+       "value": "Children's Clothing",
+       "refengine": 0.06,
+       "impl": 0.02
+      },
+      {
+       "value": "Grocery & Gourmet",
+       "refengine": 0.06,
+       "impl": 0.0
+      },
+      {
+       "value": "Bedding & Bath",
+       "refengine": 0.04,
+       "impl": 0.0
+      },
+      {
+       "value": "Parts & Accessories",
+       "refengine": 0.04,
+       "impl": 0.02
+      },
+      {
+       "value": "Kitchen & Dining",
+       "refengine": 0.04,
+       "impl": 0.04
+      },
+      {
+       "value": "Shoes & Footwear",
+       "refengine": 0.04,
+       "impl": 0.02
+      },
+      {
+       "value": "Toys & Games",
+       "refengine": 0.04,
+       "impl": 0.02
+      },
+      {
+       "value": "Clothing",
+       "refengine": 0.02,
+       "impl": 0.1
+      },
+      {
+       "value": "Home & Garden",
+       "refengine": 0.02,
+       "impl": 0.06
+      },
+      {
+       "value": "Pantry Staples",
+       "refengine": 0.0,
+       "impl": 0.06
+      },
+      {
+       "value": "Home Decor",
+       "refengine": 0.02,
+       "impl": 0.04
+      },
+      {
+       "value": "Fiction",
+       "refengine": 0.0,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.44000000000000006,
+     "tvd_baseline": 0.56,
+     "tvd_tol": 1.973857392743862,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "parent_category_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.16,
+      "impl": 0.16,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3666060555964672
+     },
+     "ks": 0.19047619047619047,
+     "ks_baseline": 0.19047619047619047,
+     "ks_tol": 0.4254102350488705,
+     "stats": {
+      "mean": {
+       "refengine": 10.952380952380953,
+       "impl": 12.833333333333334
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 2.0
+      },
+      "max": {
+       "refengine": 29.0,
+       "impl": 27.0
+      },
+      "std": {
+       "refengine": 7.751965590838362,
+       "impl": 8.150129028095396,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 21,
+      "impl": 18
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "level": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.14
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.38989492070408105,
+     "stats": {
+      "mean": {
+       "refengine": 2.26,
+       "impl": 2.26
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 3.0,
+       "impl": 3.0
+      },
+      "std": {
+       "refengine": 0.7158212067269312,
+       "impl": 0.7158212067269312,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 3,
+      "impl": 3
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "product": {
+   "rows": {
+    "refengine": 25000,
+    "impl": 25000
+   },
+   "columns_refengine": [
+    "product_id",
+    "category_id",
+    "product_name",
+    "unit_price",
+    "product_status",
+    "cost"
+   ],
+   "columns_impl": [
+    "product_id",
+    "category_id",
+    "product_name",
+    "unit_price",
+    "product_status",
+    "cost"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "product_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "category_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "product_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "unit_price": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "product_status": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "cost": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "product_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.01743663093552431,
+     "stats": {
+      "mean": {
+       "refengine": 12500.5,
+       "impl": 12500.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 25000.0,
+       "impl": 25000.0
+      },
+      "std": {
+       "refengine": 7216.87835909682,
+       "impl": 7216.87835909682,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 25000,
+      "impl": 25000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "category_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.0041200000000000125,
+     "ks_baseline": 0.011120000000000019,
+     "ks_tol": 0.01868000000000003,
+     "stats": {
+      "mean": {
+       "refengine": 25.49344,
+       "impl": 25.50648
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 50.0,
+       "impl": 50.0
+      },
+      "std": {
+       "refengine": 14.440801811755467,
+       "impl": 14.41516278123837,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 50,
+      "impl": 50
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "product_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "distinct": {
+      "refengine": 114,
+      "impl": 114,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Electric Kettle",
+       "refengine": 0.01052,
+       "impl": 0.00888
+      },
+      {
+       "value": "Sleeping Bag 20\u00b0F",
+       "refengine": 0.01036,
+       "impl": 0.0096
+      },
+      {
+       "value": "Dog Food Premium 30lb",
+       "refengine": 0.01016,
+       "impl": 0.01028
+      },
+      {
+       "value": "Jump Rope Speed",
+       "refengine": 0.01016,
+       "impl": 0.00868
+      },
+      {
+       "value": "Moisturizing Face Cream",
+       "refengine": 0.00996,
+       "impl": 0.00848
+      },
+      {
+       "value": "Camping Tent 4-Person",
+       "refengine": 0.00984,
+       "impl": 0.0082
+      },
+      {
+       "value": "Lip Balm SPF 15",
+       "refengine": 0.0098,
+       "impl": 0.00908
+      },
+      {
+       "value": "LEGO Architecture Set",
+       "refengine": 0.00976,
+       "impl": 0.00828
+      },
+      {
+       "value": "Phone Mount for Car",
+       "refengine": 0.00972,
+       "impl": 0.0084
+      },
+      {
+       "value": "Outdoor Swing Set",
+       "refengine": 0.00972,
+       "impl": 0.00876
+      },
+      {
+       "value": "Batteries AA 24-Pack",
+       "refengine": 0.00864,
+       "impl": 0.0102
+      },
+      {
+       "value": "Chef's Knife 8-inch",
+       "refengine": 0.009,
+       "impl": 0.01008
+      },
+      {
+       "value": "Extra Virgin Olive Oil",
+       "refengine": 0.00956,
+       "impl": 0.01008
+      },
+      {
+       "value": "Puzzle 1000-Piece",
+       "refengine": 0.00964,
+       "impl": 0.01008
+      },
+      {
+       "value": "Sunscreen SPF 50",
+       "refengine": 0.00832,
+       "impl": 0.01004
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.03868,
+     "tvd_baseline": 0.0428,
+     "tvd_tol": 0.1616381002671262,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "unit_price": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.008199999999999985,
+     "ks_baseline": 0.01212000000000002,
+     "ks_tol": 0.02018000000000003,
+     "stats": {
+      "mean": {
+       "refengine": 33.3360676,
+       "impl": 33.3026888
+      },
+      "min": {
+       "refengine": 0.99,
+       "impl": 0.99
+      },
+      "max": {
+       "refengine": 792.66,
+       "impl": 787.23
+      },
+      "std": {
+       "refengine": 44.03123517073114,
+       "impl": 42.49770953962525,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 8097,
+      "impl": 8149
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "product_status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "distinct": {
+      "refengine": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "active",
+       "refengine": 0.74968,
+       "impl": 0.74716
+      },
+      {
+       "value": "discontinued",
+       "refengine": 0.14876,
+       "impl": 0.1534
+      },
+      {
+       "value": "introduced",
+       "refengine": 0.10156,
+       "impl": 0.09944
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.004639999999999984,
+     "tvd_baseline": 0.0058000000000000135,
+     "tvd_tol": 0.026221162334209895,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "cost": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00028283705556379985
+     },
+     "ks": 0.008680000000000021,
+     "ks_baseline": 0.011440000000000006,
+     "ks_tol": 0.01916000000000001,
+     "stats": {
+      "mean": {
+       "refengine": 16.684726400000002,
+       "impl": 16.7077128
+      },
+      "min": {
+       "refengine": 0.3,
+       "impl": 0.3
+      },
+      "max": {
+       "refengine": 513.16,
+       "impl": 411.72
+      },
+      "std": {
+       "refengine": 23.12405108550712,
+       "impl": 22.03660726864996,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 5365,
+      "impl": 5419
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "store": {
+   "rows": {
+    "refengine": 150,
+    "impl": 150
+   },
+   "columns_refengine": [
+    "store_id",
+    "store_name",
+    "store_type",
+    "city",
+    "state"
+   ],
+   "columns_impl": [
+    "store_id",
+    "store_name",
+    "store_type",
+    "city",
+    "state"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "store_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "store_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "store_type": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "city": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "state": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "store_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.22510593742416898,
+     "stats": {
+      "mean": {
+       "refengine": 75.5,
+       "impl": 75.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 150.0,
+       "impl": 150.0
+      },
+      "std": {
+       "refengine": 43.300307928081374,
+       "impl": 43.300307928081374,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 150,
+      "impl": 150
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "store_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "refengine": 150,
+      "impl": 150,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Store #0001",
+       "refengine": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Store #0002",
+       "refengine": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Store #0003",
+       "refengine": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Store #0004",
+       "refengine": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Store #0005",
+       "refengine": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Store #0006",
+       "refengine": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Store #0007",
+       "refengine": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Store #0008",
+       "refengine": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Store #0009",
+       "refengine": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Store #0010",
+       "refengine": 0.006666666666666667,
+       "impl": 0.006666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "Store #{seq:4}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "store_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "refengine": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "physical",
+       "refengine": 0.8333333333333334,
+       "impl": 0.9
+      },
+      {
+       "value": "online",
+       "refengine": 0.1,
+       "impl": 0.08
+      },
+      {
+       "value": "warehouse",
+       "refengine": 0.06666666666666667,
+       "impl": 0.02
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.06666666666666665,
+     "tvd_baseline": 0.06666666666666665,
+     "tvd_tol": 0.3385137501286538,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "city": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "refengine": 78,
+      "impl": 76,
+      "ratio": 0.9743589743589743,
+      "baseline_max_ratio_dev": 0.03846153846153855
+     },
+     "top10": [
+      {
+       "value": "Cincinnati",
+       "refengine": 0.04,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Miami",
+       "refengine": 0.02666666666666667,
+       "impl": 0.02666666666666667
+      },
+      {
+       "value": "Jacksonville",
+       "refengine": 0.02666666666666667,
+       "impl": 0.02
+      },
+      {
+       "value": "Seattle",
+       "refengine": 0.02666666666666667,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "Nashville",
+       "refengine": 0.02666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Minneapolis",
+       "refengine": 0.02666666666666667,
+       "impl": 0.02666666666666667
+      },
+      {
+       "value": "Pittsburgh",
+       "refengine": 0.02666666666666667,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "Omaha",
+       "refengine": 0.02,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "Lexington",
+       "refengine": 0.02,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "San Diego",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Irvine",
+       "refengine": 0.006666666666666667,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "Tucson",
+       "refengine": 0.006666666666666667,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "Denver",
+       "refengine": 0.013333333333333334,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "Fremont",
+       "refengine": 0.006666666666666667,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "Santa Ana",
+       "refengine": 0.013333333333333334,
+       "impl": 0.02666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.4133333333333334,
+     "tvd_baseline": 0.4733333333333333,
+     "tvd_tol": 1.7260882175254777,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "state": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "refengine": 46,
+      "impl": 49,
+      "ratio": 1.065217391304348,
+      "baseline_max_ratio_dev": 0.0652173913043479
+     },
+     "top10": [
+      {
+       "value": "AR",
+       "refengine": 0.04666666666666667,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "TX",
+       "refengine": 0.04,
+       "impl": 0.02666666666666667
+      },
+      {
+       "value": "NY",
+       "refengine": 0.03333333333333333,
+       "impl": 0.02
+      },
+      {
+       "value": "HI",
+       "refengine": 0.03333333333333333,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "MD",
+       "refengine": 0.03333333333333333,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "NH",
+       "refengine": 0.03333333333333333,
+       "impl": 0.02666666666666667
+      },
+      {
+       "value": "MT",
+       "refengine": 0.03333333333333333,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "DE",
+       "refengine": 0.03333333333333333,
+       "impl": 0.02
+      },
+      {
+       "value": "WA",
+       "refengine": 0.03333333333333333,
+       "impl": 0.02
+      },
+      {
+       "value": "CA",
+       "refengine": 0.02666666666666667,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "NJ",
+       "refengine": 0.013333333333333334,
+       "impl": 0.06
+      },
+      {
+       "value": "MS",
+       "refengine": 0.006666666666666667,
+       "impl": 0.05333333333333334
+      },
+      {
+       "value": "NC",
+       "refengine": 0.02,
+       "impl": 0.04
+      },
+      {
+       "value": "SC",
+       "refengine": 0.013333333333333334,
+       "impl": 0.04
+      },
+      {
+       "value": "MI",
+       "refengine": 0.02666666666666667,
+       "impl": 0.02666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.3266666666666667,
+     "tvd_baseline": 0.34666666666666673,
+     "tvd_tol": 1.3255453865237978,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "promotion": {
+   "rows": {
+    "refengine": 200,
+    "impl": 200
+   },
+   "columns_refengine": [
+    "promotion_id",
+    "promo_name",
+    "promo_type",
+    "discount_pct",
+    "start_date",
+    "end_date"
+   ],
+   "columns_impl": [
+    "promotion_id",
+    "promo_name",
+    "promo_type",
+    "discount_pct",
+    "start_date",
+    "end_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "promotion_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "promo_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "promo_type": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "discount_pct": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "start_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "end_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "promotion_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.19494746035204052,
+     "stats": {
+      "mean": {
+       "refengine": 100.5,
+       "impl": 100.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 200.0,
+       "impl": 200.0
+      },
+      "std": {
+       "refengine": 57.73430522661548,
+       "impl": 57.73430522661548,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 200,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "promo_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "refengine": 49,
+      "impl": 49,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.04081632653061229
+     },
+     "top10": [
+      {
+       "value": "End of Season Clearance",
+       "refengine": 0.055,
+       "impl": 0.015
+      },
+      {
+       "value": "Gift Card Bonus Event",
+       "refengine": 0.045,
+       "impl": 0.035
+      },
+      {
+       "value": "Easter Weekend Sale",
+       "refengine": 0.035,
+       "impl": 0.015
+      },
+      {
+       "value": "Last Chance Savings",
+       "refengine": 0.035,
+       "impl": 0.025
+      },
+      {
+       "value": "Loyalty Rewards Bonus",
+       "refengine": 0.035,
+       "impl": 0.02
+      },
+      {
+       "value": "Cyber Monday Deals",
+       "refengine": 0.035,
+       "impl": 0.025
+      },
+      {
+       "value": "App-Only Discount",
+       "refengine": 0.03,
+       "impl": 0.03
+      },
+      {
+       "value": "Welcome Offer",
+       "refengine": 0.03,
+       "impl": 0.015
+      },
+      {
+       "value": "Warehouse Sale",
+       "refengine": 0.03,
+       "impl": 0.005
+      },
+      {
+       "value": "First Purchase Discount",
+       "refengine": 0.025,
+       "impl": 0.025
+      },
+      {
+       "value": "4th of July Blowout",
+       "refengine": 0.015,
+       "impl": 0.045
+      },
+      {
+       "value": "Monthly Deals",
+       "refengine": 0.025,
+       "impl": 0.04
+      },
+      {
+       "value": "Buy More Save More",
+       "refengine": 0.02,
+       "impl": 0.035
+      },
+      {
+       "value": "Member Appreciation Week",
+       "refengine": 0.015,
+       "impl": 0.03
+      },
+      {
+       "value": "Black Friday Doorbusters",
+       "refengine": 0.02,
+       "impl": 0.03
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.275,
+     "tvd_baseline": 0.28,
+     "tvd_tol": 1.1847981254502882,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "promo_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "percent_off",
+       "refengine": 0.42,
+       "impl": 0.43
+      },
+      {
+       "value": "fixed_amount",
+       "refengine": 0.2,
+       "impl": 0.175
+      },
+      {
+       "value": "bogo",
+       "refengine": 0.15,
+       "impl": 0.19
+      },
+      {
+       "value": "bundle",
+       "refengine": 0.125,
+       "impl": 0.06
+      },
+      {
+       "value": "free_shipping",
+       "refengine": 0.105,
+       "impl": 0.145
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.09000000000000002,
+     "tvd_baseline": 0.10999999999999999,
+     "tvd_tol": 0.37846987830302403,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "discount_pct": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.09000000000000002,
+     "ks_baseline": 0.08499999999999996,
+     "ks_tol": 0.19494746035204052,
+     "stats": {
+      "mean": {
+       "refengine": 22.9,
+       "impl": 20.9
+      },
+      "min": {
+       "refengine": 5.0,
+       "impl": 5.0
+      },
+      "max": {
+       "refengine": 50.0,
+       "impl": 50.0
+      },
+      "std": {
+       "refengine": 14.511719401917885,
+       "impl": 13.890284374338778,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 6,
+      "impl": 6
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "start_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.10999999999999993,
+     "ks_baseline": 0.13,
+     "ks_tol": 0.197,
+     "stats": {
+      "mean": {
+       "refengine": "2023-10-30 08:16:09.160264960",
+       "impl": "2023-12-27 01:28:47.751011072"
+      },
+      "min": {
+       "refengine": "2022-01-08 09:31:57.626860544",
+       "impl": "2022-01-05 16:51:19.225854976"
+      },
+      "max": {
+       "refengine": "2025-12-15 05:24:21.001927936",
+       "impl": "2025-12-27 14:15:21.002074112"
+      },
+      "std": {
+       "refengine": 420.87272611257714,
+       "impl": 417.23292293148205,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 200,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "end_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03526683994916471
+     },
+     "ks": 0.10500000000000004,
+     "ks_baseline": 0.13,
+     "ks_tol": 0.197,
+     "stats": {
+      "mean": {
+       "refengine": "2023-11-15 15:42:33.160264960",
+       "impl": "2024-01-12 23:04:47.751011072"
+      },
+      "min": {
+       "refengine": "2022-01-19 20:09:35.196698368",
+       "impl": "2022-01-12 16:51:19.225854976"
+      },
+      "max": {
+       "refengine": "2025-12-25 05:24:21.001927936",
+       "impl": "2026-01-17 13:10:41.976709888"
+      },
+      "std": {
+       "refengine": 420.2386994172371,
+       "impl": 417.64134162144137,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 200,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "order": {
+   "rows": {
+    "refengine": 5000000,
+    "impl": 5000000
+   },
+   "columns_refengine": [
+    "order_id",
+    "customer_id",
+    "store_id",
+    "shipping_address_id",
+    "promotion_id",
+    "order_date",
+    "status",
+    "order_total"
+   ],
+   "columns_impl": [
+    "order_id",
+    "customer_id",
+    "store_id",
+    "shipping_address_id",
+    "promotion_id",
+    "order_date",
+    "status",
+    "order_total"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "order_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "customer_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "store_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "shipping_address_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "promotion_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "order_date": {
+     "refengine": "timestamp[us]",
+     "impl": "timestamp[us]"
+    },
+    "status": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "order_total": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "order_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142134209517316e-06
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.002,
+     "stats": {
+      "mean": {
+       "refengine": 2500000.5,
+       "impl": 2500000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 5000000.0,
+       "impl": 5000000.0
+      },
+      "std": {
+       "refengine": 1443375.6729740356,
+       "impl": 1443375.6729740356,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 5000000,
+      "impl": 5000000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "customer_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142134209517316e-06
+     },
+     "ks": 0.0016856000000000093,
+     "ks_baseline": 0.0018500000000000183,
+     "ks_tol": 0.0047750000000000275,
+     "stats": {
+      "mean": {
+       "refengine": 179827.7758904,
+       "impl": 180211.6014072
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500000.0,
+       "impl": 500000.0
+      },
+      "std": {
+       "refengine": 158301.45409781864,
+       "impl": 158319.0825655494,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 499631,
+      "impl": 499613
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "store_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142134209517316e-06
+     },
+     "ks": 0.0003446000000000282,
+     "ks_baseline": 0.0006372000000000044,
+     "ks_tol": 0.0029558000000000067,
+     "stats": {
+      "mean": {
+       "refengine": 14.6927596,
+       "impl": 14.68612
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 150.0,
+       "impl": 150.0
+      },
+      "std": {
+       "refengine": 26.711168183675678,
+       "impl": 26.688249851678172,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 150,
+      "impl": 150
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "shipping_address_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.2226184,
+      "impl": 0.2233782,
+      "baseline_max_abs_diff": 0.0014744000000000146,
+      "tol": 0.002211600000000022
+     },
+     "ks": 0.0016460375181845954,
+     "ks_baseline": 0.0021269967535848533,
+     "ks_tol": 0.00519049513037728,
+     "stats": {
+      "mean": {
+       "refengine": 375066.32405089086,
+       "impl": 374911.1806676042
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 750000.0,
+       "impl": 750000.0
+      },
+      "std": {
+       "refengine": 216564.3729506464,
+       "impl": 216626.85413694844,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 702822,
+      "impl": 703301
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "promotion_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.6997706,
+      "impl": 0.7001546,
+      "baseline_max_abs_diff": 0.0006739999999999524,
+      "tol": 0.0014494540605884685
+     },
+     "ks": 0.0015465139434954756,
+     "ks_baseline": 0.001020812798990245,
+     "ks_tol": 0.0035312191984853674,
+     "stats": {
+      "mean": {
+       "refengine": 100.47545376968411,
+       "impl": 100.59255136146828
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 200.0,
+       "impl": 200.0
+      },
+      "std": {
+       "refengine": 57.71625551903278,
+       "impl": 57.733591269231894,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 200,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "order_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142134209517316e-06
+     },
+     "ks": 0.0008817999999999881,
+     "ks_baseline": 0.0023201999999999945,
+     "ks_tol": 0.005480299999999992,
+     "stats": {
+      "mean": {
+       "refengine": "2024-09-05 17:25:01.790797568",
+       "impl": "2024-09-05 19:14:47.290741760"
+      },
+      "min": {
+       "refengine": "2022-01-01 17:27:48",
+       "impl": "2022-01-02 03:07:16"
+      },
+      "max": {
+       "refengine": "2025-12-31 23:59:26",
+       "impl": "2025-12-31 23:59:06"
+      },
+      "std": {
+       "refengine": 344.22636971464584,
+       "impl": 344.35822226950825,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 2936050,
+      "impl": 2935100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142134209517316e-06
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "completed",
+       "refengine": 0.7700676,
+       "impl": 0.7700142
+      },
+      {
+       "value": "returned",
+       "refengine": 0.0898786,
+       "impl": 0.0899472
+      },
+      {
+       "value": "shipped",
+       "refengine": 0.0801862,
+       "impl": 0.0799948
+      },
+      {
+       "value": "cancelled",
+       "refengine": 0.0398314,
+       "impl": 0.0399146
+      },
+      {
+       "value": "processing",
+       "refengine": 0.0200362,
+       "impl": 0.0201292
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.00024479999999998774,
+     "tvd_baseline": 0.0006176000000000063,
+     "tvd_tol": 0.0029264000000000095,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "order_total": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 1.4142134209517316e-06
+     },
+     "ks": 0.17654419999999993,
+     "ks_baseline": 0.36886479999999994,
+     "ks_tol": 0.5552971999999999,
+     "stats": {
+      "mean": {
+       "refengine": 152.455228548,
+       "impl": 108.475287604
+      },
+      "min": {
+       "refengine": 0.0,
+       "impl": 0.0
+      },
+      "max": {
+       "refengine": 6925.03,
+       "impl": 3666.08
+      },
+      "std": {
+       "refengine": 134.86130622538477,
+       "impl": 113.88073762527341,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 83915,
+      "impl": 78560
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "order_line": {
+   "rows": {
+    "refengine": 12500000,
+    "impl": 12500000
+   },
+   "columns_refengine": [
+    "order_line_id",
+    "order_id",
+    "product_id",
+    "quantity",
+    "promotion_id",
+    "unit_price",
+    "discount_percent",
+    "line_total"
+   ],
+   "columns_impl": [
+    "order_line_id",
+    "order_id",
+    "product_id",
+    "quantity",
+    "promotion_id",
+    "unit_price",
+    "discount_percent",
+    "line_total"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "order_line_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "order_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "product_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "quantity": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "promotion_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "unit_price": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "discount_percent": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "line_total": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "order_line_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656854023218206e-07
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.002,
+     "stats": {
+      "mean": {
+       "refengine": 6250000.5,
+       "impl": 6250000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 12500000.0,
+       "impl": 12500000.0
+      },
+      "std": {
+       "refengine": 3608439.1824351493,
+       "impl": 3608439.1824351493,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 12500000,
+      "impl": 12500000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "order_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656854023218206e-07
+     },
+     "ks": 0.00036639999999998896,
+     "ks_baseline": 0.00039743999999997115,
+     "ks_tol": 0.0025961599999999568,
+     "stats": {
+      "mean": {
+       "refengine": 2499588.25371864,
+       "impl": 2500440.32144792
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 5000000.0,
+       "impl": 5000000.0
+      },
+      "std": {
+       "refengine": 1443533.694943267,
+       "impl": 1443316.2167227452,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 4590253,
+      "impl": 4588367
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "product_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656854023218206e-07
+     },
+     "ks": 0.0001356000000000135,
+     "ks_baseline": 0.00040968000000007887,
+     "ks_tol": 0.0026145200000001183,
+     "stats": {
+      "mean": {
+       "refengine": 120.78771088,
+       "impl": 121.20527352
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 25000.0,
+       "impl": 25000.0
+      },
+      "std": {
+       "refengine": 998.4181106363253,
+       "impl": 1001.4029753324193,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 22995,
+      "impl": 23003
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "quantity": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656854023218206e-07
+     },
+     "ks": 0.0002924800000000394,
+     "ks_baseline": 0.0002466400000000757,
+     "ks_tol": 0.0023699600000001136,
+     "stats": {
+      "mean": {
+       "refengine": 1.66725696,
+       "impl": 1.66658192
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 16.0,
+       "impl": 18.0
+      },
+      "std": {
+       "refengine": 1.0551441936207384,
+       "impl": 1.0538337933133068,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 16,
+      "impl": 18
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "promotion_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.69957648,
+      "impl": 0.6999276,
+      "baseline_max_abs_diff": 0.0006952000000000069,
+      "tol": 0.0010428000000000104
+     },
+     "ks": 0.0015224534925736277,
+     "ks_baseline": 0.001299911913500429,
+     "ks_tol": 0.003949867870250643,
+     "stats": {
+      "mean": {
+       "refengine": 100.50870717445825,
+       "impl": 100.62849685609206
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 200.0,
+       "impl": 200.0
+      },
+      "std": {
+       "refengine": 57.71105284870073,
+       "impl": 57.73143055804138,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 200,
+      "impl": 200
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "unit_price": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656854023218206e-07
+     },
+     "ks": 0.4840987199999999,
+     "ks_baseline": 0.58787296,
+     "ks_tol": 0.8838094400000001,
+     "stats": {
+      "mean": {
+       "refengine": 39.2831556304,
+       "impl": 27.7861203504
+      },
+      "min": {
+       "refengine": 0.99,
+       "impl": 0.99
+      },
+      "max": {
+       "refengine": 775.98,
+       "impl": 787.23
+      },
+      "std": {
+       "refengine": 22.77141238361426,
+       "impl": 26.441229612044577,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 7800,
+      "impl": 7854
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "discount_percent": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656854023218206e-07
+     },
+     "ks": 0.027108400000000032,
+     "ks_baseline": 0.02586216000000008,
+     "ks_tol": 0.04079324000000012,
+     "stats": {
+      "mean": {
+       "refengine": 6.8801948,
+       "impl": 6.2757104
+      },
+      "min": {
+       "refengine": 0.0,
+       "impl": 0.0
+      },
+      "max": {
+       "refengine": 50.0,
+       "impl": 50.0
+      },
+      "std": {
+       "refengine": 13.17022693479702,
+       "impl": 12.241598056435762,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 7,
+      "impl": 7
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "line_total": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 5.656854023218206e-07
+     },
+     "ks": 0.33538112000000003,
+     "ks_baseline": 0.48788839999999994,
+     "ks_tol": 0.7338326,
+     "stats": {
+      "mean": {
+       "refengine": 60.9820914192,
+       "impl": 43.3901150416
+      },
+      "min": {
+       "refengine": 0.5,
+       "impl": 0.5
+      },
+      "max": {
+       "refengine": 6791.67,
+       "impl": 3583.58
+      },
+      "std": {
+       "refengine": 58.096094668757054,
+       "impl": 56.76277939605789,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 23559,
+      "impl": 23883
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "return": {
+   "rows": {
+    "refengine": 850000,
+    "impl": 850000
+   },
+   "columns_refengine": [
+    "return_id",
+    "order_id",
+    "reason",
+    "refund_amount",
+    "return_date"
+   ],
+   "columns_impl": [
+    "return_id",
+    "order_id",
+    "reason",
+    "refund_amount",
+    "return_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "return_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "order_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "reason": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "refund_amount": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "return_date": {
+     "refengine": "timestamp[us]",
+     "impl": "timestamp[us]"
+    }
+   },
+   "columns": {
+    "return_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.318898414603055e-06
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.0029903575350945185,
+     "stats": {
+      "mean": {
+       "refengine": 425000.5,
+       "impl": 425000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 850000.0,
+       "impl": 850000.0
+      },
+      "std": {
+       "refengine": 245373.86440542113,
+       "impl": 245373.86440542113,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 850000,
+      "impl": 850000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "order_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.318898414603055e-06
+     },
+     "ks": 0.0019517647058824306,
+     "ks_baseline": 0.0017870588235293638,
+     "ks_tol": 0.004680588235294046,
+     "stats": {
+      "mean": {
+       "refengine": 2499070.3666341174,
+       "impl": 2503345.34828
+      },
+      "min": {
+       "refengine": 11.0,
+       "impl": 2.0
+      },
+      "max": {
+       "refengine": 5000000.0,
+       "impl": 5000000.0
+      },
+      "std": {
+       "refengine": 1443474.5845684288,
+       "impl": 1443806.2314330887,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 781762,
+      "impl": 781673
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "reason": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.318898414603055e-06
+     },
+     "distinct": {
+      "refengine": 7,
+      "impl": 7,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "wrong_size",
+       "refengine": 0.2507364705882353,
+       "impl": 0.24932470588235295
+      },
+      {
+       "value": "changed_mind",
+       "refengine": 0.22091176470588236,
+       "impl": 0.22042470588235294
+      },
+      {
+       "value": "not_as_described",
+       "refengine": 0.19898470588235295,
+       "impl": 0.20025882352941177
+      },
+      {
+       "value": "defective",
+       "refengine": 0.1497294117647059,
+       "impl": 0.14987411764705882
+      },
+      {
+       "value": "damaged_shipping",
+       "refengine": 0.10012235294117647,
+       "impl": 0.10025411764705883
+      },
+      {
+       "value": "arrived_late",
+       "refengine": 0.04975529411764706,
+       "impl": 0.05017411764705882
+      },
+      {
+       "value": "other",
+       "refengine": 0.02976,
+       "impl": 0.02968941176470588
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.001969411764705876,
+     "tvd_baseline": 0.0023835294117646993,
+     "tvd_tol": 0.00686911636231393,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "refund_amount": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.318898414603055e-06
+     },
+     "ks": 0.06067647058823522,
+     "ks_baseline": 0.1432364705882353,
+     "ks_tol": 0.21685470588235295,
+     "stats": {
+      "mean": {
+       "refengine": 36.116849035294116,
+       "impl": 31.006666694117644
+      },
+      "min": {
+       "refengine": 0.0,
+       "impl": 0.0
+      },
+      "max": {
+       "refengine": 855.59,
+       "impl": 764.62
+      },
+      "std": {
+       "refengine": 37.929494036083625,
+       "impl": 32.266708459886445,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 23790,
+      "impl": 20763
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "return_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 8.318898414603055e-06
+     },
+     "ks": 0.0013400000000000079,
+     "ks_baseline": 0.0027647058823530024,
+     "ks_tol": 0.006147058823529504,
+     "stats": {
+      "mean": {
+       "refengine": "2024-09-11 04:16:54.343740416",
+       "impl": "2024-09-10 17:24:05.959494656"
+      },
+      "min": {
+       "refengine": "2022-01-05 10:34:39",
+       "impl": "2022-01-06 04:50:32.928136960"
+      },
+      "max": {
+       "refengine": "2026-03-26 21:59:03",
+       "impl": "2026-03-30 17:26:27"
+      },
+      "std": {
+       "refengine": 344.3879378092861,
+       "impl": 344.4223865561482,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 649036,
+      "impl": 650204
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  }
+ },
+ "table_order": {
+  "refengine": [
+   "address",
+   "customer",
+   "order",
+   "order_line",
+   "product",
+   "product_category",
+   "promotion",
+   "return",
+   "store"
+  ],
+  "impl": [
+   "address",
+   "customer",
+   "order",
+   "order_line",
+   "product",
+   "product_category",
+   "promotion",
+   "return",
+   "store"
+  ]
+ },
+ "fk_integrity": {
+  "refengine": {
+   "address.customer_id->customer.customer_id": {
+    "integrity": 1.0,
+    "n": 750000
+   },
+   "product.category_id->product_category.category_id": {
+    "integrity": 1.0,
+    "n": 25000
+   },
+   "order.customer_id->customer.customer_id": {
+    "integrity": 1.0,
+    "n": 5000000
+   },
+   "order.store_id->store.store_id": {
+    "integrity": 1.0,
+    "n": 5000000
+   },
+   "order.shipping_address_id->address.address_id": {
+    "integrity": 1.0,
+    "n": 3886908
+   },
+   "order.promotion_id->promotion.promotion_id": {
+    "integrity": 1.0,
+    "n": 1501147
+   },
+   "order_line.order_id->order.order_id": {
+    "integrity": 1.0,
+    "n": 12500000
+   },
+   "order_line.product_id->product.product_id": {
+    "integrity": 1.0,
+    "n": 12500000
+   },
+   "return.order_id->order.order_id": {
+    "integrity": 1.0,
+    "n": 850000
+   },
+   "product_category.parent_category_id->product_category.category_id": {
+    "integrity": 1.0,
+    "n": 42
+   },
+   "order_line.promotion_id->promotion.promotion_id": {
+    "integrity": 1.0,
+    "n": 3755294
+   }
+  },
+  "impl": {
+   "address.customer_id->customer.customer_id": {
+    "integrity": 1.0,
+    "n": 750000
+   },
+   "product.category_id->product_category.category_id": {
+    "integrity": 1.0,
+    "n": 25000
+   },
+   "order.customer_id->customer.customer_id": {
+    "integrity": 1.0,
+    "n": 5000000
+   },
+   "order.store_id->store.store_id": {
+    "integrity": 1.0,
+    "n": 5000000
+   },
+   "order.shipping_address_id->address.address_id": {
+    "integrity": 1.0,
+    "n": 3883109
+   },
+   "order.promotion_id->promotion.promotion_id": {
+    "integrity": 1.0,
+    "n": 1499227
+   },
+   "order_line.order_id->order.order_id": {
+    "integrity": 1.0,
+    "n": 12500000
+   },
+   "order_line.product_id->product.product_id": {
+    "integrity": 1.0,
+    "n": 12500000
+   },
+   "return.order_id->order.order_id": {
+    "integrity": 1.0,
+    "n": 850000
+   },
+   "product_category.parent_category_id->product_category.category_id": {
+    "integrity": 1.0,
+    "n": 42
+   },
+   "order_line.promotion_id->promotion.promotion_id": {
+    "integrity": 1.0,
+    "n": 3750905
+   }
+  }
+ },
+ "fanout": {
+  "customer->address.customer_id": {
+   "refengine": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 5.0,
+    "max": 10,
+    "mean": 1.5,
+    "zero_frac": 0.22268
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 5.0,
+    "max": 10,
+    "mean": 1.5,
+    "zero_frac": 0.223344
+   },
+   "ks_counts": 0.0006639999999999979,
+   "ks_baseline_max": 0.0011979999999999214,
+   "ks_tol": 0.0038989492070408104,
+   "equivalent": true
+  },
+  "product_category->product.category_id": {
+   "refengine": {
+    "p50": 501.0,
+    "p90": 520.4,
+    "p99": 535.5699999999999,
+    "max": 539,
+    "mean": 500.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 500.0,
+    "p90": 533.4,
+    "p99": 545.51,
+    "max": 546,
+    "mean": 500.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.16,
+   "ks_baseline_max": 0.18000000000000002,
+   "ks_tol": 0.38989492070408105,
+   "equivalent": true
+  },
+  "customer->order.customer_id": {
+   "refengine": {
+    "p50": 8.0,
+    "p90": 15.0,
+    "p99": 50.0,
+    "max": 50,
+    "mean": 10.0,
+    "zero_frac": 0.000738
+   },
+   "impl": {
+    "p50": 8.0,
+    "p90": 15.0,
+    "p99": 50.0,
+    "max": 50,
+    "mean": 10.0,
+    "zero_frac": 0.000774
+   },
+   "ks_counts": 0.002581999999999973,
+   "ks_baseline_max": 0.002616000000000007,
+   "ks_tol": 0.005924000000000011,
+   "equivalent": true
+  },
+  "store->order.store_id": {
+   "refengine": {
+    "p50": 5661.5,
+    "p90": 43117.79999999998,
+    "p99": 508685.3799999976,
+    "max": 1566160,
+    "mean": 33333.333333333336,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 5707.5,
+    "p90": 43039.599999999984,
+    "p99": 508750.5099999976,
+    "max": 1567730,
+    "mean": 33333.333333333336,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.02666666666666667,
+   "ks_baseline_max": 0.039999999999999994,
+   "ks_tol": 0.22510593742416898,
+   "equivalent": true
+  },
+  "address->order.shipping_address_id": {
+   "refengine": {
+    "p50": 3.0,
+    "p90": 10.0,
+    "p99": 39.0,
+    "max": 50,
+    "mean": 5.182544,
+    "zero_frac": 0.062904
+   },
+   "impl": {
+    "p50": 3.0,
+    "p90": 10.0,
+    "p99": 37.0,
+    "max": 50,
+    "mean": 5.177478666666667,
+    "zero_frac": 0.06226533333333333
+   },
+   "ks_counts": 0.0009773333333332745,
+   "ks_baseline_max": 0.0016519999999999313,
+   "ks_tol": 0.004477999999999897,
+   "equivalent": true
+  },
+  "promotion->order.promotion_id": {
+   "refengine": {
+    "p50": 7514.5,
+    "p90": 7613.2,
+    "p99": 7665.32,
+    "max": 7712,
+    "mean": 7505.735,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 7498.5,
+    "p90": 7613.2,
+    "p99": 7700.02,
+    "max": 7704,
+    "mean": 7496.135,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.09999999999999998,
+   "ks_baseline_max": 0.125,
+   "ks_tol": 0.19494746035204052,
+   "equivalent": true
+  },
+  "order->order_line.order_id": {
+   "refengine": {
+    "p50": 2.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 14,
+    "mean": 2.5,
+    "zero_frac": 0.0819494
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 15,
+    "mean": 2.5,
+    "zero_frac": 0.0823266
+   },
+   "ks_counts": 0.0003771999999999942,
+   "ks_baseline_max": 0.00043839999999994994,
+   "ks_tol": 0.002657599999999925,
+   "equivalent": true
+  },
+  "product->order_line.product_id": {
+   "refengine": {
+    "p50": 4.0,
+    "p90": 39.0,
+    "p99": 1192.1699999999728,
+    "max": 4808473,
+    "mean": 500.0,
+    "zero_frac": 0.0802
+   },
+   "impl": {
+    "p50": 4.0,
+    "p90": 39.0,
+    "p99": 1230.0299999999952,
+    "max": 4810168,
+    "mean": 500.0,
+    "zero_frac": 0.07988
+   },
+   "ks_counts": 0.006519999999999998,
+   "ks_baseline_max": 0.005280000000000007,
+   "ks_tol": 0.01743663093552431,
+   "equivalent": true
+  },
+  "order->return.order_id": {
+   "refengine": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 5,
+    "mean": 0.17,
+    "zero_frac": 0.8436476
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 2.0,
+    "max": 5,
+    "mean": 0.17,
+    "zero_frac": 0.8436654
+   },
+   "ks_counts": 2.7200000000004998e-05,
+   "ks_baseline_max": 9.279999999989297e-05,
+   "ks_tol": 0.0021391999999998395,
+   "equivalent": true
+  },
+  "promotion->order_line.promotion_id": {
+   "refengine": {
+    "p50": 18779.0,
+    "p90": 19083.2,
+    "p99": 19266.32,
+    "max": 19380,
+    "mean": 18776.47,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 18744.5,
+    "p90": 19087.9,
+    "p99": 19322.04,
+    "max": 19376,
+    "mean": 18754.525,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.07499999999999996,
+   "ks_baseline_max": 0.135,
+   "ks_tol": 0.20450000000000002,
+   "equivalent": true
+  }
+ },
+ "record_coherence": {
+  "address.city+state+zip_code+lat+lng in us_zip_locations": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  }
+ },
+ "strategy_semantics": {
+  "promotion.end_date - start_date in [3,30] days": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "order.order_total == sum(order_line.line_total)": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "order_line.promotion_id == lookup order.promotion_id via order_id": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "order_line.unit_price == lookup product.unit_price via product_id": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "return.return_date - order.order_date in [1,90] days": {
+   "impl": 0.9993023529411764,
+   "refengine": [
+    0.9993411764705883,
+    0.9993458823529412,
+    0.9993141176470588,
+    0.9993741176470589,
+    0.9993517647058824
+   ],
+   "floor": 0.9943141176470588
+  }
+ },
+ "business_rules": {
+  "refengine_BusinessRulesEngine_violations": {},
+  "refengine_on_refengine": {}
+ },
+ "refengine_fidelity_comparator": {
+  "overall_impl": 91.7128875344203,
+  "overall_baseline_refengine_vs_refengine": [
+   91.74601195132665,
+   91.647277312021,
+   91.29075950330116,
+   90.70156718066389
+  ],
+  "tables": {
+   "address": {
+    "impl": 91.41949709248499,
+    "baseline": [
+     88.80552276205759,
+     89.4100212037956,
+     89.4218447756406,
+     88.79693767097706
+    ],
+    "floor": 88.29693767097706,
+    "ok": true
+   },
+   "customer": {
+    "impl": 85.54423910725885,
+    "baseline": [
+     85.70969828086209,
+     85.70546444816355,
+     85.37893335263753,
+     85.6982131746175
+    ],
+    "floor": 84.87893335263753,
+    "ok": true
+   },
+   "order": {
+    "impl": 98.08988316772427,
+    "baseline": [
+     97.60149295009256,
+     98.18501169176776,
+     97.81570993951046,
+     95.74341603007132
+    ],
+    "floor": 95.24341603007132,
+    "ok": true
+   },
+   "order_line": {
+    "impl": 94.69699499928613,
+    "baseline": [
+     93.80366212001795,
+     93.8227887163604,
+     94.24993915531682,
+     91.06975854960284
+    ],
+    "floor": 90.56975854960284,
+    "ok": true
+   },
+   "product": {
+    "impl": 94.93707712079635,
+    "baseline": [
+     94.93426937439712,
+     94.93834142382673,
+     95.0691570317555,
+     94.9138782861732
+    ],
+    "floor": 94.4138782861732,
+    "ok": true
+   },
+   "product_category": {
+    "impl": 86.49836493305747,
+    "baseline": [
+     87.56220318832499,
+     87.73440233562891,
+     84.74559762497057,
+     87.53686589429493
+    ],
+    "floor": 84.24559762497057,
+    "ok": true
+   },
+   "promotion": {
+    "impl": 91.61842816334114,
+    "baseline": [
+     93.38416432592675,
+     91.81618927591192,
+     91.02613006552633,
+     92.01188905648381
+    ],
+    "floor": 90.52613006552633,
+    "ok": true
+   },
+   "return": {
+    "impl": 97.19730453999398,
+    "baseline": [
+     98.27117574398068,
+     97.19091646428686,
+     98.39427392173461,
+     95.16080004879976
+    ],
+    "floor": 94.66080004879976,
+    "ok": true
+   },
+   "store": {
+    "impl": 85.41419868583964,
+    "baseline": [
+     85.64191881628008,
+     86.0223602484472,
+     85.51524966261809,
+     85.38234591495461
+    ],
+    "floor": 84.88234591495461,
+    "ok": true
+   }
+  }
+ },
+ "summary": {
+  "columns_total": 60,
+  "columns_equivalent": 60,
+  "flagged": [],
+  "passed": true,
+  "seconds": 1719.4853823184967
+ }
+}

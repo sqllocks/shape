@@ -1,0 +1,24 @@
+{
+  "format": "shape-scenario",
+  "version": 1,
+  "id": "unit_change",
+  "domain": "retail",
+  "scale": "small",
+  "seed": 42,
+  "gates": [
+    "schema_conformance",
+    "referential_integrity",
+    "row_count",
+    "null_check",
+    "uniqueness"
+  ],
+  "defects": [
+    {
+      "kind": "scale_values",
+      "table": "order",
+      "column": "order_total",
+      "fraction": 0.5,
+      "factor": 100
+    }
+  ]
+}

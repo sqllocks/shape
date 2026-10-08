@@ -1,0 +1,24 @@
+{
+  "format": "shape-scenario",
+  "version": 1,
+  "id": "timezone_offset",
+  "domain": "retail",
+  "scale": "small",
+  "seed": 42,
+  "gates": [
+    "schema_conformance",
+    "referential_integrity",
+    "row_count",
+    "null_check",
+    "uniqueness"
+  ],
+  "defects": [
+    {
+      "kind": "shift_hours",
+      "table": "order",
+      "column": "order_date",
+      "fraction": 1.0,
+      "hours": 8
+    }
+  ]
+}

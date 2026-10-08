@@ -1,0 +1,100 @@
+# safe_profile_1to1/verify.py on every generated profile dataset (profile_1to1/datasets.py).
+# Column 1: exit of the real harness on lane/SEC-high (final tree). Column 2: exit on plain int/INT-18
+# (69f6ffef harness, product without #395; run on d2.csv, d1.csv and the edge sets only).
+d1.csv                       lane exit 1   int18 exit -
+d1.parquet                   lane exit 0   int18 exit -
+d2.csv                       lane exit 0   int18 exit 0
+d2.parquet                   lane exit 0   int18 exit -
+d3.csv                       lane exit 0   int18 exit -
+d3.parquet                   lane exit 0   int18 exit -
+d4.csv                       lane exit 0   int18 exit -
+d4.parquet                   lane exit 0   int18 exit -
+edge/e130.csv                lane exit 1   int18 exit 1
+edge/e130.parquet            lane exit 1   int18 exit 1
+edge/e130_uuidpk.csv         lane exit 1   int18 exit 1
+edge/e130_uuidpk.parquet     lane exit 1   int18 exit 1
+edge/e15.csv                 lane exit 1   int18 exit 1
+edge/e15.parquet             lane exit 1   int18 exit 1
+edge/e15_uuidpk.csv          lane exit 1   int18 exit 1
+edge/e15_uuidpk.parquet      lane exit 1   int18 exit 1
+edge/e3.csv                  lane exit 1   int18 exit 1
+edge/e3.parquet              lane exit 1   int18 exit 1
+edge/e3000.csv               lane exit 1   int18 exit 1
+edge/e3000.parquet           lane exit 1   int18 exit 1
+edge/e3000_uuidpk.csv        lane exit 1   int18 exit 1
+edge/e3000_uuidpk.parquet    lane exit 1   int18 exit 1
+edge/e3_uuidpk.csv           lane exit 1   int18 exit 1
+edge/e3_uuidpk.parquet       lane exit 1   int18 exit 1
+edge/e60.csv                 lane exit 1   int18 exit 1
+edge/e60.parquet             lane exit 1   int18 exit 1
+edge/e60_uuidpk.csv          lane exit 1   int18 exit 1
+edge/e60_uuidpk.parquet      lane exit 1   int18 exit 1
+edge/x_csv_inf.csv           lane exit 1   int18 exit 1
+edge/x_csv_mixed_chunks.csv  lane exit 0   int18 exit 0
+edge/x_csv_mixed_tail.csv    lane exit 1   int18 exit 1
+edge/x_csv_nan_text.csv      lane exit 1   int18 exit 1
+edge/x_csv_numbers.csv       lane exit 1   int18 exit 1
+edge/x_dates_a.csv           lane exit 1   int18 exit 1
+edge/x_dates_b.csv           lane exit 1   int18 exit 1
+edge/x_dates_bad.csv         lane exit 1   int18 exit 1
+edge/x_dates_c.csv           lane exit 1   int18 exit 1
+edge/x_dates_d.csv           lane exit 1   int18 exit 1
+edge/x_dates_mixed_fmt.csv   lane exit 1   int18 exit 1
+edge/x_pq_duration.parquet   lane exit 1   int18 exit 1
+edge/x_pq_list.parquet       lane exit 1   int18 exit 1
+edge/x_pq_nested.parquet     lane exit 1   int18 exit 1
+edge/x_pq_nulls.parquet      lane exit 1   int18 exit 1
+edge/x_pq_types.parquet      lane exit 1   int18 exit 1
+edge/x_pq_u64_big.parquet    lane exit 1   int18 exit 1
+edge/x_time_ampm.csv         lane exit 1   int18 exit 1
+edge/x_time_only.csv         lane exit 1   int18 exit 1
+d1.csv on int/INT-18: exit 1, output identical to the lane's (the zip dtype difference: baseline integer, product postal_code string).
+
+# Full (untruncated) mismatch sets, scratch copies of each tree's verify.py with diffs[:20] removed:
+d1.csv: lane 74, int18 74; lane-only 0, int18-only 0
+edge_e130.csv: lane 410, int18 410; lane-only 0, int18-only 0
+edge_e130.parquet: lane 340, int18 340; lane-only 0, int18-only 0
+edge_e130_uuidpk.csv: lane 405, int18 405; lane-only 0, int18-only 0
+edge_e130_uuidpk.parquet: lane 335, int18 335; lane-only 0, int18-only 0
+edge_e15.csv: lane 238, int18 238; lane-only 0, int18-only 0
+edge_e15.parquet: lane 180, int18 180; lane-only 0, int18-only 0
+edge_e15_uuidpk.csv: lane 233, int18 233; lane-only 0, int18-only 0
+edge_e15_uuidpk.parquet: lane 175, int18 175; lane-only 0, int18-only 0
+edge_e3.csv: lane 260, int18 260; lane-only 10, int18-only 10
+edge_e3.parquet: lane 220, int18 220; lane-only 0, int18-only 0
+edge_e3000.csv: lane 115, int18 115; lane-only 0, int18-only 0
+edge_e3000.parquet: lane 45, int18 45; lane-only 0, int18-only 0
+edge_e3000_uuidpk.csv: lane 115, int18 115; lane-only 0, int18-only 0
+edge_e3000_uuidpk.parquet: lane 45, int18 45; lane-only 0, int18-only 0
+edge_e3_uuidpk.csv: lane 255, int18 255; lane-only 10, int18-only 10
+edge_e3_uuidpk.parquet: lane 215, int18 215; lane-only 0, int18-only 0
+edge_e60.csv: lane 528, int18 528; lane-only 0, int18-only 0
+edge_e60.parquet: lane 458, int18 458; lane-only 0, int18-only 0
+edge_e60_uuidpk.csv: lane 523, int18 523; lane-only 0, int18-only 0
+edge_e60_uuidpk.parquet: lane 453, int18 453; lane-only 0, int18-only 0
+edge_x_csv_inf.csv: lane 0, int18 0; lane-only 0, int18-only 0
+edge_x_csv_mixed_chunks.csv: lane 0, int18 0; lane-only 0, int18-only 0
+edge_x_csv_mixed_tail.csv: lane 10, int18 10; lane-only 0, int18-only 0
+edge_x_csv_nan_text.csv: lane 5, int18 5; lane-only 0, int18-only 0
+edge_x_csv_numbers.csv: lane 49, int18 49; lane-only 0, int18-only 0
+edge_x_dates_a.csv: lane 17, int18 17; lane-only 0, int18-only 0
+edge_x_dates_b.csv: lane 15, int18 15; lane-only 0, int18-only 0
+edge_x_dates_bad.csv: lane 5, int18 5; lane-only 0, int18-only 0
+edge_x_dates_c.csv: lane 5, int18 5; lane-only 0, int18-only 0
+edge_x_dates_d.csv: lane 17, int18 17; lane-only 0, int18-only 0
+edge_x_dates_mixed_fmt.csv: lane 5, int18 5; lane-only 0, int18-only 0
+edge_x_pq_duration.parquet: lane 10, int18 10; lane-only 0, int18-only 0
+edge_x_pq_list.parquet: lane 0, int18 0; lane-only 0, int18-only 0
+edge_x_pq_nested.parquet: lane 0, int18 0; lane-only 0, int18-only 0
+edge_x_pq_nulls.parquet: lane 92, int18 92; lane-only 0, int18-only 0
+edge_x_pq_types.parquet: lane 57, int18 57; lane-only 0, int18-only 0
+edge_x_pq_u64_big.parquet: lane 10, int18 10; lane-only 0, int18-only 0
+edge_x_time_ampm.csv: lane 5, int18 5; lane-only 0, int18-only 0
+edge_x_time_only.csv: lane 5, int18 5; lane-only 0, int18-only 0
+
+# e3.csv and e3_uuidpk.csv: the same 10 paths (zip5 mean/std in default, k11, sensitive, no_pii_gate, widen_bounds),
+# a pre-existing dtype difference, now reported by the baseline-side check of the named difference:
+  MISMATCH default.tables.e3.columns.zip5.mean (baseline): None != 19278.333333333332
+	  MISMATCH default.tables.e3.columns.zip5.mean: 19278.333333333332 != None
+  MISMATCH default.tables.e3.columns.zip5.std (baseline): None != 18299.009599793466
+	  MISMATCH default.tables.e3.columns.zip5.std: 18299.009599793466 != None

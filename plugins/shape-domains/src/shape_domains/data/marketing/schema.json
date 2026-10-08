@@ -1,0 +1,1247 @@
+{
+ "schema_version": 1,
+ "model": {
+  "name": "marketing_3nf",
+  "description": "Marketing domain — 3nf schema",
+  "domain": "marketing",
+  "schema_mode": "3nf",
+  "locale": "en_US",
+  "seed": 42,
+  "date_range": {
+   "start": "2022-01-01",
+   "end": "2025-12-31"
+  }
+ },
+ "tables": {
+  "campaign_type": {
+   "name": "campaign_type",
+   "description": "Campaign categories",
+   "cdm_mapping": null,
+   "primary_key": [
+    "type_id"
+   ],
+   "columns": {
+    "type_id": {
+     "name": "type_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "type_name": {
+     "name": "type_name",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "campaign_types"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "channel": {
+     "name": "channel",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Email": 0.25,
+       "Social": 0.2,
+       "PPC": 0.18,
+       "Content": 0.15,
+       "Event": 0.12,
+       "Direct Mail": 0.1
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "avg_conversion_rate": {
+     "name": "avg_conversion_rate",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 0.01,
+      "max": 0.15
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "industry": {
+   "name": "industry",
+   "description": "Target industries",
+   "cdm_mapping": null,
+   "primary_key": [
+    "industry_id"
+   ],
+   "columns": {
+    "industry_id": {
+     "name": "industry_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "industry_name": {
+     "name": "industry_name",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "industry_names"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "sector": {
+     "name": "sector",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Technology": 0.22,
+       "Healthcare": 0.18,
+       "Finance": 0.16,
+       "Manufacturing": 0.15,
+       "Retail": 0.15,
+       "Services": 0.14
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "campaign": {
+   "name": "campaign",
+   "description": "Marketing campaigns",
+   "cdm_mapping": null,
+   "primary_key": [
+    "campaign_id"
+   ],
+   "columns": {
+    "campaign_id": {
+     "name": "campaign_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "campaign_name": {
+     "name": "campaign_name",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "CMP-{seq:4}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 200,
+     "precision": null,
+     "scale": null
+    },
+    "campaign_type_id": {
+     "name": "campaign_type_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "campaign_type.type_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "start_date": {
+     "name": "start_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2022-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "end_date": {
+     "name": "end_date",
+     "type": "date",
+     "generator": {
+      "strategy": "derived",
+      "source": "start_date",
+      "operation": "add_days",
+      "days": 30
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "budget": {
+     "name": "budget",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 9.5,
+      "sigma": 1.0,
+      "min": 1000.0,
+      "max": 500000.0
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "status": {
+     "name": "status",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Active": 0.25,
+       "Completed": 0.45,
+       "Paused": 0.15,
+       "Draft": 0.15
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "lead_source": {
+   "name": "lead_source",
+   "description": "Lead origins",
+   "cdm_mapping": null,
+   "primary_key": [
+    "source_id"
+   ],
+   "columns": {
+    "source_id": {
+     "name": "source_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "source_name": {
+     "name": "source_name",
+     "type": "string",
+     "generator": {
+      "strategy": "reference_data",
+      "dataset": "lead_sources"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "source_type": {
+     "name": "source_type",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Inbound": 0.35,
+       "Outbound": 0.25,
+       "Referral": 0.22,
+       "Partner": 0.18
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "cost_per_lead": {
+     "name": "cost_per_lead",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 3.5,
+      "sigma": 0.8,
+      "min": 5.0,
+      "max": 500.0
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "contact": {
+   "name": "contact",
+   "description": "Marketing contacts",
+   "cdm_mapping": null,
+   "primary_key": [
+    "contact_id"
+   ],
+   "columns": {
+    "contact_id": {
+     "name": "contact_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "first_name": {
+     "name": "first_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "first_name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "last_name": {
+     "name": "last_name",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "last_name"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 50,
+     "precision": null,
+     "scale": null
+    },
+    "email": {
+     "name": "email",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "email"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 255,
+     "precision": null,
+     "scale": null
+    },
+    "phone": {
+     "name": "phone",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "phone_number"
+     },
+     "nullable": true,
+     "null_rate": 0.15,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
+    },
+    "company": {
+     "name": "company",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "company"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 200,
+     "precision": null,
+     "scale": null
+    },
+    "industry_id": {
+     "name": "industry_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "industry.industry_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "lead_source_id": {
+     "name": "lead_source_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "lead_source.source_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "created_date": {
+     "name": "created_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2022-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "lead": {
+   "name": "lead",
+   "description": "Qualified leads from contacts",
+   "cdm_mapping": null,
+   "primary_key": [
+    "lead_id"
+   ],
+   "columns": {
+    "lead_id": {
+     "name": "lead_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "contact_id": {
+     "name": "contact_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "contact.contact_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "campaign_id": {
+     "name": "campaign_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "campaign.campaign_id",
+      "distribution": "zipf",
+      "alpha": 1.3
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "lead_score": {
+     "name": "lead_score",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 0,
+      "max": 100
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "status": {
+     "name": "status",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "New": 0.2,
+       "Contacted": 0.25,
+       "Qualified": 0.2,
+       "Unqualified": 0.15,
+       "Converted": 0.2
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "created_date": {
+     "name": "created_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2022-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "opportunity": {
+   "name": "opportunity",
+   "description": "Sales opportunities from leads",
+   "cdm_mapping": null,
+   "primary_key": [
+    "opp_id"
+   ],
+   "columns": {
+    "opp_id": {
+     "name": "opp_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "lead_id": {
+     "name": "lead_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "lead.lead_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "opp_name": {
+     "name": "opp_name",
+     "type": "string",
+     "generator": {
+      "strategy": "pattern",
+      "format": "OPP-{seq:6}"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 200,
+     "precision": null,
+     "scale": null
+    },
+    "stage": {
+     "name": "stage",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Prospecting": 0.15,
+       "Qualification": 0.18,
+       "Proposal": 0.2,
+       "Negotiation": 0.17,
+       "Closed Won": 0.18,
+       "Closed Lost": 0.12
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "amount": {
+     "name": "amount",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 9.0,
+      "sigma": 1.2,
+      "min": 500.0,
+      "max": 500000.0
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "close_date": {
+     "name": "close_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2022-06-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "probability": {
+     "name": "probability",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 0.05,
+      "max": 0.95
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "email_send": {
+   "name": "email_send",
+   "description": "Email send events per campaign",
+   "cdm_mapping": null,
+   "primary_key": [
+    "send_id"
+   ],
+   "columns": {
+    "send_id": {
+     "name": "send_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "campaign_id": {
+     "name": "campaign_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "campaign.campaign_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "contact_id": {
+     "name": "contact_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "contact.contact_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "sent_date": {
+     "name": "sent_date",
+     "type": "datetime",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2022-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "opened": {
+     "name": "opened",
+     "type": "boolean",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "true": 0.25,
+       "false": 0.75
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "clicked": {
+     "name": "clicked",
+     "type": "boolean",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "true": 0.08,
+       "false": 0.92
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "bounced": {
+     "name": "bounced",
+     "type": "boolean",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "true": 0.03,
+       "false": 0.97
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "web_visit": {
+   "name": "web_visit",
+   "description": "Website visits per contact",
+   "cdm_mapping": null,
+   "primary_key": [
+    "visit_id"
+   ],
+   "columns": {
+    "visit_id": {
+     "name": "visit_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "contact_id": {
+     "name": "contact_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "contact.contact_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "visit_date": {
+     "name": "visit_date",
+     "type": "datetime",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2022-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "page_url": {
+     "name": "page_url",
+     "type": "string",
+     "generator": {
+      "strategy": "faker",
+      "provider": "uri"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 500,
+     "precision": null,
+     "scale": null
+    },
+    "referrer": {
+     "name": "referrer",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Organic": 0.3,
+       "Paid": 0.22,
+       "Social": 0.18,
+       "Direct": 0.18,
+       "Email": 0.12
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "duration_seconds": {
+     "name": "duration_seconds",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 4.5,
+      "sigma": 1.2,
+      "min": 1.0,
+      "max": 3600.0
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "pages_viewed": {
+     "name": "pages_viewed",
+     "type": "integer",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "uniform",
+      "min": 1,
+      "max": 20
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  },
+  "conversion": {
+   "name": "conversion",
+   "description": "Conversion events from leads",
+   "cdm_mapping": null,
+   "primary_key": [
+    "conversion_id"
+   ],
+   "columns": {
+    "conversion_id": {
+     "name": "conversion_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "sequence",
+      "start": 1
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "lead_id": {
+     "name": "lead_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "lead.lead_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "campaign_id": {
+     "name": "campaign_id",
+     "type": "integer",
+     "generator": {
+      "strategy": "foreign_key",
+      "ref": "campaign.campaign_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "conversion_date": {
+     "name": "conversion_date",
+     "type": "date",
+     "generator": {
+      "strategy": "temporal",
+      "start": "2022-01-01",
+      "end": "2025-12-31",
+      "pattern": "uniform",
+      "unit": "ns"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "conversion_type": {
+     "name": "conversion_type",
+     "type": "string",
+     "generator": {
+      "strategy": "weighted_enum",
+      "values": {
+       "Purchase": 0.3,
+       "Trial": 0.25,
+       "Demo": 0.25,
+       "Signup": 0.2
+      }
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    },
+    "revenue": {
+     "name": "revenue",
+     "type": "float",
+     "generator": {
+      "strategy": "distribution",
+      "distribution": "log_normal",
+      "mean": 7.5,
+      "sigma": 1.2,
+      "min": 0.0,
+      "max": 100000.0
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
+     "precision": null,
+     "scale": null
+    }
+   }
+  }
+ },
+ "relationships": [
+  {
+   "name": "campaign_campaign_type",
+   "parent": "campaign_type",
+   "child": "campaign",
+   "parent_columns": [
+    "type_id"
+   ],
+   "child_columns": [
+    "campaign_type_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "contact_industry",
+   "parent": "industry",
+   "child": "contact",
+   "parent_columns": [
+    "industry_id"
+   ],
+   "child_columns": [
+    "industry_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "contact_lead_source",
+   "parent": "lead_source",
+   "child": "contact",
+   "parent_columns": [
+    "source_id"
+   ],
+   "child_columns": [
+    "lead_source_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "lead_contact",
+   "parent": "contact",
+   "child": "lead",
+   "parent_columns": [
+    "contact_id"
+   ],
+   "child_columns": [
+    "contact_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "lead_campaign",
+   "parent": "campaign",
+   "child": "lead",
+   "parent_columns": [
+    "campaign_id"
+   ],
+   "child_columns": [
+    "campaign_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "opportunity_lead",
+   "parent": "lead",
+   "child": "opportunity",
+   "parent_columns": [
+    "lead_id"
+   ],
+   "child_columns": [
+    "lead_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "email_send_campaign",
+   "parent": "campaign",
+   "child": "email_send",
+   "parent_columns": [
+    "campaign_id"
+   ],
+   "child_columns": [
+    "campaign_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "email_send_contact",
+   "parent": "contact",
+   "child": "email_send",
+   "parent_columns": [
+    "contact_id"
+   ],
+   "child_columns": [
+    "contact_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "web_visit_contact",
+   "parent": "contact",
+   "child": "web_visit",
+   "parent_columns": [
+    "contact_id"
+   ],
+   "child_columns": [
+    "contact_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "conversion_lead",
+   "parent": "lead",
+   "child": "conversion",
+   "parent_columns": [
+    "lead_id"
+   ],
+   "child_columns": [
+    "lead_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  },
+  {
+   "name": "conversion_campaign",
+   "parent": "campaign",
+   "child": "conversion",
+   "parent_columns": [
+    "campaign_id"
+   ],
+   "child_columns": [
+    "campaign_id"
+   ],
+   "type": "one_to_many",
+   "cardinality": {},
+   "optional": false
+  }
+ ],
+ "business_rules": [
+  {
+   "name": "budget_positive",
+   "type": "constraint",
+   "rule": "budget > 0",
+   "table": "campaign",
+   "via": null,
+   "when": null
+  },
+  {
+   "name": "lead_score_range",
+   "type": "constraint",
+   "rule": "lead_score >= 0 AND lead_score <= 100",
+   "table": "lead",
+   "via": null,
+   "when": null
+  }
+ ],
+ "generation": {
+  "scale": "small",
+  "scales": {
+   "fabric_demo": {
+    "campaign": 20
+   },
+   "small": {
+    "campaign": 200
+   },
+   "medium": {
+    "campaign": 2000
+   },
+   "large": {
+    "campaign": 20000
+   },
+   "xlarge": {
+    "campaign": 500000
+   },
+   "warehouse": {
+    "campaign": 200000
+   },
+   "xxl": {
+    "campaign": 2000000
+   },
+   "xxxl": {
+    "campaign": 10000000
+   }
+  },
+  "derived_counts": {
+   "campaign_type": {
+    "fixed": 15
+   },
+   "industry": {
+    "fixed": 25
+   },
+   "lead_source": {
+    "fixed": 20
+   },
+   "contact": {
+    "per_parent": "campaign",
+    "ratio": 25.0
+   },
+   "lead": {
+    "per_parent": "contact",
+    "ratio": 0.4
+   },
+   "opportunity": {
+    "per_parent": "lead",
+    "ratio": 0.5
+   },
+   "email_send": {
+    "per_parent": "campaign",
+    "ratio": 50.0
+   },
+   "web_visit": {
+    "per_parent": "contact",
+    "ratio": 5.0
+   },
+   "conversion": {
+    "per_parent": "lead",
+    "ratio": 0.3
+   }
+  },
+  "output": {}
+ },
+ "correlated_columns": {}
+}

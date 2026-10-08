@@ -1,0 +1,447 @@
+"""Plugin host: discovery, API version check, lazy loading, registry, failure containment.
+
+This is the stable surface that the plugin CLI (P2-03), the built-ins (P2-04) and the plugin
+kit (P2-06) build on. Everything is reachable from :class:`PluginHost`; most callers use the
+process-wide host from :func:`default_host`.
+
+Lifecycle of a plugin:
+
+1. **Discovery** reads entry-point metadata only (``importlib.metadata``). It imports nothing.
+2. **Loading** is lazy: the first :meth:`PluginHost.get` (or :meth:`PluginHost.load_all`)
+   imports the entry point's module, checks its ``SHAPE_API`` major version against
+   :data:`shape.plugins.api.v1.SHAPE_API`, resolves the entry point to a factory, calls it,
+   and checks that the result satisfies the group's Protocol.
+3. **Failure containment:** any exception raised while importing or building a plugin is caught
+   and stored on its :class:`PluginRecord` (``status == "error"``). It never propagates out of
+   discovery, ``names``, ``records`` or ``load_all``. :meth:`PluginHost.get` raises
+   :class:`PluginLoadError` for that one plugin only; :meth:`PluginHost.try_get` returns
+   ``None``. A plugin that failed is not retried until :meth:`PluginHost.reload`.
+
+Plugins are trusted, in-process code (D-09): the host checks compatibility, not safety. An
+opt-in allow-list (``shape.plugins.trust``, W1-18) decides *before the import* which
+distributions may load; a plugin it refuses has ``status == "blocked"`` and is never imported.
+"""
+
+from __future__ import annotations
+
+import importlib
+import os
+import threading
+from collections.abc import Callable, Iterable, Iterator, Mapping
+from dataclasses import dataclass
+from importlib import metadata
+from typing import Any
+
+from shape.errors import ShapeError
+from shape.plugins import trust
+from shape.plugins.api import v1
+
+HOST_API = v1.SHAPE_API
+_UNLOADED = "unloaded"
+_LOADED = "ok"
+_ERROR = "error"
+_BLOCKED = "blocked"
+
+
+class PluginLoadError(ShapeError):
+    """One plugin could not be loaded. Never raised by discovery or listing."""
+
+
+class PluginBlockedError(PluginLoadError):
+    """The plugin allow-list does not permit this plugin; it was not imported. The message is
+    the whole explanation (the CLI prints it as it is)."""
+
+
+@dataclass(slots=True)
+class PluginRecord:
+    """Everything the host knows about one registered plugin.
+
+    ``status`` is ``"unloaded"`` (discovered, not imported), ``"ok"``, ``"error"`` or
+    ``"blocked"`` (the allow-list refused it; never imported). ``error`` holds
+    ``"<ExceptionType>: <message>"`` when ``status == "error"`` and the reason when blocked;
+    ``blocked_kind`` is then ``"not_permitted"`` (not on the list) or ``"check_failed"`` (listed,
+    but its version, files or signature failed).
+    ``api`` is the plugin module's declared ``SHAPE_API`` once known, else ``None``.
+    ``source`` is the distribution name for an entry point, or ``"<registered>"``.
+    ``obj`` is the live plugin object once loaded.
+    """
+
+    group: str
+    name: str
+    target: str
+    source: str
+    status: str = _UNLOADED
+    api: str | None = None
+    error: str | None = None
+    obj: Any = None
+    blocked_kind: str | None = None
+
+    def as_dict(self) -> dict[str, Any]:
+        """JSON-safe view (never includes the live object)."""
+        return {
+            "group": self.group,
+            "name": self.name,
+            "target": self.target,
+            "source": self.source,
+            "status": self.status,
+            "api": self.api,
+            "error": self.error,
+        }
+
+
+def api_major(version: str) -> int:
+    """The major number of an ``"M.m"`` API version string; ``ValueError`` if malformed."""
+    head = str(version).split(".", 1)[0]
+    if not head.isdigit():
+        raise ValueError(f"malformed SHAPE_API {version!r} (expected 'MAJOR.MINOR')")
+    return int(head)
+
+
+def check_api(declared: object) -> str:
+    """Return ``declared`` if its major matches the host's, else raise ``PluginLoadError``."""
+    if not isinstance(declared, str):
+        raise PluginLoadError("plugin does not declare SHAPE_API (a string such as '1.0')")
+    try:
+        major = api_major(declared)
+    except ValueError as exc:
+        raise PluginLoadError(str(exc)) from None
+    if major != api_major(HOST_API):
+        raise PluginLoadError(
+            f"plugin targets plugin API {declared}, but this Shape provides API {HOST_API}; "
+            f"major versions must match"
+        )
+    return declared
+
+
+EntryPointsFn = Callable[[], Iterable[metadata.EntryPoint]]
+
+
+def _installed_entry_points() -> Iterator[metadata.EntryPoint]:
+    installed = metadata.entry_points()  # one scan of the installed packages, not one per group
+    for group in v1.GROUPS:
+        yield from installed.select(group=group)
+
+
+class PluginHost:
+    """A registry of plugins keyed by ``(group, name)``.
+
+    ``entry_points`` replaces installed-package discovery (used by tests). Discovery runs once,
+    on first use; call :meth:`reload` to repeat it.
+    """
+
+    def __init__(
+        self,
+        entry_points: EntryPointsFn | None = None,
+        *,
+        allowlist: str | os.PathLike[str] | None = None,
+        project_config: Mapping[str, Any] | None = None,
+    ) -> None:
+        # The allow-list is ``allowlist``, else SHAPE_PLUGIN_ALLOWLIST, else ``plugins.allowlist``
+        # of ``project_config`` (the parsed shape.yml); with none of them nothing is checked.
+        self._allowlist_arg = None if allowlist is None else os.fspath(allowlist)
+        self._project_config = project_config
+        # Why the project file's allow-list cannot be read; the host then fails closed (set by
+        # default_host, which reads shape.yml).
+        self._project_error: str | None = None
+        self._enforcer: trust.Enforcer | None = None
+        self._entry_points = entry_points or _installed_entry_points
+        self._records: dict[tuple[str, str], PluginRecord] = {}
+        self._unkeyed: list[PluginRecord] = []
+        self._discovered = False
+        self._lock = threading.RLock()
+
+    # -- discovery and registration -------------------------------------------------------
+
+    def _discover(self) -> None:
+        with self._lock:
+            if self._discovered:
+                return
+            self._discovered = True
+            self._enforcer = self._resolve_enforcer()
+            try:
+                eps = sorted(self._entry_points(), key=lambda e: (e.group, e.name, e.value))
+            except Exception as exc:  # broken metadata must not take the host down
+                self._unkeyed.append(
+                    PluginRecord("", "<discovery>", "", "<metadata>", _ERROR, None, _describe(exc))
+                )
+                return
+            names: dict[int, str] = {}  # reading a distribution's name parses its METADATA
+            for ep in eps:
+                if ep.group not in v1.GROUPS:
+                    continue
+                key = (ep.group, ep.name)
+                dist = getattr(ep, "dist", None)
+                if dist is None:
+                    source = "<unknown>"
+                else:
+                    source = names.get(id(dist)) or names.setdefault(
+                        id(dist), dist.name or "<unknown>"
+                    )
+                if key in self._records:
+                    first = self._records[key]
+                    if first.status == _BLOCKED:
+                        # A plugin the allow-list refused never hides one it allows (a built-in).
+                        rec = PluginRecord(ep.group, ep.name, ep.value, source)
+                        self._enforce(rec, dist)
+                        if rec.status != _BLOCKED:
+                            self._records[key] = rec
+                            self._unkeyed.append(first)
+                            continue
+                    # First (sorted) registration wins; the duplicate is reported, not loaded.
+                    self._unkeyed.append(
+                        PluginRecord(
+                            ep.group,
+                            ep.name,
+                            ep.value,
+                            source,
+                            _ERROR,
+                            None,
+                            f"duplicate name {ep.name!r} in group {ep.group}; "
+                            f"already provided by {self._records[key].source}",
+                        )
+                    )
+                    continue
+                rec = PluginRecord(ep.group, ep.name, ep.value, source)
+                self._records[key] = rec
+                self._enforce(rec, dist)
+
+    def _resolve_enforcer(self) -> trust.Enforcer | None:
+        try:
+            path = self._allowlist_arg or trust.resolve_allowlist_path(project=self._project_config)
+            if path is None and self._project_error is not None:
+                raise trust.AllowlistError(self._project_error)
+        except trust.AllowlistError as exc:
+            return trust.Enforcer(None, f"the allow-list cannot be used: {exc}")
+        return trust.make_enforcer(path)
+
+    def _enforce(self, rec: PluginRecord, dist: Any) -> None:
+        """Apply the allow-list to a discovered entry point. Core's own entry points are built-ins
+        and always allowed. Nothing here imports the plugin."""
+        if self._enforcer is None or trust.is_builtin(rec.source, rec.target):
+            return
+        decision = self._enforcer.decide(rec.group, rec.name, dist, rec.source)
+        if decision.reason is not None:
+            rec.status = _BLOCKED
+            rec.error = decision.reason
+            rec.blocked_kind = decision.kind
+
+    @property
+    def allowlist_active(self) -> bool:
+        """True when an allow-list is in force (even one that cannot be read, which blocks all)."""
+        self._discover()
+        return self._enforcer is not None
+
+    @property
+    def allowlist(self) -> trust.Allowlist | None:
+        """The allow-list in force, or ``None`` (none configured, or unreadable: see
+        :attr:`allowlist_active`)."""
+        self._discover()
+        return self._enforcer.allowlist if self._enforcer is not None else None
+
+    def register(
+        self, group: str, name: str, obj: Any, *, api: str = HOST_API, source: str = "<registered>"
+    ) -> PluginRecord:
+        """Register a ready object (or zero-argument factory) without an entry point.
+
+        Used for built-ins and tests. The API check and Protocol check still apply, at load.
+        Raises ``ValueError`` for an unknown group or a duplicate name.
+        """
+        if group not in v1.GROUPS:
+            raise ValueError(f"unknown plugin group {group!r}")
+        self._discover()
+        with self._lock:
+            if (group, name) in self._records:
+                raise ValueError(f"{name!r} is already registered in group {group}")
+            rec = PluginRecord(group, name, repr(obj), source)
+            rec.obj = _Pending(obj, api)
+            self._records[(group, name)] = rec
+            return rec
+
+    def reload(self) -> None:
+        """Forget everything loaded and discover again (registered objects are dropped)."""
+        with self._lock:
+            self._records.clear()
+            self._unkeyed.clear()
+            self._enforcer = None
+            self._discovered = False
+
+    # -- queries (never import a plugin) --------------------------------------------------
+
+    def records(self, group: str | None = None) -> list[PluginRecord]:
+        """Every known plugin, sorted by ``(group, name)``; optionally one group only."""
+        self._discover()
+        with self._lock:
+            every = [*self._records.values(), *self._unkeyed]
+            rows = [r for r in every if group in (None, r.group)]
+        return sorted(rows, key=lambda r: (r.group, r.name, r.source))
+
+    def names(self, group: str) -> list[str]:
+        """Names registered in ``group`` that did not fail discovery."""
+        self._discover()
+        with self._lock:
+            return sorted(n for g, n in self._records if g == group)
+
+    def record(self, group: str, name: str) -> PluginRecord | None:
+        self._discover()
+        with self._lock:
+            return self._records.get((group, name))
+
+    # -- loading --------------------------------------------------------------------------
+
+    def get(self, group: str, name: str) -> Any:
+        """The plugin object for ``(group, name)``, loading it on first use.
+
+        Raises ``KeyError`` when nothing is registered under that name, and
+        :class:`PluginLoadError` when it is registered but cannot load.
+        """
+        self._discover()
+        with self._lock:
+            rec = self._records.get((group, name))
+            if rec is None:
+                raise KeyError(f"no plugin {name!r} in group {group}")
+            if rec.status == _BLOCKED:
+                raise PluginBlockedError(rec.error or f"plugin {group}:{name} is blocked")
+            if rec.status == _ERROR:
+                raise PluginLoadError(f"plugin {group}:{name} failed to load: {rec.error}")
+            if rec.status == _LOADED:
+                return rec.obj
+            self._load(rec)
+            if rec.status == _ERROR:
+                raise PluginLoadError(f"plugin {group}:{name} failed to load: {rec.error}")
+            return rec.obj
+
+    def try_get(self, group: str, name: str) -> Any | None:
+        """Like :meth:`get`, but ``None`` instead of ``KeyError`` or ``PluginLoadError``."""
+        try:
+            return self.get(group, name)
+        except (KeyError, PluginLoadError):
+            return None
+
+    def load_all(self, group: str | None = None) -> list[PluginRecord]:
+        """Try to load every plugin (of ``group``, or all) and return their records.
+
+        Failures are recorded, never raised. This is what ``shape plugins doctor`` runs.
+        """
+        for rec in self.records(group):
+            if rec.status == _UNLOADED:
+                with self._lock:
+                    if rec.status == _UNLOADED:
+                        self._load(rec)
+        return self.records(group)
+
+    def _load(self, rec: PluginRecord) -> None:
+        try:
+            pending = rec.obj if isinstance(rec.obj, _Pending) else None
+            if pending is not None:
+                rec.api = check_api(pending.api)
+                factory = pending.obj
+            else:
+                ep = metadata.EntryPoint(rec.name, rec.target, rec.group)
+                module = importlib.import_module(ep.module)
+                rec.api = check_api(getattr(module, "SHAPE_API", None))
+                factory = ep.load()
+            proto = v1.PROTOCOLS[v1.GROUPS[rec.group]]
+            obj = _build(factory, proto)
+            if not isinstance(obj, proto):
+                raise PluginLoadError(
+                    f"object does not implement {proto.__name__} (group {rec.group})"
+                )
+            rec.obj = obj
+            rec.status = _LOADED
+            rec.error = None
+        except (Exception, SystemExit) as exc:  # a plugin calling sys.exit must not end core
+            rec.obj = None
+            rec.status = _ERROR
+            rec.error = _describe(exc)
+
+
+@dataclass(slots=True)
+class _Pending:
+    obj: Any
+    api: str
+
+
+def _build(factory: Any, proto: type) -> Any:
+    """A class is instantiated; an object that already satisfies ``proto`` is used as it is;
+    any other callable is called with no arguments."""
+    if isinstance(factory, type):
+        return factory()
+    if isinstance(factory, proto):
+        return factory
+    return factory() if callable(factory) else factory
+
+
+def _describe(exc: BaseException) -> str:
+    return f"{type(exc).__name__}: {exc}"
+
+
+_default: PluginHost | None = None
+_default_lock = threading.Lock()
+
+
+def default_host() -> PluginHost:
+    """The process-wide host, created on first use (discovers installed plugins)."""
+    global _default
+    with _default_lock:
+        if _default is None:
+            from shape.plugins.registry import register_builtins
+
+            config, error = project_plugins_config()
+            _default = PluginHost(project_config=config)
+            _default._project_error = error
+            register_builtins(_default)
+        return _default
+
+
+def project_plugins_config(
+    start: str | os.PathLike[str] | None = None,
+) -> tuple[dict[str, Any] | None, str | None]:
+    """``(project_config, error)`` for the host from the nearest ``shape.yml`` (``start`` or the
+    current folder, then its parents up to a repository root).
+
+    A relative ``plugins.allowlist`` is made absolute against the folder of ``shape.yml``. A
+    project file that never mentions ``plugins`` gives ``(None, None)``, even when it is not
+    valid YAML (the commands that read it report that). When it has one but cannot be read,
+    ``error`` says why, and the host blocks every non-built-in plugin (fail closed)."""
+    from shape.project.file import find_project
+
+    try:
+        path = find_project(start)
+    except OSError:  # the current folder was removed: there is no project to read
+        return None, None
+    if path is None:
+        return None, None
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        return None, f"{path} cannot be read, so its plugins.allowlist cannot be applied ({exc})"
+    if "plugins" not in text:  # any spelling of the key (block, flow or quoted) has the word
+        return None, None
+    try:
+        from shape.security.yamlsafe import safe_load_yaml
+
+        doc = safe_load_yaml(text)
+    except ImportError:
+        return None, f"{path} has a plugins section; reading it needs pyyaml (pip install pyyaml)"
+    except Exception as exc:  # YAMLError is not a ValueError
+        return None, f"{path} is not valid YAML, so its plugins.allowlist cannot be applied ({exc})"
+    if not isinstance(doc, Mapping):
+        return None, f"{path}: the top level must be a mapping"
+    plugins = doc.get("plugins")
+    allowlist = plugins.get("allowlist") if isinstance(plugins, Mapping) else None
+    if (
+        isinstance(plugins, Mapping)
+        and isinstance(allowlist, str)
+        and allowlist.strip()
+        and not os.path.isabs(allowlist)
+    ):
+        plugins = {**plugins, "allowlist": str(path.parent / allowlist)}
+    # Anything else wrong with the section is trust.resolve_allowlist_path's to refuse.
+    return {**doc, "plugins": plugins}, None
+
+
+def reset_default_host() -> None:
+    """Drop the process-wide host (tests; call after installing or removing a plugin)."""
+    global _default
+    with _default_lock:
+        _default = None

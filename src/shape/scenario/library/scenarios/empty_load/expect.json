@@ -1,0 +1,14 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "empty_load",
+  "gates_fail": [
+    "row_count",
+    "referential_integrity"
+  ],
+  "defects": {
+    "chaos_volume": {
+      "min": 1
+    }
+  }
+}

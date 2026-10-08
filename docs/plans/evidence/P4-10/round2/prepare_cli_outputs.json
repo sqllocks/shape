@@ -1,0 +1,78 @@
+{
+ "meta": {
+  "cores": 4,
+  "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+  "platform": "Linux-6.18.44-fc-v51-x86_64-with-glibc2.39",
+  "python": "3.11.15",
+  "started": "2026-10-02 01:10:37",
+  "domain": "retail",
+  "runs": 1,
+  "warmup": 0,
+  "shape_threads": null,
+  "loadavg_start": 0.57373046875
+ },
+ "scales": {
+  "medium": {
+   "refengine_median_s": 7.4314487550000194,
+   "shape_median_s": 0.6638191510000979,
+   "ratio": 11.194989996603644,
+   "refengine_runs_s": [
+    7.431
+   ],
+   "shape_runs_s": [
+    0.664
+   ],
+   "raw": {
+    "refengine": [
+     {
+      "wall_s": 7.4314487550000194,
+      "cpu_s": 8.281384000000001,
+      "rows": 1965400,
+      "loadavg_before": 0.57373046875,
+      "cmd": "/root/.venvs/refengine/bin/refengine generate retail --scale medium --seed 42 --format parquet -o /root/bench-out/refengine/retail/medium/seed42.tmp19027"
+     }
+    ],
+    "shape": [
+     {
+      "wall_s": 0.6638191510000979,
+      "cpu_s": 1.6537989999999994,
+      "rows": 1965400,
+      "loadavg_before": 0.60791015625,
+      "cmd": "/root/.venvs/shape/bin/shape generate retail --scale medium --seed 1042 --format parquet -o /root/bench-out/shape/retail/medium/seed1042.tmp19027"
+     }
+    ]
+   }
+  },
+  "large": {
+   "refengine_median_s": 104.2448745290003,
+   "shape_median_s": 4.473007427000084,
+   "ratio": 23.305321135787672,
+   "refengine_runs_s": [
+    104.245
+   ],
+   "shape_runs_s": [
+    4.473
+   ],
+   "raw": {
+    "refengine": [
+     {
+      "wall_s": 104.2448745290003,
+      "cpu_s": 105.66179400000001,
+      "rows": 19625400,
+      "loadavg_before": 0.60791015625,
+      "cmd": "/root/.venvs/refengine/bin/refengine generate retail --scale large --seed 42 --format parquet -o /root/bench-out/refengine/retail/large/seed42.tmp19027"
+     }
+    ],
+    "shape": [
+     {
+      "wall_s": 4.473007427000084,
+      "cpu_s": 11.76662499999999,
+      "rows": 19625400,
+      "loadavg_before": 0.9345703125,
+      "cmd": "/root/.venvs/shape/bin/shape generate retail --scale large --seed 1042 --format parquet -o /root/bench-out/shape/retail/large/seed1042.tmp19027"
+     }
+    ]
+   }
+  }
+ }
+}

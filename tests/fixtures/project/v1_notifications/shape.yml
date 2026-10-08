@@ -1,0 +1,15 @@
+# Frozen: a shape-project version 1 file with the `notifications:` key (W6-01). Never edit it:
+# a later Shape must keep reading it as it is.
+format: shape-project
+version: 1
+name: notified
+sources:
+  orders:
+    path: data/orders.csv
+notifications:
+  - url: env://SHAPE_HOOK_URL
+    on: [fail, drift]
+    secret: env://SHAPE_HOOK_SECRET
+    commands: [diff, check]
+  - url: file://secrets/chat-webhook
+    on: [always]

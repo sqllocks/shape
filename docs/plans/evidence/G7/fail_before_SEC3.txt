@@ -1,0 +1,13 @@
+$ git worktree at b04bf32^ (the commit before the SEC3 fix); current tests/privacy/test_taxonomy.py copied in; PYTHONPATH=src SHAPE_KERNEL=python PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 pytest -q tests/privacy/test_taxonomy.py
+FAILED tests/privacy/test_taxonomy.py::test_policy_and_taxonomy_share_one_table
+FAILED tests/privacy/test_taxonomy.py::test_every_label_is_accepted_by_every_entry_point[PUBLIC]
+FAILED tests/privacy/test_taxonomy.py::test_every_label_is_accepted_by_every_entry_point[INTERNAL]
+FAILED tests/privacy/test_taxonomy.py::test_every_label_is_accepted_by_every_entry_point[CONFIDENTIAL]
+FAILED tests/privacy/test_taxonomy.py::test_every_label_is_accepted_by_every_entry_point[SENSITIVE]
+FAILED tests/privacy/test_taxonomy.py::test_every_label_is_accepted_by_every_entry_point[PII]
+FAILED tests/privacy/test_taxonomy.py::test_every_label_is_accepted_by_every_entry_point[SECRET]
+FAILED tests/privacy/test_taxonomy.py::test_every_label_is_accepted_by_every_entry_point[TOP_SECRET]
+FAILED tests/privacy/test_taxonomy.py::test_aliases_rank_as_confidential - Va...
+FAILED tests/privacy/test_taxonomy.py::test_confidential_is_released_and_redacted_like_sensitive
+FAILED tests/privacy/test_taxonomy.py::test_unknown_label_is_rejected_not_ignored
+11 failed in 0.12s

@@ -1,0 +1,121 @@
+{
+  "name": "shape",
+  "displayName": "Shape by SQLLocks",
+  "description": "Completion and validation for shape.yml, snippets, and a readable, diffable view of .shape files.",
+  "version": "0.1.0",
+  "publisher": "sqllocks",
+  "license": "MIT",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sqllocks/shape.git",
+    "directory": "editors/vscode"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Linters",
+    "Snippets",
+    "Other"
+  ],
+  "keywords": [
+    "shape",
+    "sqllocks",
+    "synthetic data",
+    "data quality"
+  ],
+  "main": "./out/src/extension.js",
+  "extensionDependencies": [
+    "redhat.vscode-yaml"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "The .shape view and the comparison run the shape executable, which needs a trusted workspace. Completion, validation and snippets work everywhere."
+    }
+  },
+  "contributes": {
+    "yamlValidation": [
+      {
+        "fileMatch": [
+          "shape.yml",
+          "shape.yaml"
+        ],
+        "url": "./schemas/shape-project-v1.schema.json"
+      }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": "*.gen.json",
+        "url": "./schemas/generation-spec-v1.schema.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "yaml",
+        "path": "./snippets/shape.json"
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "shape.textView",
+        "displayName": "Shape text form",
+        "selector": [
+          {
+            "filenamePattern": "*.shape"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "commands": [
+      {
+        "command": "shape.compareWithHead",
+        "title": "Shape: Compare with Git HEAD"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "shape.compareWithHead",
+          "when": "resourceExtname == .shape || resourceScheme == shape-text"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "shape.compareWithHead",
+          "when": "resourceExtname == .shape",
+          "group": "3_compare"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Shape",
+      "properties": {
+        "shape.path": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "markdownDescription": "Path to the `shape` executable. Empty: find `shape` on `PATH`. Version 0.9.0 or newer is required."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node scripts/build.js",
+    "test": "node scripts/test.js",
+    "package": "node scripts/build.js && cd stage && npx --no-install vsce package --no-dependencies --out ../shape.vsix"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.7",
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/test-electron": "^2.4.1",
+    "@vscode/vsce": "^3.0.0",
+    "ajv": "^8.17.1",
+    "mocha": "^10.7.0",
+    "typescript": "^5.5.0",
+    "yaml": "^2.5.0"
+  }
+}

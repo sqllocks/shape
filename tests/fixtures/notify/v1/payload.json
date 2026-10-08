@@ -1,0 +1,30 @@
+{
+  "command": "diff",
+  "counts": {
+    "findings": 2,
+    "planned": 1
+  },
+  "exit_code": 1,
+  "findings": [
+    {
+      "column": "email",
+      "kind": "null_rate_change",
+      "severity": "high",
+      "table": "customers"
+    },
+    {
+      "column": "tier",
+      "kind": "new_category",
+      "severity": "medium",
+      "table": "customers"
+    }
+  ],
+  "format": "shape-notification",
+  "project": "demo",
+  "run_url": "https://github.com/acme/data/actions/runs/42",
+  "shape_version": "0.9.0",
+  "source": "customers",
+  "time": "2026-10-03T12:00:00Z",
+  "verdict": "fail",
+  "version": 1
+}

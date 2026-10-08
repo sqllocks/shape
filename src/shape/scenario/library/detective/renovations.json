@@ -1,0 +1,36 @@
+{
+  "format": "shape-detective-pack",
+  "version": 1,
+  "name": "renovations",
+  "level": "advanced",
+  "brief": "A release went out on Friday and touched four tables. Reports that read these tables fail in four different ways. Find what changed in each.",
+  "hints": [
+    "Four problems, one in each of four tables, all about the shape of the table rather than its values.",
+    "A column that is missing and one that is new in the same table may be one column under a new name.",
+    "One column kept its name and its content but changed what kind of value it holds."
+  ],
+  "scenario": "library:detective_renovations",
+  "seed": 7105,
+  "findings": [
+    {
+      "table": "order",
+      "column": "status",
+      "mode": "column-renamed"
+    },
+    {
+      "table": "store",
+      "column": "state",
+      "mode": "column-dropped"
+    },
+    {
+      "table": "customer",
+      "column": "is_active",
+      "mode": "column-retyped"
+    },
+    {
+      "table": "product",
+      "column": "channel",
+      "mode": "column-added"
+    }
+  ]
+}

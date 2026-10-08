@@ -1,0 +1,30 @@
+{
+  "format": "shape-scenario",
+  "version": 1,
+  "id": "detective_text_trouble",
+  "domain": "retail",
+  "scale": "small",
+  "seed": 42,
+  "gates": [
+    "schema_conformance",
+    "referential_integrity",
+    "row_count",
+    "null_check",
+    "uniqueness"
+  ],
+  "defects": [
+    {
+      "kind": "corrupt_encoding",
+      "table": "customer",
+      "column": "email",
+      "fraction": 0.3
+    },
+    {
+      "kind": "truncate_strings",
+      "table": "customer",
+      "column": "last_name",
+      "fraction": 0.5,
+      "length": 3
+    }
+  ]
+}

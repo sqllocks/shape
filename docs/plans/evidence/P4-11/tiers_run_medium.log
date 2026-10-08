@@ -1,0 +1,13 @@
+baseline spread took 136 s
+address            rows=   75000 fields=   621 mismatches=0 max_tight_rel=0.00e+00 max_loose=4.76e-03
+customer           rows=   50000 fields=   400 mismatches=0 max_tight_rel=0.00e+00 max_loose=3.68e-03
+order              rows=  500000 fields=   662 mismatches=0 max_tight_rel=8.37e-11 max_loose=1.01e-04
+order_line         rows= 1250000 fields=   559 mismatches=0 max_tight_rel=0.00e+00 max_loose=2.00e-04
+product            rows=    5000 fields= 66634 mismatches=0 max_tight_rel=0.00e+00 max_loose=1.11e-03
+product_category   rows=      50 fields=  4691 mismatches=0 max_tight_rel=0.00e+00 max_loose=2.24e-02
+promotion          rows=     200 fields=  8875 mismatches=0 max_tight_rel=0.00e+00 max_loose=5.50e-03
+return             rows=   85000 fields=   374 mismatches=0 max_tight_rel=9.15e-11 max_loose=5.47e-03
+store              rows=     150 fields=  6764 mismatches=0 max_tight_rel=0.00e+00 max_loose=5.61e-03
+DP: 1000 distinct noises in 1000 unseeded calls (0.1 s)
+PASS: /root/bench-out/fidelity_tiers_1to1/report_medium.json
+RDONE

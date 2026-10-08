@@ -1,0 +1,2702 @@
+{
+ "domain": "pulse",
+ "scale": "small",
+ "impl": "shape",
+ "seed": 42,
+ "impl_seed": 1042,
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "tables": {
+  "rider": {
+   "rows": {
+    "refengine": 2000,
+    "impl": 2000
+   },
+   "columns_refengine": [
+    "rider_id",
+    "full_name",
+    "email",
+    "phone",
+    "home_city_id",
+    "rating",
+    "joined_at",
+    "payment_default"
+   ],
+   "columns_impl": [
+    "rider_id",
+    "full_name",
+    "email",
+    "phone",
+    "home_city_id",
+    "rating",
+    "joined_at",
+    "payment_default"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "rider_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "full_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "email": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "phone": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "home_city_id": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "rating": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "joined_at": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "payment_default": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "rider_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "refengine": 1000.5,
+       "impl": 1000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 2000.0,
+       "impl": 2000.0
+      },
+      "std": {
+       "refengine": 577.3501970208376,
+       "impl": 577.3501970208376,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 2000,
+      "impl": 2000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "full_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "distinct": {
+      "refengine": 2000,
+      "impl": 2000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0004999999999999449
+     },
+     "top10": [
+      {
+       "value": "Kaiel Gilham",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "Gary Lopegate",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "Doel Maloridge",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "Veo Parwood",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "Edika Lovbrook",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "Osyn Alvarsen",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "Feana Grifwick",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "Coon Beltland",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "Brandon Yatewood",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "Joth Townscroft",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "Brynlee Riverford",
+       "refengine": 0.0,
+       "impl": 0.0005
+      },
+      {
+       "value": "Lonor Pacewick",
+       "refengine": 0.0,
+       "impl": 0.0005
+      },
+      {
+       "value": "Niar Fiebrook",
+       "refengine": 0.0,
+       "impl": 0.0005
+      },
+      {
+       "value": "Diden Riveshire",
+       "refengine": 0.0,
+       "impl": 0.0005
+      },
+      {
+       "value": "Weah Dudton",
+       "refengine": 0.0,
+       "impl": 0.0005
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "FIRST_NAMES+' '+LAST_NAMES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "email": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.032,
+      "impl": 0.0295,
+      "baseline_max_abs_diff": 0.005000000000000001,
+      "tol": 0.02782804340948174
+     },
+     "distinct": {
+      "refengine": 1936,
+      "impl": 1941,
+      "ratio": 1.0025826446280992,
+      "baseline_max_ratio_dev": 0.005165289256198413
+     },
+     "top10": [
+      {
+       "value": "laura.delgabrook882@live.com",
+       "refengine": 0.0005165289256198347,
+       "impl": 0.0
+      },
+      {
+       "value": "breanna.stocroft975@charter.net",
+       "refengine": 0.0005165289256198347,
+       "impl": 0.0
+      },
+      {
+       "value": "shus.ballwell469@seznam.cz",
+       "refengine": 0.0005165289256198347,
+       "impl": 0.0
+      },
+      {
+       "value": "nuton.pineda335@optonline.net",
+       "refengine": 0.0005165289256198347,
+       "impl": 0.0
+      },
+      {
+       "value": "sian.perkistein560@engineer.com",
+       "refengine": 0.0005165289256198347,
+       "impl": 0.0
+      },
+      {
+       "value": "olon.harrington31@mailfence.com",
+       "refengine": 0.0005165289256198347,
+       "impl": 0.0
+      },
+      {
+       "value": "roas.swanson767@sbcglobal.net",
+       "refengine": 0.0005165289256198347,
+       "impl": 0.0
+      },
+      {
+       "value": "sois.benjwell190@seznam.cz",
+       "refengine": 0.0005165289256198347,
+       "impl": 0.0
+      },
+      {
+       "value": "seie.mcguford939@yandex.com",
+       "refengine": 0.0005165289256198347,
+       "impl": 0.0
+      },
+      {
+       "value": "bris.boyson852@runbox.com",
+       "refengine": 0.0005165289256198347,
+       "impl": 0.0
+      },
+      {
+       "value": "karter.chendale49@live.com",
+       "refengine": 0.0,
+       "impl": 0.0005151983513652757
+      },
+      {
+       "value": "doora.densen27@me.com",
+       "refengine": 0.0,
+       "impl": 0.0005151983513652757
+      },
+      {
+       "value": "brie.hoopcroft932@rediffmail.com",
+       "refengine": 0.0,
+       "impl": 0.0005151983513652757
+      },
+      {
+       "value": "oscar.rittdale986@yahoo.com",
+       "refengine": 0.0,
+       "impl": 0.0005151983513652757
+      },
+      {
+       "value": "ianna.samley784@sky.com",
+       "refengine": 0.0,
+       "impl": 0.0005151983513652757
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "phone": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "distinct": {
+      "refengine": 2000,
+      "impl": 2000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "(338) 506-9345",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "(894) 917-8523",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "(394) 459-7905",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "(517) 985-7210",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "(442) 648-9513",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "(446) 733-8566",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "(507) 810-6252",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "(208) 759-7139",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "(605) 808-9712",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "(556) 492-9389",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "(976) 980-2184",
+       "refengine": 0.0,
+       "impl": 0.0005
+      },
+      {
+       "value": "(890) 410-8124",
+       "refengine": 0.0,
+       "impl": 0.0005
+      },
+      {
+       "value": "(620) 463-2561",
+       "refengine": 0.0,
+       "impl": 0.0005
+      },
+      {
+       "value": "(510) 331-3190",
+       "refengine": 0.0,
+       "impl": 0.0005
+      },
+      {
+       "value": "(773) 806-8037",
+       "refengine": 0.0,
+       "impl": 0.0005
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "(AAA) EEE-SSSS, AAA/EEE 200..998, SSSS 1000..9998",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "home_city_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.022999999999999965,
+     "ks_baseline": 0.024999999999999967,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "refengine": 2.442,
+       "impl": 2.489
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 4.0,
+       "impl": 4.0
+      },
+      "std": {
+       "refengine": 1.1365016498008262,
+       "impl": 1.1396837280579204,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "rating": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.013500000000000068,
+     "ks_baseline": 0.02350000000000002,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "refengine": 4.77755,
+       "impl": 4.7776499999999995
+      },
+      "min": {
+       "refengine": 4.5,
+       "impl": 4.5
+      },
+      "max": {
+       "refengine": 5.0,
+       "impl": 5.0
+      },
+      "std": {
+       "refengine": 0.15307187037467085,
+       "impl": 0.15101482543114775,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 6,
+      "impl": 6
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "joined_at": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.017000000000000015,
+     "ks_baseline": 0.03250000000000003,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "refengine": "2025-06-03 21:21:51.072880640",
+       "impl": "2025-06-05 14:13:36.802989312"
+      },
+      "min": {
+       "refengine": "2024-06-01 10:55:30.473986816",
+       "impl": "2024-06-01 02:13:29.374661120"
+      },
+      "max": {
+       "refengine": "2026-05-31 22:56:57.221792256",
+       "impl": "2026-05-31 09:22:05.758412032"
+      },
+      "std": {
+       "refengine": 209.7497338072721,
+       "impl": 210.6555418804965,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 2000,
+      "impl": 2000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "payment_default": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "distinct": {
+      "refengine": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "card",
+       "refengine": 0.6695,
+       "impl": 0.6805
+      },
+      {
+       "value": "wallet",
+       "refengine": 0.276,
+       "impl": 0.274
+      },
+      {
+       "value": "cash",
+       "refengine": 0.0545,
+       "impl": 0.0455
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.011000000000000006,
+     "tvd_baseline": 0.01700000000000001,
+     "tvd_tol": 0.0927058084855655,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "driver": {
+   "rows": {
+    "refengine": 300,
+    "impl": 300
+   },
+   "columns_refengine": [
+    "driver_id",
+    "full_name",
+    "email",
+    "phone",
+    "home_city_id",
+    "rating",
+    "status",
+    "onboarded_at",
+    "is_active"
+   ],
+   "columns_impl": [
+    "driver_id",
+    "full_name",
+    "email",
+    "phone",
+    "home_city_id",
+    "rating",
+    "status",
+    "onboarded_at",
+    "is_active"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "driver_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "full_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "email": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "phone": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "home_city_id": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "rating": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "status": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "onboarded_at": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "is_active": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "driver_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.15917393483798453,
+     "stats": {
+      "mean": {
+       "refengine": 150.5,
+       "impl": 150.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 300.0,
+       "impl": 300.0
+      },
+      "std": {
+       "refengine": 86.60205925188308,
+       "impl": 86.60205925188308,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 300,
+      "impl": 300
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "full_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "distinct": {
+      "refengine": 300,
+      "impl": 300,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Noisha Bakerton",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "Noasha Robridge",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "Flne Carlsgate",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "Sawyer Macdonald",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "Jessica Currsen",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "Raella Berg",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "Wayne Fryburg",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "Monor Scotburg",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "Nanna Morman",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "Veila Goodmton",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "Juika Holmes",
+       "refengine": 0.0,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "Eric Bell",
+       "refengine": 0.0,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "Nichole Rollins",
+       "refengine": 0.0,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "Laie Wells",
+       "refengine": 0.0,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "Jae Hart",
+       "refengine": 0.0,
+       "impl": 0.0033333333333333335
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "FIRST_NAMES+' '+LAST_NAMES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "email": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.016666666666666666,
+      "impl": 0.013333333333333334,
+      "baseline_max_abs_diff": 0.013333333333333332,
+      "tol": 0.052263577006185495
+     },
+     "distinct": {
+      "refengine": 295,
+      "impl": 296,
+      "ratio": 1.0033898305084745,
+      "baseline_max_ratio_dev": 0.013559322033898313
+     },
+     "top10": [
+      {
+       "value": "kellie.shahfield440@frontier.com",
+       "refengine": 0.003389830508474576,
+       "impl": 0.0
+      },
+      {
+       "value": "preston.starstein862@tutanota.com",
+       "refengine": 0.003389830508474576,
+       "impl": 0.0
+      },
+      {
+       "value": "reine.knigbrook708@fastmail.com",
+       "refengine": 0.003389830508474576,
+       "impl": 0.0
+      },
+      {
+       "value": "oresa.terrman242@workmail.com",
+       "refengine": 0.003389830508474576,
+       "impl": 0.0
+      },
+      {
+       "value": "inita.rosham754@gmail.com",
+       "refengine": 0.003389830508474576,
+       "impl": 0.0
+      },
+      {
+       "value": "osira.conwstein334@post.com",
+       "refengine": 0.003389830508474576,
+       "impl": 0.0
+      },
+      {
+       "value": "mariah.crossland525@rediffmail.com",
+       "refengine": 0.003389830508474576,
+       "impl": 0.0
+      },
+      {
+       "value": "sanor.garcwell817@cox.net",
+       "refengine": 0.003389830508474576,
+       "impl": 0.0
+      },
+      {
+       "value": "carolyn.schwaham477@icloud.com",
+       "refengine": 0.003389830508474576,
+       "impl": 0.0
+      },
+      {
+       "value": "miyn.patriford905@doctor.com",
+       "refengine": 0.003389830508474576,
+       "impl": 0.0
+      },
+      {
+       "value": "daer.sutton860@verizon.net",
+       "refengine": 0.0,
+       "impl": 0.0033783783783783786
+      },
+      {
+       "value": "curtis.jacobwell659@frontier.com",
+       "refengine": 0.0,
+       "impl": 0.0033783783783783786
+      },
+      {
+       "value": "mury.mulwood601@verizon.net",
+       "refengine": 0.0,
+       "impl": 0.0033783783783783786
+      },
+      {
+       "value": "beea.solomon528@comcast.net",
+       "refengine": 0.0,
+       "impl": 0.0033783783783783786
+      },
+      {
+       "value": "muer.chang111@yahoo.co.uk",
+       "refengine": 0.0,
+       "impl": 0.0033783783783783786
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS",
+     "distinct_ratio_tol": 0.02033898305084747,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "phone": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "distinct": {
+      "refengine": 300,
+      "impl": 300,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "(218) 436-4761",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "(700) 388-8595",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "(597) 380-7170",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "(638) 432-2066",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "(995) 696-8147",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "(818) 586-4738",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "(621) 738-6849",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "(430) 542-8431",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "(627) 380-5232",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "(652) 711-1528",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0
+      },
+      {
+       "value": "(233) 860-9148",
+       "refengine": 0.0,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "(834) 246-8245",
+       "refengine": 0.0,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "(203) 880-3124",
+       "refengine": 0.0,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "(437) 510-9260",
+       "refengine": 0.0,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "(829) 990-3525",
+       "refengine": 0.0,
+       "impl": 0.0033333333333333335
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "(AAA) EEE-SSSS, AAA/EEE 200..998, SSSS 1000..9998",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "home_city_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.08000000000000002,
+     "ks_baseline": 0.08999999999999997,
+     "ks_tol": 0.15917393483798453,
+     "stats": {
+      "mean": {
+       "refengine": 2.5566666666666666,
+       "impl": 2.41
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 4.0,
+       "impl": 4.0
+      },
+      "std": {
+       "refengine": 1.1225516568168357,
+       "impl": 1.1497391008398383,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "rating": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.043333333333333335,
+     "ks_baseline": 0.0566666666666667,
+     "ks_tol": 0.15917393483798453,
+     "stats": {
+      "mean": {
+       "refengine": 4.848666666666667,
+       "impl": 4.851999999999999
+      },
+      "min": {
+       "refengine": 4.6,
+       "impl": 4.6
+      },
+      "max": {
+       "refengine": 5.0,
+       "impl": 5.0
+      },
+      "std": {
+       "refengine": 0.12096096707432354,
+       "impl": 0.12895477243333556,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "offline",
+       "refengine": 0.47,
+       "impl": 0.42333333333333334
+      },
+      {
+       "value": "available",
+       "refengine": 0.29,
+       "impl": 0.30333333333333334
+      },
+      {
+       "value": "on_trip",
+       "refengine": 0.13666666666666666,
+       "impl": 0.11333333333333333
+      },
+      {
+       "value": "enroute",
+       "refengine": 0.10333333333333333,
+       "impl": 0.16
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.07,
+     "tvd_baseline": 0.06000000000000001,
+     "tvd_tol": 0.27639531957706837,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "onboarded_at": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.09999999999999998,
+     "ks_baseline": 0.1100000000000001,
+     "ks_tol": 0.16700000000000015,
+     "stats": {
+      "mean": {
+       "refengine": "2025-06-12 00:18:36.910411776",
+       "impl": "2025-05-09 14:45:10.433426432"
+      },
+      "min": {
+       "refengine": "2024-06-01 17:27:17.258305792",
+       "impl": "2024-06-07 17:59:38.251377920"
+      },
+      "max": {
+       "refengine": "2026-05-30 07:00:29.067400960",
+       "impl": "2026-05-31 19:25:21.852431872"
+      },
+      "std": {
+       "refengine": 212.76102843128209,
+       "impl": 212.0907347656936,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 300,
+      "impl": 300
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_active": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "refengine": 0.88,
+       "impl": 0.9
+      },
+      {
+       "value": "false",
+       "refengine": 0.12,
+       "impl": 0.1
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.020000000000000004,
+     "tvd_baseline": 0.020000000000000004,
+     "tvd_tol": 0.19544100476116794,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "vehicle": {
+   "rows": {
+    "refengine": 300,
+    "impl": 300
+   },
+   "columns_refengine": [
+    "vehicle_id",
+    "driver_id",
+    "make",
+    "model",
+    "year",
+    "color",
+    "license_plate",
+    "capacity",
+    "vehicle_class",
+    "city_id"
+   ],
+   "columns_impl": [
+    "vehicle_id",
+    "driver_id",
+    "make",
+    "model",
+    "year",
+    "color",
+    "license_plate",
+    "capacity",
+    "vehicle_class",
+    "city_id"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "vehicle_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "driver_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "make": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "model": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "year": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "color": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "license_plate": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "capacity": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "vehicle_class": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "city_id": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "vehicle_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.15917393483798453,
+     "stats": {
+      "mean": {
+       "refengine": 150.5,
+       "impl": 150.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 300.0,
+       "impl": 300.0
+      },
+      "std": {
+       "refengine": 86.60205925188308,
+       "impl": 86.60205925188308,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 300,
+      "impl": 300
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "driver_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.07666666666666666,
+     "ks_baseline": 0.09000000000000002,
+     "ks_tol": 0.15917393483798453,
+     "stats": {
+      "mean": {
+       "refengine": 147.38666666666666,
+       "impl": 148.23
+      },
+      "min": {
+       "refengine": 4.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 297.0,
+       "impl": 300.0
+      },
+      "std": {
+       "refengine": 81.49124997336968,
+       "impl": 86.67285484317836,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 183,
+      "impl": 197
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "make": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "distinct": {
+      "refengine": 8,
+      "impl": 8,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Toyota",
+       "refengine": 0.22333333333333333,
+       "impl": 0.19
+      },
+      {
+       "value": "Honda",
+       "refengine": 0.16,
+       "impl": 0.16
+      },
+      {
+       "value": "Ford",
+       "refengine": 0.14,
+       "impl": 0.14
+      },
+      {
+       "value": "Nissan",
+       "refengine": 0.11666666666666667,
+       "impl": 0.1
+      },
+      {
+       "value": "Hyundai",
+       "refengine": 0.10666666666666667,
+       "impl": 0.10666666666666667
+      },
+      {
+       "value": "Chevrolet",
+       "refengine": 0.10333333333333333,
+       "impl": 0.09333333333333334
+      },
+      {
+       "value": "Tesla",
+       "refengine": 0.08333333333333333,
+       "impl": 0.10666666666666667
+      },
+      {
+       "value": "Kia",
+       "refengine": 0.06666666666666667,
+       "impl": 0.10333333333333333
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.06,
+     "tvd_baseline": 0.10666666666666669,
+     "tvd_tol": 0.39088200952233587,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "model": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "distinct": {
+      "refengine": 8,
+      "impl": 8,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Camry",
+       "refengine": 0.17333333333333334,
+       "impl": 0.14
+      },
+      {
+       "value": "Accord",
+       "refengine": 0.13666666666666666,
+       "impl": 0.10666666666666667
+      },
+      {
+       "value": "Model 3",
+       "refengine": 0.13,
+       "impl": 0.09666666666666666
+      },
+      {
+       "value": "Civic",
+       "refengine": 0.12666666666666668,
+       "impl": 0.15666666666666668
+      },
+      {
+       "value": "Elantra",
+       "refengine": 0.12,
+       "impl": 0.12
+      },
+      {
+       "value": "Fusion",
+       "refengine": 0.11666666666666667,
+       "impl": 0.11
+      },
+      {
+       "value": "Corolla",
+       "refengine": 0.1,
+       "impl": 0.15666666666666668
+      },
+      {
+       "value": "Altima",
+       "refengine": 0.09666666666666666,
+       "impl": 0.11333333333333333
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.10333333333333333,
+     "tvd_baseline": 0.10666666666666666,
+     "tvd_tol": 0.39088200952233587,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "year": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.06333333333333335,
+     "ks_baseline": 0.08333333333333337,
+     "ks_tol": 0.15917393483798453,
+     "stats": {
+      "mean": {
+       "refengine": 2020.2866666666666,
+       "impl": 2020.34
+      },
+      "min": {
+       "refengine": 2017.0,
+       "impl": 2017.0
+      },
+      "max": {
+       "refengine": 2024.0,
+       "impl": 2024.0
+      },
+      "std": {
+       "refengine": 1.9264359723477849,
+       "impl": 2.030861885998159,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 8,
+      "impl": 8
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "color": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "distinct": {
+      "refengine": 7,
+      "impl": 7,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "White",
+       "refengine": 0.24666666666666667,
+       "impl": 0.2866666666666667
+      },
+      {
+       "value": "Silver",
+       "refengine": 0.20333333333333334,
+       "impl": 0.18
+      },
+      {
+       "value": "Black",
+       "refengine": 0.19666666666666666,
+       "impl": 0.19
+      },
+      {
+       "value": "Gray",
+       "refengine": 0.14666666666666667,
+       "impl": 0.13333333333333333
+      },
+      {
+       "value": "Blue",
+       "refengine": 0.10333333333333333,
+       "impl": 0.09666666666666666
+      },
+      {
+       "value": "Red",
+       "refengine": 0.05333333333333334,
+       "impl": 0.056666666666666664
+      },
+      {
+       "value": "Other",
+       "refengine": 0.05,
+       "impl": 0.056666666666666664
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.05,
+     "tvd_baseline": 0.09666666666666666,
+     "tvd_tol": 0.36563663957157255,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "license_plate": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "distinct": {
+      "refengine": 300,
+      "impl": 300,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "000001",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "000002",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "000003",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "000004",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "000005",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "000006",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "000007",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "000008",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "000009",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "000010",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "{seq:6}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "capacity": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.023333333333333317,
+     "ks_baseline": 0.01666666666666672,
+     "ks_tol": 0.15917393483798453,
+     "stats": {
+      "mean": {
+       "refengine": 4.366666666666666,
+       "impl": 4.413333333333333
+      },
+      "min": {
+       "refengine": 4.0,
+       "impl": 4.0
+      },
+      "max": {
+       "refengine": 6.0,
+       "impl": 6.0
+      },
+      "std": {
+       "refengine": 0.7738791177495933,
+       "impl": 0.8098285140832114,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "vehicle_class": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "standard",
+       "refengine": 0.6033333333333334,
+       "impl": 0.6366666666666667
+      },
+      {
+       "value": "xl",
+       "refengine": 0.17666666666666667,
+       "impl": 0.16333333333333333
+      },
+      {
+       "value": "premium",
+       "refengine": 0.11,
+       "impl": 0.10333333333333333
+      },
+      {
+       "value": "ev",
+       "refengine": 0.11,
+       "impl": 0.09666666666666666
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.03333333333333333,
+     "tvd_baseline": 0.04333333333333336,
+     "tvd_tol": 0.27639531957706837,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "city_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.043333333333333335,
+     "ks_baseline": 0.08666666666666667,
+     "ks_tol": 0.15917393483798453,
+     "stats": {
+      "mean": {
+       "refengine": 2.5633333333333335,
+       "impl": 2.46
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 4.0,
+       "impl": 4.0
+      },
+      "std": {
+       "refengine": 1.1398781611304878,
+       "impl": 1.1380099589488075,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "trip": {
+   "rows": {
+    "refengine": 20000,
+    "impl": 20000
+   },
+   "columns_refengine": [
+    "trip_id",
+    "rider_id",
+    "driver_id",
+    "requested_at",
+    "status",
+    "distance_mi",
+    "surge_mult",
+    "rating_given",
+    "city_id",
+    "duration_min",
+    "fare",
+    "tip",
+    "payment_type"
+   ],
+   "columns_impl": [
+    "trip_id",
+    "rider_id",
+    "driver_id",
+    "requested_at",
+    "status",
+    "distance_mi",
+    "surge_mult",
+    "rating_given",
+    "city_id",
+    "duration_min",
+    "fare",
+    "tip",
+    "payment_type"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "trip_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "rider_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "driver_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "requested_at": {
+     "refengine": "timestamp[us]",
+     "impl": "timestamp[us]"
+    },
+    "status": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "distance_mi": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "surge_mult": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "rating_given": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "city_id": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "duration_min": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "fare": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "tip": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "payment_type": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "trip_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "refengine": 10000.5,
+       "impl": 10000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 20000.0,
+       "impl": 20000.0
+      },
+      "std": {
+       "refengine": 5773.502684679379,
+       "impl": 5773.502684679379,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 20000,
+      "impl": 20000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "rider_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.009099999999999997,
+     "ks_baseline": 0.026650000000000063,
+     "ks_tol": 0.041975000000000096,
+     "stats": {
+      "mean": {
+       "refengine": 240.03825,
+       "impl": 234.5405
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 2000.0,
+       "impl": 2000.0
+      },
+      "std": {
+       "refengine": 465.9569106547702,
+       "impl": 462.00142592826484,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1784,
+      "impl": 1767
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "driver_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.011949999999999905,
+     "ks_baseline": 0.01090000000000002,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "refengine": 29.97585,
+       "impl": 29.14615
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 300.0,
+       "impl": 300.0
+      },
+      "std": {
+       "refengine": 55.56936446260205,
+       "impl": 54.96012181734589,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 300,
+      "impl": 300
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "requested_at": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.06320000000000003,
+     "ks_baseline": 0.09650000000000003,
+     "ks_tol": 0.14675000000000005,
+     "stats": {
+      "mean": {
+       "refengine": "2025-10-05 18:03:47.472690944",
+       "impl": "2025-10-19 10:31:06.538930176"
+      },
+      "min": {
+       "refengine": "2024-06-04 08:33:40",
+       "impl": "2024-06-05 18:16:01.447365888"
+      },
+      "max": {
+       "refengine": "2026-06-01 22:56:57.221792",
+       "impl": "2026-06-01 21:41:25"
+      },
+      "std": {
+       "refengine": 174.40384711224823,
+       "impl": 169.62874080060956,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 10745,
+      "impl": 10010
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "distinct": {
+      "refengine": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "completed",
+       "refengine": 0.86065,
+       "impl": 0.8607
+      },
+      {
+       "value": "cancelled",
+       "refengine": 0.10165,
+       "impl": 0.1004
+      },
+      {
+       "value": "no_driver",
+       "refengine": 0.0377,
+       "impl": 0.0389
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.0012499999999999976,
+     "tvd_baseline": 0.004500000000000014,
+     "tvd_tol": 0.029316150714175197,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "distance_mi": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.00814999999999999,
+     "ks_baseline": 0.009500000000000064,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "refengine": 5.1903274999999995,
+       "impl": 5.222109
+      },
+      "min": {
+       "refengine": 0.4,
+       "impl": 0.4
+      },
+      "max": {
+       "refengine": 57.81,
+       "impl": 60.0
+      },
+      "std": {
+       "refengine": 4.179749688407639,
+       "impl": 4.2323108135059035,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1887,
+      "impl": 1902
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "surge_mult": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.0018500000000000183,
+     "ks_baseline": 0.00605,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "refengine": 1.1812200000000002,
+       "impl": 1.18251
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 3.5,
+       "impl": 3.5
+      },
+      "std": {
+       "refengine": 0.3962995225836135,
+       "impl": 0.3998275877175061,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 6,
+      "impl": 6
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "rating_given": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.18055,
+      "impl": 0.18065,
+      "baseline_max_abs_diff": 0.003999999999999976,
+      "tol": 0.01923224489626731
+     },
+     "ks": 0.0038708991387658154,
+     "ks_baseline": 0.0061754224617046605,
+     "ks_tol": 0.021536226140123637,
+     "stats": {
+      "mean": {
+       "refengine": 4.503020318506315,
+       "impl": 4.510343565021054
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 5.0,
+       "impl": 5.0
+      },
+      "std": {
+       "refengine": 0.9581867986955017,
+       "impl": 0.9524932279789488,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "city_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.10625000000000001,
+     "ks_baseline": 0.12890000000000001,
+     "ks_tol": 0.19535000000000002,
+     "stats": {
+      "mean": {
+       "refengine": 2.36,
+       "impl": 2.5817
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 4.0,
+       "impl": 4.0
+      },
+      "std": {
+       "refengine": 1.1090536506409416,
+       "impl": 1.068140959798846,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "duration_min": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.006099999999999994,
+     "ks_baseline": 0.009599999999999997,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "refengine": 17.1725415,
+       "impl": 17.2202935
+      },
+      "min": {
+       "refengine": 0.97,
+       "impl": 0.96
+      },
+      "max": {
+       "refengine": 210.83,
+       "impl": 233.79
+      },
+      "std": {
+       "refengine": 14.295628984965221,
+       "impl": 14.351248365172202,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 4509,
+      "impl": 4562
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "fare": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.006299999999999972,
+     "ks_baseline": 0.011099999999999999,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "refengine": 20.764699,
+       "impl": 20.956079000000003
+      },
+      "min": {
+       "refengine": 3.54,
+       "impl": 3.54
+      },
+      "max": {
+       "refengine": 308.58,
+       "impl": 298.15
+      },
+      "std": {
+       "refengine": 16.58111323522637,
+       "impl": 17.36573412775167,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 4814,
+      "impl": 4874
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "tip": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "ks": 0.008649999999999991,
+     "ks_baseline": 0.009549999999999947,
+     "ks_tol": 0.019494746035204052,
+     "stats": {
+      "mean": {
+       "refengine": 2.2921715,
+       "impl": 2.303994
+      },
+      "min": {
+       "refengine": 0.0,
+       "impl": 0.0
+      },
+      "max": {
+       "refengine": 58.93,
+       "impl": 53.28
+      },
+      "std": {
+       "refengine": 2.4775335213852805,
+       "impl": 2.582159344030496,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1224,
+      "impl": 1240
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "payment_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0003535445516480208
+     },
+     "distinct": {
+      "refengine": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "card",
+       "refengine": 0.6661,
+       "impl": 0.7243
+      },
+      {
+       "value": "wallet",
+       "refengine": 0.2578,
+       "impl": 0.23815
+      },
+      {
+       "value": "cash",
+       "refengine": 0.0761,
+       "impl": 0.03755
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "tvd": 0.0582,
+     "tvd_baseline": 0.12805000000000002,
+     "tvd_tol": 0.19407500000000005,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  }
+ },
+ "table_order": {
+  "refengine": [
+   "driver",
+   "rider",
+   "trip",
+   "vehicle"
+  ],
+  "impl": [
+   "driver",
+   "rider",
+   "trip",
+   "vehicle"
+  ]
+ },
+ "fk_integrity": {
+  "refengine": {
+   "vehicle.driver_id->driver.driver_id": {
+    "integrity": 1.0,
+    "n": 300
+   },
+   "trip.rider_id->rider.rider_id": {
+    "integrity": 1.0,
+    "n": 20000
+   },
+   "trip.driver_id->driver.driver_id": {
+    "integrity": 1.0,
+    "n": 20000
+   }
+  },
+  "impl": {
+   "vehicle.driver_id->driver.driver_id": {
+    "integrity": 1.0,
+    "n": 300
+   },
+   "trip.rider_id->rider.rider_id": {
+    "integrity": 1.0,
+    "n": 20000
+   },
+   "trip.driver_id->driver.driver_id": {
+    "integrity": 1.0,
+    "n": 20000
+   }
+  }
+ },
+ "fanout": {
+  "driver->vehicle.driver_id": {
+   "refengine": {
+    "p50": 1.0,
+    "p90": 2.0,
+    "p99": 4.0,
+    "max": 4,
+    "mean": 1.0,
+    "zero_frac": 0.39
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 2.0,
+    "p99": 3.009999999999991,
+    "max": 5,
+    "mean": 1.0,
+    "zero_frac": 0.3433333333333333
+   },
+   "ks_counts": 0.04666666666666669,
+   "ks_baseline_max": 0.04666666666666669,
+   "ks_tol": 0.15917393483798453,
+   "equivalent": true
+  },
+  "rider->trip.rider_id": {
+   "refengine": {
+    "p50": 2.0,
+    "p90": 9.0,
+    "p99": 275.03999999999996,
+    "max": 400,
+    "mean": 10.0,
+    "zero_frac": 0.108
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 9.0,
+    "p99": 263.02,
+    "max": 400,
+    "mean": 10.0,
+    "zero_frac": 0.1165
+   },
+   "ks_counts": 0.021500000000000075,
+   "ks_baseline_max": 0.065,
+   "ks_tol": 0.0995,
+   "equivalent": true
+  },
+  "driver->trip.driver_id": {
+   "refengine": {
+    "p50": 13.0,
+    "p90": 82.60000000000014,
+    "p99": 988.4699999999968,
+    "max": 5013,
+    "mean": 66.66666666666667,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 12.0,
+    "p90": 76.9000000000002,
+    "p99": 1019.4699999999968,
+    "max": 4962,
+    "mean": 66.66666666666667,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.039999999999999925,
+   "ks_baseline_max": 0.043333333333333335,
+   "ks_tol": 0.15917393483798453,
+   "equivalent": true
+  }
+ },
+ "record_coherence": {},
+ "strategy_semantics": {
+  "vehicle.city_id == lookup driver.home_city_id via driver_id": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "trip.city_id == lookup rider.home_city_id via rider_id": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "trip.payment_type == lookup rider.payment_default via rider_id": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  }
+ },
+ "business_rules": {
+  "refengine_BusinessRulesEngine_violations": {},
+  "refengine_on_refengine": {}
+ },
+ "refengine_fidelity_comparator": {
+  "overall_impl": 88.00444157463426,
+  "overall_baseline_refengine_vs_refengine": [
+   88.1120812502827,
+   88.28417571428005,
+   88.35495830168885,
+   88.00242924509384
+  ],
+  "tables": {
+   "driver": {
+    "impl": 79.05608185715015,
+    "baseline": [
+     79.82795204592777,
+     79.52195793087614,
+     79.78233550387478,
+     79.57916114276912
+    ],
+    "floor": 79.02195793087614,
+    "ok": true
+   },
+   "rider": {
+    "impl": 78.2511327717142,
+    "baseline": [
+     78.11235295239298,
+     78.09547486881536,
+     78.22934167749787,
+     78.19371526180322
+    ],
+    "floor": 77.59547486881536,
+    "ok": true
+   },
+   "trip": {
+    "impl": 96.43981168947863,
+    "baseline": [
+     96.42363145271945,
+     96.63573648488227,
+     96.62774713077513,
+     96.72561512195405
+    ],
+    "floor": 95.92363145271945,
+    "ok": true
+   },
+   "vehicle": {
+    "impl": 98.27073998019402,
+    "baseline": [
+     98.08438855009055,
+     98.88353357254647,
+     98.78040889460763,
+     97.51122545384898
+    ],
+    "floor": 97.01122545384898,
+    "ok": true
+   }
+  }
+ },
+ "summary": {
+  "columns_total": 40,
+  "columns_equivalent": 40,
+  "flagged": [],
+  "passed": true,
+  "seconds": 5.133544683456421
+ }
+}

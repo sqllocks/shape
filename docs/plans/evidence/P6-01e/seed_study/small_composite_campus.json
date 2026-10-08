@@ -1,0 +1,113 @@
+{
+ "domain": "composite_campus",
+ "scale": "small",
+ "impl": "shape",
+ "seeds": [
+  "1042",
+  "1043",
+  "1044",
+  "1045",
+  "1046",
+  "1047",
+  "1048",
+  "1049"
+ ],
+ "findings_per_seed": {
+  "1042": 3,
+  "1043": 0,
+  "1044": 2,
+  "1045": 2,
+  "1046": 1,
+  "1047": 1,
+  "1048": 4,
+  "1049": 1
+ },
+ "by_finding": {
+  "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [#,#] days": {
+   "seeds": [
+    "1042",
+    "1044",
+    "1045",
+    "1046",
+    "1048"
+   ],
+   "count": 5
+  },
+  "(h) fidelity education_enrollment:": {
+   "seeds": [
+    "1045"
+   ],
+   "count": 1
+  },
+  "(h) fidelity education_instructor:": {
+   "seeds": [
+    "1048"
+   ],
+   "count": 1
+  },
+  "(h) fidelity hr_department:": {
+   "seeds": [
+    "1044"
+   ],
+   "count": 1
+  },
+  "(h) fidelity hr_performance_review:": {
+   "seeds": [
+    "1048"
+   ],
+   "count": 1
+  },
+  "(h) fidelity hr_position:": {
+   "seeds": [
+    "1048"
+   ],
+   "count": 1
+  },
+  "(h) fidelity hr_termination:": {
+   "seeds": [
+    "1042",
+    "1047",
+    "1049"
+   ],
+   "count": 3
+  },
+  "(h) fidelity hr_training:": {
+   "seeds": [
+    "1042"
+   ],
+   "count": 1
+  }
+ },
+ "systematic": [],
+ "flagged": {
+  "1042": [
+   "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8455 < floor 0.8460",
+   "(h) fidelity hr_termination: 89.72 < floor 89.83",
+   "(h) fidelity hr_training: 90.30 < floor 90.52"
+  ],
+  "1043": [],
+  "1044": [
+   "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8395 < floor 0.8460",
+   "(h) fidelity hr_department: 79.93 < floor 83.37"
+  ],
+  "1045": [
+   "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8355 < floor 0.8460",
+   "(h) fidelity education_enrollment: 97.62 < floor 97.76"
+  ],
+  "1046": [
+   "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8440 < floor 0.8460"
+  ],
+  "1047": [
+   "(h) fidelity hr_termination: 88.39 < floor 89.83"
+  ],
+  "1048": [
+   "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8455 < floor 0.8460",
+   "(h) fidelity education_instructor: 75.82 < floor 76.35",
+   "(h) fidelity hr_performance_review: 90.64 < floor 90.69",
+   "(h) fidelity hr_position: 87.52 < floor 87.83"
+  ],
+  "1049": [
+   "(h) fidelity hr_termination: 88.68 < floor 89.83"
+  ]
+ }
+}

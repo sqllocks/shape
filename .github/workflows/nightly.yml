@@ -1,0 +1,554 @@
+name: Nightly
+on:
+  schedule: [{cron: '17 3 * * *'}]
+  workflow_dispatch: {}
+permissions: {contents: read}
+env:
+  # The reference engine's short name, set outside the repository (a repository variable); the
+  # comparison harness (benchmarks/vs_refengine) and its tests derive the engine's names from it.
+  REFENGINE_NAME: ${{ vars.REFENGINE_NAME }}
+jobs:
+  parity-suite:
+    # P8-02: the nightly parity suite, `run.py --full` over every domain and every profiling
+    # dataset, spread over shards because a hosted job runs at most 6 hours. Each workload's
+    # ratio is still measured inside one job (T-19); verifiers first, then timings (section 6.4).
+    # A public repository gets 4-vCPU standard runners; on a private repository use a 4-vCPU
+    # larger runner (O-05).
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [profile, stream, generate-1, generate-2, generate-3]  # nightly.py SHARDS
+    env: {BENCH_OUT_DIR: "${{ github.workspace }}/bench-out"}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Pinned RefEngine baseline and venv (plan section 1.2)
+        run: source scripts/env.sh && bash benchmarks/vs_refengine/setup_refengine.sh
+      - name: Shape venv (pyarrow pinned like the RefEngine venv, so timings share one pyarrow)
+        run: |
+          source scripts/env.sh
+          python -m venv "$SHAPE_VENV"
+          "$SHAPE_VENV/bin/pip" install -U pip
+          "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains 'pyarrow==25.0.1'
+      - run: source scripts/env.sh && python benchmarks/vs_refengine/check_coverage.py
+      - run: >-
+          source scripts/env.sh &&
+          python benchmarks/vs_refengine/nightly.py run --shard ${{ matrix.shard }}
+          --out-dir "$BENCH_OUT_DIR/nightly"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: parity-${{ matrix.shard }}
+          path: |
+            ${{ github.workspace }}/bench-out/nightly/
+            ${{ github.workspace }}/bench-out/verify/
+            ${{ github.workspace }}/bench-out/refengine_freeze.txt
+  parity-publish:
+    # P8-02: merge the shards, judge the night (green only when every workload of the full
+    # suite was recorded and its verifier exited 0), append to the nightly history and build
+    # the docs performance page from verified numbers only. The job fails on a red night.
+    needs: parity-suite
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env: {BENCH_OUT_DIR: "${{ github.workspace }}/bench-out"}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/download-artifact@v4
+        with: {pattern: 'parity-*', path: bench-out/download}
+      - name: Collect the shard directories
+        run: |
+          mkdir -p bench-out/shards
+          for d in bench-out/download/parity-*/nightly/*/; do cp -r "$d" bench-out/shards/; done
+          ls -R bench-out/shards
+      - uses: actions/cache/restore@v4
+        with:
+          path: bench-out/history
+          key: nightly-history-${{ github.run_id }}
+          restore-keys: nightly-history-
+      - name: Merge and judge the night
+        id: merge
+        run: |
+          set +e
+          python benchmarks/vs_refengine/nightly.py merge --in-dir bench-out/shards \
+            --out bench-out/parity/results.json --history bench-out/history/nightly.jsonl
+          echo "rc=$?" >> "$GITHUB_OUTPUT"
+      - name: Performance page (verified numbers only)
+        run: |
+          if [ -f bench-out/parity/results.json ]; then
+            python scripts/gen_performance_page.py --results bench-out/parity/results.json \
+              --history bench-out/history/nightly.jsonl --out bench-out/parity/PERFORMANCE.md
+          fi
+          python benchmarks/vs_refengine/nightly.py streak --history bench-out/history/nightly.jsonl \
+            --need 7 || true
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: bench-out/history
+          key: nightly-history-${{ github.run_id }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: parity-suite
+          path: |
+            ${{ github.workspace }}/bench-out/parity/
+            ${{ github.workspace }}/bench-out/history/
+      - name: Fail on a red night
+        run: test "${{ steps.merge.outputs.rc }}" = 0
+  drift-sweep:
+    # W1-08: the planted-drift sweep at its full size, once per kernel.
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install -e '.[dev]'
+      - run: python -m pytest -q tests/diff/test_drift_sweep.py
+        env: {SHAPE_KERNEL: rust, SHAPE_DRIFT_SWEEP: full}
+      - run: python -m pytest -q tests/diff/test_drift_sweep.py
+        env: {SHAPE_KERNEL: python, SHAPE_DRIFT_SWEEP: full}
+  emit-rate-soak:
+    # P5-01 / G5: the emitter's realtime rate holds within 5% at 10,000 events/s for one hour
+    # (CI runs the same test for 10 minutes in the heavy step).
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install -e '.[dev]' -e plugins/shape-domains
+      - run: python -m pytest -q -s -m heavy tests/streaming/emit/test_soak.py
+        env: {SHAPE_RATE_SOAK_SECONDS: "3600"}
+  live-fidelity:
+    # G5 / P5-03: the live score is within 0.5 points of `shape fidelity` on the same events
+    # (retail, pulse, telemetry; with the injected-drift negative control). Exit 1 on failure.
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Shape venv (the harness runs `shape fidelity` from $SHAPE_VENV)
+        run: |
+          source scripts/env.sh
+          python -m venv "$SHAPE_VENV"
+          "$SHAPE_VENV/bin/pip" install -U pip
+          "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains
+      - run: source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/live_fidelity/run.py --evidence live_fidelity.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: live-fidelity, path: live_fidelity.json}
+  scenario-library:
+    # W5-05: every starter scenario against its answer key, in both kernel modes
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        kernel: [rust, python]
+    env:
+      SHAPE_KERNEL: ${{ matrix.kernel }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install -e '.[dev]' -e plugins/shape-domains
+      # every scenario of library/index.json, from a suite file built out of the index
+      - run: python scripts/build_library_suite.py library-suite.json
+      - run: python -m shape suite run library-suite.json --scale small
+  emulator-compose:
+    # The emulator-backed test jobs (Kafka, Event Hubs + Azurite, SQL Server) arrive with the
+    # work packages that own those connectors; until then, keep the compose file valid.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose -f ci/emulators/docker-compose.yml config --quiet
+  azurite-e2e:
+    # PF-01: the abfss:// source against Azurite (blob endpoint) with the real adlfs.
+    # ISS2-sinks: the abfss:// sink (write, read back, rolling files, errors, the CLI).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      # the sink's CLI test generates the retail domain, which lives in shape-domains
+      - run: pip install -e '.[dev,azure]' -e plugins/shape-domains azure-storage-blob
+      - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait azurite
+      - run: python -m pytest -q -m emulator tests/builtins/test_cloud_sources_azurite.py tests/builtins/test_abfss_sink_azurite.py
+      - if: always()
+        run: docker compose -f ci/emulators/docker-compose.yml down -v
+  kafka-e2e:
+    # P3-04: shape-kafka against a real broker, then the stream-profile command (P3-05) on it.
+    # P5-02: the same directory holds the emitter's end-to-end tests (test_emitter_emulator.py).
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait kafka
+      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-kafka
+      - run: python -m pytest -m emulator plugins/shape-kafka/tests -q
+      - if: always()
+        run: docker compose -f ci/emulators/docker-compose.yml down -v
+  eventhubs-e2e:
+    # P3-04: shape-eventhubs against the Event Hubs emulator (with its Azurite sidecar; amd64).
+    # P5-02: the same directory holds the emitter's end-to-end tests (test_emitter_emulator.py).
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait azurite eventhubs
+      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-eventhubs
+      - run: python -m pytest -m emulator plugins/shape-eventhubs/tests -q
+      - if: always()
+        run: docker compose -f ci/emulators/docker-compose.yml down -v
+  fabric-emit-e2e:
+    # P5-02: the Eventstream emitter (the Event Hubs emulator stands in for a custom endpoint)
+    # and the Eventhouse emitter (the Kusto emulator), through the real runner.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait azurite eventhubs
+      - run: docker compose -f ci/emulators/docker-compose.yml up -d kusto
+      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e plugins/shape-fabric
+      # the Kusto emulator tests: the emitter and the Eventhouse writer (the SQL writer's
+      # emulator tests run in sqlserver-e2e)
+      - run: python -m pytest -m emulator plugins/shape-fabric/tests/test_emulator.py plugins/shape-fabric/tests/test_kusto_emulator.py -q
+      - if: always()
+        run: docker compose -f ci/emulators/docker-compose.yml down -v
+  emit-live:
+    # P5-02: the emitters against real Kafka, Event Hubs, an Eventstream and an Eventhouse. Runs
+    # only where the secrets exist (a job-level check on one of them); a missing variable fails
+    # its test by name.
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      HAVE_LIVE: ${{ secrets.EVENTHUBS_CONNECTION_STRING != '' || secrets.KAFKA_SERVERS != '' || secrets.FABRIC_EVENTSTREAM_CONNECTION_STRING != '' || secrets.FABRIC_EVENTHOUSE_URI != '' }}
+      KAFKA_SERVERS: ${{ secrets.KAFKA_SERVERS }}
+      KAFKA_TOPIC: ${{ secrets.KAFKA_TOPIC }}
+      KAFKA_CONFIG: ${{ secrets.KAFKA_CONFIG }}
+      EVENTHUBS_CONNECTION_STRING: ${{ secrets.EVENTHUBS_CONNECTION_STRING }}
+      EVENTHUBS_HUB: ${{ secrets.EVENTHUBS_HUB }}
+      FABRIC_EVENTSTREAM_CONNECTION_STRING: ${{ secrets.FABRIC_EVENTSTREAM_CONNECTION_STRING }}
+      FABRIC_EVENTHOUSE_URI: ${{ secrets.FABRIC_EVENTHOUSE_URI }}
+      FABRIC_EVENTHOUSE_TOKEN: ${{ secrets.FABRIC_EVENTHOUSE_TOKEN }}
+    steps:
+      - if: env.HAVE_LIVE != 'true'
+        run: echo "no live secrets configured; nothing to run"
+      - if: env.HAVE_LIVE == 'true'
+        uses: actions/checkout@v4
+      - if: env.HAVE_LIVE == 'true'
+        uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - if: env.HAVE_LIVE == 'true'
+        run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-kafka -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e plugins/shape-fabric
+      - if: env.HAVE_LIVE == 'true' && env.KAFKA_SERVERS != ''
+        run: python -m pytest -m live plugins/shape-kafka/tests -q
+      - if: env.HAVE_LIVE == 'true' && env.EVENTHUBS_CONNECTION_STRING != ''
+        run: python -m pytest -m live plugins/shape-eventhubs/tests -q
+      - if: env.HAVE_LIVE == 'true' && env.FABRIC_EVENTSTREAM_CONNECTION_STRING != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live.py -q -k eventstream
+      - if: env.HAVE_LIVE == 'true' && env.FABRIC_EVENTHOUSE_URI != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live.py -q -k eventhouse
+  fabric-live:
+    # P6-07a: the Fabric writers (Lakehouse files, SQL database, Warehouse COPY INTO, Eventhouse,
+    # Eventstream) against real items. Runs only where the owner's O-02 secrets exist: every step is
+    # gated on its own secrets (a job-level check, never a skipif), and a missing variable fails its
+    # test by name. The real interactions are recorded as scrubbed tapes (SHAPE_RECORD_DIR) and
+    # uploaded for review; nothing is committed from here.
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      HAVE_ANY: ${{ secrets.FABRIC_CLIENT_ID != '' || secrets.FABRIC_EVENTHOUSE_URI != '' || secrets.FABRIC_EVENTSTREAM_CONNECTION_STRING != '' }}
+      FABRIC_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
+      FABRIC_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
+      FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
+      FABRIC_STAGING_PATH: ${{ secrets.FABRIC_STAGING_PATH }}
+      FABRIC_SQL_CONNECTION_STRING: ${{ secrets.FABRIC_SQL_CONNECTION_STRING }}
+      FABRIC_WAREHOUSE_CONNECTION_STRING: ${{ secrets.FABRIC_WAREHOUSE_CONNECTION_STRING }}
+      FABRIC_EVENTHOUSE_URI: ${{ secrets.FABRIC_EVENTHOUSE_URI }}
+      FABRIC_EVENTHOUSE_TOKEN: ${{ secrets.FABRIC_EVENTHOUSE_TOKEN }}
+      FABRIC_EVENTSTREAM_CONNECTION_STRING: ${{ secrets.FABRIC_EVENTSTREAM_CONNECTION_STRING }}
+      FABRIC_WORKSPACE_ID: ${{ secrets.FABRIC_WORKSPACE_ID }}
+      FABRIC_LAKEHOUSE_ID: ${{ secrets.FABRIC_LAKEHOUSE_ID }}
+      SHAPE_RECORD_DIR: ${{ github.workspace }}/live-tapes
+    steps:
+      - if: env.HAVE_ANY != 'true'
+        run: echo "no Fabric secrets configured; nothing to run"
+      - if: env.HAVE_ANY == 'true'
+        uses: actions/checkout@v4
+      - if: env.HAVE_ANY == 'true'
+        uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Microsoft ODBC Driver 18
+        if: env.HAVE_ANY == 'true'
+        run: |
+          curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/ubuntu/$(lsb_release -rs)/prod $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
+      - if: env.HAVE_ANY == 'true'
+        run: pip install -e '.[dev,azure]' -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e 'plugins/shape-fabric[entra]'
+      - if: env.HAVE_ANY == 'true'
+        run: mkdir -p "$SHAPE_RECORD_DIR"
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_STAGING_PATH != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k lakehouse
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_SQL_CONNECTION_STRING != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k sql_database
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_WAREHOUSE_CONNECTION_STRING != '' && env.FABRIC_STAGING_PATH != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k warehouse
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_EVENTHOUSE_URI != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k eventhouse
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_EVENTSTREAM_CONNECTION_STRING != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_writers.py -q -k eventstream
+      # P6-13: the scale router's Fabric sinks and the fabric_spark mode, on the same secrets.
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_STAGING_PATH != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k lakehouse
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_SQL_CONNECTION_STRING != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k sql_database
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_WAREHOUSE_CONNECTION_STRING != '' && env.FABRIC_STAGING_PATH != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k warehouse
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_EVENTHOUSE_URI != '' && env.FABRIC_EVENTHOUSE_TOKEN != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k kql
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_WORKSPACE_ID != '' && env.FABRIC_LAKEHOUSE_ID != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_scale_sinks.py -q -k fabric_spark
+      # P6-07c: the Fabric commands (deploy-notebook, setup-fabric, publish) against a real workspace.
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_WORKSPACE_ID != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_commands.py -q -k "deploy_notebook or setup"
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_STAGING_PATH != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_commands.py -q -k lakehouse
+      - if: env.HAVE_ANY == 'true' && env.FABRIC_CLIENT_ID != '' && env.FABRIC_TENANT_ID != '' && env.FABRIC_CLIENT_SECRET != '' && env.FABRIC_SQL_CONNECTION_STRING != ''
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_commands.py -q -k sql_database
+      - if: always() && env.HAVE_ANY == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric-live-tapes
+          path: live-tapes
+          if-no-files-found: ignore
+  abfss-live:
+    # ISS2-sinks: the abfss:// and delta+abfss:// sinks against a real ADLS Gen2 account or OneLake
+    # lakehouse (real rename, Delta commits). Runs only where the owner's O-02 secrets exist; a
+    # missing variable fails its test by name (never a skipif). The secret names are the builder's
+    # choice; the owner creates them.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      HAVE_ABFSS: ${{ secrets.SHAPE_LIVE_ABFSS_URI != '' }}
+      SHAPE_LIVE_ABFSS_URI: ${{ secrets.SHAPE_LIVE_ABFSS_URI }}
+      SHAPE_LIVE_DELTA_URI: ${{ secrets.SHAPE_LIVE_DELTA_URI }}
+      AZURE_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
+    steps:
+      - if: env.HAVE_ABFSS != 'true'
+        run: echo "no abfss live secrets configured; nothing to run"
+      - if: env.HAVE_ABFSS == 'true'
+        uses: actions/checkout@v4
+      - if: env.HAVE_ABFSS == 'true'
+        uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - if: env.HAVE_ABFSS == 'true'
+        run: pip install -e '.[dev,azure]'
+      - if: env.HAVE_ABFSS == 'true'
+        run: python -m pytest -m live tests/builtins/test_abfss_sink_live.py -q
+  fabric-git-sync-live:
+    # W7-01: a shape/ folder of .shape files next to Fabric items survives Fabric Git integration in
+    # both directions. Runs only where the owner's O-02 secrets and the Git remote exist; uploads the
+    # shape-live-check JSON result (no secret, tenant or workspace id).
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      HAVE_GIT_SYNC: ${{ secrets.FABRIC_CLIENT_ID != '' && secrets.FABRIC_WORKSPACE_ID != '' && secrets.FABRIC_GIT_REMOTE != '' }}
+      FABRIC_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
+      FABRIC_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
+      FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
+      FABRIC_WORKSPACE_ID: ${{ secrets.FABRIC_WORKSPACE_ID }}
+      FABRIC_GIT_REMOTE: ${{ secrets.FABRIC_GIT_REMOTE }}
+      FABRIC_GIT_TOKEN: ${{ secrets.FABRIC_GIT_TOKEN }}
+      SHAPE_LIVE_RESULT: ${{ github.workspace }}/git-sync-result.json
+    steps:
+      - if: env.HAVE_GIT_SYNC != 'true'
+        run: echo "no Fabric Git sync secrets configured; nothing to run"
+      - if: env.HAVE_GIT_SYNC == 'true'
+        uses: actions/checkout@v4
+      - if: env.HAVE_GIT_SYNC == 'true'
+        uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - if: env.HAVE_GIT_SYNC == 'true'
+        run: pip install -e '.[dev]' -e 'plugins/shape-fabric[entra]'
+      - if: env.HAVE_GIT_SYNC == 'true'
+        run: python -m pytest -m live plugins/shape-fabric/tests/test_live_git_sync.py -q
+      - if: always() && env.HAVE_GIT_SYNC == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric-git-sync-result
+          path: git-sync-result.json
+          if-no-files-found: ignore
+  sqlserver-e2e:
+    # P6-08: shape-sqlserver against a real SQL Server 2022 (ci/emulators/docker-compose.yml),
+    # then T-22 parity of the database profiler against the pinned baseline on the same data.
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      BENCH_OUT_DIR: "${{ github.workspace }}/bench-out"
+      SHAPE_TEST_MSSQL: "Driver={ODBC Driver 18 for SQL Server};Server=localhost,1433;UID=sa;PWD=Shape_Emulator_1;Encrypt=yes;TrustServerCertificate=yes"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Microsoft ODBC Driver 18
+        run: |
+          curl -sSL -o "$RUNNER_TEMP/packages-microsoft-prod.deb" "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb"
+          sudo dpkg -i "$RUNNER_TEMP/packages-microsoft-prod.deb"
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
+      - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait mssql
+      - name: Shape venv with the plugin
+        run: |
+          source scripts/env.sh
+          python -m venv "$SHAPE_VENV"
+          "$SHAPE_VENV/bin/pip" install -U pip
+          "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric
+      - name: Emulator tests
+        run: source scripts/env.sh && "$SHAPE_VENV/bin/python" -m pytest -m emulator plugins/shape-sqlserver/tests -q
+      - name: Fabric SQL writer against the real server (P6-07a)
+        run: source scripts/env.sh && "$SHAPE_VENV/bin/python" -m pytest -m emulator plugins/shape-fabric/tests/test_sql_emulator.py -q
+      - name: Fabric sqlserver sink (mssql:// URI, commit_rows) against the real server (ISS2-sinks)
+        run: source scripts/env.sh && "$SHAPE_VENV/bin/python" -m pytest -m emulator plugins/shape-fabric/tests/test_sqlserver_sink_emulator.py -q
+      - name: shape seed against the real server (W5-05)
+        run: source scripts/env.sh && "$SHAPE_VENV/bin/python" -m pytest -m emulator plugins/shape-fabric/tests/test_seed_sqlserver_emulator.py -q
+      - name: Pinned baseline venv (plan section 1.2) with pyodbc
+        run: |
+          source scripts/env.sh && bash benchmarks/vs_refengine/setup_refengine.sh
+          "$REFENGINE_PY" -m pip install pyodbc
+      - name: T-22 parity of database profiling on the real server
+        run: source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/db_1to1/verify.py --mssql "$SHAPE_TEST_MSSQL;Database=tempdb"
+      - if: always()
+        run: docker compose -f ci/emulators/docker-compose.yml down -v
+  databases-e2e:
+    # ISS2-sinks: the PostgreSQL (COPY) and MySQL sinks against real servers
+    # (ci/emulators/docker-compose.yml), drivers installed through the plugin's extras.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SHAPE_TEST_POSTGRES: "postgresql://shape@localhost:5432/shape"
+      SHAPE_TEST_MYSQL: "mysql://shape@localhost:3306/shape"
+      SHAPE_POSTGRES_PASSWORD: shape_emulator
+      SHAPE_MYSQL_PASSWORD: shape_emulator
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait postgres mysql
+      - run: pip install -e '.[dev]' -e plugins/shape-domains -e 'plugins/shape-databases[postgres,mysql]'
+      - run: python -m pytest -m emulator plugins/shape-databases/tests -q
+      - if: always()
+        run: docker compose -f ci/emulators/docker-compose.yml down -v
+  artifact-fuzz:
+    # P7-04: the artifact fuzzer (.shape containers, signatures, manifests, profile JSON,
+    # contracts, pack and GSL YAML) with a fresh seed. A finding prints its seed and iteration and
+    # uploads the offending input; replay with `scripts/fuzz_artifacts.py --seed N --iterations M`.
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install -e '.[dev]'
+      - run: python scripts/fuzz_artifacts.py --seed "$(date +%s)" --iterations 3000 --out fuzz-findings
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: fuzz-findings
+          path: fuzz-findings/
+  dbt-build:
+    # ISS2-dbt, PLUG-INT: the jaffle-shop sample end to end against DuckDB: `shape from-dbt`,
+    # generate, load as seeds, `dbt build`, profile the outputs, and run a compiled test set
+    # (dbt_utils, dbt_expectations from the package hub) in dbt. dbt is installed in this job
+    # only: sqllocks-shape and the plugin never depend on dbt-core.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -U pip
+      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-dbt dbt-duckdb
+      - run: python -m pytest -q -m dbt plugins/shape-dbt/tests
+  healthcare-standards-validator:
+    # HC-standards, PLUG-INT: the generated FHIR bundles pass the official HL7 validator
+    # (about one minute; downloads validator_cli.jar and the US Core and CARIN BB packages).
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '21'}
+      - run: python -m pip install -U pip
+      - run: pip install -e '.[dev]' -e plugins/shape-healthcare-codes -e 'plugins/shape-healthcare-standards[test]'
+      - run: |
+          mkdir -p "$HOME/.cache/shape-hc"
+          curl -sSL -o "$HOME/.cache/shape-hc/validator_cli.jar" https://github.com/hapifhir/org.hl7.fhir.core/releases/latest/download/validator_cli.jar
+      - run: |
+          export SHAPE_FHIR_VALIDATOR_JAR="$HOME/.cache/shape-hc/validator_cli.jar"
+          python -m pytest -q -m live plugins/shape-healthcare-standards/tests/fhir/test_official_validator.py
+  fabric-demo-windows:
+    # W1-09: the Fabric demo tests (Spark with the Delta catalog) on Windows, to capture the
+    # first Spark error the Windows helpers must fix. Linux runs them in ci.yml's fabric-demo job.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - uses: actions/setup-java@v4
+        with: {distribution: temurin, java-version: '17'}
+      # W1-09: Spark's Hadoop client needs winutils.exe and hadoop.dll on Windows (HADOOP_HOME\bin).
+      # Hadoop 3.4.0 x64 binaries from a pinned commit of kontext-tech/winutils (Apache-2.0),
+      # each checked against its SHA-256 before use.
+      - name: Hadoop winutils (pinned, SHA-256 checked)
+        shell: pwsh
+        run: |
+          $base = "https://raw.githubusercontent.com/kontext-tech/winutils/ff8e529a72bde2ec95b06ab76e797bdcbade9685/hadoop-3.4.0-win10-x64/bin"
+          $hadoop = Join-Path $env:RUNNER_TEMP "hadoop"
+          New-Item -ItemType Directory -Force -Path (Join-Path $hadoop "bin") | Out-Null
+          $pinned = @{
+            "winutils.exe" = "f7294eca96ba9f2efcf66ff89db16ace67ae667692a09b49f024472b32fb354c"
+            "hadoop.dll"   = "8769e86a8ad1bffb6a6038215eb82f523b25d92cca3d4dd32f62d4ff02418f8a"
+          }
+          foreach ($name in $pinned.Keys) {
+            $out = Join-Path (Join-Path $hadoop "bin") $name
+            Invoke-WebRequest -Uri "$base/$name" -OutFile $out
+            $got = (Get-FileHash -Algorithm SHA256 $out).Hash.ToLower()
+            if ($got -ne $pinned[$name]) { throw "$name has SHA-256 $got, expected $($pinned[$name])" }
+          }
+          "HADOOP_HOME=$hadoop" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          (Join-Path $hadoop "bin") | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+      - run: python -m pip install -U pip
+      # tests/demo/fabric/test_dbt.py needs shape-dbt, as in ci.yml's fabric-demo job
+      - run: pip install -e '.[dev]' -e plugins/shape-dbt -r tests/demo/fabric/requirements.txt
+      - run: python -m pytest -q tests/demo/fabric tests/demo/content
+  plugin-template-install:
+    # W6-01: the 12 `nightly`-marked cases (each rendered `shape plugins new` template is built,
+    # installed into a fresh virtual environment and checked with `python -m shape.plugins.kit`).
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install -e '.[dev]'
+      # the Fabric demo and content tests need their own requirements (fabric-demo job)
+      - run: python -m pytest -q -m nightly --ignore=tests/demo/fabric --ignore=tests/demo/content

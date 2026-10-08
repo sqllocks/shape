@@ -1,0 +1,8 @@
+$ SHAPE_KERNEL=rust pytest -m "not emulator and not live" tests/security plugins/shape-fabric/tests tests/privacy tests/bridge tests/benchmarks   # final tree, private TMPDIR
+FAILED plugins/shape-fabric/tests/test_lakehouse.py::test_parquet_to_a_local_folder_round_trips
+1 failed, 2568 passed, 42 deselected, 16 warnings in 157.41s (0:02:37)
+rust exit 1
+$ PYTHONPATH=<int/INT-18 worktree>/src pytest plugins/shape-fabric/tests/test_lakehouse.py   # plain int/INT-18, same venv (pyarrow 19.0.1)
+SHAPE_KERNEL=rust: 1 failed, 12 passed
+SHAPE_KERNEL=python: 1 failed, 12 passed
+The failure: test_parquet_to_a_local_folder_round_trips, dictionary<values=string, indices=int32> read back where sample_schema() has indices=int8.

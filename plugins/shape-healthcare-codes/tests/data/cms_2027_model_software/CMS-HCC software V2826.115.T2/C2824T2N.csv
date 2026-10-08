@@ -1,0 +1,51 @@
+Name, Coeff, Label
+CNA_F70_74,0.395, Female 70-74
+CNA_F75_79,0.465, Female 75-79
+CNA_M80_84,0.571, Male 80-84
+CNA_OriginallyDisabled_Female,0.228, Originally Disabled Female
+CNA_HCC17,4.209, Cancer Metastatic to Lung/Liver/Brain/and Other Organs; Acute Myeloid Leukemia Except Promyelocytic
+CNA_HCC18,2.341, Cancer Metastatic to Bone/Other and Unspecified Metastatic Cancer; Acute Leukemia Except Myeloid
+CNA_HCC19,1.798, Myelodysplastic Syndromes/Multiple Myeloma/and Other Cancers
+CNA_HCC20,1.136, Lung and Other Severe Cancers
+CNA_HCC23,0.186, Prostate/Breast/and Other Cancers and Tumors
+CNA_HCC37,0.166, Diabetes with Chronic Complications
+CNA_HCC38,0.166, Diabetes with Glycemic/Unspecified/No Complications
+CNA_HCC62,0.376, Liver Transplant Status/Complications
+CNA_HCC63,0.962, Chronic Liver Failure/End-Stage Liver Disorders
+CNA_HCC202,0.543, Coma/Brain Compression/Anoxic Damage
+CNA_HCC224,0.360, Acute on Chronic Heart Failure
+CNA_HCC226,0.360, Heart Failure/Except End-Stage and Acute
+CNA_HCC280,0.319, Chronic Obstructive Pulmonary Disease/Interstitial Lung Disorders/and Other Chronic Lung Disorders
+CNA_DIABETES_HF_V28,0.112, Diabetes*Heart Failure
+CNA_HF_CHR_LUNG_V28,0.078, Heart Failure*Chronic Lung Disorder
+CNA_D10P,0.728, 10 or more payment HCCs
+CNA_D1,0.000, 1 payment HCC
+CNA_D2,0.000, 2 payment HCCs
+CNA_D3,0.000, 3 payment HCCs
+CNA_D4,0.000, 4 payment HCCs
+CND_HCC17,3.995, Cancer Metastatic to Lung/Liver/Brain/and Other Organs; Acute Myeloid Leukemia Except Promyelocytic
+INS_F70_74,1.119, Female 70-74
+INS_F75_79,0.965, Female 75-79
+INS_M80_84,1.238, Male 80-84
+INS_HCC17,1.952, Cancer Metastatic to Lung/Liver/Brain/and Other Organs; Acute Myeloid Leukemia Except Promyelocytic
+INS_HCC18,1.110, Cancer Metastatic to Bone/Other and Unspecified Metastatic Cancer; Acute Leukemia Except Myeloid
+INS_HCC19,0.957, Myelodysplastic Syndromes/Multiple Myeloma/and Other Cancers
+INS_HCC20,0.672, Lung and Other Severe Cancers
+INS_HCC23,0.197, Prostate/Breast/and Other Cancers and Tumors
+INS_HCC37,0.280, Diabetes with Chronic Complications
+INS_HCC38,0.280, Diabetes with Glycemic/Unspecified/No Complications
+INS_HCC62,0.593, Liver Transplant Status/Complications
+INS_HCC63,0.894, Chronic Liver Failure/End-Stage Liver Disorders
+INS_HCC202,0.097, Coma/Brain Compression/Anoxic Damage
+INS_HCC224,0.217, Acute on Chronic Heart Failure
+INS_HCC226,0.217, Heart Failure/Except End-Stage and Acute
+INS_HCC280,0.312, Chronic Obstructive Pulmonary Disease/Interstitial Lung Disorders/and Other Chronic Lung Disorders
+INS_DIABETES_HF_V28,0.209, Diabetes*Heart Failure
+INS_HF_CHR_LUNG_V28,0.145, Heart Failure*Chronic Lung Disorder
+INS_D1,0.000, 1 payment HCC
+INS_D2,0.000, 2 payment HCCs
+INS_D3,0.000, 3 payment HCCs
+INS_D4,0.000, 4 payment HCCs
+INS_D10P,0.373, 10 or more payment HCCs
+NE_NMCAID_NORIGDIS_NEF70_74,0.694, Baseline – Neither Medicaid nor Originally Disabled Female 70-74
+SNPNE_NMCAID_NORIGDIS_NEF70_74,1.195, Baseline – Neither Medicaid nor Originally Disabled Female 70-74

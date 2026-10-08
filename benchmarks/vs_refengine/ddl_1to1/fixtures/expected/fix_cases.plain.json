@@ -1,0 +1,1196 @@
+{
+ "annotations": [],
+ "explain": [],
+ "file": {
+  "business_rules": [],
+  "generation": {
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "ansi_order": 250000,
+     "catalog_item": 250000,
+     "customer": 100000,
+     "invoice": 100000,
+     "invoice_line": 250000,
+     "ms_order": 100000,
+     "my_order": 250000,
+     "pg_order": 250000
+    },
+    "medium": {
+     "ansi_order": 25000,
+     "catalog_item": 25000,
+     "customer": 7,
+     "invoice": 10000,
+     "invoice_line": 25000,
+     "ms_order": 10000,
+     "my_order": 25000,
+     "order": 21,
+     "orders": 21,
+     "pg_order": 25000
+    },
+    "small": {
+     "ansi_order": 2500,
+     "catalog_item": 2500,
+     "customer": 1000,
+     "invoice": 1000,
+     "invoice_line": 2500,
+     "ms_order": 1000,
+     "my_order": 2500,
+     "pg_order": 2500
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "child": "pg_order",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_pg_order_customer_id",
+    "parent": "customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "my_order",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_my_order_customer_id",
+    "parent": "customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "ansi_order",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_ansi_order_customer_id",
+    "parent": "customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "invoice_line",
+    "child_columns": [
+     "invoice_id"
+    ],
+    "name": "fk_invoice_line_invoice_id",
+    "parent": "invoice",
+    "parent_columns": [
+     "invoice_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "child": "catalog_item",
+    "child_columns": [
+     "invoice_id"
+    ],
+    "name": "fk_catalog_item_invoice_id",
+    "parent": "invoice",
+    "parent_columns": [
+     "invoice_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "ansi_order": {
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   },
+   "catalog_item": {
+    "columns": {
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "invoice_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "invoice.invoice_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "title": {
+      "generator": {
+       "max_nb_chars": 80,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 80,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   },
+   "customer": {
+    "columns": {
+     "email": {
+      "generator": {
+       "provider": "email",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "nullable": true,
+      "type": "string"
+     },
+     "gender": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 1,
+      "nullable": true,
+      "type": "string"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "is_vip": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 1,
+      "nullable": true,
+      "type": "string"
+     },
+     "marital_status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 1,
+      "nullable": true,
+      "type": "string"
+     },
+     "tier_label": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 1,
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   },
+   "invoice": {
+    "columns": {
+     "current_value": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "discount_pct": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 5,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "feedback_score": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 3,
+      "scale": 1,
+      "type": "decimal"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "invoice_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "nullable": true,
+      "type": "date"
+     },
+     "margin_pct": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 5,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "model": {
+      "generator": {
+       "max_nb_chars": 40,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "nullable": true,
+      "type": "string"
+     },
+     "state": {
+      "generator": {
+       "provider": "state_abbr",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "nullable": true,
+      "type": "string"
+     },
+     "tax_rate": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 5,
+      "scale": 4,
+      "type": "decimal"
+     },
+     "total": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   },
+   "invoice_line": {
+    "columns": {
+     "big_picture": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "nullable": true,
+      "type": "string"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "invoice_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "invoice.invoice_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "line_total": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "photo": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "nullable": true,
+      "type": "string"
+     },
+     "picture": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "nullable": true,
+      "type": "string"
+     },
+     "thumbnail": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "nullable": true,
+      "type": "string"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   },
+   "ms_order": {
+    "columns": {
+     "CustomerId": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   },
+   "my_order": {
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "nullable": true,
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   },
+   "pg_order": {
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "nullable": true,
+      "type": "integer"
+     }
+    },
+    "primary_key": [
+     "id"
+    ]
+   }
+  }
+ },
+ "schema": {
+  "business_rules": [],
+  "correlated_columns": {},
+  "generation": {
+   "derived_counts": {},
+   "output": {},
+   "scale": "medium",
+   "scales": {
+    "large": {
+     "ansi_order": 250000,
+     "catalog_item": 250000,
+     "customer": 100000,
+     "invoice": 100000,
+     "invoice_line": 250000,
+     "ms_order": 100000,
+     "my_order": 250000,
+     "pg_order": 250000
+    },
+    "medium": {
+     "ansi_order": 25000,
+     "catalog_item": 25000,
+     "customer": 7,
+     "invoice": 10000,
+     "invoice_line": 25000,
+     "ms_order": 10000,
+     "my_order": 25000,
+     "order": 21,
+     "orders": 21,
+     "pg_order": 25000
+    },
+    "small": {
+     "ansi_order": 2500,
+     "catalog_item": 2500,
+     "customer": 1000,
+     "invoice": 1000,
+     "invoice_line": 2500,
+     "ms_order": 1000,
+     "my_order": 2500,
+     "pg_order": 2500
+    }
+   }
+  },
+  "model": {
+   "date_range": {
+    "end": "2025-12-31",
+    "start": "2024-01-01"
+   },
+   "description": "Imported from SQL DDL",
+   "domain": "shop",
+   "locale": "en_US",
+   "name": "shop_ddl_import",
+   "schema_mode": "3nf",
+   "seed": 42
+  },
+  "relationships": [
+   {
+    "cardinality": {},
+    "child": "pg_order",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_pg_order_customer_id",
+    "optional": false,
+    "parent": "customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "my_order",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_my_order_customer_id",
+    "optional": false,
+    "parent": "customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "ansi_order",
+    "child_columns": [
+     "customer_id"
+    ],
+    "name": "fk_ansi_order_customer_id",
+    "optional": false,
+    "parent": "customer",
+    "parent_columns": [
+     "customer_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "invoice_line",
+    "child_columns": [
+     "invoice_id"
+    ],
+    "name": "fk_invoice_line_invoice_id",
+    "optional": false,
+    "parent": "invoice",
+    "parent_columns": [
+     "invoice_id"
+    ],
+    "type": "one_to_many"
+   },
+   {
+    "cardinality": {},
+    "child": "catalog_item",
+    "child_columns": [
+     "invoice_id"
+    ],
+    "name": "fk_catalog_item_invoice_id",
+    "optional": false,
+    "parent": "invoice",
+    "parent_columns": [
+     "invoice_id"
+    ],
+    "type": "one_to_many"
+   }
+  ],
+  "tables": {
+   "ansi_order": {
+    "cdm_mapping": null,
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "ansi_order",
+    "primary_key": [
+     "id"
+    ]
+   },
+   "catalog_item": {
+    "cdm_mapping": null,
+    "columns": {
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "invoice_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "invoice.invoice_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "invoice_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "title": {
+      "generator": {
+       "max_nb_chars": 80,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 80,
+      "name": "title",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "catalog_item",
+    "primary_key": [
+     "id"
+    ]
+   },
+   "customer": {
+    "cdm_mapping": null,
+    "columns": {
+     "email": {
+      "generator": {
+       "provider": "email",
+       "strategy": "faker"
+      },
+      "max_length": 100,
+      "name": "email",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "gender": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 1,
+      "name": "gender",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "is_vip": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 1,
+      "name": "is_vip",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "marital_status": {
+      "generator": {
+       "strategy": "weighted_enum",
+       "values": {
+        "active": 0.7,
+        "inactive": 0.2,
+        "pending": 0.1
+       }
+      },
+      "max_length": 1,
+      "name": "marital_status",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "tier_label": {
+      "generator": {
+       "format": "{seq:6}",
+       "strategy": "pattern"
+      },
+      "max_length": 1,
+      "name": "tier_label",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "customer",
+    "primary_key": [
+     "id"
+    ]
+   },
+   "invoice": {
+    "cdm_mapping": null,
+    "columns": {
+     "current_value": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "current_value",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "discount_pct": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "discount_pct",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 5,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "feedback_score": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "feedback_score",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 3,
+      "scale": 1,
+      "type": "decimal"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "invoice_date": {
+      "generator": {
+       "pattern": "uniform",
+       "range_ref": "model.date_range",
+       "strategy": "temporal"
+      },
+      "max_length": null,
+      "name": "invoice_date",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "date"
+     },
+     "margin_pct": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "margin_pct",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 5,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "model": {
+      "generator": {
+       "max_nb_chars": 40,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": 40,
+      "name": "model",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "state": {
+      "generator": {
+       "provider": "state_abbr",
+       "strategy": "faker"
+      },
+      "max_length": 50,
+      "name": "state",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "tax_rate": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "tax_rate",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 5,
+      "scale": 4,
+      "type": "decimal"
+     },
+     "total": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "total",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     }
+    },
+    "description": "",
+    "name": "invoice",
+    "primary_key": [
+     "id"
+    ]
+   },
+   "invoice_line": {
+    "cdm_mapping": null,
+    "columns": {
+     "big_picture": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "big_picture",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "invoice_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "invoice.invoice_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "invoice_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "line_total": {
+      "generator": {
+       "distribution": "normal",
+       "mean": 100,
+       "min": 0,
+       "std_dev": 50,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "line_total",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": 10,
+      "scale": 2,
+      "type": "decimal"
+     },
+     "photo": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "photo",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "picture": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "picture",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     },
+     "thumbnail": {
+      "generator": {
+       "max_nb_chars": 50,
+       "provider": "text",
+       "strategy": "faker"
+      },
+      "max_length": null,
+      "name": "thumbnail",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "string"
+     }
+    },
+    "description": "",
+    "name": "invoice_line",
+    "primary_key": [
+     "id"
+    ]
+   },
+   "ms_order": {
+    "cdm_mapping": null,
+    "columns": {
+     "CustomerId": {
+      "generator": {
+       "distribution": "uniform",
+       "max": 10000,
+       "min": 1,
+       "strategy": "distribution"
+      },
+      "max_length": null,
+      "name": "CustomerId",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "ms_order",
+    "primary_key": [
+     "id"
+    ]
+   },
+   "my_order": {
+    "cdm_mapping": null,
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "my_order",
+    "primary_key": [
+     "id"
+    ]
+   },
+   "pg_order": {
+    "cdm_mapping": null,
+    "columns": {
+     "customer_id": {
+      "generator": {
+       "distribution": "pareto",
+       "ref": "customer.customer_id",
+       "strategy": "foreign_key"
+      },
+      "max_length": null,
+      "name": "customer_id",
+      "null_rate": 0.0,
+      "nullable": false,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     },
+     "id": {
+      "generator": {
+       "start": 1,
+       "strategy": "sequence"
+      },
+      "max_length": null,
+      "name": "id",
+      "null_rate": 0.0,
+      "nullable": true,
+      "precision": null,
+      "scale": null,
+      "type": "integer"
+     }
+    },
+    "description": "",
+    "name": "pg_order",
+    "primary_key": [
+     "id"
+    ]
+   }
+  }
+ }
+}

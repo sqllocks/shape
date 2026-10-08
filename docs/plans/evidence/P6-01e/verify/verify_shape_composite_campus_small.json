@@ -1,0 +1,8421 @@
+{
+ "domain": "composite_campus",
+ "scale": "small",
+ "impl": "shape",
+ "seed": 42,
+ "impl_seed": 1042,
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "tables": {
+  "education_department": {
+   "rows": {
+    "refengine": 25,
+    "impl": 25
+   },
+   "columns_refengine": [
+    "department_id",
+    "shared_organization_hr_department_id",
+    "department_name",
+    "college",
+    "budget"
+   ],
+   "columns_impl": [
+    "department_id",
+    "shared_organization_hr_department_id",
+    "department_name",
+    "college",
+    "budget"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "department_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "shared_organization_hr_department_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "department_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "college": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "budget": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "department_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.27712812921102037
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.5513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": 13.0,
+       "impl": 13.0
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 25.0,
+       "impl": 25.0
+      },
+      "std": {
+       "refengine": 7.211102550927978,
+       "impl": 7.211102550927978,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 25,
+      "impl": 25
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "shared_organization_hr_department_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.27712812921102037
+     },
+     "ks": 0.24,
+     "ks_baseline": 0.24000000000000002,
+     "ks_tol": 0.5513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": 16.72,
+       "impl": 13.16
+      },
+      "min": {
+       "refengine": 3.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 30.0,
+       "impl": 29.0
+      },
+      "std": {
+       "refengine": 8.38818216301959,
+       "impl": 9.163754688990753,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 16,
+      "impl": 17
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "department_name": {
+     "kind": "allowed",
+     "allowed": "CMP-2",
+     "intended_pool": "education/department_names",
+     "shape_values_in_intended_pool": 1.0,
+     "baseline_values_in_intended_pool": 1.0,
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0
+     },
+     "checks": {
+      "shape_values_in_intended_pool": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "college": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.27712812921102037
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 6,
+      "ratio": 1.2,
+      "baseline_max_ratio_dev": 0.19999999999999996
+     },
+     "top10": [
+      {
+       "value": "Arts & Sciences",
+       "refengine": 0.4,
+       "impl": 0.4
+      },
+      {
+       "value": "Engineering",
+       "refengine": 0.2,
+       "impl": 0.2
+      },
+      {
+       "value": "Law",
+       "refengine": 0.16,
+       "impl": 0.04
+      },
+      {
+       "value": "Health Sciences",
+       "refengine": 0.16,
+       "impl": 0.08
+      },
+      {
+       "value": "Education",
+       "refengine": 0.08,
+       "impl": 0.12
+      },
+      {
+       "value": "Business",
+       "refengine": 0.0,
+       "impl": 0.16
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.2,
+     "tvd_baseline": 0.27999999999999997,
+     "tvd_tol": 1.0704744696916628,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "budget": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.27712812921102037
+     },
+     "ks": 0.12,
+     "ks_baseline": 0.36000000000000004,
+     "ks_tol": 0.5513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": 1014674.6827792628,
+       "impl": 1024016.1186618875
+      },
+      "min": {
+       "refengine": 500000.0,
+       "impl": 500000.0
+      },
+      "max": {
+       "refengine": 4044309.6571261743,
+       "impl": 4628863.208561676
+      },
+      "std": {
+       "refengine": 760208.746787211,
+       "impl": 873012.2995915612,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 18,
+      "impl": 16
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "education_instructor": {
+   "rows": {
+    "refengine": 150,
+    "impl": 150
+   },
+   "columns_refengine": [
+    "instructor_id",
+    "department_id",
+    "first_name",
+    "last_name",
+    "email",
+    "rank",
+    "tenure_status",
+    "hire_date"
+   ],
+   "columns_impl": [
+    "instructor_id",
+    "department_id",
+    "first_name",
+    "last_name",
+    "email",
+    "rank",
+    "tenure_status",
+    "hire_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "instructor_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "department_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "first_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "last_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "email": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "rank": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "tenure_status": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "hire_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "instructor_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.22510593742416898,
+     "stats": {
+      "mean": {
+       "refengine": 75.5,
+       "impl": 75.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 150.0,
+       "impl": 150.0
+      },
+      "std": {
+       "refengine": 43.300307928081374,
+       "impl": 43.300307928081374,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 150,
+      "impl": 150
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "department_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "ks": 0.06666666666666665,
+     "ks_baseline": 0.10000000000000009,
+     "ks_tol": 0.22510593742416898,
+     "stats": {
+      "mean": {
+       "refengine": 4.56,
+       "impl": 5.246666666666667
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 25.0,
+       "impl": 23.0
+      },
+      "std": {
+       "refengine": 5.025906220109299,
+       "impl": 5.613004740976282,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 21,
+      "impl": 22
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "first_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "refengine": 146,
+      "impl": 147,
+      "ratio": 1.0068493150684932,
+      "baseline_max_ratio_dev": 0.020547945205479534
+     },
+     "top10": [
+      {
+       "value": "Samantha",
+       "refengine": 0.013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Zeria",
+       "refengine": 0.013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Seel",
+       "refengine": 0.013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Juine",
+       "refengine": 0.013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Ednor",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Viee",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Meien",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Sael",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Zinor",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Luene",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Edion",
+       "refengine": 0.0,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "Lori",
+       "refengine": 0.0,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "Gietta",
+       "refengine": 0.0,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "Reika",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Arita",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.9533333333333335,
+     "tvd_baseline": 0.98,
+     "tvd_tol": 2.3615226456547083,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "last_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "refengine": 147,
+      "impl": 149,
+      "ratio": 1.0136054421768708,
+      "baseline_max_ratio_dev": 0.027210884353741527
+     },
+     "top10": [
+      {
+       "value": "Jacham",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Diazfield",
+       "refengine": 0.013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Mcmahberg",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Huber",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Moon",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Balcroft",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Barnham",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Mcmisen",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Hubbard",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Schmford",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Hodsen",
+       "refengine": 0.0,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "Rivasway",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Gilbert",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Willdale",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "DeDougall",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.9600000000000001,
+     "tvd_baseline": 0.9866666666666668,
+     "tvd_tol": 2.3695962509005764,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "email": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "refengine": 150,
+      "impl": 150,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "ednor.mcmahberg679@charter.net",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "viee.huber355@outlook.com",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "meien.moon293@engineer.com",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "sael.balcroft285@accountant.com",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "zinor.barnham100@hushmail.com",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "luene.mcmisen650@seznam.cz",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "mison.hubbard98@runbox.com",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "juona.schmford748@hushmail.com",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "daer.diazfield564@live.com",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "runah.corteman759@tutanota.com",
+       "refengine": 0.006666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "reika.rivasway686@gmail.com",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "arita.gilbert277@mail.ru",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "brna.willdale616@consultant.com",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "hone.dedougall760@mailfence.com",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "dios.cochham580@earthlink.net",
+       "refengine": 0.0,
+       "impl": 0.006666666666666667
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "rank": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Assistant Professor",
+       "refengine": 0.26666666666666666,
+       "impl": 0.22
+      },
+      {
+       "value": "Associate Professor",
+       "refengine": 0.22,
+       "impl": 0.19333333333333333
+      },
+      {
+       "value": "Professor",
+       "refengine": 0.20666666666666667,
+       "impl": 0.2
+      },
+      {
+       "value": "Adjunct",
+       "refengine": 0.18,
+       "impl": 0.17333333333333334
+      },
+      {
+       "value": "Lecturer",
+       "refengine": 0.12666666666666668,
+       "impl": 0.21333333333333335
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.08666666666666666,
+     "tvd_baseline": 0.10000000000000002,
+     "tvd_tol": 0.4370193722368317,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "tenure_status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "distinct": {
+      "refengine": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Non-Tenure",
+       "refengine": 0.4066666666666667,
+       "impl": 0.4266666666666667
+      },
+      {
+       "value": "Tenured",
+       "refengine": 0.38,
+       "impl": 0.36
+      },
+      {
+       "value": "Tenure-Track",
+       "refengine": 0.21333333333333335,
+       "impl": 0.21333333333333335
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.020000000000000018,
+     "tvd_baseline": 0.08666666666666666,
+     "tvd_tol": 0.3385137501286538,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "hire_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.046983054470813274
+     },
+     "ks": 0.06666666666666665,
+     "ks_baseline": 0.1333333333333333,
+     "ks_tol": 0.22510593742416898,
+     "stats": {
+      "mean": {
+       "refengine": "2012-12-02 03:07:28.525279488",
+       "impl": "2012-12-04 05:14:55.518917888"
+      },
+      "min": {
+       "refengine": "2000-02-28 17:21:15.513789568",
+       "impl": "2000-01-15 12:46:10.379179008"
+      },
+      "max": {
+       "refengine": "2025-05-16 05:54:43.474996992",
+       "impl": "2025-06-14 18:51:58.369936896"
+      },
+      "std": {
+       "refengine": 2807.595806445351,
+       "impl": 2914.494098618618,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 150,
+      "impl": 150
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "education_course": {
+   "rows": {
+    "refengine": 300,
+    "impl": 300
+   },
+   "columns_refengine": [
+    "course_id",
+    "department_id",
+    "course_code",
+    "course_name",
+    "credits",
+    "level"
+   ],
+   "columns_impl": [
+    "course_id",
+    "department_id",
+    "course_code",
+    "course_name",
+    "credits",
+    "level"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "course_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "department_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "course_code": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "course_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "credits": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "level": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "course_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.15917393483798453,
+     "stats": {
+      "mean": {
+       "refengine": 150.5,
+       "impl": 150.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 300.0,
+       "impl": 300.0
+      },
+      "std": {
+       "refengine": 86.60205925188308,
+       "impl": 86.60205925188308,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 300,
+      "impl": 300
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "department_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.09999999999999998,
+     "ks_baseline": 0.0733333333333333,
+     "ks_tol": 0.15917393483798453,
+     "stats": {
+      "mean": {
+       "refengine": 12.903333333333334,
+       "impl": 13.78
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 25.0,
+       "impl": 25.0
+      },
+      "std": {
+       "refengine": 6.90656611895923,
+       "impl": 6.987961076022104,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 25,
+      "impl": 25
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "course_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "distinct": {
+      "refengine": 300,
+      "impl": 300,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "CRS-0001",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "CRS-0002",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "CRS-0003",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "CRS-0004",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "CRS-0005",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "CRS-0006",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "CRS-0007",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "CRS-0008",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "CRS-0009",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "CRS-0010",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.0033333333333333335
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "CRS-{seq:4}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "course_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "distinct": {
+      "refengine": 96,
+      "impl": 96,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0625
+     },
+     "top10": [
+      {
+       "value": "Introduction to Programming",
+       "refengine": 0.03666666666666667,
+       "impl": 0.04
+      },
+      {
+       "value": "Introduction to Business",
+       "refengine": 0.03,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "Physics II",
+       "refengine": 0.02666666666666667,
+       "impl": 0.0033333333333333335
+      },
+      {
+       "value": "Financial Accounting",
+       "refengine": 0.023333333333333334,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "Calculus I",
+       "refengine": 0.023333333333333334,
+       "impl": 0.016666666666666666
+      },
+      {
+       "value": "Data Structures & Algorithms",
+       "refengine": 0.02,
+       "impl": 0.01
+      },
+      {
+       "value": "US History to 1877",
+       "refengine": 0.02,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "Creative Writing",
+       "refengine": 0.02,
+       "impl": 0.006666666666666667
+      },
+      {
+       "value": "General Biology",
+       "refengine": 0.02,
+       "impl": 0.023333333333333334
+      },
+      {
+       "value": "Artificial Intelligence",
+       "refengine": 0.016666666666666666,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "Software Engineering",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.02666666666666667
+      },
+      {
+       "value": "English Composition",
+       "refengine": 0.016666666666666666,
+       "impl": 0.023333333333333334
+      },
+      {
+       "value": "Discrete Mathematics",
+       "refengine": 0.01,
+       "impl": 0.023333333333333334
+      },
+      {
+       "value": "Statistics",
+       "refengine": 0.01,
+       "impl": 0.023333333333333334
+      },
+      {
+       "value": "Mass Communications",
+       "refengine": 0.0033333333333333335,
+       "impl": 0.02
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.3,
+     "tvd_baseline": 0.3066666666666667,
+     "tvd_tol": 1.3540550005146148,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "credits": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.02333333333333333,
+     "ks_baseline": 0.05666666666666664,
+     "ks_tol": 0.15917393483798453,
+     "stats": {
+      "mean": {
+       "refengine": 3.0633333333333335,
+       "impl": 3.07
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 4.0,
+       "impl": 4.0
+      },
+      "std": {
+       "refengine": 0.7066273573972509,
+       "impl": 0.696491205974634,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "level": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02353090953838597
+     },
+     "ks": 0.06666666666666665,
+     "ks_baseline": 0.04999999999999999,
+     "ks_tol": 0.15917393483798453,
+     "stats": {
+      "mean": {
+       "refengine": 284.3333333333333,
+       "impl": 311.3333333333333
+      },
+      "min": {
+       "refengine": 100.0,
+       "impl": 100.0
+      },
+      "max": {
+       "refengine": 600.0,
+       "impl": 600.0
+      },
+      "std": {
+       "refengine": 161.8267248908192,
+       "impl": 166.9477629546307,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 6,
+      "impl": 6
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "education_student": {
+   "rows": {
+    "refengine": 2000,
+    "impl": 2000
+   },
+   "columns_refengine": [
+    "student_id",
+    "major_department_id",
+    "shared_person_hr_employee_id",
+    "first_name",
+    "last_name",
+    "email",
+    "date_of_birth",
+    "enrollment_date",
+    "gpa",
+    "classification",
+    "status"
+   ],
+   "columns_impl": [
+    "student_id",
+    "major_department_id",
+    "shared_person_hr_employee_id",
+    "first_name",
+    "last_name",
+    "email",
+    "date_of_birth",
+    "enrollment_date",
+    "gpa",
+    "classification",
+    "status"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "student_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "major_department_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "shared_person_hr_employee_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "first_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "last_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "email": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "date_of_birth": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "enrollment_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "gpa": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "classification": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "status": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "student_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "refengine": 1000.5,
+       "impl": 1000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 2000.0,
+       "impl": 2000.0
+      },
+      "std": {
+       "refengine": 577.3501970208376,
+       "impl": 577.3501970208376,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 2000,
+      "impl": 2000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "major_department_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.013999999999999901,
+     "ks_baseline": 0.034499999999999975,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "refengine": 4.852,
+       "impl": 4.9675
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 25.0,
+       "impl": 25.0
+      },
+      "std": {
+       "refengine": 5.534265624272113,
+       "impl": 5.7889069564124105,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 25,
+      "impl": 25
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "shared_person_hr_employee_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.023999999999999966,
+     "ks_baseline": 0.0295,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "refengine": 248.8715,
+       "impl": 244.7475
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500.0,
+       "impl": 500.0
+      },
+      "std": {
+       "refengine": 145.28603851626625,
+       "impl": 144.6719141497409,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 490,
+      "impl": 488
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "first_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "distinct": {
+      "refengine": 1639,
+      "impl": 1656,
+      "ratio": 1.010372178157413,
+      "baseline_max_ratio_dev": 0.018913971934106266
+     },
+     "top10": [
+      {
+       "value": "Thnor",
+       "refengine": 0.0025,
+       "impl": 0.0
+      },
+      {
+       "value": "Jacqueline",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "Haix",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "Weie",
+       "refengine": 0.002,
+       "impl": 0.0005
+      },
+      {
+       "value": "Auesa",
+       "refengine": 0.0015,
+       "impl": 0.0005
+      },
+      {
+       "value": "Shawn",
+       "refengine": 0.0015,
+       "impl": 0.0
+      },
+      {
+       "value": "Siol",
+       "refengine": 0.0015,
+       "impl": 0.0
+      },
+      {
+       "value": "Vincent",
+       "refengine": 0.0015,
+       "impl": 0.0
+      },
+      {
+       "value": "Moard",
+       "refengine": 0.0015,
+       "impl": 0.001
+      },
+      {
+       "value": "Zeetta",
+       "refengine": 0.0015,
+       "impl": 0.0
+      },
+      {
+       "value": "Sunna",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "Ceden",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "Gietta",
+       "refengine": 0.0,
+       "impl": 0.0015
+      },
+      {
+       "value": "Neria",
+       "refengine": 0.0005,
+       "impl": 0.0015
+      },
+      {
+       "value": "Skyler",
+       "refengine": 0.0,
+       "impl": 0.0015
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "distinct_ratio_tol": 0.0283709579011594,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "last_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "distinct": {
+      "refengine": 1667,
+      "impl": 1664,
+      "ratio": 0.9982003599280144,
+      "baseline_max_ratio_dev": 0.027594481103779267
+     },
+     "top10": [
+      {
+       "value": "Wyatt",
+       "refengine": 0.002,
+       "impl": 0.001
+      },
+      {
+       "value": "Mccullough",
+       "refengine": 0.002,
+       "impl": 0.0005
+      },
+      {
+       "value": "Landry",
+       "refengine": 0.002,
+       "impl": 0.0005
+      },
+      {
+       "value": "Rowton",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "Gamblshire",
+       "refengine": 0.002,
+       "impl": 0.001
+      },
+      {
+       "value": "Singleton",
+       "refengine": 0.0015,
+       "impl": 0.0005
+      },
+      {
+       "value": "Graygate",
+       "refengine": 0.0015,
+       "impl": 0.0
+      },
+      {
+       "value": "Lunaford",
+       "refengine": 0.0015,
+       "impl": 0.0005
+      },
+      {
+       "value": "Mahonwick",
+       "refengine": 0.0015,
+       "impl": 0.0
+      },
+      {
+       "value": "DelLean",
+       "refengine": 0.0015,
+       "impl": 0.0005
+      },
+      {
+       "value": "Carrstein",
+       "refengine": 0.0005,
+       "impl": 0.002
+      },
+      {
+       "value": "Collibrook",
+       "refengine": 0.0005,
+       "impl": 0.002
+      },
+      {
+       "value": "Hodgeton",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "Pearway",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "Mcmilwell",
+       "refengine": 0.0,
+       "impl": 0.0015
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "distinct_ratio_tol": 0.0413917216556689,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "email": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "distinct": {
+      "refengine": 2000,
+      "impl": 2000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "huan.mahoney281@hushmail.com",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "traci.jeffeberg920@msn.com",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "joseph.russeson998@accountant.com",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "waisha.kimbrook130@protonmail.com",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "huien.singleton665@mac.com",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "true.contman593@aol.com",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "danna.turley153@comcast.net",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "ision.lutland727@sbcglobal.net",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "iaar.laarthur709@accountant.com",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "gracie.mannbrook776@post.com",
+       "refengine": 0.0005,
+       "impl": 0.0
+      },
+      {
+       "value": "diana.lynford53@sbcglobal.net",
+       "refengine": 0.0,
+       "impl": 0.0005
+      },
+      {
+       "value": "prar.mcmilwell10@inbox.com",
+       "refengine": 0.0,
+       "impl": 0.0005
+      },
+      {
+       "value": "linor.jackson240@btinternet.com",
+       "refengine": 0.0,
+       "impl": 0.0005
+      },
+      {
+       "value": "ceo.whitaton148@hotmail.com",
+       "refengine": 0.0,
+       "impl": 0.0005
+      },
+      {
+       "value": "tinah.hufman562@optonline.net",
+       "refengine": 0.0,
+       "impl": 0.0005
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "date_of_birth": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.02849999999999997,
+     "ks_baseline": 0.05249999999999999,
+     "ks_tol": 0.08074999999999999,
+     "stats": {
+      "mean": {
+       "refengine": "1998-09-21 07:53:48.167520512",
+       "impl": "1998-08-02 08:40:55.983901696"
+      },
+      "min": {
+       "refengine": "1990-01-01 03:56:05.244345984",
+       "impl": "1990-01-06 18:15:49.779986048"
+      },
+      "max": {
+       "refengine": "2006-12-28 23:13:58.026931456",
+       "impl": "2006-12-29 04:05:50.074370048"
+      },
+      "std": {
+       "refengine": 1786.9320834094779,
+       "impl": 1755.3804320976112,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 2000,
+      "impl": 2000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "enrollment_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.010500000000000065,
+     "ks_baseline": 0.026499999999999968,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "refengine": "2022-02-04 05:16:38.590633984",
+       "impl": "2022-01-27 23:45:51.016985088"
+      },
+      "min": {
+       "refengine": "2018-08-01 02:38:55.288114432",
+       "impl": "2018-08-01 04:50:54.667952896"
+      },
+      "max": {
+       "refengine": "2025-08-22 22:48:05.128650240",
+       "impl": "2025-08-30 21:04:45.197712896"
+      },
+      "std": {
+       "refengine": 743.6218683092035,
+       "impl": 743.5337408900758,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 2000,
+      "impl": 2000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "gpa": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.02300000000000002,
+     "ks_baseline": 0.03649999999999998,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "refengine": 2.985641323659662,
+       "impl": 2.993768049542136
+      },
+      "min": {
+       "refengine": 1.3741538184495345,
+       "impl": 1.193181010789025
+      },
+      "max": {
+       "refengine": 4.0,
+       "impl": 4.0
+      },
+      "std": {
+       "refengine": 0.46741824956612016,
+       "impl": 0.47946582076960736,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1963,
+      "impl": 1962
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "classification": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Freshman",
+       "refengine": 0.226,
+       "impl": 0.22
+      },
+      {
+       "value": "Sophomore",
+       "refengine": 0.2045,
+       "impl": 0.1875
+      },
+      {
+       "value": "Senior",
+       "refengine": 0.1985,
+       "impl": 0.213
+      },
+      {
+       "value": "Junior",
+       "refengine": 0.189,
+       "impl": 0.199
+      },
+      {
+       "value": "Graduate",
+       "refengine": 0.182,
+       "impl": 0.1805
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.024499999999999994,
+     "tvd_baseline": 0.0295,
+     "tvd_tol": 0.1196826841204298,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Active",
+       "refengine": 0.808,
+       "impl": 0.8035
+      },
+      {
+       "value": "Graduated",
+       "refengine": 0.1185,
+       "impl": 0.1185
+      },
+      {
+       "value": "Withdrawn",
+       "refengine": 0.0445,
+       "impl": 0.0465
+      },
+      {
+       "value": "Suspended",
+       "refengine": 0.029,
+       "impl": 0.0315
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.00450000000000003,
+     "tvd_baseline": 0.01400000000000004,
+     "tvd_tol": 0.10704744696916627,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "education_enrollment": {
+   "rows": {
+    "refengine": 16000,
+    "impl": 16000
+   },
+   "columns_refengine": [
+    "enrollment_id",
+    "student_id",
+    "course_id",
+    "instructor_id",
+    "semester",
+    "grade",
+    "credits_attempted"
+   ],
+   "columns_impl": [
+    "enrollment_id",
+    "student_id",
+    "course_id",
+    "instructor_id",
+    "semester",
+    "grade",
+    "credits_attempted"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "enrollment_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "student_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "course_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "instructor_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "semester": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "grade": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "credits_attempted": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "enrollment_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00044192792734647354
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.021795788669405385,
+     "stats": {
+      "mean": {
+       "refengine": 8000.5,
+       "impl": 8000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 16000.0,
+       "impl": 16000.0
+      },
+      "std": {
+       "refengine": 4618.802144495909,
+       "impl": 4618.802144495909,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 16000,
+      "impl": 16000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "student_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00044192792734647354
+     },
+     "ks": 0.0078125,
+     "ks_baseline": 0.014062499999999978,
+     "ks_tol": 0.02309374999999997,
+     "stats": {
+      "mean": {
+       "refengine": 1005.5743125,
+       "impl": 1002.82775
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 2000.0,
+       "impl": 2000.0
+      },
+      "std": {
+       "refengine": 577.9837979802309,
+       "impl": 577.0507827132179,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1999,
+      "impl": 2000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "course_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00044192792734647354
+     },
+     "ks": 0.004187500000000011,
+     "ks_baseline": 0.009750000000000036,
+     "ks_tol": 0.021795788669405385,
+     "stats": {
+      "mean": {
+       "refengine": 22.927625,
+       "impl": 22.798625
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 300.0,
+       "impl": 300.0
+      },
+      "std": {
+       "refengine": 48.5618138238202,
+       "impl": 48.186139844455006,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 298,
+      "impl": 298
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "instructor_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00044192792734647354
+     },
+     "ks": 0.008875000000000077,
+     "ks_baseline": 0.009062499999999973,
+     "ks_tol": 0.021795788669405385,
+     "stats": {
+      "mean": {
+       "refengine": 18.379125,
+       "impl": 18.0291875
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 150.0,
+       "impl": 150.0
+      },
+      "std": {
+       "refengine": 30.377504246306593,
+       "impl": 29.947094359717834,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 150,
+      "impl": 150
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "semester": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00044192792734647354
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Spring 2025",
+       "refengine": 0.241125,
+       "impl": 0.248625
+      },
+      {
+       "value": "Spring 2024",
+       "refengine": 0.225625,
+       "impl": 0.220125
+      },
+      {
+       "value": "Fall 2024",
+       "refengine": 0.2158125,
+       "impl": 0.2180625
+      },
+      {
+       "value": "Fall 2023",
+       "refengine": 0.1990625,
+       "impl": 0.195375
+      },
+      {
+       "value": "Summer 2024",
+       "refengine": 0.118375,
+       "impl": 0.1178125
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.009750000000000009,
+     "tvd_baseline": 0.009937500000000016,
+     "tvd_tol": 0.042314218766081726,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "grade": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.09725,
+      "impl": 0.0975625,
+      "baseline_max_abs_diff": 0.0076875,
+      "tol": 0.016563555390902644
+     },
+     "distinct": {
+      "refengine": 12,
+      "impl": 12,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "A",
+       "refengine": 0.18222099141512046,
+       "impl": 0.17736685366022578
+      },
+      {
+       "value": "B",
+       "refengine": 0.13874273054555525,
+       "impl": 0.1410069949442482
+      },
+      {
+       "value": "B+",
+       "refengine": 0.11741899750761561,
+       "impl": 0.11759817161853314
+      },
+      {
+       "value": "B-",
+       "refengine": 0.10391858211021877,
+       "impl": 0.09966064131865088
+      },
+      {
+       "value": "A-",
+       "refengine": 0.09464137358072557,
+       "impl": 0.10478564997576009
+      },
+      {
+       "value": "C+",
+       "refengine": 0.08079479368595957,
+       "impl": 0.08172311101876861
+      },
+      {
+       "value": "C",
+       "refengine": 0.07684851841595126,
+       "impl": 0.07895283606897985
+      },
+      {
+       "value": "D",
+       "refengine": 0.05600941567432844,
+       "impl": 0.04667913290394072
+      },
+      {
+       "value": "C-",
+       "refengine": 0.049709221822209916,
+       "impl": 0.05028049033866611
+      },
+      {
+       "value": "W",
+       "refengine": 0.04147050678482415,
+       "impl": 0.04134635362559734
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.018566514476077104,
+     "tvd_baseline": 0.017777371522307375,
+     "tvd_tol": 0.06555290583552476,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "credits_attempted": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00044192792734647354
+     },
+     "ks": 0.0038124999999999964,
+     "ks_baseline": 0.007937500000000014,
+     "ks_tol": 0.021795788669405385,
+     "stats": {
+      "mean": {
+       "refengine": 3.0528125,
+       "impl": 3.05425
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 4.0,
+       "impl": 4.0
+      },
+      "std": {
+       "refengine": 0.7340118117876239,
+       "impl": 0.7380257024657069,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "education_financial_aid": {
+   "rows": {
+    "refengine": 1400,
+    "impl": 1400
+   },
+   "columns_refengine": [
+    "aid_id",
+    "student_id",
+    "aid_type",
+    "academic_year",
+    "amount",
+    "status",
+    "award_date"
+   ],
+   "columns_impl": [
+    "aid_id",
+    "student_id",
+    "aid_type",
+    "academic_year",
+    "amount",
+    "status",
+    "award_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "aid_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "student_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "aid_type": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "academic_year": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "amount": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "status": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "award_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "aid_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.005048958556701434
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.07368321411644621,
+     "stats": {
+      "mean": {
+       "refengine": 700.5,
+       "impl": 700.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 1400.0,
+       "impl": 1400.0
+      },
+      "std": {
+       "refengine": 404.1450853344625,
+       "impl": 404.1450853344625,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1400,
+      "impl": 1400
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "student_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.005048958556701434
+     },
+     "ks": 0.020714285714285685,
+     "ks_baseline": 0.03857142857142859,
+     "ks_tol": 0.07368321411644621,
+     "stats": {
+      "mean": {
+       "refengine": 1005.815,
+       "impl": 1010.9121428571428
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 2.0
+      },
+      "max": {
+       "refengine": 1997.0,
+       "impl": 1999.0
+      },
+      "std": {
+       "refengine": 568.2099731896149,
+       "impl": 575.054607465097,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1004,
+      "impl": 996
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "aid_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.005048958556701434
+     },
+     "distinct": {
+      "refengine": 15,
+      "impl": 15,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Federal Pell Grant",
+       "refengine": 0.13857142857142857,
+       "impl": 0.14214285714285715
+      },
+      {
+       "value": "Federal Subsidized Loan",
+       "refengine": 0.12571428571428572,
+       "impl": 0.11785714285714285
+      },
+      {
+       "value": "Need-Based Grant",
+       "refengine": 0.10214285714285715,
+       "impl": 0.08428571428571428
+      },
+      {
+       "value": "Federal Unsubsidized Loan",
+       "refengine": 0.09642857142857143,
+       "impl": 0.09357142857142857
+      },
+      {
+       "value": "Institutional Grant",
+       "refengine": 0.07571428571428572,
+       "impl": 0.07214285714285715
+      },
+      {
+       "value": "Merit Scholarship",
+       "refengine": 0.075,
+       "impl": 0.10357142857142858
+      },
+      {
+       "value": "State Grant",
+       "refengine": 0.07142857142857142,
+       "impl": 0.06571428571428571
+      },
+      {
+       "value": "Federal PLUS Loan",
+       "refengine": 0.06285714285714286,
+       "impl": 0.06357142857142857
+      },
+      {
+       "value": "Private Scholarship",
+       "refengine": 0.04928571428571429,
+       "impl": 0.041428571428571426
+      },
+      {
+       "value": "Work-Study",
+       "refengine": 0.047857142857142855,
+       "impl": 0.05857142857142857
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.05500000000000003,
+     "tvd_baseline": 0.06285714285714285,
+     "tvd_tol": 0.24776669508347604,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "academic_year": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.005048958556701434
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "2024-2025",
+       "refengine": 0.30357142857142855,
+       "impl": 0.30857142857142855
+      },
+      {
+       "value": "2023-2024",
+       "refengine": 0.2542857142857143,
+       "impl": 0.25142857142857145
+      },
+      {
+       "value": "2022-2023",
+       "refengine": 0.1692857142857143,
+       "impl": 0.16785714285714284
+      },
+      {
+       "value": "2025-2026",
+       "refengine": 0.15357142857142858,
+       "impl": 0.145
+      },
+      {
+       "value": "2021-2022",
+       "refengine": 0.11928571428571429,
+       "impl": 0.12714285714285714
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.012857142857142866,
+     "tvd_baseline": 0.04000000000000002,
+     "tvd_tol": 0.14304816810266882,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "amount": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.005048958556701434
+     },
+     "ks": 0.017857142857142905,
+     "ks_baseline": 0.04428571428571432,
+     "ks_tol": 0.07368321411644621,
+     "stats": {
+      "mean": {
+       "refengine": 6875.807891166967,
+       "impl": 6620.984350680501
+      },
+      "min": {
+       "refengine": 500.0,
+       "impl": 500.0
+      },
+      "max": {
+       "refengine": 50000.0,
+       "impl": 50000.0
+      },
+      "std": {
+       "refengine": 6414.723194196316,
+       "impl": 5906.129556610794,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1397,
+      "impl": 1396
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.005048958556701434
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Awarded",
+       "refengine": 0.4035714285714286,
+       "impl": 0.4007142857142857
+      },
+      {
+       "value": "Disbursed",
+       "refengine": 0.375,
+       "impl": 0.3892857142857143
+      },
+      {
+       "value": "Pending",
+       "refengine": 0.1407142857142857,
+       "impl": 0.14
+      },
+      {
+       "value": "Cancelled",
+       "refengine": 0.08071428571428571,
+       "impl": 0.07
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.01428571428571429,
+     "tvd_baseline": 0.020714285714285723,
+     "tvd_tol": 0.12794617117375384,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "award_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.005048958556701434
+     },
+     "ks": 0.02857142857142858,
+     "ks_baseline": 0.040000000000000036,
+     "ks_tol": 0.07368321411644621,
+     "stats": {
+      "mean": {
+       "refengine": "2022-12-29 16:06:10.397490944",
+       "impl": "2022-12-20 03:09:01.526854656"
+      },
+      "min": {
+       "refengine": "2020-01-02 01:25:10.444034048",
+       "impl": "2020-01-01 21:24:51.813947904"
+      },
+      "max": {
+       "refengine": "2025-12-30 19:12:10.257257216",
+       "impl": "2025-12-30 08:45:20.980702976"
+      },
+      "std": {
+       "refengine": 630.597953581043,
+       "impl": 619.1014573369896,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 1400,
+      "impl": 1400
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "education_course_section": {
+   "rows": {
+    "refengine": 600,
+    "impl": 600
+   },
+   "columns_refengine": [
+    "section_id",
+    "course_id",
+    "instructor_id",
+    "semester",
+    "room_number",
+    "capacity",
+    "enrolled_count"
+   ],
+   "columns_impl": [
+    "section_id",
+    "course_id",
+    "instructor_id",
+    "semester",
+    "room_number",
+    "capacity",
+    "enrolled_count"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "section_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "course_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "instructor_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "semester": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "room_number": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "capacity": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "enrolled_count": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "section_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.011775287996792581
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.11255296871208449,
+     "stats": {
+      "mean": {
+       "refengine": 300.5,
+       "impl": 300.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 600.0,
+       "impl": 600.0
+      },
+      "std": {
+       "refengine": 173.2048401941085,
+       "impl": 173.2048401941085,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 600,
+      "impl": 600
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "course_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.011775287996792581
+     },
+     "ks": 0.03833333333333333,
+     "ks_baseline": 0.043333333333333335,
+     "ks_tol": 0.11255296871208449,
+     "stats": {
+      "mean": {
+       "refengine": 148.56833333333333,
+       "impl": 152.54666666666665
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 300.0,
+       "impl": 300.0
+      },
+      "std": {
+       "refengine": 86.27654372552381,
+       "impl": 86.88247515401993,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 262,
+      "impl": 250
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "instructor_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.011775287996792581
+     },
+     "ks": 0.04500000000000004,
+     "ks_baseline": 0.06500000000000006,
+     "ks_tol": 0.11255296871208449,
+     "stats": {
+      "mean": {
+       "refengine": 19.4,
+       "impl": 17.405
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 150.0,
+       "impl": 146.0
+      },
+      "std": {
+       "refengine": 31.307081201116997,
+       "impl": 28.93972428456544,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 98,
+      "impl": 96
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "semester": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.011775287996792581
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Spring 2024",
+       "refengine": 0.24333333333333335,
+       "impl": 0.23666666666666666
+      },
+      {
+       "value": "Spring 2025",
+       "refengine": 0.23833333333333334,
+       "impl": 0.25333333333333335
+      },
+      {
+       "value": "Fall 2024",
+       "refengine": 0.215,
+       "impl": 0.19833333333333333
+      },
+      {
+       "value": "Fall 2023",
+       "refengine": 0.17833333333333334,
+       "impl": 0.19333333333333333
+      },
+      {
+       "value": "Summer 2024",
+       "refengine": 0.125,
+       "impl": 0.11833333333333333
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.030000000000000006,
+     "tvd_baseline": 0.051666666666666666,
+     "tvd_tol": 0.21850968611841584,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "room_number": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.011775287996792581
+     },
+     "distinct": {
+      "refengine": 600,
+      "impl": 600,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "RM-001",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      },
+      {
+       "value": "RM-002",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      },
+      {
+       "value": "RM-003",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      },
+      {
+       "value": "RM-004",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      },
+      {
+       "value": "RM-005",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      },
+      {
+       "value": "RM-006",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      },
+      {
+       "value": "RM-007",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      },
+      {
+       "value": "RM-008",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      },
+      {
+       "value": "RM-009",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      },
+      {
+       "value": "RM-010",
+       "refengine": 0.0016666666666666668,
+       "impl": 0.0016666666666666668
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "RM-{seq:3}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "capacity": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.011775287996792581
+     },
+     "ks": 0.03833333333333336,
+     "ks_baseline": 0.06000000000000005,
+     "ks_tol": 0.11255296871208449,
+     "stats": {
+      "mean": {
+       "refengine": 158.6739107005057,
+       "impl": 160.65336646161282
+      },
+      "min": {
+       "refengine": 20.256516916057528,
+       "impl": 20.164125348875864
+      },
+      "max": {
+       "refengine": 299.62463893817335,
+       "impl": 298.9684076799443
+      },
+      "std": {
+       "refengine": 81.80857876311873,
+       "impl": 81.03690668942177,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 600,
+      "impl": 600
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "enrolled_count": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.011775287996792581
+     },
+     "ks": 0.035,
+     "ks_baseline": 0.040000000000000036,
+     "ks_tol": 0.11255296871208449,
+     "stats": {
+      "mean": {
+       "refengine": 115.62209999999999,
+       "impl": 117.19686666666666
+      },
+      "min": {
+       "refengine": 11.28,
+       "impl": 10.23
+      },
+      "max": {
+       "refengine": 274.08,
+       "impl": 274.78
+      },
+      "std": {
+       "refengine": 64.71317490220468,
+       "impl": 63.235696360380366,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 597,
+      "impl": 594
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "education_grade_appeal": {
+   "rows": {
+    "refengine": 320,
+    "impl": 320
+   },
+   "columns_refengine": [
+    "appeal_id",
+    "enrollment_id",
+    "filed_date",
+    "reason",
+    "status",
+    "resolution_date"
+   ],
+   "columns_impl": [
+    "appeal_id",
+    "enrollment_id",
+    "filed_date",
+    "reason",
+    "status",
+    "resolution_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "appeal_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "enrollment_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "filed_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "reason": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "status": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "resolution_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "appeal_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02206253319756709
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.15411949969445465,
+     "stats": {
+      "mean": {
+       "refengine": 160.5,
+       "impl": 160.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 320.0,
+       "impl": 320.0
+      },
+      "std": {
+       "refengine": 92.37559201434111,
+       "impl": 92.37559201434111,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 320,
+      "impl": 320
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "enrollment_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02206253319756709
+     },
+     "ks": 0.09062499999999996,
+     "ks_baseline": 0.10312500000000002,
+     "ks_tol": 0.15668750000000004,
+     "stats": {
+      "mean": {
+       "refengine": 8450.275,
+       "impl": 8075.58125
+      },
+      "min": {
+       "refengine": 187.0,
+       "impl": 66.0
+      },
+      "max": {
+       "refengine": 15971.0,
+       "impl": 15955.0
+      },
+      "std": {
+       "refengine": 4378.091193588251,
+       "impl": 4501.27576772946,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 317,
+      "impl": 318
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "filed_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02206253319756709
+     },
+     "ks": 0.05625000000000002,
+     "ks_baseline": 0.06874999999999998,
+     "ks_tol": 0.15411949969445465,
+     "stats": {
+      "mean": {
+       "refengine": "2024-06-28 16:52:06.445231616",
+       "impl": "2024-06-15 03:38:06.438280704"
+      },
+      "min": {
+       "refengine": "2023-01-02 01:04:08.542079744",
+       "impl": "2023-01-02 12:43:29.727520"
+      },
+      "max": {
+       "refengine": "2025-12-27 23:18:09.510664704",
+       "impl": "2025-12-28 09:49:18.586013952"
+      },
+      "std": {
+       "refengine": 312.6049780103907,
+       "impl": 306.25311806333434,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 320,
+      "impl": 320
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "reason": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02206253319756709
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Calculation Error",
+       "refengine": 0.321875,
+       "impl": 0.325
+      },
+      {
+       "value": "Grading Criteria",
+       "refengine": 0.25,
+       "impl": 0.259375
+      },
+      {
+       "value": "Incomplete Grade",
+       "refengine": 0.203125,
+       "impl": 0.175
+      },
+      {
+       "value": "Medical",
+       "refengine": 0.159375,
+       "impl": 0.1375
+      },
+      {
+       "value": "Other",
+       "refengine": 0.065625,
+       "impl": 0.103125
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.049999999999999996,
+     "tvd_baseline": 0.0625,
+     "tvd_tol": 0.29920671030107454,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.02206253319756709
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Denied",
+       "refengine": 0.2875,
+       "impl": 0.275
+      },
+      {
+       "value": "Approved",
+       "refengine": 0.284375,
+       "impl": 0.284375
+      },
+      {
+       "value": "Under Review",
+       "refengine": 0.240625,
+       "impl": 0.25625
+      },
+      {
+       "value": "Pending",
+       "refengine": 0.1875,
+       "impl": 0.184375
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.015624999999999958,
+     "tvd_baseline": 0.07499999999999997,
+     "tvd_tol": 0.2676186174229157,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "resolution_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.29375,
+      "impl": 0.315625,
+      "baseline_max_abs_diff": 0.04375000000000001,
+      "tol": 0.18004380434876122
+     },
+     "ks": 0.06097708813189473,
+     "ks_baseline": 0.09568076642039458,
+     "ks_tol": 0.18485078973964938,
+     "stats": {
+      "mean": {
+       "refengine": "2024-06-30 01:33:24.648290560",
+       "impl": "2024-06-13 05:05:52.862771968"
+      },
+      "min": {
+       "refengine": "2023-02-07 10:56:42.897149952",
+       "impl": "2023-02-03 02:02:48.627952896"
+      },
+      "max": {
+       "refengine": "2025-12-27 21:30:42.211251456",
+       "impl": "2025-12-29 21:57:18.295584"
+      },
+      "std": {
+       "refengine": 314.60244060443534,
+       "impl": 309.5599769348414,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 226,
+      "impl": 219
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "education_academic_standing": {
+   "rows": {
+    "refengine": 4000,
+    "impl": 4000
+   },
+   "columns_refengine": [
+    "standing_id",
+    "student_id",
+    "semester",
+    "standing",
+    "cumulative_gpa",
+    "semester_gpa"
+   ],
+   "columns_impl": [
+    "standing_id",
+    "student_id",
+    "semester",
+    "standing",
+    "cumulative_gpa",
+    "semester_gpa"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "standing_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "student_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "semester": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "standing": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "cumulative_gpa": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "semester_gpa": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "standing_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0017675459682848422
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.04359157733881077,
+     "stats": {
+      "mean": {
+       "refengine": 2000.5,
+       "impl": 2000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 4000.0,
+       "impl": 4000.0
+      },
+      "std": {
+       "refengine": 1154.7005022948592,
+       "impl": 1154.7005022948592,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 4000,
+      "impl": 4000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "student_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0017675459682848422
+     },
+     "ks": 0.01375000000000004,
+     "ks_baseline": 0.023499999999999965,
+     "ks_tol": 0.04359157733881077,
+     "stats": {
+      "mean": {
+       "refengine": 998.84175,
+       "impl": 996.59825
+      },
+      "min": {
+       "refengine": 2.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 2000.0,
+       "impl": 2000.0
+      },
+      "std": {
+       "refengine": 574.9436978582664,
+       "impl": 580.0497339426487,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1735,
+      "impl": 1729
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "semester": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0017675459682848422
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Spring 2025",
+       "refengine": 0.23475,
+       "impl": 0.24
+      },
+      {
+       "value": "Fall 2024",
+       "refengine": 0.22525,
+       "impl": 0.218
+      },
+      {
+       "value": "Spring 2024",
+       "refengine": 0.2225,
+       "impl": 0.21725
+      },
+      {
+       "value": "Fall 2023",
+       "refengine": 0.19825,
+       "impl": 0.20425
+      },
+      {
+       "value": "Summer 2024",
+       "refengine": 0.11925,
+       "impl": 0.1205
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.012499999999999997,
+     "tvd_baseline": 0.018500000000000016,
+     "tvd_tol": 0.08462843753216345,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "standing": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0017675459682848422
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Good Standing",
+       "refengine": 0.69,
+       "impl": 0.7045
+      },
+      {
+       "value": "Dean's List",
+       "refengine": 0.158,
+       "impl": 0.14725
+      },
+      {
+       "value": "Probation",
+       "refengine": 0.10425,
+       "impl": 0.1
+      },
+      {
+       "value": "Suspension",
+       "refengine": 0.04775,
+       "impl": 0.04825
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.015000000000000034,
+     "tvd_baseline": 0.02000000000000005,
+     "tvd_tol": 0.07569397566060479,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "cumulative_gpa": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0017675459682848422
+     },
+     "ks": 0.009750000000000009,
+     "ks_baseline": 0.018500000000000072,
+     "ks_tol": 0.04359157733881077,
+     "stats": {
+      "mean": {
+       "refengine": 2.9928416545368273,
+       "impl": 2.995959318629594
+      },
+      "min": {
+       "refengine": 1.3009763392684488,
+       "impl": 1.3666304069782824
+      },
+      "max": {
+       "refengine": 4.0,
+       "impl": 4.0
+      },
+      "std": {
+       "refengine": 0.4950915429335207,
+       "impl": 0.49160043976528034,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 3906,
+      "impl": 3911
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "semester_gpa": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0017675459682848422
+     },
+     "ks": 0.025000000000000022,
+     "ks_baseline": 0.029249999999999998,
+     "ks_tol": 0.045875,
+     "stats": {
+      "mean": {
+       "refengine": 2.9725067012207362,
+       "impl": 2.9955934810561446
+      },
+      "min": {
+       "refengine": 0.7204763118689117,
+       "impl": 0.9832752677569787
+      },
+      "max": {
+       "refengine": 4.0,
+       "impl": 4.0
+      },
+      "std": {
+       "refengine": 0.5671456213804654,
+       "impl": 0.5720236085408062,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 3831,
+      "impl": 3808
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "hr_department": {
+   "rows": {
+    "refengine": 30,
+    "impl": 30
+   },
+   "columns_refengine": [
+    "department_id",
+    "department_name",
+    "cost_center",
+    "is_active"
+   ],
+   "columns_impl": [
+    "department_id",
+    "department_name",
+    "cost_center",
+    "is_active"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "department_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "department_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "cost_center": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "is_active": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "department_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.23174059571793568
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.5033521782192557,
+     "stats": {
+      "mean": {
+       "refengine": 15.5,
+       "impl": 15.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 30.0,
+       "impl": 30.0
+      },
+      "std": {
+       "refengine": 8.65544144839919,
+       "impl": 8.65544144839919,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 30,
+      "impl": 30
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "department_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.23174059571793568
+     },
+     "distinct": {
+      "refengine": 17,
+      "impl": 21,
+      "ratio": 1.2352941176470589,
+      "baseline_max_ratio_dev": 0.11764705882352944
+     },
+     "top10": [
+      {
+       "value": "Political Science",
+       "refengine": 0.16666666666666666,
+       "impl": 0.0
+      },
+      {
+       "value": "Business Administration",
+       "refengine": 0.13333333333333333,
+       "impl": 0.0
+      },
+      {
+       "value": "Biology",
+       "refengine": 0.06666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Marketing",
+       "refengine": 0.06666666666666667,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "Economics",
+       "refengine": 0.06666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Nursing",
+       "refengine": 0.06666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Psychology",
+       "refengine": 0.06666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Mathematics",
+       "refengine": 0.06666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Environmental Science",
+       "refengine": 0.03333333333333333,
+       "impl": 0.0
+      },
+      {
+       "value": "Kinesiology",
+       "refengine": 0.03333333333333333,
+       "impl": 0.0
+      },
+      {
+       "value": "Information Technology",
+       "refengine": 0.0,
+       "impl": 0.1
+      },
+      {
+       "value": "Public Relations",
+       "refengine": 0.0,
+       "impl": 0.06666666666666667
+      },
+      {
+       "value": "Training & Development",
+       "refengine": 0.0,
+       "impl": 0.06666666666666667
+      },
+      {
+       "value": "Engineering",
+       "refengine": 0.0,
+       "impl": 0.06666666666666667
+      },
+      {
+       "value": "Executive Office",
+       "refengine": 0.0,
+       "impl": 0.06666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.9666666666666669,
+     "tvd_baseline": 0.5,
+     "tvd_tol": 1.8018770321735786,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "cost_center": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.23174059571793568
+     },
+     "distinct": {
+      "refengine": 30,
+      "impl": 30,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "CC-0001",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0002",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0003",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0004",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0005",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0006",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0007",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0008",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0009",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      },
+      {
+       "value": "CC-0010",
+       "refengine": 0.03333333333333333,
+       "impl": 0.03333333333333333
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "CC-{seq:4}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_active": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.23174059571793568
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.5
+     },
+     "top10": [
+      {
+       "value": "true",
+       "refengine": 0.9666666666666667,
+       "impl": 0.9
+      },
+      {
+       "value": "false",
+       "refengine": 0.03333333333333333,
+       "impl": 0.1
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.06666666666666667,
+     "tvd_baseline": 0.033333333333333326,
+     "tvd_tol": 0.6180387232371032,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "hr_position": {
+   "rows": {
+    "refengine": 80,
+    "impl": 80
+   },
+   "columns_refengine": [
+    "position_id",
+    "position_title",
+    "pay_grade",
+    "is_exempt",
+    "min_salary",
+    "max_salary"
+   ],
+   "columns_impl": [
+    "position_id",
+    "position_title",
+    "pay_grade",
+    "is_exempt",
+    "min_salary",
+    "max_salary"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "position_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "position_title": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "pay_grade": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "is_exempt": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "min_salary": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "max_salary": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "position_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.3082389993889093,
+     "stats": {
+      "mean": {
+       "refengine": 40.5,
+       "impl": 40.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 80.0,
+       "impl": 80.0
+      },
+      "std": {
+       "refengine": 23.092206477510977,
+       "impl": 23.092206477510977,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 80,
+      "impl": 80
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "position_title": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "distinct": {
+      "refengine": 45,
+      "impl": 48,
+      "ratio": 1.0666666666666667,
+      "baseline_max_ratio_dev": 0.11111111111111116
+     },
+     "top10": [
+      {
+       "value": "Customer Service Representative",
+       "refengine": 0.0625,
+       "impl": 0.0375
+      },
+      {
+       "value": "Recruiter",
+       "refengine": 0.05,
+       "impl": 0.0125
+      },
+      {
+       "value": "Senior Accountant",
+       "refengine": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Senior Software Engineer",
+       "refengine": 0.05,
+       "impl": 0.0625
+      },
+      {
+       "value": "Project Manager",
+       "refengine": 0.0375,
+       "impl": 0.0
+      },
+      {
+       "value": "Administrative Assistant",
+       "refengine": 0.0375,
+       "impl": 0.0125
+      },
+      {
+       "value": "Logistics Coordinator",
+       "refengine": 0.0375,
+       "impl": 0.0
+      },
+      {
+       "value": "Talent Acquisition Specialist",
+       "refengine": 0.0375,
+       "impl": 0.0125
+      },
+      {
+       "value": "Network Administrator",
+       "refengine": 0.0375,
+       "impl": 0.0125
+      },
+      {
+       "value": "Accountant",
+       "refengine": 0.025,
+       "impl": 0.0
+      },
+      {
+       "value": "Buyer",
+       "refengine": 0.0125,
+       "impl": 0.0625
+      },
+      {
+       "value": "Software Engineer",
+       "refengine": 0.0125,
+       "impl": 0.05
+      },
+      {
+       "value": "Sales Representative",
+       "refengine": 0.0125,
+       "impl": 0.0375
+      },
+      {
+       "value": "Operations Analyst",
+       "refengine": 0.0125,
+       "impl": 0.0375
+      },
+      {
+       "value": "Technical Support Specialist",
+       "refengine": 0.0,
+       "impl": 0.0375
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.5249999999999999,
+     "tvd_baseline": 0.6124999999999999,
+     "tvd_tol": 1.7952402618064474,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "pay_grade": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "distinct": {
+      "refengine": 7,
+      "impl": 7,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "G2",
+       "refengine": 0.225,
+       "impl": 0.175
+      },
+      {
+       "value": "G1",
+       "refengine": 0.1875,
+       "impl": 0.225
+      },
+      {
+       "value": "G4",
+       "refengine": 0.175,
+       "impl": 0.1875
+      },
+      {
+       "value": "G3",
+       "refengine": 0.1625,
+       "impl": 0.2375
+      },
+      {
+       "value": "G5",
+       "refengine": 0.1125,
+       "impl": 0.1
+      },
+      {
+       "value": "G7",
+       "refengine": 0.075,
+       "impl": 0.025
+      },
+      {
+       "value": "G6",
+       "refengine": 0.0625,
+       "impl": 0.05
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.125,
+     "tvd_baseline": 0.22500000000000003,
+     "tvd_tol": 0.7080523079119723,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_exempt": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "refengine": 0.625,
+       "impl": 0.65
+      },
+      {
+       "value": "false",
+       "refengine": 0.375,
+       "impl": 0.35
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.025000000000000022,
+     "tvd_baseline": 0.0625,
+     "tvd_tol": 0.37846987830302403,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "min_salary": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "ks": 0.1,
+     "ks_baseline": 0.15000000000000002,
+     "ks_tol": 0.3082389993889093,
+     "stats": {
+      "mean": {
+       "refengine": 75518.46213740348,
+       "impl": 76201.6396743145
+      },
+      "min": {
+       "refengine": 30477.536219881575,
+       "impl": 31127.384778734875
+      },
+      "max": {
+       "refengine": 118743.37706916498,
+       "impl": 119826.36923908905
+      },
+      "std": {
+       "refengine": 28588.318829445674,
+       "impl": 26816.705917313815,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 80,
+      "impl": 80
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "max_salary": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.08783418326596999
+     },
+     "ks": 0.1,
+     "ks_baseline": 0.16249999999999998,
+     "ks_tol": 0.3082389993889093,
+     "stats": {
+      "mean": {
+       "refengine": 117134.62849999999,
+       "impl": 119014.84775
+      },
+      "min": {
+       "refengine": 45435.0,
+       "impl": 44825.3
+      },
+      "max": {
+       "refengine": 209722.81,
+       "impl": 214349.9
+      },
+      "std": {
+       "refengine": 46913.24164776169,
+       "impl": 43025.49447828996,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 80,
+      "impl": 80
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "hr_employee": {
+   "rows": {
+    "refengine": 500,
+    "impl": 500
+   },
+   "columns_refengine": [
+    "employee_id",
+    "department_id",
+    "position_id",
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "hire_date",
+    "manager_id",
+    "employment_status",
+    "employment_type"
+   ],
+   "columns_impl": [
+    "employee_id",
+    "department_id",
+    "position_id",
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "hire_date",
+    "manager_id",
+    "employment_status",
+    "employment_type"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "employee_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "department_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "position_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "first_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "last_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "email": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "phone": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "hire_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "manager_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "employment_status": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "employment_type": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "employee_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.1232955997555637,
+     "stats": {
+      "mean": {
+       "refengine": 250.5,
+       "impl": 250.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500.0,
+       "impl": 500.0
+      },
+      "std": {
+       "refengine": 144.33727862198316,
+       "impl": 144.33727862198316,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 500,
+      "impl": 500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "department_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "ks": 0.04800000000000004,
+     "ks_baseline": 0.08799999999999997,
+     "ks_tol": 0.13399999999999995,
+     "stats": {
+      "mean": {
+       "refengine": 5.634,
+       "impl": 5.244
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 30.0,
+       "impl": 30.0
+      },
+      "std": {
+       "refengine": 6.727558546753793,
+       "impl": 6.59548815479188,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 29,
+      "impl": 30
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "position_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "ks": 0.04200000000000004,
+     "ks_baseline": 0.062000000000000055,
+     "ks_tol": 0.1232955997555637,
+     "stats": {
+      "mean": {
+       "refengine": 11.296,
+       "impl": 12.168
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 80.0,
+       "impl": 80.0
+      },
+      "std": {
+       "refengine": 16.82677580524564,
+       "impl": 17.57634137128657,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 63,
+      "impl": 61
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "first_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 470,
+      "impl": 475,
+      "ratio": 1.0106382978723405,
+      "baseline_max_ratio_dev": 0.03191489361702127
+     },
+     "top10": [
+      {
+       "value": "Isah",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Panor",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Nuol",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Abigail",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Rine",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Suin",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Thnah",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Saron",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Jeiel",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Meaya",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Jaasha",
+       "refengine": 0.0,
+       "impl": 0.006
+      },
+      {
+       "value": "Loyn",
+       "refengine": 0.0,
+       "impl": 0.006
+      },
+      {
+       "value": "Osea",
+       "refengine": 0.0,
+       "impl": 0.004
+      },
+      {
+       "value": "Hie",
+       "refengine": 0.0,
+       "impl": 0.004
+      },
+      {
+       "value": "Brantley",
+       "refengine": 0.0,
+       "impl": 0.004
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.9200000000000004,
+     "tvd_baseline": 0.9180000000000004,
+     "tvd_tol": 2.320733348368515,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "last_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 472,
+      "impl": 474,
+      "ratio": 1.0042372881355932,
+      "baseline_max_ratio_dev": 0.016949152542372836
+     },
+     "top10": [
+      {
+       "value": "Bauton",
+       "refengine": 0.006,
+       "impl": 0.0
+      },
+      {
+       "value": "Kiddwick",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Meadgate",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Wattshire",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Shepherd",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Weberwell",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "LaNally",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Arnland",
+       "refengine": 0.004,
+       "impl": 0.002
+      },
+      {
+       "value": "Hufman",
+       "refengine": 0.004,
+       "impl": 0.002
+      },
+      {
+       "value": "Reefield",
+       "refengine": 0.004,
+       "impl": 0.0
+      },
+      {
+       "value": "Villaford",
+       "refengine": 0.0,
+       "impl": 0.006
+      },
+      {
+       "value": "Novdale",
+       "refengine": 0.0,
+       "impl": 0.004
+      },
+      {
+       "value": "Dawssen",
+       "refengine": 0.002,
+       "impl": 0.004
+      },
+      {
+       "value": "Fitzggate",
+       "refengine": 0.0,
+       "impl": 0.004
+      },
+      {
+       "value": "Nobcroft",
+       "refengine": 0.0,
+       "impl": 0.004
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.9060000000000004,
+     "tvd_baseline": 0.9160000000000004,
+     "tvd_tol": 2.3256658371388985,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "email": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 500,
+      "impl": 500,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "jameson.townbrook637@gmx.com",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "daon.coopson120@earthlink.net",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "kayla.kiddwick521@mailfence.com",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "frton.farrell141@outlook.co.uk",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "evden.meadgate959@mailfence.com",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "hoea.foleygate823@optonline.net",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "emson.barshire615@hotmail.com",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "leona.riggs202@btinternet.com",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "rhys.foxwick948@engineer.com",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "isah.simmons289@att.net",
+       "refengine": 0.002,
+       "impl": 0.0
+      },
+      {
+       "value": "koton.novdale806@hushmail.com",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "feard.dawssen806@live.com",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "ruen.le144@yahoo.co.uk",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "diee.novdale620@hushmail.com",
+       "refengine": 0.0,
+       "impl": 0.002
+      },
+      {
+       "value": "gene.pinedwick572@consultant.com",
+       "refengine": 0.0,
+       "impl": 0.002
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "phone": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.064,
+      "impl": 0.082,
+      "baseline_max_abs_diff": 0.03,
+      "tol": 0.07739767438366607
+     },
+     "distinct": {
+      "refengine": 468,
+      "impl": 459,
+      "ratio": 0.9807692307692307,
+      "baseline_max_ratio_dev": 0.03205128205128205
+     },
+     "top10": [
+      {
+       "value": "(813) 513-5394",
+       "refengine": 0.002136752136752137,
+       "impl": 0.0
+      },
+      {
+       "value": "(885) 633-9815",
+       "refengine": 0.002136752136752137,
+       "impl": 0.0
+      },
+      {
+       "value": "(886) 326-3317",
+       "refengine": 0.002136752136752137,
+       "impl": 0.0
+      },
+      {
+       "value": "(317) 618-5131",
+       "refengine": 0.002136752136752137,
+       "impl": 0.0
+      },
+      {
+       "value": "(373) 312-9833",
+       "refengine": 0.002136752136752137,
+       "impl": 0.0
+      },
+      {
+       "value": "(673) 488-2490",
+       "refengine": 0.002136752136752137,
+       "impl": 0.0
+      },
+      {
+       "value": "(666) 450-1472",
+       "refengine": 0.002136752136752137,
+       "impl": 0.0
+      },
+      {
+       "value": "(807) 625-9127",
+       "refengine": 0.002136752136752137,
+       "impl": 0.0
+      },
+      {
+       "value": "(843) 620-9051",
+       "refengine": 0.002136752136752137,
+       "impl": 0.0
+      },
+      {
+       "value": "(569) 931-4219",
+       "refengine": 0.002136752136752137,
+       "impl": 0.0
+      },
+      {
+       "value": "(335) 682-4426",
+       "refengine": 0.0,
+       "impl": 0.002178649237472767
+      },
+      {
+       "value": "(976) 845-8912",
+       "refengine": 0.0,
+       "impl": 0.002178649237472767
+      },
+      {
+       "value": "(654) 474-9931",
+       "refengine": 0.0,
+       "impl": 0.002178649237472767
+      },
+      {
+       "value": "(342) 608-1485",
+       "refengine": 0.0,
+       "impl": 0.002178649237472767
+      },
+      {
+       "value": "(690) 705-2785",
+       "refengine": 0.0,
+       "impl": 0.002178649237472767
+      }
+     ],
+     "vocab_overlap": 0.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "(AAA) EEE-SSSS, AAA/EEE 200..998, SSSS 1000..9998",
+     "distinct_ratio_tol": 0.04807692307692307,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "hire_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "ks": 0.07000000000000006,
+     "ks_baseline": 0.061999999999999944,
+     "ks_tol": 0.1232955997555637,
+     "stats": {
+      "mean": {
+       "refengine": "2020-08-09 08:35:22.303178496",
+       "impl": "2020-03-24 13:22:21.174935296"
+      },
+      "min": {
+       "refengine": "2015-01-17 04:26:42.164740352",
+       "impl": "2015-01-10 10:23:19.689417984"
+      },
+      "max": {
+       "refengine": "2025-12-26 23:05:24.819990784",
+       "impl": "2025-12-30 07:52:48.123590912"
+      },
+      "std": {
+       "refengine": 1177.8829291401555,
+       "impl": 1151.6371918606428,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 500,
+      "impl": 500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "manager_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.01,
+      "impl": 0.01,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.03146426544510455
+     },
+     "ks": 0.04646464646464643,
+     "ks_baseline": 0.036363636363636376,
+     "ks_tol": 0.12391674020940599,
+     "stats": {
+      "mean": {
+       "refengine": 113.6989898989899,
+       "impl": 113.94141414141414
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 334.0,
+       "impl": 335.0
+      },
+      "std": {
+       "refengine": 108.15070059589875,
+       "impl": 112.3536920766413,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 208,
+      "impl": 209
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employment_status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Active",
+       "refengine": 0.792,
+       "impl": 0.828
+      },
+      {
+       "value": "Terminated",
+       "refengine": 0.104,
+       "impl": 0.084
+      },
+      {
+       "value": "On Leave",
+       "refengine": 0.074,
+       "impl": 0.056
+      },
+      {
+       "value": "Retired",
+       "refengine": 0.03,
+       "impl": 0.032
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.03799999999999995,
+     "tvd_baseline": 0.043999999999999956,
+     "tvd_tol": 0.21409489393833253,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employment_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.014127986409959489
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Full-Time",
+       "refengine": 0.758,
+       "impl": 0.744
+      },
+      {
+       "value": "Part-Time",
+       "refengine": 0.108,
+       "impl": 0.118
+      },
+      {
+       "value": "Contract",
+       "refengine": 0.096,
+       "impl": 0.084
+      },
+      {
+       "value": "Temporary",
+       "refengine": 0.038,
+       "impl": 0.054
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.026000000000000002,
+     "tvd_baseline": 0.052000000000000005,
+     "tvd_tol": 0.21409489393833253,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "hr_compensation": {
+   "rows": {
+    "refengine": 1500,
+    "impl": 1500
+   },
+   "columns_refengine": [
+    "compensation_id",
+    "employee_id",
+    "effective_date",
+    "base_salary",
+    "bonus_pct",
+    "change_reason"
+   ],
+   "columns_impl": [
+    "compensation_id",
+    "employee_id",
+    "effective_date",
+    "base_salary",
+    "bonus_pct",
+    "change_reason"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "compensation_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "employee_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "effective_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "base_salary": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "bonus_pct": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "change_reason": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "compensation_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.004712473597528946
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.07118474770877106,
+     "stats": {
+      "mean": {
+       "refengine": 750.5,
+       "impl": 750.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 1500.0,
+       "impl": 1500.0
+      },
+      "std": {
+       "refengine": 433.01260566716377,
+       "impl": 433.01260566716377,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1500,
+      "impl": 1500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employee_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.004712473597528946
+     },
+     "ks": 0.022666666666666613,
+     "ks_baseline": 0.06666666666666671,
+     "ks_tol": 0.10200000000000006,
+     "stats": {
+      "mean": {
+       "refengine": 241.68933333333334,
+       "impl": 242.30933333333334
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500.0,
+       "impl": 500.0
+      },
+      "std": {
+       "refengine": 144.86655751491517,
+       "impl": 145.36171084420945,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 472,
+      "impl": 475
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "effective_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.004712473597528946
+     },
+     "ks": 0.026000000000000023,
+     "ks_baseline": 0.04866666666666675,
+     "ks_tol": 0.07500000000000012,
+     "stats": {
+      "mean": {
+       "refengine": "2020-05-29 01:19:41.104169728",
+       "impl": "2020-06-20 12:42:56.951767552"
+      },
+      "min": {
+       "refengine": "2015-01-04 05:55:12.672981760",
+       "impl": "2015-01-01 03:40:47.883926016"
+      },
+      "max": {
+       "refengine": "2025-12-30 16:24:00.386174464",
+       "impl": "2025-12-29 04:50:41.280236032"
+      },
+      "std": {
+       "refengine": 1156.1538344168846,
+       "impl": 1181.1289225089404,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 1500,
+      "impl": 1500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "base_salary": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.004712473597528946
+     },
+     "ks": 0.02733333333333335,
+     "ks_baseline": 0.030000000000000027,
+     "ks_tol": 0.07118474770877106,
+     "stats": {
+      "mean": {
+       "refengine": 67765.79627854307,
+       "impl": 68039.21048185427
+      },
+      "min": {
+       "refengine": 28000.0,
+       "impl": 28000.0
+      },
+      "max": {
+       "refengine": 310503.92606283893,
+       "impl": 280178.44697038946
+      },
+      "std": {
+       "refengine": 34745.32813244831,
+       "impl": 34525.88824351122,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1400,
+      "impl": 1406
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "bonus_pct": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.004712473597528946
+     },
+     "ks": 0.02466666666666667,
+     "ks_baseline": 0.05199999999999999,
+     "ks_tol": 0.07999999999999999,
+     "stats": {
+      "mean": {
+       "refengine": 12.367416478521664,
+       "impl": 12.449359721729149
+      },
+      "min": {
+       "refengine": 0.0012263084415653491,
+       "impl": 0.005929672960158783
+      },
+      "max": {
+       "refengine": 24.986314018337076,
+       "impl": 24.965132511890435
+      },
+      "std": {
+       "refengine": 7.236511942113649,
+       "impl": 7.255354638987505,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1500,
+      "impl": 1500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "change_reason": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.004712473597528946
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Annual Review",
+       "refengine": 0.412,
+       "impl": 0.41933333333333334
+      },
+      {
+       "value": "Promotion",
+       "refengine": 0.24,
+       "impl": 0.23933333333333334
+      },
+      {
+       "value": "Market Adjustment",
+       "refengine": 0.14333333333333334,
+       "impl": 0.14533333333333334
+      },
+      {
+       "value": "New Hire",
+       "refengine": 0.12733333333333333,
+       "impl": 0.11933333333333333
+      },
+      {
+       "value": "Transfer",
+       "refengine": 0.07733333333333334,
+       "impl": 0.07666666666666666
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.00933333333333334,
+     "tvd_baseline": 0.032666666666666656,
+     "tvd_tol": 0.1381976597885342,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "hr_performance_review": {
+   "rows": {
+    "refengine": 1250,
+    "impl": 1250
+   },
+   "columns_refengine": [
+    "review_id",
+    "employee_id",
+    "reviewer_id",
+    "review_date",
+    "review_period_year",
+    "rating",
+    "comments"
+   ],
+   "columns_impl": [
+    "review_id",
+    "employee_id",
+    "reviewer_id",
+    "review_date",
+    "review_period_year",
+    "rating",
+    "comments"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "review_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "employee_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "reviewer_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "review_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "review_period_year": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "rating": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "comments": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "review_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.005654591055063133
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.07797898414081621,
+     "stats": {
+      "mean": {
+       "refengine": 625.5,
+       "impl": 625.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 1250.0,
+       "impl": 1250.0
+      },
+      "std": {
+       "refengine": 360.84380277344377,
+       "impl": 360.84380277344377,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1250,
+      "impl": 1250
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employee_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.005654591055063133
+     },
+     "ks": 0.028000000000000025,
+     "ks_baseline": 0.03760000000000008,
+     "ks_tol": 0.07797898414081621,
+     "stats": {
+      "mean": {
+       "refengine": 251.644,
+       "impl": 250.2656
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500.0,
+       "impl": 500.0
+      },
+      "std": {
+       "refengine": 145.10635156325858,
+       "impl": 142.98178854889179,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 458,
+      "impl": 456
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "reviewer_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.005654591055063133
+     },
+     "ks": 0.028800000000000048,
+     "ks_baseline": 0.0504,
+     "ks_tol": 0.07797898414081621,
+     "stats": {
+      "mean": {
+       "refengine": 253.9312,
+       "impl": 249.18
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500.0,
+       "impl": 500.0
+      },
+      "std": {
+       "refengine": 145.58908773173903,
+       "impl": 146.45253838701467,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 458,
+      "impl": 467
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "review_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.005654591055063133
+     },
+     "ks": 0.03040000000000001,
+     "ks_baseline": 0.051999999999999935,
+     "ks_tol": 0.0799999999999999,
+     "stats": {
+      "mean": {
+       "refengine": "2022-12-08 12:20:05.226479616",
+       "impl": "2023-01-04 12:57:32.226574848"
+      },
+      "min": {
+       "refengine": "2020-01-01 17:35:10.781911296",
+       "impl": "2020-01-02 08:41:39.723760896"
+      },
+      "max": {
+       "refengine": "2025-12-27 19:01:07.660819456",
+       "impl": "2025-12-30 11:44:12.401389056"
+      },
+      "std": {
+       "refengine": 626.9559806698541,
+       "impl": 622.1618173535256,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 1250,
+      "impl": 1250
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "review_period_year": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.005654591055063133
+     },
+     "ks": 0.009600000000000053,
+     "ks_baseline": 0.021600000000000064,
+     "ks_tol": 0.07797898414081621,
+     "stats": {
+      "mean": {
+       "refengine": 2022.2264,
+       "impl": 2022.2152
+      },
+      "min": {
+       "refengine": 2020.0,
+       "impl": 2020.0
+      },
+      "max": {
+       "refengine": 2024.0,
+       "impl": 2024.0
+      },
+      "std": {
+       "refengine": 1.4093768268280844,
+       "impl": 1.392296290306054,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "rating": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.005654591055063133
+     },
+     "ks": 0.036800000000000055,
+     "ks_baseline": 0.0416,
+     "ks_tol": 0.07797898414081621,
+     "stats": {
+      "mean": {
+       "refengine": 3.3368,
+       "impl": 3.24
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 5.0,
+       "impl": 5.0
+      },
+      "std": {
+       "refengine": 0.9613354045285131,
+       "impl": 0.9927738916792685,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "comments": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.1864,
+      "impl": 0.184,
+      "baseline_max_abs_diff": 0.04319999999999999,
+      "tol": 0.07788582412737251
+     },
+     "distinct": {
+      "refengine": 809,
+      "impl": 810,
+      "ratio": 1.0012360939431397,
+      "baseline_max_ratio_dev": 0.060568603213844274
+     },
+     "top10": [
+      {
+       "value": "A comprehensive project plan was updated by the committee.",
+       "refengine": 0.003933136676499509,
+       "impl": 0.0
+      },
+      {
+       "value": "The quarterly inventory initiative will drive acquisition growth.",
+       "refengine": 0.003933136676499509,
+       "impl": 0.0
+      },
+      {
+       "value": "A comprehensive deliverable plan was enhanced by the committee.",
+       "refengine": 0.0029498525073746312,
+       "impl": 0.0
+      },
+      {
+       "value": "The team validated the technical program successfully.",
+       "refengine": 0.0029498525073746312,
+       "impl": 0.00196078431372549
+      },
+      {
+       "value": "The primary program initiative will drive revenue growth.",
+       "refengine": 0.0029498525073746312,
+       "impl": 0.0
+      },
+      {
+       "value": "Implementation of the enhanced framework is scheduled for next quarter.",
+       "refengine": 0.0029498525073746312,
+       "impl": 0.0
+      },
+      {
+       "value": "Budget allocation for secondary initiative has been restructured.",
+       "refengine": 0.0029498525073746312,
+       "impl": 0.0
+      },
+      {
+       "value": "Customer resource has been analyzed through our optimized program.",
+       "refengine": 0.0029498525073746312,
+       "impl": 0.0
+      },
+      {
+       "value": "Our milestone team implemented innovative comprehensive solutions daily.",
+       "refengine": 0.0029498525073746312,
+       "impl": 0.000980392156862745
+      },
+      {
+       "value": "We need to delivered the final budget before the deadline.",
+       "refengine": 0.0029498525073746312,
+       "impl": 0.000980392156862745
+      },
+      {
+       "value": "This service requires optimized accountability to be effective.",
+       "refengine": 0.0,
+       "impl": 0.00392156862745098
+      },
+      {
+       "value": "The team optimized the annual program successfully.",
+       "refengine": 0.0019665683382497543,
+       "impl": 0.00392156862745098
+      },
+      {
+       "value": "A comprehensive process plan was delivered by the committee.",
+       "refengine": 0.0009832841691248771,
+       "impl": 0.00392156862745098
+      },
+      {
+       "value": "The analysis shows operational improvement in analysis performance.",
+       "refengine": 0.0,
+       "impl": 0.0029411764705882353
+      },
+      {
+       "value": "This program requires annual compliance to be effective.",
+       "refengine": 0.0,
+       "impl": 0.0029411764705882353
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.6714037827520389,
+     "tvd_baseline": 0.6912399124788505,
+     "tvd_tol": 1.9256642620370479,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "hr_time_off_request": {
+   "rows": {
+    "refengine": 2500,
+    "impl": 2500
+   },
+   "columns_refengine": [
+    "request_id",
+    "employee_id",
+    "leave_type",
+    "start_date",
+    "hours_requested",
+    "status",
+    "end_date"
+   ],
+   "columns_impl": [
+    "request_id",
+    "employee_id",
+    "leave_type",
+    "start_date",
+    "hours_requested",
+    "status",
+    "end_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "request_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "employee_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "leave_type": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "start_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "hours_requested": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "status": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "end_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "request_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.05513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": 1250.5,
+       "impl": 1250.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 2500.0,
+       "impl": 2500.0
+      },
+      "std": {
+       "refengine": 721.6877787520029,
+       "impl": 721.6877787520029,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 2500,
+      "impl": 2500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employee_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.042800000000000005,
+     "ks_baseline": 0.03999999999999998,
+     "ks_tol": 0.06199999999999997,
+     "stats": {
+      "mean": {
+       "refengine": 257.9208,
+       "impl": 248.0496
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500.0,
+       "impl": 500.0
+      },
+      "std": {
+       "refengine": 145.2933863854787,
+       "impl": 144.93731589842554,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 499,
+      "impl": 496
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "leave_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "distinct": {
+      "refengine": 7,
+      "impl": 7,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "PTO",
+       "refengine": 0.4576,
+       "impl": 0.4504
+      },
+      {
+       "value": "Sick",
+       "refengine": 0.2448,
+       "impl": 0.2616
+      },
+      {
+       "value": "Personal",
+       "refengine": 0.116,
+       "impl": 0.1032
+      },
+      {
+       "value": "Parental",
+       "refengine": 0.0636,
+       "impl": 0.0664
+      },
+      {
+       "value": "Unpaid",
+       "refengine": 0.0464,
+       "impl": 0.052
+      },
+      {
+       "value": "Bereavement",
+       "refengine": 0.04,
+       "impl": 0.04
+      },
+      {
+       "value": "Jury Duty",
+       "refengine": 0.0316,
+       "impl": 0.0264
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.0252,
+     "tvd_baseline": 0.024000000000000018,
+     "tvd_tol": 0.12666024736934256,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "start_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.02639999999999998,
+     "ks_baseline": 0.03320000000000001,
+     "ks_tol": 0.05513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": "2023-01-26 21:45:02.263379456",
+       "impl": "2023-01-01 03:03:28.785137664"
+      },
+      "min": {
+       "refengine": "2020-01-01 12:06:36.748664064",
+       "impl": "2020-01-01 12:12:28.584669952"
+      },
+      "max": {
+       "refengine": "2025-12-30 15:35:02.568818688",
+       "impl": "2025-12-30 17:41:43.828023040"
+      },
+      "std": {
+       "refengine": 631.9175691398618,
+       "impl": 632.7043918319313,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 2500,
+      "impl": 2500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "hours_requested": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.022800000000000042,
+     "ks_baseline": 0.022799999999999987,
+     "ks_tol": 0.05513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": 42.08712565882299,
+       "impl": 42.387993584355435
+      },
+      "min": {
+       "refengine": 4.003779468538241,
+       "impl": 4.04267104034677
+      },
+      "max": {
+       "refengine": 79.99954820408902,
+       "impl": 79.96876289492039
+      },
+      "std": {
+       "refengine": 22.091891383104937,
+       "impl": 21.730522364559043,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 2500,
+      "impl": 2500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Approved",
+       "refengine": 0.7444,
+       "impl": 0.7584
+      },
+      {
+       "value": "Pending",
+       "refengine": 0.1068,
+       "impl": 0.0984
+      },
+      {
+       "value": "Denied",
+       "refengine": 0.088,
+       "impl": 0.0804
+      },
+      {
+       "value": "Cancelled",
+       "refengine": 0.0608,
+       "impl": 0.0628
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.016000000000000004,
+     "tvd_baseline": 0.02200000000000001,
+     "tvd_tol": 0.09574614729634384,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "end_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.027200000000000002,
+     "ks_baseline": 0.032799999999999996,
+     "ks_tol": 0.05513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": "2023-02-03 12:06:09.463379456",
+       "impl": "2023-01-08 13:52:37.905137664"
+      },
+      "min": {
+       "refengine": "2020-01-04 14:11:56.768903424",
+       "impl": "2020-01-04 17:37:17.925584896"
+      },
+      "max": {
+       "refengine": "2026-01-10 01:02:05.978866688",
+       "impl": "2026-01-12 05:38:06.402521088"
+      },
+      "std": {
+       "refengine": 631.8384902951158,
+       "impl": 632.8130233493501,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 2500,
+      "impl": 2500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "hr_training": {
+   "rows": {
+    "refengine": 100,
+    "impl": 100
+   },
+   "columns_refengine": [
+    "training_id",
+    "course_name",
+    "category",
+    "duration_hours",
+    "is_mandatory"
+   ],
+   "columns_impl": [
+    "training_id",
+    "course_name",
+    "category",
+    "duration_hours",
+    "is_mandatory"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "training_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "course_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "category": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "duration_hours": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "is_mandatory": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "training_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.2756973423800469,
+     "stats": {
+      "mean": {
+       "refengine": 50.5,
+       "impl": 50.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "refengine": 28.86607004772212,
+       "impl": 28.86607004772212,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "course_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "refengine": 46,
+      "impl": 40,
+      "ratio": 0.8695652173913043,
+      "baseline_max_ratio_dev": 0.08695652173913049
+     },
+     "top10": [
+      {
+       "value": "Cybersecurity Awareness",
+       "refengine": 0.05,
+       "impl": 0.03
+      },
+      {
+       "value": "Managing Remote Teams",
+       "refengine": 0.05,
+       "impl": 0.03
+      },
+      {
+       "value": "Effective Communication Skills",
+       "refengine": 0.04,
+       "impl": 0.01
+      },
+      {
+       "value": "Performance Review Best Practices",
+       "refengine": 0.04,
+       "impl": 0.02
+      },
+      {
+       "value": "Public Speaking & Presentation",
+       "refengine": 0.04,
+       "impl": 0.05
+      },
+      {
+       "value": "SOX Compliance Overview",
+       "refengine": 0.04,
+       "impl": 0.01
+      },
+      {
+       "value": "New Employee Orientation",
+       "refengine": 0.04,
+       "impl": 0.05
+      },
+      {
+       "value": "Code of Conduct Review",
+       "refengine": 0.03,
+       "impl": 0.06
+      },
+      {
+       "value": "Workplace Harassment Prevention",
+       "refengine": 0.03,
+       "impl": 0.02
+      },
+      {
+       "value": "Time Management & Productivity",
+       "refengine": 0.03,
+       "impl": 0.05
+      },
+      {
+       "value": "Customer Service Excellence",
+       "refengine": 0.02,
+       "impl": 0.05
+      },
+      {
+       "value": "Python Programming Basics",
+       "refengine": 0.02,
+       "impl": 0.04
+      },
+      {
+       "value": "Business Writing Skills",
+       "refengine": 0.01,
+       "impl": 0.04
+      },
+      {
+       "value": "Cloud Computing Fundamentals",
+       "refengine": 0.0,
+       "impl": 0.04
+      },
+      {
+       "value": "Negotiation Skills",
+       "refengine": 0.0,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.4,
+     "tvd_baseline": 0.33999999999999997,
+     "tvd_tol": 1.6234549139418029,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "category": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "refengine": 7,
+      "impl": 7,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Compliance",
+       "refengine": 0.27,
+       "impl": 0.33
+      },
+      {
+       "value": "Technical",
+       "refengine": 0.25,
+       "impl": 0.22
+      },
+      {
+       "value": "Leadership",
+       "refengine": 0.12,
+       "impl": 0.15
+      },
+      {
+       "value": "Soft Skills",
+       "refengine": 0.11,
+       "impl": 0.07
+      },
+      {
+       "value": "Onboarding",
+       "refengine": 0.1,
+       "impl": 0.05
+      },
+      {
+       "value": "Safety",
+       "refengine": 0.1,
+       "impl": 0.16
+      },
+      {
+       "value": "Diversity",
+       "refengine": 0.05,
+       "impl": 0.02
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.14999999999999997,
+     "tvd_baseline": 0.17,
+     "tvd_tol": 0.6333012368467129,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "duration_hours": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.14999999999999997,
+     "ks_baseline": 0.14999999999999997,
+     "ks_tol": 0.2756973423800469,
+     "stats": {
+      "mean": {
+       "refengine": 21.997337091930703,
+       "impl": 19.17725829592274
+      },
+      "min": {
+       "refengine": 1.0090492696450972,
+       "impl": 0.7533110294011867
+      },
+      "max": {
+       "refengine": 39.765751439769396,
+       "impl": 39.70369820042839
+      },
+      "std": {
+       "refengine": 11.221378398314375,
+       "impl": 11.847172906414322,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "is_mandatory": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "false",
+       "refengine": 0.7,
+       "impl": 0.68
+      },
+      {
+       "value": "true",
+       "refengine": 0.3,
+       "impl": 0.32
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.019999999999999962,
+     "tvd_baseline": 0.10999999999999999,
+     "tvd_tol": 0.3385137501286538,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "hr_training_enrollment": {
+   "rows": {
+    "refengine": 2000,
+    "impl": 2000
+   },
+   "columns_refengine": [
+    "enrollment_id",
+    "employee_id",
+    "training_id",
+    "enrollment_date",
+    "status",
+    "score",
+    "completion_date"
+   ],
+   "columns_impl": [
+    "enrollment_id",
+    "employee_id",
+    "training_id",
+    "enrollment_date",
+    "status",
+    "score",
+    "completion_date"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "enrollment_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "employee_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "training_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "enrollment_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "status": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "score": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "completion_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "enrollment_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "refengine": 1000.5,
+       "impl": 1000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 2000.0,
+       "impl": 2000.0
+      },
+      "std": {
+       "refengine": 577.3501970208376,
+       "impl": 577.3501970208376,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 2000,
+      "impl": 2000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employee_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.025000000000000022,
+     "ks_baseline": 0.03450000000000002,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "refengine": 249.762,
+       "impl": 252.8045
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 500.0,
+       "impl": 500.0
+      },
+      "std": {
+       "refengine": 146.27987679786992,
+       "impl": 145.24997514543676,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 494,
+      "impl": 491
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "training_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.034500000000000086,
+     "ks_baseline": 0.025000000000000022,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "refengine": 13.5835,
+       "impl": 12.909
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 99.0,
+       "impl": 100.0
+      },
+      "std": {
+       "refengine": 20.149516811824547,
+       "impl": 20.178471671561255,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 95,
+      "impl": 97
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "enrollment_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "ks": 0.02849999999999997,
+     "ks_baseline": 0.038000000000000034,
+     "ks_tol": 0.06164779987778185,
+     "stats": {
+      "mean": {
+       "refengine": "2023-01-19 01:54:16.885099520",
+       "impl": "2023-01-13 20:36:38.096738304"
+      },
+      "min": {
+       "refengine": "2020-01-01 07:33:12.840404480",
+       "impl": "2020-01-02 11:50:03.005108992"
+      },
+      "max": {
+       "refengine": "2025-12-30 04:50:40.711420928",
+       "impl": "2025-12-30 23:06:57.196497920"
+      },
+      "std": {
+       "refengine": 639.320633416109,
+       "impl": 628.1597764580999,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 2000,
+      "impl": 2000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.00353464991194319
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Completed",
+       "refengine": 0.6475,
+       "impl": 0.65
+      },
+      {
+       "value": "In Progress",
+       "refengine": 0.1605,
+       "impl": 0.15
+      },
+      {
+       "value": "Enrolled",
+       "refengine": 0.1,
+       "impl": 0.099
+      },
+      {
+       "value": "Dropped",
+       "refengine": 0.0635,
+       "impl": 0.0695
+      },
+      {
+       "value": "Failed",
+       "refengine": 0.0285,
+       "impl": 0.0315
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.011500000000000036,
+     "tvd_baseline": 0.02100000000000004,
+     "tvd_tol": 0.1196826841204298,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "score": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.256,
+      "impl": 0.257,
+      "baseline_max_abs_diff": 0.01200000000000001,
+      "tol": 0.06900434768911304
+     },
+     "ks": 0.01929025745669255,
+     "ks_baseline": 0.03255892615537992,
+     "ks_tol": 0.07149525074424871,
+     "stats": {
+      "mean": {
+       "refengine": 74.91837076189648,
+       "impl": 74.89323322297894
+      },
+      "min": {
+       "refengine": 50.07186843451915,
+       "impl": 50.02860085538825
+      },
+      "max": {
+       "refengine": 99.92249026360591,
+       "impl": 99.99123099254354
+      },
+      "std": {
+       "refengine": 14.246590023240136,
+       "impl": 14.231580171230116,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 1488,
+      "impl": 1486
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "completion_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.1445,
+      "impl": 0.1545,
+      "baseline_max_abs_diff": 0.0069999999999999785,
+      "tol": 0.055592209436215075
+     },
+     "ks": 0.03494105867312114,
+     "ks_baseline": 0.03877035371457649,
+     "ks_tol": 0.0668479245199716,
+     "stats": {
+      "mean": {
+       "refengine": "2023-03-07 01:30:44.102054912",
+       "impl": "2023-02-28 18:17:32.770511104"
+      },
+      "min": {
+       "refengine": "2020-01-25 23:25:30.127784960",
+       "impl": "2020-01-21 22:05:44.228663040"
+      },
+      "max": {
+       "refengine": "2026-03-25 04:50:40.711420928",
+       "impl": "2026-03-17 07:47:21.009515008"
+      },
+      "std": {
+       "refengine": 639.9721165709917,
+       "impl": 626.3628165223276,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 1711,
+      "impl": 1691
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "hr_termination": {
+   "rows": {
+    "refengine": 75,
+    "impl": 75
+   },
+   "columns_refengine": [
+    "termination_id",
+    "employee_id",
+    "termination_date",
+    "termination_type",
+    "reason",
+    "eligible_for_rehire"
+   ],
+   "columns_impl": [
+    "termination_id",
+    "employee_id",
+    "termination_date",
+    "termination_type",
+    "reason",
+    "eligible_for_rehire"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "termination_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "employee_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "termination_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "termination_type": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "reason": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "eligible_for_rehire": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "termination_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.09365025558091324
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.31834786967596906,
+     "stats": {
+      "mean": {
+       "refengine": 38.0,
+       "impl": 38.0
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 75.0,
+       "impl": 75.0
+      },
+      "std": {
+       "refengine": 21.64871050817269,
+       "impl": 21.64871050817269,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 75,
+      "impl": 75
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "employee_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.09365025558091324
+     },
+     "ks": 0.14666666666666672,
+     "ks_baseline": 0.13333333333333336,
+     "ks_tol": 0.31834786967596906,
+     "stats": {
+      "mean": {
+       "refengine": 259.0933333333333,
+       "impl": 242.72
+      },
+      "min": {
+       "refengine": 4.0,
+       "impl": 7.0
+      },
+      "max": {
+       "refengine": 498.0,
+       "impl": 499.0
+      },
+      "std": {
+       "refengine": 146.00092906858123,
+       "impl": 133.94939940141577,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 71,
+      "impl": 71
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "termination_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.09365025558091324
+     },
+     "ks": 0.12,
+     "ks_baseline": 0.13333333333333341,
+     "ks_tol": 0.31834786967596906,
+     "stats": {
+      "mean": {
+       "refengine": "2022-11-03 17:40:38.285611264",
+       "impl": "2022-09-19 15:10:28.336561408"
+      },
+      "min": {
+       "refengine": "2020-03-11 20:58:28.975768576",
+       "impl": "2020-01-31 22:04:34.894391040"
+      },
+      "max": {
+       "refengine": "2025-12-09 05:07:04.274511360",
+       "impl": "2025-12-30 04:20:30.908793088"
+      },
+      "std": {
+       "refengine": 592.0085326651956,
+       "impl": 659.350787656447,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 75,
+      "impl": 75
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "termination_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.09365025558091324
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 5,
+      "ratio": 1.25,
+      "baseline_max_ratio_dev": 0.25
+     },
+     "top10": [
+      {
+       "value": "Voluntary",
+       "refengine": 0.48,
+       "impl": 0.5866666666666667
+      },
+      {
+       "value": "Involuntary",
+       "refengine": 0.24,
+       "impl": 0.16
+      },
+      {
+       "value": "Layoff",
+       "refengine": 0.18666666666666668,
+       "impl": 0.12
+      },
+      {
+       "value": "Retirement",
+       "refengine": 0.09333333333333334,
+       "impl": 0.09333333333333334
+      },
+      {
+       "value": "End of Contract",
+       "refengine": 0.0,
+       "impl": 0.04
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.14666666666666667,
+     "tvd_baseline": 0.17333333333333337,
+     "tvd_tol": 0.5527906391541367,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "reason": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.09365025558091324
+     },
+     "distinct": {
+      "refengine": 8,
+      "impl": 8,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Better Opportunity",
+       "refengine": 0.3333333333333333,
+       "impl": 0.3333333333333333
+      },
+      {
+       "value": "Relocation",
+       "refengine": 0.17333333333333334,
+       "impl": 0.06666666666666667
+      },
+      {
+       "value": "Performance",
+       "refengine": 0.13333333333333333,
+       "impl": 0.14666666666666667
+      },
+      {
+       "value": "Restructuring",
+       "refengine": 0.10666666666666667,
+       "impl": 0.10666666666666667
+      },
+      {
+       "value": "Other",
+       "refengine": 0.09333333333333334,
+       "impl": 0.05333333333333334
+      },
+      {
+       "value": "Personal",
+       "refengine": 0.08,
+       "impl": 0.21333333333333335
+      },
+      {
+       "value": "Retirement",
+       "refengine": 0.04,
+       "impl": 0.013333333333333334
+      },
+      {
+       "value": "Conduct",
+       "refengine": 0.04,
+       "impl": 0.06666666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.17333333333333337,
+     "tvd_baseline": 0.22666666666666666,
+     "tvd_tol": 0.7817640190446717,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "eligible_for_rehire": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.09365025558091324
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "refengine": 0.5866666666666667,
+       "impl": 0.8133333333333334
+      },
+      {
+       "value": "false",
+       "refengine": 0.41333333333333333,
+       "impl": 0.18666666666666668
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.22666666666666668,
+     "tvd_baseline": 0.22666666666666668,
+     "tvd_tol": 0.39088200952233587,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  }
+ },
+ "table_order": {
+  "refengine": [
+   "hr_department",
+   "hr_position",
+   "hr_training",
+   "education_department",
+   "hr_employee",
+   "education_course",
+   "education_instructor",
+   "education_student",
+   "hr_compensation",
+   "hr_performance_review",
+   "hr_termination",
+   "hr_time_off_request",
+   "hr_training_enrollment",
+   "education_course_section",
+   "education_academic_standing",
+   "education_enrollment",
+   "education_financial_aid",
+   "education_grade_appeal"
+  ],
+  "impl": [
+   "hr_department",
+   "hr_position",
+   "hr_training",
+   "education_department",
+   "hr_employee",
+   "education_course",
+   "education_instructor",
+   "education_student",
+   "hr_compensation",
+   "hr_performance_review",
+   "hr_termination",
+   "hr_time_off_request",
+   "hr_training_enrollment",
+   "education_course_section",
+   "education_academic_standing",
+   "education_enrollment",
+   "education_financial_aid",
+   "education_grade_appeal"
+  ]
+ },
+ "fk_integrity": {
+  "refengine": {
+   "education_instructor.department_id->education_department.department_id": {
+    "integrity": 1.0,
+    "n": 150
+   },
+   "education_course.department_id->education_department.department_id": {
+    "integrity": 1.0,
+    "n": 300
+   },
+   "education_student.major_department_id->education_department.department_id": {
+    "integrity": 1.0,
+    "n": 2000
+   },
+   "education_enrollment.student_id->education_student.student_id": {
+    "integrity": 1.0,
+    "n": 16000
+   },
+   "education_enrollment.course_id->education_course.course_id": {
+    "integrity": 1.0,
+    "n": 16000
+   },
+   "education_enrollment.instructor_id->education_instructor.instructor_id": {
+    "integrity": 1.0,
+    "n": 16000
+   },
+   "education_financial_aid.student_id->education_student.student_id": {
+    "integrity": 1.0,
+    "n": 1400
+   },
+   "education_course_section.course_id->education_course.course_id": {
+    "integrity": 1.0,
+    "n": 600
+   },
+   "education_course_section.instructor_id->education_instructor.instructor_id": {
+    "integrity": 1.0,
+    "n": 600
+   },
+   "education_grade_appeal.enrollment_id->education_enrollment.enrollment_id": {
+    "integrity": 1.0,
+    "n": 320
+   },
+   "education_academic_standing.student_id->education_student.student_id": {
+    "integrity": 1.0,
+    "n": 4000
+   },
+   "hr_employee.department_id->hr_department.department_id": {
+    "integrity": 1.0,
+    "n": 500
+   },
+   "hr_employee.position_id->hr_position.position_id": {
+    "integrity": 1.0,
+    "n": 500
+   },
+   "hr_compensation.employee_id->hr_employee.employee_id": {
+    "integrity": 1.0,
+    "n": 1500
+   },
+   "hr_performance_review.employee_id->hr_employee.employee_id": {
+    "integrity": 1.0,
+    "n": 1250
+   },
+   "hr_time_off_request.employee_id->hr_employee.employee_id": {
+    "integrity": 1.0,
+    "n": 2500
+   },
+   "hr_training_enrollment.employee_id->hr_employee.employee_id": {
+    "integrity": 1.0,
+    "n": 2000
+   },
+   "hr_training_enrollment.training_id->hr_training.training_id": {
+    "integrity": 1.0,
+    "n": 2000
+   },
+   "hr_termination.employee_id->hr_employee.employee_id": {
+    "integrity": 1.0,
+    "n": 75
+   },
+   "education_student.shared_person_hr_employee_id->hr_employee.employee_id": {
+    "integrity": 1.0,
+    "n": 2000
+   },
+   "education_department.shared_organization_hr_department_id->hr_department.department_id": {
+    "integrity": 1.0,
+    "n": 25
+   },
+   "hr_employee.manager_id->hr_employee.employee_id": {
+    "integrity": 1.0,
+    "n": 495
+   }
+  },
+  "impl": {
+   "education_instructor.department_id->education_department.department_id": {
+    "integrity": 1.0,
+    "n": 150
+   },
+   "education_course.department_id->education_department.department_id": {
+    "integrity": 1.0,
+    "n": 300
+   },
+   "education_student.major_department_id->education_department.department_id": {
+    "integrity": 1.0,
+    "n": 2000
+   },
+   "education_enrollment.student_id->education_student.student_id": {
+    "integrity": 1.0,
+    "n": 16000
+   },
+   "education_enrollment.course_id->education_course.course_id": {
+    "integrity": 1.0,
+    "n": 16000
+   },
+   "education_enrollment.instructor_id->education_instructor.instructor_id": {
+    "integrity": 1.0,
+    "n": 16000
+   },
+   "education_financial_aid.student_id->education_student.student_id": {
+    "integrity": 1.0,
+    "n": 1400
+   },
+   "education_course_section.course_id->education_course.course_id": {
+    "integrity": 1.0,
+    "n": 600
+   },
+   "education_course_section.instructor_id->education_instructor.instructor_id": {
+    "integrity": 1.0,
+    "n": 600
+   },
+   "education_grade_appeal.enrollment_id->education_enrollment.enrollment_id": {
+    "integrity": 1.0,
+    "n": 320
+   },
+   "education_academic_standing.student_id->education_student.student_id": {
+    "integrity": 1.0,
+    "n": 4000
+   },
+   "hr_employee.department_id->hr_department.department_id": {
+    "integrity": 1.0,
+    "n": 500
+   },
+   "hr_employee.position_id->hr_position.position_id": {
+    "integrity": 1.0,
+    "n": 500
+   },
+   "hr_compensation.employee_id->hr_employee.employee_id": {
+    "integrity": 1.0,
+    "n": 1500
+   },
+   "hr_performance_review.employee_id->hr_employee.employee_id": {
+    "integrity": 1.0,
+    "n": 1250
+   },
+   "hr_time_off_request.employee_id->hr_employee.employee_id": {
+    "integrity": 1.0,
+    "n": 2500
+   },
+   "hr_training_enrollment.employee_id->hr_employee.employee_id": {
+    "integrity": 1.0,
+    "n": 2000
+   },
+   "hr_training_enrollment.training_id->hr_training.training_id": {
+    "integrity": 1.0,
+    "n": 2000
+   },
+   "hr_termination.employee_id->hr_employee.employee_id": {
+    "integrity": 1.0,
+    "n": 75
+   },
+   "education_student.shared_person_hr_employee_id->hr_employee.employee_id": {
+    "integrity": 1.0,
+    "n": 2000
+   },
+   "education_department.shared_organization_hr_department_id->hr_department.department_id": {
+    "integrity": 1.0,
+    "n": 25
+   },
+   "hr_employee.manager_id->hr_employee.employee_id": {
+    "integrity": 1.0,
+    "n": 495
+   }
+  }
+ },
+ "fanout": {
+  "education_department->education_instructor.department_id": {
+   "refengine": {
+    "p50": 2.0,
+    "p90": 11.600000000000001,
+    "p99": 47.03999999999994,
+    "max": 54,
+    "mean": 6.0,
+    "zero_frac": 0.16
+   },
+   "impl": {
+    "p50": 3.0,
+    "p90": 10.600000000000009,
+    "p99": 42.15999999999997,
+    "max": 46,
+    "mean": 6.0,
+    "zero_frac": 0.12
+   },
+   "ks_counts": 0.15999999999999998,
+   "ks_baseline_max": 0.12,
+   "ks_tol": 0.5513946847600938,
+   "equivalent": true
+  },
+  "education_department->education_course.department_id": {
+   "refengine": {
+    "p50": 11.0,
+    "p90": 17.200000000000003,
+    "p99": 22.279999999999994,
+    "max": 23,
+    "mean": 12.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 12.0,
+    "p90": 17.0,
+    "p99": 18.759999999999998,
+    "max": 19,
+    "mean": 12.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.12,
+   "ks_baseline_max": 0.12000000000000005,
+   "ks_tol": 0.5513946847600938,
+   "equivalent": true
+  },
+  "education_department->education_student.major_department_id": {
+   "refengine": {
+    "p50": 26.0,
+    "p90": 157.20000000000005,
+    "p99": 630.8399999999992,
+    "max": 729,
+    "mean": 80.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 26.0,
+    "p90": 161.00000000000014,
+    "p99": 638.559999999999,
+    "max": 748,
+    "mean": 80.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.12000000000000002,
+   "ks_baseline_max": 0.2,
+   "ks_tol": 0.5513946847600938,
+   "equivalent": true
+  },
+  "education_student->education_enrollment.student_id": {
+   "refengine": {
+    "p50": 8.0,
+    "p90": 12.0,
+    "p99": 14.009999999999991,
+    "max": 17,
+    "mean": 8.0,
+    "zero_frac": 0.0005
+   },
+   "impl": {
+    "p50": 8.0,
+    "p90": 12.0,
+    "p99": 15.0,
+    "max": 18,
+    "mean": 8.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.013500000000000012,
+   "ks_baseline_max": 0.018500000000000072,
+   "ks_tol": 0.06164779987778185,
+   "equivalent": true
+  },
+  "education_course->education_enrollment.course_id": {
+   "refengine": {
+    "p50": 7.0,
+    "p90": 58.200000000000045,
+    "p99": 825.6699999999976,
+    "max": 4820,
+    "mean": 53.333333333333336,
+    "zero_frac": 0.006666666666666667
+   },
+   "impl": {
+    "p50": 7.0,
+    "p90": 55.500000000000114,
+    "p99": 804.5299999999968,
+    "max": 4858,
+    "mean": 53.333333333333336,
+    "zero_frac": 0.006666666666666667
+   },
+   "ks_counts": 0.026666666666666727,
+   "ks_baseline_max": 0.040000000000000036,
+   "ks_tol": 0.15917393483798453,
+   "equivalent": true
+  },
+  "education_instructor->education_enrollment.instructor_id": {
+   "refengine": {
+    "p50": 24.0,
+    "p90": 146.79999999999984,
+    "p99": 1495.4399999999932,
+    "max": 4252,
+    "mean": 106.66666666666667,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 26.0,
+    "p90": 154.0,
+    "p99": 1524.6899999999935,
+    "max": 4246,
+    "mean": 106.66666666666667,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.040000000000000036,
+   "ks_baseline_max": 0.08000000000000002,
+   "ks_tol": 0.22510593742416898,
+   "equivalent": true
+  },
+  "education_student->education_financial_aid.student_id": {
+   "refengine": {
+    "p50": 1.0,
+    "p90": 2.0,
+    "p99": 3.0,
+    "max": 4,
+    "mean": 0.7,
+    "zero_frac": 0.498
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 2.0,
+    "p99": 3.0,
+    "max": 5,
+    "mean": 0.7,
+    "zero_frac": 0.502
+   },
+   "ks_counts": 0.0040000000000000036,
+   "ks_baseline_max": 0.011499999999999955,
+   "ks_tol": 0.06164779987778185,
+   "equivalent": true
+  },
+  "education_course->education_course_section.course_id": {
+   "refengine": {
+    "p50": 2.0,
+    "p90": 4.0,
+    "p99": 5.0,
+    "max": 6,
+    "mean": 2.0,
+    "zero_frac": 0.12666666666666668
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 4.0,
+    "p99": 6.0,
+    "max": 6,
+    "mean": 2.0,
+    "zero_frac": 0.16666666666666666
+   },
+   "ks_counts": 0.03999999999999998,
+   "ks_baseline_max": 0.043333333333333335,
+   "ks_tol": 0.15917393483798453,
+   "equivalent": true
+  },
+  "education_instructor->education_course_section.instructor_id": {
+   "refengine": {
+    "p50": 1.0,
+    "p90": 7.0,
+    "p99": 49.74999999999977,
+    "max": 174,
+    "mean": 4.0,
+    "zero_frac": 0.3466666666666667
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 5.0,
+    "p99": 63.33999999999969,
+    "max": 162,
+    "mean": 4.0,
+    "zero_frac": 0.36
+   },
+   "ks_counts": 0.040000000000000036,
+   "ks_baseline_max": 0.08000000000000002,
+   "ks_tol": 0.22510593742416898,
+   "equivalent": true
+  },
+  "education_enrollment->education_grade_appeal.enrollment_id": {
+   "refengine": {
+    "p50": 0.0,
+    "p90": 0.0,
+    "p99": 1.0,
+    "max": 2,
+    "mean": 0.02,
+    "zero_frac": 0.9801875
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 0.0,
+    "p99": 1.0,
+    "max": 2,
+    "mean": 0.02,
+    "zero_frac": 0.980125
+   },
+   "ks_counts": 6.249999999996536e-05,
+   "ks_baseline_max": 0.00024999999999997247,
+   "ks_tol": 0.021795788669405385,
+   "equivalent": true
+  },
+  "education_student->education_academic_standing.student_id": {
+   "refengine": {
+    "p50": 2.0,
+    "p90": 4.0,
+    "p99": 6.0,
+    "max": 9,
+    "mean": 2.0,
+    "zero_frac": 0.1325
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 4.0,
+    "p99": 6.0,
+    "max": 9,
+    "mean": 2.0,
+    "zero_frac": 0.1355
+   },
+   "ks_counts": 0.01749999999999996,
+   "ks_baseline_max": 0.01649999999999996,
+   "ks_tol": 0.06164779987778185,
+   "equivalent": true
+  },
+  "hr_department->hr_employee.department_id": {
+   "refengine": {
+    "p50": 5.5,
+    "p90": 27.50000000000002,
+    "p99": 148.2300000000001,
+    "max": 181,
+    "mean": 16.666666666666668,
+    "zero_frac": 0.03333333333333333
+   },
+   "impl": {
+    "p50": 5.0,
+    "p90": 26.40000000000002,
+    "p99": 158.13000000000008,
+    "max": 188,
+    "mean": 16.666666666666668,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.06666666666666676,
+   "ks_baseline_max": 0.19999999999999996,
+   "ks_tol": 0.5033521782192557,
+   "equivalent": true
+  },
+  "hr_position->hr_employee.position_id": {
+   "refengine": {
+    "p50": 2.0,
+    "p90": 9.200000000000017,
+    "p99": 84.32999999999954,
+    "max": 142,
+    "mean": 6.25,
+    "zero_frac": 0.2125
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 10.100000000000009,
+    "p99": 77.95999999999952,
+    "max": 138,
+    "mean": 6.25,
+    "zero_frac": 0.2375
+   },
+   "ks_counts": 0.07500000000000001,
+   "ks_baseline_max": 0.11249999999999999,
+   "ks_tol": 0.3082389993889093,
+   "equivalent": true
+  },
+  "hr_employee->hr_compensation.employee_id": {
+   "refengine": {
+    "p50": 3.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 12,
+    "mean": 3.0,
+    "zero_frac": 0.056
+   },
+   "impl": {
+    "p50": 3.0,
+    "p90": 5.0,
+    "p99": 8.009999999999991,
+    "max": 10,
+    "mean": 3.0,
+    "zero_frac": 0.05
+   },
+   "ks_counts": 0.020000000000000018,
+   "ks_baseline_max": 0.025999999999999995,
+   "ks_tol": 0.1232955997555637,
+   "equivalent": true
+  },
+  "hr_employee->hr_performance_review.employee_id": {
+   "refengine": {
+    "p50": 2.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 8,
+    "mean": 2.5,
+    "zero_frac": 0.084
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 9,
+    "mean": 2.5,
+    "zero_frac": 0.088
+   },
+   "ks_counts": 0.02200000000000002,
+   "ks_baseline_max": 0.029999999999999916,
+   "ks_tol": 0.1232955997555637,
+   "equivalent": true
+  },
+  "hr_employee->hr_time_off_request.employee_id": {
+   "refengine": {
+    "p50": 5.0,
+    "p90": 8.0,
+    "p99": 11.0,
+    "max": 16,
+    "mean": 5.0,
+    "zero_frac": 0.002
+   },
+   "impl": {
+    "p50": 5.0,
+    "p90": 8.0,
+    "p99": 11.009999999999991,
+    "max": 16,
+    "mean": 5.0,
+    "zero_frac": 0.008
+   },
+   "ks_counts": 0.040000000000000036,
+   "ks_baseline_max": 0.057999999999999996,
+   "ks_tol": 0.1232955997555637,
+   "equivalent": true
+  },
+  "hr_employee->hr_training_enrollment.employee_id": {
+   "refengine": {
+    "p50": 4.0,
+    "p90": 6.0,
+    "p99": 9.0,
+    "max": 10,
+    "mean": 4.0,
+    "zero_frac": 0.012
+   },
+   "impl": {
+    "p50": 4.0,
+    "p90": 7.0,
+    "p99": 8.009999999999991,
+    "max": 10,
+    "mean": 4.0,
+    "zero_frac": 0.018
+   },
+   "ks_counts": 0.02400000000000002,
+   "ks_baseline_max": 0.027999999999999997,
+   "ks_tol": 0.1232955997555637,
+   "equivalent": true
+  },
+  "hr_training->hr_training_enrollment.training_id": {
+   "refengine": {
+    "p50": 6.0,
+    "p90": 35.0,
+    "p99": 221.21000000000163,
+    "max": 539,
+    "mean": 20.0,
+    "zero_frac": 0.05
+   },
+   "impl": {
+    "p50": 5.0,
+    "p90": 37.400000000000034,
+    "p99": 250.3000000000017,
+    "max": 577,
+    "mean": 20.0,
+    "zero_frac": 0.03
+   },
+   "ks_counts": 0.06999999999999995,
+   "ks_baseline_max": 0.07999999999999999,
+   "ks_tol": 0.2756973423800469,
+   "equivalent": true
+  },
+  "hr_employee->hr_termination.employee_id": {
+   "refengine": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 1.0,
+    "max": 2,
+    "mean": 0.15,
+    "zero_frac": 0.858
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 1.0,
+    "p99": 1.0,
+    "max": 2,
+    "mean": 0.15,
+    "zero_frac": 0.858
+   },
+   "ks_counts": 0.0,
+   "ks_baseline_max": 0.008000000000000007,
+   "ks_tol": 0.1232955997555637,
+   "equivalent": true
+  },
+  "hr_employee->education_student.shared_person_hr_employee_id": {
+   "refengine": {
+    "p50": 4.0,
+    "p90": 7.0,
+    "p99": 9.009999999999991,
+    "max": 11,
+    "mean": 4.0,
+    "zero_frac": 0.02
+   },
+   "impl": {
+    "p50": 4.0,
+    "p90": 7.0,
+    "p99": 9.0,
+    "max": 11,
+    "mean": 4.0,
+    "zero_frac": 0.024
+   },
+   "ks_counts": 0.030000000000000027,
+   "ks_baseline_max": 0.030000000000000027,
+   "ks_tol": 0.1232955997555637,
+   "equivalent": true
+  },
+  "hr_department->education_department.shared_organization_hr_department_id": {
+   "refengine": {
+    "p50": 1.0,
+    "p90": 2.1000000000000014,
+    "p99": 3.0,
+    "max": 3,
+    "mean": 0.8333333333333334,
+    "zero_frac": 0.4666666666666667
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 2.1000000000000014,
+    "p99": 3.0,
+    "max": 3,
+    "mean": 0.8333333333333334,
+    "zero_frac": 0.43333333333333335
+   },
+   "ks_counts": 0.033333333333333326,
+   "ks_baseline_max": 0.09999999999999998,
+   "ks_tol": 0.5033521782192557,
+   "equivalent": true
+  }
+ },
+ "record_coherence": {},
+ "strategy_semantics": {
+  "hr_time_off_request.end_date - start_date in [1,14] days": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  },
+  "hr_training_enrollment.completion_date - enrollment_date in [1,90] days": {
+   "impl": 0.8455,
+   "refengine": [
+    0.8555,
+    0.851,
+    0.8515,
+    0.8625,
+    0.8535
+   ],
+   "floor": 0.846
+  }
+ },
+ "business_rules": {
+  "refengine_BusinessRulesEngine_violations": {},
+  "refengine_on_refengine": {}
+ },
+ "refengine_fidelity_comparator": {
+  "overall_impl": 91.68874310538479,
+  "overall_baseline_refengine_vs_refengine": [
+   92.03853392474916,
+   91.96972918106178,
+   91.7385312657953,
+   91.3101017433986
+  ],
+  "tables": {
+   "education_academic_standing": {
+    "impl": 99.55815475423204,
+    "baseline": [
+     99.49027673133952,
+     98.94024297789521,
+     99.51174030917763,
+     99.00646946485817
+    ],
+    "floor": 98.44024297789521,
+    "ok": true
+   },
+   "education_course": {
+    "impl": 92.91809702163413,
+    "baseline": [
+     93.31955956883822,
+     93.33090362161693,
+     93.47206186907299,
+     93.17999522734023
+    ],
+    "floor": 92.67999522734023,
+    "ok": true
+   },
+   "education_course_section": {
+    "impl": 98.65454443341217,
+    "baseline": [
+     98.26712699749262,
+     98.16234825603033,
+     98.85695913466675,
+     98.34322299859943
+    ],
+    "floor": 97.66234825603033,
+    "ok": true
+   },
+   "education_department": {
+    "impl": 78.89207101711881,
+    "baseline": [
+     77.82398826571496,
+     79.4051011632499,
+     75.62560729390289,
+     72.6590222864377
+    ],
+    "floor": 72.1590222864377,
+    "ok": true
+   },
+   "education_enrollment": {
+    "impl": 97.92494022203111,
+    "baseline": [
+     98.46312846400795,
+     98.54428413892684,
+     98.26681533392976,
+     98.2648897975438
+    ],
+    "floor": 97.7648897975438,
+    "ok": true
+   },
+   "education_financial_aid": {
+    "impl": 98.0616115814394,
+    "baseline": [
+     97.62966047144357,
+     99.14832626278347,
+     99.13001330995603,
+     98.48819641648664
+    ],
+    "floor": 97.12966047144357,
+    "ok": true
+   },
+   "education_grade_appeal": {
+    "impl": 98.35087913060636,
+    "baseline": [
+     97.43642746255033,
+     97.5331070364566,
+     98.28610328867939,
+     97.74836484767603
+    ],
+    "floor": 96.93642746255033,
+    "ok": true
+   },
+   "education_instructor": {
+    "impl": 77.22631279412553,
+    "baseline": [
+     77.71651484814628,
+     77.93475362324082,
+     76.84615255839242,
+     77.81805983449038
+    ],
+    "floor": 76.34615255839242,
+    "ok": true
+   },
+   "education_student": {
+    "impl": 84.89737719590225,
+    "baseline": [
+     84.54740665359482,
+     84.77916011561965,
+     84.82321154091129,
+     84.1659726763727
+    ],
+    "floor": 83.6659726763727,
+    "ok": true
+   },
+   "hr_compensation": {
+    "impl": 99.44989988014633,
+    "baseline": [
+     98.40142021478543,
+     98.11129415002551,
+     98.31480256861819,
+     98.69825166689266
+    ],
+    "floor": 97.61129415002551,
+    "ok": true
+   },
+   "hr_department": {
+    "impl": 84.77143327041907,
+    "baseline": [
+     88.7780112044818,
+     89.23090975520643,
+     90.39615846338536,
+     83.87376689806356
+    ],
+    "floor": 83.37376689806356,
+    "ok": true
+   },
+   "hr_employee": {
+    "impl": 78.28628410771121,
+    "baseline": [
+     78.0773517211819,
+     78.31780585773095,
+     77.93747501107624,
+     78.41773175604058
+    ],
+    "floor": 77.43747501107624,
+    "ok": true
+   },
+   "hr_performance_review": {
+    "impl": 91.57695312866363,
+    "baseline": [
+     91.3056778077901,
+     91.19182505091466,
+     91.50642324751303,
+     91.4942160670763
+    ],
+    "floor": 90.69182505091466,
+    "ok": true
+   },
+   "hr_position": {
+    "impl": 91.57462681195746,
+    "baseline": [
+     89.62418716730302,
+     90.37199055801061,
+     88.33273413793502,
+     89.9845605034996
+    ],
+    "floor": 87.83273413793502,
+    "ok": true
+   },
+   "hr_termination": {
+    "impl": 89.71959720737748,
+    "baseline": [
+     97.74774826487624,
+     90.32862561101085,
+     90.95545869900921,
+     92.4636885010449
+    ],
+    "floor": 89.82862561101085,
+    "ok": false
+   },
+   "hr_time_off_request": {
+    "impl": 99.03364366791834,
+    "baseline": [
+     98.72807102151327,
+     99.26021919327583,
+     98.61055464476068,
+     99.04296996369324
+    ],
+    "floor": 98.11055464476068,
+    "ok": true
+   },
+   "hr_training": {
+    "impl": 90.29625859445773,
+    "baseline": [
+     91.05932291974364,
+     92.07971704164727,
+     91.46261924211663,
+     91.01848400034767
+    ],
+    "floor": 90.51848400034767,
+    "ok": false
+   },
+   "hr_training_enrollment": {
+    "impl": 99.20469107777335,
+    "baseline": [
+     98.27773086068103,
+     98.78451084547011,
+     98.95867213121178,
+     98.91396847471118
+    ],
+    "floor": 97.77773086068103,
+    "ok": true
+   }
+  }
+ },
+ "allowed_differences": {
+  "CMP-2": {
+   "education_department.department_name": {
+    "kind": "allowed",
+    "allowed": "CMP-2",
+    "intended_pool": "education/department_names",
+    "shape_values_in_intended_pool": 1.0,
+    "baseline_values_in_intended_pool": 1.0,
+    "null_rate": {
+     "refengine": 0.0,
+     "impl": 0.0
+    },
+    "checks": {
+     "shape_values_in_intended_pool": true
+    },
+    "equivalent": true,
+    "arrow_type_match": true
+   }
+  }
+ },
+ "summary": {
+  "columns_total": 122,
+  "columns_equivalent": 122,
+  "flagged": [
+   "(f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8455 < floor 0.8460",
+   "(h) fidelity hr_termination: 89.72 < floor 89.83",
+   "(h) fidelity hr_training: 90.30 < floor 90.52"
+  ],
+  "passed": false,
+  "seconds": 25.800466060638428
+ }
+}

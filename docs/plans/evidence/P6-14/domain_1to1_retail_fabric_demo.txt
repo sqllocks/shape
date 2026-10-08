@@ -1,0 +1,119 @@
+RefEngine retail (seed 42) vs shape (seed 1042) - scale=fabric_demo  (baseline = max distance of RefEngine seeds [43, 44, 45, 46] to RefEngine seed 42)
+table order identical: True
+
+table.column                       kind        type         null s/i       dist  baseline     tol  vocab  verdict
+-- customer: rows 200 / 200  cols identical+ordered=True  types identical=True
+customer.customer_id               numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1949         EQUIVALENT
+customer.first_name                categorical ok    0.0000/0.0000 TVD  0.9800    0.9800  2.3635 1.0000  EQUIVALENT
+customer.last_name                 categorical ok    0.0000/0.0000 TVD  0.9750    0.9900  2.3575 1.0000  EQUIVALENT
+customer.email                     categorical ok    0.0300/0.0500 |dR-1|  0.0206    0.0361  0.0541 1.0000  EQUIVALENT
+customer.gender                    categorical ok    0.0000/0.0000 TVD  0.0200    0.1100  0.2394 1.0000  EQUIVALENT
+customer.loyalty_tier              categorical ok    0.0000/0.0000 TVD  0.0400    0.0750  0.3385 1.0000  EQUIVALENT
+customer.signup_date               datetime    ok    0.0000/0.0000  KS  0.0650    0.0950  0.1949         EQUIVALENT
+customer.is_active                 categorical ok    0.0000/0.0000 TVD  0.0200    0.0400  0.2394 1.0000  EQUIVALENT
+-- address: rows 300 / 300  cols identical+ordered=True  types identical=True
+address.address_id                 numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1592         EQUIVALENT
+address.customer_id                numeric     ok    0.0000/0.0000  KS  0.0800    0.0800  0.1592         EQUIVALENT
+address.address_type               categorical ok    0.0000/0.0000 TVD  0.0433    0.0500  0.2394 1.0000  EQUIVALENT
+address.street                     categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+address.city                       categorical ok    0.0000/0.0000 TVD  0.9067    0.9300  2.3330 1.0000  EQUIVALENT
+address.state                      categorical ok    0.0000/0.0000 TVD  0.1933    0.2300  0.9474 1.0000  EQUIVALENT
+address.zip_code                   categorical ok    0.0000/0.0000 TVD  1.0000    0.9967  2.3937 1.0000  EQUIVALENT
+address.lat                        numeric     ok    0.0000/0.0000  KS  0.0433    0.0633  0.1592         EQUIVALENT
+address.lng                        numeric     ok    0.0000/0.0000  KS  0.0633    0.0800  0.1592         EQUIVALENT
+address.is_primary                 categorical ok    0.0000/0.0000 TVD  0.0033    0.0200  0.1954 1.0000  EQUIVALENT
+-- product_category: rows 50 / 50  cols identical+ordered=True  types identical=True
+product_category.category_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3899         EQUIVALENT
+product_category.category_name     categorical ok    0.0000/0.0000 TVD  0.4400    0.5600  1.9739 1.0000  EQUIVALENT
+product_category.parent_category_id numeric     ok    0.1600/0.1600  KS  0.1905    0.1905  0.4254         EQUIVALENT
+product_category.level             numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3899         EQUIVALENT
+-- product: rows 100 / 100  cols identical+ordered=True  types identical=True
+product.product_id                 numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.2757         EQUIVALENT
+product.category_id                numeric     ok    0.0000/0.0000  KS  0.1600    0.2200  0.3320         EQUIVALENT
+product.product_name               categorical ok    0.0000/0.0000 TVD  0.5200    0.5600  1.9298 1.0000  EQUIVALENT
+product.unit_price                 numeric     ok    0.0000/0.0000  KS  0.1100    0.2500  0.3770         EQUIVALENT
+product.product_status             categorical ok    0.0000/0.0000 TVD  0.0100    0.0900  0.4146 1.0000  EQUIVALENT
+product.cost                       numeric     ok    0.0000/0.0000  KS  0.1000    0.2200  0.3320         EQUIVALENT
+-- store: rows 150 / 150  cols identical+ordered=True  types identical=True
+store.store_id                     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.2251         EQUIVALENT
+store.store_name                   categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+store.store_type                   categorical ok    0.0000/0.0000 TVD  0.0667    0.0667  0.3385 1.0000  EQUIVALENT
+store.city                         categorical ok    0.0000/0.0000 TVD  0.4133    0.4733  1.7261 1.0000  EQUIVALENT
+store.state                        categorical ok    0.0000/0.0000 TVD  0.3267    0.3467  1.3255 1.0000  EQUIVALENT
+-- promotion: rows 200 / 200  cols identical+ordered=True  types identical=True
+promotion.promotion_id             numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1949         EQUIVALENT
+promotion.promo_name               categorical ok    0.0000/0.0000 TVD  0.2750    0.2800  1.1848 1.0000  EQUIVALENT
+promotion.promo_type               categorical ok    0.0000/0.0000 TVD  0.0900    0.1100  0.3785 1.0000  EQUIVALENT
+promotion.discount_pct             numeric     ok    0.0000/0.0000  KS  0.0900    0.0850  0.1949         EQUIVALENT
+promotion.start_date               datetime    ok    0.0000/0.0000  KS  0.1100    0.1300  0.1970         EQUIVALENT
+promotion.end_date                 datetime    ok    0.0000/0.0000  KS  0.1050    0.1300  0.1970         EQUIVALENT
+-- order: rows 1,000 / 1,000  cols identical+ordered=True  types identical=True
+order.order_id                     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0872         EQUIVALENT
+order.customer_id                  numeric     ok    0.0000/0.0000  KS  0.0310    0.0800  0.1220         EQUIVALENT
+order.store_id                     numeric     ok    0.0000/0.0000  KS  0.0350    0.0520  0.0872         EQUIVALENT
+order.shipping_address_id          numeric     ok    0.2960/0.1670  KS  0.1083    0.1755  0.2652         EQUIVALENT
+order.promotion_id                 numeric     ok    0.6930/0.7170  KS  0.0494    0.0658  0.1607         EQUIVALENT
+order.order_date                   datetime    ok    0.0000/0.0000  KS  0.0680    0.1040  0.1580         EQUIVALENT
+order.status                       categorical ok    0.0000/0.0000 TVD  0.0220    0.0250  0.1693 1.0000  EQUIVALENT
+order.order_total                  numeric     ok    0.0000/0.0000  KS  0.2130    0.4860  0.7310         EQUIVALENT
+-- order_line: rows 2,500 / 2,500  cols identical+ordered=True  types identical=True
+order_line.order_line_id           numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0551         EQUIVALENT
+order_line.order_id                numeric     ok    0.0000/0.0000  KS  0.0276    0.0292  0.0551         EQUIVALENT
+order_line.product_id              numeric     ok    0.0000/0.0000  KS  0.0212    0.0204  0.0551         EQUIVALENT
+order_line.quantity                numeric     ok    0.0000/0.0000  KS  0.0256    0.0388  0.0602         EQUIVALENT
+order_line.promotion_id            numeric     ok    0.6828/0.7120  KS  0.0809    0.0983  0.1494         EQUIVALENT
+order_line.unit_price              numeric     ok    0.0000/0.0000  KS  0.3960    0.5644  0.8486         EQUIVALENT
+order_line.discount_percent        numeric     ok    0.0000/0.0000  KS  0.0380    0.0520  0.0800         EQUIVALENT
+order_line.line_total              numeric     ok    0.0000/0.0000  KS  0.3240    0.4880  0.7340         EQUIVALENT
+-- return: rows 170 / 170  cols identical+ordered=True  types identical=True
+return.return_id                   numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.2115         EQUIVALENT
+return.order_id                    numeric     ok    0.0000/0.0000  KS  0.1118    0.1588  0.2402         EQUIVALENT
+return.reason                      categorical ok    0.0000/0.0000 TVD  0.0647    0.1176  0.4857 1.0000  EQUIVALENT
+return.refund_amount               numeric     ok    0.0000/0.0000  KS  0.1353    0.2412  0.3638         EQUIVALENT
+return.return_date                 datetime    ok    0.0000/0.0000  KS  0.1294    0.1882  0.2844         EQUIVALENT
+
+FK integrity (refengine / impl):
+  address.customer_id->customer.customer_id               1.0000 / 1.0000
+  product.category_id->product_category.category_id       1.0000 / 1.0000
+  order.customer_id->customer.customer_id                 1.0000 / 1.0000
+  order.store_id->store.store_id                          1.0000 / 1.0000
+  order.shipping_address_id->address.address_id           1.0000 / 1.0000
+  order.promotion_id->promotion.promotion_id              1.0000 / 1.0000
+  order_line.order_id->order.order_id                     1.0000 / 1.0000
+  order_line.product_id->product.product_id               1.0000 / 1.0000
+  return.order_id->order.order_id                         1.0000 / 1.0000
+  product_category.parent_category_id->product_category.category_id 1.0000 / 1.0000
+  order_line.promotion_id->promotion.promotion_id         1.0000 / 1.0000
+FK fan-out (children per parent)  refengine p50/p90/p99/max/zero% | impl | KS (baseline max, tol)
+  customer->address.customer_id            1/3/5/6/0.225 | 1/3/6/6/0.220 | 0.0100 (0.0450, 0.1949)
+  product_category->product.category_id    2/4/6/6/0.140 | 2/4/6/7/0.060 | 0.0800 (0.0800, 0.3899)
+  customer->order.customer_id              3/8/50/50/0.075 | 3/7/50/50/0.050 | 0.0450 (0.1250, 0.1949)
+  store->order.store_id                    1/11/110/321/0.313 | 1/9/98/327/0.300 | 0.0333 (0.0467, 0.2251)
+  address->order.shipping_address_id       1/4/17/50/0.297 | 1/6/22/50/0.250 | 0.0867 (0.0933, 0.1592)
+  promotion->order.promotion_id            1/3/6/8/0.205 | 1/3/5/6/0.275 | 0.0700 (0.0400, 0.1949)
+  order->order_line.order_id               2/5/7/8/0.088 | 2/4/7/10/0.066 | 0.0320 (0.0260, 0.0872)
+  product->order_line.product_id           3/32/354/1029/0.120 | 2/32/381/1019/0.150 | 0.1500 (0.0800, 0.2757)
+  order->return.order_id                   0/1/2/2/0.841 | 0/1/2/2/0.845 | 0.0040 (0.0040, 0.0872)
+  promotion->order_line.promotion_id       3/9/15/19/0.260 | 3/9/16/19/0.290 | 0.0700 (0.0750, 0.1949)
+record_coherence (impl / min over RefEngine seeds, floor):
+  address.city+state+zip_code+lat+lng in us_zip_locations      1.0000 / 1.0000  floor 0.9950
+strategy_semantics (impl / min over RefEngine seeds, floor):
+  promotion.end_date - start_date in [3,30] days               1.0000 / 1.0000  floor 0.9950
+  order.order_total == sum(order_line.line_total)              1.0000 / 1.0000  floor 0.9950
+  order_line.promotion_id == lookup order.promotion_id via order_id 1.0000 / 1.0000  floor 0.9950
+  order_line.unit_price == lookup product.unit_price via product_id 1.0000 / 1.0000  floor 0.9950
+  return.return_date - order.order_date in [1,90] days         1.0000 / 0.9941  floor 0.9891
+RefEngine BusinessRulesEngine violations on impl output: {}
+RefEngine FidelityComparator (real=RefEngine seed 42, synthetic=impl): overall impl=88.40  RefEngine-vs-RefEngine baselines=[88.61, 88.69, 86.06, 87.17]
+  address            impl  83.88  floor  83.17  baselines [83.67, 84.41, 84.8, 84.59]  ok
+  customer           impl  78.15  floor  77.41  baselines [77.91, 77.94, 77.99, 78.24]  ok
+  order              impl  96.08  floor  90.59  baselines [93.69, 94.34, 91.09, 91.47]  ok
+  order_line         impl  93.59  floor  85.12  baselines [92.79, 91.88, 85.62, 87.16]  ok
+  product            impl  85.08  floor  84.11  baselines [88.9, 89.35, 84.61, 87.72]  ok
+  product_category   impl  86.50  floor  84.25  baselines [87.56, 87.73, 84.75, 87.54]  ok
+  promotion          impl  91.62  floor  90.53  baselines [93.38, 91.82, 91.03, 92.01]  ok
+  return             impl  95.26  floor  88.60  baselines [93.94, 94.68, 89.1, 90.45]  ok
+  store              impl  85.41  floor  84.88  baselines [85.64, 86.02, 85.52, 85.38]  ok
+
+COLUMNS EQUIVALENT: 60/60
+VERDICT: PASS

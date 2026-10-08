@@ -1,0 +1,188 @@
+# Publish a release to TestPyPI or PyPI (P8-04, T-25; the early-access 0.9.0 was DM-03b).
+#
+# Trusted publishing only: no API tokens and no passwords. Each project (sqllocks-shape and
+# every sqllocks-shape-<plugin>) must have a trusted publisher registered for this repository,
+# workflow file "publish.yml" and environment "pypi" (TestPyPI: environment "testpypi"), owner
+# action O-01. The owner triggers it (docs/RELEASE_CHECKLIST.md): Actions > "Publish" > Run
+# workflow with repository = testpypi first; then pushing the tag "v<version>" publishes to PyPI.
+#
+# release.yml builds every archive once (the T-04 platform wheels, the pure wheel, the sdists),
+# their SBOMs and Sigstore attestations, and smoke-tests them on every platform; this workflow
+# only uploads those archives (with PEP 740 attestations), checks that the index serves exactly
+# those files (by SHA-256), and installs the published sqllocks-shape[all] back from the index
+# on every platform to run the smoke suite.
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: "Where to publish"
+        required: true
+        default: testpypi
+        type: choice
+        options:
+          - testpypi
+          - pypi
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-publish
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    # #266: PyPI only from a release tag. A manual run with repository = pypi, or any push that is
+    # not a v* tag, stops here before anything is built; TestPyPI runs from any ref.
+    name: PyPI only from a v* tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refuse PyPI from anything but a v* tag
+        if: github.event_name != 'workflow_dispatch' || inputs.repository == 'pypi'
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          case "$REF" in
+            refs/tags/v*) echo "publishing $REF" ;;
+            *) echo "::error::PyPI publishes only from a v* tag, not $REF (#266)"; exit 1 ;;
+          esac
+
+  build:
+    name: Build, SBOM, attest and smoke-test every archive
+    needs: guard
+    uses: ./.github/workflows/release.yml
+    with:
+      release: true
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+
+  publish:
+    # One job per project: PyPI accepts a pending trusted publisher (owner, repository, workflow,
+    # environment) for one project name only, so each plugin publishes from its own environment,
+    # pypi-<plugin> (testpypi-<plugin>); core keeps pypi (testpypi), the publisher registered for
+    # 0.9.0 (O-01). Each job uploads only its project's archives from the one build.
+    name: Publish ${{ matrix.project }} to ${{ (github.event_name == 'workflow_dispatch' && inputs.repository == 'testpypi') && 'TestPyPI' || 'PyPI' }}
+    needs: build
+    runs-on: ubuntu-latest
+    environment: ${{ (github.event_name == 'workflow_dispatch' && inputs.repository == 'testpypi') && 'testpypi' || 'pypi' }}${{ matrix.env }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {project: sqllocks-shape, files: sqllocks_shape-, env: ''}
+          - {project: sqllocks-shape-behavior, files: sqllocks_shape_behavior-, env: '-behavior'}
+          - {project: sqllocks-shape-databases, files: sqllocks_shape_databases-, env: '-databases'}
+          - {project: sqllocks-shape-dbt, files: sqllocks_shape_dbt-, env: '-dbt'}
+          - {project: sqllocks-shape-domains, files: sqllocks_shape_domains-, env: '-domains'}
+          - {project: sqllocks-shape-eventhubs, files: sqllocks_shape_eventhubs-, env: '-eventhubs'}
+          - {project: sqllocks-shape-fabric, files: sqllocks_shape_fabric-, env: '-fabric'}
+          - {project: sqllocks-shape-healthcare-codes, files: sqllocks_shape_healthcare_codes-, env: '-healthcare-codes'}
+          - {project: sqllocks-shape-healthcare-standards, files: sqllocks_shape_healthcare_standards-, env: '-healthcare-standards'}
+          - {project: sqllocks-shape-integrations, files: sqllocks_shape_integrations-, env: '-integrations'}
+          - {project: sqllocks-shape-kafka, files: sqllocks_shape_kafka-, env: '-kafka'}
+          - {project: sqllocks-shape-simulation, files: sqllocks_shape_simulation-, env: '-simulation'}
+          - {project: sqllocks-shape-sqlserver, files: sqllocks_shape_sqlserver-, env: '-sqlserver'}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-dist
+          path: dist
+      - name: Select ${{ matrix.project }}'s archives
+        env:
+          FILES: ${{ matrix.files }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          mkdir upload
+          cp dist/"${FILES}${VERSION}"[-.]* upload/
+          ls -l upload
+          # a wheel or wheels and one sdist, and nothing of another project
+          test "$(ls upload | grep -c '\.tar\.gz$')" = 1
+          test "$(ls upload | grep -c '\.whl$')" -ge 1
+          ! ls upload | grep -v "^${FILES}${VERSION}[-.]"
+      - name: Publish to TestPyPI
+        if: github.event_name == 'workflow_dispatch' && inputs.repository == 'testpypi'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          packages-dir: upload/
+          # a re-run of a publish that failed half-way uploads the rest; index-hashes below
+          # proves every file the index then holds is the one this run built and attested
+          skip-existing: true
+      - name: Publish to PyPI
+        if: github.event_name != 'workflow_dispatch' || inputs.repository == 'pypi'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: upload/
+          skip-existing: true
+
+  index-hashes:
+    name: The index serves exactly the archives this run built
+    needs: [build, publish]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-sbom
+          path: sbom
+      - name: Every archive on the index has the SHA-256 in SHA256SUMS, and no other file is there
+        env:
+          INDEX: ${{ (github.event_name == 'workflow_dispatch' && inputs.repository == 'testpypi') && 'testpypi' || 'pypi' }}
+        run: python3 scripts/release_index_check.py sbom/SHA256SUMS --index "$INDEX"
+
+  installed:
+    name: sqllocks-shape[all] from the index (${{ matrix.os }}, Python ${{ matrix.python }})
+    needs: [build, publish]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-14, macos-15-intel, windows-latest]
+        python: ['3.11', '3.14']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          allow-prereleases: true
+      - if: runner.os == 'macOS'
+        run: brew install unixodbc librdkafka
+      - name: Install from the index and run the smoke suite
+        shell: bash
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+          INDEX: ${{ (github.event_name == 'workflow_dispatch' && inputs.repository == 'testpypi') && 'testpypi' || 'pypi' }}
+        run: python scripts/release_smoke.py --version "$VERSION" --source "$INDEX" --kernel rust
+
+  installed-musllinux:
+    name: sqllocks-shape[all] from the index (Alpine, ${{ matrix.platform }})
+    needs: [build, publish]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-latest, platform: linux/amd64}
+          - {os: ubuntu-24.04-arm, platform: linux/arm64}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install from the index and run the smoke suite (Python 3.11 and 3.14)
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+          INDEX: ${{ (github.event_name == 'workflow_dispatch' && inputs.repository == 'testpypi') && 'testpypi' || 'pypi' }}
+        run: |
+          for py in 3.11 3.14; do
+            docker run --rm --platform ${{ matrix.platform }} -e VERSION -e INDEX -v "$PWD:/src" -w /src "python:${py}-alpine" sh -c '
+              apk add --no-cache libstdc++ build-base unixodbc-dev librdkafka-dev >/dev/null &&
+              python scripts/release_smoke.py --version "$VERSION" --source "$INDEX" --kernel rust'
+          done

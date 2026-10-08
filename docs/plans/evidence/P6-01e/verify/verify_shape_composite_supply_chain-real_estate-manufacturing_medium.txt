@@ -1,0 +1,344 @@
+RefEngine composite_supply_chain-real_estate-manufacturing (seed 42) vs shape (seed 1042) - scale=medium  (baseline = max distance of RefEngine seeds [43, 44, 45, 46] to RefEngine seed 42)
+table order identical: True
+
+table.column                       kind        type         null s/i       dist  baseline     tol  vocab  verdict
+-- supply_chain_warehouse: rows 50 / 50  cols identical+ordered=True  types identical=True
+supply_chain_warehouse.warehouse_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3899         EQUIVALENT
+supply_chain_warehouse.shared_location_manufacturing_production_line_id numeric     ok    0.0000/0.0000  KS  0.1400    0.2800  0.4220         EQUIVALENT
+supply_chain_warehouse.warehouse_name categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+supply_chain_warehouse.warehouse_type categorical ok    0.0000/0.0000 TVD  0.1000    0.2000  0.7569 1.0000  EQUIVALENT
+supply_chain_warehouse.city        categorical ok    0.0000/0.0000 TVD  1.0000    1.0000  2.3937 1.0000  EQUIVALENT
+supply_chain_warehouse.capacity_sqft numeric     ok    0.0000/0.0000  KS  0.1000    0.1200  0.3899         EQUIVALENT
+supply_chain_warehouse.is_active   categorical ok    0.0000/0.0000 TVD  0.0800    0.1000  0.4787 1.0000  EQUIVALENT
+supply_chain_warehouse.state       categorical ok    0.0000/0.0000 TVD  0.4600    0.4600  1.7912 1.0000  EQUIVALENT
+supply_chain_warehouse.zip_code    categorical ok    0.0000/0.0000 TVD  1.0000    1.0000  2.3937 1.0000  EQUIVALENT
+supply_chain_warehouse.lat         numeric     ok    0.0000/0.0000  KS  0.1400    0.1400  0.3899         EQUIVALENT
+supply_chain_warehouse.lng         numeric     ok    0.0000/0.0000  KS  0.2000    0.3200  0.4820         EQUIVALENT
+-- supply_chain_supplier: rows 200 / 200  cols identical+ordered=True  types identical=True
+supply_chain_supplier.supplier_id  numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1949         EQUIVALENT
+supply_chain_supplier.shared_organization_manufacturing_production_line_id numeric     ok    0.0000/0.0000  KS  0.0650    0.0850  0.1949         EQUIVALENT
+supply_chain_supplier.supplier_name categorical ok    0.0000/0.0000 TVD  0.9050    0.9300  2.3146 1.0000  EQUIVALENT
+supply_chain_supplier.contact_name categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+supply_chain_supplier.contact_email categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+supply_chain_supplier.country      categorical ok    0.0000/0.0000 TVD  0.1250    0.1850  0.5078 1.0000  EQUIVALENT
+supply_chain_supplier.lead_time_days numeric     ok    0.0000/0.0000  KS  0.0650    0.0800  0.1949         EQUIVALENT
+supply_chain_supplier.reliability_score numeric     ok    0.0000/0.0000  KS  0.0400    0.1200  0.1949         EQUIVALENT
+supply_chain_supplier.is_active    categorical ok    0.0000/0.0000 TVD  0.0250    0.0300  0.2394 1.0000  EQUIVALENT
+-- supply_chain_material: rows 300 / 300  cols identical+ordered=True  types identical=True
+supply_chain_material.material_id  numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1592         EQUIVALENT
+supply_chain_material.material_name categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+supply_chain_material.category     categorical ok    0.0000/0.0000 TVD  0.2133    0.2133  0.7569 1.0000  EQUIVALENT
+supply_chain_material.unit_of_measure categorical ok    0.0000/0.0000 TVD  0.0533    0.0967  0.3385 1.0000  EQUIVALENT
+supply_chain_material.unit_cost    numeric     ok    0.0000/0.0000  KS  0.0667    0.0667  0.1592         EQUIVALENT
+supply_chain_material.reorder_point numeric     ok    0.0000/0.0000  KS  0.0600    0.0700  0.1592         EQUIVALENT
+supply_chain_material.is_hazardous categorical ok    0.0000/0.0000 TVD  0.0000    0.0333  0.1954 1.0000  EQUIVALENT
+-- supply_chain_purchase_order: rows 20,000 / 20,000  cols identical+ordered=True  types identical=True
+supply_chain_purchase_order.po_id  numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0195         EQUIVALENT
+supply_chain_purchase_order.supplier_id numeric     ok    0.0000/0.0000  KS  0.0059    0.0091  0.0195         EQUIVALENT
+supply_chain_purchase_order.po_number categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+supply_chain_purchase_order.order_date datetime    ok    0.0000/0.0000  KS  0.0082    0.0121  0.0201         EQUIVALENT
+supply_chain_purchase_order.total_amount numeric     ok    0.0000/0.0000  KS  0.0118    0.0125  0.0208         EQUIVALENT
+supply_chain_purchase_order.status categorical ok    0.0000/0.0000 TVD  0.0060    0.0127  0.0378 1.0000  EQUIVALENT
+supply_chain_purchase_order.priority categorical ok    0.0000/0.0000 TVD  0.0083    0.0100  0.0339 1.0000  EQUIVALENT
+supply_chain_purchase_order.expected_delivery_date datetime    ok    0.0000/0.0000  KS  0.0082    0.0121  0.0201         EQUIVALENT
+-- supply_chain_purchase_order_line: rows 60,000 / 60,000  cols identical+ordered=True  types identical=True
+supply_chain_purchase_order_line.po_line_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0113         EQUIVALENT
+supply_chain_purchase_order_line.po_id numeric     ok    0.0000/0.0000  KS  0.0034    0.0065  0.0118         EQUIVALENT
+supply_chain_purchase_order_line.material_id numeric     ok    0.0000/0.0000  KS  0.0062    0.0083  0.0145         EQUIVALENT
+supply_chain_purchase_order_line.quantity_ordered numeric     ok    0.0000/0.0000  KS  0.0035    0.0068  0.0122         EQUIVALENT
+supply_chain_purchase_order_line.unit_price numeric     ok    0.0000/0.0000  KS  0.0041    0.0064  0.0116         EQUIVALENT
+supply_chain_purchase_order_line.quantity_received numeric     ok    0.0000/0.0000  KS  0.0033    0.0063  0.0114         EQUIVALENT
+supply_chain_purchase_order_line.line_total numeric     ok    0.0000/0.0000  KS  0.0037    0.0066  0.0120         EQUIVALENT
+-- supply_chain_inventory: rows 900 / 900  cols identical+ordered=True  types identical=True
+supply_chain_inventory.inventory_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0919         EQUIVALENT
+supply_chain_inventory.warehouse_id numeric     ok    0.0000/0.0000  KS  0.0278    0.0433  0.0919         EQUIVALENT
+supply_chain_inventory.material_id numeric     ok    0.0000/0.0000  KS  0.0600    0.0422  0.0919         EQUIVALENT
+supply_chain_inventory.quantity_on_hand numeric     ok    0.0000/0.0000  KS  0.0489    0.0589  0.0919         EQUIVALENT
+supply_chain_inventory.last_counted_date datetime    ok    0.0000/0.0000  KS  0.0267    0.0433  0.0919         EQUIVALENT
+supply_chain_inventory.bin_location categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+supply_chain_inventory.quantity_reserved numeric     ok    0.0000/0.0000  KS  0.0511    0.0433  0.0919         EQUIVALENT
+-- supply_chain_shipment: rows 24,000 / 24,000  cols identical+ordered=True  types identical=True
+supply_chain_shipment.shipment_id  numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0178         EQUIVALENT
+supply_chain_shipment.po_id        numeric     ok    0.0000/0.0000  KS  0.0081    0.0072  0.0178         EQUIVALENT
+supply_chain_shipment.warehouse_id numeric     ok    0.0000/0.0000  KS  0.0045    0.0090  0.0178         EQUIVALENT
+supply_chain_shipment.shipment_number categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+supply_chain_shipment.carrier_name categorical ok    0.0000/0.0000 TVD  0.0176    0.0197  0.0773 1.0000  EQUIVALENT
+supply_chain_shipment.shipping_method categorical ok    0.0000/0.0000 TVD  0.0078    0.0118  0.0437 1.0000  EQUIVALENT
+supply_chain_shipment.ship_date    datetime    ok    0.0000/0.0000  KS  0.0055    0.0077  0.0178         EQUIVALENT
+supply_chain_shipment.status       categorical ok    0.0000/0.0000 TVD  0.0047    0.0112  0.0378 1.0000  EQUIVALENT
+supply_chain_shipment.weight_kg    numeric     ok    0.0000/0.0000  KS  0.0051    0.0080  0.0178         EQUIVALENT
+supply_chain_shipment.delivery_date datetime    ok    0.0000/0.0000  KS  0.0055    0.0077  0.0178         EQUIVALENT
+-- supply_chain_shipment_event: rows 96,000 / 96,000  cols identical+ordered=True  types identical=True
+supply_chain_shipment_event.event_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0089         EQUIVALENT
+supply_chain_shipment_event.shipment_id numeric     ok    0.0000/0.0000  KS  0.0026    0.0051  0.0097         EQUIVALENT
+supply_chain_shipment_event.event_type categorical ok    0.0000/0.0000 TVD  0.0026    0.0050  0.0204 1.0000  EQUIVALENT
+supply_chain_shipment_event.event_timestamp datetime    ok    0.0000/0.0000  KS  0.0030    0.0046  0.0089         EQUIVALENT
+supply_chain_shipment_event.location categorical ok    0.0000/0.0000 TVD  0.0195    0.0189  0.0769 1.0000  EQUIVALENT
+supply_chain_shipment_event.notes  categorical ok    0.5988/0.6012 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+-- supply_chain_quality_inspection: rows 7,200 / 7,200  cols identical+ordered=True  types identical=True
+supply_chain_quality_inspection.inspection_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0325         EQUIVALENT
+supply_chain_quality_inspection.shipment_id numeric     ok    0.0000/0.0000  KS  0.0140    0.0169  0.0325         EQUIVALENT
+supply_chain_quality_inspection.inspector_name categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0003  0.0200 1.0000  EQUIVALENT
+supply_chain_quality_inspection.inspection_date datetime    ok    0.0000/0.0000  KS  0.0094    0.0150  0.0325         EQUIVALENT
+supply_chain_quality_inspection.result categorical ok    0.0000/0.0000 TVD  0.0075    0.0064  0.0564 1.0000  EQUIVALENT
+supply_chain_quality_inspection.defect_count numeric     ok    0.0000/0.0000  KS  0.0163    0.0167  0.0325         EQUIVALENT
+supply_chain_quality_inspection.notes categorical ok    0.4015/0.4029 |dR-1|  0.0045    0.0129  0.0200 1.0000  EQUIVALENT
+-- supply_chain_demand_forecast: rows 1,800 / 1,800  cols identical+ordered=True  types identical=True
+supply_chain_demand_forecast.forecast_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0650         EQUIVALENT
+supply_chain_demand_forecast.material_id numeric     ok    0.0000/0.0000  KS  0.0289    0.0278  0.0650         EQUIVALENT
+supply_chain_demand_forecast.forecast_date datetime    ok    0.0000/0.0000  KS  0.0350    0.0522  0.0803         EQUIVALENT
+supply_chain_demand_forecast.forecast_quantity numeric     ok    0.0000/0.0000  KS  0.0289    0.0367  0.0650         EQUIVALENT
+supply_chain_demand_forecast.confidence_level numeric     ok    0.0000/0.0000  KS  0.0256    0.0272  0.0650         EQUIVALENT
+supply_chain_demand_forecast.forecast_method categorical ok    0.0000/0.0000 TVD  0.0356    0.0550  0.1262 1.0000  EQUIVALENT
+-- real_estate_neighborhood: rows 50 / 50  cols identical+ordered=True  types identical=True
+real_estate_neighborhood.neighborhood_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3899         EQUIVALENT
+real_estate_neighborhood.shared_location_manufacturing_production_line_id numeric     ok    0.0000/0.0000  KS  0.2200    0.2000  0.3899         EQUIVALENT
+real_estate_neighborhood.neighborhood_name categorical ok    0.0000/0.0000 TVD  0.4800    0.5000  1.9149 1.0000  EQUIVALENT
+real_estate_neighborhood.city      categorical ok    0.0000/0.0000 TVD  0.9800    1.0000  2.3937 1.0000  EQUIVALENT
+real_estate_neighborhood.median_income numeric     ok    0.0000/0.0000  KS  0.1200    0.1600  0.3899         EQUIVALENT
+real_estate_neighborhood.walk_score numeric     ok    0.0000/0.0000  KS  0.1400    0.2000  0.3899         EQUIVALENT
+real_estate_neighborhood.state     categorical ok    0.0000/0.0000 TVD  0.5200    0.6000  1.7590 1.0000  EQUIVALENT
+real_estate_neighborhood.zip_code  categorical ok    0.0000/0.0000 TVD  1.0000    1.0000  2.3937 1.0000  EQUIVALENT
+-- real_estate_agent: rows 100 / 100  cols identical+ordered=True  types identical=True
+real_estate_agent.agent_id         numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.2757         EQUIVALENT
+real_estate_agent.first_name       categorical ok    0.0000/0.0000 TVD  1.0000    0.9900  2.3575 1.0000  EQUIVALENT
+real_estate_agent.last_name        categorical ok    0.0000/0.0000 TVD  0.9700    1.0000  2.3817 1.0000  EQUIVALENT
+real_estate_agent.email            categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+real_estate_agent.phone            categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+real_estate_agent.license_number   categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+real_estate_agent.brokerage        categorical ok    0.0000/0.0000 TVD  0.9800    0.9900  2.3937 1.0000  EQUIVALENT
+real_estate_agent.years_experience numeric     ok    0.0000/0.0000  KS  0.1100    0.1400  0.2757         EQUIVALENT
+real_estate_agent.specialization   categorical ok    0.0000/0.0000 TVD  0.1000    0.2100  0.5352 1.0000  EQUIVALENT
+-- real_estate_property: rows 10,000 / 10,000  cols identical+ordered=True  types identical=True
+real_estate_property.property_id   numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0276         EQUIVALENT
+real_estate_property.neighborhood_id numeric     ok    0.0000/0.0000  KS  0.0040    0.0138  0.0276         EQUIVALENT
+real_estate_property.property_type categorical ok    0.0000/0.0000 TVD  0.0185    0.0276  0.0927 1.0000  EQUIVALENT
+real_estate_property.address       categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0001  0.0200 1.0000  EQUIVALENT
+real_estate_property.bedrooms      numeric     ok    0.0000/0.0000  KS  0.0161    0.0143  0.0276         EQUIVALENT
+real_estate_property.bathrooms     numeric     ok    0.0000/0.0000  KS  0.0098    0.0125  0.0276         EQUIVALENT
+real_estate_property.sqft          numeric     ok    0.0000/0.0000  KS  0.0117    0.0138  0.0276         EQUIVALENT
+real_estate_property.lot_size_sqft numeric     ok    0.0000/0.0000  KS  0.0108    0.0128  0.0276         EQUIVALENT
+real_estate_property.year_built    numeric     ok    0.0000/0.0000  KS  0.0150    0.0186  0.0299         EQUIVALENT
+real_estate_property.assessed_value numeric     ok    0.0000/0.0000  KS  0.0118    0.0122  0.0276         EQUIVALENT
+-- real_estate_listing: rows 15,000 / 15,000  cols identical+ordered=True  types identical=True
+real_estate_listing.listing_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0225         EQUIVALENT
+real_estate_listing.property_id    numeric     ok    0.0000/0.0000  KS  0.0087    0.0133  0.0225         EQUIVALENT
+real_estate_listing.agent_id       numeric     ok    0.0000/0.0000  KS  0.0109    0.0135  0.0225         EQUIVALENT
+real_estate_listing.list_date      datetime    ok    0.0000/0.0000  KS  0.0123    0.0099  0.0225         EQUIVALENT
+real_estate_listing.list_price     numeric     ok    0.0000/0.0000  KS  0.0127    0.0119  0.0225         EQUIVALENT
+real_estate_listing.status         categorical ok    0.0000/0.0000 TVD  0.0077    0.0108  0.0437 1.0000  EQUIVALENT
+real_estate_listing.days_on_market numeric     ok    0.0000/0.0000  KS  0.0141    0.0115  0.0225         EQUIVALENT
+real_estate_listing.mls_number     categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+-- real_estate_showing: rows 75,000 / 75,000  cols identical+ordered=True  types identical=True
+real_estate_showing.showing_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0101         EQUIVALENT
+real_estate_showing.listing_id     numeric     ok    0.0000/0.0000  KS  0.0034    0.0044  0.0101         EQUIVALENT
+real_estate_showing.agent_id       numeric     ok    0.0000/0.0000  KS  0.0051    0.0054  0.0101         EQUIVALENT
+real_estate_showing.showing_date   datetime    ok    0.0000/0.0000  KS  0.0035    0.0063  0.0114         EQUIVALENT
+real_estate_showing.feedback       categorical ok    0.2512/0.2492 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+real_estate_showing.buyer_interest_level categorical ok    0.0000/0.0000 TVD  0.0046    0.0051  0.0175 1.0000  EQUIVALENT
+-- real_estate_offer: rows 22,500 / 22,500  cols identical+ordered=True  types identical=True
+real_estate_offer.offer_id         numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0184         EQUIVALENT
+real_estate_offer.listing_id       numeric     ok    0.0000/0.0000  KS  0.0136    0.0131  0.0216         EQUIVALENT
+real_estate_offer.offer_date       datetime    ok    0.0000/0.0000  KS  0.0065    0.0141  0.0231         EQUIVALENT
+real_estate_offer.offer_amount     numeric     ok    0.0000/0.0000  KS  0.0081    0.0110  0.0185         EQUIVALENT
+real_estate_offer.status           categorical ok    0.0000/0.0000 TVD  0.0119    0.0080  0.0357 1.0000  EQUIVALENT
+real_estate_offer.contingencies    categorical ok    0.0000/0.0000 TVD  0.0047    0.0088  0.0319 1.0000  EQUIVALENT
+-- real_estate_transaction: rows 6,000 / 6,000  cols identical+ordered=True  types identical=True
+real_estate_transaction.transaction_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0356         EQUIVALENT
+real_estate_transaction.listing_id numeric     ok    0.0000/0.0000  KS  0.0142    0.0215  0.0356         EQUIVALENT
+real_estate_transaction.buyer_agent_id numeric     ok    0.0000/0.0000  KS  0.0125    0.0160  0.0356         EQUIVALENT
+real_estate_transaction.seller_agent_id numeric     ok    0.0000/0.0000  KS  0.0145    0.0137  0.0356         EQUIVALENT
+real_estate_transaction.sale_price numeric     ok    0.0000/0.0000  KS  0.0182    0.0202  0.0356         EQUIVALENT
+real_estate_transaction.close_date datetime    ok    0.0000/0.0000  KS  0.0150    0.0150  0.0356         EQUIVALENT
+real_estate_transaction.commission_rate numeric     ok    0.0000/0.0000  KS  0.0133    0.0170  0.0356         EQUIVALENT
+-- real_estate_inspection: rows 6,000 / 6,000  cols identical+ordered=True  types identical=True
+real_estate_inspection.inspection_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0356         EQUIVALENT
+real_estate_inspection.transaction_id numeric     ok    0.0000/0.0000  KS  0.0095    0.0240  0.0380         EQUIVALENT
+real_estate_inspection.inspection_date datetime    ok    0.0000/0.0000  KS  0.0253    0.0252  0.0398         EQUIVALENT
+real_estate_inspection.inspector_name categorical ok    0.0000/0.0000 |dR-1|  0.0003    0.0003  0.0200 1.0000  EQUIVALENT
+real_estate_inspection.inspection_type categorical ok    0.0000/0.0000 TVD  0.0230    0.0290  0.0977 1.0000  EQUIVALENT
+real_estate_inspection.result      categorical ok    0.0000/0.0000 TVD  0.0085    0.0145  0.0535 1.0000  EQUIVALENT
+real_estate_inspection.findings_count numeric     ok    0.0000/0.0000  KS  0.0125    0.0153  0.0356         EQUIVALENT
+-- real_estate_appraisal: rows 6,000 / 6,000  cols identical+ordered=True  types identical=True
+real_estate_appraisal.appraisal_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0356         EQUIVALENT
+real_estate_appraisal.transaction_id numeric     ok    0.0000/0.0000  KS  0.0252    0.0182  0.0356         EQUIVALENT
+real_estate_appraisal.appraisal_date datetime    ok    0.0000/0.0000  KS  0.0147    0.0167  0.0356         EQUIVALENT
+real_estate_appraisal.appraised_value numeric     ok    0.0000/0.0000  KS  0.0137    0.0182  0.0356         EQUIVALENT
+real_estate_appraisal.appraiser_name categorical ok    0.0000/0.0000 |dR-1|  0.0002    0.0002  0.0200 1.0000  EQUIVALENT
+real_estate_appraisal.condition_rating categorical ok    0.0000/0.0000 TVD  0.0052    0.0140  0.0618 1.0000  EQUIVALENT
+-- manufacturing_production_line: rows 20 / 20  cols identical+ordered=True  types identical=True
+manufacturing_production_line.line_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.6165         EQUIVALENT
+manufacturing_production_line.line_name categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+manufacturing_production_line.facility categorical ok    0.0000/0.0000 TVD  0.1000    0.3000  1.0705 1.0000  EQUIVALENT
+manufacturing_production_line.line_type categorical ok    0.0000/0.0000 TVD  0.2000    0.3500  1.1968 1.0000  EQUIVALENT
+manufacturing_production_line.capacity_per_hour numeric     ok    0.0000/0.0000  KS  0.3000    0.3000  0.6165         EQUIVALENT
+manufacturing_production_line.is_active categorical ok    0.0000/0.0000 TVD  0.1000    0.1500  0.7569 1.0000  EQUIVALENT
+-- manufacturing_product: rows 100 / 100  cols identical+ordered=True  types identical=True
+manufacturing_product.product_id   numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.2757         EQUIVALENT
+manufacturing_product.product_name categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+manufacturing_product.product_category categorical ok    0.0000/0.0000 TVD  0.2500    0.2700  1.0705 1.0000  EQUIVALENT
+manufacturing_product.unit_cost    numeric     ok    0.0000/0.0000  KS  0.0800    0.1700  0.2757         EQUIVALENT
+manufacturing_product.weight_kg    numeric     ok    0.0000/0.0000  KS  0.1100    0.1700  0.2757         EQUIVALENT
+manufacturing_product.sell_price   numeric     ok    0.0000/0.0000  KS  0.0800    0.1600  0.2757         EQUIVALENT
+-- manufacturing_bom: rows 500 / 500  cols identical+ordered=True  types identical=True
+manufacturing_bom.bom_id           numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1233         EQUIVALENT
+manufacturing_bom.product_id       numeric     ok    0.0000/0.0000  KS  0.0460    0.0440  0.1233         EQUIVALENT
+manufacturing_bom.component_name   categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+manufacturing_bom.quantity_required numeric     ok    0.0000/0.0000  KS  0.0740    0.0800  0.1233         EQUIVALENT
+manufacturing_bom.unit_of_measure  categorical ok    0.0000/0.0000 TVD  0.0860    0.0600  0.2394 1.0000  EQUIVALENT
+manufacturing_bom.unit_cost        numeric     ok    0.0000/0.0000  KS  0.0440    0.0520  0.1233         EQUIVALENT
+manufacturing_bom.is_critical      categorical ok    0.0000/0.0000 TVD  0.0260    0.0200  0.1514 1.0000  EQUIVALENT
+-- manufacturing_work_order: rows 5,000 / 5,000  cols identical+ordered=True  types identical=True
+manufacturing_work_order.wo_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0390         EQUIVALENT
+manufacturing_work_order.product_id numeric     ok    0.0000/0.0000  KS  0.0222    0.0168  0.0390         EQUIVALENT
+manufacturing_work_order.production_line_id numeric     ok    0.0000/0.0000  KS  0.0092    0.0186  0.0390         EQUIVALENT
+manufacturing_work_order.work_order_number categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+manufacturing_work_order.quantity_planned numeric     ok    0.0000/0.0000  KS  0.0128    0.0222  0.0390         EQUIVALENT
+manufacturing_work_order.start_date datetime    ok    0.0000/0.0000  KS  0.0140    0.0284  0.0446         EQUIVALENT
+manufacturing_work_order.status    categorical ok    0.0000/0.0000 TVD  0.0150    0.0230  0.0757 1.0000  EQUIVALENT
+manufacturing_work_order.priority  categorical ok    0.0000/0.0000 TVD  0.0080    0.0116  0.0586 1.0000  EQUIVALENT
+manufacturing_work_order.quantity_produced numeric     ok    0.0000/0.0000  KS  0.0120    0.0216  0.0390         EQUIVALENT
+manufacturing_work_order.end_date  datetime    ok    0.0000/0.0000  KS  0.0140    0.0284  0.0446         EQUIVALENT
+-- manufacturing_quality_check: rows 15,000 / 15,000  cols identical+ordered=True  types identical=True
+manufacturing_quality_check.check_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0225         EQUIVALENT
+manufacturing_quality_check.wo_id  numeric     ok    0.0000/0.0000  KS  0.0117    0.0096  0.0225         EQUIVALENT
+manufacturing_quality_check.check_date datetime    ok    0.0000/0.0000  KS  0.0113    0.0123  0.0225         EQUIVALENT
+manufacturing_quality_check.check_type categorical ok    0.0000/0.0000 TVD  0.0125    0.0163  0.0757 1.0000  EQUIVALENT
+manufacturing_quality_check.result categorical ok    0.0000/0.0000 TVD  0.0011    0.0050  0.0339 1.0000  EQUIVALENT
+manufacturing_quality_check.defect_count numeric     ok    0.0000/0.0000  KS  0.0153    0.0154  0.0251         EQUIVALENT
+manufacturing_quality_check.inspector_name categorical ok    0.0000/0.0000 |dR-1|  0.0003    0.0002  0.0200 1.0000  EQUIVALENT
+-- manufacturing_defect: rows 4,500 / 4,500  cols identical+ordered=True  types identical=True
+manufacturing_defect.defect_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0411         EQUIVALENT
+manufacturing_defect.check_id      numeric     ok    0.0000/0.0000  KS  0.0140    0.0249  0.0411         EQUIVALENT
+manufacturing_defect.defect_code   categorical ok    0.0000/0.0000 TVD  0.0456    0.0440  0.1784 1.0000  EQUIVALENT
+manufacturing_defect.severity      categorical ok    0.0000/0.0000 TVD  0.0076    0.0309  0.0714 1.0000  EQUIVALENT
+manufacturing_defect.root_cause    categorical ok    0.0000/0.0000 TVD  0.0242    0.0258  0.0798 1.0000  EQUIVALENT
+manufacturing_defect.disposition   categorical ok    0.0000/0.0000 TVD  0.0147    0.0142  0.0714 1.0000  EQUIVALENT
+-- manufacturing_equipment: rows 80 / 80  cols identical+ordered=True  types identical=True
+manufacturing_equipment.equipment_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3082         EQUIVALENT
+manufacturing_equipment.production_line_id numeric     ok    0.0000/0.0000  KS  0.0875    0.1750  0.3082         EQUIVALENT
+manufacturing_equipment.equipment_name categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+manufacturing_equipment.equipment_type categorical ok    0.0000/0.0000 TVD  0.1500    0.1500  0.6555 1.0000  EQUIVALENT
+manufacturing_equipment.purchase_date datetime    ok    0.0000/0.0000  KS  0.1375    0.1500  0.3082         EQUIVALENT
+manufacturing_equipment.status     categorical ok    0.0000/0.0000 TVD  0.0625    0.0500  0.4635 1.0000  EQUIVALENT
+manufacturing_equipment.last_maintenance_date datetime    ok    0.0000/0.0000  KS  0.1500    0.1375  0.3082         EQUIVALENT
+-- manufacturing_downtime_event: rows 320 / 320  cols identical+ordered=True  types identical=True
+manufacturing_downtime_event.event_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1541         EQUIVALENT
+manufacturing_downtime_event.equipment_id numeric     ok    0.0000/0.0000  KS  0.0750    0.0937  0.1541         EQUIVALENT
+manufacturing_downtime_event.start_time datetime    ok    0.0000/0.0000  KS  0.0813    0.0781  0.1541         EQUIVALENT
+manufacturing_downtime_event.duration_minutes numeric     ok    0.0000/0.0000  KS  0.0656    0.0813  0.1541         EQUIVALENT
+manufacturing_downtime_event.cause categorical ok    0.0000/0.0000 TVD  0.0812    0.0906  0.3278 1.0000  EQUIVALENT
+manufacturing_downtime_event.impact_level categorical ok    0.0000/0.0000 TVD  0.0906    0.0781  0.2318 1.0000  EQUIVALENT
+-- manufacturing_production_metric: rows 25,000 / 25,000  cols identical+ordered=True  types identical=True
+manufacturing_production_metric.metric_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0174         EQUIVALENT
+manufacturing_production_metric.wo_id numeric     ok    0.0000/0.0000  KS  0.0067    0.0089  0.0174         EQUIVALENT
+manufacturing_production_metric.metric_date datetime    ok    0.0000/0.0000  KS  0.0043    0.0077  0.0174         EQUIVALENT
+manufacturing_production_metric.oee_score numeric     ok    0.0000/0.0000  KS  0.0039    0.0080  0.0174         EQUIVALENT
+manufacturing_production_metric.yield_rate numeric     ok    0.0000/0.0000  KS  0.0081    0.0118  0.0196         EQUIVALENT
+manufacturing_production_metric.cycle_time_seconds numeric     ok    0.0000/0.0000  KS  0.0071    0.0089  0.0174         EQUIVALENT
+manufacturing_production_metric.scrap_rate numeric     ok    0.0000/0.0000  KS  0.0048    0.0100  0.0174         EQUIVALENT
+
+FK integrity (refengine / impl):
+  supply_chain_purchase_order.supplier_id->supply_chain_supplier.supplier_id 1.0000 / 1.0000
+  supply_chain_purchase_order_line.po_id->supply_chain_purchase_order.po_id 1.0000 / 1.0000
+  supply_chain_purchase_order_line.material_id->supply_chain_material.material_id 1.0000 / 1.0000
+  supply_chain_inventory.warehouse_id->supply_chain_warehouse.warehouse_id 1.0000 / 1.0000
+  supply_chain_inventory.material_id->supply_chain_material.material_id 1.0000 / 1.0000
+  supply_chain_shipment.po_id->supply_chain_purchase_order.po_id 1.0000 / 1.0000
+  supply_chain_shipment.warehouse_id->supply_chain_warehouse.warehouse_id 1.0000 / 1.0000
+  supply_chain_shipment_event.shipment_id->supply_chain_shipment.shipment_id 1.0000 / 1.0000
+  supply_chain_quality_inspection.shipment_id->supply_chain_shipment.shipment_id 1.0000 / 1.0000
+  supply_chain_demand_forecast.material_id->supply_chain_material.material_id 1.0000 / 1.0000
+  real_estate_property.neighborhood_id->real_estate_neighborhood.neighborhood_id 1.0000 / 1.0000
+  real_estate_listing.property_id->real_estate_property.property_id 1.0000 / 1.0000
+  real_estate_listing.agent_id->real_estate_agent.agent_id 1.0000 / 1.0000
+  real_estate_showing.listing_id->real_estate_listing.listing_id 1.0000 / 1.0000
+  real_estate_showing.agent_id->real_estate_agent.agent_id 1.0000 / 1.0000
+  real_estate_offer.listing_id->real_estate_listing.listing_id 1.0000 / 1.0000
+  real_estate_transaction.listing_id->real_estate_listing.listing_id 1.0000 / 1.0000
+  real_estate_transaction.buyer_agent_id->real_estate_agent.agent_id 1.0000 / 1.0000
+  real_estate_transaction.seller_agent_id->real_estate_agent.agent_id 1.0000 / 1.0000
+  real_estate_inspection.transaction_id->real_estate_transaction.transaction_id 1.0000 / 1.0000
+  real_estate_appraisal.transaction_id->real_estate_transaction.transaction_id 1.0000 / 1.0000
+  manufacturing_bom.product_id->manufacturing_product.product_id 1.0000 / 1.0000
+  manufacturing_work_order.product_id->manufacturing_product.product_id 1.0000 / 1.0000
+  manufacturing_work_order.production_line_id->manufacturing_production_line.line_id 1.0000 / 1.0000
+  manufacturing_quality_check.wo_id->manufacturing_work_order.wo_id 1.0000 / 1.0000
+  manufacturing_defect.check_id->manufacturing_quality_check.check_id 1.0000 / 1.0000
+  manufacturing_equipment.production_line_id->manufacturing_production_line.line_id 1.0000 / 1.0000
+  manufacturing_downtime_event.equipment_id->manufacturing_equipment.equipment_id 1.0000 / 1.0000
+  manufacturing_production_metric.wo_id->manufacturing_work_order.wo_id 1.0000 / 1.0000
+  supply_chain_warehouse.shared_location_manufacturing_production_line_id->manufacturing_production_line.line_id 1.0000 / 1.0000
+  real_estate_neighborhood.shared_location_manufacturing_production_line_id->manufacturing_production_line.line_id 1.0000 / 1.0000
+  supply_chain_supplier.shared_organization_manufacturing_production_line_id->manufacturing_production_line.line_id 1.0000 / 1.0000
+FK fan-out (children per parent)  refengine p50/p90/p99/max/zero% | impl | KS (baseline max, tol)
+  supply_chain_supplier->supply_chain_purchase_order.supplier_id 22/130/1340/5184/0.000 | 21/138/1387/5168/0.000 | 0.0500 (0.0750, 0.1949)
+  supply_chain_purchase_order->supply_chain_purchase_order_line.po_id 3/5/8/12/0.053 | 3/5/8/11/0.051 | 0.0044 (0.0066, 0.0195)
+  supply_chain_material->supply_chain_purchase_order_line.material_id 50/277/2529/11996/0.000 | 48/270/2645/12105/0.000 | 0.0300 (0.0567, 0.1592)
+  supply_chain_warehouse->supply_chain_inventory.warehouse_id 7/33/177/254/0.000 | 7/35/164/238/0.020 | 0.0600 (0.1000, 0.3899)
+  supply_chain_material->supply_chain_inventory.material_id 3/5/8/8/0.043 | 3/5/8/9/0.060 | 0.0400 (0.0600, 0.1592)
+  supply_chain_purchase_order->supply_chain_shipment.po_id 1/3/4/7/0.300 | 1/3/4/7/0.299 | 0.0018 (0.0044, 0.0195)
+  supply_chain_warehouse->supply_chain_shipment.warehouse_id 176/861/4629/6291/0.000 | 178/937/4597/6238/0.000 | 0.0600 (0.1000, 0.3899)
+  supply_chain_shipment->supply_chain_shipment_event.shipment_id 4/7/9/14/0.018 | 4/7/9/15/0.019 | 0.0031 (0.0066, 0.0178)
+  supply_chain_shipment->supply_chain_quality_inspection.shipment_id 0/1/2/4/0.740 | 0/1/2/5/0.742 | 0.0020 (0.0023, 0.0178)
+  supply_chain_material->supply_chain_demand_forecast.material_id 6/10/13/15/0.000 | 6/9/12/14/0.000 | 0.0667 (0.0633, 0.1592)
+  real_estate_neighborhood->real_estate_property.neighborhood_id 56/384/2437/3411/0.000 | 52/356/2431/3436/0.000 | 0.0800 (0.1200, 0.3899)
+  real_estate_property->real_estate_listing.property_id 1/3/5/7/0.224 | 1/3/5/7/0.223 | 0.0042 (0.0063, 0.0276)
+  real_estate_agent->real_estate_listing.agent_id 25/194/2017/5614/0.000 | 24/218/2214/5502/0.000 | 0.0500 (0.0700, 0.2757)
+  real_estate_listing->real_estate_showing.listing_id 5/8/11/16/0.007 | 5/8/11/15/0.007 | 0.0043 (0.0083, 0.0225)
+  real_estate_agent->real_estate_showing.agent_id 184/1191/9154/20740/0.000 | 180/1194/9180/21058/0.000 | 0.0600 (0.1000, 0.2757)
+  real_estate_listing->real_estate_offer.listing_id 1/3/5/10/0.224 | 1/3/5/9/0.222 | 0.0039 (0.0049, 0.0225)
+  real_estate_listing->real_estate_transaction.listing_id 0/1/2/6/0.672 | 0/1/2/4/0.669 | 0.0037 (0.0033, 0.0225)
+  real_estate_agent->real_estate_transaction.buyer_agent_id 11/88/802/1924/0.000 | 13/85/771/1928/0.000 | 0.0700 (0.0800, 0.2757)
+  real_estate_agent->real_estate_transaction.seller_agent_id 12/90/812/1903/0.000 | 13/85/806/1944/0.000 | 0.1000 (0.1200, 0.2757)
+  real_estate_transaction->real_estate_inspection.transaction_id 1/2/4/7/0.366 | 1/2/4/6/0.365 | 0.0038 (0.0070, 0.0356)
+  real_estate_transaction->real_estate_appraisal.transaction_id 1/2/4/6/0.371 | 1/2/4/7/0.369 | 0.0053 (0.0072, 0.0356)
+  manufacturing_product->manufacturing_bom.product_id 5/8/11/13/0.000 | 5/8/11/11/0.010 | 0.0500 (0.0800, 0.2757)
+  manufacturing_product->manufacturing_work_order.product_id 10/76/662/1595/0.000 | 9/66/653/1664/0.000 | 0.0800 (0.0700, 0.2757)
+  manufacturing_production_line->manufacturing_work_order.production_line_id 248/270/282/284/0.000 | 252/262/268/269/0.000 | 0.2000 (0.3000, 0.6165)
+  manufacturing_work_order->manufacturing_quality_check.wo_id 3/5/8/11/0.050 | 3/5/8/11/0.047 | 0.0048 (0.0080, 0.0390)
+  manufacturing_quality_check->manufacturing_defect.check_id 0/1/2/4/0.739 | 0/1/2/3/0.740 | 0.0023 (0.0037, 0.0225)
+  manufacturing_production_line->manufacturing_equipment.production_line_id 4/6/7/7/0.000 | 4/6/9/9/0.000 | 0.1000 (0.1000, 0.6165)
+  manufacturing_equipment->manufacturing_downtime_event.equipment_id 4/7/9/9/0.013 | 4/7/8/8/0.013 | 0.0500 (0.0875, 0.3082)
+  manufacturing_work_order->manufacturing_production_metric.wo_id 5/8/11/14/0.008 | 5/8/11/16/0.008 | 0.0072 (0.0096, 0.0390)
+  manufacturing_production_line->supply_chain_warehouse.shared_location_manufacturing_production_line_id 2/5/6/6/0.150 | 2/4/6/6/0.000 | 0.1500 (0.1500, 0.6165)
+  manufacturing_production_line->real_estate_neighborhood.shared_location_manufacturing_production_line_id 2/5/6/6/0.100 | 2/4/7/8/0.100 | 0.1000 (0.2000, 0.6165)
+  manufacturing_production_line->supply_chain_supplier.shared_organization_manufacturing_production_line_id 9/13/17/17/0.000 | 10/14/17/17/0.000 | 0.1000 (0.2000, 0.6165)
+record_coherence (impl / min over RefEngine seeds, floor):
+  supply_chain_warehouse.city+state+zip_code+lat+lng in us_zip_locations 1.0000 / 1.0000  floor 0.9950
+  real_estate_neighborhood.city+state+zip_code in us_zip_locations 1.0000 / 1.0000  floor 0.9950
+strategy_semantics (impl / min over RefEngine seeds, floor):
+RefEngine BusinessRulesEngine violations on impl output: {}
+RefEngine FidelityComparator (real=RefEngine seed 42, synthetic=impl): overall impl=93.18  RefEngine-vs-RefEngine baselines=[93.27, 93.11, 93.27, 93.17]
+  manufacturing_bom  impl  97.25  floor  96.23  baselines [96.82, 97.1, 96.73, 98.43]  ok
+  manufacturing_defect impl  95.57  floor  95.37  baselines [96.63, 96.56, 95.87, 96.28]  ok
+  manufacturing_downtime_event impl  96.87  floor  96.19  baselines [97.76, 96.69, 99.05, 98.35]  ok
+  manufacturing_equipment impl  96.45  floor  96.46  baselines [97.09, 96.96, 97.57, 97.53]  FAIL
+  manufacturing_product impl  94.00  floor  88.11  baselines [88.61, 94.96, 94.7, 93.25]  ok
+  manufacturing_production_line impl  97.08  floor  95.74  baselines [97.66, 96.24, 99.47, 96.6]  ok
+  manufacturing_production_metric impl  99.74  floor  99.12  baselines [99.7, 99.77, 99.62, 99.71]  ok
+  manufacturing_quality_check impl  91.55  floor  90.14  baselines [91.59, 91.56, 91.68, 90.64]  ok
+  manufacturing_work_order impl  99.45  floor  98.24  baselines [99.08, 99.08, 99.14, 98.74]  ok
+  real_estate_agent  impl  67.59  floor  66.69  baselines [67.68, 67.19, 67.54, 67.51]  ok
+  real_estate_appraisal impl  89.99  floor  88.72  baselines [89.84, 89.22, 89.24, 89.93]  ok
+  real_estate_inspection impl  90.80  floor  89.73  baselines [90.23, 90.5, 90.76, 90.26]  ok
+  real_estate_listing impl  99.54  floor  99.14  baselines [99.64, 99.66, 99.66, 99.65]  ok
+  real_estate_neighborhood impl  76.72  floor  76.55  baselines [77.7, 78.37, 77.05, 78.87]  ok
+  real_estate_offer  impl  98.90  floor  98.29  baselines [99.64, 99.79, 98.79, 99.75]  ok
+  real_estate_property impl  93.70  floor  92.18  baselines [93.03, 93.04, 92.87, 92.68]  ok
+  real_estate_showing impl  95.16  floor  94.08  baselines [95.14, 94.58, 95.08, 95.14]  ok
+  real_estate_transaction impl  99.05  floor  98.62  baselines [99.16, 99.44, 99.46, 99.12]  ok
+  supply_chain_demand_forecast impl  97.93  floor  97.08  baselines [99.0, 98.36, 98.74, 97.58]  ok
+  supply_chain_inventory impl  97.98  floor  97.02  baselines [98.79, 98.1, 97.84, 97.52]  ok
+  supply_chain_material impl  94.08  floor  93.91  baselines [96.45, 95.87, 94.41, 94.43]  ok
+  supply_chain_purchase_order impl  99.71  floor  98.66  baselines [99.16, 99.39, 99.59, 99.51]  ok
+  supply_chain_purchase_order_line impl  98.98  floor  98.58  baselines [99.51, 99.29, 99.08, 99.12]  ok
+  supply_chain_quality_inspection impl  86.26  floor  86.01  baselines [86.66, 86.51, 86.68, 86.76]  ok
+  supply_chain_shipment impl  98.61  floor  96.70  baselines [98.53, 98.23, 97.2, 98.15]  ok
+  supply_chain_shipment_event impl  90.44  floor  89.30  baselines [89.8, 90.41, 90.43, 90.38]  ok
+  supply_chain_supplier impl  79.64  floor  77.79  baselines [79.93, 78.6, 79.71, 78.29]  ok
+  supply_chain_warehouse impl  85.90  floor  81.08  baselines [86.71, 81.58, 83.54, 84.7]  ok
+
+COLUMNS EQUIVALENT: 207/207
+  NOT EQUIVALENT: (h) fidelity manufacturing_equipment: 96.45 < floor 96.46
+VERDICT: FAIL

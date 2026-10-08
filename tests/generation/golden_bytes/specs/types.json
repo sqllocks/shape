@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "golden_types",
+    "seed": 42
+  },
+  "tables": {
+    "values": {
+      "name": "values",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "text": {
+          "name": "text",
+          "type": "string",
+          "generator": {
+            "strategy": "choice",
+            "values": [
+              "plain",
+              "comma, inside",
+              "quote \" inside",
+              "line\nbreak",
+              "carriage\r\nreturn",
+              "tab\tinside",
+              "back\\slash",
+              "O'Brien",
+              "",
+              " leading and trailing ",
+              "é ü ß ñ",
+              "日本語のテキスト",
+              "emoji 😀",
+              "NULL",
+              "-- not a comment",
+              "zero​width"
+            ]
+          }
+        },
+        "maybe": {
+          "name": "maybe",
+          "type": "string",
+          "generator": {
+            "strategy": "choice",
+            "values": [
+              "x",
+              "y"
+            ]
+          },
+          "null_rate": 0.3
+        },
+        "f": {
+          "name": "f",
+          "type": "float",
+          "generator": {
+            "strategy": "choice",
+            "values": [
+              0.1,
+              0.3333333333333333,
+              0.6666666666666666,
+              1e-07,
+              1e-05,
+              0.0001,
+              1e+16,
+              1e+22,
+              123456789.0,
+              1.0,
+              100.0,
+              -0.0,
+              0.0,
+              5e-324,
+              2.2250738585072014e-308,
+              1.7976931348623157e+308,
+              -2.5,
+              3.141592653589793
+            ]
+          }
+        },
+        "normal": {
+          "name": "normal",
+          "type": "float",
+          "generator": {
+            "strategy": "distribution",
+            "distribution": "normal",
+            "mean": 1000,
+            "std": 250
+          }
+        },
+        "amount": {
+          "name": "amount",
+          "type": "decimal",
+          "generator": {
+            "strategy": "distribution",
+            "distribution": "uniform",
+            "min": -5000,
+            "max": 5000,
+            "output_type": "decimal"
+          },
+          "precision": 12,
+          "scale": 4
+        },
+        "big": {
+          "name": "big",
+          "type": "integer",
+          "generator": {
+            "strategy": "choice",
+            "values": [
+              0,
+              1,
+              -1,
+              2147483648,
+              -2147483649,
+              9007199254740993,
+              9223372036854775807,
+              -9223372036854775808
+            ]
+          }
+        },
+        "flag": {
+          "name": "flag",
+          "type": "boolean",
+          "generator": {
+            "strategy": "choice",
+            "values": [
+              true,
+              false
+            ]
+          }
+        },
+        "ts": {
+          "name": "ts",
+          "type": "datetime",
+          "generator": {
+            "strategy": "temporal",
+            "start": "1969-12-31T18:00:00",
+            "end": "2038-01-19T03:14:07"
+          }
+        },
+        "day": {
+          "name": "day",
+          "type": "date",
+          "generator": {
+            "strategy": "temporal",
+            "start": "1900-01-01",
+            "end": "2100-12-31"
+          }
+        },
+        "key": {
+          "name": "key",
+          "type": "string",
+          "generator": {
+            "strategy": "uuid"
+          }
+        }
+      }
+    }
+  },
+  "generators": {
+    "choice": 1,
+    "distribution": 1,
+    "normal": 1,
+    "uniform": 1,
+    "sequence": 1,
+    "temporal": 1,
+    "uuid": 1
+  }
+}

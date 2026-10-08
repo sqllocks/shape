@@ -1,0 +1,36 @@
+{
+  "name": "customer",
+  "version": 1,
+  "fidelity": "gold",
+  "fields": [
+    {
+      "name": "customer_id",
+      "kind": "integer",
+      "nullable": false,
+      "semantic_type": null,
+      "sensitivity": "INTERNAL",
+      "constraints": {
+        "unique": true
+      }
+    },
+    {
+      "name": "email",
+      "kind": "string",
+      "nullable": false,
+      "semantic_type": "email",
+      "sensitivity": "CONFIDENTIAL",
+      "constraints": {}
+    },
+    {
+      "name": "state",
+      "kind": "string",
+      "nullable": false,
+      "semantic_type": "us_state",
+      "sensitivity": "PUBLIC",
+      "constraints": {}
+    }
+  ],
+  "metadata": {
+    "purpose": "example"
+  }
+}

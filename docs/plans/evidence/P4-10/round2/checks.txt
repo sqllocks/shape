@@ -1,0 +1,18 @@
+== ruff check src tests plugins benchmarks/vs_refengine
+All checks passed!
+== ruff format --check
+577 files already formatted
+== mypy
+Success: no issues found in 260 source files
+== vulture
+exit 0
+== lint-imports
+
+Built-ins load only through the plugin registry (plan 4.3) KEPT (1 ignored import)
+
+Contracts: 1 kept, 0 broken.
+== check_user_facing
+check_user_facing: clean
+== bandit -q -r src -ll
+exit 0
+== cargo: no Rust changes in this round

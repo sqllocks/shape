@@ -1,0 +1,22 @@
+"""Semantic detector `{{name}}`: labels a column whose values start with `{{name}}:`."""
+
+from __future__ import annotations
+
+from typing import Any
+
+import pyarrow as pa
+from shape.plugins.api.v1 import Detection
+
+SHAPE_API = "1.0"
+
+class {{class}}:
+    """Labels a column `{{name}}` when every value starts with `{{name}}:`. Replace the rule."""
+
+    name = "{{name}}"
+
+    def detect(self, values: pa.Array, column: str) -> Detection | None:
+        found = [v for v in values.to_pylist() if v is not None]
+        if not found:
+            return None
+        share = sum(isinstance(v, str) and v.startswith("{{name}}:") for v in found) / len(found)
+        return Detection("{{name}}", share) if share >= 0.9 else None

@@ -1,0 +1,285 @@
+"""The exit codes of every core command, in one place (W1-14).
+
+``docs/EXIT_CODES.md`` is generated from :data:`CODES` (``python scripts/gen_exit_codes.py``), and
+each command's ``--help`` ends with the same table (:func:`epilog`). The classes are those of
+``docs/CLI.md``: 0 ok, 1 a check failed, 2 bad input, 3 and above a command's own verdict. A
+command's codes are only ever described here, never changed: the registry follows the commands,
+and ``tests/cli/test_exit_codes.py`` keeps the two together (every core command has an entry, the
+flags that signal a verdict imply their code, and spot checks run the commands).
+"""
+
+from __future__ import annotations
+
+import argparse
+import textwrap
+
+from shape.cli.introspect import leaves
+
+#: Every command can end in these: 0 when it did its work, 2 for an input it cannot use (an
+#: unreadable or wrong file, a bad argument, a failed expected condition that is not a verdict).
+OK = "ok"
+BAD = "bad input: a missing or unreadable file, the wrong kind of file, or a bad argument"
+SIGNATURE = "a `--verify` public key does not verify an input, or an input's signature is invalid"
+LEAK = "the leak scan found a value"
+
+#: alias -> command
+ALIASES = {"show": "inspect", "compare": "fidelity"}
+
+#: Codes other than 0 (ok) and 2 (bad input), which every command has, by command.
+_EXTRA: dict[str, dict[int, str]] = {
+    "doctor": {1: "a required package is missing"},
+    "conformance": {1: "a conformance case failed"},
+    "version": {},
+    "plugins list": {},
+    "plugins info": {1: "the plugin loads with a problem (its status is not ok)"},
+    "plugins doctor": {1: "a plugin failed to load"},
+    "capture": {},
+    "profile": {},
+    "profile export": {},
+    "profile import": {},
+    "profile list": {},
+    "profile validate": {
+        1: "the profile is not well formed (or, with `--safe`, the leak scan found a value)"
+    },
+    "profile safe": {},
+    "profile registry list": {},
+    "profile registry save": {},
+    "profile registry delete": {},
+    "profile registry tag": {},
+    "profile registry diff": {1: "the profiles differ (with `--fail-on-diff`)"},
+    "profile registry reindex": {},
+    "profile registry validate": {1: "the store, the profile or the data has a problem"},
+    "stream-profile": {},
+    "diff": {1: "drift was found (with `--fail-on-drift`), or " + SIGNATURE},
+    "inspect": {1: SIGNATURE},
+    "cat": {1: "the file's signature check failed (with `--verify`)"},
+    "git-setup": {},
+    "design": {1: "the design has errors (warnings too with `--strict`)"},
+    "from-ddl": {},
+    "keygen": {},
+    "sign": {},
+    "validate": {1: "the schema or contract is not valid"},
+    "verify": {
+        1: "a validation gate failed that is enforced (a warning too with `--strict`), or "
+        "the `.shape` file's signature is invalid"
+    },
+    "quality": {},
+    "generate": {
+        1: "the plan has problems (`--dry-run`), or a sink or the scale run failed",
+        130: "interrupted during a scale run (the job can be resumed)",
+    },
+    "describe": {},
+    "list": {},
+    "presets": {},
+    "learn": {},
+    "emit": {1: "a live target failed (with `--live-fail`)"},
+    "stream": {1: "a live target failed (with `--live-fail`)"},
+    "mask": {},
+    "continue": {},
+    "time-travel": {},
+    "chaos": {},
+    "generate-drift": {},
+    "pack run": {1: "the pack or spec is not valid, or the run failed"},
+    "pack replay": {1: "the replay does not match the recorded run"},
+    "pack validate": {1: "the pack or spec is not valid"},
+    "pack list": {},
+    "transform star": {},
+    "transform cdm": {},
+    "jobs list": {},
+    "jobs status": {1: "the job failed"},
+    "jobs cancel": {1: "the job is in a state that cannot be cancelled, or it failed"},
+    "jobs resume": {1: "the job is in a state that cannot be resumed, or it failed"},
+    "proposals propose": {},
+    "proposals list": {},
+    "proposals decide": {},
+    "bridge": {1: "with `--once`: the request failed"},
+    "bridge schema": {1: "the schemas in DIR differ from the ones Shape ships (with `--check`)"},
+    "demo init": {1: "the connection profile could not be saved"},
+    "demo list": {},
+    "demo run": {1: "the run failed"},
+    "demo preflight": {1: "a preflight check failed"},
+    "demo cleanup": {1: "something could not be removed"},
+    "demo status": {1: "a check failed"},
+    "demo notebook": {},
+    "demo report": {},
+    "fidelity": {
+        1: "a pass mark was missed",
+        3: "with a REFERENCE.json profile: the certificate failed",
+    },
+    "key": {},
+    "fd": {},
+    "privacy-k": {},
+    "query": {1: SIGNATURE},
+    "check": {
+        1: "a contract rule failed on a profile, or " + SIGNATURE,
+        4: "a contract rule failed on a Shape model or evidence document",
+    },
+    "compatibility": {5: "the change is not compatible in the mode asked for"},
+    "plan": {1: SIGNATURE},
+    "certify-shapes": {3: "the certificate score is below `--threshold`"},
+    "drift": {1: "drift was found"},
+    "registry commit": {1: "not committed: the leak scan found a value in the artifact"},
+    "registry checkout": {},
+    "registry tag": {},
+    "registry promote": {},
+    "registry log": {},
+    "registry list": {},
+    "registry show": {},
+    "registry diff": {},
+    "registry prune": {},
+    "init": {},
+    "project validate": {},
+    "ci comment": {},
+    "ci post-comment": {
+        1: "GitHub answered with an error other than 403 or 404 (those print a notice and exit "
+        "0), or could not be reached"
+    },
+    "badge": {},
+    "plugins new": {},
+    "notify test": {1: "a notification was not delivered"},
+    # INT-18: the commands of the lanes merged beside W1-14, as their docs and --help state them
+    "bisect": {},
+    "timelapse": {},
+    "changes validate": {1: "the planned-change file has problems (each on its own line)"},
+    "changes list": {},
+    "changes add": {},
+    "changes ack": {},
+    "composite": {
+        1: "a sink or the scale run failed, or constraints did not hold after "
+        "`--sql-constraints disable` loaded the rows",
+        130: "interrupted during a scale run (the job can be resumed)",
+    },
+    "contract emit": {1: "a rule cannot be expressed in the target (with `--strict`)"},
+    "contracts validate": {},
+    "contracts check-consumers": {1: "a consumer contract is broken"},
+    "parity": {1: "a parity check failed"},
+    "dictionary": {},
+    "explain": {},
+    "fingerprint embed": {},
+    "fingerprint show": {},
+    "fingerprint verify": {1: "the digest or the signature does not match"},
+    "import-schema": {1: "an element was not imported (with `--strict`; no spec is written)"},
+    "migrate": {1: "the source's signature check failed"},
+    "vault": {
+        1: "a check failed: the wrong key, a vault that is not the profile's, or a hash, id, "
+        "signature or authentication mismatch"
+    },
+    "pin": {1: "the spec uses names it does not pin (with `--check`)"},
+    "plugins allowlist init": {},
+    "plugins sign": {},
+    "plugins verify": {1: "the signature is missing or invalid, or the files do not match"},
+    "profile merge": {},
+    "proposals contract": {},
+    "reference list": {},
+    "reference show": {},
+    "report-card": {1: "a section that ran failed"},
+    "resolve run": {},
+    "resolve synth": {},
+    "rules backtest": {1: "an incident was missed (with `--fail-on-miss`)"},
+    "rules mutate": {1: "the mutation score is below `--min-score`"},
+    "scorecard": {1: "a slice gap is above `--max-slice-gap`"},
+    "seed": {
+        1: "`--mode create` found an existing table, or `--mode append` a primary key already "
+        "in its table (nothing is written)"
+    },
+    "share-bundle create": {},
+    "share-bundle verify": {1: "the bundle was tampered with, or a check failed"},
+    "skew": {1: "a feature is flagged"},
+    "skew-rehearsal": {1: "a generated top share is outside the tolerance"},
+    "suite run": {1: "a scenario did not meet its expectation"},
+    "types": {1: "a column's types disagree (findings)"},
+    # W6-03: failure modes, detective packs, the dataset library, canaries and game days
+    "detective list": {},
+    "detective start": {},
+    "detective hint": {2: "the pack does not exist, the hint number is out of range, or " + BAD},
+    "detective check": {
+        1: "a planted finding is missed or a named finding is not planted",
+        2: "the answer is malformed or names an unknown failure mode, the pack does not "
+        "exist, or " + BAD,
+    },
+    "canary make": {
+        2: "the target cannot make a canary, a check does not fire at this size, "
+        "the folder is not new or empty, or " + BAD
+    },
+    "canary check": {
+        1: "an expected detection is missing from the results: a blind spot",
+        2: "the canary or a result is malformed, or " + BAD,
+    },
+    "gameday run": {
+        1: "an expected detection was missed",
+        2: "the plan is malformed (an unknown or disallowed command, a data path that is not a "
+        "local folder, a table that cannot be read), or " + BAD,
+    },
+    "library list": {},
+    "library show": {2: "the dataset is not in the library, or " + BAD},
+    "library get": {2: "the dataset is not in the library, the output exists, or " + BAD},
+    "failure-modes list": {},
+    "failure-modes show": {2: "the failure mode id is not in the catalog, or " + BAD},
+}
+
+#: ``quality`` is the one command whose "failed" verdict has always been 2.
+_OVERRIDE: dict[str, dict[int, str]] = {
+    "quality": {2: "a rule was violated, or " + BAD},
+    "project validate": {2: "shape.yml is not valid, or " + BAD},
+    "contracts validate": {2: "the consumer contract is not valid, or " + BAD},
+    "check": {
+        2: "a rule needs a value a safe capture left out and nothing is violated (not "
+        "evaluable), or " + BAD
+    },
+    "bisect": {
+        2: "`--good` tests bad, `--bad` tests good, or a version cannot be tested, or " + BAD
+    },
+    "fingerprint verify": {2: "the data has no fingerprint, or one of a newer version, or " + BAD},
+    "share-bundle verify": {2: "the bundle is malformed, or " + BAD},
+}
+
+CODES: dict[str, dict[int, str]] = {
+    path: {0: OK, 2: BAD, **extra, **_OVERRIDE.get(path, {})} for path, extra in _EXTRA.items()
+}
+
+_RAW = "\x00"  # in an epilog: the text after it is kept as written
+
+
+def codes(path: str) -> dict[int, str]:
+    """The exit codes of the command ``path`` (``"registry commit"``; an alias works), by code."""
+    return dict(sorted(CODES[ALIASES.get(path, path)].items()))
+
+
+def epilog(path: str) -> str:
+    """The exit-code table for a command's ``--help``."""
+    lines = ["exit codes:"]
+    for code, meaning in codes(path).items():
+        first, *rest = textwrap.wrap(meaning, width=64) or [""]
+        lines.append(f"  {code:<3} {first}")
+        lines.extend(f"      {line}" for line in rest)
+    return "\n".join(lines).replace("exit codes:", "Exit codes:", 1)
+
+
+class HelpFormatter(argparse.HelpFormatter):
+    """Wraps text as usual, but keeps what follows a NUL as written (the exit-code table)."""
+
+    def _fill_text(self, text: str, width: int, indent: str) -> str:
+        head, sep, raw = text.partition(_RAW)
+        out = super()._fill_text(head, width, indent) if head.strip() else ""
+        if not sep:
+            return out
+        table = "\n".join(indent + line for line in raw.splitlines())
+        return f"{out}\n\n{table}" if out else table
+
+
+def apply_to(parser: argparse.ArgumentParser, path: str) -> None:
+    """Put the exit codes of the command ``path`` at the end of ``parser``'s ``--help``, for a
+    command that has a parser of its own."""
+    parser.formatter_class = HelpFormatter
+    parser.epilog = (f"{parser.epilog}\n\n" if parser.epilog else "") + _RAW + epilog(path)
+
+
+def apply(parser: argparse.ArgumentParser, prefix: tuple[str, ...] = ()) -> None:
+    """Put the exit codes of every command below ``parser`` at the end of its ``--help``. A
+    command that has no entry is left alone (the registry test fails for it)."""
+    for words, leaf, _, _ in leaves(parser, prefix, prefix):
+        path = " ".join(words)
+        if path not in CODES:
+            continue
+        leaf.formatter_class = HelpFormatter
+        leaf.epilog = (f"{leaf.epilog}\n\n" if leaf.epilog else "") + _RAW + epilog(path)

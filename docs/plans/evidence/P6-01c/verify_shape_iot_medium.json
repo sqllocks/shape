@@ -1,0 +1,3691 @@
+{
+ "domain": "iot",
+ "scale": "medium",
+ "impl": "shape",
+ "seed": 42,
+ "impl_seed": 1042,
+ "baseline_seeds": [
+  43,
+  44,
+  45,
+  46
+ ],
+ "tables": {
+  "device_type": {
+   "rows": {
+    "refengine": 20,
+    "impl": 20
+   },
+   "columns_refengine": [
+    "type_id",
+    "type_name",
+    "manufacturer",
+    "category",
+    "protocol"
+   ],
+   "columns_impl": [
+    "type_id",
+    "type_name",
+    "manufacturer",
+    "category",
+    "protocol"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "type_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "type_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "manufacturer": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "category": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "protocol": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "type_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.6164779987778186,
+     "stats": {
+      "mean": {
+       "refengine": 10.5,
+       "impl": 10.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 20.0,
+       "impl": 20.0
+      },
+      "std": {
+       "refengine": 5.766281297335398,
+       "impl": 5.766281297335398,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 20,
+      "impl": 20
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "type_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "distinct": {
+      "refengine": 11,
+      "impl": 10,
+      "ratio": 0.9090909090909091,
+      "baseline_max_ratio_dev": 0.18181818181818188
+     },
+     "top10": [
+      {
+       "value": "Temperature Sensor Node",
+       "refengine": 0.2,
+       "impl": 0.05
+      },
+      {
+       "value": "Light Sensor",
+       "refengine": 0.1,
+       "impl": 0.15
+      },
+      {
+       "value": "Pressure Transmitter",
+       "refengine": 0.1,
+       "impl": 0.1
+      },
+      {
+       "value": "GPS Tracker",
+       "refengine": 0.1,
+       "impl": 0.0
+      },
+      {
+       "value": "Smart Power Meter",
+       "refengine": 0.1,
+       "impl": 0.15
+      },
+      {
+       "value": "Motion Detector",
+       "refengine": 0.1,
+       "impl": 0.0
+      },
+      {
+       "value": "Humidity Monitor",
+       "refengine": 0.1,
+       "impl": 0.05
+      },
+      {
+       "value": "Smart Thermostat",
+       "refengine": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Wind Speed Anemometer",
+       "refengine": 0.05,
+       "impl": 0.05
+      },
+      {
+       "value": "Air Quality Monitor",
+       "refengine": 0.05,
+       "impl": 0.05
+      },
+      {
+       "value": "Gas Detector",
+       "refengine": 0.0,
+       "impl": 0.15
+      },
+      {
+       "value": "Soil Moisture Sensor",
+       "refengine": 0.0,
+       "impl": 0.15
+      },
+      {
+       "value": "Industrial PLC Gateway",
+       "refengine": 0.0,
+       "impl": 0.1
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.5000000000000001,
+     "tvd_baseline": 0.6,
+     "tvd_tol": 1.7751810818109592,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "manufacturer": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "distinct": {
+      "refengine": 20,
+      "impl": 20,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.050000000000000044
+     },
+     "top10": [
+      {
+       "value": "Spartan Analytics",
+       "refengine": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Grand Node",
+       "refengine": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Spectrum Data Ventures",
+       "refengine": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Holloway Industries",
+       "refengine": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Barbfield Technologies",
+       "refengine": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Rosashire Networks",
+       "refengine": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Harbor Wind International",
+       "refengine": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Royal Stream Technologies",
+       "refengine": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Sky Wave Co",
+       "refengine": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Freeland Inc",
+       "refengine": 0.05,
+       "impl": 0.0
+      },
+      {
+       "value": "Epic Technologies",
+       "refengine": 0.0,
+       "impl": 0.05
+      },
+      {
+       "value": "Villawell Consulting",
+       "refengine": 0.0,
+       "impl": 0.05
+      },
+      {
+       "value": "Global LLC",
+       "refengine": 0.0,
+       "impl": 0.05
+      },
+      {
+       "value": "Platinum Solutions",
+       "refengine": 0.0,
+       "impl": 0.05
+      },
+      {
+       "value": "Hurley Holdings",
+       "refengine": 0.0,
+       "impl": 0.05
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 1.0,
+     "tvd_baseline": 1.0,
+     "tvd_tol": 2.3936536824085963,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "category": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.19999999999999996
+     },
+     "top10": [
+      {
+       "value": "Industrial",
+       "refengine": 0.35,
+       "impl": 0.2
+      },
+      {
+       "value": "Consumer",
+       "refengine": 0.3,
+       "impl": 0.25
+      },
+      {
+       "value": "Medical",
+       "refengine": 0.15,
+       "impl": 0.1
+      },
+      {
+       "value": "Automotive",
+       "refengine": 0.1,
+       "impl": 0.2
+      },
+      {
+       "value": "Smart Home",
+       "refengine": 0.1,
+       "impl": 0.25
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.24999999999999994,
+     "tvd_baseline": 0.35,
+     "tvd_tol": 1.1968268412042982,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "protocol": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.3446012188022556
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 4,
+      "ratio": 0.8,
+      "baseline_max_ratio_dev": 0.19999999999999996
+     },
+     "top10": [
+      {
+       "value": "MQTT",
+       "refengine": 0.45,
+       "impl": 0.4
+      },
+      {
+       "value": "AMQP",
+       "refengine": 0.2,
+       "impl": 0.15
+      },
+      {
+       "value": "HTTP",
+       "refengine": 0.2,
+       "impl": 0.4
+      },
+      {
+       "value": "Modbus",
+       "refengine": 0.1,
+       "impl": 0.0
+      },
+      {
+       "value": "CoAP",
+       "refengine": 0.05,
+       "impl": 0.05
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.2,
+     "tvd_baseline": 0.39999999999999997,
+     "tvd_tol": 1.1968268412042982,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "location": {
+   "rows": {
+    "refengine": 100,
+    "impl": 100
+   },
+   "columns_refengine": [
+    "location_id",
+    "location_name",
+    "facility_type",
+    "city",
+    "state",
+    "zip_code",
+    "lat",
+    "lng"
+   ],
+   "columns_impl": [
+    "location_id",
+    "location_name",
+    "facility_type",
+    "city",
+    "state",
+    "zip_code",
+    "lat",
+    "lng"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "location_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "location_name": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "facility_type": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "city": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "state": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "zip_code": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "lat": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "lng": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "location_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.2756973423800469,
+     "stats": {
+      "mean": {
+       "refengine": 50.5,
+       "impl": 50.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "refengine": 28.86607004772212,
+       "impl": 28.86607004772212,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "location_name": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "refengine": 100,
+      "impl": 100,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "LOC-0001",
+       "refengine": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "LOC-0002",
+       "refengine": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "LOC-0003",
+       "refengine": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "LOC-0004",
+       "refengine": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "LOC-0005",
+       "refengine": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "LOC-0006",
+       "refengine": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "LOC-0007",
+       "refengine": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "LOC-0008",
+       "refengine": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "LOC-0009",
+       "refengine": 0.01,
+       "impl": 0.01
+      },
+      {
+       "value": "LOC-0010",
+       "refengine": 0.01,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "LOC-{seq:4}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "facility_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Factory",
+       "refengine": 0.27,
+       "impl": 0.32
+      },
+      {
+       "value": "Office",
+       "refengine": 0.23,
+       "impl": 0.17
+      },
+      {
+       "value": "Residential",
+       "refengine": 0.19,
+       "impl": 0.11
+      },
+      {
+       "value": "Warehouse",
+       "refengine": 0.19,
+       "impl": 0.24
+      },
+      {
+       "value": "Field",
+       "refengine": 0.12,
+       "impl": 0.16
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.13999999999999999,
+     "tvd_baseline": 0.10000000000000002,
+     "tvd_tol": 0.5352372348458314,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "city": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "refengine": 96,
+      "impl": 99,
+      "ratio": 1.03125,
+      "baseline_max_ratio_dev": 0.04166666666666674
+     },
+     "top10": [
+      {
+       "value": "Conrad",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Pittsburgh",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Chicago",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Columbia",
+       "refengine": 0.02,
+       "impl": 0.0
+      },
+      {
+       "value": "Canada",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Birmingham",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "River Falls",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Blanket",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Brookville",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Evansville",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "Rich Square",
+       "refengine": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "Cresson",
+       "refengine": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Brady",
+       "refengine": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "El Sobrante",
+       "refengine": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "Meridian",
+       "refengine": 0.0,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.9699999999999999,
+     "tvd_baseline": 0.9799999999999999,
+     "tvd_tol": 2.345292057134016,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "state": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "refengine": 39,
+      "impl": 41,
+      "ratio": 1.0512820512820513,
+      "baseline_max_ratio_dev": 0.15384615384615385
+     },
+     "top10": [
+      {
+       "value": "TX",
+       "refengine": 0.09,
+       "impl": 0.08
+      },
+      {
+       "value": "NY",
+       "refengine": 0.09,
+       "impl": 0.04
+      },
+      {
+       "value": "PA",
+       "refengine": 0.07,
+       "impl": 0.09
+      },
+      {
+       "value": "KY",
+       "refengine": 0.05,
+       "impl": 0.02
+      },
+      {
+       "value": "IL",
+       "refengine": 0.05,
+       "impl": 0.01
+      },
+      {
+       "value": "MI",
+       "refengine": 0.05,
+       "impl": 0.02
+      },
+      {
+       "value": "CA",
+       "refengine": 0.04,
+       "impl": 0.09
+      },
+      {
+       "value": "MN",
+       "refengine": 0.04,
+       "impl": 0.04
+      },
+      {
+       "value": "AL",
+       "refengine": 0.03,
+       "impl": 0.02
+      },
+      {
+       "value": "IA",
+       "refengine": 0.03,
+       "impl": 0.02
+      },
+      {
+       "value": "GA",
+       "refengine": 0.01,
+       "impl": 0.04
+      },
+      {
+       "value": "VA",
+       "refengine": 0.0,
+       "impl": 0.03
+      },
+      {
+       "value": "MO",
+       "refengine": 0.01,
+       "impl": 0.03
+      },
+      {
+       "value": "SC",
+       "refengine": 0.0,
+       "impl": 0.03
+      },
+      {
+       "value": "OH",
+       "refengine": 0.01,
+       "impl": 0.03
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.33,
+     "tvd_baseline": 0.42000000000000004,
+     "tvd_tol": 1.494836245550064,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "zip_code": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "distinct": {
+      "refengine": 100,
+      "impl": 99,
+      "ratio": 0.99,
+      "baseline_max_ratio_dev": 0.010000000000000009
+     },
+     "top10": [
+      {
+       "value": "41519",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "35283",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "36476",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "50621",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "76432",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "47012",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "47737",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "61470",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "93606",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "72260",
+       "refengine": 0.01,
+       "impl": 0.0
+      },
+      {
+       "value": "27869",
+       "refengine": 0.0,
+       "impl": 0.02
+      },
+      {
+       "value": "76035",
+       "refengine": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "69123",
+       "refengine": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "94803",
+       "refengine": 0.0,
+       "impl": 0.01
+      },
+      {
+       "value": "76665",
+       "refengine": 0.0,
+       "impl": 0.01
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.9999999999999998,
+     "tvd_baseline": 0.9999999999999998,
+     "tvd_tol": 2.3936536824085963,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lat": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.19,
+     "ks_baseline": 0.19000000000000006,
+     "ks_tol": 0.2870000000000001,
+     "stats": {
+      "mean": {
+       "refengine": 39.108363,
+       "impl": 38.702715
+      },
+      "min": {
+       "refengine": 24.7234,
+       "impl": 30.7126
+      },
+      "max": {
+       "refengine": 48.7722,
+       "impl": 61.2181
+      },
+      "std": {
+       "refengine": 5.082962890532549,
+       "impl": 4.84087341535337,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 100,
+      "impl": 99
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "lng": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.07035623639735145
+     },
+     "ks": 0.12,
+     "ks_baseline": 0.15999999999999998,
+     "ks_tol": 0.2756973423800469,
+     "stats": {
+      "mean": {
+       "refengine": -89.761774,
+       "impl": -92.409983
+      },
+      "min": {
+       "refengine": -123.0445,
+       "impl": -149.9003
+      },
+      "max": {
+       "refengine": -70.6089,
+       "impl": -70.8243
+      },
+      "std": {
+       "refengine": 13.787030231283456,
+       "impl": 15.064162370348077,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 100,
+      "impl": 99
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "device": {
+   "rows": {
+    "refengine": 5000,
+    "impl": 5000
+   },
+   "columns_refengine": [
+    "device_id",
+    "device_type_id",
+    "location_id",
+    "serial_number",
+    "firmware_version",
+    "install_date",
+    "status",
+    "battery_level"
+   ],
+   "columns_impl": [
+    "device_id",
+    "device_type_id",
+    "location_id",
+    "serial_number",
+    "firmware_version",
+    "install_date",
+    "status",
+    "battery_level"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "device_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "device_type_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "location_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "serial_number": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "firmware_version": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "install_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "status": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "battery_level": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "device_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "refengine": 2500.5,
+       "impl": 2500.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "refengine": 1443.3756441065507,
+       "impl": 1443.3756441065507,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 5000,
+      "impl": 5000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "device_type_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.009599999999999997,
+     "ks_baseline": 0.01859999999999995,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "refengine": 4.5646,
+       "impl": 4.608
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 20.0,
+       "impl": 20.0
+      },
+      "std": {
+       "refengine": 4.7354225619262325,
+       "impl": 4.769395768857938,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 20,
+      "impl": 20
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "location_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.019199999999999995,
+     "ks_baseline": 0.015000000000000013,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "refengine": 16.0172,
+       "impl": 16.6782
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 100.0,
+       "impl": 100.0
+      },
+      "std": {
+       "refengine": 22.609548959676307,
+       "impl": 23.065772147491614,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 100,
+      "impl": 100
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "serial_number": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "refengine": 5000,
+      "impl": 5000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "DEV-000001",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "DEV-000002",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "DEV-000003",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "DEV-000004",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "DEV-000005",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "DEV-000006",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "DEV-000007",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "DEV-000008",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "DEV-000009",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "DEV-000010",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "DEV-{seq:6}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "firmware_version": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "refengine": 5000,
+      "impl": 5000,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "v1.1.1",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "v2.2.2",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "v3.3.3",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "v4.4.4",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "v5.5.5",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "v6.6.6",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "v7.7.7",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "v8.8.8",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "v9.9.9",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      },
+      {
+       "value": "v10.10.10",
+       "refengine": 0.0002,
+       "impl": 0.0002
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "v{seq:1}.{seq:1}.{seq:1}",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "install_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.010800000000000032,
+     "ks_baseline": 0.02200000000000002,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "refengine": "2022-10-03 05:35:15.971852800",
+       "impl": "2022-10-07 07:23:48.368129280"
+      },
+      "min": {
+       "refengine": "2020-01-01 11:55:28.400416512",
+       "impl": "2020-01-01 07:57:58.139566080"
+      },
+      "max": {
+       "refengine": "2025-06-29 04:00:29.906245632",
+       "impl": "2025-06-29 09:52:16.266063872"
+      },
+      "std": {
+       "refengine": 579.356908529774,
+       "impl": 581.7568262180146,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 5000,
+      "impl": 5000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Active",
+       "refengine": 0.7238,
+       "impl": 0.724
+      },
+      {
+       "value": "Maintenance",
+       "refengine": 0.1072,
+       "impl": 0.0948
+      },
+      {
+       "value": "Inactive",
+       "refengine": 0.0938,
+       "impl": 0.1044
+      },
+      {
+       "value": "Decommissioned",
+       "refengine": 0.0752,
+       "impl": 0.0768
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.012399999999999994,
+     "tvd_baseline": 0.015600000000000017,
+     "tvd_tol": 0.06770275002573076,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "battery_level": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0014140721339450828
+     },
+     "ks": 0.028400000000000036,
+     "ks_baseline": 0.01980000000000004,
+     "ks_tol": 0.038989492070408104,
+     "stats": {
+      "mean": {
+       "refengine": 49.50732799703237,
+       "impl": 50.462091088145705
+      },
+      "min": {
+       "refengine": 0.03726385868225712,
+       "impl": 0.007684456481560353
+      },
+      "max": {
+       "refengine": 99.98878333878277,
+       "impl": 99.99599634166934
+      },
+      "std": {
+       "refengine": 28.87696364867851,
+       "impl": 28.867224915451906,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 5000,
+      "impl": 5000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "sensor": {
+   "rows": {
+    "refengine": 12500,
+    "impl": 12500
+   },
+   "columns_refengine": [
+    "sensor_id",
+    "device_id",
+    "sensor_type",
+    "unit_of_measure",
+    "min_range",
+    "max_range"
+   ],
+   "columns_impl": [
+    "sensor_id",
+    "device_id",
+    "sensor_type",
+    "unit_of_measure",
+    "min_range",
+    "max_range"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "sensor_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "device_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "sensor_type": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "unit_of_measure": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "min_range": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "max_range": {
+     "refengine": "double",
+     "impl": "double"
+    }
+   },
+   "columns": {
+    "sensor_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005656627970796736
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.024659119951112744,
+     "stats": {
+      "mean": {
+       "refengine": 6250.5,
+       "impl": 6250.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 12500.0,
+       "impl": 12500.0
+      },
+      "std": {
+       "refengine": 3608.439170888156,
+       "impl": 3608.439170888156,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 12500,
+      "impl": 12500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "device_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005656627970796736
+     },
+     "ks": 0.007199999999999984,
+     "ks_baseline": 0.014399999999999968,
+     "ks_tol": 0.024659119951112744,
+     "stats": {
+      "mean": {
+       "refengine": 2501.38592,
+       "impl": 2501.31704
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "refengine": 1449.9360828483968,
+       "impl": 1441.1891509047791,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 4607,
+      "impl": 4597
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "sensor_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005656627970796736
+     },
+     "distinct": {
+      "refengine": 8,
+      "impl": 8,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Temperature",
+       "refengine": 0.1844,
+       "impl": 0.17328
+      },
+      {
+       "value": "Humidity",
+       "refengine": 0.14824,
+       "impl": 0.1464
+      },
+      {
+       "value": "Pressure",
+       "refengine": 0.13832,
+       "impl": 0.14328
+      },
+      {
+       "value": "Vibration",
+       "refengine": 0.11952,
+       "impl": 0.12048
+      },
+      {
+       "value": "Proximity",
+       "refengine": 0.1128,
+       "impl": 0.11296
+      },
+      {
+       "value": "Flow",
+       "refengine": 0.09976,
+       "impl": 0.10208
+      },
+      {
+       "value": "Light",
+       "refengine": 0.09912,
+       "impl": 0.09832
+      },
+      {
+       "value": "Level",
+       "refengine": 0.09784,
+       "impl": 0.1032
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.013760000000000015,
+     "tvd_baseline": 0.012160000000000011,
+     "tvd_tol": 0.06055518052848384,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "unit_of_measure": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005656627970796736
+     },
+     "distinct": {
+      "refengine": 8,
+      "impl": 8,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "C",
+       "refengine": 0.18224,
+       "impl": 0.18512
+      },
+      {
+       "value": "%RH",
+       "refengine": 0.15064,
+       "impl": 0.1452
+      },
+      {
+       "value": "Pa",
+       "refengine": 0.13744,
+       "impl": 0.14248
+      },
+      {
+       "value": "mm/s",
+       "refengine": 0.11768,
+       "impl": 0.1176
+      },
+      {
+       "value": "cm",
+       "refengine": 0.10928,
+       "impl": 0.10728
+      },
+      {
+       "value": "lux",
+       "refengine": 0.1028,
+       "impl": 0.10368
+      },
+      {
+       "value": "m",
+       "refengine": 0.10032,
+       "impl": 0.09832
+      },
+      {
+       "value": "L/min",
+       "refengine": 0.0996,
+       "impl": 0.10032
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.00952,
+     "tvd_baseline": 0.014079999999999988,
+     "tvd_tol": 0.06055518052848384,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "min_range": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005656627970796736
+     },
+     "ks": 0.009199999999999986,
+     "ks_baseline": 0.012160000000000004,
+     "ks_tol": 0.024659119951112744,
+     "stats": {
+      "mean": {
+       "refengine": -25.051362289097767,
+       "impl": -25.000185958579948
+      },
+      "min": {
+       "refengine": -49.99863357607733,
+       "impl": -49.99112324609799
+      },
+      "max": {
+       "refengine": -0.003046664035693425,
+       "impl": -0.004489292416195667
+      },
+      "std": {
+       "refengine": 14.380685492335267,
+       "impl": 14.443848950465206,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 12500,
+      "impl": 12500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "max_range": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0005656627970796736
+     },
+     "ks": 0.006400000000000017,
+     "ks_baseline": 0.010720000000000007,
+     "ks_tol": 0.024659119951112744,
+     "stats": {
+      "mean": {
+       "refengine": 275.10407867233994,
+       "impl": 275.60230578305834
+      },
+      "min": {
+       "refengine": 50.03376050203027,
+       "impl": 50.02936114405875
+      },
+      "max": {
+       "refengine": 499.9717559826671,
+       "impl": 499.98836204659364
+      },
+      "std": {
+       "refengine": 129.70519458501326,
+       "impl": 130.60216470369085,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 12500,
+      "impl": 12500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "reading": {
+   "rows": {
+    "refengine": 250000,
+    "impl": 250000
+   },
+   "columns_refengine": [
+    "reading_id",
+    "sensor_id",
+    "reading_value",
+    "reading_timestamp",
+    "quality_flag"
+   ],
+   "columns_impl": [
+    "reading_id",
+    "sensor_id",
+    "reading_value",
+    "reading_timestamp",
+    "quality_flag"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "reading_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "sensor_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "reading_value": {
+     "refengine": "double",
+     "impl": "double"
+    },
+    "reading_timestamp": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "quality_flag": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "reading_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.828421467886284e-05
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.005513946847600939,
+     "stats": {
+      "mean": {
+       "refengine": 125000.5,
+       "impl": 125000.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 250000.0,
+       "impl": 250000.0
+      },
+      "std": {
+       "refengine": 72168.78364812587,
+       "impl": 72168.78364812587,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 250000,
+      "impl": 250000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "sensor_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.828421467886284e-05
+     },
+     "ks": 0.002711999999999992,
+     "ks_baseline": 0.0032599999999999296,
+     "ks_tol": 0.0068899999999998945,
+     "stats": {
+      "mean": {
+       "refengine": 803.398504,
+       "impl": 804.043208
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 12500.0,
+       "impl": 12500.0
+      },
+      "std": {
+       "refengine": 2031.044519678129,
+       "impl": 2030.0865997186104,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 11090,
+      "impl": 11078
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "reading_value": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.828421467886284e-05
+     },
+     "ks": 0.0020680000000000143,
+     "ks_baseline": 0.002980000000000038,
+     "ks_tol": 0.006470000000000057,
+     "stats": {
+      "mean": {
+       "refengine": 25.02926223830623,
+       "impl": 25.002155179734917
+      },
+      "min": {
+       "refengine": -40.78701900951678,
+       "impl": -42.76880490539088
+      },
+      "max": {
+       "refengine": 90.59907148066972,
+       "impl": 97.48247126599917
+      },
+      "std": {
+       "refengine": 15.000251541394483,
+       "impl": 15.011324488450304,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 250000,
+      "impl": 250000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "reading_timestamp": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.828421467886284e-05
+     },
+     "ks": 0.0019799999999999818,
+     "ks_baseline": 0.0030400000000000427,
+     "ks_tol": 0.006560000000000064,
+     "stats": {
+      "mean": {
+       "refengine": "2024-12-31 05:32:14.197387776",
+       "impl": "2024-12-31 02:14:06.103217152"
+      },
+      "min": {
+       "refengine": "2024-01-01 00:02:43.427641600",
+       "impl": "2024-01-01 00:04:15.085940992"
+      },
+      "max": {
+       "refengine": "2025-12-30 23:57:58.039930880",
+       "impl": "2025-12-30 23:59:38.401346048"
+      },
+      "std": {
+       "refengine": 210.9307469792181,
+       "impl": 210.59748253268583,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 250000,
+      "impl": 250000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "quality_flag": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 2.828421467886284e-05
+     },
+     "distinct": {
+      "refengine": 3,
+      "impl": 3,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Good",
+       "refengine": 0.900588,
+       "impl": 0.900092
+      },
+      {
+       "value": "Suspect",
+       "refengine": 0.069232,
+       "impl": 0.069664
+      },
+      {
+       "value": "Bad",
+       "refengine": 0.03018,
+       "impl": 0.030244
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.0004960000000000277,
+     "tvd_baseline": 0.001876000000000039,
+     "tvd_tol": 0.008291859587312052,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "alert": {
+   "rows": {
+    "refengine": 2500,
+    "impl": 2500
+   },
+   "columns_refengine": [
+    "alert_id",
+    "device_id",
+    "alert_type",
+    "severity",
+    "triggered_at",
+    "acknowledged",
+    "resolved_at"
+   ],
+   "columns_impl": [
+    "alert_id",
+    "device_id",
+    "alert_type",
+    "severity",
+    "triggered_at",
+    "acknowledged",
+    "resolved_at"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "alert_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "device_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "alert_type": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "severity": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "triggered_at": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "acknowledged": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "resolved_at": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    }
+   },
+   "columns": {
+    "alert_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.05513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": 1250.5,
+       "impl": 1250.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 2500.0,
+       "impl": 2500.0
+      },
+      "std": {
+       "refengine": 721.6877787520029,
+       "impl": 721.6877787520029,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 2500,
+      "impl": 2500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "device_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.012799999999999923,
+     "ks_baseline": 0.021199999999999997,
+     "ks_tol": 0.05513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": 147.5832,
+       "impl": 162.5968
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 4975.0,
+       "impl": 4974.0
+      },
+      "std": {
+       "refengine": 528.0764526825259,
+       "impl": 564.8690558260029,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 424,
+      "impl": 434
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "alert_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Threshold",
+       "refengine": 0.2912,
+       "impl": 0.29
+      },
+      {
+       "value": "Anomaly",
+       "refengine": 0.2508,
+       "impl": 0.2572
+      },
+      {
+       "value": "Connectivity",
+       "refengine": 0.1956,
+       "impl": 0.1952
+      },
+      {
+       "value": "Battery",
+       "refengine": 0.158,
+       "impl": 0.152
+      },
+      {
+       "value": "Maintenance",
+       "refengine": 0.1044,
+       "impl": 0.1056
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.007599999999999989,
+     "tvd_baseline": 0.02519999999999998,
+     "tvd_tol": 0.10704744696916627,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "severity": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Medium",
+       "refengine": 0.41,
+       "impl": 0.4036
+      },
+      {
+       "value": "Low",
+       "refengine": 0.2928,
+       "impl": 0.3
+      },
+      {
+       "value": "High",
+       "refengine": 0.1984,
+       "impl": 0.2036
+      },
+      {
+       "value": "Critical",
+       "refengine": 0.0988,
+       "impl": 0.0928
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.01239999999999998,
+     "tvd_baseline": 0.021200000000000004,
+     "tvd_tol": 0.09574614729634384,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "triggered_at": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "ks": 0.04999999999999999,
+     "ks_baseline": 0.028800000000000048,
+     "ks_tol": 0.05513946847600938,
+     "stats": {
+      "mean": {
+       "refengine": "2024-12-23 06:50:36.615891712",
+       "impl": "2025-01-06 19:37:16.136448"
+      },
+      "min": {
+       "refengine": "2024-01-01 00:19:28.392210944",
+       "impl": "2024-01-01 03:57:41.329220096"
+      },
+      "max": {
+       "refengine": "2025-12-30 22:43:22.605386496",
+       "impl": "2025-12-30 21:36:18.137513984"
+      },
+      "std": {
+       "refengine": 210.22640361655746,
+       "impl": 209.31437661865675,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 2500,
+      "impl": 2500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "acknowledged": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.002827861382741382
+     },
+     "distinct": {
+      "refengine": 2,
+      "impl": 2,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "true",
+       "refengine": 0.7052,
+       "impl": 0.6984
+      },
+      {
+       "value": "false",
+       "refengine": 0.2948,
+       "impl": 0.3016
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.0068000000000000005,
+     "tvd_baseline": 0.009600000000000025,
+     "tvd_tol": 0.06770275002573076,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "resolved_at": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.2576,
+      "impl": 0.2524,
+      "baseline_max_abs_diff": 0.012399999999999994,
+      "tol": 0.06184532965390353
+     },
+     "ks": 0.055869298998173444,
+     "ks_baseline": 0.044435155236372204,
+     "ks_tol": 0.06865273285455831,
+     "stats": {
+      "mean": {
+       "refengine": "2024-12-26 02:36:56.207655424",
+       "impl": "2025-01-14 02:14:20.457947904"
+      },
+      "min": {
+       "refengine": "2024-01-03 00:19:28.392210944",
+       "impl": "2024-01-02 20:47:21.083308032"
+      },
+      "max": {
+       "refengine": "2026-01-02 19:27:50.487693056",
+       "impl": "2026-01-05 19:35:22.955211008"
+      },
+      "std": {
+       "refengine": 209.48180685867047,
+       "impl": 209.01702552524074,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 1856,
+      "impl": 1869
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "maintenance_log": {
+   "rows": {
+    "refengine": 7500,
+    "impl": 7500
+   },
+   "columns_refengine": [
+    "log_id",
+    "device_id",
+    "maintenance_type",
+    "performed_date",
+    "performed_by",
+    "notes"
+   ],
+   "columns_impl": [
+    "log_id",
+    "device_id",
+    "maintenance_type",
+    "performed_date",
+    "performed_by",
+    "notes"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "log_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "device_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "maintenance_type": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "performed_date": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "performed_by": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "notes": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "log_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0009427461855506871
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.0318347869675969,
+     "stats": {
+      "mean": {
+       "refengine": 3750.5,
+       "impl": 3750.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 7500.0,
+       "impl": 7500.0
+      },
+      "std": {
+       "refengine": 2165.0634902160878,
+       "impl": 2165.0634902160878,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 7500,
+      "impl": 7500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "device_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0009427461855506871
+     },
+     "ks": 0.021466666666666634,
+     "ks_baseline": 0.025466666666666637,
+     "ks_tol": 0.04019999999999996,
+     "stats": {
+      "mean": {
+       "refengine": 2537.1512,
+       "impl": 2487.8750666666665
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "refengine": 1455.479155308849,
+       "impl": 1456.0836467702197,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 3866,
+      "impl": 3883
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "maintenance_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0009427461855506871
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Preventive",
+       "refengine": 0.3470666666666667,
+       "impl": 0.3484
+      },
+      {
+       "value": "Corrective",
+       "refengine": 0.2517333333333333,
+       "impl": 0.24666666666666667
+      },
+      {
+       "value": "Calibration",
+       "refengine": 0.20813333333333334,
+       "impl": 0.20186666666666667
+      },
+      {
+       "value": "Firmware Update",
+       "refengine": 0.19306666666666666,
+       "impl": 0.20306666666666667
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.011333333333333306,
+     "tvd_baseline": 0.01626666666666668,
+     "tvd_tol": 0.05527906391541368,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "performed_date": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0009427461855506871
+     },
+     "ks": 0.011733333333333346,
+     "ks_baseline": 0.020000000000000018,
+     "ks_tol": 0.03200000000000003,
+     "stats": {
+      "mean": {
+       "refengine": "2024-06-29 05:21:58.596046336",
+       "impl": "2024-07-02 23:33:19.442011392"
+      },
+      "min": {
+       "refengine": "2023-01-01 00:41:02.066784256",
+       "impl": "2023-01-01 03:15:52.137223936"
+      },
+      "max": {
+       "refengine": "2025-12-30 23:20:04.382393600",
+       "impl": "2025-12-30 22:35:30.687102976"
+      },
+      "std": {
+       "refengine": 318.5705119917312,
+       "impl": 315.94962966436793,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 7500,
+      "impl": 7500
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "performed_by": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0009427461855506871
+     },
+     "distinct": {
+      "refengine": 7499,
+      "impl": 7498,
+      "ratio": 0.9998666488865182,
+      "baseline_max_ratio_dev": 0.0002667022269635666
+     },
+     "top10": [
+      {
+       "value": "Koisha Sheridge",
+       "refengine": 0.0002666666666666667,
+       "impl": 0.0
+      },
+      {
+       "value": "Saita Hebcroft",
+       "refengine": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Inila Harrwick",
+       "refengine": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Siard Foxwick",
+       "refengine": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Tiix Myersham",
+       "refengine": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Hiesa Gross",
+       "refengine": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Seth Mahoney",
+       "refengine": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Niene Librook",
+       "refengine": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Jadra Hess",
+       "refengine": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Teas Stokes",
+       "refengine": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Alfred Huanridge",
+       "refengine": 0.0,
+       "impl": 0.0002666666666666667
+      },
+      {
+       "value": "Neus Stevewick",
+       "refengine": 0.0,
+       "impl": 0.0002666666666666667
+      },
+      {
+       "value": "Edson Tanner",
+       "refengine": 0.0,
+       "impl": 0.00013333333333333334
+      },
+      {
+       "value": "Chisha Pottsland",
+       "refengine": 0.0,
+       "impl": 0.00013333333333333334
+      },
+      {
+       "value": "Soan Mcdonton",
+       "refengine": 0.0,
+       "impl": 0.00013333333333333334
+      }
+     ],
+     "vocab_overlap": 0.0006666666666666666,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "FIRST_NAMES+' '+LAST_NAMES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "notes": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.30093333333333333,
+      "impl": 0.29706666666666665,
+      "baseline_max_abs_diff": 0.01093333333333335,
+      "tol": 0.037449740739843335
+     },
+     "distinct": {
+      "refengine": 1851,
+      "impl": 1858,
+      "ratio": 1.003781739600216,
+      "baseline_max_ratio_dev": 0.012425715829281536
+     },
+     "top10": [
+      {
+       "value": "The automated program initiative will drive efficiency growth.",
+       "refengine": 0.0019073049780659929,
+       "impl": 0.00037936267071320183
+      },
+      {
+       "value": "Regular assessment updates ensure standardized compliance with standards.",
+       "refengine": 0.0019073049780659929,
+       "impl": 0.00037936267071320183
+      },
+      {
+       "value": "Customer inventory has been restructured through our preliminary program.",
+       "refengine": 0.0017165744802593935,
+       "impl": 0.00037936267071320183
+      },
+      {
+       "value": "Customer report has been distributed through our primary program.",
+       "refengine": 0.0015258439824527943,
+       "impl": 0.0007587253414264037
+      },
+      {
+       "value": "The projected system platform enables seamless security integration.",
+       "refengine": 0.0015258439824527943,
+       "impl": 0.00018968133535660092
+      },
+      {
+       "value": "The sustainable resource platform enables seamless productivity integration.",
+       "refengine": 0.0015258439824527943,
+       "impl": 0.0009484066767830046
+      },
+      {
+       "value": "The analysis shows annual improvement in compliance performance.",
+       "refengine": 0.0015258439824527943,
+       "impl": 0.0
+      },
+      {
+       "value": "This demand requires enhanced scalability to be effective.",
+       "refengine": 0.0015258439824527943,
+       "impl": 0.00037936267071320183
+      },
+      {
+       "value": "A comprehensive framework plan was approved by the committee.",
+       "refengine": 0.0015258439824527943,
+       "impl": 0.0007587253414264037
+      },
+      {
+       "value": "Our workflow team delivered innovative integrated solutions daily.",
+       "refengine": 0.0013351134846461949,
+       "impl": 0.0009484066767830046
+      },
+      {
+       "value": "The analysis shows pending improvement in process performance.",
+       "refengine": 0.0005721914934197979,
+       "impl": 0.0018968133535660092
+      },
+      {
+       "value": "The assessment department submitted all automated requests promptly.",
+       "refengine": 0.0005721914934197979,
+       "impl": 0.0017071320182094083
+      },
+      {
+       "value": "A comprehensive inventory plan was submitted by the committee.",
+       "refengine": 0.0005721914934197979,
+       "impl": 0.0017071320182094083
+      },
+      {
+       "value": "The analysis shows integrated improvement in revenue performance.",
+       "refengine": 0.0009536524890329964,
+       "impl": 0.0017071320182094083
+      },
+      {
+       "value": "Regular report updates ensure quarterly compliance with standards.",
+       "refengine": 0.00038146099561319857,
+       "impl": 0.0015174506828528073
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  },
+  "command": {
+   "rows": {
+    "refengine": 15000,
+    "impl": 15000
+   },
+   "columns_refengine": [
+    "command_id",
+    "device_id",
+    "command_type",
+    "issued_at",
+    "status",
+    "issued_by"
+   ],
+   "columns_impl": [
+    "command_id",
+    "device_id",
+    "command_type",
+    "issued_at",
+    "status",
+    "issued_by"
+   ],
+   "columns_identical_and_ordered": true,
+   "arrow_types": {
+    "command_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "device_id": {
+     "refengine": "int64",
+     "impl": "int64"
+    },
+    "command_type": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "issued_at": {
+     "refengine": "timestamp[ns]",
+     "impl": "timestamp[ns]"
+    },
+    "status": {
+     "refengine": "string",
+     "impl": "string"
+    },
+    "issued_by": {
+     "refengine": "string",
+     "impl": "string"
+    }
+   },
+   "columns": {
+    "command_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.0,
+     "ks_baseline": 0.0,
+     "ks_tol": 0.022510593742416898,
+     "stats": {
+      "mean": {
+       "refengine": 7500.5,
+       "impl": 7500.5
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 15000.0,
+       "impl": 15000.0
+      },
+      "std": {
+       "refengine": 4330.127009299689,
+       "impl": 4330.127009299689,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 15000,
+      "impl": 15000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "device_id": {
+     "kind": "numeric",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.009333333333333305,
+     "ks_baseline": 0.009133333333333327,
+     "ks_tol": 0.022510593742416898,
+     "stats": {
+      "mean": {
+       "refengine": 2497.002933333333,
+       "impl": 2511.4778666666666
+      },
+      "min": {
+       "refengine": 1.0,
+       "impl": 1.0
+      },
+      "max": {
+       "refengine": 5000.0,
+       "impl": 5000.0
+      },
+      "std": {
+       "refengine": 1445.0335460897538,
+       "impl": 1447.73551780362,
+       "unit": ""
+      }
+     },
+     "distinct": {
+      "refengine": 4760,
+      "impl": 4753
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "command_type": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "distinct": {
+      "refengine": 5,
+      "impl": 5,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Configure",
+       "refengine": 0.25366666666666665,
+       "impl": 0.25666666666666665
+      },
+      {
+       "value": "Update",
+       "refengine": 0.20333333333333334,
+       "impl": 0.20013333333333333
+      },
+      {
+       "value": "Reboot",
+       "refengine": 0.1982,
+       "impl": 0.19833333333333333
+      },
+      {
+       "value": "Calibrate",
+       "refengine": 0.1974,
+       "impl": 0.19833333333333333
+      },
+      {
+       "value": "Reset",
+       "refengine": 0.1474,
+       "impl": 0.14653333333333332
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.004066666666666691,
+     "tvd_baseline": 0.014133333333333331,
+     "tvd_tol": 0.043701937223683165,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "issued_at": {
+     "kind": "datetime",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "ks": 0.01100000000000001,
+     "ks_baseline": 0.010600000000000054,
+     "ks_tol": 0.022510593742416898,
+     "stats": {
+      "mean": {
+       "refengine": "2025-01-01 10:37:20.582511360",
+       "impl": "2024-12-30 12:11:29.980819968"
+      },
+      "min": {
+       "refengine": "2024-01-01 00:22:50.176340736",
+       "impl": "2024-01-01 00:11:26.960788992"
+      },
+      "max": {
+       "refengine": "2025-12-30 20:18:06.702812416",
+       "impl": "2025-12-30 22:45:32.288797952"
+      },
+      "std": {
+       "refengine": 210.94414265208843,
+       "impl": 210.7713994004015,
+       "unit": "days"
+      }
+     },
+     "distinct": {
+      "refengine": 15000,
+      "impl": 15000
+     },
+     "checks": {
+      "null_rate": true,
+      "ks": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "status": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "distinct": {
+      "refengine": 4,
+      "impl": 4,
+      "ratio": 1.0,
+      "baseline_max_ratio_dev": 0.0
+     },
+     "top10": [
+      {
+       "value": "Executed",
+       "refengine": 0.5455333333333333,
+       "impl": 0.5510666666666667
+      },
+      {
+       "value": "Acknowledged",
+       "refengine": 0.2064,
+       "impl": 0.1994
+      },
+      {
+       "value": "Sent",
+       "refengine": 0.14746666666666666,
+       "impl": 0.15106666666666665
+      },
+      {
+       "value": "Failed",
+       "refengine": 0.1006,
+       "impl": 0.09846666666666666
+      }
+     ],
+     "vocab_overlap": 1.0,
+     "vocab_source": "refengine_output+pool",
+     "tvd": 0.009133333333333361,
+     "tvd_baseline": 0.013133333333333372,
+     "tvd_tol": 0.039088200952233594,
+     "checks": {
+      "null_rate": true,
+      "tvd": true,
+      "vocab": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    },
+    "issued_by": {
+     "kind": "categorical",
+     "null_rate": {
+      "refengine": 0.0,
+      "impl": 0.0,
+      "baseline_max_abs_diff": 0.0,
+      "tol": 0.0004713888070451052
+     },
+     "distinct": {
+      "refengine": 14998,
+      "impl": 14996,
+      "ratio": 0.9998666488865182,
+      "baseline_max_ratio_dev": 0.00033337778370445825
+     },
+     "top10": [
+      {
+       "value": "Miane Newmastein",
+       "refengine": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Ryan Litson",
+       "refengine": 0.00013333333333333334,
+       "impl": 0.0
+      },
+      {
+       "value": "Pierce Lyoman",
+       "refengine": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Caita DelMillan",
+       "refengine": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Reginald Wadewick",
+       "refengine": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Riane Yorkcroft",
+       "refengine": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Aaliyah Lozwood",
+       "refengine": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Elena Carlsgate",
+       "refengine": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Siey Boonecroft",
+       "refengine": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Ilron Wheelford",
+       "refengine": 6.666666666666667e-05,
+       "impl": 0.0
+      },
+      {
+       "value": "Jein Aguway",
+       "refengine": 0.0,
+       "impl": 0.00013333333333333334
+      },
+      {
+       "value": "Wedra Haney",
+       "refengine": 0.0,
+       "impl": 0.00013333333333333334
+      },
+      {
+       "value": "Kodra Bargate",
+       "refengine": 0.0,
+       "impl": 0.00013333333333333334
+      },
+      {
+       "value": "Hooa Morsbrook",
+       "refengine": 0.0,
+       "impl": 0.00013333333333333334
+      },
+      {
+       "value": "Rinor Reidsen",
+       "refengine": 0.0,
+       "impl": 6.666666666666667e-05
+      }
+     ],
+     "vocab_overlap": 0.00046666666666666666,
+     "vocab_source": "refengine_output",
+     "component_overlap": 1.0,
+     "component_overlap_refengine": 1.0,
+     "component_rule": "FIRST_NAMES+' '+LAST_NAMES",
+     "distinct_ratio_tol": 0.02,
+     "checks": {
+      "null_rate": true,
+      "vocab": true,
+      "distinct_ratio": true
+     },
+     "equivalent": true,
+     "arrow_type_match": true
+    }
+   },
+   "types_identical": true,
+   "row_counts_identical": true
+  }
+ },
+ "table_order": {
+  "refengine": [
+   "device_type",
+   "location",
+   "device",
+   "alert",
+   "command",
+   "maintenance_log",
+   "sensor",
+   "reading"
+  ],
+  "impl": [
+   "device_type",
+   "location",
+   "device",
+   "alert",
+   "command",
+   "maintenance_log",
+   "sensor",
+   "reading"
+  ]
+ },
+ "fk_integrity": {
+  "refengine": {
+   "device.device_type_id->device_type.type_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "device.location_id->location.location_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "sensor.device_id->device.device_id": {
+    "integrity": 1.0,
+    "n": 12500
+   },
+   "reading.sensor_id->sensor.sensor_id": {
+    "integrity": 1.0,
+    "n": 250000
+   },
+   "alert.device_id->device.device_id": {
+    "integrity": 1.0,
+    "n": 2500
+   },
+   "maintenance_log.device_id->device.device_id": {
+    "integrity": 1.0,
+    "n": 7500
+   },
+   "command.device_id->device.device_id": {
+    "integrity": 1.0,
+    "n": 15000
+   }
+  },
+  "impl": {
+   "device.device_type_id->device_type.type_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "device.location_id->location.location_id": {
+    "integrity": 1.0,
+    "n": 5000
+   },
+   "sensor.device_id->device.device_id": {
+    "integrity": 1.0,
+    "n": 12500
+   },
+   "reading.sensor_id->sensor.sensor_id": {
+    "integrity": 1.0,
+    "n": 250000
+   },
+   "alert.device_id->device.device_id": {
+    "integrity": 1.0,
+    "n": 2500
+   },
+   "maintenance_log.device_id->device.device_id": {
+    "integrity": 1.0,
+    "n": 7500
+   },
+   "command.device_id->device.device_id": {
+    "integrity": 1.0,
+    "n": 15000
+   }
+  }
+ },
+ "fanout": {
+  "device_type->device.device_type_id": {
+   "refengine": {
+    "p50": 93.5,
+    "p90": 515.9000000000004,
+    "p99": 1571.4199999999987,
+    "max": 1758,
+    "mean": 250.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 98.0,
+    "p90": 529.1000000000005,
+    "p99": 1538.8099999999988,
+    "max": 1710,
+    "mean": 250.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.10000000000000003,
+   "ks_baseline_max": 0.15000000000000002,
+   "ks_tol": 0.6164779987778186,
+   "equivalent": true
+  },
+  "location->device.location_id": {
+   "refengine": {
+    "p50": 14.0,
+    "p90": 85.60000000000014,
+    "p99": 558.1500000000032,
+    "max": 1167,
+    "mean": 50.0,
+    "zero_frac": 0.0
+   },
+   "impl": {
+    "p50": 16.0,
+    "p90": 93.60000000000005,
+    "p99": 546.0800000000031,
+    "max": 1148,
+    "mean": 50.0,
+    "zero_frac": 0.0
+   },
+   "ks_counts": 0.08000000000000002,
+   "ks_baseline_max": 0.10000000000000003,
+   "ks_tol": 0.2756973423800469,
+   "equivalent": true
+  },
+  "device->sensor.device_id": {
+   "refengine": {
+    "p50": 2.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 12,
+    "mean": 2.5,
+    "zero_frac": 0.0786
+   },
+   "impl": {
+    "p50": 2.0,
+    "p90": 5.0,
+    "p99": 7.0,
+    "max": 11,
+    "mean": 2.5,
+    "zero_frac": 0.0806
+   },
+   "ks_counts": 0.00880000000000003,
+   "ks_baseline_max": 0.005600000000000049,
+   "ks_tol": 0.038989492070408104,
+   "equivalent": true
+  },
+  "sensor->reading.sensor_id": {
+   "refengine": {
+    "p50": 3.0,
+    "p90": 15.0,
+    "p99": 186.01000000000022,
+    "max": 37084,
+    "mean": 20.0,
+    "zero_frac": 0.1128
+   },
+   "impl": {
+    "p50": 3.0,
+    "p90": 15.0,
+    "p99": 176.01000000000022,
+    "max": 37683,
+    "mean": 20.0,
+    "zero_frac": 0.11376
+   },
+   "ks_counts": 0.009439999999999948,
+   "ks_baseline_max": 0.007519999999999999,
+   "ks_tol": 0.024659119951112744,
+   "equivalent": true
+  },
+  "device->alert.device_id": {
+   "refengine": {
+    "p50": 0.0,
+    "p90": 0.0,
+    "p99": 5.0,
+    "max": 664,
+    "mean": 0.5,
+    "zero_frac": 0.9152
+   },
+   "impl": {
+    "p50": 0.0,
+    "p90": 0.0,
+    "p99": 4.0,
+    "max": 682,
+    "mean": 0.5,
+    "zero_frac": 0.9132
+   },
+   "ks_counts": 0.0020000000000000018,
+   "ks_baseline_max": 0.0030000000000000027,
+   "ks_tol": 0.038989492070408104,
+   "equivalent": true
+  },
+  "device->maintenance_log.device_id": {
+   "refengine": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 5.0,
+    "max": 8,
+    "mean": 1.5,
+    "zero_frac": 0.2268
+   },
+   "impl": {
+    "p50": 1.0,
+    "p90": 3.0,
+    "p99": 5.0,
+    "max": 7,
+    "mean": 1.5,
+    "zero_frac": 0.2234
+   },
+   "ks_counts": 0.010800000000000032,
+   "ks_baseline_max": 0.02200000000000002,
+   "ks_tol": 0.038989492070408104,
+   "equivalent": true
+  },
+  "device->command.device_id": {
+   "refengine": {
+    "p50": 3.0,
+    "p90": 5.0,
+    "p99": 8.0,
+    "max": 12,
+    "mean": 3.0,
+    "zero_frac": 0.048
+   },
+   "impl": {
+    "p50": 3.0,
+    "p90": 5.0,
+    "p99": 8.0,
+    "max": 12,
+    "mean": 3.0,
+    "zero_frac": 0.0494
+   },
+   "ks_counts": 0.007600000000000051,
+   "ks_baseline_max": 0.009399999999999992,
+   "ks_tol": 0.038989492070408104,
+   "equivalent": true
+  }
+ },
+ "record_coherence": {
+  "location.city+state+zip_code+lat+lng in us_zip_locations": {
+   "impl": 1.0,
+   "refengine": [
+    1.0,
+    1.0,
+    1.0,
+    1.0,
+    1.0
+   ],
+   "floor": 0.995
+  }
+ },
+ "strategy_semantics": {
+  "alert.resolved_at - triggered_at in [0,7] days": {
+   "impl": 0.7476,
+   "refengine": [
+    0.7424,
+    0.7548,
+    0.7508,
+    0.7516,
+    0.7444
+   ],
+   "floor": 0.7373999999999999
+  }
+ },
+ "business_rules": {
+  "refengine_BusinessRulesEngine_violations": {},
+  "refengine_on_refengine": {}
+ },
+ "refengine_fidelity_comparator": {
+  "overall_impl": 91.95316917907246,
+  "overall_baseline_refengine_vs_refengine": [
+   91.63144305930659,
+   91.62535520673791,
+   91.85242879003178,
+   91.84571075372804
+  ],
+  "tables": {
+   "alert": {
+    "impl": 98.76128806432959,
+    "baseline": [
+     99.07270465864701,
+     99.28574182635587,
+     99.31812068603656,
+     99.57730910007903
+    ],
+    "floor": 98.57270465864701,
+    "ok": true
+   },
+   "command": {
+    "impl": 90.32729921070604,
+    "baseline": [
+     89.68227776445839,
+     89.84941228781956,
+     89.59554406893209,
+     90.32585707052449
+    ],
+    "floor": 89.09554406893209,
+    "ok": true
+   },
+   "device": {
+    "impl": 99.06528277682494,
+    "baseline": [
+     98.96519525303549,
+     99.70343270420096,
+     99.4385961856149,
+     99.02324882503447
+    ],
+    "floor": 98.46519525303549,
+    "ok": true
+   },
+   "device_type": {
+    "impl": 78.02597402597402,
+    "baseline": [
+     77.53418700813658,
+     76.62337662337663,
+     77.1621521335807,
+     77.60549859497227
+    ],
+    "floor": 76.12337662337663,
+    "ok": true
+   },
+   "location": {
+    "impl": 85.61380404798598,
+    "baseline": [
+     84.84891353291196,
+     83.94621578469312,
+     85.49122482338237,
+     84.26034921331487
+    ],
+    "floor": 83.44621578469312,
+    "ok": true
+   },
+   "maintenance_log": {
+    "impl": 84.74823724737162,
+    "baseline": [
+     84.1373945625701,
+     84.339471645661,
+     84.75886338083299,
+     84.69214753600635
+    ],
+    "floor": 83.6373945625701,
+    "ok": true
+   },
+   "reading": {
+    "impl": 99.95375561093637,
+    "baseline": [
+     99.06839381631531,
+     99.49536508941542,
+     99.25312175834812,
+     99.51863033531785
+    ],
+    "floor": 98.56839381631531,
+    "ok": true
+   },
+   "sensor": {
+    "impl": 99.12971244845107,
+    "baseline": [
+     99.74247787837793,
+     99.75982569238062,
+     99.8018072835265,
+     99.76264535457494
+    ],
+    "floor": 99.24247787837793,
+    "ok": false
+   }
+  }
+ },
+ "summary": {
+  "columns_total": 51,
+  "columns_equivalent": 51,
+  "flagged": [
+   "(h) fidelity sensor: 99.13 < floor 99.24"
+  ],
+  "passed": false,
+  "seconds": 19.721553087234497
+ }
+}

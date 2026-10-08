@@ -1,0 +1,48 @@
+FAILED tests/security/test_sec_high.py::test_724_a_go_line_inside_a_value_is_not_a_batch_separator[tsql]
+FAILED tests/security/test_sec_high.py::test_724_a_go_line_inside_a_value_is_not_a_batch_separator[tsql-fabric-warehouse]
+FAILED tests/security/test_sec_high.py::test_724_carriage_returns_are_kept_as_characters
+FAILED tests/security/test_sec_high.py::test_724_a_long_value_with_a_line_break_is_not_truncated_by_the_concatenation
+FAILED tests/security/test_sec_high.py::test_724_a_name_with_a_control_character_is_refused[column-tsql]
+FAILED tests/security/test_sec_high.py::test_724_a_name_with_a_control_character_is_refused[column-tsql-fabric-warehouse]
+FAILED tests/security/test_sec_high.py::test_724_a_name_with_a_control_character_is_refused[column-postgres]
+FAILED tests/security/test_sec_high.py::test_724_a_name_with_a_control_character_is_refused[column-mysql]
+FAILED tests/security/test_sec_high.py::test_724_a_name_with_a_control_character_is_refused[table-tsql]
+FAILED tests/security/test_sec_high.py::test_724_a_name_with_a_control_character_is_refused[table-tsql-fabric-warehouse]
+FAILED tests/security/test_sec_high.py::test_724_a_name_with_a_control_character_is_refused[table-postgres]
+FAILED tests/security/test_sec_high.py::test_724_a_name_with_a_control_character_is_refused[table-mysql]
+FAILED tests/security/test_sec_high.py::test_724_a_name_with_a_control_character_is_refused[schema-tsql]
+FAILED tests/security/test_sec_high.py::test_724_a_name_with_a_control_character_is_refused[schema-tsql-fabric-warehouse]
+FAILED tests/security/test_sec_high.py::test_724_a_name_with_a_control_character_is_refused[schema-postgres]
+FAILED tests/security/test_sec_high.py::test_724_a_name_with_a_control_character_is_refused[schema-mysql]
+FAILED tests/security/test_sec_high.py::test_285_the_design_ddl_and_contract_ddl_refuse_or_escape_line_breaks
+FAILED tests/security/test_sec_high.py::test_285_postgres_literals_do_not_depend_on_standard_conforming_strings
+FAILED tests/security/test_sec_high.py::test_629_the_excel_sink_stores_formula_text_as_text
+FAILED tests/security/test_sec_high.py::test_275_redirects_off_the_origin_are_not_followed
+FAILED tests/security/test_sec_high.py::test_275_the_fabric_transport_uses_the_same_origin_opener
+FAILED tests/security/test_sec_high.py::test_276_an_abfss_uri_off_azure_storage_gets_no_credential[attacker.example.net]
+FAILED tests/security/test_sec_high.py::test_276_an_abfss_uri_off_azure_storage_gets_no_credential[acct.dfs.core.windows.net.attacker.net]
+FAILED tests/security/test_sec_high.py::test_276_an_abfss_uri_off_azure_storage_gets_no_credential[acct.dfs.core.windows.net:8443]
+FAILED tests/security/test_sec_high.py::test_276_an_abfss_uri_off_azure_storage_gets_no_credential[onelake.dfs.fabric.microsoft.com.evil.io]
+FAILED tests/security/test_sec_high.py::test_276_an_abfss_uri_off_azure_storage_gets_no_credential[evil.io#.dfs.core.windows.net]
+FAILED tests/security/test_sec_high.py::test_276_an_abfss_uri_off_azure_storage_gets_no_credential[dfs.core.windows.net]
+FAILED tests/security/test_sec_high.py::test_276_the_sink_and_delta_paths_refuse_the_host_too
+FAILED tests/security/test_sec_high.py::test_533_diff_and_check_withhold_values_of_a_classified_column_in_joint_entries
+FAILED tests/security/test_sec_high.py::test_533_redact_entries_reads_every_column_an_entry_names
+FAILED tests/security/test_sec_high.py::test_535_verify_withholds_the_actual_extreme_of_a_classified_column[1.0]
+FAILED tests/security/test_sec_high.py::test_535_verify_withholds_the_actual_extreme_of_a_classified_column[1.2]
+FAILED tests/security/test_sec_high.py::test_663_the_comparison_page_shows_no_value_of_a_personal_data_column
+FAILED tests/security/test_sec_high.py::test_650_release_for_suppresses_small_cells_inside_joint
+FAILED tests/security/test_sec_high.py::test_650_release_for_suppresses_small_dependency_violations
+FAILED tests/security/test_sec_high.py::test_395_a_column_below_k_releases_no_value_statistic
+FAILED tests/security/test_sec_high.py::test_395_the_validator_flags_a_value_statistic_of_a_column_below_k
+FAILED plugins/shape-fabric/tests/test_security_review.py::test_411_the_scrubber_redacts_quoted_braced_and_spaced_values[{"client_secret": "S3cr3tValue", "password": "hunter2"}-secret0]
+FAILED plugins/shape-fabric/tests/test_security_review.py::test_411_the_scrubber_redacts_quoted_braced_and_spaced_values[Password='hunter2 two';-secret1]
+FAILED plugins/shape-fabric/tests/test_security_review.py::test_411_the_scrubber_redacts_quoted_braced_and_spaced_values[pwd="x y z";Server=s-secret2]
+FAILED plugins/shape-fabric/tests/test_security_review.py::test_411_the_scrubber_redacts_quoted_braced_and_spaced_values[password=my secret phrase-secret3]
+FAILED plugins/shape-fabric/tests/test_security_review.py::test_411_the_scrubber_redacts_quoted_braced_and_spaced_values[PWD={ab}}cdTOPSECRET;x};Server=s-secret4]
+FAILED plugins/shape-fabric/tests/test_security_review.py::test_411_the_scrubber_redacts_quoted_braced_and_spaced_values[{'secret': 'it\\'s me'}-secret5]
+FAILED plugins/shape-fabric/tests/test_security_review.py::test_411_a_login_connection_string_leaves_nothing_after_a_closing_brace
+FAILED plugins/shape-fabric/tests/test_security_review.py::test_411_the_scrubber_keeps_json_valid_and_other_text_unchanged
+FAILED plugins/shape-fabric/tests/test_security_review.py::test_411_a_tape_holding_a_secret_is_refused_on_save_and_on_load
+FAILED plugins/shape-fabric/tests/test_security_review.py::test_275_the_kusto_transport_does_not_send_the_token_to_a_redirect_target
+47 failed, 11 passed in 2.02s

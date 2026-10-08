@@ -1,0 +1,221 @@
+RefEngine composite_campus (seed 42) vs shape (seed 1042) - scale=small  (baseline = max distance of RefEngine seeds [43, 44, 45, 46] to RefEngine seed 42)
+table order identical: True
+
+table.column                       kind        type         null s/i       dist  baseline     tol  vocab  verdict
+-- education_department: rows 25 / 25  cols identical+ordered=True  types identical=True
+education_department.department_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.5514         EQUIVALENT
+education_department.shared_organization_hr_department_id numeric     ok    0.0000/0.0000  KS  0.2400    0.2400  0.5514         EQUIVALENT
+education_department.department_name categorical ok    0.0000/0.0000 TVD  0.5600    0.5200  1.8541 1.0000  EQUIVALENT
+education_department.college       categorical ok    0.0000/0.0000 TVD  0.2000    0.2800  1.0705 1.0000  EQUIVALENT
+education_department.budget        numeric     ok    0.0000/0.0000  KS  0.1200    0.3600  0.5514         EQUIVALENT
+-- education_instructor: rows 150 / 150  cols identical+ordered=True  types identical=True
+education_instructor.instructor_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.2251         EQUIVALENT
+education_instructor.department_id numeric     ok    0.0000/0.0000  KS  0.0667    0.1000  0.2251         EQUIVALENT
+education_instructor.first_name    categorical ok    0.0000/0.0000 TVD  0.9533    0.9800  2.3615 1.0000  EQUIVALENT
+education_instructor.last_name     categorical ok    0.0000/0.0000 TVD  0.9600    0.9867  2.3696 1.0000  EQUIVALENT
+education_instructor.email         categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+education_instructor.rank          categorical ok    0.0000/0.0000 TVD  0.0867    0.1000  0.4370 1.0000  EQUIVALENT
+education_instructor.tenure_status categorical ok    0.0000/0.0000 TVD  0.0200    0.0867  0.3385 1.0000  EQUIVALENT
+education_instructor.hire_date     datetime    ok    0.0000/0.0000  KS  0.0667    0.1333  0.2251         EQUIVALENT
+-- education_course: rows 300 / 300  cols identical+ordered=True  types identical=True
+education_course.course_id         numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1592         EQUIVALENT
+education_course.department_id     numeric     ok    0.0000/0.0000  KS  0.1000    0.0733  0.1592         EQUIVALENT
+education_course.course_code       categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+education_course.course_name       categorical ok    0.0000/0.0000 TVD  0.3000    0.3067  1.3541 1.0000  EQUIVALENT
+education_course.credits           numeric     ok    0.0000/0.0000  KS  0.0233    0.0567  0.1592         EQUIVALENT
+education_course.level             numeric     ok    0.0000/0.0000  KS  0.0667    0.0500  0.1592         EQUIVALENT
+-- education_student: rows 2,000 / 2,000  cols identical+ordered=True  types identical=True
+education_student.student_id       numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0616         EQUIVALENT
+education_student.major_department_id numeric     ok    0.0000/0.0000  KS  0.0140    0.0345  0.0616         EQUIVALENT
+education_student.shared_person_hr_employee_id numeric     ok    0.0000/0.0000  KS  0.0240    0.0295  0.0616         EQUIVALENT
+education_student.first_name       categorical ok    0.0000/0.0000 |dR-1|  0.0104    0.0189  0.0284 1.0000  EQUIVALENT
+education_student.last_name        categorical ok    0.0000/0.0000 |dR-1|  0.0018    0.0276  0.0414 1.0000  EQUIVALENT
+education_student.email            categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+education_student.date_of_birth    datetime    ok    0.0000/0.0000  KS  0.0285    0.0525  0.0807         EQUIVALENT
+education_student.enrollment_date  datetime    ok    0.0000/0.0000  KS  0.0105    0.0265  0.0616         EQUIVALENT
+education_student.gpa              numeric     ok    0.0000/0.0000  KS  0.0230    0.0365  0.0616         EQUIVALENT
+education_student.classification   categorical ok    0.0000/0.0000 TVD  0.0245    0.0295  0.1197 1.0000  EQUIVALENT
+education_student.status           categorical ok    0.0000/0.0000 TVD  0.0045    0.0140  0.1070 1.0000  EQUIVALENT
+-- education_enrollment: rows 16,000 / 16,000  cols identical+ordered=True  types identical=True
+education_enrollment.enrollment_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0218         EQUIVALENT
+education_enrollment.student_id    numeric     ok    0.0000/0.0000  KS  0.0078    0.0141  0.0231         EQUIVALENT
+education_enrollment.course_id     numeric     ok    0.0000/0.0000  KS  0.0042    0.0098  0.0218         EQUIVALENT
+education_enrollment.instructor_id numeric     ok    0.0000/0.0000  KS  0.0089    0.0091  0.0218         EQUIVALENT
+education_enrollment.semester      categorical ok    0.0000/0.0000 TVD  0.0098    0.0099  0.0423 1.0000  EQUIVALENT
+education_enrollment.grade         categorical ok    0.0973/0.0976 TVD  0.0186    0.0178  0.0656 1.0000  EQUIVALENT
+education_enrollment.credits_attempted numeric     ok    0.0000/0.0000  KS  0.0038    0.0079  0.0218         EQUIVALENT
+-- education_financial_aid: rows 1,400 / 1,400  cols identical+ordered=True  types identical=True
+education_financial_aid.aid_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0737         EQUIVALENT
+education_financial_aid.student_id numeric     ok    0.0000/0.0000  KS  0.0207    0.0386  0.0737         EQUIVALENT
+education_financial_aid.aid_type   categorical ok    0.0000/0.0000 TVD  0.0550    0.0629  0.2478 1.0000  EQUIVALENT
+education_financial_aid.academic_year categorical ok    0.0000/0.0000 TVD  0.0129    0.0400  0.1430 1.0000  EQUIVALENT
+education_financial_aid.amount     numeric     ok    0.0000/0.0000  KS  0.0179    0.0443  0.0737         EQUIVALENT
+education_financial_aid.status     categorical ok    0.0000/0.0000 TVD  0.0143    0.0207  0.1279 1.0000  EQUIVALENT
+education_financial_aid.award_date datetime    ok    0.0000/0.0000  KS  0.0286    0.0400  0.0737         EQUIVALENT
+-- education_course_section: rows 600 / 600  cols identical+ordered=True  types identical=True
+education_course_section.section_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1126         EQUIVALENT
+education_course_section.course_id numeric     ok    0.0000/0.0000  KS  0.0383    0.0433  0.1126         EQUIVALENT
+education_course_section.instructor_id numeric     ok    0.0000/0.0000  KS  0.0450    0.0650  0.1126         EQUIVALENT
+education_course_section.semester  categorical ok    0.0000/0.0000 TVD  0.0300    0.0517  0.2185 1.0000  EQUIVALENT
+education_course_section.room_number categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+education_course_section.capacity  numeric     ok    0.0000/0.0000  KS  0.0383    0.0600  0.1126         EQUIVALENT
+education_course_section.enrolled_count numeric     ok    0.0000/0.0000  KS  0.0350    0.0400  0.1126         EQUIVALENT
+-- education_grade_appeal: rows 320 / 320  cols identical+ordered=True  types identical=True
+education_grade_appeal.appeal_id   numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1541         EQUIVALENT
+education_grade_appeal.enrollment_id numeric     ok    0.0000/0.0000  KS  0.0906    0.1031  0.1567         EQUIVALENT
+education_grade_appeal.filed_date  datetime    ok    0.0000/0.0000  KS  0.0563    0.0687  0.1541         EQUIVALENT
+education_grade_appeal.reason      categorical ok    0.0000/0.0000 TVD  0.0500    0.0625  0.2992 1.0000  EQUIVALENT
+education_grade_appeal.status      categorical ok    0.0000/0.0000 TVD  0.0156    0.0750  0.2676 1.0000  EQUIVALENT
+education_grade_appeal.resolution_date datetime    ok    0.2938/0.3156  KS  0.0610    0.0957  0.1849         EQUIVALENT
+-- education_academic_standing: rows 4,000 / 4,000  cols identical+ordered=True  types identical=True
+education_academic_standing.standing_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0436         EQUIVALENT
+education_academic_standing.student_id numeric     ok    0.0000/0.0000  KS  0.0138    0.0235  0.0436         EQUIVALENT
+education_academic_standing.semester categorical ok    0.0000/0.0000 TVD  0.0125    0.0185  0.0846 1.0000  EQUIVALENT
+education_academic_standing.standing categorical ok    0.0000/0.0000 TVD  0.0150    0.0200  0.0757 1.0000  EQUIVALENT
+education_academic_standing.cumulative_gpa numeric     ok    0.0000/0.0000  KS  0.0098    0.0185  0.0436         EQUIVALENT
+education_academic_standing.semester_gpa numeric     ok    0.0000/0.0000  KS  0.0250    0.0292  0.0459         EQUIVALENT
+-- hr_department: rows 30 / 30  cols identical+ordered=True  types identical=True
+hr_department.department_id        numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.5034         EQUIVALENT
+hr_department.department_name      ALLOWED CMP-2: Shape values in hr/department_names 1.0000, baseline's 0.0667  EQUIVALENT
+hr_department.cost_center          categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+hr_department.is_active            categorical ok    0.0000/0.0000 TVD  0.0667    0.0333  0.6180 1.0000  EQUIVALENT
+-- hr_position: rows 80 / 80  cols identical+ordered=True  types identical=True
+hr_position.position_id            numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3082         EQUIVALENT
+hr_position.position_title         categorical ok    0.0000/0.0000 TVD  0.5250    0.6125  1.7952 1.0000  EQUIVALENT
+hr_position.pay_grade              categorical ok    0.0000/0.0000 TVD  0.1250    0.2250  0.7081 1.0000  EQUIVALENT
+hr_position.is_exempt              categorical ok    0.0000/0.0000 TVD  0.0250    0.0625  0.3785 1.0000  EQUIVALENT
+hr_position.min_salary             numeric     ok    0.0000/0.0000  KS  0.1000    0.1500  0.3082         EQUIVALENT
+hr_position.max_salary             numeric     ok    0.0000/0.0000  KS  0.1000    0.1625  0.3082         EQUIVALENT
+-- hr_employee: rows 500 / 500  cols identical+ordered=True  types identical=True
+hr_employee.employee_id            numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.1233         EQUIVALENT
+hr_employee.department_id          numeric     ok    0.0000/0.0000  KS  0.0480    0.0880  0.1340         EQUIVALENT
+hr_employee.position_id            numeric     ok    0.0000/0.0000  KS  0.0420    0.0620  0.1233         EQUIVALENT
+hr_employee.first_name             categorical ok    0.0000/0.0000 TVD  0.9200    0.9180  2.3207 1.0000  EQUIVALENT
+hr_employee.last_name              categorical ok    0.0000/0.0000 TVD  0.9060    0.9160  2.3257 1.0000  EQUIVALENT
+hr_employee.email                  categorical ok    0.0000/0.0000 |dR-1|  0.0000    0.0000  0.0200 1.0000  EQUIVALENT
+hr_employee.phone                  categorical ok    0.0640/0.0820 |dR-1|  0.0192    0.0321  0.0481 1.0000  EQUIVALENT
+hr_employee.hire_date              datetime    ok    0.0000/0.0000  KS  0.0700    0.0620  0.1233         EQUIVALENT
+hr_employee.manager_id             numeric     ok    0.0100/0.0100  KS  0.0465    0.0364  0.1239         EQUIVALENT
+hr_employee.employment_status      categorical ok    0.0000/0.0000 TVD  0.0380    0.0440  0.2141 1.0000  EQUIVALENT
+hr_employee.employment_type        categorical ok    0.0000/0.0000 TVD  0.0260    0.0520  0.2141 1.0000  EQUIVALENT
+-- hr_compensation: rows 1,500 / 1,500  cols identical+ordered=True  types identical=True
+hr_compensation.compensation_id    numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0712         EQUIVALENT
+hr_compensation.employee_id        numeric     ok    0.0000/0.0000  KS  0.0227    0.0667  0.1020         EQUIVALENT
+hr_compensation.effective_date     datetime    ok    0.0000/0.0000  KS  0.0260    0.0487  0.0750         EQUIVALENT
+hr_compensation.base_salary        numeric     ok    0.0000/0.0000  KS  0.0273    0.0300  0.0712         EQUIVALENT
+hr_compensation.bonus_pct          numeric     ok    0.0000/0.0000  KS  0.0247    0.0520  0.0800         EQUIVALENT
+hr_compensation.change_reason      categorical ok    0.0000/0.0000 TVD  0.0093    0.0327  0.1382 1.0000  EQUIVALENT
+-- hr_performance_review: rows 1,250 / 1,250  cols identical+ordered=True  types identical=True
+hr_performance_review.review_id    numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0780         EQUIVALENT
+hr_performance_review.employee_id  numeric     ok    0.0000/0.0000  KS  0.0280    0.0376  0.0780         EQUIVALENT
+hr_performance_review.reviewer_id  numeric     ok    0.0000/0.0000  KS  0.0288    0.0504  0.0780         EQUIVALENT
+hr_performance_review.review_date  datetime    ok    0.0000/0.0000  KS  0.0304    0.0520  0.0800         EQUIVALENT
+hr_performance_review.review_period_year numeric     ok    0.0000/0.0000  KS  0.0096    0.0216  0.0780         EQUIVALENT
+hr_performance_review.rating       numeric     ok    0.0000/0.0000  KS  0.0368    0.0416  0.0780         EQUIVALENT
+hr_performance_review.comments     categorical ok    0.1864/0.1840 TVD  0.6714    0.6912  1.9257 1.0000  EQUIVALENT
+-- hr_time_off_request: rows 2,500 / 2,500  cols identical+ordered=True  types identical=True
+hr_time_off_request.request_id     numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0551         EQUIVALENT
+hr_time_off_request.employee_id    numeric     ok    0.0000/0.0000  KS  0.0428    0.0400  0.0620         EQUIVALENT
+hr_time_off_request.leave_type     categorical ok    0.0000/0.0000 TVD  0.0252    0.0240  0.1267 1.0000  EQUIVALENT
+hr_time_off_request.start_date     datetime    ok    0.0000/0.0000  KS  0.0264    0.0332  0.0551         EQUIVALENT
+hr_time_off_request.hours_requested numeric     ok    0.0000/0.0000  KS  0.0228    0.0228  0.0551         EQUIVALENT
+hr_time_off_request.status         categorical ok    0.0000/0.0000 TVD  0.0160    0.0220  0.0957 1.0000  EQUIVALENT
+hr_time_off_request.end_date       datetime    ok    0.0000/0.0000  KS  0.0272    0.0328  0.0551         EQUIVALENT
+-- hr_training: rows 100 / 100  cols identical+ordered=True  types identical=True
+hr_training.training_id            numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.2757         EQUIVALENT
+hr_training.course_name            categorical ok    0.0000/0.0000 TVD  0.4000    0.3400  1.6235 1.0000  EQUIVALENT
+hr_training.category               categorical ok    0.0000/0.0000 TVD  0.1500    0.1700  0.6333 1.0000  EQUIVALENT
+hr_training.duration_hours         numeric     ok    0.0000/0.0000  KS  0.1500    0.1500  0.2757         EQUIVALENT
+hr_training.is_mandatory           categorical ok    0.0000/0.0000 TVD  0.0200    0.1100  0.3385 1.0000  EQUIVALENT
+-- hr_training_enrollment: rows 2,000 / 2,000  cols identical+ordered=True  types identical=True
+hr_training_enrollment.enrollment_id numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.0616         EQUIVALENT
+hr_training_enrollment.employee_id numeric     ok    0.0000/0.0000  KS  0.0250    0.0345  0.0616         EQUIVALENT
+hr_training_enrollment.training_id numeric     ok    0.0000/0.0000  KS  0.0345    0.0250  0.0616         EQUIVALENT
+hr_training_enrollment.enrollment_date datetime    ok    0.0000/0.0000  KS  0.0285    0.0380  0.0616         EQUIVALENT
+hr_training_enrollment.status      categorical ok    0.0000/0.0000 TVD  0.0115    0.0210  0.1197 1.0000  EQUIVALENT
+hr_training_enrollment.score       numeric     ok    0.2560/0.2570  KS  0.0193    0.0326  0.0715         EQUIVALENT
+hr_training_enrollment.completion_date datetime    ok    0.1445/0.1545  KS  0.0349    0.0388  0.0668         EQUIVALENT
+-- hr_termination: rows 75 / 75  cols identical+ordered=True  types identical=True
+hr_termination.termination_id      numeric     ok    0.0000/0.0000  KS  0.0000    0.0000  0.3183         EQUIVALENT
+hr_termination.employee_id         numeric     ok    0.0000/0.0000  KS  0.1467    0.1333  0.3183         EQUIVALENT
+hr_termination.termination_date    datetime    ok    0.0000/0.0000  KS  0.1200    0.1333  0.3183         EQUIVALENT
+hr_termination.termination_type    categorical ok    0.0000/0.0000 TVD  0.1467    0.1733  0.5528 1.0000  EQUIVALENT
+hr_termination.reason              categorical ok    0.0000/0.0000 TVD  0.1733    0.2267  0.7818 1.0000  EQUIVALENT
+hr_termination.eligible_for_rehire categorical ok    0.0000/0.0000 TVD  0.2267    0.2267  0.3909 1.0000  EQUIVALENT
+
+FK integrity (refengine / impl):
+  education_instructor.department_id->education_department.department_id 1.0000 / 1.0000
+  education_course.department_id->education_department.department_id 1.0000 / 1.0000
+  education_student.major_department_id->education_department.department_id 1.0000 / 1.0000
+  education_enrollment.student_id->education_student.student_id 1.0000 / 1.0000
+  education_enrollment.course_id->education_course.course_id 1.0000 / 1.0000
+  education_enrollment.instructor_id->education_instructor.instructor_id 1.0000 / 1.0000
+  education_financial_aid.student_id->education_student.student_id 1.0000 / 1.0000
+  education_course_section.course_id->education_course.course_id 1.0000 / 1.0000
+  education_course_section.instructor_id->education_instructor.instructor_id 1.0000 / 1.0000
+  education_grade_appeal.enrollment_id->education_enrollment.enrollment_id 1.0000 / 1.0000
+  education_academic_standing.student_id->education_student.student_id 1.0000 / 1.0000
+  hr_employee.department_id->hr_department.department_id  1.0000 / 1.0000
+  hr_employee.position_id->hr_position.position_id        1.0000 / 1.0000
+  hr_compensation.employee_id->hr_employee.employee_id    1.0000 / 1.0000
+  hr_performance_review.employee_id->hr_employee.employee_id 1.0000 / 1.0000
+  hr_time_off_request.employee_id->hr_employee.employee_id 1.0000 / 1.0000
+  hr_training_enrollment.employee_id->hr_employee.employee_id 1.0000 / 1.0000
+  hr_training_enrollment.training_id->hr_training.training_id 1.0000 / 1.0000
+  hr_termination.employee_id->hr_employee.employee_id     1.0000 / 1.0000
+  education_student.shared_person_hr_employee_id->hr_employee.employee_id 1.0000 / 1.0000
+  education_department.shared_organization_hr_department_id->hr_department.department_id 1.0000 / 1.0000
+  hr_employee.manager_id->hr_employee.employee_id         1.0000 / 1.0000
+FK fan-out (children per parent)  refengine p50/p90/p99/max/zero% | impl | KS (baseline max, tol)
+  education_department->education_instructor.department_id 2/12/47/54/0.160 | 3/11/42/46/0.120 | 0.1600 (0.1200, 0.5514)
+  education_department->education_course.department_id 11/17/22/23/0.000 | 12/17/19/19/0.000 | 0.1200 (0.1200, 0.5514)
+  education_department->education_student.major_department_id 26/157/631/729/0.000 | 26/161/639/748/0.000 | 0.1200 (0.2000, 0.5514)
+  education_student->education_enrollment.student_id 8/12/14/17/0.001 | 8/12/15/18/0.000 | 0.0135 (0.0185, 0.0616)
+  education_course->education_enrollment.course_id 7/58/826/4820/0.007 | 7/56/805/4858/0.007 | 0.0267 (0.0400, 0.1592)
+  education_instructor->education_enrollment.instructor_id 24/147/1495/4252/0.000 | 26/154/1525/4246/0.000 | 0.0400 (0.0800, 0.2251)
+  education_student->education_financial_aid.student_id 1/2/3/4/0.498 | 0/2/3/5/0.502 | 0.0040 (0.0115, 0.0616)
+  education_course->education_course_section.course_id 2/4/5/6/0.127 | 2/4/6/6/0.167 | 0.0400 (0.0433, 0.1592)
+  education_instructor->education_course_section.instructor_id 1/7/50/174/0.347 | 1/5/63/162/0.360 | 0.0400 (0.0800, 0.2251)
+  education_enrollment->education_grade_appeal.enrollment_id 0/0/1/2/0.980 | 0/0/1/2/0.980 | 0.0001 (0.0002, 0.0218)
+  education_student->education_academic_standing.student_id 2/4/6/9/0.133 | 2/4/6/9/0.136 | 0.0175 (0.0165, 0.0616)
+  hr_department->hr_employee.department_id 6/28/148/181/0.033 | 5/26/158/188/0.000 | 0.0667 (0.2000, 0.5034)
+  hr_position->hr_employee.position_id     2/9/84/142/0.212 | 2/10/78/138/0.237 | 0.0750 (0.1125, 0.3082)
+  hr_employee->hr_compensation.employee_id 3/5/7/12/0.056 | 3/5/8/10/0.050 | 0.0200 (0.0260, 0.1233)
+  hr_employee->hr_performance_review.employee_id 2/5/7/8/0.084 | 2/5/7/9/0.088 | 0.0220 (0.0300, 0.1233)
+  hr_employee->hr_time_off_request.employee_id 5/8/11/16/0.002 | 5/8/11/16/0.008 | 0.0400 (0.0580, 0.1233)
+  hr_employee->hr_training_enrollment.employee_id 4/6/9/10/0.012 | 4/7/8/10/0.018 | 0.0240 (0.0280, 0.1233)
+  hr_training->hr_training_enrollment.training_id 6/35/221/539/0.050 | 5/37/250/577/0.030 | 0.0700 (0.0800, 0.2757)
+  hr_employee->hr_termination.employee_id  0/1/1/2/0.858 | 0/1/1/2/0.858 | 0.0000 (0.0080, 0.1233)
+  hr_employee->education_student.shared_person_hr_employee_id 4/7/9/11/0.020 | 4/7/9/11/0.024 | 0.0300 (0.0300, 0.1233)
+  hr_department->education_department.shared_organization_hr_department_id 1/2/3/3/0.467 | 1/2/3/3/0.433 | 0.0333 (0.1000, 0.5034)
+record_coherence (impl / min over RefEngine seeds, floor):
+strategy_semantics (impl / min over RefEngine seeds, floor):
+  hr_time_off_request.end_date - start_date in [1,14] days     1.0000 / 1.0000  floor 0.9950
+  hr_training_enrollment.completion_date - enrollment_date in [1,90] days 0.8455 / 0.8510  floor 0.8460
+RefEngine BusinessRulesEngine violations on impl output: {}
+RefEngine FidelityComparator (real=RefEngine seed 42, synthetic=impl): overall impl=91.69  RefEngine-vs-RefEngine baselines=[92.04, 91.97, 91.74, 91.31]
+  education_academic_standing impl  99.56  floor  98.44  baselines [99.49, 98.94, 99.51, 99.01]  ok
+  education_course   impl  92.92  floor  92.68  baselines [93.32, 93.33, 93.47, 93.18]  ok
+  education_course_section impl  98.65  floor  97.66  baselines [98.27, 98.16, 98.86, 98.34]  ok
+  education_department impl  78.89  floor  72.16  baselines [77.82, 79.41, 75.63, 72.66]  ok
+  education_enrollment impl  97.92  floor  97.76  baselines [98.46, 98.54, 98.27, 98.26]  ok
+  education_financial_aid impl  98.06  floor  97.13  baselines [97.63, 99.15, 99.13, 98.49]  ok
+  education_grade_appeal impl  98.35  floor  96.94  baselines [97.44, 97.53, 98.29, 97.75]  ok
+  education_instructor impl  77.23  floor  76.35  baselines [77.72, 77.93, 76.85, 77.82]  ok
+  education_student  impl  84.90  floor  83.67  baselines [84.55, 84.78, 84.82, 84.17]  ok
+  hr_compensation    impl  99.45  floor  97.61  baselines [98.4, 98.11, 98.31, 98.7]  ok
+  hr_department      impl  84.77  floor  83.37  baselines [88.78, 89.23, 90.4, 83.87]  ok
+  hr_employee        impl  78.29  floor  77.44  baselines [78.08, 78.32, 77.94, 78.42]  ok
+  hr_performance_review impl  91.58  floor  90.69  baselines [91.31, 91.19, 91.51, 91.49]  ok
+  hr_position        impl  91.57  floor  87.83  baselines [89.62, 90.37, 88.33, 89.98]  ok
+  hr_termination     impl  89.72  floor  89.83  baselines [97.75, 90.33, 90.96, 92.46]  FAIL
+  hr_time_off_request impl  99.03  floor  98.11  baselines [98.73, 99.26, 98.61, 99.04]  ok
+  hr_training        impl  90.30  floor  90.52  baselines [91.06, 92.08, 91.46, 91.02]  FAIL
+  hr_training_enrollment impl  99.20  floor  97.78  baselines [98.28, 98.78, 98.96, 98.91]  ok
+
+COLUMNS EQUIVALENT: 122/122
+  NOT EQUIVALENT: (f) strategy_semantics: hr_training_enrollment.completion_date - enrollment_date in [1,90] days impl 0.8455 < floor 0.8460
+  NOT EQUIVALENT: (h) fidelity hr_termination: 89.72 < floor 89.83
+  NOT EQUIVALENT: (h) fidelity hr_training: 90.30 < floor 90.52
+VERDICT: FAIL
+

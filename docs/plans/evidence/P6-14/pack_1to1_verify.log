@@ -1,0 +1,8 @@
+== tutorial_custom_pack.yaml (pack)
+== notebook_custom_pack.yaml (pack)
+== retail_basic.gsl.yaml (spec)
+== retail_chaos.gsl.yaml (spec)
+== retail_hybrid.gsl.yaml (spec)
+5 inputs, T-21 columns 64/64, 0 problems, 24.0s
+PASS
+rc=0

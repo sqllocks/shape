@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "available_profiles": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "distribution_keys": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "distributions": {
+      "additionalProperties": {},
+      "type": "object"
+    },
+    "domain": {
+      "type": "string"
+    },
+    "profile": {
+      "type": "string"
+    },
+    "ratio_keys": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "ratios": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "domain",
+    "profile",
+    "available_profiles",
+    "distribution_keys",
+    "distributions",
+    "ratio_keys",
+    "ratios"
+  ],
+  "title": "profile_info result",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.0"
+}

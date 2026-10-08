@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "m",
+    "seed": 3
+  },
+  "tables": {
+    "t": {
+      "name": "t",
+      "primary_key": [
+        "k"
+      ],
+      "columns": {
+        "k": {
+          "name": "k",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "x": {
+          "name": "x",
+          "type": "string",
+          "generator": {
+            "strategy": "faker",
+            "provider": "ipv4"
+          }
+        }
+      }
+    }
+  },
+  "generation": {
+    "scale": "s",
+    "scales": {
+      "s": {
+        "t": 20000
+      }
+    }
+  }
+}

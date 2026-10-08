@@ -1,0 +1,6 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "clean_baseline",
+  "gates_fail": []
+}

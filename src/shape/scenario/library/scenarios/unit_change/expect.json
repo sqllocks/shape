@@ -1,0 +1,11 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "unit_change",
+  "gates_fail": [],
+  "defects": {
+    "scale_values": {
+      "min": 1
+    }
+  }
+}

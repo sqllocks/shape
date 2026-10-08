@@ -1,0 +1,14 @@
+{
+  "format": "shape-live-check",
+  "version": 1,
+  "shape_version": "0.9.0",
+  "min_shape_version": "0.9.0",
+  "check": "fabric-git-sync",
+  "passed": false,
+  "started": "2026-10-04T02:00:00Z",
+  "finished": "2026-10-04T02:03:12Z",
+  "steps": [
+    {"name": "push", "passed": true, "seconds": 3.2},
+    {"name": "update-from-git", "passed": false, "seconds": 180.0, "error": "RuntimeError: update from Git did not finish in 180 s (workspace <id>)"}
+  ]
+}

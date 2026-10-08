@@ -1,0 +1,43 @@
+PASS  catalog: scenarios, modes, domains, rows, tags
+PASS  list: one line per scenario
+PASS  options and choices of every command
+PASS  fidelity report: every row and the score, on two dataset pairs
+PASS  inference run (domain defaults): tables, rows, record, score
+PASS  inference run (a file): same schema, T-21 (a)-(d) on the values
+PASS  seeding run: preset rows and T-21 (a)-(h) via domain_1to1/verify.py
+PASS  status, Markdown and HTML report of the same records
+PASS  cost estimate and dry-run line
+PASS  cleanup --dry-run lines
+PASS  init: the stored profile
+PASS  notebooks: markdown, cell kinds, scenario, mode, rows
+PASS  wrong command lines fail in Shape (exit 2)
+PASS  probe: the scenario's domain is ignored
+PASS  probe: one row count for every table
+PASS  probe: --dry-run runs for real
+PASS  probe: cleanup reports the unremoved as removed
+PASS  probe: cleanup removes by name
+PASS  probe: a Spark run records nothing
+PASS  probe: a failed seeding run is not rolled back
+PASS  probe: a target is skipped silently
+PASS  probe: a password at rest
+PASS  probe: preflight reports what it did not check
+PASS  probe: an unknown output format
+PASS  probe: --rows 0
+PASS  probe: report escaping
+PASS  probe: the session id
+PASS  probe: exit codes and messages
+PASS  probe: streaming
+PASS  probe: charts and the semantic model
+PASS  probe: the HTML page's charset
+PASS  negative control: tampering is flagged
+note: product_category.category_name: learned faker from Shape's domain sample; the baseline learned ['weighted_enum'] from its own
+note: store.store_name: learned faker from Shape's domain sample; the baseline learned ['weighted_enum'] from its own
+note: store.city: learned faker from Shape's domain sample; the baseline learned ['weighted_enum'] from its own
+note: order.shipping_address_id: learned distribution from Shape's domain sample; the baseline learned ['weighted_enum'] from its own
+note: order_line.line_total: learned distribution from Shape's domain sample; the baseline learned ['weighted_enum'] from its own
+note: order.customer_id: truncated_enum (learn.DIFFERENCES): the baseline draws from the top 500 of 938 values, Shape from the distribution
+note: order.shipping_address_id: truncated_enum (learn.DIFFERENCES): the baseline draws from the top 500 of 1090 values, Shape from the distribution
+note: order_line.line_total: truncated_enum (learn.DIFFERENCES): the baseline draws from the top 500 of 1296 values, Shape from the distribution
+allowed differences: scenario-domain-ignored, per-table-row-counts, dry-run-in-every-mode, unremoved-reported-removed, file-removal-by-name, spark-artifacts-recorded, failed-run-rolls-back, no-silent-target-skip, secrets-not-stored, preflight-checks-what-it-reports, unknown-output-format-refused, rows-zero, report-escaping, session-id-is-a-name, exit-codes, streaming-is-bounded-events, charts-are-a-page, notebook-is-a-python-notebook, html-declares-its-charset, added-settings, learn-rules, own-domain-sample, artifact-order
+VERDICT: PASS
+exit 0

@@ -1,0 +1,11 @@
+{
+  "format": "shape-scenario-expect",
+  "version": 1,
+  "scenario": "timezone_offset",
+  "gates_fail": [],
+  "defects": {
+    "shift_hours": {
+      "min": 1
+    }
+  }
+}

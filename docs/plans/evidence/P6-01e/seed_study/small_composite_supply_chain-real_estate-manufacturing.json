@@ -1,0 +1,113 @@
+{
+ "domain": "composite_supply_chain-real_estate-manufacturing",
+ "scale": "small",
+ "impl": "shape",
+ "seeds": [
+  "1042",
+  "1043",
+  "1044",
+  "1045",
+  "1046",
+  "1047",
+  "1048",
+  "1049"
+ ],
+ "findings_per_seed": {
+  "1042": 2,
+  "1043": 0,
+  "1044": 2,
+  "1045": 2,
+  "1046": 0,
+  "1047": 3,
+  "1048": 2,
+  "1049": 1
+ },
+ "by_finding": {
+  "(h) fidelity manufacturing_bom:": {
+   "seeds": [
+    "1047"
+   ],
+   "count": 1
+  },
+  "(h) fidelity manufacturing_defect:": {
+   "seeds": [
+    "1045"
+   ],
+   "count": 1
+  },
+  "(h) fidelity manufacturing_downtime_event:": {
+   "seeds": [
+    "1047"
+   ],
+   "count": 1
+  },
+  "(h) fidelity manufacturing_equipment:": {
+   "seeds": [
+    "1042",
+    "1048"
+   ],
+   "count": 2
+  },
+  "(h) fidelity manufacturing_production_line:": {
+   "seeds": [
+    "1044"
+   ],
+   "count": 1
+  },
+  "(h) fidelity real_estate_appraisal:": {
+   "seeds": [
+    "1042"
+   ],
+   "count": 1
+  },
+  "(h) fidelity real_estate_inspection:": {
+   "seeds": [
+    "1044",
+    "1047"
+   ],
+   "count": 2
+  },
+  "(h) fidelity real_estate_neighborhood:": {
+   "seeds": [
+    "1048",
+    "1049"
+   ],
+   "count": 2
+  },
+  "(h) fidelity supply_chain_inventory:": {
+   "seeds": [
+    "1045"
+   ],
+   "count": 1
+  }
+ },
+ "systematic": [],
+ "flagged": {
+  "1042": [
+   "(h) fidelity manufacturing_equipment: 96.45 < floor 96.46",
+   "(h) fidelity real_estate_appraisal: 88.39 < floor 88.48"
+  ],
+  "1043": [],
+  "1044": [
+   "(h) fidelity manufacturing_production_line: 94.64 < floor 95.74",
+   "(h) fidelity real_estate_inspection: 88.80 < floor 89.37"
+  ],
+  "1045": [
+   "(h) fidelity manufacturing_defect: 94.61 < floor 95.00",
+   "(h) fidelity supply_chain_inventory: 94.87 < floor 96.80"
+  ],
+  "1046": [],
+  "1047": [
+   "(h) fidelity manufacturing_bom: 96.21 < floor 96.23",
+   "(h) fidelity manufacturing_downtime_event: 95.60 < floor 96.04",
+   "(h) fidelity real_estate_inspection: 89.35 < floor 89.37"
+  ],
+  "1048": [
+   "(h) fidelity manufacturing_equipment: 96.23 < floor 96.46",
+   "(h) fidelity real_estate_neighborhood: 75.38 < floor 76.56"
+  ],
+  "1049": [
+   "(h) fidelity real_estate_neighborhood: 76.17 < floor 76.56"
+  ]
+ }
+}

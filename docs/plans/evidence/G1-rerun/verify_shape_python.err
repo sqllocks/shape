@@ -1,0 +1,18 @@
+/home/user/shape/src/shape/kernel/reference/exact.py:123: RuntimeWarning: invalid value encountered in cast
+  "all_whole": bool(np.all(uniq == uniq.astype(np.int64))),
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/refengine/sqllocks_refengine/inference/profiler.py:550: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  hours = pd.to_datetime(dt_series, errors="coerce").dropna().dt.hour
+/root/refengine/sqllocks_refengine/inference/profiler.py:559: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dows = pd.to_datetime(dt_series, errors="coerce").dropna().dt.dayofweek
+/root/refengine/sqllocks_refengine/inference/profiler.py:575: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(dt_series, errors="coerce").dropna()
+/root/.venvs/refengine/lib/python3.11/site-packages/scipy/stats/_continuous_distns.py:6941: RuntimeWarning: overflow encountered in divide
+  return np.sum((1 + np.log(shifted/scale)/shape**2)/shifted)
+/root/refengine/sqllocks_refengine/inference/profiler.py:550: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  hours = pd.to_datetime(dt_series, errors="coerce").dropna().dt.hour
+/root/refengine/sqllocks_refengine/inference/profiler.py:559: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dows = pd.to_datetime(dt_series, errors="coerce").dropna().dt.dayofweek
+/root/refengine/sqllocks_refengine/inference/profiler.py:575: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  dt = pd.to_datetime(dt_series, errors="coerce").dropna()

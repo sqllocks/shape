@@ -1,0 +1,8 @@
+table Passport
+
+	column PassportId
+		dataType: int64
+		isKey
+
+	column SaleId
+		dataType: int64
