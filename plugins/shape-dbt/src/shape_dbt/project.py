@@ -63,6 +63,7 @@ class DbtRelation:
     tests: list[DbtTest] = field(default_factory=list)
     source_name: str | None = None
     contract_enforced: bool = False
+    singular_tests: list[dict[str, Any]] = field(default_factory=list)
 
 
 def _yaml() -> Any:
@@ -164,7 +165,9 @@ def _relation(node: Mapping[str, Any], kind: str, source: str | None = None) -> 
     return rel
 
 
-def read_schema_yaml(text: str, origin: str = "schema.yml") -> list[DbtRelation]:
+def read_schema_yaml(
+    text: str, origin: str = "schema.yml", *, apply_semantics: bool = True
+) -> list[DbtRelation]:
     """The relations of one ``schema.yml`` or ``sources.yml`` text (``models:``, ``seeds:``,
     ``snapshots:`` and ``sources:``)."""
     doc = _yaml().safe_load(text) or {}
@@ -181,6 +184,10 @@ def read_schema_yaml(text: str, origin: str = "schema.yml") -> list[DbtRelation]
         for node in src.get("tables") or []:
             if isinstance(node, Mapping) and "name" in node:
                 out.append(_relation(node, "source", str(src["name"])))
+    from .semantic import apply_semantic_models
+
+    if apply_semantics:
+        apply_semantic_models(out, list(doc.get("semantic_models") or []))
     return out
 
 
@@ -258,6 +265,14 @@ def read_manifest(path_or_doc: str | Path | Mapping[str, Any]) -> list[DbtRelati
             continue
         parsed = _manifest_test(node)
         if parsed is None:
+            record = {
+                "name": str(node.get("name") or ""),
+                "sql_path": node.get("original_file_path") or node.get("path"),
+                "depends_on": list((node.get("depends_on") or {}).get("nodes") or []),
+            }
+            targets = [by_id[d] for d in record["depends_on"] if d in by_id]
+            for singular_relation in targets or list(by_id.values())[:1]:
+                singular_relation.singular_tests.append(record)
             continue
         test, column = parsed
         rel = _tested_relation(node, by_id)
@@ -271,6 +286,17 @@ def read_manifest(path_or_doc: str | Path | Mapping[str, Any]) -> list[DbtRelati
         for col in rel.columns.values():
             if "not_null" in col.constraints and not any(t.kind == "not_null" for t in col.tests):
                 col.tests.append(DbtTest("not_null"))
+    from .semantic import apply_semantic_models
+
+    models = []
+    for raw in (doc.get("semantic_models") or {}).values():
+        model = dict(raw)
+        if not model.get("model"):
+            deps = (model.get("depends_on") or {}).get("nodes") or []
+            if deps and deps[0] in by_id:
+                model["model"] = f"ref('{by_id[deps[0]].name}')"
+        models.append(model)
+    apply_semantic_models(list(by_id.values()), models)
     return list(by_id.values())
 
 
@@ -282,6 +308,7 @@ def read_project(inputs: Iterable[str | Path]) -> list[DbtRelation]:
     ``target/manifest.json`` when there is one, else every ``*.yml`` / ``*.yaml`` file under it
     (``dbt_packages`` and ``target`` skipped)."""
     relations: list[DbtRelation] = []
+    semantic_models: list[Mapping[str, Any]] = []
     paths: list[Path] = []
     for item in inputs:
         p = Path(item)
@@ -308,7 +335,13 @@ def read_project(inputs: Iterable[str | Path]) -> list[DbtRelation]:
         if p.suffix == ".json":
             relations += read_manifest(p)
         else:
-            relations += read_schema_yaml(_read_text(p), str(p))
+            text = _read_text(p)
+            relations += read_schema_yaml(text, str(p), apply_semantics=False)
+            doc = _yaml().safe_load(text) or {}
+            semantic_models.extend(doc.get("semantic_models") or [])
+    from .semantic import apply_semantic_models
+
+    apply_semantic_models(relations, semantic_models)
     if not relations:
         raise DbtProjectError("no sources, seeds or models found in the dbt input")
     return relations

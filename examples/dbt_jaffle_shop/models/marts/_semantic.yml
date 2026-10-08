@@ -1,0 +1,26 @@
+version: 2
+semantic_models:
+  - name: orders_semantic
+    model: ref('orders')
+    defaults:
+      agg_time_dimension: order_date
+    entities:
+      - {name: order, type: primary, expr: order_id}
+    dimensions:
+      - name: order_date
+        type: time
+        type_params: {time_granularity: day}
+    measures:
+      - {name: revenue, expr: amount, agg: sum}
+metrics:
+  - name: revenue
+    label: Revenue
+    type: simple
+    type_params:
+      measure: revenue
+exposures:
+  - name: orders_dashboard
+    type: dashboard
+    maturity: low
+    owner: {name: Analytics}
+    depends_on: [ref('orders')]

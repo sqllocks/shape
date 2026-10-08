@@ -355,9 +355,16 @@ def metadata(relations: Sequence[DbtRelation], schema: GenSchema) -> dict[str, A
                     "description": c.description,
                     "data_type": c.data_type,
                     "tests": [t.kind for t in c.tests],
+                    **({"semantic": c.meta["semantic"]} if "semantic" in c.meta else {}),
                 }
                 for c in rel.columns.values()
                 if c.name in schema.tables[rel.name].columns
             },
         }
-    return {"format": "shape-dbt-metadata", "version": 1, "tables": tables}
+    singular = {str(t): t for rel in relations for t in rel.singular_tests}
+    return {
+        "format": "shape-dbt-metadata",
+        "version": 1,
+        "tables": tables,
+        "singular_tests": list(singular.values()),
+    }

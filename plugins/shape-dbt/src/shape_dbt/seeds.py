@@ -275,3 +275,114 @@ class DbtSeedsSink:
             options.get("column_descriptions") or {},
         )
         return rows
+
+
+def _entity_expression(columns: list[str], dialect: str) -> str:
+    """Length-prefix composite fields, preserving tuple identity and null foreign tuples."""
+    if len(columns) == 1:
+        return columns[0]
+    if dialect not in DIALECTS:
+        raise SeedError(f"unknown dialect {dialect!r}")
+    text_type = {"tsql": "varchar(max)", "spark": "string"}.get(dialect, "varchar")
+    length = "datalength" if dialect == "tsql" else "length"
+
+    def quote(column: str) -> str:
+        if dialect == "tsql":
+            return "[" + column.replace("]", "]]") + "]"
+        if dialect == "spark":
+            return "`" + column.replace("`", "``") + "`"
+        return '"' + column.replace('"', '""') + '"'
+
+    parts = []
+    for column in columns:
+        value = f"cast({quote(column)} as {text_type})"
+        prefix = f"cast({length}({value}) as {text_type})"
+        parts.append(f"concat(concat({prefix}, ':'), {value})")
+    combined = parts[0]
+    for part in parts[1:]:
+        combined = f"concat({combined}, {part})"
+    nulls = " or ".join(f"{quote(column)} is null" for column in columns)
+    return f"case when {nulls} then null else {combined} end"
+
+
+def semantic_models_from_schema(schema: Any, *, dialect: str = "ansi") -> list[dict[str, Any]]:
+    """A dbt semantic model per table: declared keys, numeric sums, first timestamp."""
+    models: list[dict[str, Any]] = []
+    for name, table in schema.tables.items():
+        entities = []
+        key_columns = set(table.primary_key)
+        if table.primary_key:
+            entity_name = (
+                name + "_" + (table.primary_key[0] if len(table.primary_key) == 1 else "key")
+            )
+            entities.append(
+                {
+                    "name": entity_name,
+                    "type": "primary",
+                    "expr": _entity_expression(table.primary_key, dialect),
+                }
+            )
+        for relationship in schema.relationships:
+            if relationship.child == name:
+                key_columns.update(relationship.child_columns)
+                parent = schema.tables[relationship.parent]
+                parent_columns = list(relationship.parent_columns)
+                if set(parent_columns) == set(parent.primary_key):
+                    order = [parent_columns.index(column) for column in parent.primary_key]
+                    child_columns = [relationship.child_columns[index] for index in order]
+                    parent_columns = list(parent.primary_key)
+                else:
+                    child_columns = list(relationship.child_columns)
+                entity_name = (
+                    relationship.parent
+                    + "_"
+                    + (parent_columns[0] if len(parent_columns) == 1 else "key")
+                )
+                entities.append(
+                    {
+                        "name": entity_name,
+                        "type": "foreign",
+                        "expr": _entity_expression(child_columns, dialect),
+                    }
+                )
+        numeric = [
+            column
+            for column in table.columns.values()
+            if column.type in ("integer", "float", "decimal") and column.name not in key_columns
+        ]
+        timestamp = next(
+            (column.name for column in table.columns.values() if column.type == "timestamp"), None
+        )
+        model: dict[str, Any] = {
+            "name": name + "_semantic",
+            "model": "ref('" + name + "')",
+            "entities": entities,
+            "measures": [
+                {"name": name + "_" + column.name, "expr": column.name, "agg": "sum"}
+                for column in numeric
+            ],
+            "dimensions": [],
+        }
+        if timestamp:
+            model["defaults"] = {"agg_time_dimension": timestamp}
+            model["dimensions"] = [
+                {"name": timestamp, "type": "time", "type_params": {"time_granularity": "day"}}
+            ]
+        models.append(model)
+    return models
+
+
+def write_semantic_models(project: str | Path, schema: Any, *, dialect: str = "ansi") -> Path:
+    """Write generated semantic models beside the seeds without changing other resources."""
+    import yaml
+
+    path = Path(project) / "models" / "_shape_semantic_models.yml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        yaml.safe_dump(
+            {"version": 2, "semantic_models": semantic_models_from_schema(schema, dialect=dialect)},
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+    return path

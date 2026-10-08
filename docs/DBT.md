@@ -119,15 +119,16 @@ The round trip is contract, dbt tests, contract. It is exact for what dbt tests 
 | Rule | In dbt |
 |---|---|
 | `dtype` | **not expressible**: a data type is adapter-specific. Use a model contract's `data_type`. |
-| `pattern` | **not expressible** |
+| `pattern` | Singular dialect regexp test for known pattern labels |
 | `distribution` (a family name) | **not expressible** |
-| `min_true_rate`, `max_true_rate` | **not expressible** (no portable aggregate test of a boolean) |
-| `min`, `max` that are not numbers | **not expressible** (`accepted_range` is numeric) |
+| `min_true_rate`, `max_true_rate` | Singular aggregate SQL test |
+| `min`, `max` that are not numbers | Singular SQL comparison test |
 | `nullable: true`, `unique: false`, `allow_extra_columns: true` | say nothing; they normalise away |
 
 These rules are not lost: they are written on the column as `meta.shape` (and noted in the
-output), so `contract_from_dbt_tests(text)` gives the whole contract back. **dbt does not test
-them**; reading the tests alone (`use_meta=False`) gives exactly `expressible(contract)`. The
+output), so `contract_from_dbt_tests(text)` gives the whole contract back. `dtype` and
+`distribution` remain metadata only; the rules above also get singular SQL files. Reading only
+the generic YAML tests (`use_meta=False`) gives `expressible(contract)`. The
 null rate is kept to nine decimals and `required_columns` is a set, so contracts are compared
 after `normalize_contract`. The distribution bounds have no place in contract v1 (and the format
 does not change): `contract_from_schema_yaml` returns them as a second value. A test
@@ -234,3 +235,49 @@ pytest -m dbt plugins/shape-dbt/tests                # dbt build against DuckDB
 `pytest -m dbt` runs `dbt deps`, which needs the dbt package hub. On a runner without that access,
 point `SHAPE_DBT_PACKAGES_FILE` at a `packages.yml` with `local:` or `git:` entries for
 `dbt_utils`, `dbt_expectations` and `dbt_date`.
+
+## Semantic models and singular tests
+
+`shape from-dbt` reads `semantic_models:` from YAML and manifest files. Primary
+entities become primary keys, matching foreign entities become relationships,
+time dimensions carry their granularity in the metadata document, and measures
+carry their aggregation and supply numeric types. Direct expressions name physical columns. SQL expressions are retained as metadata
+and produce derived columns named after the declared entity, dimension or measure;
+Shape does not evaluate SQL or infer physical lineage from expressions. Conflicting entity
+and generic-test keys report both declarations. Semantic declarations may live in
+a separate YAML file in the project. The version 1 `shape-dbt-metadata` document
+also has `singular_tests`: each entry has `name`, `sql_path`, and the manifest's
+`depends_on` node IDs. Shape lists these tests without interpreting their SQL.
+
+`shape to-dbt-tests contract.json --model orders -o models/schema.yml --dialect duckdb`
+also writes `tests/<model>__<column>__<rule>.sql` under the nearest ancestor with
+`dbt_project.yml` (or beside the output YAML when no project is found). Use
+`--tests-dir tests` to choose a directory explicitly. Supported dialects are `duckdb`,
+`postgres`, `snowflake`, and `bigquery`. Singular tests enforce `pattern` with the
+dialect's regexp, `min_true_rate` and `max_true_rate` over non-null booleans, and
+string or date `min` and `max`. Bounds are inclusive; nulls remain governed by the
+contract's null rules. An empty or all-null boolean column has no measurable true
+rate and does not fail a rate test. Pattern labels use the same regular expression table as the contract emitters. Generated SQL files have stable names and are replaced deterministically,
+including with `--merge`; unrelated SQL files are kept. Contract rules remain in
+`meta.shape`, so `contract_from_dbt_tests` reconstructs them exactly.
+
+`shape dbt-report` adds an `impact` object (`format: shape-dbt-impact`, integer
+`version: 1`) with `columns`, keyed by `model.column`. Each column has sorted
+`metrics` and `exposures` lists. Metrics follow declared measure names and metric
+dependencies; exposures walk transitive model `depends_on` edges. This reports
+file-declared dependencies. Computed measures use an identifier lexer against
+the model's declared columns, excluding string literals, comments, function names
+and unknown identifiers; model SQL and singular test SQL are never parsed. Missing
+semantic resources produce empty lists. Existing version 1 report fields remain.
+
+`shape dbt-seeds schema.gen.json --project my_project --semantic-models` writes
+`models/_shape_semantic_models.yml`: entities from primary and foreign keys,
+`sum` measures from non-key numeric columns, and a day-granularity dimension and
+aggregation default from the first timestamp. Tables without timestamps get no
+time dimension. Composite keys emit one entity with length-prefixed string
+components, using the selected dialect, and nullable foreign tuples evaluate to
+NULL. Parent and child keys share an entity name and component order. The semantic
+file is generated deterministically on each run.
+The example project includes an orders semantic model, revenue metric, dashboard
+exposure, and a singular amount test. Neither dbt nor MetricFlow is run by these
+commands.
