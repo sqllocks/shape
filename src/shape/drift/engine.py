@@ -178,6 +178,14 @@ class Policy:
 
     def skips(self, table: str | None, column: str | None) -> bool:
         """True when the change on ``table.column`` is ignored (or outside ``only``)."""
+        if column in {
+            "_shape_key",
+            "_shape_headers",
+            "_shape_timestamp",
+            "_shape_properties",
+            "_shape_partition_key",
+        } and not (self.only and self._matches(self.only, table, column)):
+            return True
         if self.ignore and self._matches(self.ignore, table, column):
             return True
         return bool(self.only) and not self._matches(self.only, table, column)

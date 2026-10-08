@@ -1843,3 +1843,10 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - The fidelity e-mail format pattern runs in linear time (#293).
 - The kql scale sink percent-encodes its database name (#295); Spark job and `COPY INTO` checks
   take whole values, and backticks in Spark column names are doubled (#300).
+
+### W9-08: broker message metadata
+
+- Kafka and Event Hubs support column/composite keys, user headers, partition
+  controls and event-time message timestamps; replay keys remain available.
+- Stream sources expose message metadata on request and drift ignores it by
+  default. The CLI exposes both write and read metadata options.

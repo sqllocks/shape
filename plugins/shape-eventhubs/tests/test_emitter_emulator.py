@@ -100,3 +100,17 @@ def test_a_wrong_hub_is_an_error_not_a_hang():
             "eventhubs://localhost/no-such-hub", [batch], connection_string=CONNECTION
         )
     assert time.monotonic() - started < 120
+
+
+def test_keyed_metadata_round_trip_emulator():
+    h = new_harness()
+    batch = next(iter(contract.default_plan().blocks(0))).batch.slice(0, 3)
+    emitter = h.make()
+    emitter.emit(
+        URI, [batch], key="_shape_table", partition_key="_shape_table", headers=["rehearsal=yes"]
+    )
+    emitter.close()
+    raw = read_raw(CONNECTION, HUB, GROUP, h.start, hub_ends(CONNECTION, HUB, GROUP))
+    assert [p["shape_key"] for p, _ in raw] == ["order_line"] * 3
+    assert [p["shape-key"] for p, _ in raw] == [f"order_line/{i}" for i in range(3)]
+    assert all(p["rehearsal"] == "yes" for p, _ in raw)

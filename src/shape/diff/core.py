@@ -31,7 +31,7 @@ def diff_mapping(a: dict[str, Any], b: dict[str, Any], prefix: str = "") -> list
     return out
 
 
-def diff_models(before: Any, after: Any) -> list[Delta]:
+def diff_models(before: Any, after: Any, *, with_message_metadata: bool = False) -> list[Delta]:
     """Typed deltas between two Shapes (v2 models, or v1 captures that are migrated): rows per
     table and every column field, as ``tables.<table>.columns.<column>.<field>``; added and
     removed tables and columns are one delta each."""
@@ -47,5 +47,22 @@ def diff_models(before: Any, after: Any) -> list[Delta]:
             continue
         bt, at = b["tables"][tname], a["tables"][tname]
         out.extend(diff_mapping({"rows": bt["rows"]}, {"rows": at["rows"]}, path))
-        out.extend(diff_mapping(columns_of(bt), columns_of(at), f"{path}.columns"))
+        excluded = (
+            set()
+            if with_message_metadata
+            else {
+                "_shape_key",
+                "_shape_headers",
+                "_shape_timestamp",
+                "_shape_properties",
+                "_shape_partition_key",
+            }
+        )
+        out.extend(
+            diff_mapping(
+                {k: v for k, v in columns_of(bt).items() if k not in excluded},
+                {k: v for k, v in columns_of(at).items() if k not in excluded},
+                f"{path}.columns",
+            )
+        )
     return out

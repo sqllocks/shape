@@ -62,11 +62,15 @@ _TRANSIENT = frozenset(
 def parse_uri(uri: str) -> tuple[str, str]:
     """``(bootstrap servers, topic)`` of a ``kafka://`` URI."""
     parts = urlsplit(uri)
+    if parts.username is not None or parts.password is not None:
+        raise StreamSourceError("credentials must be supplied outside the URI")
     if parts.scheme != "kafka" or not parts.netloc:
-        raise StreamSourceError(f"not a kafka URI: {uri!r} (kafka://host:9092[,host2:9092]/topic)")
+        raise StreamSourceError(
+            "not a kafka URI: the supplied URI (kafka://host:9092[,host2:9092]/topic)"
+        )
     topic = unquote(parts.path.lstrip("/"))
     if not topic or "/" in topic:
-        raise StreamSourceError(f"the kafka URI needs one topic name: {uri!r}")
+        raise StreamSourceError("the kafka URI needs one topic name: the supplied URI")
     return parts.netloc, topic
 
 
@@ -128,7 +132,16 @@ class KafkaStreamSource:
         schema: pa.Schema | None = opts.pop("schema", None)
         decode: dict[str, Any] = {
             k: opts.pop(k)
-            for k in ("event_time_field", "event_time_unit", "with_offsets", "on_error")
+            for k in (
+                "event_time_field",
+                "event_time_unit",
+                "with_offsets",
+                "on_error",
+                "with_key",
+                "with_headers",
+                "with_timestamp",
+                "nested",
+            )
             if k in opts
         }
         if opts:
@@ -227,6 +240,8 @@ class KafkaStreamSource:
                             int(raw.offset()),
                             raw.value(),
                             None if ts is None or ts < 0 else int(ts) * 1000,
+                            raw.key() if hasattr(raw, "key") else None,
+                            dict(raw.headers() or []) if hasattr(raw, "headers") else None,
                         )
                     )
                 if not messages:

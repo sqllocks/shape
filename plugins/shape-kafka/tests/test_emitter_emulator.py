@@ -178,3 +178,18 @@ def test_an_unreachable_broker_is_a_timeout_not_a_hang():
 def test_a_missing_client_option_is_refused_before_anything_is_sent():
     with pytest.raises(ShapeError, match="unknown kafka emitter options"):
         KafkaEmitter().emit(f"kafka://{SERVERS}/t", [], nope=1)
+
+
+def test_keyed_metadata_round_trip_emulator():
+    topic = make_topic()
+    batch = next(iter(contract.default_plan().blocks(0))).batch.slice(0, 3)
+    emitter = KafkaEmitter()
+    emitter.emit(
+        f"kafka://{SERVERS}/{topic}",
+        [batch],
+        key="_shape_table",
+        partition=0,
+        headers=["rehearsal=yes"],
+    )
+    emitter.close()
+    assert [key for key, _ in consume_all(topic)] == ["order_line"] * 3

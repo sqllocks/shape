@@ -64,6 +64,18 @@ def add_options(em: Any, *, stream: bool = False) -> None:
 
     rate_default = 10.0 if stream else 100.0
 
+    em.add_argument("--key", help="broker key: column or columns joined by | (default idempotency)")
+    em.add_argument(
+        "--header", action="append", default=[], help="broker header name=value or name=@column"
+    )
+    em.add_argument("--partition", help="Kafka partition number or by_key")
+    em.add_argument("--partition-key", help="Event Hubs table, none or column")
+    em.add_argument(
+        "--timestamp",
+        choices=("broker", "event_time"),
+        default="broker",
+        help="broker time or event time",
+    )
     em.add_argument("target", metavar="DOMAIN|SCHEMA.json", help="an installed domain or a schema")
     em.add_argument(
         *flags("--mode", "-m"), choices=("3nf", "star"), help="the schema mode of a domain"
@@ -819,6 +831,17 @@ def _open_target(
         sink_config=options.extra,
         dry=dry,
         # --auth for an event sink; a table sink got it in `options`
+        **(
+            {
+                "key": a.key,
+                "headers": a.header,
+                "timestamp": a.timestamp,
+                **({"partition": a.partition} if a.partition is not None else {}),
+                **({"partition_key": a.partition_key} if a.partition_key is not None else {}),
+            }
+            if scheme in ("kafka", "eventhubs", "eventstream")
+            else {}
+        ),
         **(_auth_options(a, scheme, offline=dry) if scheme not in sink_names_by_scheme() else {}),
     )
 

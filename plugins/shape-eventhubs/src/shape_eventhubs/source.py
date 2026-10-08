@@ -24,7 +24,8 @@ Options of :meth:`EventHubsStreamSource.read`:
                    delivers up to its own ``max_batch_size``, which this sets).
 ``schema``, ``on_error``, ``event_time_field``, ``event_time_unit``, ``with_offsets``:
                    as for ``shape.streaming.messages.decode_messages``; the event time of an
-                   event without one in its body is its enqueued time.
+                   event without one in its body is its AMQP creation time when present,
+                   otherwise its enqueued time.
 
 ``azure-eventhub`` is imported when a read starts, never at plugin load. The client delivers
 events on a worker thread; they reach the reader through a bounded queue, so a slow profiler
@@ -74,13 +75,15 @@ class HubUri(NamedTuple):
 def parse_uri(uri: str) -> HubUri:
     """The namespace, event hub and consumer group of an ``eventhubs://`` URI."""
     parts = urlsplit(uri)
+    if parts.username is not None or parts.password is not None:
+        raise StreamSourceError("credentials must be supplied outside the URI")
     if parts.scheme != "eventhubs" or not parts.netloc:
         raise StreamSourceError(
-            f"not an eventhubs URI: {uri!r} (eventhubs://<namespace>/<hub>[?consumer_group=NAME])"
+            "not an eventhubs URI: the supplied URI (eventhubs://<namespace>/<hub>[?consumer_group=NAME])"
         )
     hub = unquote(parts.path.lstrip("/"))
     if not hub or "/" in hub:
-        raise StreamSourceError(f"the eventhubs URI needs one event hub name: {uri!r}")
+        raise StreamSourceError("the eventhubs URI needs one event hub name: the supplied URI")
     query = parse_qs(parts.query)
     group = query.get("consumer_group", [DEFAULT_GROUP])[0]
     return HubUri(parts.netloc, hub, group)
@@ -143,6 +146,31 @@ def _body(event: Any) -> str | bytes | None:
         return None  # not bytes at all: an empty message to the decoder
 
 
+def _properties(event: Any) -> dict[str, bytes | None]:
+    result: dict[str, bytes | None] = {}
+    for key, value in (getattr(event, "properties", None) or {}).items():
+        name = key.decode() if isinstance(key, bytes) else str(key)
+        result[name] = value if value is None or isinstance(value, bytes) else str(value).encode()
+    return result
+
+
+def _message_key(event: Any) -> bytes | None:
+    props = _properties(event)
+    return props.get("shape_key")
+
+
+def _partition_key(event: Any) -> str | None:
+    value = getattr(event, "partition_key", None)
+    return value.decode() if isinstance(value, bytes) else None if value is None else str(value)
+
+
+def _message_timestamp(event: Any) -> int | None:
+    raw = getattr(event, "raw_amqp_message", None)
+    properties = getattr(raw, "properties", None)
+    created = getattr(properties, "creation_time", None)
+    return int(created) * 1000 if created is not None else _enqueued_us(event.enqueued_time)
+
+
 class _Failure:
     """A worker-thread error, handed to the reader."""
 
@@ -189,7 +217,16 @@ class EventHubsStreamSource:
         }
         decode: dict[str, Any] = {
             k: opts.pop(k)
-            for k in ("event_time_field", "event_time_unit", "with_offsets", "on_error")
+            for k in (
+                "event_time_field",
+                "event_time_unit",
+                "with_offsets",
+                "on_error",
+                "with_key",
+                "with_headers",
+                "with_timestamp",
+                "nested",
+            )
             if k in opts
         }
         if opts:
@@ -317,7 +354,11 @@ class EventHubsStreamSource:
                             pid,
                             int(e.sequence_number),
                             _body(e),
-                            _enqueued_us(e.enqueued_time),
+                            _message_timestamp(e),
+                            _message_key(e),
+                            _properties(e),
+                            _properties(e),
+                            _partition_key(e),
                         )
                         for e in events
                     ],

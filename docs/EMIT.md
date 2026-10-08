@@ -523,3 +523,50 @@ the profiler out. The measured events per second with and without the tee are in
 * Event order across tables is fixed (table by table); there is no interleaving.
 * Rate accuracy depends on the sink keeping up; `max_lag` in the report says whether it did.
 * Live fidelity compares what *this run* delivered with the target, and the target must be data (see above).
+
+### Message metadata (W9-08)
+
+Both broker emitters accept `key="column"` or `key="a|b"` (values joined with
+`|`; null components become empty strings), and `headers=["name=value",
+"name=@column"]`. A mapping of header names to static values or `@column`
+references is also accepted. Unknown columns fail before sending the batch.
+The default key remains `<table>/<seq>`. A column key moves that replay key to
+`shape-key`; Event Hubs retains its established `shape_key` property name for
+the selected key. User headers cannot replace reserved `shape-*` or `shape_*`
+metadata. Synthetic and dead-letter headers retain their established names.
+
+Kafka `partition=0` selects one partition; `partition="by_key"` uses the broker's
+key partitioner. Event Hubs `partition_key` accepts `table` (default), `none`,
+or a column. `timestamp="broker"` leaves timestamp assignment to the transport.
+`timestamp="event_time"` takes `_shape_event_time`: Kafka receives producer
+milliseconds, and Event Hubs receives AMQP creation time in milliseconds. Event
+Hubs enqueue time is always assigned by the service. Null event times leave the
+transport timestamp unset; submillisecond precision is truncated.
+
+Sources accept `with_key`, `with_headers`, `with_timestamp`. They add binary
+`_shape_key`, map<string,binary> `_shape_headers`, and UTC-microsecond
+`_shape_timestamp`. Event Hubs also includes `_shape_properties` and
+`_shape_partition_key` when key/header metadata is requested. Its message
+timestamp uses creation time when present, otherwise service enqueue time.
+`nested=False` writes header/property maps as JSON text with hex-encoded binary
+values (nulls remain null). Missing metadata stays null or an empty map.
+Message metadata columns are excluded from drift by default; explicitly select
+one with `only_columns` to compare it.
+
+CLI: `shape emit ... --key customer_id --header trace=@trace_id --partition 0
+--timestamp event_time` (Kafka); use `--partition-key customer_id` for Event
+Hubs. `shape stream-profile URI --with-key --with-headers --with-timestamp`
+reads metadata. The existing `--option nested=false` selects JSON-text maps.
+
+Keyed emulator rehearsal (one Kafka partition preserves key order):
+
+```bash
+shape emit retail --table order --max-events 10 --to kafka://localhost:9092/orders --key order_id --partition 0 --header rehearsal=yes
+shape stream-profile kafka://localhost:9092/orders --with-key --with-headers --with-timestamp -o keyed-profile.json
+```
+
+Use a topic created by the existing emulator rehearsal. Read offsets in partition
+0 increase in send order; each record has its column key plus the `shape-key`
+replay header. Run the marked keyed round-trip tests against both emulators with
+`pytest -m emulator plugins/shape-kafka/tests/test_emitter_emulator.py
+plugins/shape-eventhubs/tests/test_emitter_emulator.py`.

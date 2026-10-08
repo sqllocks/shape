@@ -38,6 +38,12 @@ class FakeMessage:
     ) -> None:
         self._p, self._o, self._v, self._ts, self._e = partition, offset, value, ts_ms, error
 
+    def key(self) -> bytes | None:
+        return getattr(self, "message_key", None)
+
+    def headers(self) -> list[tuple[str, bytes | None]] | None:
+        return getattr(self, "message_headers", None)
+
     def error(self) -> Any:
         return self._e
 
@@ -100,8 +106,13 @@ class FakeConsumer:
         for p in sorted(self.next):
             log = b.topics[self.topic][p]
             while len(out) < cap and self.next[p] < len(log):
-                value, ts = log[self.next[p]]
-                out.append(FakeMessage(p, self.next[p], value, ts))
+                item = log[self.next[p]]
+                value, ts = item[:2]
+                message = FakeMessage(p, self.next[p], value, ts)
+                if len(item) > 2:
+                    message.message_key = item[2]
+                    message.message_headers = item[3]
+                out.append(message)
                 self.next[p] += 1
         b.delivered += len(out)
         return out
@@ -459,6 +470,8 @@ def decode_messages(
 
             parsed = fastavro.parse_schema(json.loads(text))
             record = fastavro.schemaless_reader(io.BytesIO(payload), parsed)
+            if not isinstance(record, dict):
+                raise ValueError("an Avro message must be a record")
             sources.add("avro")
             for n in names:
                 columns[n].append(record[n])

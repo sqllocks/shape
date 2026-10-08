@@ -375,13 +375,59 @@ def test_emit_to_console_and_file_never_ask(
     assert code == 0, err
 
 
-def test_emit_with_yes_gets_past_the_confirmation(capsys: Any, schema_file: Path) -> None:
+def test_emit_with_yes_gets_past_the_confirmation(
+    capsys: Any,
+    schema_file: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from shape.plugins.host import PluginHost
+    from shape.plugins.registry import register_builtins
+    from shape.streaming.emit.formats import encode_events
+
+    received: list[Any] = []
+    received_options: list[dict[str, Any]] = []
+
+    class FakeEmitter:
+        name = "kafka"
+        schemes = ("kafka",)
+        supports_synthetic = True
+
+        def emit(self, uri: str, batches: Any, **options: Any) -> int:
+            received_options.append(options)
+            events = [event for batch in batches for event in encode_events(batch)]
+            received.extend(events)
+            return len(events)
+
+        def close(self) -> None:
+            pass
+
+    host = PluginHost(entry_points=lambda: [])
+    register_builtins(host)
+    host.register("shape.emitters", "kafka", FakeEmitter, api="1.0", source="test")
+    monkeypatch.setattr("shape.plugins.host._default", host)
     code, _, err = run(
-        capsys, "emit", schema_file, "--max-events", "5", "--sink", "kafka://broker.example:9092/o",
+        capsys,
+        "emit",
+        schema_file,
+        "--max-events",
+        "5",
+        "--sink",
+        "kafka://broker.example:9092/o",
         "--yes",
-    )  # fmt: skip
-    # No Kafka plugin or broker here: the command gets past the confirmation and fails later.
+        "--key",
+        "_shape_table",
+        "--header",
+        "test=yes",
+        "--partition",
+        "0",
+    )
     assert "refusing to write to non-local" not in err
+    assert code == 0, err
+    assert len(received) == 5
+    assert all(
+        o["key"] == "_shape_table" and o["headers"] == ["test=yes"] and o["partition"] == "0"
+        for o in received_options
+    )
 
 
 @pytest.mark.parametrize(

@@ -1341,6 +1341,11 @@ def _stream_profile_arguments(parser):
         "lines (what `shape emit` and `shape stream` write), CSV or Parquet",
     )
     parser.add_argument("-o", "--output", metavar="OUT.json", help="the global profile")
+    parser.add_argument("--with-key", action="store_true", help="include broker message keys")
+    parser.add_argument(
+        "--with-headers", action="store_true", help="include headers and Event Hubs properties"
+    )
+    parser.add_argument("--with-timestamp", action="store_true", help="include message timestamp")
     parser.add_argument(
         "--window",
         choices=("global", "tumbling", "sliding", "session"),
