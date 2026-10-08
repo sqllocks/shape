@@ -354,7 +354,7 @@ def test_other_errors_are_not_swallowed(monkeypatch):
     def boom(self, *a, **k):
         raise RuntimeError("disk on fire")
 
-    monkeypatch.setattr(deltalake.DeltaTable, "to_pyarrow_table", boom)
+    monkeypatch.setattr(deltalake.DeltaTable, "to_pyarrow_dataset", boom)
     with pytest.raises(RuntimeError, match="disk on fire"):
         shape.profile(_table("plain"))
 
@@ -367,7 +367,7 @@ def test_a_different_unsupported_reader_feature_falls_back_too(monkeypatch, caps
             "supported by the deltalake reader."
         )
 
-    monkeypatch.setattr(deltalake.DeltaTable, "to_pyarrow_table", v2)
+    monkeypatch.setattr(deltalake.DeltaTable, "to_pyarrow_dataset", v2)
     prof = shape.profile(_table("plain"))
     assert prof.to_dict()["row_count"] == 100
     assert "v2Checkpoint" in capsys.readouterr().err

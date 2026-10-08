@@ -310,7 +310,7 @@ def build(
         shares, sampled = _text_shares(uniques, counts)
         if sampled:
             prof.samples.append("type_inference")
-    elif col.kind in ("str", "cat", "objmix", "objtime", "objbin", "objdur", "nullobj"):
+    elif col.kind in ("str", "cat", "objmix", "objtime", "objbin", "objdur", "nullobj", "nested"):
         shares = _none_shares()
     else:
         shares = _numeric_shares(col, prof, n)

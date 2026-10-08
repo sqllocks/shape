@@ -397,6 +397,11 @@ class SchemaBuilder:
         for tname, tp in dataset.tables.items():
             columns: dict[str, Any] = {}
             for cname, cp in tp.columns.items():
+                if cp.dtype == "nested":
+                    raise ValueError(
+                        f"cannot generate opaque nested column {tname}.{cname}; "
+                        f"profile again with --exclude {cname} or select --columns"
+                    )
                 null_rate = float(cp.null_rate or 0.0)
                 columns[cname] = {
                     "name": cname,

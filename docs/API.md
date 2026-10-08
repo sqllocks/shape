@@ -12,10 +12,13 @@ model and query functions are documented as they behave today and may change.
 ## Profiles
 
 ```python
-shape.profile(source, *, name=None, version=None, as_of=None, delimiter=None, encoding=None, quotechar=None, header=True, string_columns=(), types=None, infer_types='auto', reference_pairs=None, joint=None, sheet=None, include_hidden=False, sketches=False, univariate=False, multivariate=False, sample=None, sample_method='random', sample_seed=None, decisions=None, validators=None, time_column=None)
+shape.profile(source, *, name=None, version=None, as_of=None, delimiter=None, encoding=None, quotechar=None, header=True, string_columns=(), types=None, infer_types='auto', reference_pairs=None, joint=None, sheet=None, include_hidden=False, sketches=False, univariate=False, multivariate=False, sample=None, sample_method='random', sample_seed=None, decisions=None, validators=None, time_column=None, columns=None, exclude=())
 ```
 
-Profiles `source` and returns a `Profile`. `source` is a path (CSV, Parquet, JSONL, `.xlsx`, a
+Profiles `source` and returns a `Profile`. `columns` includes named columns in source order;
+`exclude` removes named columns afterwards. Unknown names are errors. List, struct and map
+columns report the opaque `nested` kind, structure, counts and serialized size statistics
+without example values (`docs/PROFILING_NOTES.md`). `source` is a path (CSV, Parquet, JSONL, `.xlsx`, a
 Delta table directory, a glob or a directory of files), a `pyarrow.Table`, a
 `pandas.DataFrame`, a list of row dicts, or a `dict` of such sources for several tables (with
 foreign-key detection). Every argument after `source` is keyword-only. `version` and `as_of`

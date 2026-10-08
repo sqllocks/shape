@@ -154,6 +154,10 @@ def _column_dict(cp: ColumnProfile) -> dict[str, Any]:
         d["adequacy"] = cp.adequacy
     if cp.type_inference is not None:
         d["type_inference"] = cp.type_inference
+    if cp.structure is not None:
+        d["row_count"] = cp.null_count + int((cp.serialized_size or {}).get("count", 0))
+        d["structure"] = cp.structure
+        d["serialized_size"] = cp.serialized_size
     return d
 
 
@@ -192,7 +196,7 @@ def _plain(tagged: Any) -> Any:
 
 
 def _column_summary(col: dict[str, Any]) -> dict[str, Any]:
-    return {
+    out = {
         "dtype": col["dtype"],
         "null_rate": col["null_rate"],
         "cardinality": col["cardinality"],
@@ -207,6 +211,9 @@ def _column_summary(col: dict[str, Any]) -> dict[str, Any]:
         "mean": col["mean"],
         "std": col["std"],
     }
+    if col.get("dtype") == "nested":
+        out.update(structure=col.get("structure"), serialized_size=col.get("serialized_size"))
+    return out
 
 
 def _table_summary(table: dict[str, Any]) -> dict[str, Any]:
@@ -409,10 +416,16 @@ def profile(
     decisions: Any = None,
     validators: Any = None,
     time_column: str | None = None,
+    columns: Iterable[str] | None = None,
+    exclude: Iterable[str] = (),
 ) -> Profile:
     """Profile a path, glob, directory, Delta table, Arrow table or DataFrame.
 
     Pass a ``dict`` of such sources to profile several tables and detect foreign keys.
+
+    ``columns`` selects names in source order and ``exclude`` removes names afterwards.
+    Unknown names are refused. Nested Arrow columns are opaque: counts, canonical JSON
+    distinct counts, serialized byte sizes and structure, without example values.
 
     CSV options: ``delimiter`` (default: sniffed among comma, semicolon, tab and pipe),
     ``encoding`` (default UTF-8), ``quotechar`` (default ``"``) and ``header=False`` for a file
@@ -497,6 +510,8 @@ def profile(
         infer_types,
     )
     spec = _sampling.make_spec(sample, sample_method, sample_seed)
+    selected = None if columns is None else tuple(columns)
+    excluded = tuple(exclude)
     if sketches and spec is not None:
         # the sketch state reads every row, the profile a sample: merged, they would disagree
         raise ValueError("sketches and sample cannot be combined: the sketch state reads every row")
@@ -531,6 +546,8 @@ def profile(
                 univariate=univariate,
                 reference_pairs=reference_pairs,
                 multivariate=multivariate,
+                columns=selected,
+                exclude=excluded,
             )
             if sketches:
                 raise SourceError("sketches are not kept for .xlsx workbooks")
@@ -551,6 +568,8 @@ def profile(
             validators,
             multivariate,
             time_column,
+            selected,
+            excluded,
         )
 
 
@@ -677,6 +696,24 @@ def attach_reference_pairs(doc: dict[str, Any], cols: list[Any], rows: int, spec
         record["internal"].append(_sampling.internal_entry("reference_pairs", _pairs.MAX_ROWS))
 
 
+def _check_selection(
+    known: set[str], columns: tuple[str, ...] | None, exclude: tuple[str, ...]
+) -> None:
+    for flag, names in (("--columns", columns or ()), ("--exclude", exclude)):
+        for name in names:
+            if name not in known:
+                raise ValueError(
+                    f"{flag} {name!r} is not a column of the data "
+                    f"(columns: {', '.join(sorted(known))})"
+                )
+
+
+def _select_columns(
+    cols: list[Any], include: tuple[str, ...] | None, exclude: tuple[str, ...]
+) -> list[Any]:
+    return [c for c in cols if (include is None or c.name in include) and c.name not in exclude]
+
+
 def _profile(
     source: Any,
     name: str | None,
@@ -691,6 +728,8 @@ def _profile(
     validators: Any = None,
     multivariate: bool = False,
     time_column: str | None = None,
+    columns: tuple[str, ...] | None = None,
+    exclude: tuple[str, ...] = (),
 ) -> Profile:
     check_delta_options(version, as_of)
     asked = version is not None or as_of is not None
@@ -701,6 +740,12 @@ def _profile(
             raise SourceError("an empty dict of tables cannot be profiled")
         named = {str(k): v for k, v in source.items()}
         cols_by_t = _load_tables(named, csv)
+        known = {c.name for cols, _ in cols_by_t.values() for c in cols}
+        _check_selection(known, columns, exclude)
+        cols_by_t = {
+            n: (_select_columns(cols, columns, exclude), rows)
+            for n, (cols, rows) in cols_by_t.items()
+        }
         if time_column is not None and not any(
             c.name == time_column for cols, _ in cols_by_t.values() for c in cols
         ):
@@ -728,7 +773,11 @@ def _profile(
         return Profile(
             doc,
             name=name,
-            sketches=_sketch_state(named, csv) if sketches else None,
+            sketches=_sketch_state(
+                named, csv, {n: [c.name for c in cols] for n, (cols, _) in cols_by_t.items()}
+            )
+            if sketches
+            else None,
         )
     delta = delta_dir(source)
     if delta is None:
@@ -744,6 +793,8 @@ def _profile(
         table, provenance = read_delta(delta, version=version, as_of=as_of)
         table_name, cols, rows = load_columns(table, name or delta.name)
         sketch_source = table
+    _check_selection({c.name for c in cols}, columns, exclude)
+    cols = _select_columns(cols, columns, exclude)
     _mark_univariate(cols, univariate, multivariate)
     check_reference_pairs(reference_pairs, cols)
     if time_column is not None and all(c.name != time_column for c in cols):
@@ -761,14 +812,20 @@ def _profile(
         doc,
         name=name,
         provenance=provenance,
-        sketches=_sketch_state({table_name: sketch_source}, csv) if sketches else None,
+        sketches=_sketch_state(
+            {table_name: sketch_source}, csv, {table_name: [c.name for c in cols]}
+        )
+        if sketches
+        else None,
     )
 
 
-def _sketch_state(sources: dict[str, Any], csv: CsvFormat | None) -> dict[str, Any]:
+def _sketch_state(
+    sources: dict[str, Any], csv: CsvFormat | None, columns: Mapping[str, list[str]] | None = None
+) -> dict[str, Any]:
     from shape.profile import sketches  # only when asked for
 
-    return sketches.build_document(sources, csv)
+    return sketches.build_document(sources, csv, columns)
 
 
 # --- .shape artifact ---------------------------------------------------------------

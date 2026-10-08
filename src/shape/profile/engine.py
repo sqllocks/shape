@@ -24,6 +24,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 from shape.io import CsvOptions, open_source
 from shape.kernel.dispatch import get_kernel
 from shape.profile.error import ErrorModel, hll_error, kll_error, space_saving_error
+from shape.profile.nested import profile_state
 
 SCHEMA_VERSION = 1
 _BOUNDED_CSV_BLOCK = 4 << 20
@@ -100,6 +101,9 @@ def _column_doc(stats: dict[str, Any], arrow_type: str, mode: str) -> dict[str, 
     kind = d["kind"]
     exact = mode == "exact"
     models: dict[str, ErrorModel] = {"counts": _EXACT}
+    if kind == "nested":
+        d["null_rate"] = d["null_count"] / d["count"] if d["count"] else None
+        models["cardinality"] = _EXACT_CARD if exact else hll_error(14)
     if "top" in d:
         d["top"] = [[_json_value(v), c, e, f] for v, c, e, f in d["top"]]
         models["cardinality"] = _EXACT_CARD if exact else hll_error(14)
@@ -137,7 +141,7 @@ def profile_table(
         # the default 16 MiB blocks Arrow's read-ahead buffers made peak RSS creep up with size)
         csv = CsvOptions(stream=True, block_size=_BOUNDED_CSV_BLOCK)
     src = open_source(source, name=name, batch_size=opts.batch_size, csv=csv)
-    state = get_kernel().ProfileState(src.schema, opts.mode)
+    state = profile_state(src.schema, opts.mode)
     pool = pa.default_memory_pool()
     for i, batch in enumerate(src.batches()):
         state.update(batch)

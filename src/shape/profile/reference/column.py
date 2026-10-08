@@ -814,6 +814,37 @@ def _profile_column(
 
 def _profile_one_column(c: _Col, row_count: int, top_n: int, keep_uniques: bool) -> _Work:
     kind = c.kind
+    if kind == "nested":
+        from shape.profile.nested import canonical_values, size_stats
+
+        values = canonical_values(c.arr)
+        cardinality = len({v for v in values if v is not None})
+        nulls = c.arr.null_count
+        prof = ColumnProfile(
+            name=c.name,
+            dtype="nested",
+            null_count=nulls,
+            null_rate=round(nulls / row_count, 6) if row_count else None,
+            cardinality=cardinality,
+            cardinality_ratio=round(cardinality / row_count, 6) if row_count else None,
+            is_unique=cardinality == row_count and nulls == 0 if row_count else None,
+            is_enum=False,
+            enum_values=None,
+            min_value=None,
+            max_value=None,
+            mean=None,
+            std=None,
+            distribution=None,
+            distribution_params=None,
+            pattern=None,
+            is_primary_key=False,
+            is_foreign_key=False,
+            fk_ref_table=None,
+            structure=str(c.arr.type),
+            serialized_size=size_stats(values),
+        )
+        prof.type_inference = typeinfer.build(c, prof, row_count)
+        return _Work(col=c, prof=prof)
     if kind in _OBJECT_KINDS:
         return _profile_object_column(c, row_count, top_n)
     arr = c.arr

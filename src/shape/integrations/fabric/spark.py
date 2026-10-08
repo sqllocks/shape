@@ -30,8 +30,8 @@ from typing import Any
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
-from shape.kernel.dispatch import get_kernel
 from shape.profile.engine import _document, table_entry
+from shape.profile.nested import profile_state, restore_state
 
 __all__ = ["SNAPSHOT_SPARK_SCHEMA", "profile_distributed"]
 
@@ -60,7 +60,7 @@ def _partition_snapshot(batches: Iterator[pa.RecordBatch]) -> Iterator[pa.Record
     for batch in batches:
         if state is None:
             schema = batch.schema
-            state = get_kernel().ProfileState(schema, "bounded")
+            state = profile_state(schema, "bounded")
         state.update(batch)
         rows += batch.num_rows
     if state is None or schema is None:
@@ -103,7 +103,6 @@ def profile_distributed(
     table_name = name or "table"
     snapshots = df.mapInArrow(_partition_snapshot, SNAPSHOT_SPARK_SCHEMA)
 
-    kernel = get_kernel()
     schema: pa.Schema | None = None
     merged: Any = None
     for row in snapshots.toLocalIterator():  # partition order; one partition's cell at a time
@@ -114,14 +113,14 @@ def profile_distributed(
             raise ValueError(
                 f"partition {row['partition']} has schema {part_schema}, expected {schema}"
             )
-        state = kernel.ProfileState.from_snapshot(schema, bytes(row["snapshot"]))
+        state = restore_state(schema, bytes(row["snapshot"]))
         if merged is None:
             merged = state
         else:
             merged.merge(state)
     if merged is None:  # no partition produced a batch: an empty table
         schema = _driver_schema(df)
-        merged = kernel.ProfileState(schema, "bounded")
+        merged = profile_state(schema, "bounded")
     assert schema is not None
     entry = table_entry(merged, table_name, schema, "bounded", top_n)
     return _document("bounded", {table_name: entry})

@@ -62,6 +62,8 @@ class ColumnProfile:
     # the analyses whose statistics of this column drew a sample (``sampling.INTERNAL``); read by
     # the table's sampling record, never stored in the profile
     samples: list[str] = field(default_factory=list)
+    structure: str | None = None
+    serialized_size: dict[str, Any] | None = None
 
 
 @dataclass

@@ -52,15 +52,27 @@ def profile_workbook(
     univariate: bool = False,
     reference_pairs: Any = None,
     multivariate: bool = False,
+    columns: tuple[str, ...] | None = None,
+    exclude: tuple[str, ...] = (),
 ) -> tuple[dict[str, Any], str]:
     """-> (the profile dict, the profile's name) for a workbook source. ``reference_pairs`` is a
     list for one sheet, and a dict of sheet name to list for the whole workbook (#319)."""
-    from .profile import attach_reference_pairs, check_reference_pairs, check_reference_tables
+    from .profile import (
+        _check_selection,
+        _select_columns,
+        attach_reference_pairs,
+        check_reference_pairs,
+        check_reference_tables,
+    )
 
     path, picked = split_spec(spec)
     picked = sheet or picked
     wb = read_workbook(path, picked, include_hidden=include_hidden)
     cols_by_t = {n: (_to_cols("xlsx", s.table), s.table.num_rows) for n, s in wb.sheets.items()}
+    _check_selection({c.name for cols, _ in cols_by_t.values() for c in cols}, columns, exclude)
+    cols_by_t = {
+        n: (_select_columns(cols, columns, exclude), rows) for n, (cols, rows) in cols_by_t.items()
+    }
     for cols, _rows in cols_by_t.values():
         for c in cols:
             c.univariate = univariate

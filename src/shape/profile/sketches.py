@@ -42,20 +42,26 @@ def _csv_options(csv: Any) -> Any:
     )
 
 
-def build_table(source: Any, name: str, csv: Any = None) -> dict[str, Any]:
+def build_table(
+    source: Any, name: str, csv: Any = None, columns: list[str] | None = None
+) -> dict[str, Any]:
     """Read ``source`` once more, in bounded mode, and return its table state entry. ``csv`` is
     the profile's CSV format, so the same file is read the same way."""
     import pyarrow as pa  # type: ignore[import-untyped]
 
     from shape.io import open_source
-    from shape.kernel.dispatch import get_kernel
+    from shape.profile.nested import profile_state
 
     src = open_source(source, name=name, csv=_csv_options(csv))
     # names and types only: the state is merged across files whose metadata differs
-    schema = pa.schema([pa.field(f.name, f.type) for f in src.schema])
-    state = get_kernel().ProfileState(schema, "bounded")
+    schema = pa.schema(
+        [pa.field(f.name, f.type) for f in src.schema if columns is None or f.name in columns]
+    )
+    state = profile_state(schema, "bounded")
     rows = 0
     for batch in src.batches():
+        if columns is not None:
+            batch = batch.select(columns)
         state.update(batch)
         rows += batch.num_rows
     return {
@@ -65,12 +71,17 @@ def build_table(source: Any, name: str, csv: Any = None) -> dict[str, Any]:
     }
 
 
-def build_document(sources: Mapping[str, Any], csv: Any = None) -> dict[str, Any]:
+def build_document(
+    sources: Mapping[str, Any], csv: Any = None, columns: Mapping[str, list[str]] | None = None
+) -> dict[str, Any]:
     return {
         "format": FORMAT,
         "version": VERSION,
         "snapshot_version": SNAPSHOT_VERSION,
-        "tables": {name: build_table(src, name, csv) for name, src in sources.items()},
+        "tables": {
+            name: build_table(src, name, csv, None if columns is None else columns[name])
+            for name, src in sources.items()
+        },
     }
 
 
@@ -79,11 +90,11 @@ def restore(entry: Mapping[str, Any]) -> tuple[Any, Any]:
     kernel) that a table entry holds."""
     import pyarrow as pa
 
-    from shape.kernel.dispatch import get_kernel
+    from shape.profile.nested import restore_state
 
     try:
         schema = pa.ipc.read_schema(pa.py_buffer(_unb64(entry["schema"])))
-        return schema, get_kernel().ProfileState.from_snapshot(schema, _unb64(entry["state"]))
+        return schema, restore_state(schema, _unb64(entry["state"]))
     except (ValueError, KeyError, TypeError, pa.ArrowException) as exc:
         raise SketchStateError(f"the sketch state cannot be read: {exc}") from exc
 

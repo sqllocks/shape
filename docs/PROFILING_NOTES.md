@@ -6,6 +6,44 @@ inputs, sampling and column types. Each statement here has a test in `tests/prof
 `tests/profile/test_sampling.py`, `tests/profile/test_type_inference.py`, `tests/cli/test_profile_sampling_cli.py` and
 `tests/cli/test_types_command.py`.
 
+## Nested columns and column selection
+
+Parquet, Delta and Arrow list, struct and map columns have `dtype: nested`. Child
+fields are not profiled. The table reports its row count; each nested column reports
+`null_count`, `null_rate`, `cardinality`, the Arrow type string as `structure`, and
+`serialized_size` (non-null count, total, minimum, maximum and mean UTF-8 bytes).
+An all-null column has zero distinct values and no size minimum, maximum or mean.
+An empty list is a non-null value.
+
+Distinct values use deterministic JSON with sorted object keys, ASCII escaping and
+no whitespace. Byte sizes refer to that serialization. Maps remain ordered key/value
+pairs, preserving duplicate keys. Full and safe profiles contain no nested example
+values, enums, top values or value extrema. Safe profiles retain structure and size
+statistics. The size record declares `format: shape-nested-size` and integer
+`version: 1`; existing profile artifacts keep their versioned format and old profiles
+load without acquiring these optional fields. See `tests/profile/test_nested.py`.
+
+Both kernels use the same serialization. The fused batch and streaming engine reports
+`kind: nested`; exact mode counts distinct values exactly, bounded mode uses the
+existing HLL cardinality model. Merge combines null counts and sizes exactly, retains
+the common structure, and obtains cardinality from sketches when available. Different
+nested structures cannot merge. Fingerprints preserve nested values and duplicate map
+keys. Learning or generation from an opaque nested column raises an error naming the
+column; exclude it to generate the other columns.
+
+```bash
+shape profile events.parquet -o events.shape --exclude payload --exclude attributes
+shape profile events.parquet -o events.shape --columns id,timestamp,payload
+shape profile delta_table -o events.shape --columns id,payload --exclude payload
+```
+
+`--exclude COL` is repeatable. `--columns COL,...` includes only named columns, in
+source order; exclusions apply afterwards. An unknown name is an error. A dataset
+accepts names present in any of its tables. Selection happens before column statistics,
+keys and joint analysis, so excluded columns do not affect them. The Python API accepts
+`columns=["id", "payload"]` and `exclude=["payload"]`. Delta reads finish synchronously
+before profiling, so a subsequent profiling error exits cleanly.
+
 ## CSV files
 
 The delimiter is sniffed from the first 100 rows: comma, semicolon, tab or pipe, whichever splits every row into the

@@ -167,7 +167,10 @@ def read_delta(
         rows, extra = delta_fallback.fallback_read(path.name, str(path), table, None)
         return rows, {**provenance, **extra}
     try:
-        return table.to_pyarrow_table(), provenance
+        # The dataset scanner's asynchronous read-ahead can survive to interpreter shutdown
+        # after an error in profiling, causing a native abort. A synchronous scan completes
+        # the read before handing ownership of the materialised table to the profiler.
+        return table.to_pyarrow_dataset().scanner(use_threads=False).to_table(), provenance
     except Exception as exc:
         if not delta_fallback.is_unsupported_feature_error(exc):
             raise

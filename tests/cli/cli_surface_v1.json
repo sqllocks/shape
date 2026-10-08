@@ -4542,6 +4542,10 @@
      "choices": null,
      "takes_value": true
     },
+    "--columns": {
+     "choices": null,
+     "takes_value": true
+    },
     "--dataset": {
      "choices": null,
      "takes_value": false
@@ -4559,6 +4563,10 @@
      "takes_value": false
     },
     "--encoding": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--exclude": {
      "choices": null,
      "takes_value": true
     },

@@ -314,6 +314,8 @@ def declared_name(typ: pa.DataType) -> str:
         return "string"
     if pa.types.is_binary(typ) or pa.types.is_large_binary(typ):
         return "binary"
+    if pa.types.is_nested(typ):
+        return "nested"
     return "other"
 
 
@@ -333,8 +335,8 @@ def _arrow_cols_untyped(t: pa.Table) -> list[_Col]:
             out.append(_Col(name, "cat", _clean_dictionary(col.unify_dictionaries())))
             continue
         if pa.types.is_nested(typ):
-            # pandas holds dicts / ndarrays here; value hashing then raises
-            raise TypeError(f"column {name}: unhashable type: nested Arrow column ({typ})")
+            out.append(_Col(name, "nested", col))
+            continue
         if pa.types.is_uint64(typ) and col.null_count == 0:
             out.append(_Col(name, "uint64", col))
         elif pa.types.is_integer(typ):

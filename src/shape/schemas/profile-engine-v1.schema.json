@@ -49,7 +49,10 @@
       "properties": {
         "name": {"type": "string"},
         "arrow_type": {"type": "string"},
-        "kind": {"enum": ["int", "float", "bool", "text", "temporal", "other"]},
+        "kind": {"enum": ["int", "float", "bool", "text", "temporal", "other", "nested"]},
+        "structure": {"type": "string"},
+        "serialized_size": {"type": "object"},
+        "null_rate": {"$ref": "#/$defs/optnumber"},
         "count": {"$ref": "#/$defs/count"},
         "null_count": {"$ref": "#/$defs/count"},
         "nan_count": {"$ref": "#/$defs/count"},

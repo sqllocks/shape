@@ -465,6 +465,11 @@ class SafeColumnProfile:
             temporal_histogram=temporal,
             validators=_opt_dict(col.get("validators")),
             cells_suppressed=(suppressed or 0) + cells,
+            extra={
+                k: col[k]
+                for k in ("structure", "serialized_size", "null_count", "row_count")
+                if dtype == "nested" and k in col
+            },
         )
 
     def to_dict(self) -> dict[str, Any]:

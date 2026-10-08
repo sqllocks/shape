@@ -295,26 +295,29 @@ def _conform(item: Any, entry: Any, schema: Any, target: Any) -> Any:
     format is shared by both kernels, so the reference twin rebuilds it and the active kernel
     reads the result."""
 
-    from shape.kernel.dispatch import get_kernel
     from shape.kernel.reference import profile as twin
     from shape.profile import sketches
+    from shape.profile.nested import restore_state, wire_schema
+
+    source_schema = wire_schema(schema)
+    target_schema = wire_schema(target)
 
     try:
-        source = twin.ProfileState.from_snapshot(schema, sketches._unb64(entry["state"]))
+        source = twin.ProfileState.from_snapshot(source_schema, sketches._unb64(entry["state"]))
     except (ValueError, sketches.SketchStateError) as exc:
         raise MergeError(f"{item.name!r}: the sketch state cannot be read: {exc}") from exc
     by_name = {f.name: col for f, col in zip(schema, source._cols, strict=True)}
-    state = twin.ProfileState(target, "bounded")
+    state = twin.ProfileState(target_schema, "bounded")
     state._rows = source.rows
     columns = []
     for f in target:
         col = by_name[f.name]
         if schema.field(f.name).type != f.type:  # no values here: all null, of the target type
-            col = twin._Column(f.name, f.type, "bounded")
+            col = twin._Column(f.name, target_schema.field(f.name).type, "bounded")
             col.count = col.nulls = source.rows
         columns.append(col)
     state._cols = columns
-    return get_kernel().ProfileState.from_snapshot(target, state.snapshot())
+    return restore_state(target, state.snapshot())
 
 
 def _state_document(states: dict[str, tuple[Any, Any]]) -> dict[str, Any]:
@@ -360,6 +363,9 @@ def _sketch_columns(state: Any) -> dict[str, Any]:
             ]
             models["cardinality"] = hll_error(_BOUNDED_HLL_P).to_dict()
             models["top"] = space_saving_error(_BOUNDED_TOP).to_dict()
+        if kind == "nested":
+            entry.pop("top", None)
+            models.pop("top", None)
         if kind in ("int", "float"):
             entry["finite_count"] = col["finite_count"]
             entry["inf_distinct"] = int(col["pos_inf_count"] > 0) + int(col["neg_inf_count"] > 0)
@@ -471,6 +477,8 @@ def _merge_column(
     mean = std = None
     if dtype in _NUMERIC:
         mean, std = _moments(where, cols, finite)
+    if dtype == "nested" and len({c.get("structure") for c in cols}) != 1:
+        raise MergeError(f"{where}: nested structures differ")
     out: dict[str, Any] = {
         "name": cname,
         "dtype": dtype,
@@ -510,6 +518,22 @@ def _merge_column(
             out[field] = sum(counts)
     if sketch is not None:
         _apply_sketch(out, sketch, dtype, sum(finite), total_rows, unknown_rates)
+    if dtype == "nested":
+        sizes = [c["serialized_size"] for c in cols]
+        count = sum(s["count"] for s in sizes)
+        total = sum(s["total"] for s in sizes)
+        out["structure"] = cols[0]["structure"]
+        out["row_count"] = total_rows
+        out["serialized_size"] = {
+            "format": "shape-nested-size",
+            "version": 1,
+            "unit": "utf8-bytes",
+            "count": count,
+            "total": total,
+            "min": min((s["min"] for s in sizes if s["count"]), default=None),
+            "max": max((s["max"] for s in sizes if s["count"]), default=None),
+            "mean": total / count if count else None,
+        }
     return out
 
 

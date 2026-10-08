@@ -446,6 +446,15 @@ def _vault_args(a):
     return {"policy": load_policy(a.vault_policy)}
 
 
+def _profile_columns(a):
+    if a.columns is None:
+        return None
+    columns = [c.strip() for c in a.columns.split(",")]
+    if not all(columns):
+        raise ValueError("--columns needs comma-separated column names")
+    return columns
+
+
 def _cmd_profile(a):
     import shape
     from shape.cli import project as project_cli
@@ -494,6 +503,8 @@ def _cmd_profile(a):
         decisions=a.decisions,
         **_sample_options(a),
         time_column=getattr(a, "time_column", None),
+        columns=_profile_columns(a),
+        exclude=a.exclude,
         **_workbook_options(a),
     )
     if settings:
@@ -1606,6 +1617,18 @@ def _build_parser(plugin_commands=()):
         action="store_true",
         help="SRC is a folder of table files: profile one table per file, named by the file name "
         "without its extension (without it a folder is one table)",
+    )
+    pr.add_argument(
+        "--exclude",
+        action="append",
+        default=[],
+        metavar="COL",
+        help="exclude a column from profiling (repeatable)",
+    )
+    pr.add_argument(
+        "--columns",
+        metavar="COL,...",
+        help="profile only these comma-separated columns; exclusions apply afterwards",
     )
     pr.add_argument(
         "--sketches",

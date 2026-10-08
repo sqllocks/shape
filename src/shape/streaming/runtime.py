@@ -38,8 +38,8 @@ import numpy as np
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
-from shape.kernel.dispatch import get_kernel
 from shape.profile.engine import table_entry
+from shape.profile.nested import profile_state, restore_state
 from shape.streaming import versions
 from shape.streaming.keyed import _inflate
 from shape.streaming.messages import partition_of
@@ -184,7 +184,7 @@ def _encode_state(state: Any) -> str:
 
 def _decode_state(schema: pa.Schema, text: str) -> Any:
     raw = _inflate(text, MAX_STATE_BYTES)
-    return get_kernel().ProfileState.from_snapshot(schema, raw)
+    return restore_state(schema, raw)
 
 
 def _encode_schema(schema: pa.Schema) -> str:
@@ -293,7 +293,7 @@ class WindowedProfiler:
         return self._finished
 
     def _new_state(self) -> Any:
-        return get_kernel().ProfileState(self.schema, "bounded")
+        return profile_state(self.schema, "bounded")
 
     def _emit(self, start: int | None, end: int | None, state: Any) -> WindowProfile:
         self.windows_emitted += 1
