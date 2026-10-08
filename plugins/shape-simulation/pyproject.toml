@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sqllocks-shape-simulation"
+# Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
+version = "0.9.0"
+description = "Shape plugin: Simulation scenarios"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = ["sqllocks-shape==0.9.0"]
+
+# Entry points (shape.* groups, plugin API v1); see docs/plugins/authoring.md.
+[project.entry-points."shape.commands"]
+simulate = "shape_simulation.cli:SimulateCommand"
+
+[tool.setuptools.packages.find]
+where = ["src"]

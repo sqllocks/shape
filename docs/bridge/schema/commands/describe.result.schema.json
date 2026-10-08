@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "business_rules": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "rule": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "rule",
+          "type"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "domain": {
+      "type": "string"
+    },
+    "generation_order": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "mode": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "relationships": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "child": {
+            "type": "string"
+          },
+          "child_columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "parent": {
+            "type": "string"
+          },
+          "parent_columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "parent",
+          "child",
+          "parent_columns",
+          "child_columns"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "scale": {
+      "type": "string"
+    },
+    "scales": {
+      "additionalProperties": {
+        "additionalProperties": {
+          "type": "integer"
+        },
+        "type": "object"
+      },
+      "type": "object"
+    },
+    "table_count": {
+      "type": "integer"
+    },
+    "tables": {
+      "additionalProperties": {
+        "additionalProperties": true,
+        "properties": {
+          "column_count": {
+            "type": "integer"
+          },
+          "columns": {
+            "items": {
+              "additionalProperties": true,
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "nullable": {
+                  "type": "boolean"
+                },
+                "strategy": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "type",
+                "nullable"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "dependencies": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": {
+            "type": "string"
+          },
+          "primary_key": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "rows": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "description",
+          "primary_key",
+          "columns",
+          "column_count",
+          "dependencies"
+        ],
+        "type": "object"
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "domain",
+    "mode",
+    "name",
+    "scale",
+    "table_count",
+    "tables",
+    "generation_order",
+    "relationships",
+    "business_rules",
+    "scales"
+  ],
+  "title": "describe result",
+  "type": "object",
+  "x-api-version": "1.0"
+}

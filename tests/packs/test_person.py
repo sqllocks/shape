@@ -1,0 +1,11 @@
+from shape.packs import generate_person
+
+
+def test_person_deterministic_coherent():
+    a = generate_person(4, 9)
+    b = generate_person(4, 9)
+    assert (
+        a == b
+        and a["full_name"] == a["first_name"] + " " + a["last_name"]
+        and a["email"].endswith("@example.invalid")
+    )

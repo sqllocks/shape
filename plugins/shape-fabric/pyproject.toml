@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sqllocks-shape-fabric"
+# Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
+version = "0.9.0"
+description = "Shape plugin: Microsoft Fabric, Synapse and Azure Data Factory pipeline integration"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = [
+    "sqllocks-shape==0.9.0",
+    "sqllocks-shape-eventhubs==0.9.0",
+    "sqllocks-shape-sqlserver==0.9.0",
+]
+
+[project.optional-dependencies]
+# Microsoft Entra sign-in to an Eventhouse instead of a bearer token.
+entra = ["azure-identity>=1.15"]
+# Reading and writing OneLake / ADLS Gen2 paths (abfss://, onelake://): adlfs and azure-identity.
+onelake = ["sqllocks-shape[azure]==0.9.0"]
+
+# Entry points (shape.* groups, plugin API v1) are added here by the work package that
+# implements each part of this plugin; see docs/plugins/authoring.md.
+[project.entry-points."shape.emitters"]
+eventstream = "shape_fabric:EventstreamEmitter"
+eventhouse = "shape_fabric:EventhouseEmitter"
+
+[project.entry-points."shape.commands"]
+fabric = "shape_fabric.commands:FabricCommand"
+publish = "shape_fabric.commands:PublishCommand"
+notebook = "shape_fabric.commands:NotebookCommand"
+deploy-notebook = "shape_fabric.commands:DeployNotebookCommand"
+setup-fabric = "shape_fabric.commands:SetupFabricCommand"
+export-model = "shape_fabric.commands:ExportModelCommand"
+
+[project.entry-points."shape.sinks"]
+sqlserver = "shape_fabric:SqlServerSink"
+warehouse = "shape_fabric:WarehouseSink"
+
+[project.entry-points."shape.sources"]
+onelake = "shape_fabric:LakehouseSource"
+
+[tool.setuptools.packages.find]
+where = ["src"]

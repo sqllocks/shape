@@ -1,0 +1,31 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.hypothesis/
+.coverage
+htmlcov/
+.DS_Store
+Thumbs.db
+*.swp
+
+# benchmark scratch output in CI
+/bench-out/
+
+# Rust / maturin build output
+target/
+*.so
+*.pyd
+*.dylib

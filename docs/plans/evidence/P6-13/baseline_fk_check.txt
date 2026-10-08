@@ -1,0 +1,12 @@
+baseline local_mp:
+orders 786160 unique order_id 786160
+order_line rows 1965400 unique line_id 1965400
+customers 50000 unique 50000
+order_line.order_id not in order: 0
+order.customer_id not in customer: 0
+baseline local_single:
+orders 500000 unique order_id 500000
+order_line rows 1250000 unique line_id 1250000
+customers 50000 unique 50000
+order_line.order_id not in order: 0
+order.customer_id not in customer: 0

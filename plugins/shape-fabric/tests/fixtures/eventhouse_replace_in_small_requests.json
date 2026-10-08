@@ -1,0 +1,113 @@
+{
+  "channel": "http",
+  "format": 1,
+  "result": {
+    "value": 12
+  },
+  "scenario": "eventhouse_replace_in_small_requests",
+  "source": "in-repo fake service",
+  "steps": [
+    {
+      "request": {
+        "body": "{\"db\": \"db1\", \"csl\": \".show tables | where TableName == 'customer' | count\"}",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/mgmt"
+      },
+      "response": {
+        "body": "{\"Tables\": [{\"TableName\": \"Table_0\", \"Columns\": [], \"Rows\": [[0]]}]}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"db\": \"db1\", \"csl\": \".create-merge table ['customer'] (['id']:long, ['name']:string, ['segment']:string, ['balance']:decimal, ['score']:real, ['active']:bool, ['born']:datetime, ['seen']:datetime, ['seen_tz']:datetime)\"}",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/mgmt"
+      },
+      "response": {
+        "body": "{}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"db\": \"db1\", \"csl\": \".create-or-alter table ['customer'] ingestion json mapping 'shape_json' '[{\\\"column\\\": \\\"id\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"id\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"long\\\"}, {\\\"column\\\": \\\"name\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"name\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"string\\\"}, {\\\"column\\\": \\\"segment\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"segment\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"string\\\"}, {\\\"column\\\": \\\"balance\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"balance\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"decimal\\\"}, {\\\"column\\\": \\\"score\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"score\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"real\\\"}, {\\\"column\\\": \\\"active\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"active\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"bool\\\"}, {\\\"column\\\": \\\"born\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"born\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"datetime\\\"}, {\\\"column\\\": \\\"seen\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"seen\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"datetime\\\"}, {\\\"column\\\": \\\"seen_tz\\\", \\\"path\\\": \\\"$[\\\\\\\\\\\"seen_tz\\\\\\\\\\\"]\\\", \\\"datatype\\\": \\\"datetime\\\"}]'\"}",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/mgmt"
+      },
+      "response": {
+        "body": "{}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"db\": \"db1\", \"csl\": \".alter table ['customer'] policy streamingingestion enable\"}",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/mgmt"
+      },
+      "response": {
+        "body": "{}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"id\":0,\"name\":\"O'Brien; DROP TABLE x;--\",\"segment\":\"a\",\"balance\":\"0.00\",\"score\":null,\"active\":true,\"born\":\"2000-01-01\",\"seen\":\"2026-01-01T12:00:00.123456000\",\"seen_tz\":\"2026-01-01T12:00:00.123456Z\"}\n{\"id\":1,\"name\":\"name 1\",\"segment\":\"b\",\"balance\":\"0.25\",\"score\":0.3333333333333333,\"active\":false,\"born\":\"2000-01-02\",\"seen\":\"2026-01-02T12:00:00.123456000\",\"seen_tz\":\"2026-01-02T12:00:00.123456Z\"}\n{\"id\":2,\"name\":\"name 2\",\"segment\":\"a\",\"balance\":\"0.50\",\"score\":0.6666666666666666,\"active\":true,\"born\":\"2000-01-03\",\"seen\":\"2026-01-03T12:00:00.123456000\",\"seen_tz\":\"2026-01-03T12:00:00.123456Z\"}\n{\"id\":3,\"name\":\"O'Brien; DROP TABLE x;--\",\"segment\":null,\"balance\":\"0.75\",\"score\":1.0,\"active\":false,\"born\":\"2000-01-04\",\"seen\":\"2026-01-04T12:00:00.123456000\",\"seen_tz\":\"2026-01-04T12:00:00.123456Z\"}\n{\"id\":4,\"name\":\"name 4\",\"segment\":\"b\",\"balance\":\"1.00\",\"score\":null,\"active\":true,\"born\":\"2000-01-05\",\"seen\":\"2026-01-05T12:00:00.123456000\",\"seen_tz\":\"2026-01-05T12:00:00.123456Z\"}\n{\"id\":5,\"name\":\"name 5\",\"segment\":\"b\",\"balance\":\"1.25\",\"score\":1.6666666666666667,\"active\":false,\"born\":\"2000-01-06\",\"seen\":\"2026-01-06T12:00:00.123456000\",\"seen_tz\":\"2026-01-06T12:00:00.123456Z\"}\n{\"id\":6,\"name\":\"O'Brien; DROP TABLE x;--\",\"segment\":\"b\",\"balance\":\"1.50\",\"score\":2.0,\"active\":true,\"born\":\"2000-01-07\",\"seen\":\"2026-01-07T12:00:00.123456000\",\"seen_tz\":\"2026-01-07T12:00:00.123456Z\"}\n{\"id\":7,\"name\":\"name 7\",\"segment\":\"b\",\"balance\":\"1.75\",\"score\":2.3333333333333335,\"active\":false,\"born\":\"2000-01-08\",\"seen\":\"2026-01-08T12:00:00.123456000\",\"seen_tz\":\"2026-01-08T12:00:00.123456Z\"}\n{\"id\":8,\"name\":\"name 8\",\"segment\":\"b\",\"balance\":\"2.00\",\"score\":null,\"active\":true,\"born\":\"2000-01-09\",\"seen\":\"2026-01-09T12:00:00.123456000\",\"seen_tz\":\"2026-01-09T12:00:00.123456Z\"}\n{\"id\":9,\"name\":\"O'Brien; DROP TABLE x;--\",\"segment\":\"b\",\"balance\":\"2.25\",\"score\":3.0,\"active\":false,\"born\":\"2000-01-10\",\"seen\":\"2026-01-10T12:00:00.123456000\",\"seen_tz\":\"2026-01-10T12:00:00.123456Z\"}\n",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/ingest/db1/customer?streamFormat=JSON&mappingName=shape_json"
+      },
+      "response": {
+        "body": "{}",
+        "headers": {},
+        "status": 200
+      }
+    },
+    {
+      "request": {
+        "body": "{\"id\":10,\"name\":\"name 10\",\"segment\":\"b\",\"balance\":\"2.50\",\"score\":3.3333333333333335,\"active\":true,\"born\":\"2000-01-11\",\"seen\":\"2026-01-11T12:00:00.123456000\",\"seen_tz\":\"2026-01-11T12:00:00.123456Z\"}\n{\"id\":11,\"name\":\"name 11\",\"segment\":\"b\",\"balance\":\"2.75\",\"score\":3.6666666666666665,\"active\":false,\"born\":\"2000-01-12\",\"seen\":\"2026-01-12T12:00:00.123456000\",\"seen_tz\":\"2026-01-12T12:00:00.123456Z\"}\n",
+        "headers": {
+          "accept": "application/json",
+          "authorization": "Bearer <redacted>",
+          "content-type": "application/json; charset=utf-8"
+        },
+        "method": "POST",
+        "url": "https://kql.example.test/v1/rest/ingest/db1/customer?streamFormat=JSON&mappingName=shape_json"
+      },
+      "response": {
+        "body": "{}",
+        "headers": {},
+        "status": 200
+      }
+    }
+  ]
+}

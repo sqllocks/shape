@@ -1,0 +1,11 @@
+All checks passed!
+520 files already formatted
+Success: no issues found in 238 source files
+Built-ins load only through the plugin registry (plan 4.3) KEPT (1 ignored import)
+
+Contracts: 1 kept, 0 broken.
+check_user_facing: clean
+[tester]	WARNING	nosec encountered (B608), but no failed test on file src/shape/builtins/sinks/sql.py:214
+[tester]	WARNING	nosec encountered (B608), but no failed test on file src/shape/builtins/sinks/sql.py:214
+[tester]	WARNING	nosec encountered (B608), but no failed test on file src/shape/integrations/fabric/udf.py:282
+static exit=0

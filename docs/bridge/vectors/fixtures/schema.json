@@ -1,0 +1,163 @@
+{
+  "generation": {
+    "scale": "small",
+    "scales": {
+      "small": {
+        "customer": 40,
+        "order": 1200,
+        "order_line": 3100
+      }
+    }
+  },
+  "model": {
+    "name": "scale_t",
+    "seed": 5
+  },
+  "relationships": [
+    {
+      "child": "order",
+      "child_columns": [
+        "customer_id"
+      ],
+      "name": "o_c",
+      "parent": "customer",
+      "parent_columns": [
+        "customer_id"
+      ]
+    },
+    {
+      "child": "order_line",
+      "child_columns": [
+        "order_id"
+      ],
+      "name": "l_o",
+      "parent": "order",
+      "parent_columns": [
+        "order_id"
+      ]
+    }
+  ],
+  "schema_version": 1,
+  "tables": {
+    "customer": {
+      "columns": {
+        "customer_id": {
+          "generator": {
+            "start": 1000,
+            "strategy": "sequence"
+          },
+          "name": "customer_id",
+          "null_rate": 0.0,
+          "nullable": false,
+          "type": "integer"
+        },
+        "name": {
+          "generator": {
+            "strategy": "weighted_enum",
+            "values": {
+              "a": 4,
+              "b": 3,
+              "c": 2,
+              "d": 1
+            }
+          },
+          "name": "name",
+          "null_rate": 0.0,
+          "nullable": false,
+          "type": "string"
+        },
+        "score": {
+          "generator": {
+            "high": 100.0,
+            "low": 0.0,
+            "strategy": "distribution"
+          },
+          "name": "score",
+          "null_rate": 0.0,
+          "nullable": false,
+          "type": "float"
+        }
+      },
+      "name": "customer",
+      "primary_key": [
+        "customer_id"
+      ]
+    },
+    "order": {
+      "columns": {
+        "customer_id": {
+          "generator": {
+            "ref": "customer.customer_id",
+            "strategy": "foreign_key"
+          },
+          "name": "customer_id",
+          "null_rate": 0.0,
+          "nullable": false,
+          "type": "integer"
+        },
+        "order_id": {
+          "generator": {
+            "strategy": "sequence"
+          },
+          "name": "order_id",
+          "null_rate": 0.0,
+          "nullable": false,
+          "type": "integer"
+        },
+        "score": {
+          "generator": {
+            "high": 10.0,
+            "low": 0.0,
+            "strategy": "distribution"
+          },
+          "name": "score",
+          "null_rate": 0.0,
+          "nullable": false,
+          "type": "float"
+        }
+      },
+      "name": "order",
+      "primary_key": [
+        "order_id"
+      ]
+    },
+    "order_line": {
+      "columns": {
+        "amount": {
+          "generator": {
+            "high": 50.0,
+            "low": 1.0,
+            "strategy": "distribution"
+          },
+          "name": "amount",
+          "null_rate": 0.0,
+          "nullable": false,
+          "type": "float"
+        },
+        "line_id": {
+          "generator": {
+            "strategy": "sequence"
+          },
+          "name": "line_id",
+          "null_rate": 0.0,
+          "nullable": false,
+          "type": "integer"
+        },
+        "order_id": {
+          "generator": {
+            "ref": "order.order_id",
+            "strategy": "foreign_key"
+          },
+          "name": "order_id",
+          "null_rate": 0.0,
+          "nullable": false,
+          "type": "integer"
+        }
+      },
+      "name": "order_line",
+      "primary_key": [
+        "line_id"
+      ]
+    }
+  }
+}

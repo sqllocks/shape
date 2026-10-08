@@ -1,0 +1,14 @@
+{
+  "row_count": {"min": 100000, "max": 5000000},
+  "columns": {
+    "order_id": {"dtype": "integer", "nullable": false, "unique": true},
+    "customer_id": {"dtype": "integer", "nullable": false},
+    "status": {
+      "nullable": false,
+      "allowed_values": ["cancelled", "completed", "processing", "returned", "shipped"]
+    },
+    "order_total": {"dtype": "float", "nullable": false, "min": 0, "max": 6000}
+  },
+  "required_columns": ["order_id", "customer_id", "order_date", "status", "order_total"],
+  "allow_extra_columns": true
+}

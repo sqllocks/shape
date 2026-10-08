@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "domain": {
+      "type": "string"
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "tables": {
+      "additionalProperties": {
+        "additionalProperties": true,
+        "properties": {
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {},
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "properties": {
+                  "bytes": {
+                    "type": "integer"
+                  },
+                  "content_id": {
+                    "type": "string"
+                  },
+                  "path": {
+                    "type": "string"
+                  },
+                  "spilled": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "spilled",
+                  "content_id",
+                  "path",
+                  "bytes"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "preview_rows": {
+            "type": "integer"
+          },
+          "total_rows": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total_rows",
+          "preview_rows",
+          "columns",
+          "data"
+        ],
+        "type": "object"
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "domain",
+    "seed",
+    "tables"
+  ],
+  "title": "preview result",
+  "type": "object",
+  "x-api-version": "1.0"
+}

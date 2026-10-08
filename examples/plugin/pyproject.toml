@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shape-example-plugin"
+version = "0.1.0"
+description = "Example Shape plugin: a source, a detector and a command"
+requires-python = ">=3.11"
+dependencies = ["sqllocks-shape"]
+
+[project.entry-points."shape.sources"]
+lines = "shape_example_plugin:LinesSource"
+
+[project.entry-points."shape.detectors"]
+iban = "shape_example_plugin:IbanDetector"
+
+[project.entry-points."shape.commands"]
+hello = "shape_example_plugin:HelloCommand"
+
+[tool.setuptools.packages.find]
+where = ["src"]

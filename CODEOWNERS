@@ -1,0 +1,4 @@
+# Replace placeholder after GitHub repository creation.
+/docs/PRODUCT_ARCHITECTURE.md @OWNER
+/docs/SECURITY_SPECIFICATION.md @OWNER
+/security/ @OWNER

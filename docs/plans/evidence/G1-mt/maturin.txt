@@ -1,0 +1,47 @@
+🍹 Building a mixed python/rust project
+🐍 Found CPython 3.11 at /root/.venvs/shape/bin/python
+🔗 Found pyo3 bindings with abi3-py3.11 support
+Ignoring adlfs: markers 'extra == "azure"' don't match your environment
+Ignoring azure-identity: markers 'extra == "azure"' don't match your environment
+Ignoring deltalake: markers 'extra == "azure"' don't match your environment
+Ignoring deltalake: markers 'extra == "delta"' don't match your environment
+Ignoring pytest: markers 'extra == "dev"' don't match your environment
+Ignoring pytest-cov: markers 'extra == "dev"' don't match your environment
+Ignoring hypothesis: markers 'extra == "dev"' don't match your environment
+Ignoring ruff: markers 'extra == "dev"' don't match your environment
+Ignoring mypy: markers 'extra == "dev"' don't match your environment
+Ignoring pip-audit: markers 'extra == "dev"' don't match your environment
+Ignoring build: markers 'extra == "dev"' don't match your environment
+Ignoring pyyaml: markers 'extra == "dev"' don't match your environment
+Ignoring pandas: markers 'extra == "dev"' don't match your environment
+Ignoring deltalake: markers 'extra == "dev"' don't match your environment
+Ignoring twine: markers 'extra == "dev"' don't match your environment
+Ignoring cryptography: markers 'extra == "dev"' don't match your environment
+Ignoring xxhash: markers 'extra == "dev"' don't match your environment
+Ignoring maturin: markers 'extra == "dev"' don't match your environment
+Ignoring import-linter: markers 'extra == "dev"' don't match your environment
+Ignoring vulture: markers 'extra == "dev"' don't match your environment
+Ignoring bandit: markers 'extra == "dev"' don't match your environment
+Ignoring py-spy: markers 'extra == "dev"' don't match your environment
+Ignoring sqlglot: markers 'extra == "dev"' don't match your environment
+Ignoring openpyxl: markers 'extra == "dev"' don't match your environment
+Ignoring scipy: markers 'extra == "dev"' don't match your environment
+Ignoring pyspark: markers 'extra == "dev"' don't match your environment
+Ignoring sqllocks-shape-eventhubs: markers 'extra == "eventhubs"' don't match your environment
+Ignoring openpyxl: markers 'extra == "excel"' don't match your environment
+Ignoring sqllocks-shape-kafka: markers 'extra == "kafka"' don't match your environment
+Ignoring pandas: markers 'extra == "pandas"' don't match your environment
+Ignoring scipy: markers 'extra == "scipy"' don't match your environment
+Ignoring cryptography: markers 'extra == "sign"' don't match your environment
+Ignoring sqllocks-shape-sqlserver: markers 'extra == "sqlserver"' don't match your environment
+Ignoring confluent-kafka: markers 'extra == "streaming"' don't match your environment
+Ignoring azure-eventhub: markers 'extra == "streaming"' don't match your environment
+Ignoring pyyaml: markers 'extra == "yaml"' don't match your environment
+Requirement already satisfied: numpy<3,>=2.0 in /root/.venvs/shape/lib/python3.11/site-packages (2.4.6)
+Requirement already satisfied: pyarrow>=14.0.1 in /root/.venvs/shape/lib/python3.11/site-packages (25.0.1)
+   Compiling shape-kernel v0.9.0 (/home/user/shape/rust/shape-kernel)
+    Finished `release` profile [optimized] target(s) in 1m 04s
+📦 Built wheel for abi3 Python ≥ 3.11 to /tmp/.tmpAKH2en/sqllocks_shape-0.9.0-cp311-abi3-linux_x86_64.whl
+✏️ Setting installed package as editable
+🛠 Installed sqllocks-shape-0.9.0
+maturin exit 0

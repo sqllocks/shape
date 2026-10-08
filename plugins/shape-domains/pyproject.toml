@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sqllocks-shape-domains"
+# Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
+version = "0.9.0"
+description = "Shape plugin: Industry domains and reference data"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = ["sqllocks-shape==0.9.0"]
+
+# Entry points (shape.* groups, plugin API v1); see docs/plugins/authoring.md.
+[project.entry-points."shape.domains"]
+retail = "shape_domains.retail:RetailDomain"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+shape_domains = ["data/**/*.json", "data/**/*.arrow"]

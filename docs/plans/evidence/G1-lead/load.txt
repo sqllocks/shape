@@ -1,0 +1,5 @@
+=== uptime_before
+ 16:25:15 up 25 min,  0 user,  load average: 1.98, 1.65, 1.21
+--
+=== uptime_after
+ 17:06:46 up  1:07,  0 user,  load average: 1.29, 1.27, 1.20

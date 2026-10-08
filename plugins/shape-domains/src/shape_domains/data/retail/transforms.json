@@ -1,0 +1,50 @@
+{
+  "star": {
+    "dimensions": {
+      "dim_customer": {"source": "customer", "key": "sk_customer", "natural_key": "customer_id"},
+      "dim_product": {
+        "source": "product",
+        "key": "sk_product",
+        "natural_key": "product_id",
+        "enrich": [
+          {"table": "product_category", "left": "category_id", "right": "category_id", "prefix": "cat_"}
+        ]
+      },
+      "dim_store": {"source": "store", "key": "sk_store", "natural_key": "store_id"},
+      "dim_promotion": {"source": "promotion", "key": "sk_promotion", "natural_key": "promotion_id"}
+    },
+    "facts": {
+      "fact_sale": {
+        "source": "order_line",
+        "join": [{"table": "order", "left": "order_id", "right": "order_id"}],
+        "dimension_keys": {
+          "customer_id": "dim_customer",
+          "product_id": "dim_product",
+          "store_id": "dim_store",
+          "promotion_id": "dim_promotion"
+        },
+        "date_columns": ["order_date"]
+      },
+      "fact_return": {
+        "source": "return",
+        "join": [{"table": "order", "left": "order_id", "right": "order_id"}],
+        "dimension_keys": {
+          "customer_id": "dim_customer",
+          "store_id": "dim_store"
+        },
+        "date_columns": ["return_date"]
+      }
+    }
+  },
+  "cdm_entities": {
+    "customer": "Contact",
+    "address": "CustomerAddress",
+    "product_category": "ProductCategory",
+    "product": "Product",
+    "store": "Store",
+    "promotion": "Campaign",
+    "order": "SalesOrder",
+    "order_line": "SalesOrderProduct",
+    "return": "ReturnOrder"
+  }
+}

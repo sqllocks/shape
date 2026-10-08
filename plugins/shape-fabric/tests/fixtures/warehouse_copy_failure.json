@@ -1,0 +1,88 @@
+{
+  "channel": "odbc",
+  "format": 1,
+  "result": {
+    "error": "WriteError",
+    "message": "loading dbo.customer failed: Bulk load failed: the external file could not be read"
+  },
+  "scenario": "warehouse_copy_failure",
+  "source": "in-repo fake service",
+  "steps": [
+    {
+      "request": {
+        "op": "execute",
+        "params": [
+          "dbo",
+          "customer"
+        ],
+        "sql": "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "fetchone"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [],
+        "sql": "CREATE TABLE [dbo].[customer] (\n    [id] BIGINT NULL,\n    [name] VARCHAR(8000) NULL,\n    [segment] VARCHAR(8000) NULL,\n    [balance] DECIMAL(12,2) NULL,\n    [score] FLOAT NULL,\n    [active] BIT NULL,\n    [born] DATE NULL,\n    [seen] DATETIME2(6) NULL,\n    [seen_tz] DATETIME2(6) NULL\n)"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "commit"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [],
+        "sql": "COPY INTO [dbo].[customer] FROM 'https://onelake.dfs.fabric.microsoft.com/Analytics/Sales.Lakehouse/Files/staging/run000000001/customer-81398e09/' WITH (FILE_TYPE = 'PARQUET')"
+      },
+      "response": {
+        "message": "Bulk load failed: the external file could not be read",
+        "raises": "RuntimeError"
+      }
+    },
+    {
+      "request": {
+        "op": "rollback"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "execute",
+        "params": [],
+        "sql": "DROP TABLE IF EXISTS [dbo].[customer]"
+      },
+      "response": {
+        "value": null
+      }
+    },
+    {
+      "request": {
+        "op": "commit"
+      },
+      "response": {
+        "value": null
+      }
+    }
+  ]
+}
