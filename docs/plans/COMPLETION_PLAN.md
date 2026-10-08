@@ -2153,7 +2153,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 109 | W1-18 | done | Integrated in INT-17, landed with INT-18 (2026-10-05, §2.3); issue #94. |
 | 110 | W2-04 | done | Integrated in INT-14 (2026-10-03, §2.3); issue #69. |
 | 111 | W2-05 | todo | |
-| 112 | W2-06 | wip (merged in INT-17; gap: a plain `shape profile semantic-model://...` of one table does not record `hidden: true` in the profile, `shape profile-model` does; W2-06.md) | Integrated in INT-17, landed with INT-18 (2026-10-05, §2.3); issue #95. |
+| 112 | W2-06 | done (the `hidden: true` gap of a plain `shape profile` moved to W9-12 item 5, 2026-10-08) | Integrated in INT-17, landed with INT-18 (2026-10-05, §2.3); issue #95. |
 | 113 | W2-07 | done | Integrated in INT-18 (2026-10-05, §2.3); issue #231 (shard P1 failure #771 fixed in c1999097). |
 | 114 | W2-08 | done (live Snowflake, Databricks and Synapse tests wait on the owner's secrets, §9) | Integrated in INT-17, landed with INT-18 (2026-10-05, §2.3); issue #96. |
 | 115 | W2-09 | done | Integrated in INT-18 (2026-10-05, §2.3); issue #97. |
@@ -2767,7 +2767,7 @@ The owner delegated decisions to the lead on 2026-10-03 (§2.3). These work pack
 | W9-09 | #10 | Kafka and Event Hubs formats II: Avro and Protobuf without a registry, on read, nested fields, Azure Schema Registry | none |
 | W9-10 | #11 | dbt II: singular tests, semantic models, metrics and exposures | none |
 | W9-11 | #12 | Fabric Eventhouse source: `eventhouse://` tables profiled through the KQL query endpoint | none |
-| W9-12 | #13 | Power BI semantic models II: measures and row-level security read into the profile and kept by `export-model` | W2-06 |
+| W9-12 | #13 | Power BI semantic models II: measures and row-level security read into the profile and kept by `export-model`; W2-06's `hidden: true` gap | W2-06 |
 | W9-13 | #14 | BigQuery sink and source: Parquet load jobs, Storage Read API, whole-dataset profiles, a bytes-billed cost guard | W9-01 |
 | W9-14 | #15 | Amazon Redshift sink and source: S3-staged Parquet `COPY`, IAM or password sign-in, whole-schema profiles | W9-01 |
 | W9-15 | #16 | Oracle Database sink and source: thin-mode array DML, Oracle's empty-string rule, whole-schema profiles | W9-01 |
