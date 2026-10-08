@@ -64,6 +64,7 @@ class DbtRelation:
     source_name: str | None = None
     contract_enforced: bool = False
     singular_tests: list[dict[str, Any]] = field(default_factory=list)
+    semantic_primary_key: list[str] = field(default_factory=list)
 
 
 def _yaml() -> Any:

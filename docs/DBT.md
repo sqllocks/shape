@@ -243,8 +243,9 @@ entities become primary keys, matching foreign entities become relationships,
 time dimensions carry their granularity in the metadata document, and measures
 carry their aggregation and supply numeric types. Direct expressions name physical columns. SQL expressions are retained as metadata
 and produce derived columns named after the declared entity, dimension or measure;
-Shape does not evaluate SQL or infer physical lineage from expressions. Conflicting entity
-and generic-test keys report both declarations. Semantic declarations may live in
+Shape does not evaluate SQL or infer physical lineage from expressions. Explicit semantic primary keys take precedence over heuristic key selection
+without rejecting alternate unique columns. Conflicting foreign entity and
+relationship-test targets report both declarations. Semantic declarations may live in
 a separate YAML file in the project. The version 1 `shape-dbt-metadata` document
 also has `singular_tests`: each entry has `name`, `sql_path`, and the manifest's
 `depends_on` node IDs. Shape lists these tests without interpreting their SQL.

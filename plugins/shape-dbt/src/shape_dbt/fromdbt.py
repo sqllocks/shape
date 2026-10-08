@@ -203,11 +203,11 @@ def _parse_tables(
     for rel in rels:
         combos = _unique_combos(rel)
         single = [c.name for c in rel.columns.values() if _has(c, "unique") and _has(c, "not_null")]
-        pk = single[:1] if single else (combos[0] if combos else [])
+        pk = rel.semantic_primary_key or (single[:1] if single else (combos[0] if combos else []))
         if len(single) > 1:
             notes.append(
                 f"{rel.name}: {', '.join(single)} are all unique and not null; "
-                f"{single[0]} is the primary key"
+                f"{', '.join(pk)} is the primary key"
             )
         pt = ParsedTable(name=rel.name, primary_key=list(pk))
         for col in rel.columns.values():

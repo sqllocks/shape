@@ -43,17 +43,8 @@ def apply_semantic_models(
             if column != expression:
                 col.data_type = col.data_type or "varchar"
             if kind == "primary":
-                existing = [
-                    c.name
-                    for c in rel.columns.values()
-                    if any(t.kind == "unique" for t in c.tests)
-                    and any(t.kind == "not_null" for t in c.tests)
-                ]
-                if existing and column not in existing:
-                    raise DbtProjectError(
-                        f"{origin} primary entity {name!r} ({column}) conflicts with "
-                        f"unique + not_null tests on {rel.name}.{existing[0]}"
-                    )
+                if column not in rel.semantic_primary_key:
+                    rel.semantic_primary_key.append(column)
                 entities[name] = (rel.name, column)
                 col.tests.extend([DbtTest("unique"), DbtTest("not_null")])
             elif kind == "foreign":
@@ -73,6 +64,7 @@ def apply_semantic_models(
                 raise DbtProjectError(f"{origin}: unknown dimension type {kind!r}")
             col.data_type = col.data_type or ("timestamp" if kind == "time" else "varchar")
             col.meta["semantic"] = {
+                **dict(col.meta.get("semantic") or {}),
                 "dimension": dimension["name"],
                 "expression": expression,
                 "type": kind,

@@ -43,10 +43,25 @@ def test_semantic_yaml_keys_types_aggregation_and_boundary():
     assert read_schema_yaml("models: [{name: empty}]")[0].columns == {}
 
 
-def test_semantic_conflict_names_test_and_entity():
-    text = SEMANTIC.replace("- name: amount", "- name: amount\n        tests: [unique, not_null]")
-    with pytest.raises(DbtProjectError, match=r"(?s)(unique.*primary|primary.*unique)"):
-        from_dbt(read_schema_yaml(text), smart=False)
+def test_semantic_primary_preserves_alternate_unique_test():
+    text = """
+models:
+  - name: orders
+    columns:
+      - {name: email, data_type: varchar, tests: [unique, not_null]}
+      - {name: id, data_type: bigint}
+semantic_models:
+  - name: orders_semantic
+    model: ref('orders')
+    entities: [{name: order, type: primary, expr: id}]
+"""
+    relations = read_schema_yaml(text)
+    schema, _ = from_dbt(relations, smart=False)
+    assert schema.tables["orders"].primary_key == ["id"]
+    assert metadata(relations, schema)["tables"]["orders"]["columns"]["email"]["tests"] == [
+        "unique",
+        "not_null",
+    ]
 
 
 def test_manifest_semantic_and_singular_metadata(tmp_path):
