@@ -1,0 +1,149 @@
+"""Iceberg Arrow batch scans with snapshot selection and width restoration."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from datetime import UTC, datetime
+from typing import Any
+
+import pyarrow as pa  # type: ignore[import-untyped]
+
+from shape.builtins._iceberg import SCHEMA_KEY, catalog, decode_schema, parse
+
+
+class IcebergSource:
+    name = "iceberg"
+    schemes = ("iceberg", "iceberg+file")
+
+    def can_open(self, uri: str) -> bool:
+        return uri.startswith(("iceberg://", "iceberg+file://"))
+
+    def _table(self, uri: str, options: dict[str, Any]) -> Any:
+        cat, identifier = catalog(uri, options)
+        if len(identifier) != 2:
+            raise ValueError("Iceberg scan needs a table URI")
+        try:
+            return cat.load_table(identifier)
+        except Exception:
+            raise ValueError(
+                "Iceberg table could not be loaded; check namespace, table and access"
+            ) from None
+
+    def _snapshot(self, table: Any, options: dict[str, Any]) -> Any:
+        snapshot_id, as_of = options.get("snapshot_id"), options.get("as_of")
+        if snapshot_id is not None and as_of is not None:
+            raise ValueError("pass snapshot_id or as_of, not both")
+        if as_of is not None:
+            try:
+                stamp = (
+                    as_of
+                    if isinstance(as_of, datetime)
+                    else datetime.fromisoformat(str(as_of).replace("Z", "+00:00"))
+                )
+                stamp = stamp.replace(tzinfo=UTC) if stamp.tzinfo is None else stamp
+                millis = int(stamp.timestamp() * 1000)
+            except (ValueError, TypeError, OverflowError):
+                raise ValueError("as_of needs an ISO timestamp") from None
+            candidates = [s for s in table.metadata.snapshots if s.timestamp_ms <= millis]
+            if not candidates:
+                raise ValueError("no Iceberg snapshot exists at as_of")
+            return max(candidates, key=lambda s: s.timestamp_ms)
+        snapshot = (
+            table.snapshot_by_id(int(snapshot_id))
+            if snapshot_id is not None
+            else table.current_snapshot()
+        )
+        if snapshot is None and snapshot_id is not None:
+            raise ValueError("Iceberg snapshot_id does not exist")
+        return snapshot
+
+    def _schema(self, table: Any) -> pa.Schema:
+        original = table.properties.get(SCHEMA_KEY)
+        if original:
+            schema = decode_schema(original)
+            # Timestamp normalization is part of the documented Iceberg mapping.
+            from shape.builtins._iceberg import mapped_schema
+
+            normalized = mapped_schema(schema, True)
+            return pa.schema(
+                [
+                    f.with_type(normalized.field(f.name).type)
+                    if pa.types.is_timestamp(f.type)
+                    else f
+                    for f in schema
+                ],
+                metadata=schema.metadata,
+            )
+        return table.schema().as_arrow()
+
+    def schema(self, uri: str, **options: Any) -> pa.Schema:
+        table = self._table(uri, options)
+        self._snapshot(table, options)
+        schema = self._schema(table)
+        columns = options.get("columns")
+        return pa.schema([schema.field(c) for c in columns]) if columns else schema
+
+    def read(self, uri: str, **options: Any) -> Iterator[pa.RecordBatch]:
+        table = self._table(uri, options)
+        snapshot = self._snapshot(table, options)
+        schema = self.schema(uri, **options)
+        if snapshot is None:
+            return
+        scan = table.scan(
+            snapshot_id=snapshot.snapshot_id,
+            selected_fields=tuple(options.get("columns") or ("*",)),
+        )
+        try:
+            for batch in scan.to_arrow_batch_reader():
+                yield batch.cast(schema)
+        except Exception:
+            raise ValueError("Iceberg scan failed; check snapshot and storage access") from None
+
+    def profile_source(self, uri: str, **options: Any) -> Any:
+        import shape
+
+        profile_options = options.pop("profile_options", {})
+        from shape.profile.reference.sources import source_options
+
+        cat, identifier = catalog(uri, options)
+        if len(identifier) == 1:
+            identifiers = cat.list_tables(identifier)
+            if not identifiers:
+                raise ValueError("Iceberg namespace contains no tables")
+            tables = {}
+            provenance = {}
+            for item in identifiers:
+                target = uri.rstrip("/") + "/" + item[-1]
+                table = self._table(target, options)
+                snapshot = self._snapshot(table, options)
+                tables[item[-1]] = pa.Table.from_batches(
+                    self.read(target, **options), schema=self.schema(target, **options)
+                )
+                provenance[item[-1]] = self._provenance(target, snapshot)
+            result = shape.profile(tables, **profile_options)
+            result._provenance = {"format": "iceberg", "version": 1, "tables": provenance}
+            return result
+        table = self._table(uri, options)
+        snapshot = self._snapshot(table, options)
+        with source_options():
+            result = shape.profile(
+                pa.Table.from_batches(
+                    self.read(uri, **options), schema=self.schema(uri, **options)
+                ),
+                **{**profile_options, "name": profile_options.get("name") or identifier[-1]},
+            )
+        result._provenance = self._provenance(uri, snapshot)
+        return result
+
+    def _provenance(self, uri: str, snapshot: Any) -> dict[str, Any]:
+        name, identifier, _ = parse(uri)
+        return {
+            "format": "iceberg",
+            "version": 1,
+            "catalog": name,
+            "table": ".".join(identifier),
+            "snapshot_id": None if snapshot is None else snapshot.snapshot_id,
+            "total_records": 0
+            if snapshot is None
+            else int(snapshot.summary.additional_properties.get("total-records", 0)),
+        }

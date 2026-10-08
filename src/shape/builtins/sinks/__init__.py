@@ -19,11 +19,13 @@ if TYPE_CHECKING:
     from .files import JsonlSink as JsonlSink
     from .files import ParquetSink as ParquetSink
     from .files import TsvSink as TsvSink
+    from .iceberg import IcebergSink as IcebergSink
     from .sql import SqlSink as SqlSink
 
 SHAPE_API = "1.0"
 
 _EXPORTS = {
+    "IcebergSink": "iceberg",
     "AbfssSink": "azure",
     "CsvSink": "files",
     "DeltaSink": "delta",

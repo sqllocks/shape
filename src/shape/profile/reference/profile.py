@@ -500,6 +500,34 @@ def profile(
     ``docs/JOINT.md``), which ``shape.diff`` compares and ``mixed_copula`` generation reads. They
     are off by default too: they add a fixed cost per table.
     """
+    if isinstance(source, str) and "://" in source:
+        from shape.plugins.host import default_host
+        from shape.profile.reference.sources import _SOURCE_OPTIONS
+
+        host = default_host()
+        for record in host.records("shape.sources"):
+            plugin = host.try_get(record.group, record.name)
+            specialized = getattr(plugin, "profile_source", None)
+            if plugin is not None and specialized is not None and plugin.can_open(source):
+                options = dict(_SOURCE_OPTIONS.get() or {})
+                if as_of is not None:
+                    options["as_of"] = as_of
+                options["profile_options"] = dict(
+                    name=name,
+                    joint=joint,
+                    columns=columns,
+                    exclude=exclude,
+                    sample=sample,
+                    sample_method=sample_method,
+                    sample_seed=sample_seed,
+                    sketches=sketches,
+                    univariate=univariate,
+                    multivariate=multivariate,
+                )
+                result = specialized(source, **options)
+                if not isinstance(result, Profile):
+                    raise TypeError("source profile hook must return a Profile")
+                return result
     fmt = CsvFormat(
         delimiter,
         encoding,

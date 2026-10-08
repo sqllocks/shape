@@ -29,6 +29,7 @@ dependencies=["numpy>=2.0,<3","pyarrow>=14.0.1","tzdata; sys_platform == 'win32'
 yaml=["pyyaml>=6"]
 sign=["cryptography>=50,<51"]
 delta=["deltalake>=0.17"]
+iceberg=["pyiceberg[pyarrow,sql-sqlite,pyiceberg-core]>=0.9"]
 delta-fallback=["deltalake>=0.17","duckdb>=1.2"]
 excel=["openpyxl>=3.1","defusedxml>=0.7"]
 azure=["adlfs>=2024.4.1","azure-identity>=1.16.1","deltalake>=0.17"]
@@ -172,6 +173,7 @@ json = "shape.builtins.sources:JsonSource"
 xml = "shape.builtins.sources:XmlSource"
 abfss = "shape.builtins.sources:AbfssSource"
 delta = "shape.builtins.sources:DeltaSource"
+iceberg = "shape.builtins.sources:IcebergSource"
 
 [project.entry-points."shape.sinks"]
 csv = "shape.builtins.sinks:CsvSink"
@@ -182,6 +184,7 @@ tsv = "shape.builtins.sinks:TsvSink"
 sql = "shape.builtins.sinks:SqlSink"
 excel = "shape.builtins.sinks:ExcelSink"
 delta = "shape.builtins.sinks:DeltaSink"
+iceberg = "shape.builtins.sinks:IcebergSink"
 abfss = "shape.builtins.sinks:AbfssSink"
 fabric-mirror = "shape.builtins.sinks:FabricMirrorSink"
 
