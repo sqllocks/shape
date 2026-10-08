@@ -130,3 +130,29 @@ removal that itself fails is a `RuntimeWarning`).
 
 Out of scope: serverless SQL pools, Synapse Spark pools and Synapse pipelines (those are
 `integrations/synapse`).
+
+### Read an Eventhouse
+
+The Fabric plugin registers the `eventhouse` source. Read one table with
+`shape profile 'eventhouse://<query host>/<database>?table=T' -o table.shape`,
+or omit `table` to capture every table in one multi-table profile. The same URI
+works through the bridge profile command and as a source for `shape diff`.
+Sign-in uses the emitter's `token` option, `SHAPE_EVENTHOUSE_TOKEN`, or Entra
+(`sqllocks-shape-fabric[entra]`). Credentials belong in options or environment
+variables, never in the URI. `tls=false` supports local emulators.
+
+Python source options are `sample_rows` (default 1000; 0 reads all) and
+`batch_size` (default 65536, maximum 500000). Sampling uses KQL `sample N`;
+`source_sampling` records `sampled_rows`, `sample_method`, and `catalog_rows`
+from `.show table T details`. Profiles exclude emitter `_shape_table` and
+`_shape_seq` columns by default, so their delivery metadata does not cause drift.
+Add `dedupe=true` to collapse repeated emitter rows using
+`summarize take_any(*) by _shape_table, _shape_seq`; ordinary tables without
+both key columns are read unchanged.
+
+Schema comes from `.show table T schema as json`. KQL maps to Arrow as follows:
+`long` → int64, `int` → int32, `real` → float64, `decimal` → decimal256(57,28),
+`datetime` → timestamp(us, UTC), `timespan` → duration(ns), `bool` → boolean,
+and `string`/`guid` → string. `dynamic` becomes JSON text. Unknown types fail
+explicitly; nulls stay null. Decimal values exceeding the fixed precision or
+scale fail rather than round silently.

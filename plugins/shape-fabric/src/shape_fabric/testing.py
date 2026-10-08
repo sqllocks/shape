@@ -1081,3 +1081,62 @@ class FakeIdentity:
         monkeypatch.setattr(package, "identity", module, raising=False)
         monkeypatch.setitem(sys.modules, "azure.identity", module)
         return self
+
+
+class FakeKustoReadTransport:
+    """Offline KQL read transport: declared columns and positional rows by table."""
+
+    def __init__(self, tables: Any):
+        self.tables = tables
+        self.queries: list[str] = []
+
+    def __call__(self, method: str, url: str, headers: Any, body: bytes, timeout: float) -> Any:
+        import re
+
+        query = json.loads(body)["csl"]
+        self.queries.append(query)
+        columns: list[dict[str, str]] = []
+        if query == ".show tables":
+            rows = [[name] for name in self.tables]
+        else:
+            match = re.search(r"\['((?:\\.|[^'])*)'\]", query)
+            name = match[1].replace("\\'", "'").replace("\\\\", "\\") if match else ""
+            if name not in self.tables:
+                return 400, {}, b"table not found"
+            fields, rows = self.tables[name]
+            if "schema as json" in query:
+                columns = [{"ColumnName": "TableName"}, {"ColumnName": "Schema"}]
+                rows = [
+                    [
+                        name,
+                        json.dumps(
+                            {"OrderedColumns": [{"Name": n, "CslType": k} for n, k in fields]}
+                        ),
+                    ]
+                ]
+            elif query.endswith(" details"):
+                columns = [{"ColumnName": "TotalRowCount"}]
+                rows = [[len(rows)]]
+            else:
+                if "summarize take_any(*)" in query:
+                    indices = [
+                        next(i for i, f in enumerate(fields) if f[0] == n)
+                        for n in ("_shape_table", "_shape_seq")
+                    ]
+                    seen = set()
+                    unique = []
+                    for row in rows:
+                        key = tuple(row[i] for i in indices)
+                        if key not in seen:
+                            seen.add(key)
+                            unique.append(row)
+                    rows = unique
+                sample = re.search(r"\| sample (\d+)", query)
+                if sample:
+                    rows = rows[: int(sample[1])]
+                if "__shape_read_order" in query:
+                    rows = sorted(rows, key=lambda row: json.dumps(row, sort_keys=True))
+                page = re.search(r"__shape_read_row > (\d+) and __shape_read_row <= (\d+)", query)
+                if page:
+                    rows = rows[int(page[1]) : int(page[2])]
+        return 200, {}, json.dumps({"Tables": [{"Columns": columns, "Rows": rows}]}).encode()

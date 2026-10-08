@@ -893,7 +893,9 @@ def _cmd_diff(a):
 
     t0 = ci.started()
     current_path = a.after if a.after is not None else a.before
-    current = shape.load(current_path)
+    from shape.profile.reference.sources import profile_or_load
+
+    current = profile_or_load(current_path)
     ctx = project_cli.context(a, current.name)
     source = ctx.source if ctx else None
     options = project_cli.merge_diff_options(source, _diff_options(a), a.ignore is not None)
@@ -904,7 +906,7 @@ def _cmd_diff(a):
         {"planned": planned.plan, "on": planned.on, "source": planned.source} if planned else {}
     )
     if a.after is not None:  # BASE and CURRENT given: no baseline is looked up
-        base = shape.load(a.before)
+        base = profile_or_load(a.before)
         _check_only(a, base, current)
         result = shape.diff(base, current, **options, **plan_args)
     else:

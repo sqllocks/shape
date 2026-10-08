@@ -692,6 +692,38 @@ def _profile(
     multivariate: bool = False,
     time_column: str | None = None,
 ) -> Profile:
+    # Optional source expansion supports catalog-backed multi-table profiles without
+    # imposing a catalog API on file and single-table plugins.
+    if isinstance(source, str) and "://" in source:
+        from shape.plugins.host import default_host
+
+        from .sources import _SOURCE_OPTIONS
+
+        host = default_host()
+        for rec in host.records("shape.sources"):
+            reader = host.try_get(rec.group, rec.name)
+            expand = getattr(reader, "profile_tables", None)
+            if reader is None or expand is None or not reader.can_open(source):
+                continue
+            tables, metadata = expand(source, **(_SOURCE_OPTIONS.get() or {}))
+            result = _profile(
+                tables,
+                name,
+                version,
+                as_of,
+                csv,
+                reference_pairs,
+                joint,
+                sketches,
+                univariate,
+                sample,
+                validators,
+                multivariate,
+                time_column,
+            )
+            for table_name, record in metadata.items():
+                result._data["tables"][table_name]["source_sampling"] = record
+            return result
     check_delta_options(version, as_of)
     asked = version is not None or as_of is not None
     if isinstance(source, dict):

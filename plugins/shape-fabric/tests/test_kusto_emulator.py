@@ -66,3 +66,30 @@ def test_awkward_column_names_survive_the_mapping():
         raise
     finally:
         w.client.mgmt(f".drop table ['{table}'] ifexists")
+
+
+def test_emitter_rows_profile_through_eventhouse_source():
+    import pyarrow as pa
+    from shape_fabric import EventhouseEmitter
+    from shape_fabric.eventhouse_source import EventhouseSource
+
+    from shape.streaming.emit.formats import with_event_fields
+
+    table = f"shape_read_{uuid.uuid4().hex[:8]}"
+    batch = with_event_fields(pa.RecordBatch.from_pydict({"x": [1, 2]}), table, 0)
+    emitter = EventhouseEmitter()
+    emitter.emit(f"eventhouse://{HOST}/NetDefaultDB/{table}?tls=false", [batch])
+    uri = f"eventhouse://{HOST}/NetDefaultDB?table={table}&tls=false&dedupe=true"
+    reader = EventhouseSource()
+    try:
+        deadline = time.monotonic() + 60
+        while True:
+            tables, _ = reader.profile_tables(uri, sample_rows=0)
+            if tables[table].num_rows == 2 or time.monotonic() >= deadline:
+                break
+            time.sleep(1)
+        assert tables[table].column_names == ["x"]
+        assert tables[table].num_rows == 2
+    finally:
+        EventhouseWriter(URI).client.mgmt(f".drop table ['{table}'] ifexists")
+        emitter.close()

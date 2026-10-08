@@ -1843,3 +1843,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - The fidelity e-mail format pattern runs in linear time (#293).
 - The kql scale sink percent-encodes its database name (#295); Spark job and `COPY INTO` checks
   take whole values, and backticks in Spark column names are doubled (#300).
+
+- W9-11: Fabric Eventhouse source reads table schemas, sampled or paged rows,
+  catalog row counts and whole-database profiles through the KQL endpoint.
+  Emitter metadata is excluded from profiles; `dedupe=true` collapses retries.

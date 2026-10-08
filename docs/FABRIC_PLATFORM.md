@@ -128,3 +128,20 @@ id or workspace id. It follows the [state and compatibility policy](specs/STATE_
 that names the first Shape release that reads it.
 
 Last recorded run: not run yet
+
+### Eventhouse source read limits
+
+`eventhouse://<query host>/<database>?table=T` reads through the KQL query
+endpoint. Each request is subject to Kusto's result-size limit (normally 64 MB)
+and 500,000-row cap. The source caps each page at 500,000 rows and defaults to
+65,536. Sampling defaults to 1,000 rows and samples above 500,000 are refused;
+use `sample_rows=0` to page a larger table. Full reads sort by ingestion time and
+then a serialized array of the row values in declared column order, so equal
+or null ingestion timestamps have a secondary ordering. They use `serialize`
+and `row_number()` to select each numbered range. Ordering remains approximate
+while ingestion continues; this is a batch profile, not a transactional snapshot.
+Pause ingestion for
+repeatable captures. Size-limited or failed queries must be retried with a
+smaller batch; the source does not use Kusto export or streaming reads.
+The source reserves `__shape_read_row` and `__shape_read_order` as paging helper
+names and refuses a table containing either name before requesting its rows.
