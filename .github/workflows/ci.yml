@@ -13,7 +13,7 @@ permissions: {contents: read}
 env:
   # The reference engine's short name, set outside the repository (a repository variable); the
   # comparison harness (benchmarks/vs_refengine) and its tests derive the engine's names from it.
-  REFENGINE_NAME: ${{ vars.REFENGINE_NAME }}
+  REFENGINE_NAME: ${{ secrets.REFENGINE_NAME }}
 jobs:
   test:
     # T-06: the full Python 3.11-3.14 matrix on Linux; 3.11 and 3.14 on macOS and Windows.
