@@ -6,7 +6,7 @@ Status: available.
 
 ## Run the local examples
 
-The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Output appears beneath each command. `…` elides the wheel byte size and, where shown, elapsed times, session IDs and timestamps. These values vary between builds or runs. The harness validates those fields and compares the remaining output exactly. Temporary paths, job IDs and generated signing keys also vary.
 
 <!-- example: 999 -->
 
@@ -172,7 +172,7 @@ pip install --quiet --no-deps --find-links wheels wheels/sqllocks_shape-*.whl \
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    sqllocks_shape-0.9.1-py3-none-any.whl  2,794,739 bytes
+    sqllocks_shape-0.9.1-py3-none-any.whl  …
     checks passed: tag py3-none-any, < 28,600,000 bytes, no compiled code, RECORD valid
     ```
 

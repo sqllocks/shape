@@ -4,7 +4,7 @@ Status: experimental.
 
 ## Run the local examples
 
-The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Output appears beneath each command. `…` elides the wheel byte size and, where shown, elapsed times, session IDs and timestamps. These values vary between builds or runs. The harness validates those fields and compares the remaining output exactly. Temporary paths, job IDs and generated signing keys also vary.
 
 <!-- example: 999 -->
 
@@ -205,12 +205,12 @@ shape demo notebook retail --mode seeding --output retail.ipynb
     healthcare       inference, streaming, seeding  healthcare                     50,000  Healthcare domain — patients, encounters, medications, claim...
     enterprise       seeding                        retail, hr, financial         200,000  Enterprise composite — retail + hr + financial across all 4 ...
     === Shape Demo — retail (inference) ===
-      >> [0.5s] Profiling source data: domain defaults
+      >> […] Profiling source data: domain defaults
          Profiled 9 table(s)
          Built schema: 9 tables
-      >> [1.5s] Generating synthetic data: small scale preset: 21,800 rows
+      >> […] Generating synthetic data: small scale preset: 21,800 rows
          Generated 21,800 total rows
-      >> [2.1s] Comparing distributions
+      >> […] Comparing distributions
          Fidelity score: 96.7%
     Fidelity Report
     Table                Column                    Type        Pass
@@ -277,18 +277,18 @@ shape demo notebook retail --mode seeding --output retail.ipynb
     store                store_type                string        OK
 
     Fidelity score: 96.7%
-      >> [2.1s] Complete
-    === Done in 2.1s ===
+      >> […] Complete
+    === Done in …s ===
     Connection profile 'here' saved. Use with: shape demo run SCENARIO --connection here
     === Shape Demo — retail (seeding) ===
-      >> [0.2s] Generating synthetic data: small scale preset: 21,750 rows (local)
+      >> […] Generating synthetic data: small scale preset: 21,750 rows (local)
          retail: 21,750 rows in 9 tables
-      >> [0.4s] Complete
-    === Done in 0.4s ===
-    Session: 15603d02
+      >> […] Complete
+    === Done in …s ===
+    Session: …
     Scenario: retail (seeding)
     Status: Success
-    Started: 2026-10-09T17:00:38.105126
+    Started: …
     Artifacts: 9
     Report written to: report.html
       Removed: file/customer
@@ -320,7 +320,7 @@ pip install --quiet --no-deps --find-links wheels wheels/sqllocks_shape-*.whl \
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    sqllocks_shape-0.9.1-py3-none-any.whl  2,794,739 bytes
+    sqllocks_shape-0.9.1-py3-none-any.whl  …
     checks passed: tag py3-none-any, < 28,600,000 bytes, no compiled code, RECORD valid
     ```
 

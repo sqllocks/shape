@@ -26,7 +26,7 @@ jobs:
       - name: Block release documentation with unresolved owner notes
         if: github.ref_type == 'tag'
         run: python scripts/check_docs_owners.py --release
-      - run: pytest -q -n 3 -o tmp_path_retention_policy=failed tests/docs/test_launch_tutorials.py tests/docs/test_launch_api.py tests/docs/test_launch_site.py tests/docs/test_reference_examples.py tests/docs/test_owner_notes.py tests/docs/test_brand.py
+      - run: pytest -q -n 3 -o tmp_path_retention_policy=failed tests/docs/test_launch_tutorials.py tests/docs/test_launch_api.py tests/docs/test_launch_site.py tests/docs/test_reference_examples.py tests/docs/test_owner_notes.py tests/docs/test_brand.py tests/docs/test_transcripts.py
       - run: mkdocs build --strict
       - run: python scripts/check_doc_links.py --site site
       - run: python scripts/check_user_facing.py --site site
