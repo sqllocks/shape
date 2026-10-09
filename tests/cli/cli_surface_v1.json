@@ -2291,9 +2291,17 @@
      "choices": null,
      "takes_value": false
     },
+    "--header": {
+     "choices": null,
+     "takes_value": true
+    },
     "--json": {
      "choices": null,
      "takes_value": false
+    },
+    "--key": {
+     "choices": null,
+     "takes_value": true
     },
     "--keytab": {
      "choices": null,
@@ -2418,6 +2426,14 @@
      "choices": null,
      "takes_value": true
     },
+    "--partition": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--partition-key": {
+     "choices": null,
+     "takes_value": true
+    },
     "--path-template": {
      "choices": null,
      "takes_value": true
@@ -2515,6 +2531,13 @@
     },
     "--tenant-id": {
      "choices": null,
+     "takes_value": true
+    },
+    "--timestamp": {
+     "choices": [
+      "broker",
+      "event_time"
+     ],
      "takes_value": true
     },
     "--to": {
@@ -6157,9 +6180,17 @@
      "choices": null,
      "takes_value": false
     },
+    "--header": {
+     "choices": null,
+     "takes_value": true
+    },
     "--json": {
      "choices": null,
      "takes_value": false
+    },
+    "--key": {
+     "choices": null,
+     "takes_value": true
     },
     "--keytab": {
      "choices": null,
@@ -6284,6 +6315,14 @@
      "choices": null,
      "takes_value": true
     },
+    "--partition": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--partition-key": {
+     "choices": null,
+     "takes_value": true
+    },
     "--path-template": {
      "choices": null,
      "takes_value": true
@@ -6381,6 +6420,13 @@
     },
     "--tenant-id": {
      "choices": null,
+     "takes_value": true
+    },
+    "--timestamp": {
+     "choices": [
+      "broker",
+      "event_time"
+     ],
      "takes_value": true
     },
     "--to": {
@@ -6563,6 +6609,18 @@
     "--windows": {
      "choices": null,
      "takes_value": true
+    },
+    "--with-headers": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--with-key": {
+     "choices": null,
+     "takes_value": false
+    },
+    "--with-timestamp": {
+     "choices": null,
+     "takes_value": false
     },
     "-o": {
      "choices": null,
