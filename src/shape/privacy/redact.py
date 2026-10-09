@@ -154,12 +154,13 @@ def _redact_column(
     k: int,
     classified: bool,
     row_count: int,
+    sampled_rows: int,
     previous: Mapping[str, Any],
 ) -> _ColumnResult:
     c = copy.deepcopy(dict(col))
     dtype = str(c.get("dtype"))
     cardinality = int(c.get("cardinality") or 0)
-    base = non_null_base(row_count, c.get("null_count"), c.get("null_rate") or 0.0)
+    base = non_null_base(sampled_rows, c.get("null_count"), c.get("null_rate") or 0.0)
     pii = pii_gate_reason(c.get("pattern"), cardinality, row_count, _GATE, _column_rates(c))
     reason = "classification" if classified else pii
     sensitive = reason is not None
@@ -431,7 +432,10 @@ def redact_profile(profile: Any, config: CaptureConfig | None = None) -> Any:
     multivariate_removed = False
     manifest_tables: dict[str, Any] = {}
     for tname, table in tables.items():
-        row_count = int(table.get("sampled_rows", table.get("row_count")) or 0)
+        row_count = int(table.get("row_count") or 0)
+        # Sample support controls category disclosure, not the existing population-based
+        # sensitivity classification. Keeping those separate preserves source round trips.
+        sampled_rows = int(table.get("sampled_rows", row_count) or 0)
         sensitive: set[str] = set()
         entries: dict[str, Any] = {}
         columns: dict[str, Any] = {}
@@ -442,6 +446,7 @@ def redact_profile(profile: Any, config: CaptureConfig | None = None) -> Any:
                 k=column_k.get((tname, cname), cfg.k),
                 classified=declared is not None and cfg.is_sensitive_label(declared),
                 row_count=row_count,
+                sampled_rows=sampled_rows,
                 previous=before.get(tname, {}).get(cname, {}),
             )
             columns[cname] = result.column
