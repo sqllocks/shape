@@ -135,3 +135,16 @@
 .md-search-result .md-search-result__article mark, .md-search-result mark {
   color: var(--shape-link-ink);
 }
+@media (max-width: 600px) {
+  .md-typeset pre.shape-home-flow {
+    margin-left: 0;
+    margin-right: 0;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  .md-typeset pre.shape-home-flow > svg {
+    width: var(--shape-flow-width);
+    max-width: none !important;
+    height: auto;
+  }
+}

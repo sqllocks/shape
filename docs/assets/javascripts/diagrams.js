@@ -30,6 +30,13 @@
         if (!sources.has(block)) sources.set(block, block.textContent);
         const { svg } = await mermaid.render(`shape-diagram-${index}`, sources.get(block));
         block.innerHTML = svg;
+        if (sources.get(block).includes("A[Your data] --> P[Profile]")) {
+          block.classList.add("shape-home-flow");
+          block.style.setProperty("--shape-flow-width", `${block.querySelector("svg").viewBox.baseVal.width}px`);
+          block.tabIndex = 0;
+          block.setAttribute("role", "region");
+          block.setAttribute("aria-label", "Profile, check, diff and generate workflow");
+        }
       }
     } finally {
       running = false;
