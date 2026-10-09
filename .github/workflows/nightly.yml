@@ -228,7 +228,26 @@ jobs:
       - run: python -m pytest -m emulator plugins/shape-fabric/tests/test_emulator.py plugins/shape-fabric/tests/test_kusto_emulator.py -q
       - name: Kusto diagnostics after a failed emulator test
         if: failure()
-        run: docker compose -f ci/emulators/docker-compose.yml logs --no-color kusto
+        run: |
+          docker compose -f ci/emulators/docker-compose.yml logs --no-color kusto
+          docker compose -f ci/emulators/docker-compose.yml ps -a
+          docker inspect --format '{{json .State}}' "$(docker compose -f ci/emulators/docker-compose.yml ps -a -q kusto)"
+          docker stats --no-stream
+          python - <<'PY'
+          import json
+          import urllib.request
+
+          # Startup stdout does not show whether a table survived or its streaming policy.
+          for command in (".show tables", ".show database NetDefaultDB schema as json"):
+              print(command, flush=True)
+              request = urllib.request.Request(
+                  "http://localhost:8080/v1/rest/mgmt",
+                  data=json.dumps({"db": "NetDefaultDB", "csl": command}).encode(),
+                  headers={"Content-Type": "application/json"},
+              )
+              with urllib.request.urlopen(request, timeout=60) as response:
+                  print(response.status, response.read().decode())
+          PY
       - if: always()
         run: docker compose -f ci/emulators/docker-compose.yml down -v
   emit-live:

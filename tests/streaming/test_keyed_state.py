@@ -372,7 +372,7 @@ def test_snapshot_restore_continues_exactly():
 # ------------------------------------------------------------- at scale
 
 _SCALE = """
-import sys, time
+import json, sys, time
 import numpy as np
 from shape.streaming.dedupe import Deduplicator
 from shape.streaming.keyed import KeyedSketches
@@ -400,6 +400,19 @@ checkpoint = int(sys.argv[4])
 rng = np.random.default_rng(7)
 sketches = KeyedSketches(max_keys=keys + keys // 8, ttl=float(keys))  # TTL in event-time seconds
 dedupe = Deduplicator(max_keys=keys + keys // 8)
+
+def state_bytes():
+    return json.dumps({
+        "events": done,
+        "live": len(sketches),
+        "held": len(dedupe),
+        "sketch_arrays": sketches.nbytes,
+        "dedupe_arrays": dedupe.nbytes,
+        "index": sys.getsizeof(sketches._index),
+        "free_slots": len(sketches._free),
+        "free_list": sys.getsizeof(sketches._free),
+    })
+
 done, at_checkpoint, kept = 0, None, 0
 while done < events:
     n = min(batch, events - done)
@@ -410,6 +423,8 @@ while done < events:
     done += n
     if at_checkpoint is None and done >= checkpoint:
         at_checkpoint = peak_rss()
+        print("checkpoint state: " + state_bytes(), file=sys.stderr)
+print("final state: " + state_bytes(), file=sys.stderr)
 print(at_checkpoint, peak_rss(), len(sketches), len(dedupe), kept)
 """
 
@@ -425,5 +440,5 @@ def test_memory_does_not_grow_after_ten_million_events():
         check=True,
     )
     at_ten_million, final, live, held, kept = (int(x) for x in r.stdout.split())
-    assert final <= at_ten_million * 1.10, (at_ten_million, final)
+    assert final <= at_ten_million * 1.10, (at_ten_million, final, r.stderr)
     assert live <= 1_125_000 and held <= 1_125_000 and 0 < kept <= 10**6
