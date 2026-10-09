@@ -264,3 +264,12 @@ Its bundle hash and source archive are in `docs/assets/javascripts/mermaid-prove
 The Mermaid and installed dependency licence notices are preserved in
 `docs/assets/javascripts/MERMAID_NOTICES.txt`. `scripts/vendor_docs_diagrams.py` regenerates
 these assets from an install of the pinned package. No CDN request is needed to render diagrams.
+
+## Documentation fonts
+
+The documentation site bundles these fonts locally. It does not request fonts from an external service.
+
+| Font | Copyright | Licence | Bundled notice |
+|---|---|---|---|
+| Host Grotesk | Copyright 2023 The Host Grotesk Project Authors | SIL Open Font License 1.1 | `docs/assets/fonts/host-grotesk-OFL.txt` |
+| Fragment Mono | Copyright 2022 The Fragment-Mono Project Authors | SIL Open Font License 1.1 | `docs/assets/fonts/fragment-mono-OFL.txt` |
