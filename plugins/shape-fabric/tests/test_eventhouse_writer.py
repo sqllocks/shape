@@ -51,6 +51,40 @@ def test_append_truncate_replace(batches):
     assert len(kusto.by_table["fresh"]) == 7
 
 
+def test_table_management_waits_for_sealing_without_extending_ingestion_or_queries(batches):
+    import json
+
+    kusto = FakeKusto()
+    ordinary_limits = []
+
+    def transport(method, url, headers, body, timeout):
+        command = json.loads(body).get("csl", "") if url.endswith("/mgmt") else ""
+        if (
+            command.startswith(".clear table ") and command.endswith(" data")
+        ) or command.startswith(".drop table "):
+            # The real emulator completed this command after 104.7 seconds. A short
+            # transport deadline must fail before the replacement rows are accepted.
+            if timeout < 105:
+                raise ConnectionError("streamed rows are still being sealed")
+        elif not url.endswith("/mgmt"):
+            ordinary_limits.append(timeout)
+        return kusto(method, url, headers, body, timeout)
+
+    writer = EventhouseWriter(URI, transport=transport, timeout=0.5)
+    writer.write_table("t", batches)
+    writer.write_table("t", batches[:1], write_mode="truncate")
+    assert writer.row_count("t") == 4
+    writer.write_table("t", batches, write_mode="replace")
+    assert writer.row_count("t") == 7
+    assert ordinary_limits and set(ordinary_limits) == {0.5}
+
+    short_writer = EventhouseWriter(URI, transport=transport, timeout=0.5, management_timeout=1)
+    with pytest.raises(WriteError, match="after 0 accepted request.*still being sealed"):
+        short_writer.write_table("t", batches, write_mode="truncate")
+    assert short_writer.client.accepted == 0
+    assert short_writer.row_count("t") == 7
+
+
 def test_requests_are_split_under_the_size_limit_and_counted(batches):
     w, kusto = make()
     assert w.write_table("t", [sample_batch(0, 50)], max_request_bytes=3000) == 50

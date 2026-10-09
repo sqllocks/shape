@@ -11,6 +11,9 @@ columns); the writer sends a table's own columns, as they are.
 **Write modes** (``write_mode``): ``create`` (the default; an existing KQL table is an error),
 ``append`` (the table is created when missing and new columns are merged in), ``truncate``
 (``.clear table ... data``, then add) and ``replace`` (drop and create again).
+Truncate and replace can wait for the service to seal streamed rows before clearing or
+dropping them. ``management_timeout`` defaults to 600 seconds; ingestion and queries use
+``timeout`` (100 seconds).
 
 Streaming ingestion has no transactions: when a write fails part way, the rows of the requests
 that were accepted stay in the table, and the error says how many requests had been made. It
@@ -57,6 +60,7 @@ class EventhouseWriter:
         busy_retries: int = 6,
         timeout: float = 100.0,
         ready_timeout: float = 120.0,
+        management_timeout: float = 600.0,
     ) -> None:
         self.target: EventhouseTarget = parse_uri(uri)
         self.client = KustoClient(
@@ -67,6 +71,7 @@ class EventhouseWriter:
             busy_retries=busy_retries,
             timeout=timeout,
             ready_timeout=ready_timeout,
+            management_timeout=management_timeout,
         )
 
     @property

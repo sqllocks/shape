@@ -220,6 +220,7 @@ class KustoClient:
         busy_retries: int = 6,
         timeout: float = 100.0,
         ready_timeout: float = 120.0,
+        management_timeout: float | None = None,
     ) -> None:
         self.target = target
         self._token = token
@@ -228,6 +229,7 @@ class KustoClient:
         self.busy_retries = busy_retries
         self.timeout = timeout
         self.ready_timeout = ready_timeout
+        self.management_timeout = management_timeout
         self._warm: set[str] = set()  # tables that have accepted a request
         self._prepared: set[tuple[str, str]] = set()
         self.accepted = 0  # ingestion requests the service has accepted, over the client's life
@@ -239,12 +241,18 @@ class KustoClient:
             headers["Authorization"] = f"Bearer {bearer}"
         return headers
 
-    def _call(self, method: str, url: str, content_type: str, body: bytes) -> bytes:
+    def _call(
+        self, method: str, url: str, content_type: str, body: bytes, *, timeout: float | None = None
+    ) -> bytes:
         pause = self._busy_pause
         attempt = 0
         while True:
             status, resp_headers, data = self._transport(
-                method, url, self._headers(content_type), body, self.timeout
+                method,
+                url,
+                self._headers(content_type),
+                body,
+                self.timeout if timeout is None else timeout,
             )
             if status < 300:
                 return data
@@ -263,17 +271,23 @@ class KustoClient:
             else:
                 raise ShapeError(f"eventhouse: request refused ({status}): {text}")
 
-    def _json_call(self, path: str, csl: str) -> Any:
+    def _json_call(self, path: str, csl: str, *, timeout: float | None = None) -> Any:
         body = json.dumps({"db": self.target.database, "csl": csl}).encode("utf-8")
-        data = self._call("POST", f"{self.target.base}{path}", "application/json", body)
+        data = self._call(
+            "POST", f"{self.target.base}{path}", "application/json", body, timeout=timeout
+        )
         try:
             return json.loads(data or b"{}")
         except ValueError:
             return {}
 
-    def mgmt(self, csl: str) -> Any:
-        """Run a management command (``.create table ...``)."""
-        return self._json_call("/v1/rest/mgmt", csl)
+    def mgmt(self, csl: str, *, timeout: float | None = None) -> Any:
+        """Run a management command, optionally allowing for a longer service operation."""
+        return self._json_call(
+            "/v1/rest/mgmt",
+            csl,
+            timeout=self.management_timeout if timeout is None else timeout,
+        )
 
     def query(self, csl: str) -> list[list[Any]]:
         """The rows of the first table of a query's answer."""

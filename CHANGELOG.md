@@ -13,6 +13,8 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Fabric setup reports portable source paths, and Synapse derives table labels from Windows paths.
 - Eventhouse emitters and writers synchronize streaming schema caches before ingesting into
   newly created or changed tables.
+- Eventhouse truncate and replace wait for streamed rows to be sealed, using a
+  configurable command timeout instead of the shorter ingestion timeout.
 
 ## Unreleased
 
