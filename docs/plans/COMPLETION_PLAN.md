@@ -2216,6 +2216,7 @@ Work packages are listed in execution order. The next work package is the first 
 | 172 | W9-14 | todo | Issue #15 (platform coverage II, 2026-10-08). |
 | 173 | W9-15 | todo | Issue #16 (platform coverage II, 2026-10-08). |
 | 174 | W9-16 | todo | Issue #17 (platform coverage II, 2026-10-08). |
+| 175 | REL-091 | todo | Issue #19 (release 0.9.1 readiness, 2026-10-09). |
 
 | Gate | Status |
 |---|---|
@@ -2772,6 +2773,7 @@ The owner delegated decisions to the lead on 2026-10-03 (§2.3). These work pack
 | W9-14 | #15 | Amazon Redshift sink and source: S3-staged Parquet `COPY`, IAM or password sign-in, whole-schema profiles | W9-01 |
 | W9-15 | #16 | Oracle Database sink and source: thin-mode array DML, Oracle's empty-string rule, whole-schema profiles | W9-01 |
 | W9-16 | #17 | Apache Iceberg sink and source beside Delta: local SQL catalog and named catalogs, transforms, time travel, native nested types | W8-07 |
+| REL-091 | #19 | Make 0.9.1 releasable: root cause and fix for each of the 14 CI and Nightly jobs failing on main 7f700d3 | none |
 
 P6-11 (`shape bridge`) is specified further by issue #56; its `demo_*` commands follow P6-12 and the rest start now (owner standing instruction: whatever can run in parallel, do).
 
