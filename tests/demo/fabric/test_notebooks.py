@@ -340,7 +340,7 @@ def spark_tables(spark, lakehouse):
         spark.sql(f"DROP TABLE IF EXISTS orders_day{day}")
         spark.sql(
             f"CREATE TABLE orders_day{day} USING DELTA "
-            f"LOCATION '{lakehouse / 'Tables' / f'orders_day{day}'}'"
+            f"LOCATION '{(lakehouse / 'Tables' / f'orders_day{day}').as_uri()}'"
         )
     return lakehouse
 

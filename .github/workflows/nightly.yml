@@ -26,6 +26,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - name: Pinned RefEngine baseline and venv (plan section 1.2)
+        env: {REFENGINE_DEPLOY_KEY: "${{ secrets.REFENGINE_DEPLOY_KEY }}"}
         run: source scripts/env.sh && bash benchmarks/vs_refengine/setup_refengine.sh
       - name: Shape venv (pyarrow pinned like the RefEngine venv, so timings share one pyarrow)
         run: |
@@ -225,6 +226,9 @@ jobs:
       # the Kusto emulator tests: the emitter and the Eventhouse writer (the SQL writer's
       # emulator tests run in sqlserver-e2e)
       - run: python -m pytest -m emulator plugins/shape-fabric/tests/test_emulator.py plugins/shape-fabric/tests/test_kusto_emulator.py -q
+      - name: Kusto diagnostics after a failed emulator test
+        if: failure()
+        run: docker compose -f ci/emulators/docker-compose.yml logs --no-color kusto
       - if: always()
         run: docker compose -f ci/emulators/docker-compose.yml down -v
   emit-live:
@@ -429,8 +433,10 @@ jobs:
       - name: shape seed against the real server (W5-05)
         run: source scripts/env.sh && "$SHAPE_VENV/bin/python" -m pytest -m emulator plugins/shape-fabric/tests/test_seed_sqlserver_emulator.py -q
       - name: Pinned baseline venv (plan section 1.2) with pyodbc
+        env: {REFENGINE_DEPLOY_KEY: "${{ secrets.REFENGINE_DEPLOY_KEY }}"}
         run: |
           source scripts/env.sh && bash benchmarks/vs_refengine/setup_refengine.sh
+          unset REFENGINE_DEPLOY_KEY
           "$REFENGINE_PY" -m pip install pyodbc
       - name: T-22 parity of database profiling on the real server
         run: source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/db_1to1/verify.py --mssql "$SHAPE_TEST_MSSQL;Database=tempdb"
@@ -549,6 +555,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: pip install -e '.[dev]'
+      - run: pip install -e '.[dev]' -e plugins/shape-fabric
       # the Fabric demo and content tests need their own requirements (fabric-demo job)
       - run: python -m pytest -q -m nightly --ignore=tests/demo/fabric --ignore=tests/demo/content

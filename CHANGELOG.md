@@ -3,6 +3,15 @@
 Shape is in **early access**. Profiling is available now; data generation and
 pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
+## 0.9.1
+
+### Fixed
+
+- Safe-profile validation handles JSON row counts larger than a floating-point number without
+  crashing, while retaining the minimum cohort check.
+- Bounded CSV profiling avoids CPU-scaled decoded read-ahead buffers.
+- Fabric setup reports portable source paths, and Synapse derives table labels from Windows paths.
+
 ## Unreleased
 
 - `shape share-bundle verify` bounds every member of a bundle before reading it (#684): at most

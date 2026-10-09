@@ -261,6 +261,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - name: Pinned RefEngine baseline and venv (plan section 1.2)
+        env: {REFENGINE_DEPLOY_KEY: "${{ secrets.REFENGINE_DEPLOY_KEY }}"}
         run: source scripts/env.sh && bash benchmarks/vs_refengine/setup_refengine.sh
       - name: Shape venv (pyarrow pinned like the RefEngine venv)
         run: |
@@ -268,6 +269,8 @@ jobs:
           python -m venv "$SHAPE_VENV"
           "$SHAPE_VENV/bin/pip" install -U pip
           "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains 'pyarrow==25.0.1'
+      - name: Reference SSH setup contract (the setup runs on Linux)
+        run: source scripts/env.sh && "$SHAPE_VENV/bin/python" -m pytest -q benchmarks/vs_refengine/tests/test_setup_refengine.py
       - run: source scripts/env.sh && python benchmarks/vs_refengine/check_coverage.py
       # P6-01e: the committed baseline fixtures (schemas, plans, composites) still equal the pinned
       # baseline's output, and every domain and composite has the baseline's row counts at every scale.

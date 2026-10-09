@@ -169,7 +169,7 @@ for f in files:
         schema_mode="overwrite",
         storage_options=STORAGE_OPTIONS,
     )
-    created.append({"table": name, "rows": table.num_rows, "source": str(f.relative_to(DEMO_DIR))})
+    created.append({"table": name, "rows": table.num_rows, "source": f.relative_to(DEMO_DIR).as_posix()})
 
 for row in created:
     print(f"{row['table']:<32} {row['rows']:>10,} rows   <- {row['source']}")

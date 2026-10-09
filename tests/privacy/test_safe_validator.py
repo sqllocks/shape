@@ -155,3 +155,26 @@ def test_exports_validate_clean_for_every_variant(orders):
 
     for cfg in (SafeConfig(), SafeConfig(k=11), SafeConfig(columns={"status": ColumnConfig(k=3)})):
         assert not rules(to_safe_profile(orders, cfg).to_dict())
+
+
+@pytest.mark.parametrize("finding", sorted((HERE.parent / "fixtures" / "REL-091").glob("*.json")))
+def test_rel091_fuzz_row_counts_do_not_overflow(finding):
+    result = SafeProfileValidator().validate_file(finding)
+    assert result.is_clean
+
+
+@pytest.mark.parametrize("rows", [0, 1, 4, 5, 10**400])
+@pytest.mark.parametrize("rate", [0.0, 0.5, 1.0])
+def test_rel091_cohort_threshold_with_large_counts(rows, rate):
+    from fractions import Fraction
+
+    doc = {
+        "schema_version": 1,
+        "unsafe": False,
+        "tables": {"t": {"row_count": rows, "columns": {"x": {"null_rate": rate, "mean": 3}}}},
+    }
+    found = rules(doc)
+    assert ("row-count-missing" in found) == (rows == 0)
+    assert ("small-cohort-statistic" in found) == (
+        rows > 0 and rows - round(Fraction(rate) * rows) < 5
+    )

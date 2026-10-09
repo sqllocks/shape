@@ -32,6 +32,7 @@ def _record(kind: str, **extra) -> dict:
 
 def _offline(monkeypatch, tmp_path: Path) -> None:
     """Point the driver at existing stand-in paths and stub every subprocess step."""
+    monkeypatch.setenv("REFENGINE_NAME", "fixture")
     fake = tmp_path / "fake"
     (fake / run._refpkg.PACKAGE).mkdir(parents=True)
     (fake / "python").write_text("")

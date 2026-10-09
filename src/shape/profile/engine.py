@@ -135,7 +135,9 @@ def profile_table(
     if csv is None and opts.mode == "bounded":
         # bounded memory: never read a whole CSV at once, and keep the read-ahead small (with
         # the default 16 MiB blocks Arrow's read-ahead buffers made peak RSS creep up with size)
-        csv = CsvOptions(stream=True, block_size=_BOUNDED_CSV_BLOCK)
+        # Arrow otherwise reads ahead one decoded block per CPU thread. Keep only
+        # the current decoded block so allocator retention cannot grow with the file.
+        csv = CsvOptions(stream=True, block_size=_BOUNDED_CSV_BLOCK, use_threads=False)
     src = open_source(source, name=name, batch_size=opts.batch_size, csv=csv)
     state = get_kernel().ProfileState(src.schema, opts.mode)
     pool = pa.default_memory_pool()
