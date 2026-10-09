@@ -5,7 +5,9 @@
 **Shape by SQLLocks** — Shape as Code: a portable, executable description of how
 data behaves, not merely its schema.
 
-> **Early access 0.9.1.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
+> **Early access 0.9.1.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available.
+>
+> This release ships seeded domain generation, generation from profiles, file sinks for CSV, Parquet and JSONL, and plugins for dbt, databases, Fabric and streaming. Database sinks write to PostgreSQL, MySQL, DuckDB, Snowflake and Databricks.
 
 Install with `pip install "sqllocks-shape[domains]"`. Python imports use `import shape`, the
 command is `shape`, and artifacts use the `.shape` extension.

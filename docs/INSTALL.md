@@ -172,7 +172,7 @@ pip install --quiet --no-deps --find-links wheels wheels/sqllocks_shape-*.whl \
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    sqllocks_shape-0.9.1-py3-none-any.whl  2,794,499 bytes
+    sqllocks_shape-0.9.1-py3-none-any.whl  2,794,588 bytes
     checks passed: tag py3-none-any, < 28,600,000 bytes, no compiled code, RECORD valid
     ```
 
