@@ -1,16 +1,16 @@
 # Emitting events: `shape emit`
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 `shape emit` turns a domain (or a generation schema file) into a stream of events: the same rows
 `shape generate` writes (same schema, seed and scale), one JSON object per line, in a
 deterministic order. The runtime is `shape.streaming.emit`; sinks for Kafka, Event Hubs and
 Fabric come from emitter plugins (`shape.emitters`).
 
-```bash
-shape emit retail --scale small --max-events 5                       # events on standard output
-shape emit retail --realtime --rate 10000 --duration 60 --sink file -o events.jsonl
-shape emit retail --realtime --rate 500 --burst 30:10:4 --out-of-order 0.05 \
-      --anomaly-fraction 0.01 --sink file -o events.jsonl
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 ## `shape stream`: one table in event-time order
 
@@ -29,11 +29,7 @@ checkpoint and live fidelity; `shape stream` differs only in the shape of the st
 | short flags | none | `-t` (`--table`), `-s` (`--scale`), `-m` (`--mode`) |
 | delivery batch (not paced) | 1,000 events | 32,768 events |
 
-```bash
-shape stream retail --table order --scale medium --no-realtime --sink file -o orders.jsonl
-shape stream retail -t order -s small --max-events 1000          # the 1,000 earliest orders
-shape stream retail -t order --realtime --rate 500 --burst 30:10:4 --sink file -o orders.jsonl
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `_shape_seq` is still the row's position in the table (so the idempotency key is the same as in
 `shape emit`), which makes the sequence of `_shape_seq` values of a time-ordered stream a permutation
@@ -108,7 +104,7 @@ whole once, so its rows equal `shape generate`'s; the others are read chunk by c
   the events delivered over any window equal the integral of the rate over it, within one event
   (tested over windows spanning days, with ramps, bursts and a curve together).
 * `--speed 60x` (a virtual clock, instead of `--realtime`): pace by the events' **event time**, 60
-  times faster than the clock, so a day of events replays in 24 minutes. An event stamped `t`
+  times the clock rate, so a day of events replays in 24 minutes. An event stamped `t`
   seconds after the first is due `t / 60` seconds after the start; an event that is earlier than
   one already sent (`--out-of-order`) goes at once. It needs events with a date or timestamp
   column, so it is meant for `shape stream`, which delivers one table in time order. The report
@@ -251,14 +247,7 @@ big-endian schema id, then the payload (Protobuf adds the message-index list `[0
 as Confluent's serializers do). The message key stays `<table>/<seq>` (D-12) and the headers are
 unchanged. Only `kafka://` takes a registry format: any other target refuses it (exit 2).
 
-```
-pip install 'sqllocks-shape-kafka[avro]'        # or [protobuf]; json-schema needs no extra
-shape emit retail --table order_line --sink kafka://broker:9092/orders \
-    --event-format avro \
-    --sink-config kafka.schema_registry_url=https://registry.example:8081 \
-    --sink-config kafka.schema_registry_username=svc \
-    --sink-config kafka.schema_registry_password=env://REGISTRY_PASSWORD
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 | `--sink-config` key | meaning |
 |---|---|
@@ -337,10 +326,7 @@ and delivered plus dead-lettered events are the stream, each once.
 `shape emit` and `shape stream` take the plan of `shape generate-drift` (`docs/DRIFT.md`) and plant
 its drift in the stream, day by day:
 
-```
-shape emit retail --drift-plan plan.json --rows customer=500 --rows order=2000 \
-    --sink kafka://broker:9092/orders --realtime --day-seconds 60 --answer-key key.jsonl
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 * **Day d is generated from `plan.schema_at(schema, d)` with seed + d**, exactly as `shape
   generate-drift` does, so for the same `--rows TABLE=N` the event values of day d equal that day's
@@ -375,12 +361,7 @@ generate --drift-plan` (the Excel workbook README) is unchanged.
 
 `--dry-run` resolves everything a run would use and prints it, then exits without starting:
 
-```
-shape emit retail --table order_line --realtime --rate 200 --burst 30:10:4 \
-    --sink kafka://broker:9092/orders --dead-letter file:///dlq.jsonl \
-    --checkpoint ck.json --dry-run            # text
-shape emit ... --dry-run --json                # {"format": "shape-dry-run", ..., "plan": {"format": "shape-emit-plan", ...}}
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 It prints: the target and its schema (name, seed, scale), the tables with their row counts and the
 event total; each destination (`--sink`, every `--to`, `--dead-letter`) with its kind, scheme, the
@@ -443,11 +424,7 @@ and raises an alert when the score drifts. The score is the one `shape fidelity`
 (`docs/FIDELITY.md`): at any moment the live score is `shape fidelity` of the target against the
 events delivered so far, computed without keeping the events.
 
-```bash
-shape emit retail --scale medium --sink file -o events.jsonl \
-      --live-target retail --live-alerts alerts.jsonl --live-report live.json
-shape emit retail --scale medium --anomaly-fraction 0.05 --live-target retail --live-fail --sink file -o e.jsonl
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 What it is made of: a tee (`shape.streaming.emit.live.TeeSink`) sits in front of the sink. An event
 reaches the tee only after the sink's `send` returned, so a batch the runtime retries is counted
@@ -512,10 +489,8 @@ profiler's bounded profile of each table, JSON). `--json` adds a `live` object t
 
 ### Overhead
 
-The tee costs CPU on the thread that feeds it and on the stream profiler. `--no-live-profile` leaves
-the profiler out. The measured events per second with and without the tee are in
-`docs/plans/evidence/P5-03/live_fidelity.json` (`benchmarks/live_fidelity/run.py`, section
-`overhead`); the numbers are summarised in `docs/plans/lane_status/P5-03.md`.
+The tee profiles events on the feeding thread. The no-live-profile option disables that work.
+[Owner: performance maintainer — publish only committed, machine-labelled overhead measurements.]
 
 ## Limits
 

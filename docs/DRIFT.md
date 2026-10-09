@@ -1,5 +1,10 @@
 # Drift: `shape diff`, `ShapeMonitor` and planted drift
 
+Status: available.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 One engine answers "did the data change?": `shape.drift.engine`. `shape.diff` (two profiles),
 `shape.drift.compare` (Shape models and captures), `ShapeMonitor` (rows arriving in a stream),
 `ShapeTimeline.changes` and the stream profiler's windows all use its rules and thresholds, so the
@@ -15,9 +20,7 @@ d.semver             # {"bump": "major", "breaking": 1, "additive": 0, "cosmetic
 d.not_evaluable      # [{column, kind, captured_safe, reason}, ...]
 ```
 
-```
-shape diff baseline.shape today.shape --fail-on-drift --ignore order_id --null-rate 0.02
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 A change is reported only when it passes its threshold, so a stable column produces no record.
 `severity` is fixed per kind. `score` is the size of the change from 0 to 1: a structural change
@@ -220,14 +223,7 @@ a `severity` entry that still counts is counted at its class. `--version-from X.
 `semver.next_version(version, bump)`) adds `semver.next_version`: `2.0.0`, `1.5.0`, `1.4.3` and
 `1.4.2` for the four bumps of `1.4.2`.
 
-```
-$ shape diff base.shape today.shape --fail-on breaking --version-from 1.4.2
-shape: status: column_removed [breaking]
-shape: tier: column_added [additive]
-shape: amount: mean_shift [cosmetic]
-version: 2.0.0
-bump: major (1 breaking, 1 additive, 1 cosmetic)
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 **Failing on a class.** `shape diff --fail-on breaking|additive|cosmetic` (and
 `shape.diff(..., fail_on=...)`, which sets `DiffResult.failed`) fails when an unplanned change of
@@ -308,16 +304,7 @@ shape.diff(
   contract may carry the same object as `"drift"`, so a team keeps one policy file:
   `shape diff a.shape b.shape --policy contract.json`. `shape check` ignores the `drift` key.
 
-```
-shape diff BASE.shape CURRENT.shape
-    [--null-rate X] [--cardinality-ratio-max X] [--cardinality-ratio-min X]
-    [--mean-shift-std X] [--min-severity low|medium|high]
-    [--threshold KEY=VALUE]...           any threshold by name, e.g. category_tvd=0.2
-    [--column-threshold COLUMN:KEY=VALUE]...
-    [--ignore COL1,COL2] [--only COL1,COL2] [--policy POLICY.json]
-    [--json RESULT.json] [--fail-on-drift] [--fail-on breaking|additive|cosmetic]
-    [--version-from X.Y.Z]
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 On a terminal, a change's `baseline` and `current` lists (or mappings) of more than 20 entries
 show their first 20, and `values_omitted` says how many were left out on each side; piped or
@@ -402,9 +389,7 @@ name the table already has, raise `ShapeError` naming both the column and the ne
 day (not only from the start day). Events on a renamed column must use the name it has on their
 days. With `end` the rename is a window and the old name returns.
 
-```
-shape generate-drift orders.gen.json plan.json -o feed/ --rows orders=4000 --format parquet
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 writes `feed/<date>/<table>.parquet`, `feed/_specs/<date>.json` (that day's schema) and
 `feed/ground_truth.json`. A plan may declare `"format": "shape-drift-plan"` and `"version": 1`;

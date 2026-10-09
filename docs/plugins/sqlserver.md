@@ -1,15 +1,17 @@
 # SQL Server, Azure SQL and Fabric SQL (`shape-sqlserver`)
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 `sqllocks-shape-sqlserver` profiles a relational database and reads its tables. It talks to
 SQL Server 2016 and later, Azure SQL Database, Azure SQL Managed Instance, Fabric Warehouse and
 Fabric SQL database through `pyodbc`.
 
 ## Install
 
-```bash
-pip install 'sqllocks-shape[sqlserver]'         # the plugin and pyodbc
-pip install 'sqllocks-shape-sqlserver[entra]'   # adds azure-identity for --auth cli|msi|spn
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 `pyodbc` needs the **Microsoft ODBC Driver 18 for SQL Server** (and unixODBC on Linux).
 Nothing is imported until a connection is opened, so `shape plugins doctor` is clean without
@@ -17,10 +19,7 @@ them. `shape plugins list` shows `shape.sources:mssql` and `shape.commands:profi
 
 ## Profile a database
 
-```bash
-shape profile-db --server myserver.database.windows.net --database shop \
-    --schema dbo --sample-rows 1000 -o shop.shape --json shop-summary.json
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 | Option | Meaning |
 |---|---|
@@ -79,13 +78,10 @@ its start. The choice is deterministic: the same data gives the same rows on eve
   table. Hash collisions are settled by the key; on a heap two different rows with the same
   hash at the cut-off could in principle be picked differently from run to run, which is
   vanishingly rare.
-- **Cost.** One full scan of the table per profiled table, plus a top-n sort that keeps only n
-  rows in memory (nothing spills). Measured on SQL Server 2022 in a container, a 5-million-row
-  table with a primary key took about 3 seconds against 4 milliseconds for the first n rows;
-  it grows linearly with the table. Only `CHECKSUM`, `CAST`, `ORDER BY` and `TOP` are used, plain T-SQL
-  that SQL Server 2019 and later and Azure SQL are documented to support; it was tested on
-  SQL Server 2022. Azure SQL and Fabric SQL were not available to test here: if a server rejects the query, the table's first n rows are read instead, a warning is
-  logged, and the profile says so (`sample_method`, below).
+- **Cost.** The sampling query scans the table and uses a top-n sort. The reader constructs
+  the query with `CHECKSUM`, `CAST`, `ORDER BY` and `TOP`. If the server rejects it, the reader
+  falls back to the first n rows, logs a warning and records the sampling method.
+  [Owner: SQL adapter maintainer — commit machine-labelled measurements before publishing costs.]
 - Other ways were rejected: `TABLESAMPLE` samples whole pages, so a table of few pages is
   sampled coarsely and the rows depend on page layout rather than on the data alone;
   `ORDER BY NEWID()` is not repeatable. There is no seed: the rows follow from the data alone.

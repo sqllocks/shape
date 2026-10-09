@@ -1,21 +1,16 @@
-# Shape by SQLLocks — naming contract
+# Project names
 
-The product name is **Shape** and the publisher/community identity is **SQLLocks**.
+Status: available.
 
-- Product: Shape
-- Public branding: Shape by SQLLocks
-- Core concept: Shape as Code
-- PyPI distribution: `sqllocks-shape`
-- Python import: `shape`
-- CLI executable: `shape`
-- Artifact extension: `.shape`
-- GitHub repository: `sqllocks/shape`
-- Hosted control plane: Shape Hub
-- Web experience: Shape Studio
-- Package/domain ecosystem: Shape Packs
+The product is Shape by SQLLocks. The Python distribution is `sqllocks-shape`,
+the Python import is `shape`, the command is `shape` and the artifact extension is `.shape`.
+The source repository is [sqllocks/shape](https://github.com/sqllocks/shape).
+The documentation is published at https://docs.shapedata.ai/.
+Use support@shapedata.ai for public contact.
 
-The distribution namespace MUST NOT be confused with the Python import namespace. Installation is `pip install sqllocks-shape`; application code continues to use `import shape`.
+Industry Profile Packs are coming with Premium, healthcare first:
+[shapedata.ai](https://shapedata.ai/).
 
-## What this repository covers
+## Related
 
-This open-source repository, `sqllocks/shape` (MIT), covers Shape itself: the `sqllocks-shape` distribution, its first-party plugins (`sqllocks-shape-*` built from `plugins/`), the `shape` CLI and the `.shape` format. Shape Hub and Shape Studio are product names in the Shape family that are not built from this repository, and this repository does not depend on them. Shape Packs is the package and domain ecosystem: it includes the open first-party plugins in this repository and packs published separately through the public plugin entry points.
+[Install](INSTALL.md) · [Concepts](CONCEPTS.md)

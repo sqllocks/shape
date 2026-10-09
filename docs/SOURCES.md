@@ -1,5 +1,8 @@
 # File sources
 
+Status: available.
+
+
 A source turns a file or URI into Arrow record batches. Every command that reads data (`profile`,
 `check`, `diff`, `generate --from`) goes through them. This page lists the file sources and gives
 the options of the two that read nested documents: `json` and `xml`. The plugin API for writing

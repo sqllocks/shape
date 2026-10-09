@@ -168,9 +168,7 @@ that could not be read under a licence this session.
 The reference data of the `capital_markets`, `education`, `financial`, `healthcare`, `hr`, `insurance`, `iot`, `manufacturing`,
 `marketing`, `real_estate`, `retail`, `supply_chain` and `telecom` domains in `plugins/shape-domains` (names, catalogs,
 exchange and sector lists, index memberships, constituents, code lists, and device, property, shipping and network lists)
-is copied from the reference data of release 3.0.1 (commit 422e78df2267e73bb2fa976267e48cb437861e2f)
-of an earlier SQLLocks data-generation library, which is released under the MIT license with the
-same copyright holder as Shape:
+is distributed under the MIT licence by SQLLocks. The reference-data attribution is:
 
 MIT License. Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). Permission is hereby granted, free
 of charge, to any person obtaining a copy of this software and associated documentation files (the
@@ -234,3 +232,35 @@ datasets below. No source data is shipped. Each profile was built from the file 
 - Licence: Creative Commons Attribution 4.0 International (CC-BY-4.0), https://creativecommons.org/licenses/by/4.0/
 - Retrieved: 2026-10-03
 - Attribution: Aeberhard, S. and Forina, M. (1992). Wine. UCI Machine Learning Repository. https://doi.org/10.24432/C5PC7J. Licensed under CC BY 4.0.
+
+
+## Per-domain reference-data attribution
+
+This table lists the evidence in these notices, not a claim of calibration or upstream research.
+Retain the full licence notices above when redistributing reference data. Domain code can reuse
+reference providers from other domains; those providers keep their own attribution requirements.
+
+| Domain | Source recorded here | Licence | Attribution / missing evidence |
+|---|---|---|---|
+| `capital_markets` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
+| `education` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
+| `financial` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
+| `healthcare` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
+| `hr` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
+| `insurance` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
+| `iot` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
+| `manufacturing` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
+| `marketing` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
+| `real_estate` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
+| `retail` | SQLLocks lists; GeoNames US postal locations | MIT; CC-BY-4.0 | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). Includes GeoNames data licensed under CC-BY-4.0. |
+| `supply_chain` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
+| `telecom` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
+| `pulse` | No bundled reference files in the domain data directory | MIT (schema) | SQLLocks; [Owner: domain maintainer — confirm whether runtime reference providers need additional notices.] |
+
+## Documentation diagrams
+
+The documentation site bundles Mermaid 11.17.2 from the npm distribution under MIT.
+Its bundle hash and source archive are in `docs/assets/javascripts/mermaid-provenance.json`.
+The Mermaid and installed dependency licence notices are preserved in
+`docs/assets/javascripts/MERMAID_NOTICES.txt`. `scripts/vendor_docs_diagrams.py` regenerates
+these assets from an install of the pinned package. No CDN request is needed to render diagrams.

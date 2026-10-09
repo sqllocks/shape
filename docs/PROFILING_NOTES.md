@@ -1,5 +1,10 @@
 # Profiling notes: inputs, odd values and size
 
+Status: available.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 What `shape profile` (and `shape.profile`) does with CSV files, non-finite numbers, decimals, time zones, large
 inputs, sampling and column types. Each statement here has a test in `tests/profile/test_profile_issues.py` or
 `tests/profile/test_audit_profile.py`; the sections on sampling and type inference are tested in
@@ -12,10 +17,7 @@ The delimiter is sniffed from the first 100 rows: comma, semicolon, tab or pipe,
 same number (two or more) of fields (quotes are respected, and a comma wins when it qualifies). Set it when sniffing
 guesses wrong, along with the other reader options:
 
-```bash
-shape profile export.csv -o export.shape --delimiter ';' --encoding latin-1
-shape profile raw.csv -o raw.shape --no-header          # columns are f0, f1, ...
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 ```python
 shape.profile("export.csv", delimiter=";", encoding="latin-1", quotechar="'", header=True)
@@ -53,11 +55,7 @@ A column that only looks like an identifier (a fixed width of five or more digit
 `zip` or `phone` over values of mixed width) stays an integer and `shape profile` warns, naming the columns and the option
 that keeps them as text. The options:
 
-```bash
-shape profile members.csv -o members.shape --string-columns zip,npi        # keep these as text
-shape profile members.csv -o members.shape --types types.json              # {"zip": "string", "amount": "float"}
-shape profile members.csv -o members.shape --infer-types off               # read every column as text
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `shape.profile(path, string_columns=["zip"], types={"amount": "float"}, infer_types="off")` is the same from Python, and
 `shape.io.CsvOptions(string_columns=, column_types=, infer_types=)` for the readers. Types are `string`, `integer`, `float`,
@@ -112,9 +110,7 @@ reaches 0.1% (`SafeConfig.pii_pattern_floor`). See [PRIVACY_MODEL.md](PRIVACY_MO
 For a profile kept per run, write the safe form with `--compact` (one line, no null fields; it reads back the same) and
 pick the columns with `--columns A,B,*_id` or `--exclude 'raw_*'`:
 
-```bash
-shape profile safe daily.shape -o daily.safe.json --compact --exclude 'notes,raw_*'
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 ### Input budget for untrusted files
 
@@ -150,7 +146,7 @@ that columns hold real combinations against a reference file.
 The fields below are **opt-in**: `shape profile --univariate` (`shape.profile(...,
 univariate=True)`) computes them; without it a profile carries none of them and is otherwise the
 same. They add Python work for every numeric column, more than the benchmark gate of the default
-profile allows, so they are not computed by default (`docs/plans/lane_status/INT-18.md`).
+profile allows, so they are not computed by default (the implementation tests).
 
 With it, every numeric column with at least **20 finite values** (integers, floats, and decimals
 read as numbers) gains the fields below, each only where it applies; a text, boolean or date column gains
@@ -381,11 +377,7 @@ states them in each column's card as `mixture: k=2 ...` and `seasonality: period
 A profile says how much of the data it saw. Nothing is sampled unless you ask, and every table's profile records what was
 done, whether you asked or not.
 
-```bash
-shape profile orders.csv -o orders.shape --sample 100000                       # 100,000 rows
-shape profile orders.csv -o orders.shape --sample 10% --sample-method systematic --sample-seed 7
-shape profile data/ --dataset -o shop.shape --sample 20%                       # each table
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 ```python
 shape.profile("orders.csv", sample=100_000)                       # an int is a number of rows

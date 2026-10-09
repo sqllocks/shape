@@ -1,5 +1,10 @@
 # Chaos: deterministic data-quality fault injection
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 `shape.chaos` injects the faults real pipelines meet, on purpose and repeatably, into generated
 data. It has six categories: **schema**, **value**, **file**, **referential**, **temporal** and
 **volume**. A seeded engine decides when each fires; mutators decide what changes.
@@ -53,17 +58,7 @@ The categories below are randomised: a scheduler decides what fires and each mut
 own rows. To corrupt a table in a known way and score a quality check against the answer, use named
 corruptions, each with a rate, and the **ground-truth log** they write.
 
-```
-shape chaos retail --scale small --seed 7 -o corrupted/ \
-    --corrupt duplicates=0.02@order \
-    --corrupt orphan_keys=0.01@order.customer_id \
-    --corrupt date_shift=0.03@order.order_date:days=14 \
-    --corrupt negative_amounts=0.02@order.order_total \
-    --corrupt case_whitespace=0.05@order.status \
-    --corrupt pii_fill=0.05@customer.email \
-    --corrupt type_change=1@order.shipping_address_id \
-    --corrupt null_creep=0.02@order.promotion_id:step=0.01
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 writes the corrupted tables to `corrupted/` and the log to `corrupted/_chaos_ground_truth.jsonl`.
 The tables are generated, or read from `--input DIR` (the files `shape generate` writes); the same

@@ -1,5 +1,10 @@
 # Webhook notifications
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 When a scheduled check finds drift, someone has to know. After `shape diff`, `check`, `verify` or
 `fidelity` has decided its result, Shape can POST one JSON document to a webhook. It is a generic
 webhook: there are no integrations for particular chat or email services; point it at your own
@@ -40,9 +45,7 @@ before.
 For one run, add a target on the command line: `--notify REF` (repeatable) on `diff`, `check`,
 `verify` and `fidelity`. It is sent on every run of that command, on top of the file's targets.
 
-```bash
-shape diff --source orders current.shape --notify env://SHAPE_DRIFT_WEBHOOK
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `shape notify test [--project DIR]` sends a notification with `"verdict": "test"` to **every**
 configured target (whatever its `on` and `commands`), prints which were delivered and exits 1 if any

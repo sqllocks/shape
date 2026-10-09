@@ -1,5 +1,8 @@
 # `sqllocks-shape-healthcare-standards`
 
+Status: experimental.
+
+
 Writers for X12 005010 (837P, 837I, 835, 834), FHIR R4, OMOP CDM and an NCPDP mapping layer, and
 two readers that turn X12 and HL7 v2 files into Arrow tables. The writers are described in the
 plugin's [README](../../plugins/shape-healthcare-standards/README.md). This page lists the X12

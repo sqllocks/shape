@@ -1,5 +1,10 @@
 # Sinks: where generated data goes
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 Every output is a `shape.sinks` plugin: `Sink.write(uri, table, batches, **options) -> rows`. The
 file sinks are chosen by `--format`; a **URI** with a scheme is routed to the sink that registered
 it. `shape generate --to URI` writes the tables; `shape emit --to URI` and `shape stream --to URI`
@@ -29,16 +34,7 @@ An unknown scheme is an error that lists the schemes installed.
 
 ## OneLake and ADLS Gen2 (`abfss://`, `delta+abfss://`)
 
-```bash
-shape generate retail --scale small --seed 7 \
-  --to abfss://landing@myacct.dfs.core.windows.net/raw \
-  --table-format store=csv --batch-date 2026-10-02
-# raw/order/ingest_date=2026-10-02/order_20261002.parquet, raw/store/.../store_20261002.csv, ...
-
-shape stream retail -t order --to abfss://landing@myacct.dfs.core.windows.net/live \
-  --roll-seconds 30 --realtime --rate 200 --checkpoint-seconds 30
-shape generate retail --to delta+abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Tables
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 * **Layout.** `--path-template` (default `{table}/ingest_date={date}/{table}_{yyyymmdd}.{ext}`;
   with rolling `..._{part}.{ext}`): Hive-style date partitions. Tokens: `{table} {ext} {date}
@@ -112,11 +108,7 @@ query.
 
 ## Databases
 
-```bash
-shape generate retail --scale small --to mssql://myserver.database.windows.net/mydb \
-  --write-mode create
-shape stream retail -t order --to postgresql://me@dbhost/shape --commit-rows 500 --realtime --rate 100
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `--write-mode` is `create` (the default: never touches an existing table), `append`, `truncate`
 or `replace` (`mssql://` and `duckdb://` also take `upsert`, below); `--commit-rows N` commits every N rows so readers see rows during the run (a stream
@@ -194,10 +186,7 @@ refusal unless it passes `True` or sets the variable. Plugin commands such as
 
 ### DuckDB (`duckdb://`)
 
-```bash
-shape generate retail --scale small --to duckdb:///out/retail.duckdb
-shape emit retail --to duckdb:///out/retail.duckdb?schema=raw --write-mode append --max-events 10000
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `pip install 'sqllocks-shape[duckdb]'` (the `sqllocks-shape-databases[duckdb]` extra; DuckDB is
 never a core dependency). `duckdb:///PATH.duckdb` is relative to the working directory and

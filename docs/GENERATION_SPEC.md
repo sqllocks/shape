@@ -1,5 +1,8 @@
 # The generation spec: JSON Schema, stability and edit API
 
+Status: experimental.
+
+
 A generation spec is the JSON document the engine reads: a model, tables whose columns each
 carry a generator (a strategy name plus its keys), relationships, business rules, scale presets
 and correlated columns. Editors, form builders and other programs can build and change specs

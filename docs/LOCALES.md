@@ -1,5 +1,8 @@
 # Basic locale packs
 
+Status: experimental.
+
+
 `{"strategy": "locale", "locale": "FR", "provider": "postcode"}` generates values that look right
 for a country: places and postal codes, phone numbers, first names. A locale is a country:
 `US`, `CA`, `GB`, `DE`, `FR`, `IN` or `AU`, written `FR`, `fr`, `fr_FR` or `fr-FR`. An unknown

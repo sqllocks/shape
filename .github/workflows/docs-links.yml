@@ -1,0 +1,23 @@
+name: External documentation links
+on:
+  schedule:
+    - cron: '21 3 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: dtolnay/rust-toolchain@stable
+      - run: pip install -r requirements-docs.txt
+      - run: pip install --no-deps -e . -e plugins/shape-domains -e plugins/shape-databases -e plugins/shape-integrations
+      - run: mkdocs build --strict
+      - uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress --max-retries 3 --timeout 30 --exclude-mail site/**/*.html site/*.html
+          fail: true

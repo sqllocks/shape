@@ -51,6 +51,7 @@ class NestedTables:
 
 
 def check_flatten(flatten: str | None) -> str | None:
+    """Validate the flatten mode and return it; reject an unsupported mode."""
     if flatten is not None and flatten not in FLATTEN_MODES:
         raise ValueError(f"flatten must be one of {list(FLATTEN_MODES)} or None, not {flatten!r}")
     return flatten

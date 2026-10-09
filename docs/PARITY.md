@@ -1,13 +1,15 @@
 # Environment parity: `shape parity`
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 After a development or test environment is wiped and reloaded, can anyone show that it still
 looks like production? `shape parity A B` answers by **shape only**: it never compares rows or
 values, so side A can be a share-safe profile that production hands over.
 
-```
-shape parity A B [--dataset] [--source NAME] [--project shape.yml] [--no-project]
-                 [--scaled] [--row-tolerance F] [--tables T,...] [-o REPORT.json] [--json]
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `A` is the reference (production), `B` the environment under test. Each is one of:
 
@@ -104,14 +106,7 @@ failed. The text form lists failures first, then what could not be measured, the
 
 ## Example: production hands over a safe profile
 
-```bash
-# in production
-shape profile data/ --dataset -o prod.shape
-shape profile safe prod.shape -o prod.safe.json
-
-# in development, after a reload
-shape parity prod.safe.json dev-data/ --dataset --scaled --source orders -o parity.json
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 Persisted-format compatibility: `tests/fixtures/parity/v1/report.json` is a frozen version 1
 report that later Shapes must still read (`tests/parity/test_compat.py`).

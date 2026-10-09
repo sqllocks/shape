@@ -1,4 +1,7 @@
 # Shape Product Architecture
+
+Status: experimental.
+
 Status: BASELINED 1.0 — Changes require an Architecture Change Proposal (ACP) and owner approval
 
 ## 1. Product thesis

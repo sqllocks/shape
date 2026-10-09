@@ -1,5 +1,10 @@
 # Generation engine
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 The engine turns a generation schema into tables, chunk by chunk. This page is the contract that
 strategies, writers and domains build on.
 
@@ -184,12 +189,7 @@ plus `ALTER TABLE ... ADD CONSTRAINT ... FOREIGN KEY`) into a generation schema.
 read wherever the dialect writes them: a table-level `FOREIGN KEY` constraint, an `ALTER TABLE`, or
 a column-level `REFERENCES` clause.
 
-```
-shape from-ddl tables.sql                      # writes tables.gen.json
-shape from-ddl tables.sql -o shop.gen.json --domain shop -s medium:customer=5000,order=25000
-shape from-ddl tables.sql --no-smart           # type and name heuristics only
-shape from-ddl tables.sql --explain            # print every inference decision
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 | Option | Meaning |
 |---|---|
@@ -314,13 +314,7 @@ composite is the concept's primary and the others get a bridge column
 `shared_<concept>_<domain>_<table>_id`, a foreign key to the primary's key. A preset may instead name its
 links (`person: hr.employee`, `retail: customer.customer_id`).
 
-```
-shape presets --composites                    # the six presets: enterprise, healthcare_system, smart_factory,
-                                              # digital_commerce, campus, telecom_bundle
-shape composite enterprise --scale small      # a preset ...
-shape composite retail+hr+financial -f parquet -o out/    # ... or domains joined by '+'
-shape presets campus                          # rows per table, as for a domain
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `generate`, `describe` and `presets` take a composite as their target too, and
 `shape.api.generate("enterprise", scale="small")` returns its tables. A composite has the `3nf` mode only.
@@ -403,7 +397,7 @@ table's chunks are made (`StreamedAggregate`, the same row-order additions as th
 leading business rules are repaired on a helper thread once the tables they name exist, when no
 `computed` column and no earlier rule is in their way (`EarlyRules`). The generation path builds Arrow
 arrays and reads them back through `shape.generation.arrowkit`, which never imports pandas (pyarrow's
-own `array`, `to_numpy` and `scalar` do, about 0.16 s of start-up).
+own `array`, `to_numpy` and `scalar` can).
 
 `import shape` sets Arrow's allocator for the whole process, in one place (`shape._process.configure`),
 so the command line and the Python API behave alike. Arrow's default pool (mimalloc) reserves a large
@@ -420,11 +414,9 @@ short-lived arrays a large part of a run. Two cases:
   `generate()` additionally runs with Arrow's system pool for the Python-level allocations
   (`shape.generation.runtime.generation_memory`).
 
-`SHAPE_MEMORY_POOL=default` turns all of it off. Values are unaffected (a test compares a run with and
-without it); arrays stay valid whichever pool made them. Measured on 4 vCPU (Intel Xeon @ 2.80GHz, KVM),
-fresh process per run, interleaved, the `generate.py` timed region at medium: education median 0.205 s
-default, 0.148 s with the environment variable, 0.149 s with huge pages off; financial 0.728 s, 0.566 s,
-0.586 s (12 runs each, `docs/plans/lane_status/P6-01a.md`, "Escalation 2, round 2").
+`SHAPE_MEMORY_POOL=default` turns all of it off. Values are unaffected by pool selection; arrays remain valid with their original pool.
+[Owner: performance maintainer — commit a product measurement with the machine and workload
+before publishing allocator timing numbers.]
 
 `shape.generation.keypos` finds the row of a key (`first_positions`, `first_rows`): for the primary key
 of a parent that is a sequence (`start`, `start + 1`, ...) the row is `key - start`, found by the native
@@ -454,21 +446,9 @@ backslash is written as `E'...'` with the backslash doubled, which reads the sam
 
 ## The command line
 
-```
-shape list                                   # installed domains and their modes
-shape presets retail                         # rows per table for every scale preset
-shape composite enterprise                   # several domains as one dataset (see Composites)
-shape describe retail --mode star --scale medium
-shape generate retail --scale medium --seed 42 --format parquet -o out/
-shape generate retail --dry-run              # the plan: order, rows, memory; generates nothing
-shape from-ddl tables.sql -o shop.gen.json && shape generate shop.gen.json -f csv -o out/
-shape validate shop.gen.json                 # a schema file, or a contract; exit 0, 1 or 2
-shape continue retail --input out/ -o delta/ # the next inserts, updates and deletes (docs/INCREMENTAL.md)
-shape time-travel retail --months 12 -o snaps/   # monthly snapshots of an evolving dataset
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
-Start-up and exit are kept short, because they are part of what a run costs (retail `medium` takes
-about 0.65 s end to end, of which the imports are about 0.2 s): `generate` imports pandas never (see
+The generation path avoids importing pandas directly (see
 `shape.generation.arrowkit`), loads a sink on a writer thread, and, run as the program with no
 `--log-json` or `--metrics`, switches the garbage collector off (the imports make the objects it would
 walk, and generation makes no reference cycles) and ends the process as soon as the last file is
@@ -493,9 +473,7 @@ In Python, `shape.api.generate("retail", scale="medium", seed=42, mode="star")` 
 Every command can log JSON lines and write its metrics, with the options before the command or
 environment variables:
 
-```
-shape --log-json --metrics run.json generate retail --scale small
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 | Option | Variable | Meaning |
 |---|---|---|

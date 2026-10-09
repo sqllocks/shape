@@ -1,5 +1,10 @@
 # The `shape` command line
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 Run it as `shape ...`, or as `python -m shape ...` when the `shape` script is not on `PATH` (an
 environment that is not activated, a CI step, a notebook). Both start the same program.
 
@@ -33,19 +38,13 @@ exits 0, or 2 for invalid input. `--junit FILE` and `--sarif FILE` on `diff`, `c
 
 An expected error is one line on stderr and exit code 2:
 
-```
-$ shape registry reg checkout orders nope
-shape: error: orders@nope is not recorded in the registry
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 The same wording is used for the same problem everywhere (`shape: error: file not found: PATH`
 for a missing file). A bug in Shape is not hidden: it keeps its Python traceback. To see the
 traceback of an expected error as well, put `--debug` before the command, or set `SHAPE_DEBUG=1`:
 
-```bash
-shape --debug registry reg checkout orders nope
-SHAPE_DEBUG=1 shape check missing.shape contract.json
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 ## `shape vault`
 
@@ -72,11 +71,7 @@ also adds `*.shapevault` to `.gitignore`.
 file, offline: a `.shape` artifact, or a safe profile, model, run manifest, contract or any other
 JSON kind in [the state and compatibility policy](specs/STATE_AND_COMPATIBILITY.md).
 
-```bash
-shape migrate old.shape new.shape --dry-run   # print the plan, write nothing
-shape migrate old.shape new.shape             # new file + new.shape.receipt.json; old.shape kept
-shape migrate old.shape new.shape --verify old.pub --sign-key release.key   # a signed source
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 It never rewrites in place or overwrites a file, records `migrated_from` and `source_content_id`,
 refuses a downgrade (`--to N` below the file's version), reads its result back and checks the
@@ -217,11 +212,7 @@ the policy.
   for schema changes, capture it each day and compare with the baseline; a renamed or dropped
   column is reported as `removed` and a changed type as `type_changed` (exit 5):
 
-  ```bash
-  shape capture orders.parquet -o orders-base.shape
-  shape capture orders-today.parquet -o orders-today.shape
-  shape compatibility orders-base.shape orders-today.shape --mode backward
-  ```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 - `shape fidelity REFERENCE SYNTHETIC` compares data with data: CSV, Parquet, JSONL or a folder
   of one file per table. Given a captured evidence document (`REFERENCE.json`) it certifies the
   CSV against it instead. A `.shape` file (a profile or a model) is not data and is refused with a one-line message; profile the synthetic data and
@@ -330,22 +321,7 @@ the policy.
 
 ## `shape doctor`
 
-```
-$ shape doctor
-Shape 0.9.0
-  python    3.12.10  (Linux-6.8.0-x86_64-with-glibc2.39)
-  kernel    rust  (compiled)
-
-Required
-  OK      numpy         2.4.6
-  OK      pyarrow       25.0.1
-
-Optional
-  OK      cryptography  50.0.2
-  missing yaml          needed for YAML generation schemas and scenario packs
-  ...
-Result: OK
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 It shows the Shape version, the Python, which kernel is in use (`rust` is the compiled kernel;
 `python` is the pure-Python fallback, selected with `SHAPE_KERNEL`), and each package with what it
@@ -360,12 +336,7 @@ it, so plain `shape doctor` stays offline. Every check is one line with a status
 `FAIL`, and a `Next:` step for a warning or failure. A warning never changes the exit code; a
 failure exits 1. A malformed target is an input error (exit 2).
 
-```
-shape doctor --fabric onelake://WORKSPACE/ITEM [--auth cli|msi|spn|device-code|fabric ...]
-shape doctor --broker kafka://host:9092[,host2:9092]/topic
-shape doctor --broker eventhubs://NAMESPACE/HUB [--auth ...]
-shape doctor --delta-table PATH
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 | Option | Checks |
 |---|---|
@@ -482,14 +453,7 @@ date, an unknown name, a bad `--keep-last`, a held `prune.lock`). See
 
 ## History: `shape bisect` and `shape timelapse`
 
-```
-shape bisect REGISTRY NAME --good REF --bad REF [--column COL] [--kind KIND] [--contract FILE]
-             [--verify-all] [--coarse week|month] [--json] [--source NAME] [threshold flags]
-shape bisect layers --layers SOURCE[,SOURCE...] --good-date D1 --bad-date D2 [--column COL]
-             [--map LAYER.COL=COL]... [--project shape.yml] [--json]
-shape timelapse REGISTRY NAME --column COL [--table T] [--since DATE] [--until DATE]
-             [--window day|week|month] [-o OUT.json|OUT.html] [--format json|text]
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `bisect` finds the first committed version of `NAME` that changed (exit 0; exit 2 when `--good`
 tests bad, `--bad` tests good, or a version cannot be tested, for example a share-safe profile).

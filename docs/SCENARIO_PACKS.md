@@ -1,16 +1,16 @@
 # Scenario packs and generation specs
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 A **scenario pack** is a YAML file that bundles a domain, a simulation kind, optional chaos,
 validation gates and the landing paths of a run. A **generation spec** (GSL, `*.gsl.yaml`) points at
 a pack and sets the schema, scale, seed, chaos, outputs and gates around it. Both run with
 `shape pack`:
 
-```bash
-shape pack validate my_pack.yaml            # check a pack against its domain; exit 1 on errors
-shape pack run my_pack.yaml --scale fabric_demo --seed 42 -o out/
-shape pack run estate.gsl.yaml -o out/      # a spec supplies scale, seed, gates and chaos
-shape pack list packs/                      # the packs and specs under a directory
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 Shape ships **no packs**, but it does ship a library of named starter scenarios with answer keys:
 `shape pack list --library` lists them and `shape pack run library:NAME` runs one and checks the

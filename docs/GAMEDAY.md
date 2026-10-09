@@ -1,15 +1,16 @@
 # Game days
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 A game day rehearses failures before they happen. You give Shape a plan: a folder of your own local
 data and rounds. For each round Shape copies some of your tables, plants a failure from the
 [catalog](FAILURE_MODES.md) in the copies, runs the checks you list and records which expectations
 your checks detected, which they missed and how long the round took. Your data is never modified.
 
-```
-shape gameday run plan.json -o gameday/
-shape gameday run plan.json -o gameday/ --seed 7
-shape gameday run plan.json -o gameday/ --dry-run     # check the plan, read the tables, run nothing
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 Exit 0 when every expectation was detected, 1 when one was missed, 2 for a plan that is malformed
 or uses something it may not.

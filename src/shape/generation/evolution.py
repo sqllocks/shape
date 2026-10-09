@@ -12,6 +12,7 @@ class ShapePoint:
 
 
 def interpolate(a: ShapePoint, b: ShapePoint, t: float) -> dict:
+    """Interpolate column evidence between two dated Shape points."""
     if not a.at <= t <= b.at or b.at == a.at:
         raise ValueError("t outside interval or zero interval")
     w = (t - a.at) / (b.at - a.at)

@@ -1,5 +1,10 @@
 # Proposals and decision files
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 Some facts about a dataset cannot be settled by a profile alone: whether a column is a foreign key
 to another table, whether it holds personal data, what it means, and which rules a dataset should
 obey. Shape **proposes** these with the evidence and a confidence, you **accept, reject or defer**
@@ -7,14 +12,7 @@ each one, and the decision file keeps your answer, so the question does not come
 next re-profile. Accepted rules become a contract that `shape check` reads (see
 [Rules](#rules)).
 
-```bash
-shape profile data/ --dataset -o shop.shape
-shape proposals propose shop.shape --data data/ -d decisions.json
-shape proposals list -d decisions.json --status pending --min-confidence 0.9
-shape proposals decide -d decisions.json "relationship:orders.customer_id->customers.customer_id" \
-    accept --actor ana --note "orders belong to customers"
-shape generate --from shop.shape --decisions decisions.json -o out/
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 ## Commands
 
@@ -103,15 +101,7 @@ Writing a contract by hand is slow, so most datasets have none or a thin one. A 
 holds the evidence for most rules, so Shape proposes them, you decide, and the accepted ones become
 a contract v1 file that `shape check` reads.
 
-```bash
-shape profile orders.csv -o orders.shape
-shape proposals propose orders.shape -d decisions.json --kinds pii,rule
-shape proposals list -d decisions.json --kind rule --min-confidence 0.85
-shape proposals decide -d decisions.json rule:orders.order_id.unique accept --actor ana --note "key"
-shape proposals decide -d decisions.json rule:orders.status.allowed_values accept --actor ana
-shape proposals contract -d decisions.json -o contract.json
-shape check orders.shape contract.json          # exit 0: the contract passes on that profile
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `shape proposals propose PROFILE.shape [PROFILE.shape ...] -d DECISIONS.json --kinds rule` (and
 `propose_rules(profiles, ...)` in `shape.proposals`) proposes contract v1 rules. A dataset
@@ -201,9 +191,7 @@ sensitive is no longer found and goes stale (below).
 
 Give a week of daily captures to learn what holds across them:
 
-```bash
-shape proposals propose mon.shape tue.shape wed.shape -d decisions.json --kinds rule
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 Single-table profiles are matched by position and take the first one's table name. A table
 profiled in only some of them gets no rules.

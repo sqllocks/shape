@@ -1,5 +1,10 @@
 # The pull request check: `uses: sqllocks/shape@<tag>`
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 A composite GitHub Action that profiles the sources of a Shape project, compares each with its
 baseline, posts the result as **one comment** on the pull request and fails the job when the result
 says so. Make the job a required status check and it gates the merge.
@@ -23,10 +28,7 @@ jobs:
 It needs a project (`shape.yml`, [PROJECT.md](PROJECT.md)) whose sources have a baseline
 (`shape init` writes one to start from). The action runs, per source:
 
-```bash
-shape profile NAME -o current/NAME.shape
-shape diff --source NAME current/NAME.shape --json - --junit NAME.junit.xml --sarif NAME.sarif
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 then `shape ci comment` over the result documents (`shape-result`, [CI.md](CI.md)), the comment is
 appended to the job's step summary (`$GITHUB_STEP_SUMMARY`), `shape ci post-comment` puts it on the

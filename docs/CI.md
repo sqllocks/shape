@@ -1,5 +1,10 @@
 # Shape in CI: reports, exit codes, `--json` and `--dry-run`
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 The checking commands write the two reports CI systems read, every command ends with a
 documented exit code, and every command can print one JSON document or say what it would do before
 it does it.
@@ -145,12 +150,7 @@ changes a registry or project file. It reads and checks the inputs, resolves the
 opening a connection or signing in, prints the planned actions, writes nothing and exits 0, or 2
 for an input the command would refuse:
 
-```
-$ shape diff a.shape b.shape --junit reports/diff.xml --dry-run
-would create reports/diff.xml
-$ shape emit retail --sink kafka://user:secret@broker:9092/topic --dry-run --json
-{"actions": [{"action": "send", "target": "kafka://broker:9092/topic"}], "command": "emit", "format": "shape-dry-run", "version": 1}
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 - `actions` is a list of `{"action": "write" | "create" | "delete" | "send", "target": ...}`:
   `create` for a file that does not exist, `write` for one that does, `delete` for something

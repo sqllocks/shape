@@ -1,5 +1,10 @@
 # Duplicate detection and entity resolution
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 `shape.resolve` finds rows that describe the same real-world entity, collapses each group into one
 golden record, and measures how well it did against **known** answers: the synthetic duplicates
 generator records the true clusters, so precision, recall and F1 are exact, not estimated.
@@ -95,19 +100,7 @@ The chaos `duplicates` corruption records the same truth: see `duplicate_cluster
 
 ## Command line
 
-```bash
-# plant duplicates in a clean file; write the table and the true clusters
-shape resolve synth people.csv -o people_dup.csv --truth truth.json \
-    --rate 0.25 --fuzz 0.5 --seed 21 --id-column id
-
-# resolve them and score against the truth
-shape resolve run people_dup.csv \
-    --block name:ngram:5 --block name:phonetic \
-    --match name:text:3 --match city:exact:0.5 \
-    --match income:numeric:1:0.05:relative --match born:date:1:5 \
-    --threshold 0.85 --truth truth.json \
-    --golden golden.csv --clusters clusters.json --report report.json
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `--block` is `COL[+COL]:METHOD[:SIZE]`; `--match` is `COL:KIND[:WEIGHT[:TOLERANCE[:relative]]]`;
 `--survive` is `COL=RULE[:BY[:A,B,...]]` (for example `--survive phone=most_recent:updated`).

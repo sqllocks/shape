@@ -1,5 +1,10 @@
 # History tools: `shape bisect` and `shape timelapse`
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 The registry (`docs/REGISTRY.md`) keeps every committed profile of a name with its business date.
 These commands read that history; they never read data and never change the registry.
 
@@ -21,59 +26,21 @@ be merged into windows (`--coarse`, `--window`).
 Plant a step in a 31-day history with `shape generate-drift`, commit each day with its business
 date, and find the day again.
 
-```bash
-# orders.gen.json is a generation schema; plan.json plants one event
-cat plan.json
-# {"start": "2026-03-01", "days": 31,
-#  "events": [{"kind": "distribution", "table": "orders", "column": "amount",
-#              "start": "2026-03-15", "scale": 1.3}]}
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
-shape generate-drift orders.gen.json plan.json -o feed --rows orders=2000 --format parquet
-# Planted 1 events over 31 days from 2026-03-01
-#   e1: distribution on orders.amount from 2026-03-15
-
-for d in $(ls feed | grep '^2026'); do
-  shape profile feed/$d/orders.parquet -o day.shape --sketches --capture full
-  shape registry shapes/registry commit orders day.shape --allow-raw --business-date $d
-done
-shape registry shapes/registry tag orders day1 <content id of the first commit>
-```
-
-```
-$ shape bisect shapes/registry orders --good day1 --bad latest
-first bad version: 2026-03-15  content id 5a03b17253e6
-last good version: 2026-03-14  content id 6ef0f474a611
-changes between them:
-  amount: mean_shift 50.1107 -> 65.0709
-  amount: distribution_shift {"p05": 34.105548, "p25": 43.460477, ... -> {"p05": 43.499661, ...
-  amount: distribution_change lognormal -> normal
-tested 6 version(s) of 30 candidate(s) (at most 7); read 7 profile(s)
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 The day (2026-03-15) and the column (`amount`) are the ones in `feed/ground_truth.json`. The answer
 key is what the tests of this feature compare against, for ranges of 1, 2 and 30 candidate
 versions.
 
-```
-$ shape timelapse shapes/registry orders --column amount --format text
-orders.amount  2026-03-01 .. 2026-03-31  31 frames, 1 change point(s)
-row_count   ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄  2000 .. 2000
-mean        ▁▁▁▁▁▁▁▁▁▁▁▁▁▁█████████████████  50.1296 .. 64.696
-std         ▁▁▁▂▁▁▁▁▁▁▂▁▁▁██▇█▇▇██▇▇██▇████  9.88416 .. 12.9758
-p50         ▁▁▁▁▁▁▁▁▁▁▁▁▁▁█████████████████  50.2142 .. 64.3773
-change                    ^                  at 2026-03-15
-$ shape timelapse shapes/registry orders --column amount --window week -o amount.html
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 (The listing shows some of the lines; the command prints one per statistic.)
 
 ## `shape bisect`
 
-```
-shape bisect REGISTRY NAME --good REF --bad REF [--column COL] [--kind KIND] [--contract FILE]
-             [--source NAME] [--verify-all] [--coarse week|month] [--json]
-             [--project FILE | --no-project] [diff threshold flags]
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `REF` is what `shape registry` accepts: `latest`, a tag, a promoted ref or a content id. The
 versions of `NAME` are ordered by their `business_date` (else by commit time); the candidates are
@@ -140,10 +107,7 @@ tests in order), `cost` (`versions_read`, `full_profile_tests`, `window_tests`),
 
 ## `shape bisect layers`
 
-```
-shape bisect layers --layers SOURCE[,SOURCE...] --good-date D1 --bad-date D2
-                    [--column COL] [--map LAYER.COL=COL]... [--project shape.yml] [--json]
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 Each layer is a source of `shape.yml`, in pipeline order (raw, cleaned, published). A source's
 `baseline` gives its registry and name (`kind` does not matter here), and its thresholds and
@@ -170,11 +134,7 @@ The JSON has `"format": "shape-bisect-layers"`, `"version": 1`, `good_date`, `ba
 
 ## `shape timelapse`
 
-```
-shape timelapse REGISTRY NAME --column COL [--table T] [--since DATE] [--until DATE]
-                [--window day|week|month] [-o OUT.json|OUT.html] [--format json|text]
-                [--project FILE | --no-project] [diff threshold flags]
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 One **frame** per version, or per merged window with `--window` (versions of the same day, ISO
 week or month, merged with `merge_profiles`: profiles need `--sketches`; a window of one version is

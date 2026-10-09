@@ -1,19 +1,17 @@
 # Data dictionary: `shape dictionary`
 
+Status: available.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 A human-readable description of a dataset's tables and columns, written from a profile and,
 optionally, the project file. It reads the `.shape` profile and `shape.yml` only: it never reads
 the data, makes no network request and pushes nothing to a catalog.
 
-```bash
-shape dictionary orders.shape --format md -o docs/orders.md
-shape dictionary orders.shape --project shape.yml --source orders --format html -o orders.html
-shape dictionary orders.shape --format json --examples -o orders.dictionary.json
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
-```
-shape dictionary PROFILE.shape [--project FILE | --no-project] [--source NAME]
-                 [--format md|html|json] [--examples] -o OUT
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 | Flag | Meaning |
 |---|---|

@@ -1,17 +1,16 @@
 # Profile registry and profile files
 
+Status: available.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 Two groups of commands manage profiles. Both read and write Shape's own formats only: a `.shape`
 profile artifact, and the `shape-profile` JSON that `export` writes.
 
 ## Profile files
 
-```bash
-shape profile export orders.shape -o orders.json    # portable JSON, round-trips exactly
-shape profile import orders.json -o orders.shape    # --name NAME renames it
-shape profile list DIR                              # the .shape profiles in a directory (--json)
-shape profile validate orders.shape                 # well formed? tampered? (exit 0 / 1)
-shape profile validate --safe orders.json           # the leak scanner (see PRIVACY_MODEL.md)
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `import` accepts only `shape-profile` JSON; any other JSON file is refused with exit 2.
 `list` prints what it skipped (a file that is not a profile) on stderr instead of hiding it.
@@ -30,16 +29,7 @@ for the safe form below):
 The root is `--root DIR`, else `$SHAPE_PROFILE_REGISTRY`, else `~/.shape/profiles`. The
 description and tags are kept inside each file, so the index can always be rebuilt.
 
-```bash
-shape profile registry save orders.csv --system crm --name 2026Q2 --tags prod,daily
-shape profile registry save orders.shape --system crm --name 2026Q2 --overwrite
-shape profile registry list [--system S] [--table T] [--tag X]... [--query TEXT] [--json]
-shape profile registry tag crm/orders/2026Q2 reviewed        # --remove to drop tags
-shape profile registry diff crm/orders/2026Q2 crm/orders/2026Q3   # --fail-on-diff for CI
-shape profile registry validate [crm/orders/2026Q2] [--data new.csv --tolerance 0.05]
-shape profile registry reindex
-shape profile registry delete crm/orders/2026Q2
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `save` takes data (it is profiled) or a `.shape` profile, and stores one entry per table.
 `validate` checks the files and the index; with `--data` it also compares the data's profile with
@@ -63,9 +53,7 @@ such a store is a private catalog, and the default root is under your home folde
 
 For the stricter share-safe profile JSON, save with `--safe`:
 
-```bash
-shape profile registry save orders.csv --system crm --name 2026Q2 --safe [--k N] [--sensitive]
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 A safe entry is the output of `shape profile safe` (one table, no field that can hold a raw value
 or a value list), stored as `<system>/<table>/<name>.safe.json`. It is checked with the leak

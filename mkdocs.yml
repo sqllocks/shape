@@ -1,195 +1,234 @@
-# The documentation site (P8-03, T-24). Build with `mkdocs build --strict`; check links with
-# `python scripts/check_doc_links.py`. Two pages are generated at build time by
-# `scripts/mkdocs_hooks.py`: the CLI reference (from the argparse parser) and the performance
-# page (from the committed benchmark results).
 site_name: Shape by SQLLocks
 site_description: Shape as Code — a portable, executable description of how data behaves.
-site_url: https://sqllocks.github.io/shape/
+site_url: https://docs.shapedata.ai/
 repo_url: https://github.com/sqllocks/shape
 repo_name: sqllocks/shape
-edit_uri: edit/main/docs/
 copyright: Copyright SQLLocks. Released under the MIT license.
-
 docs_dir: docs
 site_dir: site
 strict: true
+exclude_docs: 'plans/
 
-# Internal planning material and talk rehearsal files are not part of the site.
-exclude_docs: |
-  plans/
   talks/
 
+  '
 hooks:
-  - scripts/mkdocs_hooks.py
-
+- scripts/mkdocs_hooks.py
 validation:
-  omitted_files: warn
+  omitted_files: info
   absolute_links: warn
   unrecognized_links: warn
   anchors: warn
-
 theme:
   name: material
+  font: false
   features:
-    - navigation.sections
-    - navigation.top
-    - navigation.indexes
-    - search.suggest
-    - content.code.copy
+  - navigation.sections
+  - navigation.top
+  - navigation.indexes
+  - search.suggest
+  - content.code.copy
   palette:
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      toggle:
-        icon: material/weather-night
-        name: Dark mode
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      toggle:
-        icon: material/weather-sunny
-        name: Light mode
-
+  - media: '(prefers-color-scheme: light)'
+    scheme: default
+    toggle:
+      icon: material/weather-night
+      name: Dark mode
+  - media: '(prefers-color-scheme: dark)'
+    scheme: slate
+    toggle:
+      icon: material/weather-sunny
+      name: Light mode
+  custom_dir: site_overrides
 markdown_extensions:
-  - admonition
-  - attr_list
-  - def_list
-  - footnotes
-  - tables
-  - toc:
-      permalink: true
-  - pymdownx.details
-  - pymdownx.highlight
-  - pymdownx.inlinehilite
-  - pymdownx.superfences
-
+- admonition
+- attr_list
+- def_list
+- footnotes
+- tables
+- toc:
+    permalink: true
+- pymdownx.details
+- pymdownx.highlight
+- pymdownx.inlinehilite
+- pymdownx.superfences:
+    custom_fences:
+    - name: mermaid
+      class: shape-mermaid
+      format: !!python/name:pymdownx.superfences.fence_code_format
+extra_javascript:
+- assets/javascripts/diagrams.js
 nav:
-  - Home: index.md
-  - Get started:
-      - Install: INSTALL.md
-      - Five-minute quickstart: QUICKSTART.md
-      - Tutorial: TUTORIAL.md
-      - Manifesto: SHAPE_MANIFESTO.md
-  - Profiling:
-      - File sources: SOURCES.md
-      - Profiling notes: PROFILING_NOTES.md
-      - Mergeable profiles: PROFILE_MERGE.md
-      - Profile registry: PROFILE_REGISTRY.md
-      - Fingerprint: FINGERPRINT.md
-      - Joint distributions: JOINT.md
-      - Slices and skew: FAIRNESS_AND_SKEW.md
-      - Explain and notebooks: EXPLAIN.md
-      - Data dictionary: DICTIONARY.md
-      - Scorecards: SCORECARD.md
-      - Duplicate detection: RESOLVE.md
-      - Data detective packs: DETECTIVE.md
-      - Reference packs and validators: REFERENCE_PACKS.md
-      - Public dataset library: DATASET_LIBRARY.md
-  - Contracts, checks and drift:
-      - Drift: DRIFT.md
-      - Contracts: CONTRACTS.md
-      - Consumer contracts: CONSUMER_CONTRACTS.md
-      - Canaries: CANARIES.md
-      - Environment parity: PARITY.md
-      - Drift report: DRIFT_REPORT.md
-      - Verifying data: VERIFY.md
-      - Emitting a contract: CONTRACT_EMIT.md
-      - Testing your rules: RULES_TESTING.md
-      - Testing with Shape: TESTING_WITH_SHAPE.md
-      - Proposals: PROPOSALS.md
-      - Planned changes: PLANNED_CHANGES.md
-  - Generation:
-      - Schema design: DESIGN.md
-      - Generation engine: GENERATION_ENGINE.md
-      - Generation strategies: GENERATION_STRATEGIES.md
-      - Calendars and timestamps: GENERATION_CALENDARS.md
-      - Generation spec: GENERATION_SPEC.md
-      - Generation stability: GENERATION_STABILITY.md
-      - Generation kernel: GENERATION_KERNEL.md
-      - Locales: LOCALES.md
-      - Location as Code: LOCATION_AS_CODE.md
-      - Scenario packs: SCENARIO_PACKS.md
-      - Scenario library: SCENARIO_LIBRARY.md
-      - Schema importers: IMPORTERS.md
-      - Chaos: CHAOS.md
-      - Game days: GAMEDAY.md
-      - Failure modes: FAILURE_MODES.md
-      - Incremental data: INCREMENTAL.md
-      - Transforms: TRANSFORMS.md
-      - Simulating files and events: SIMULATION_FILES_EVENTS.md
-      - Generating at scale: SCALE.md
-      - Performance: PERFORMANCE.md
-      - Fidelity report: FIDELITY.md
-      - Fidelity tiers: FIDELITY_TIERS.md
-      - Report card: REPORT_CARD.md
-  - Outputs and integration:
-      - Sinks: SINKS.md
-      - Landing layout: LANDING.md
-      - Emitting events: EMIT.md
-      - Fabric mirroring: FABRIC_MIRROR.md
-      - Excel workbooks: EXCEL.md
-      - dbt: DBT.md
-      - JSON bridge: BRIDGE.md
-      - Demos: DEMO.md
-      - Container image: CONTAINER.md
-      - Fabric platform inventory: FABRIC_PLATFORM.md
-      - Shape in CI: CI.md
-      - Pull request check: PR_BOT.md
-      - Webhook notifications: NOTIFICATIONS.md
-  - Projects and history:
-      - Project file: PROJECT.md
-      - Registry: REGISTRY.md
-      - History tools: HISTORY.md
-      - Reproducibility: REPRODUCIBILITY.md
-      - Determinism: DETERMINISM.md
-  - Privacy and trust:
-      - Privacy model: PRIVACY_MODEL.md
-      - Masking: MASK.md
-      - Value vault: VAULT.md
-      - Safe-to-share bundle: SHARE_BUNDLE.md
-      - Signing: SIGNING.md
-      - Threat model: THREAT_MODEL.md
-      - Security specification: SECURITY_SPECIFICATION.md
-      - External reference assets: EXTERNAL_REFERENCE_ASSETS.md
-  - Plugins:
-      - Built-in plugins: plugins/builtins.md
-      - Writing a plugin: plugins/authoring.md
-      - Plugin API v1: plugins/api-v1.md
-      - Plugin host: plugins/host.md
-      - Stability promise: plugins/stability.md
-      - Trust model: plugins/trust-model.md
-      - Cloud sources: plugins/cloud-sources.md
-      - Fabric sign-in: plugins/fabric-auth.md
-      - Fabric commands: plugins/fabric-commands.md
-      - Fabric writers: plugins/fabric-writers.md
-      - SQL Server: plugins/sqlserver.md
-      - Streaming: plugins/streaming.md
-      - Simulation: plugins/simulation.md
-      - Behavior models: plugins/behavior.md
-      - Healthcare code sets: plugins/healthcare-codes.md
-      - Healthcare standards: plugins/healthcare-standards.md
-      - Integrations: plugins/integrations.md
-  - Reference:
-      - Command line: CLI.md
-      - CLI reference (generated): reference/cli.md
-      - CLI stability: CLI_STABILITY.md
-      - Exit codes: EXIT_CODES.md
-      - Python API: API.md
-      - API stability: API_STABILITY.md
-      - Performance (generated): reference/performance.md
-      - Specifications:
-          - Shape model v2: specs/SHAPE_MODEL_V2.md
-          - Normative contract v2: specs/SHAPE_2.md
-          - Shape 1.0 contract: specs/SHAPE_1_0.md
-          - 1.0 compatibility contract: specs/ONE_ZERO_CONTRACT.md
-          - Artifact specification: specs/SHAPE_ARTIFACT_SPEC.md
-          - State and compatibility: specs/STATE_AND_COMPATIBILITY.md
-          - Streaming semantics: specs/STREAMING_SEMANTICS.md
-          - Pack specification: specs/PACK_SPEC.md
-          - Location specification: specs/LOCATION_SPEC.md
-  - Project:
-      - Product architecture: PRODUCT_ARCHITECTURE.md
-      - Release policy: RELEASE_POLICY.md
-      - Release checklist: RELEASE_CHECKLIST.md
-      - Definition of done for 1.0: V1_DONE.md
-      - What Shape will not build: NOT_BUILDING.md
-      - Branding: BRANDING.md
-      - Contributing: CONTRIBUTING.md
+- Home: index.md
+- Start here:
+  - Install: INSTALL.md
+  - Concepts: CONCEPTS.md
+  - Glossary: GLOSSARY.md
+  - Learning paths: LEARNING_PATHS.md
+  - Quickstart: QUICKSTART.md
+  - Starter tutorials: TUTORIAL.md
+- Starter tutorials:
+  - 1 Your first profile: tutorials/01-first-profile.md
+  - 2 Read the report: tutorials/02-read-report.md
+  - 3 Commit a shape and catch drift: tutorials/03-drift.md
+  - 4 Write a contract and check it: tutorials/04-contract.md
+  - 5 Generate dev data from a profile: tutorials/05-generate-profile.md
+  - 6 Generate a domain into DuckDB: tutorials/06-domain-duckdb.md
+- Understand your results:
+  - HTML report: READ_REPORT.md
+  - Anatomy of a shape: ANATOMY.md
+  - When drift goes red: DRIFT_RED.md
+- Profiling:
+  - File sources: SOURCES.md
+  - Profiling notes: PROFILING_NOTES.md
+  - Mergeable profiles: PROFILE_MERGE.md
+  - Profile registry: PROFILE_REGISTRY.md
+  - Fingerprint: FINGERPRINT.md
+  - Joint distributions: JOINT.md
+  - Slices and skew: FAIRNESS_AND_SKEW.md
+  - Explain and notebooks: EXPLAIN.md
+  - Data dictionary: DICTIONARY.md
+  - Scorecards: SCORECARD.md
+  - Duplicate detection: RESOLVE.md
+  - Data detective packs: DETECTIVE.md
+  - Reference packs and validators: REFERENCE_PACKS.md
+  - Public dataset library: DATASET_LIBRARY.md
+- Contracts, checks and drift:
+  - Drift: DRIFT.md
+  - Contracts: CONTRACTS.md
+  - Consumer contracts: CONSUMER_CONTRACTS.md
+  - Canaries: CANARIES.md
+  - Environment parity: PARITY.md
+  - Drift report: DRIFT_REPORT.md
+  - Verifying data: VERIFY.md
+  - Emitting a contract: CONTRACT_EMIT.md
+  - Testing your rules: RULES_TESTING.md
+  - Testing with Shape: TESTING_WITH_SHAPE.md
+  - Proposals: PROPOSALS.md
+  - Planned changes: PLANNED_CHANGES.md
+- Generation:
+  - Schema design: DESIGN.md
+  - Generation engine: GENERATION_ENGINE.md
+  - Generation strategies: GENERATION_STRATEGIES.md
+  - Calendars and timestamps: GENERATION_CALENDARS.md
+  - Generation spec: GENERATION_SPEC.md
+  - Generation stability: GENERATION_STABILITY.md
+  - Generation kernel: GENERATION_KERNEL.md
+  - Locales: LOCALES.md
+  - Scenario packs: SCENARIO_PACKS.md
+  - Scenario library: SCENARIO_LIBRARY.md
+  - Schema importers: IMPORTERS.md
+  - Chaos: CHAOS.md
+  - Game days: GAMEDAY.md
+  - Failure modes: FAILURE_MODES.md
+  - Incremental data: INCREMENTAL.md
+  - Transforms: TRANSFORMS.md
+  - Simulating files and events: SIMULATION_FILES_EVENTS.md
+  - Generating at scale: SCALE.md
+  - Fidelity report: FIDELITY.md
+  - Fidelity tiers: FIDELITY_TIERS.md
+  - Report card: REPORT_CARD.md
+- Outputs and integration:
+  - Sinks: SINKS.md
+  - Landing layout: LANDING.md
+  - Emitting events: EMIT.md
+  - Fabric mirroring: FABRIC_MIRROR.md
+  - Excel workbooks: EXCEL.md
+  - dbt: DBT.md
+  - JSON bridge: BRIDGE.md
+  - Demos: DEMO.md
+  - Container image: CONTAINER.md
+  - Fabric platform inventory: FABRIC_PLATFORM.md
+  - Shape in CI: CI.md
+  - Pull request check: PR_BOT.md
+  - Webhook notifications: NOTIFICATIONS.md
+- Projects and history:
+  - Project file: PROJECT.md
+  - Registry: REGISTRY.md
+  - History tools: HISTORY.md
+  - Reproducibility: REPRODUCIBILITY.md
+- Privacy and trust:
+  - Privacy model: PRIVACY_MODEL.md
+  - Masking: MASK.md
+  - Value vault: VAULT.md
+  - Safe-to-share bundle: SHARE_BUNDLE.md
+  - Signing: SIGNING.md
+  - Threat model: THREAT_MODEL.md
+  - Security specification: SECURITY_SPECIFICATION.md
+- Plugins:
+  - Built-in plugins: plugins/builtins.md
+  - Writing a plugin: plugins/authoring.md
+  - Plugin API v1: plugins/api-v1.md
+  - Plugin host: plugins/host.md
+  - Stability promise: plugins/stability.md
+  - Trust model: plugins/trust-model.md
+  - Cloud sources: plugins/cloud-sources.md
+  - Fabric sign-in: plugins/fabric-auth.md
+  - Fabric commands: plugins/fabric-commands.md
+  - Fabric writers: plugins/fabric-writers.md
+  - SQL Server: plugins/sqlserver.md
+  - Streaming: plugins/streaming.md
+  - Simulation: plugins/simulation.md
+  - Behavior models: plugins/behavior.md
+  - Healthcare code sets: plugins/healthcare-codes.md
+  - Healthcare standards: plugins/healthcare-standards.md
+  - Integrations: plugins/integrations.md
+- Reference:
+  - Command line: CLI.md
+  - CLI reference (generated): reference/cli.md
+  - CLI stability: CLI_STABILITY.md
+  - Exit codes: EXIT_CODES.md
+  - Python API: API.md
+  - API stability: API_STABILITY.md
+  - Performance (generated): reference/performance.md
+  - Specifications:
+    - Shape model v2: specs/SHAPE_MODEL_V2.md
+    - Normative contract v2: specs/SHAPE_2.md
+    - Artifact specification: specs/SHAPE_ARTIFACT_SPEC.md
+    - State and compatibility: specs/STATE_AND_COMPATIBILITY.md
+    - Streaming semantics: specs/STREAMING_SEMANTICS.md
+  - Models: MODELS.md
+  - API generated: reference/api.md
+- Project:
+  - Product architecture: PRODUCT_ARCHITECTURE.md
+  - Release policy: RELEASE_POLICY.md
+  - Release checklist: RELEASE_CHECKLIST.md
+  - Definition of done for 1.0: V1_DONE.md
+- Help and trust:
+  - Troubleshooting: TROUBLESHOOTING.md
+  - FAQ: FAQ.md
+  - Known limitations: KNOWN_LIMITATIONS.md
+  - What leaves my machine: WHAT_LEAVES.md
+  - Licensing: LICENSING.md
+  - Security: SECURITY.md
+- Platforms:
+  - Databases: databases/index.md
+  - DuckDB: databases/duckdb.md
+  - PostgreSQL: databases/postgresql.md
+  - MySQL: databases/mysql.md
+  - Snowflake: databases/snowflake.md
+  - Databricks: databases/databricks.md
+  - VS Code: VSCODE.md
+  - GitHub Action: GITHUB_ACTION.md
+- Community:
+  - Contributing: CONTRIBUTING.md
+  - Docs style: contributing/DOCS_STYLE.md
+  - Governance: GOVERNANCE.md
+  - Code of conduct: CODE_OF_CONDUCT.md
+  - Changelog: CHANGELOG.md
+  - Posts and videos: POSTS.md
+plugins:
+- search
+- mkdocstrings:
+    handlers:
+      python:
+        paths:
+        - src
+        options:
+          docstring_style: null
+          show_source: false
+          show_root_heading: true
+          show_signature_annotations: false
+extra:
+  version:
+    provider: mike

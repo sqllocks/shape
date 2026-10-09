@@ -1,5 +1,10 @@
 # Landing layout: one file per table per business date
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 A source system drops files: one per table per day, in a folder named for the date, each table in
 its own format. `shape generate`, `shape continue` and `shape chaos` write that layout with three
 options, and the file sinks take the same two path options.
@@ -11,10 +16,7 @@ landing/customers/ingest_date=2026-08-04/customers_20260804.csv
 
 ## How-to
 
-```
-shape generate retail --scale small --format parquet --table-format customer=csv \
-    --batch-date 2026-08-04 -o landing/
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 writes `landing/customer/ingest_date=2026-08-04/customer_20260804.csv` and
 `landing/order/ingest_date=2026-08-04/order_20260804.parquet` (and one file for every other table,

@@ -100,6 +100,7 @@ def _schema_maps(schema: Any) -> tuple[dict[str, str], dict[str, str]]:
 
 
 def cmd_chaos(a: argparse.Namespace) -> int:
+    """Run the chaos chaos subcommand with parsed arguments."""
     from shape.chaos.groundtruth import corrupt_tables, parse_corruptions, write_ground_truth
     from shape.cli.generation import _check_scale, load_target
     from shape.cli.incremental import read_tables, write_tables
@@ -184,6 +185,7 @@ def cmd_chaos(a: argparse.Namespace) -> int:
 
 
 def run(a: argparse.Namespace) -> int:
+    """Dispatch parsed chaos arguments and return the command exit code."""
     return cmd_chaos(a)
 
 

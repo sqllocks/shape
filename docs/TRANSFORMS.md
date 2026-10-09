@@ -1,14 +1,15 @@
 # Transforms: star schema and CDM
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 `shape transform` reshapes a set of related tables. The source is an installed domain (generated
 first, with `--scale` and `--seed`) or a directory of CSV, Parquet or JSON Lines files, one per
 table.
 
-```bash
-shape transform star retail -o star/ --format parquet
-shape transform cdm retail -o cdm/
-shape transform star data/ --map star-map.json -o star/      # a directory needs a map
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 Both commands exit 0, or 2 for bad input (a missing table or column in the map, an unreadable
 map, an unknown domain). `--json` prints the summary as JSON.

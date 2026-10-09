@@ -1,18 +1,17 @@
 # Container image
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 The Shape CLI ships as a container image for runtimes that take an image and a command line,
 such as an Azure Batch Custom activity in Azure Data Factory. It is `python:3.11-slim` with the
 Shape wheel (Rust kernel) and the `[azure]` extra (`adlfs`, `azure-identity`, `deltalake`), a
 non-root user (`shape`, uid 10001) and no entry point: the command you pass is the whole
 command line.
 
-```bash
-docker build -t shape .
-docker run --rm \
-  -v "$PWD/data:/data:ro" -v "$PWD/out:/work" \
-  shape shape profile /data/orders.parquet -o /work/orders.shape --json /work/orders.summary.json
-echo $?    # 0 when the profile was written
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 - The working directory is `/work`, writable by the `shape` user. Mount a host directory there
   to keep outputs; mount inputs read-only at `/data`.

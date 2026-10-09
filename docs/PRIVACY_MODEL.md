@@ -1,5 +1,13 @@
 # Privacy Model
-A Shape is not automatically anonymous. Aggregates, rare categories, small cohorts, geography, history and differencing can disclose sensitive facts. Production policy should apply cohort thresholds, rare-value suppression, sensitivity propagation, history access control, release review and—where needed—formal privacy mechanisms. Shape 1.0 does not claim that k-anonymity alone provides anonymization.
+
+Status: available.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
+A safe capture is data minimisation, not anonymisation. Aggregates, rare categories, small
+cohorts, geography, history and differencing can disclose sensitive facts. Apply cohort
+thresholds, sensitivity controls and release review before sharing.
 
 ## Classification levels
 
@@ -14,12 +22,7 @@ path)` and `shape profile registry save`. The profile that `shape.profile()` ret
 not changed, so everything that compares it (the equivalence verifiers, the kernel parity checks)
 sees the same values as before.
 
-```bash
-shape profile orders.csv -o orders.shape                      # --capture safe is the default
-shape profile orders.csv -o orders.shape --k 10 --column-k status=25
-shape profile orders.csv -o orders.shape --classify ssn=CONFIDENTIAL --classify salary=SECRET
-shape profile orders.csv -o orders.full.shape --capture full  # real values: do not commit or share
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 ```python
 shape.save(profile, "orders.shape")                       # capture="safe"
@@ -95,11 +98,7 @@ real status codes, categories or region names with their frequencies), `--captur
 in the clear in the file you commit. A **value vault** keeps them in a separate file, encrypted with
 AES-256-GCM under a key you hold, and the `.shape` stays the safe, committable capture:
 
-```bash
-shape profile orders.csv -o orders.shape --vault orders.shapevault \
-      --vault-policy policy.json --kek file://KEK.key
-shape generate --from orders.shape --vault orders.shapevault --kek file://KEK.key -f csv -o out
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 Only what the safe capture withheld is vaulted, column by column, as the policy says (`categories`,
 `extremes`, `all`, `none`; by column, by classification or by default). Without `--vault`, nothing
@@ -119,7 +118,7 @@ A full profile holds value-bearing evidence (exact minimum and maximum, every en
 
 `--unsafe-full-fidelity` is the one opt-out: it turns the controls off and stamps the artifact `unsafe`.
 
-`shape profile validate --safe ARTIFACT [--json]` scans a serialized artifact (never the data) and exits 0 only when it is proven clean, 1 on any finding, 2 on a usage error. It denies by shape rather than name: lists of more than two raw strings, numeric min/max pairs outside the length aggregates, personal-data patterns anywhere in a value, a missing table `row_count`, a missing safe-profile marker, or an `unsafe` stamp. It is a leak scanner, not proof of anonymity.
+`shape profile validate --safe ARTIFACT [--json]` scans a serialized artifact (never the data) and exits 0 only when it is proven clean, 1 on any finding, 2 on a usage error. It denies by shape rather than name: lists of more than two raw strings, numeric min/max pairs outside the length aggregates, personal-data patterns anywhere in a value, a missing table `row_count`, a missing safe-profile marker, or an `unsafe` stamp. It is a leak scanner, not approval to share.
 
 ## Minimum cohort and small cells
 
@@ -132,4 +131,4 @@ Every released cell must be absent or stand for at least the minimum cohort `k` 
 - `release_for` applies the rule inside the profile's `joint` block when no column is classified above the target (#650): a row of a conditional table, or a dependency violation, that stands for fewer than `k` rows is withheld, and inside one the values below `k` rows fold into `__OTHER__` (conditional shares are stored to four decimals and read with a lower bound for that rounding); `cohorts`, `copula` and `multivariate_outliers`, whose cells are not checked one by one, are withheld. When any column is above the target, the whole `joint` block is withheld;
 - a safe-profile column whose non-null rows are fewer than its `k` releases no value statistic (#395): `mean`, `std`, `quantiles`, `bounds` and `distribution_params` are `null`, since the mean of one row is the value. `--unsafe-full-fidelity` keeps them, and `shape profile validate --safe` reports such a statistic as a finding (rule `small-cohort-statistic`).
 
-This limits what a single release shows. It does not stop differencing across releases (see `differencing_risk`) and is not an anonymity guarantee.
+This limits what a single release shows. It does not stop differencing across releases (see `differencing_risk`) and is not a sharing guarantee.

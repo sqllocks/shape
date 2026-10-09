@@ -1,5 +1,8 @@
 # Built-in plugins
 
+Status: experimental.
+
+
 Everything core ships is a plugin: it registers through the same entry points as a third-party
 plugin and is reached through the [plugin host](host.md). `shape plugins doctor` lists them all
 (with their `sqllocks-shape` source).

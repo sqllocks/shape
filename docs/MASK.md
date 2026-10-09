@@ -1,15 +1,15 @@
 # Masking personal data: `shape mask`
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 `shape mask` replaces personal data in data files with synthetic values of the same format, so
 the files can be shared or used for testing. The same code is the `mask` built-in of the
 `shape.transforms` group, usable from Python.
 
-```bash
-shape mask ./real_data/ -o ./masked/                  # every CSV file in the directory
-shape mask customers.csv -o ./masked/ --seed 7
-shape mask ./real_data/ -o ./masked/ --format parquet
-shape mask orders.csv -o ./masked/ --exclude notes --pii token=ssn --json
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 | Option | Meaning |
 |---|---|
@@ -81,11 +81,7 @@ on the other rows, the table, the column, the order of rows or the run. Mask a t
 new extract next month with the same key and the same customer gets the same mask, so joins hold
 across extracts. Without a key (`--seed`), masks depend on the whole set of values in the run.
 
-```bash
-export SHAPE_MASK_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
-shape mask ./real_data/ -o ./masked/ --key-env SHAPE_MASK_KEY
-shape mask ./real_data/ -o ./masked/ --key-file ~/.config/mykey      # chmod 600
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 Keyed mode needs the `cryptography` package (`pip install 'sqllocks-shape[sign]'`). It masks
 e-mail, phone, first name, last name, name, SSN, ZIP and date-of-birth columns value by value.
@@ -155,7 +151,7 @@ A change that would alter outputs needs a new major version of the masking API. 
 **Security notes.** Masks come from HMAC-SHA256 (the `cryptography` package) over the key, the
 kind, and the value. A small input domain (a 4-digit code, a birth year) can be searched
 completely by anyone who has the key, so format-preserving masking is pseudonymization, not
-anonymization.
+data minimisation.
 
 ## Changes to existing behaviour
 

@@ -47,6 +47,8 @@ class AggregateWindowResult:
 
 
 class AggregateTumblingWindow:
+    """Maintain numeric aggregates in fixed event-time windows."""
+
     def __init__(self, size: timedelta, allowed_lateness: timedelta = timedelta(0)):
         if size.total_seconds() <= 0 or allowed_lateness.total_seconds() < 0:
             raise ValueError("invalid window")

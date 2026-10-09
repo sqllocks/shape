@@ -1,10 +1,13 @@
 # Testing with Shape: the pytest plugin and `shape seed`
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 ## The pytest plugin
 
-```bash
-pip install 'sqllocks-shape[pytest,domains]'
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 The `pytest` extra installs pytest. The plugin itself is registered by the package through the
 `pytest11` entry point (`shape = "shape.testdata.pytest_plugin"`), as pytest plugins are, so it loads
@@ -62,12 +65,7 @@ passes none) and of every scenario marker. Use it to rerun a suite on other data
 
 ## `shape seed`
 
-```bash
-shape seed retail --target postgresql://shape@localhost:5432/shape --scale small --seed 7
-shape seed schema.json --target mssql://localhost:1433/test --mode truncate
-shape seed retail --target mysql://shape@localhost/shape --dry-run
-shape seed retail --target sql://./seed-scripts --scale tiny
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `SPEC|DOMAIN` is an installed domain or a generation schema file (`shape from-ddl` writes one).
 `--target` is a database URI whose scheme picks the installed sink (`mssql` or `sqlserver`,

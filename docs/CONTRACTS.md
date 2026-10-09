@@ -1,5 +1,8 @@
 # Contracts: `shape check`
 
+Status: available.
+
+
 A contract is a JSON object (format `shape.contracts.v1`) that `shape check PROFILE.shape
 CONTRACT.json` and `shape.check(profile, contract)` test a profile against. Every key is optional;
 an empty contract passes. A contract against a dataset profile (several tables) has a `tables`

@@ -1,5 +1,10 @@
 # Release checklist
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 How a Shape release is made, from the owner's approval to the checks after it is on PyPI, and
 how to recover when something goes wrong. It covers the core distribution `sqllocks-shape` and
 every first-party plugin `sqllocks-shape-<plugin>`: they share one version and are released
@@ -69,10 +74,7 @@ through a pull request like any other change.
    review done.
 2. **Set the version everywhere** (owner-approved change):
 
-   ```bash
-   python scripts/set_version.py 1.0.0 --dry-run   # the 16 files it will change
-   python scripts/set_version.py 1.0.0
-   ```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
    It rewrites exactly the places the release version lives (core and plugin `pyproject.toml`
    versions and first-party `==` pins, `__version__`, the kernel's `Cargo.toml` and
@@ -88,11 +90,7 @@ through a pull request like any other change.
    words; from 1.0 it neither requires nor forbids them.
 5. **Check the tree is releasable:**
 
-   ```bash
-   python scripts/check_versions.py --release --expect 1.0.0
-   python scripts/check_plugin_skeletons.py
-   make check
-   ```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
    `--release` requires a final version (no `.dev`, `a`, `b` or `rc`: Fabric's library pickers
    may hide pre-releases), a `## 1.0.0` changelog section and, below 1.0, the words "early access"
@@ -134,10 +132,7 @@ TestPyPI round needs a new version.
 
 1. Tag the release commit on `main` (the same commit the TestPyPI run built) and push the tag:
 
-   ```bash
-   git tag -a v1.0.0 -m "Shape 1.0.0" <release-commit>
-   git push origin v1.0.0
-   ```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
    The tag must be `v` plus the version: `check_versions.py --tag` fails the build otherwise.
 2. The tag starts **Publish** (to PyPI) and **Container**. Approve the `pypi` deployment.
@@ -151,10 +146,7 @@ TestPyPI round needs a new version.
 2. **Provenance:** each file on PyPI shows its provenance (PEP 740) in the file's details. For a
    downloaded archive:
 
-   ```bash
-   sha256sum -c SHA256SUMS                      # from the release-sbom artifact
-   gh attestation verify sqllocks_shape-1.0.0-py3-none-any.whl --repo sqllocks/shape
-   ```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
    The attestation names `.github/workflows/release.yml` as the signer workflow.
 3. **A clean install:** in a fresh Python 3.11 environment, `pip install "sqllocks-shape[all]==1.0.0"`,

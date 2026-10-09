@@ -1,5 +1,10 @@
 # Fabric commands
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 The `sqllocks-shape-fabric` plugin adds `shape fabric`, with eight commands, each also a top-level
 command of its own, and `shape profile-model`:
 
@@ -24,12 +29,7 @@ database login: it applies to `publish -t sql-database|warehouse` only.
 
 ## `publish`
 
-```
-shape publish retail -t lakehouse --base-path onelake://MyWorkspace/MyLakehouse/Files
-shape publish retail -t sql-database --connection-string env://SHAPE_SQL_CONNECTION
-shape publish retail -t warehouse --connection-string env://WH --staging-path onelake://W/L/Files
-shape publish retail -t eventhouse --connection-string https://<query-uri-host> --database mydb
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 `DOMAIN` is a domain or a generation schema file. `-s/--scale`, `--seed`, `-m/--mode 3nf|star` as in
 `shape generate`. `--dry-run` generates and prints the table summary and publishes nothing.
@@ -53,10 +53,7 @@ shape publish retail -t eventhouse --connection-string https://<query-uri-host> 
 
 ## `notebook` and `deploy-notebook`
 
-```
-shape notebook retail --target lakehouse -o retail.ipynb      # or print the JSON: no -o
-shape deploy-notebook retail --workspace "Demo" --auth cli
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 The notebook installs Shape, generates the domain with `shape.generate`, checks foreign keys and
 writes Parquet files to the default Lakehouse (`--target lakehouse`), CSV files (`csv`) or shows a
@@ -66,10 +63,7 @@ of the listing. A creation that Fabric accepts to finish later is followed to it
 
 ## `setup-fabric`
 
-```
-shape setup-fabric --workspace "Demo" --create-lakehouse
-shape setup-fabric --snippet        # print the cell to paste into a notebook instead
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 Creates the Fabric Environment item (`--env-name`, default `shape-env`) and, with
 `--create-lakehouse`, a Lakehouse (`--lakehouse-name`). An item that already exists is reused. The
@@ -77,9 +71,7 @@ command prints the libraries to add to the Environment; adding them is done in F
 
 ## `export-model`
 
-```
-shape export-model retail --source-type warehouse --source-name Sales -o retail.bim
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 Writes a Tabular Object Model document (compatibility level 1604): typed columns, relationships,
 one Power Query partition per table for the source (`--source-type lakehouse|warehouse|sql_database`,
@@ -98,9 +90,7 @@ database's. For a Lakehouse the expression keeps the placeholders `{workspace_id
 
 ## `profile-model`
 
-```
-shape profile-model Sales/Retail -o retail.shape [--tables Customer,Orders] [--max-rows 100000] [--json]
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 Profiles every table of a Power BI / Fabric semantic model as one dataset profile and records the
 model's relationships, the way `shape profile-db` does for a SQL Server schema. It needs `sempy`
@@ -134,10 +124,7 @@ not in the model, a bad `--max-rows`, no `-o`, `sempy` missing).
 
 ## `known-answer`
 
-```
-shape known-answer retail --scale fabric_demo -o ka/
-shape known-answer schema.json --seed 7 --measures measures.json --plant order_line.line_total=250000 -o ka/
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 Generates a dataset whose measure results are known exactly, so a model author can tell whether
 the measures return the right numbers. `DOMAIN` is a domain or a generation schema file; `-s/--scale`
@@ -226,10 +213,7 @@ non-decimal plant column). The same inputs give byte-identical `answers.json`, `
 
 ## `check-answers`
 
-```
-shape check-answers ka/answers.json results/
-shape check-answers ka/answers.json results.json --places 4
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 `RESULTS` is a CSV or JSON export of the queries of `queries.dax`:
 

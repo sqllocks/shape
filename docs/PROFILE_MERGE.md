@@ -1,20 +1,14 @@
 # Mergeable profiles
 
+Status: available.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 Daily captures roll up into weekly or monthly baselines, and the partitions of a large table
 profile separately and combine, without reading the data again.
 
-```bash
-# profile each partition, keeping the mergeable sketch state (it holds real values, so only a
-# full capture keeps it: do not commit or share these files)
-shape profile day1.parquet -o day1.shape --sketches --capture full
-shape profile day2.parquet -o day2.shape --sketches --capture full
-
-# combine them
-shape profile merge day1.shape day2.shape -o week.shape --name week --capture full
-
-# profiles written without --sketches can still be merged for their exact statistics
-shape profile merge a.shape b.shape -o ab.shape --exact-only
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 ```python
 import shape

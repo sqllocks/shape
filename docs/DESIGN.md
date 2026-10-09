@@ -1,16 +1,17 @@
 # Schema design
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 Designing a relational or a dimensional schema from a description of the data is mechanical once
 the facts are written down. `shape design` does that part: it reads a **design input** (entities,
 attributes, keys, functional dependencies, hierarchies, history needs, and facts with a declared
 grain and measures), lints it, and writes DDL for a **3NF**, **star** or **snowflake** schema. The
 same input always gives the same bytes.
 
-```bash
-shape design retail.design.json --mode star --dialect postgres -o retail.sql --json retail.tables.json
-shape design retail.design.json --mode snowflake --lint        # the lint report only (JSON)
-shape design orders.csv --from-data --name orders -o orders.design.json
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 Exit codes: 0 ok, 1 a lint error (or a warning with `--strict`), 2 bad input. DDL is written to
 standard output when `-o` is not given; lint findings go to standard error.

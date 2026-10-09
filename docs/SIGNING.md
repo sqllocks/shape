@@ -1,5 +1,10 @@
 # Signing `.shape` artifacts
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 A `.shape` file carries SHA-256 hashes of its components. Those hashes catch corruption, not
 tampering: anyone who edits a component can rewrite the hashes in the manifest to match.
 Signing closes that gap. A signature by a key you trust proves who produced the artifact and
@@ -7,9 +12,7 @@ that nothing in it changed since.
 
 Signing uses Ed25519 and needs the `[sign]` extra:
 
-```bash
-pip install "sqllocks-shape[sign]"
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 ## What is signed
 
@@ -36,14 +39,7 @@ Verification checks the signature first and then every content hash.
 
 ## Commands
 
-```bash
-shape keygen release              # writes release.key (encrypted, mode 0600) and release.pub
-shape profile data.csv -o data.shape --sign release.key
-shape capture data.csv -o data.shape --sign release.key
-shape sign data.shape --key release.key        # sign an existing artifact (-o OUT to keep the original)
-shape verify data.shape --key release.pub      # exit 0 valid, 1 not valid, 2 unreadable
-shape inspect data.shape --verify release.pub  # also check, diff, query, plan
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `--verify PUBKEY` on `inspect`, `show`, `check`, `diff`, `query` and `plan` verifies every
 `.shape` input before the command runs and stops with exit code 1 if one fails.
@@ -74,10 +70,7 @@ take a *key source*:
 
 So a pipeline never has to write the key to disk:
 
-```bash
-shape sign data.shape --key env://SHAPE_SIGNING_KEY --passphrase-env SHAPE_SIGNING_PASSPHRASE
-printf '%s' "$KEY" | shape sign data.shape --key - --passphrase-env SHAPE_SIGNING_PASSPHRASE
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 The `env://`, `file://` and `kv://` references are the same credential references that Fabric
 credentials use. `kv://` is pluggable because core ships no cloud SDK: register a resolver with
@@ -133,9 +126,7 @@ it. `shape migrate` never touches the signed original (keep it: it is the eviden
 migrated artifact as a new file, and writes a **signed receipt** that names both files by SHA-256
 and records the source's signature:
 
-```bash
-shape migrate old.shape new.shape --verify old.pub --sign-key release.key
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `--verify` checks the source's signature first and stops if it fails; `--sign-key` signs the new
 artifact and the receipt (`new.shape.receipt.json`). A signed source needs `--sign-key`, or

@@ -1,5 +1,10 @@
 # Fabric platform inventory
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 Every Fabric and OneLake surface that Shape calls or targets, with its release stage. A test
 (`tests/docs/test_fabric_platform.py`) reads the table below and fails when the code builds a
 Fabric REST path or names an item type that is not listed, or is listed `preview` or `retired`,
@@ -110,13 +115,7 @@ Git credentials set up for the workspace.
 
 Run by hand:
 
-```
-pip install -e '.[dev]' -e 'plugins/shape-fabric[entra]'
-FABRIC_TENANT_ID=... FABRIC_CLIENT_ID=... FABRIC_CLIENT_SECRET=... FABRIC_WORKSPACE_ID=... \
-FABRIC_GIT_REMOTE=https://github.com/<owner>/<repo>.git FABRIC_GIT_TOKEN=... \
-SHAPE_LIVE_RESULT=git-sync-result.json \
-pytest -m live plugins/shape-fabric/tests/test_live_git_sync.py
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 The nightly job `fabric-git-sync-live` runs it only where the secrets are set and uploads the
 result file. The result is a `shape-live-check` document (`format`, integer `version`,

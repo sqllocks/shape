@@ -1,5 +1,10 @@
 # Planned changes: `shape-changes.yml`
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 A release adds a column, a migration changes a type, a source switches vendor. Until now the only
 ways to keep `shape diff --fail-on-drift` and the gates quiet were `--ignore`, a looser threshold
 or an `observe` gate, and all of those also hide changes nobody planned. A planned-change file
@@ -70,9 +75,7 @@ CI job). The first matching entry in file order wins.
 
 ## `shape diff`
 
-```
-shape diff base.shape today.shape --fail-on-drift --changes shape-changes.yml
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 The `--json` result adds three lists next to `drifted` and `changes`:
 
@@ -85,9 +88,7 @@ The result's `semver` counts unplanned changes only; the planned ones are counte
 `semver.planned`. `--fail-on CLASS` never fails on an `expect` entry, and fails again one day after
 its `until`:
 
-```
-shape diff base.shape today.shape --fail-on breaking --changes shape-changes.yml
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 A planned change is marked `(planned: ID)` in the lines `shape diff` prints on stderr.
 With a rolling-window baseline (`docs/PROJECT.md`) the lists describe the first run of the window,
@@ -140,11 +141,7 @@ A planned type change, with the mean allowed to move while the migration runs:
 
 ## Acknowledging a reported change
 
-```
-shape diff base.shape today.shape --json result.json        # exit 1: drift
-shape changes ack result.json --until 2026-12-31 --reason "reviewed with the owner" --by sam --all
-shape diff base.shape today.shape --fail-on-drift             # exit 0 inside the window
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `shape changes ack RESULT.json` turns the selected changes (`--all`: every change that is not
 already planned; `--change N`, 1-based, repeatable) into `expect` entries with `acknowledged_by`

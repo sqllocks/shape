@@ -168,36 +168,6 @@ def performance_markdown(results: dict[str, Any]) -> str:
                 out.append(f"| {_label(key, w)} | not counted | — | — | — | — |")
         out.append("")
 
-    out += ["## Kernel microbenchmarks", ""]
-    micro = results.get("kernel_microbench") or {}
-    kernels = micro.get("kernels") or {}
-    if not kernels:
-        out += ["No kernel microbenchmark has been recorded yet.", ""]
-    else:
-        out += [
-            f"The native kernel functions against their pure-Python twins, on {micro.get('rows')} "
-            f"rows, median of {micro.get('runs')} runs (recorded {micro.get('measured_utc')}). "
-            "A kernel is listed with a time only when its output was equivalent to its twin's. "
-            "The slower twin is timed on fewer rows (the last column) and its time is scaled "
-            "linearly to the same row count as the native time. "
-            "See [the generation kernel](../GENERATION_KERNEL.md).",
-            "",
-            "| Kernel | Equivalent to twin | Native (s) | Python twin (s, scaled) | "
-            "Native vs twin | Twin rows timed |",
-            "|---|---|---|---|---|---|",
-        ]
-        for name in sorted(kernels):
-            k = kernels[name]
-            if k.get("equivalent_to_reference") is not True:
-                out.append(f"| `{name}` | no: not counted | — | — | — | — |")
-                continue
-            speed = k.get("speedup_vs_reference")
-            out.append(
-                f"| `{name}` | yes | {k['native_s']:.4f} | {k['reference_s']:.4f} | "
-                f"{f'{speed:.1f}x' if isinstance(speed, (int, float)) else '—'} | "
-                f"{k.get('reference_rows_measured', k.get('rows'))} |"
-            )
-        out.append("")
     return "\n".join(out).rstrip() + "\n"
 
 
@@ -263,6 +233,66 @@ def on_page_markdown(markdown: str, page: Any, config: Any, files: Any) -> str:
         f = files.get_file_from_path(rel)
         return f is not None and not f.inclusion.is_excluded()
 
+    import html
+    from urllib.parse import urlencode
+
+    if page.file.src_uri == "LICENSING.md":
+        notices = (ROOT / "THIRD_PARTY_NOTICES.md").read_text()
+        table = notices.split("## Per-domain reference-data attribution\n", 1)[1]
+        markdown = markdown.replace("<!-- domain-licences -->", table)
+        library = notices.split("## Public dataset library\n", 1)[1].split("## Per-domain", 1)[0]
+        credits = []
+        for section in library.split("\n### ")[1:]:
+            title = section.split("\n", 1)[0]
+            attribution = next(
+                line.removeprefix("- Attribution: ")
+                for line in section.splitlines()
+                if line.startswith("- Attribution:")
+            )
+            licence = next(
+                line.removeprefix("- Licence: ")
+                for line in section.splitlines()
+                if line.startswith("- Licence:")
+            )
+            credits += ["### " + title, "", attribution, "", "Licence: " + licence, ""]
+        markdown = markdown.replace("<!-- library-credits -->", "\n".join(credits))
+    if page.file.src_uri == "POSTS.md":
+        import yaml
+
+        series = yaml.safe_load((ROOT / "docs/series.yml").read_text())
+        rows = ["| Topic | Related page | Post | Video | Status |", "|---|---|---|---|---|"]
+        for item in series:
+            if item["status"] == "coming" and (item.get("post_url") or item.get("video_url")):
+                raise ValueError("Coming series topic has a publication URL")
+            related = item["related_page"]
+            if not (ROOT / "docs" / related).exists():
+                raise ValueError("Series topic links to a missing page: " + related)
+            links = [
+                f"[{label}]({item[field]})" if item.get(field) else "coming"
+                for field, label in (("post_url", "Post"), ("video_url", "Video"))
+            ]
+            rows.append(
+                f"| {item['topic']} | [Docs]({related}) | {links[0]} | "
+                f"{links[1]} | {item['status']} |"
+            )
+        markdown = markdown.replace("<!-- series -->", "\n".join(rows))
+    for key in ("post", "video"):
+        value = page.meta.get(key)
+        if value:
+            markdown += f"\n\n[{key.title()}]({value})"
+    page_url = config["site_url"].rstrip("/") + "/" + page.url
+    query = urlencode(
+        {
+            "template": "docs-problem.yml",
+            "title": "Docs problem: " + page.title,
+            "page-url": page_url,
+        }
+    )
+    markdown += (
+        '\n\n<a class="docs-problem" href="'
+        + html.escape(config["repo_url"] + "/issues/new?" + query, quote=True)
+        + '">Report a problem with this page</a>\n'
+    )
     return rewrite_links(
         markdown, page.file.src_uri, Path(config["docs_dir"]), is_site_file, config["repo_url"]
     )
@@ -270,9 +300,77 @@ def on_page_markdown(markdown: str, page: Any, config: Any, files: Any) -> str:
 
 def on_files(files: Any, config: Any) -> Any:
     """mkdocs hook: add the two generated pages to the site."""
+    import importlib.util
+
     from mkdocs.structure.files import File
 
+    spec = importlib.util.spec_from_file_location(
+        "docs_public_api", ROOT / "scripts/docs_public_api.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    missing = module.missing_docstrings()
+    if missing:
+        raise ValueError("Public API docstrings missing: " + ", ".join(missing))
+    files.append(File.generated(config, "reference/api.md", content=module.reference_markdown()))
     results = json.loads(RESULTS.read_text(encoding="utf-8"))
     files.append(File.generated(config, CLI_PAGE, content=cli_reference_markdown()))
     files.append(File.generated(config, PERFORMANCE_PAGE, content=performance_markdown(results)))
+    for filename in (
+        "CONTRIBUTING.md",
+        "GOVERNANCE.md",
+        "SECURITY.md",
+        "CODE_OF_CONDUCT.md",
+        "CHANGELOG.md",
+    ):
+        markdown = (ROOT / filename).read_text()
+        # Root Markdown links remain correct in the generated site copy.
+        markdown = markdown.replace("](docs/", "](")
+        files.append(File.generated(config, filename, content=markdown))
     return files
+
+
+def on_post_build(config: Any) -> None:
+    """Write discoverable text indexes from the built site pages."""
+    from html.parser import HTMLParser
+
+    class PlainText(HTMLParser):
+        def __init__(self) -> None:
+            super().__init__()
+            self.active = False
+            self.parts: list[str] = []
+
+        def handle_starttag(self, tag: str, attrs: Any) -> None:
+            if tag == "article":
+                self.active = True
+
+        def handle_endtag(self, tag: str) -> None:
+            if tag == "article":
+                self.active = False
+
+        def handle_data(self, data: str) -> None:
+            if self.active and data.strip():
+                self.parts.append(data.strip())
+
+    site = Path(config["site_dir"])
+    index = [
+        "# Shape documentation",
+        "",
+        "Early access 0.9.1. Profiling, contracts and drift are available.",
+        "",
+    ]
+    full = index.copy()
+    for path in sorted(site.rglob("*.html")):
+        if path.name == "404.html":
+            continue
+        parser = PlainText()
+        parser.feed(path.read_text())
+        if not parser.parts:
+            continue
+        rel = path.relative_to(site).as_posix()
+        url = config["site_url"].rstrip("/") + "/" + rel.removesuffix("index.html")
+        title = parser.parts[0]
+        index += [f"- [{title}]({url})"]
+        full += [f"## {title}", url, "", "\n".join(parser.parts), ""]
+    (site / "llms.txt").write_text("\n".join(index) + "\n")
+    (site / "llms-full.txt").write_text("\n".join(full) + "\n")

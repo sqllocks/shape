@@ -1,17 +1,15 @@
 # Verifying data: gates, quarantine and `shape verify`
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 `shape verify` checks tables you generated or received against a schema, with a set of
 validation gates, and writes a report. The same gates, and a quarantine for what fails them,
 are available from Python as `shape.quality`.
 
-```bash
-shape verify out/ --schema gates.json                   # a directory of Parquet, CSV or JSONL files
-shape verify orders.csv --schema gates.json --strict    # exit 1 on warnings too
-shape verify out/ --schema gates.json --statistical -o report.md   # add KS / chi-squared tests
-shape verify out/ --schema gates.json -o report.json
-shape verify out/ --schema gates.json --config verify.json   # add range, temporal, drift, file gates
-shape verify out/ --source real/ --config verify.json        # add the memorization (and utility) gate
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 A directory may mix Parquet, CSV and JSONL files: with `--format auto` (the default) every
 file is loaded as a table named after its file stem, each by its own extension. A table that
@@ -268,9 +266,7 @@ Contract v1 accepts the same two lists as optional top-level rules, `"timeseries
 `"reconcile"` (an older Shape refuses them as unknown keys). They check data, not a profile, so
 `shape check` takes the data too, and a contract with these rules and no data exits `2`:
 
-```bash
-shape check orders.shape contract.json --data out/        # exit 1 on a violation
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 ```python
 shape.check(profile, "contract.json", data=tables_or_path)

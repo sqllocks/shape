@@ -24,6 +24,7 @@ _DATE = re.compile(r"^(?:\d{4}([-/.])\d{1,2}\1\d{1,2}|\d{1,2}([-/.])\d{1,2}\2\d{
 
 
 def detect_value(value: Any) -> tuple[Detection, ...]:
+    """Return recognized personal-data pattern matches for one value."""
     if value is None:
         return ()
     s = str(value).strip()
@@ -44,6 +45,7 @@ def detect_value(value: Any) -> tuple[Detection, ...]:
 
 
 def detect_column(values: Iterable[Any], sample_limit: int = 1000) -> tuple[Detection, ...]:
+    """Aggregate recognized pattern matches from a bounded sample of non-null values."""
     counts: dict[str, int] = {}
     n = 0
     for v in values:

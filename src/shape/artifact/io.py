@@ -142,6 +142,7 @@ def write_container(
 def write_artifact(
     path: Any, manifest: dict[str, Any], components: dict[str, bytes]
 ) -> dict[str, Any]:
+    """Validate components and write a bounded artifact container with its manifest."""
     if len(components) > 10000:
         raise ArtifactError("too many components")
     for k in components:

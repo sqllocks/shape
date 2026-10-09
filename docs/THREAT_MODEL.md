@@ -1,14 +1,10 @@
 # Threat model
 
-Version of 2026-10-02 (P7-04). It covers everything built up to Phase 7: the profile engine, the
-`.shape` container and signing, the generation engine, the emit runtime and its emitters (Kafka,
-Event Hubs, Fabric), `shape stream`, live fidelity, scenario packs and GSL, chaos, `shape mask`,
-incremental generation, the profile registry, generation inside pipelines (Fabric, Synapse and ADF
-notebooks, the Fabric UDF), the SQL Server plugin, contracts and `shape git-setup`.
+Status: experimental.
 
-Every control named here has a test that enforces it; a control without one is listed as a
-residual risk. The review that produced this version, with every finding, is in
-`docs/plans/lane_status/P7-04.md`.
+
+Review the shipped source and tests for each control. [Owner: security reviewer — confirm this
+threat model against the deployment before publishing an assurance statement.]
 
 ## Assets
 
@@ -100,7 +96,7 @@ Each row: the threat, the control, the test that enforces it.
 ### Privacy of profiles
 
 Raw-value leakage, re-identification and small cells are handled by the safe profile, the leak
-validator and k-anonymity (`docs/PRIVACY_MODEL.md`, `tests/privacy`). A full-fidelity `.shape`
+validator and k-release risk (`docs/PRIVACY_MODEL.md`, `tests/privacy`). A full-fidelity `.shape`
 and `--json` (`--capture full`) hold real values by design; the default capture of `shape profile`
 is the committable artifact (`docs/PRIVACY_MODEL.md`), and `shape profile validate --safe` flags a
 full one.

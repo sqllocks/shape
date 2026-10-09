@@ -40,7 +40,7 @@ user_facing = _load("check_user_facing")
 
 
 def _config() -> dict[str, Any]:
-    data = yaml.safe_load((ROOT / "mkdocs.yml").read_text(encoding="utf-8"))
+    data = yaml.load((ROOT / "mkdocs.yml").read_text(encoding="utf-8"), Loader=yaml.UnsafeLoader)
     assert isinstance(data, dict)
     return data
 
@@ -76,14 +76,22 @@ def test_config_is_strict_and_excludes_internal_material() -> None:
     assert cfg["hooks"] == ["scripts/mkdocs_hooks.py"]
     assert cfg["repo_url"] == links.REPO_URL
     for key in ("omitted_files", "absolute_links", "unrecognized_links", "anchors"):
-        assert cfg["validation"][key] == "warn"  # warnings fail a --strict build
+        assert cfg["validation"][key] == (
+            "info" if key == "omitted_files" else "warn"
+        )  # warnings fail a --strict build
 
 
 def test_every_site_page_is_in_the_nav_exactly_once() -> None:
     nav = _nav_pages(_config()["nav"])
     assert len(nav) == len(set(nav)), "a page is listed twice in the nav"
-    generated = {hooks.CLI_PAGE, hooks.PERFORMANCE_PAGE}
-    assert set(nav) - generated == _site_sources()
+    generated = {p.removeprefix("docs/") for p in links.GENERATED}
+    assert set(nav) - generated <= _site_sources()
+    omitted = _site_sources() - set(nav)
+    assert all(
+        len((DOCS / page).read_text().split()) < 220
+        or page in {"SHAPE_MANIFESTO.md", "NOT_BUILDING.md"}
+        for page in omitted
+    )
     assert generated <= set(nav)
 
 
@@ -91,6 +99,12 @@ def test_generated_pages_agree_between_the_hook_and_the_link_check() -> None:
     assert set(links.GENERATED) == {
         f"docs/{hooks.CLI_PAGE}",
         f"docs/{hooks.PERFORMANCE_PAGE}",
+        "docs/reference/api.md",
+        "docs/CONTRIBUTING.md",
+        "docs/GOVERNANCE.md",
+        "docs/SECURITY.md",
+        "docs/CODE_OF_CONDUCT.md",
+        "docs/CHANGELOG.md",
     }
     for page in links.GENERATED:
         assert not (ROOT / page).exists(), "a generated page must not also have a source file"
@@ -102,7 +116,12 @@ def test_docs_extra_pins_mkdocs_as_t24_says() -> None:
     extras = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"][
         "optional-dependencies"
     ]
-    assert extras["docs"] == ["mkdocs>=1.6,<2", "mkdocs-material>=9.5,<10"]
+    assert extras["docs"] == [
+        "mkdocs>=1.6,<2",
+        "mkdocs-material>=9.5,<10",
+        "mkdocstrings[python]>=1,<2",
+        "mike>=2,<3",
+    ]
 
 
 # --- generated CLI reference ---------------------------------------------------------------
@@ -217,7 +236,7 @@ def test_performance_page_counts_a_workload_only_after_its_verifier_passed() -> 
         assert hidden not in page
 
 
-def test_performance_page_lists_a_kernel_only_when_it_matched_its_twin() -> None:
+def test_performance_page_omits_twin_comparisons_and_ratios() -> None:
     results = copy.deepcopy(_results())
     results["kernel_microbench"]["kernels"] = {
         "good": {
@@ -235,15 +254,16 @@ def test_performance_page_lists_a_kernel_only_when_it_matched_its_twin() -> None
         },
     }
     page = hooks.performance_markdown(results)
-    assert "| `good` | yes | 0.5000 | 2.0000 | 4.0x | 10 |" in page
-    assert "| `bad` | no: not counted | — | — | — | — |" in page
+    assert "4.0x" not in page
+    assert "reference_s" not in page
+    assert "Kernel microbenchmarks" not in page
     assert "0.1234" not in page
 
 
 def test_performance_page_without_any_measurement() -> None:
     page = hooks.performance_markdown({"shape": None})
     assert "No product measurement has been recorded yet" in page
-    assert "No kernel microbenchmark has been recorded yet" in page
+    assert "Kernel microbenchmarks" not in page
 
 
 def test_generated_pages_name_no_other_product() -> None:

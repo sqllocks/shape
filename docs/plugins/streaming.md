@@ -1,5 +1,10 @@
 # Stream sources and `shape stream-profile` (`shape-kafka`, `shape-eventhubs`, files)
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 Shape profiles streams it consumes. A **stream source** is a `shape.stream_sources` plugin that
 turns a Kafka topic or an Event Hubs hub into Arrow micro-batches with an offset after each one;
 `shape stream-profile` feeds those batches to the stream runtime
@@ -9,11 +14,7 @@ and deduplication on offset.
 
 ## Install
 
-```bash
-pip install 'sqllocks-shape[kafka]'        # sqllocks-shape-kafka and confluent-kafka
-pip install 'sqllocks-shape[eventhubs]'    # sqllocks-shape-eventhubs and azure-eventhub
-pip install 'sqllocks-shape-eventhubs[entra]'   # Microsoft Entra sign-in (azure-identity)
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 Neither client library is imported until a read starts, so `shape plugins doctor` is clean
 without a broker. `shape plugins list` shows `shape.stream_sources:kafka` and
@@ -21,15 +22,7 @@ without a broker. `shape plugins list` shows `shape.stream_sources:kafka` and
 
 ## Profile a stream
 
-```bash
-# everything the topic holds now, as one profile
-shape stream-profile kafka://broker:9092/orders -o orders.json
-
-# 5-minute tumbling windows, written as they close, resumable
-shape stream-profile eventhubs://contoso.servicebus.windows.net/telemetry \
-    --window tumbling --size 5m --allowed-lateness 30s \
-    --windows telemetry.jsonl --checkpoint telemetry.ckpt --follow
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 Exit codes: `0` done, `2` the input or the connection is wrong (nothing partial is hidden: the
 message says what).
@@ -61,14 +54,7 @@ its column's type is *rejected*, not coerced; a message that is not a JSON objec
 No broker is needed to try, test or replay a stream. The same command, with the same windows,
 lateness, event time, `--max-events` and checkpoints, reads:
 
-```bash
-shape stream retail -t order --max-events 5000 --sink file -o orders.jsonl   # a stream to replay
-shape stream-profile orders.jsonl --window tumbling --size 30d --windows orders.windows.jsonl
-shape stream-profile file:///data/landed/2026-06-02/ --window tumbling --size 5m --windows day.jsonl
-shape stream-profile 'landed/*.parquet' --event-time ts --window sliding --size 1h --slide 15m \
-    --windows history.jsonl
-cat events.jsonl | shape stream-profile - -o events.json
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 * **Sources:** a path or `file://` URI, a folder (its `.jsonl`, `.ndjson`, `.json`, `.csv`,
   `.parquet` files in name order; names starting with `.` or `_` are skipped), a glob (matches in

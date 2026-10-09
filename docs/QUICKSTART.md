@@ -1,32 +1,31 @@
-# Five-minute Shape quickstart
+# Quickstart
 
-Capture a table (CSV, Parquet, Delta, JSONL) into a portable Shape:
+Follow one short route from local rows to a reviewed baseline and generated data.
 
-```bash
-shape capture customers.csv -o customers.shape
-```
+Status: available.
 
-Inspect evidence without reopening the source rows:
+Start with [Your first profile](tutorials/01-first-profile.md). Its tested commands create
+forty local rows, profile them, save a safe `.shape` file and validate the capture. You can
+open the HTML file locally; it needs no account.
 
-```bash
-shape show customers.shape
-shape query customers.shape 'column("age").mean'
-```
+Next, [write a contract](tutorials/04-contract.md). You state that the id must be unique
+and non-null and that an amount cannot be negative. Run the check against the saved profile
+and read the observed output. A zero exit code means those rules pass; an unavailable rule
+is not a pass.
 
-Compare behavior over time:
+Then [commit a shape and catch drift](tutorials/03-drift.md). Keep the profile in an isolated
+Git repository, change the input, profile again and compare the artifacts. The example includes
+the expected nonzero drift exit code. Review a change before accepting a baseline.
 
-```bash
-shape capture customers_today.csv -o customers-today.shape
-shape compatibility customers.shape customers-today.shape --mode backward
-```
+Finally, [generate dev data from a profile](tutorials/05-generate-profile.md). Use an explicit
+format and output directory. Generation from a profile is available and is being hardened.
+Inspect the rows instead of assuming every property of the original data is reproduced.
 
-Check a Parquet (or Delta, JSONL, `abfss://`) feed for schema changes the same way; a renamed,
-dropped or retyped column is reported and the command exits 5:
+## What's next
 
-```bash
-shape capture orders.parquet -o orders-base.shape
-shape capture orders-today.parquet -o orders-today.shape
-shape compatibility orders-base.shape orders-today.shape
-```
+[Read the report](tutorials/02-read-report.md) or
+[generate a domain into DuckDB](tutorials/06-domain-duckdb.md).
 
-Use `shape plan customers.shape` to see reconstruction support and fidelity expectations. Use the Python generation/domain APIs for high-volume synthetic reconstruction, relational keys, addresses/locations, temporal behavior and scenarios.
+## Related
+
+[Install](INSTALL.md) · [Learning paths](LEARNING_PATHS.md) · [Known limitations](KNOWN_LIMITATIONS.md)

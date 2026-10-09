@@ -141,6 +141,8 @@ def _sink_arg(target: Any) -> Any:
 
 
 class CsvSink(_FileSink):
+    """Write Arrow batches to CSV files."""
+
     name = "csv"
     extension = "csv"
     # The byte format of the file (docs/GENERATION_STABILITY.md, "Byte-identical files"): the same
@@ -157,6 +159,8 @@ class CsvSink(_FileSink):
 
 
 class TsvSink(CsvSink):
+    """Write Arrow batches as tab-separated values."""
+
     name = "tsv"
     extension = "tsv"
 
@@ -252,6 +256,8 @@ class ParquetSink(_FileSink):
 
 
 class IpcSink(_FileSink):
+    """Write Arrow batches to Arrow IPC files."""
+
     name = "ipc"
     extension = "arrow"
 
@@ -317,6 +323,8 @@ class _JsonlWriter:
 
 
 class JsonlSink(_FileSink):
+    """Write Arrow batches as JSON lines."""
+
     name = "jsonl"
     extension = "jsonl"
     format_version = 1  # the byte format of the file (see CsvSink)

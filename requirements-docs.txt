@@ -1,0 +1,17 @@
+# Build and local tutorial dependencies; core/plugins install from the checkout in CI.
+mkdocs==1.6.1
+mkdocs-material==9.7.7
+mkdocstrings[python]==1.0.6
+mkdocstrings-python==2.0.9
+mike==2.2.0
+pytest==9.1.1
+PyYAML==6.0.3
+maturin>=1.15,<2
+numpy==2.5.3
+pyarrow==25.0.1
+pandas==3.0.6
+scipy==1.18.1
+Faker==40.41.0
+duckdb==1.5.6
+playwright==1.63.0
+cryptography>=50,<51

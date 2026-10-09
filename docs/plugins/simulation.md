@@ -1,5 +1,10 @@
 # Simulation patterns (`shape-simulation`)
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 `sqllocks-shape-simulation` also holds the file-drop, stream and workflow simulators, described in
 [SIMULATION_FILES_EVENTS.md](../SIMULATION_FILES_EVENTS.md). This page covers the pattern
 simulators: it generates the kinds of data a plain table generator does not: web
@@ -7,9 +12,7 @@ sessions, financial anomalies, IoT telemetry, service logs and traces, and a rid
 telemetry and finance marts. Each simulator takes a configuration (and, where it layers
 anomalies on existing data, Arrow tables) and returns Arrow tables and summary statistics.
 
-```bash
-pip install 'sqllocks-shape[simulation]'
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 Nothing is imported until a simulator runs. `shape plugins list` shows
 `shape.commands:simulate`; the command has one sub-command per simulator.
@@ -115,11 +118,7 @@ geography, lifecycle timestamps and ETAs), `trip_events`, `surge_signals`, `driv
 
 ## The command
 
-```bash
-shape simulate clickstream --set users=500 --set duration_hours=12 -o out/
-shape simulate iot --domain iot --scale small --seed 7 -o out/ --format csv
-shape simulate financial --domain my-schema.json --events settlements
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 `PATTERN` is `clickstream`, `financial`, `iot`, `operational-log` or `pulse`. `--set KEY=VALUE`
 sets a field of the configuration (values are Python literals); `--seed` sets the seed of the

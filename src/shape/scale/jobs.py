@@ -78,6 +78,7 @@ def now_iso() -> str:
 
 
 def default_jobs_dir() -> Path:
+    """Return the default local directory for persisted job state."""
     return Path(os.environ.get(JOBS_DIR_ENV) or Path.home() / ".shape" / "jobs")
 
 
@@ -174,6 +175,7 @@ class JobRecord:
 
 
 def new_job_id(kind: str) -> str:
+    """Return a new unique identifier for a persisted job."""
     prefix = "spark" if kind == "fabric_spark" else "local"
     return f"{prefix}-{uuid.uuid4().hex[:8]}"
 
@@ -620,6 +622,8 @@ class LocalRunner:
 
 @dataclass
 class StreamState:
+    """Persisted cursor and checkpoint state for a streaming job."""
+
     stream_id: str
     chunks_written: int = 0
     rows_written: int = 0

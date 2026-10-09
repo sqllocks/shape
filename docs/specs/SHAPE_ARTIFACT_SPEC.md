@@ -1,5 +1,8 @@
 # Shape Artifact Specification — Draft 1
 
+Status: experimental.
+
+
 A `.shape` artifact is a safe, bounded container for executable evidence about data behavior.
 
 Normative rules:

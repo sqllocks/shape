@@ -1,15 +1,16 @@
 # The project file: `shape.yml`
 
+Status: available.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 A Shape setup, in git. `shape.yml` holds what is otherwise spread over command-line flags: the
 named **sources**, a **baseline** for each, **thresholds** and **ignore** lists per column,
 **gates** with their **mode** (observe or enforce), and column **owners** and **annotations**.
 `shape init` writes a starting project; `shape project validate` checks one.
 
-```bash
-pip install "sqllocks-shape[yaml]"     # the file is YAML; PyYAML is an optional extra
-shape init my-feed --source orders     # shape.yml, folders, .gitattributes, a CI workflow
-cd my-feed && shape project validate
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 ## An example
 
@@ -130,9 +131,7 @@ is the raw result, `enforced_passed` is what decided the exit code.
 
 ## `shape init`
 
-```
-shape init [DIR] [--name NAME] [--source NAME[=PATH]]... [--force]
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 Writes `shape.yml` (valid, with the optional settings as comments), `data/`, `shapes/`,
 `contracts/` and `contracts/consumers/` (where consuming teams commit their contracts, see

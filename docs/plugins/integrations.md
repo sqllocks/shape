@@ -1,5 +1,10 @@
 # Integrations plugin
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 `sqllocks-shape-integrations` is one first-party plugin with a thin adapter for each tool a team
 may already use. Its version equals core's and it is released with core. It is built only on
 [plugin API v1](api-v1.md) and the run manifest, and core never depends on any of the tools:
@@ -14,10 +19,7 @@ each one is an **extra** you install on its own.
 | Anonymeter | `anonymeter` | `shape evaluate anonymeter` | privacy-risk report of synthetic against real |
 | Ibis / DuckDB | `ibis` | source `duckdb`, `shape_integrations.ibis.connect` | read a DuckDB table; explore an output folder |
 
-```
-pip install 'sqllocks-shape-integrations[openlineage]'      # one adapter
-pip install 'sqllocks-shape-integrations[mlflow,presidio]'  # several
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 Importing `shape_integrations` imports none of these libraries. Using an adapter whose library
 is missing exits with code 2 and says how to install it:
@@ -38,9 +40,7 @@ the library is missing they are skipped with the reason, never counted as passes
 
 **Command:**
 
-```
-shape lineage emit MANIFEST.json --to URL|file://PATH [--namespace NS] [--token-env VAR]
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 It turns a run manifest into OpenLineage `RunEvent`s: `START`, then `COMPLETE`, or `FAIL` when
 the manifest records a failed gate. `--namespace` defaults to `shape`; it is the namespace of
@@ -78,10 +78,7 @@ extra.
 
 **Command:**
 
-```
-shape mlflow log MANIFEST.json [--profile P.shape] [--verify-report R.json]
-                 [--experiment NAME] [--tracking-uri URI] [--allow-duplicate]
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 It logs one MLflow run (experiment `shape` unless `--experiment` says otherwise; created when
 missing; the tracking URI is `--tracking-uri` or MLflow's own default):
@@ -150,11 +147,7 @@ Anonymeter: see the note below.
 
 **Commands:**
 
-```
-shape evaluate sdmetrics  REAL_DIR SYNTH_DIR [--tables a,b] [-o REPORT.json] [--json]
-shape evaluate anonymeter REAL_DIR SYNTH_DIR --control CONTROL_DIR
-                          [--attacks singling-out,linkability,inference] [-o REPORT.json] [--json]
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 Tables are read from the directories the way `shape verify` reads them: every Parquet, CSV and
 JSONL file is one table, named by the file stem. `--tables` (SDMetrics) names the tables to
@@ -199,11 +192,7 @@ requires `numpy>=2`, so `pip` cannot resolve `sqllocks-shape-integrations[anonym
 library itself runs under NumPy 2 (the integration tests run it that way). Until Anonymeter
 publishes a release for NumPy 2, install it without its pins:
 
-```
-pip install sqllocks-shape-integrations
-pip install numba polars joblib 'scikit-learn~=1.2'
-pip install --no-deps 'anonymeter>=1,<2'
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 The `anonymeter` extra is declared so that the install command in every message stays the same
 once that release exists.

@@ -1,18 +1,16 @@
 # Emitting a contract: DDL, JSON Schema, pandera, Great Expectations
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 A v1 contract (the file `shape check` reads, `src/shape/contracts/v1.py`) says what a table must
 hold. `shape to-dbt-tests` turns it into dbt tests ([DBT.md](DBT.md)). `shape contract emit` turns
 it into the other places data is validated: database constraints, a JSON Schema for a row payload,
 a pandera schema for a Python pipeline, or a Great Expectations suite. It does not run any of them.
 
-```bash
-shape contract emit examples/contracts/orders.contract.json --to ddl -o orders.sql
-shape contract emit orders.contract.json --to ddl --dialect postgres -o orders.pg.sql
-shape contract emit orders.contract.json --to jsonschema -o orders.schema.json
-shape contract emit orders.contract.json --to pandera -o orders_schema.py
-shape contract emit orders.contract.json --to gx -o orders_suite.json
-shape contract emit orders.contract.json --to jsonschema --strict    # exit 1 if anything is lost
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 The same contract and options always give the same bytes (no timestamp, no id, sorted keys).
 What a target cannot say is **listed, never silently dropped** (`not_expressed`), and kept as

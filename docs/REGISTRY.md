@@ -1,8 +1,11 @@
 # `shape registry`: a content-addressed history of artifacts
 
-```
-shape registry ROOT ACTION ...
-```
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `ROOT` is a directory. Every version of a name is stored as the bytes you committed, under their
 sha256 (`objects/<sha256>`); `logs/<name>.jsonl` records each commit, `refs/<name>/latest` and
@@ -21,19 +24,11 @@ holds up to 500 real values per column and each column's minimum and maximum. Th
 scanned by the leak scanner and committed as it is (`profile_form` `safe`). `shape registry ...
 commit` refuses a raw one:
 
-```
-$ shape registry reg commit customers cust.shape
-shape: error: cust.shape is a raw profile: it holds real values from the data ...
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 Commit the safe form instead:
 
-```bash
-shape registry reg commit customers cust.shape --safe            # converts, then commits
-shape profile safe cust.shape -o cust.safe.json                  # or write it yourself ...
-shape registry reg commit customers cust.safe.json               # ... and commit that
-shape profile validate --safe cust.safe.json                     # exit 0: no leak found
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 A safe-profile JSON is scanned with the leak scanner before it is stored; one that fails (for
 example `shape profile safe --unsafe-full-fidelity` output) is not committed (exit 1). The safe
@@ -52,18 +47,7 @@ refused without being inflated.
 
 ## Commands
 
-```bash
-shape registry ROOT commit NAME ARTIFACT [--meta KEY=VALUE]... [--business-date YYYY-MM-DD]
-                                         [--safe [--k N] [--sensitive] | --allow-raw]
-shape registry ROOT log NAME             # every commit, oldest first (JSON; `created` is UTC)
-shape registry ROOT list                 # the names: commits, latest content id, tags
-shape registry ROOT show NAME [REF]      # one log entry
-shape registry ROOT diff NAME REF1 REF2  # what changed between two versions
-shape registry ROOT checkout NAME [REF] -o OUT
-shape registry ROOT tag NAME TAG [REF]
-shape registry ROOT promote NAME SOURCE TARGET
-shape registry ROOT prune --before DATE [--name NAME ...] [--keep-last N] [--dry-run] [--json]
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 A `REF` is `latest`, a tag, a promoted ref or a content id recorded for that name. `prune` removes
 old log entries and the objects nothing points at any more (see [Pruning](#pruning)).
@@ -90,11 +74,7 @@ old log entries and the objects nothing points at any more (see [Pruning](#pruni
 A registry only grows: every commit appends to `logs/<name>.jsonl` and adds an object. A team that
 commits on every pipeline run keeps it to a bounded size with `prune`:
 
-```bash
-shape registry reg prune --before 2026-06-01 --dry-run          # what would go; nothing changes
-shape registry reg prune --before 2026-06-01                    # every name
-shape registry reg prune --before 2026-06-01T00:00:00Z --name orders --keep-last 7 --json
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `--before` is a date (`YYYY-MM-DD`, midnight UTC) or an ISO 8601 timestamp with `Z` or an offset
 (`2026-06-01T02:00:00+02:00`); a timestamp without a zone is refused, because it names no instant.

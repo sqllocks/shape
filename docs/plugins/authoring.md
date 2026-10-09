@@ -1,5 +1,10 @@
 # Writing a Shape plugin
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 A plugin is an ordinary Python distribution that registers objects in one or more **entry-point
 groups**. Shape finds it through the installed metadata; nothing in core changes. First-party
 features use exactly the same route (see [builtins.md](builtins.md)).
@@ -13,13 +18,7 @@ plugins). A complete small plugin, with a source, a detector and a command, is i
 
 ## Start from a template
 
-```bash
-shape plugins new acme-iban --group shape.detectors      # a folder ./acme-iban
-cd acme-iban
-pip install -e . pytest
-pytest
-python -m shape.plugins.kit acme-iban
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 `shape plugins new NAME --group GROUP [-o DIR] [--author TEXT] [--dry-run]` writes a package that
 works and conforms from the first minute: `pyproject.toml` with the entry point in `GROUP`, a module
@@ -146,9 +145,7 @@ kit.check_installed(                   # every shape.* entry point of an install
 
 or, from a shell, with no samples (the shared rules only):
 
-```bash
-python -m shape.plugins.kit my-plugin
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 `check_plugin(group, obj, **sample)` picks the check from a group name.
 
@@ -161,12 +158,7 @@ rows) is up to your own tests.
 
 ## 4. Install and try it
 
-```bash
-pip install -e .
-shape plugins list --group shape.detectors
-shape plugins info shape.detectors:iban
-shape plugins doctor
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 The acceptance test for the kit does exactly this for `examples/plugin/`: it installs the
 example into a scratch directory outside the repository, runs the kit and the plugin's own

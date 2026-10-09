@@ -1,15 +1,15 @@
 # The report card: is this synthetic dataset fit to use?
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 `shape report-card` runs the checks that are spread over `shape fidelity`, `shape fidelity --tier`
 and `shape verify --source`, adds a membership-inference test, and states, per section, what
 passed, what failed and what was not run. It is local: it reads files and writes a file.
 
-```bash
-shape report-card real/ synthetic/ --config verify.json --holdout holdout/ \
-    --manifest out/RUN_MANIFEST.json -o card.json -o card.md -o card.html
-shape report-card real.parquet synthetic.parquet --json
-shape report-card real/ synthetic/ --config verify.json --require utility,privacy   # for CI
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `REAL` and `SYNTHETIC` are read as `shape fidelity` reads them: a file, or a directory with one file
 per table (two single files are compared whatever they are called). `--holdout` has the layout of

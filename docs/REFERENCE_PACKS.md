@@ -1,5 +1,10 @@
 # Reference packs and column validators
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 Shape ships reference data that works offline: a ZIP-to-city table, ISO code lists and the
 length of an IBAN in each country. They are **reference packs**, a small versioned format that you
 can also use for your own code lists. Everything is checked against a checksum before it is read,
@@ -11,13 +16,7 @@ dataset name. They all look a dataset up with `shape.generation.reference.load_d
 the datasets of packs as well as `<name>.json` files and registered datasets, so nothing changes
 for the caller.
 
-```bash
-shape reference list                      # every pack and dataset found
-shape reference show iso-3166-1           # manifest, fields and first rows
-shape profile orders.csv -o orders.shape \
-    --reference-pair zip,city,state=us_zip_city \
-    --validate country=iso3166_alpha2 --validate iban=iban
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 ## The pack format
 
@@ -163,11 +162,7 @@ confirmed:
 machine, download the files yourself and build the packs locally (the script reads files, never
 the network):
 
-```bash
-python scripts/build_reference_packs.py iso-4217 --source list-one.xml --out ~/packs/iso-4217
-python scripts/build_reference_packs.py iso-639 --source ISO-639-2_utf-8.txt --out ~/packs/iso-639
-export SHAPE_REFERENCE_PATH=~/packs
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `list-one.xml` is the SIX Group file at
 https://www.six-group.com/dam/download/financial-information/data-center/iso-currrency/lists/list-one.xml
@@ -204,9 +199,7 @@ A **validator** says whether a value is a valid code of some kind. It enters Sha
 shape.profile("orders.csv", validators={"iban": "iban", "country": ["iso3166_alpha2"]})
 ```
 
-```bash
-shape profile orders.csv -o orders.shape --validate iban=iban --validate country=iso3166_alpha2
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 ```json
 {"columns": {"iban": {"valid_as": {"kind": "iban", "min_valid_rate": 0.999}}}}

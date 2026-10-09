@@ -1,16 +1,15 @@
 # Data quality scorecards: `shape scorecard`
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 `shape scorecard` runs the validation gates of [`shape verify`](VERIFY.md) and turns their
 results into one score per data quality dimension, with the failing rows behind each score.
 It adds no checks of its own: a score is computed from the checks that already exist.
 
-```bash
-shape scorecard out/ --schema gates.json                      # Markdown on standard output
-shape scorecard out/ --schema gates.json --json -o card.json  # JSON
-shape scorecard out/ --schema gates.json --config verify.json --samples 3
-shape scorecard out/ --schema gates.json --flag-output flagged/   # add a flag column to copies
-shape scorecard out/ --schema gates.json --slice-by region --max-slice-gap 10   # per slice
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 Exit `0` when the scorecard was produced and `2` on an input error (missing data, bad schema,
 bad suppression file). The command reports quality; it does not fail a build, with one

@@ -1,5 +1,10 @@
 # Testing your rules: mutation testing and backtesting
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 A contract (`shape check`, contract format v1) can look strict and still miss the faults that
 matter, and a new rule cannot be tried against the past before it is enforced. Two commands
 answer those questions:
@@ -11,10 +16,7 @@ Neither changes your data, your contract or your registry.
 
 ## `shape rules mutate`
 
-```
-shape rules mutate DATA CONTRACT.json [--plan PLAN.json] [--seed N] [--rate R] [--diff]
-                   [--min-score S] [-o REPORT.json] [--json]
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `DATA` is a data file or a folder of them (the files `shape profile` reads; one table per file).
 Each **mutant** is one corruption of `shape chaos` (`duplicates`, `orphan_keys`, `date_shift`,
@@ -98,9 +100,7 @@ Schema: `src/shape/schemas/shape-mutation-report-v1.schema.json`.
 
 Generate a domain and keep one table:
 
-```
-shape generate retail --mode 3nf --format csv --scale small -o data --seed 7
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 A first contract for `data/order.csv`, `weak.json`, looks reasonable:
 
@@ -109,19 +109,7 @@ A first contract for `data/order.csv`, `weak.json`, looks reasonable:
              "order_total": {"dtype": "float"}}}
 ```
 
-```
-$ shape rules mutate data/order.csv weak.json --seed 1
-mutation score 0.0% (0 of 13 applicable mutants killed; seed 1, rate 0.05)
-
-SURVIVED: no rule caught these (13)
-  duplicates.order  [250 cells]
-  orphan_keys.order.customer_id  [250 cells]
-  ...
-  negative_amounts.order.order_total  [250 cells]
-  case_whitespace.order.status  [250 cells]
-  null_creep.order.status  [250 cells]
-  ...
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 Not one of the 13 faults is caught. Adding one rule, `"unique": true` on `order_id`, kills the
 `duplicates` mutant and lifts the score to 7.7% (1 of 13). Rules that match what each surviving
@@ -136,27 +124,7 @@ mutant breaks do the rest (`better.json`):
   "order_date": {"nullable": false}}}
 ```
 
-```
-$ shape rules mutate data/order.csv better.json --seed 1
-mutation score 61.5% (8 of 13 applicable mutants killed; seed 1, rate 0.05)
-
-SURVIVED: no rule caught these (5)
-  orphan_keys.order.customer_id  [250 cells]
-  orphan_keys.order.store_id  [250 cells]
-  orphan_keys.order.shipping_address_id  [250 cells]
-  orphan_keys.order.promotion_id  [250 cells]
-  pii_fill.order.order_date  [250 cells]
-
-killed (8)
-  duplicates.order  [250 cells]  by order.order_id.unique
-  negative_amounts.order.order_total  [250 cells]  by order.order_total.min
-  case_whitespace.order.status  [250 cells]  by order.status.allowed_values
-  ...
-rules that killed no mutant
-  order.order_id.dtype
-  order.order_id.nullable
-  order.order_total.dtype
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 The survivors are the finding. A contract has no cross-table rule, so orphan foreign keys pass a
 per-table check; and the dtype and nullable rules of `order_id` never fire because the mutants do
@@ -165,11 +133,7 @@ the unmutated profile catches the remaining five, and the score is 100.0%.
 
 ## `shape rules backtest`
 
-```
-shape rules backtest REGISTRY NAME CONTRACT.json [--since DATE] [--until DATE]
-                     [--window day|week|month] [--incidents FILE] [--fail-on-miss]
-                     [--compare OLD_CONTRACT.json] [-o REPORT.json] [--json]
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 Replays the contract over every committed version of `NAME` in a registry (`shape registry`,
 `REGISTRY.md`), oldest first. A version's date is its `business_date` metadata

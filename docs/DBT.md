@@ -1,5 +1,10 @@
 # Shape and dbt
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 Shape works with dbt in four ways. It is an integration: Shape does not replace dbt (see
 [PRODUCT_ARCHITECTURE.md](PRODUCT_ARCHITECTURE.md)), and nothing here runs inside dbt but SQL and
 `schema.yml`.
@@ -15,10 +20,7 @@ It is file-based and works with dbt Core anywhere (a laptop, CI, the Fabric dbt 
 reads and writes dbt's files and never imports or runs dbt, so `dbt-core` is not a dependency of
 Shape or of the plugin.
 
-```bash
-pip install sqllocks-shape-dbt
-shape plugins list                      # from-dbt, to-dbt-tests, dbt-seeds, dbt-report, dbt-seeds (sink)
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 A runnable sample, a jaffle-shop style project, is in
 [`examples/dbt_jaffle_shop`](../examples/dbt_jaffle_shop). Its test
@@ -26,13 +28,7 @@ A runnable sample, a jaffle-shop style project, is in
 
 ## 1. `shape from-dbt`: a dbt project as a generation schema
 
-```bash
-shape from-dbt my_dbt_project -o shop.gen.json          # a project directory
-shape from-dbt target/manifest.json -o shop.gen.json    # or a manifest
-shape from-dbt models/staging/_sources.yml -o shop.gen.json
-shape from-dbt my_dbt_project --select model            # generate the models instead
-shape from-dbt my_dbt_project --profile day1.shape      # weight the enums by a profile
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 The schema is built by the builder `shape from-ddl` uses, so the generators, scale presets and
 smart inference are the same (`--no-smart`, `--explain`, `--scale`, `--domain` work alike).
@@ -70,14 +66,10 @@ smart inference are the same (`--no-smart`, `--explain`, `--scale`, `--domain` w
 ## 2. `shape to-dbt-tests`: a contract or a profile as dbt tests
 
 "Capture once, compile for purpose": the contract (format v1,
-[the plan's §12.3](plans/COMPLETION_PLAN.md); unchanged) or a profile compiles to `schema.yml`
+the drift defaults; unchanged) or a profile compiles to `schema.yml`
 data tests, so the checks run where the data is built, with no Python.
 
-```bash
-shape to-dbt-tests orders.contract.json --model orders -o models/marts/_shape_tests.yml
-shape to-dbt-tests marts.shape -o models/marts/_marts.yml --merge models/marts/_marts.yml --distribution
-shape to-dbt-tests contract.json --kind sources --source-name raw -o models/staging/_sources.yml --merge models/staging/_sources.yml
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 | Contract rule | dbt test | Package |
 |---|---|---|
@@ -143,11 +135,7 @@ assert contract_from_dbt_tests(compiled.yaml(), use_meta=False) == expressible(c
 
 ## 3. `shape dbt-seeds`: generated data as dbt seeds
 
-```bash
-shape dbt-seeds shop.gen.json --project my_dbt_project --rows raw_orders=2000 --dialect duckdb \
-    --metadata shop.gen.dbt-meta.json
-dbt build
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 Each table becomes `seeds/<table>.csv`, and `seeds/_shape_seeds.yml` gets a `seeds:` entry with
 `config.column_types` for every column (and the descriptions, from the metadata). It is also the
@@ -224,12 +212,7 @@ expressions; and the seed load time. The owner's checklist is
 
 ## Running the tests
 
-```bash
-pip install -e '.[dev]' -e plugins/shape-dbt
-pytest -m "not dbt" plugins/shape-dbt/tests          # no dbt needed
-pip install dbt-duckdb                               # the dbt job in CI installs it; core never does
-pytest -m dbt plugins/shape-dbt/tests                # dbt build against DuckDB
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `pytest -m dbt` runs `dbt deps`, which needs the dbt package hub. On a runner without that access,
 point `SHAPE_DBT_PACKAGES_FILE` at a `packages.yml` with `local:` or `git:` entries for

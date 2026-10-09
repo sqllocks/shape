@@ -1,5 +1,10 @@
 # Slices, representation and training-serving skew
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 A quality score for a whole table can hide a slice where the data is much worse: one region
 with most of the nulls, one group whose records fail validation, or a group that is
 under-represented compared with the population the data should describe. A model trained on one
@@ -17,12 +22,7 @@ are the columns you name.
 
 ## Sliced scorecards
 
-```bash
-shape scorecard out/ --schema gates.json --slice-by region
-shape scorecard out/ --schema gates.json --slice-by region,tier --min-slice-rows 50
-shape scorecard out/ --schema gates.json --slice-by region --max-slice-gap 10   # exit 1 over 10
-shape scorecard out/ --schema gates.json --slice-by region --reference population.csv --label churned
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 A *slice* is each distinct value, or value combination, of the slice columns, in each table that
 holds all of them (other tables are listed under `skipped_tables`; if no table holds them the
@@ -111,14 +111,7 @@ card.to_dict()["slices"]["tables"]["customer"]["dimensions"]["completeness"]["wo
 
 ## Training-serving skew: `shape skew`
 
-```bash
-shape skew train/ serving/                                     # Markdown
-shape skew train.parquet serving.parquet --features x,price,country --label churned
-shape skew train/ serving/ --slice-by country -o skew.json     # JSON report; exit 1 if flagged
-shape skew train.shape serving.shape --json                    # two profiles
-shape skew train/ serving/ --threshold psi=0.25 --threshold null_rate=0.02
-shape skew train/ serving/ --project shape.yml --source orders
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `TRAIN` and `SERVING` are data (a file, or a folder with one file per table) or profiles. A
 single table on each side is paired whatever its name; with several, tables are paired by name

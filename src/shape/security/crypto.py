@@ -12,12 +12,15 @@ from shape.errors import ShapeSecurityError
 
 @dataclass(frozen=True, slots=True)
 class EncryptedPayload:
+    """Nonce, ciphertext and algorithm of an authenticated encrypted payload."""
+
     nonce: bytes
     ciphertext: bytes
     algorithm: str = "AES-256-GCM"
 
 
 def encrypt_aes_gcm(plaintext: bytes, key: bytes, aad: bytes = b"") -> EncryptedPayload:
+    """Encrypt bytes with a 32-byte AES key, random nonce and optional authenticated data."""
     if len(key) != 32:
         raise ValueError("AES-256-GCM key must be 32 bytes")
     n = os.urandom(12)
@@ -25,6 +28,7 @@ def encrypt_aes_gcm(plaintext: bytes, key: bytes, aad: bytes = b"") -> Encrypted
 
 
 def decrypt_aes_gcm(payload: EncryptedPayload, key: bytes, aad: bytes = b"") -> bytes:
+    """Authenticate and decrypt a payload; reject a wrong key or altered ciphertext."""
     if len(key) != 32:
         raise ValueError("AES-256-GCM key must be 32 bytes")
     try:
@@ -34,6 +38,7 @@ def decrypt_aes_gcm(payload: EncryptedPayload, key: bytes, aad: bytes = b"") -> 
 
 
 def generate_ed25519_keypair() -> tuple[bytes, bytes]:
+    """Return a new Ed25519 private/public key pair in raw byte form."""
     sk = Ed25519PrivateKey.generate()
     pk = sk.public_key()
     return (
@@ -47,10 +52,12 @@ def generate_ed25519_keypair() -> tuple[bytes, bytes]:
 
 
 def sign_ed25519(message: bytes, private_key: bytes) -> bytes:
+    """Return the Ed25519 signature of a message using the raw private key."""
     return Ed25519PrivateKey.from_private_bytes(private_key).sign(message)
 
 
 def verify_ed25519(message: bytes, signature: bytes, public_key: bytes) -> None:
+    """Verify a message signature or raise ShapeSecurityError."""
     try:
         Ed25519PublicKey.from_public_bytes(public_key).verify(signature, message)
     except Exception as e:

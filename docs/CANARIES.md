@@ -1,13 +1,15 @@
 # Canaries
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 A canary is a small synthetic batch with known planted failures. You send it through a real
 pipeline input on a schedule. If your checks do not flag it, your monitoring is blind: it would
 not notice the real thing either.
 
-```
-shape canary make null-flood -o canary/            # a failure mode of the catalog
-shape canary make library:duplicate_rows -o canary/ --rows 500 --marker is_test=yes
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `make` writes one file per table the failure touches (`--format csv|parquet|jsonl`, default CSV)
 and `canary.json`. Every row of every file carries a marker column (default `shape_canary=1`, or
@@ -40,12 +42,7 @@ check of Shape detects (the catalog says which): both are refused with exit 2.
 Run your own checks on the batch the pipeline received, each with `--json`, and give the results to
 `check`:
 
-```
-shape diff baseline.shape today.shape --json diff.json
-shape check today.shape contract.json --json check.json
-shape verify out/ --schema gates.json --json > verify.json
-shape canary check canary/canary.json --result diff.json --result check.json --result verify.json
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `check` reads the `shape-result` documents (`docs/CI.md`): a `diff` lists its changes, a `check` its
 violations and a `verify` its failed gates. A gate named in the catalog by its scenario name

@@ -1,3 +1,5 @@
+"""Profile interfaces and the callable package forwarding to the public profile API."""
+
 from .datetime import DatetimeProfile as DatetimeProfile
 
 __all__ = ["DatetimeProfile"]

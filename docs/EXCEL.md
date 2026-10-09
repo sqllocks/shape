@@ -1,18 +1,17 @@
 # Excel workbooks
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 `.xlsx` workbooks are read as a source (`shape profile book.xlsx`, and every command that reads a table file) and written
 as a sink (`shape generate ... -f excel`). Both need the `[excel]` extra (openpyxl): `pip install 'sqllocks-shape[excel]'`.
 Each statement below has a test in `tests/excel/`.
 
 ## Reading a workbook
 
-```bash
-shape profile book.xlsx -o book.shape                  # one table per visible sheet (a dataset)
-shape profile 'book.xlsx#Members' -o members.shape     # that sheet alone (hidden or not)
-shape profile book.xlsx --sheet Members -o members.shape
-shape profile 'book.xlsx#Members' -o t.shape           # an Excel table or a named range called Members
-shape profile book.xlsx --include-hidden -o all.shape  # read the hidden sheets too
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 ```python
 shape.profile("book.xlsx")                     # dataset
@@ -77,10 +76,7 @@ because their examples are cell values.
 
 ## Writing a workbook
 
-```bash
-shape generate retail --scale small -f excel -o out/                       # out/retail.xlsx
-shape generate retail -f excel -o out/ --chaos-log out/_chaos_ground_truth.jsonl --drift-plan plan.json
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 ```python
 from shape.generation.output import write_engine, write_result

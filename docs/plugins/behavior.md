@@ -1,5 +1,10 @@
 # Behavior models: `sqllocks-shape-behavior`
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 A domain-agnostic engine for things that *happen to entities over time*: a subscriber trials,
 pays, pauses and cancels; a pump runs, degrades, fails and is repaired; a patient is screened,
 diagnosed, treated and followed up. You describe the process as a **state machine** in a small
@@ -16,10 +21,7 @@ Population (attributes) ─────┘                                  └�
 Status of this page: **API v1, stable for domain packs to build on.** The names below are the
 contract; the implementation behind them may get faster. Anything not listed here is private.
 
-```bash
-pip install sqllocks-shape-behavior          # numpy and pyarrow only, nothing heavy
-shape behave run subscription equipment_maintenance --population 50000 --years 5 --seed 7 -o out/
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 ## 1. Concepts
 
@@ -258,14 +260,7 @@ warning). Distributed probabilities that do not sum to 1 are normalized (warning
 
 ## 7. CLI
 
-```
-shape behave run MODULES... --population N --years Y --seed S -o OUT
-      [--start 2020-01-01] [--population-spec FILE.json] [--window-years 1]
-      [--poll "7 days"] [--strict] [--params FILE.json]
-shape behave check MODULES...            # validate; exit 1 on problems
-shape behave import-gmf FILE [-o OUT.json] [--strict]
-shape behave examples [-o DIR]           # write the built-in example modules
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 `MODULES` are native or GMF JSON files, or the built-in example names `subscription`,
 `equipment_maintenance`, `healthcare_screening`. `run` writes `OUT/events/part-NNNN.parquet` (one
@@ -380,9 +375,7 @@ over a year); after a step it continues with probability `1 - dropout` and other
 
 Emits one event per step reached, `kind` = the step name.
 
-```bash
-shape behave run event_sequence --population 10000 --years 1 --seed 7 -o out/funnel
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 ### 11.2 `telemetry_series(interval, unit, level, noise, drift, missing_rate, stuck_rate)`
 
@@ -401,14 +394,7 @@ A regular reading per entity (a device), the first when it arrives.
 Emits `kind` = `reading` with `value` and `unit`. State type `telemetry_reading` (whole-array
 handler; it draws only through `ctx.uniform`).
 
-```bash
-cat > telemetry.json <<'EOF'
-{"format": "shape-behavior-params", "version": 1, "primitive": "telemetry_series",
- "params": {"interval": "1 hour", "unit": "kPa", "level": 101.3, "noise": 0.4}}
-EOF
-shape behave run telemetry_series --params telemetry.json --population 10000 --years 1 \
-    --window-years 0.02 --seed 7 -o out/telemetry
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 Memory stays bounded by the window: `--window-years` sets how much virtual time one output file
 holds. 10,000 devices at a 1-hour interval for a year is about 87.8 million events;
@@ -455,13 +441,7 @@ One entity per feed; every schedule slot (the first at the feed's start) has one
 `file_arrived`, `file_late`, `file_missing`, `file_duplicate`; the `payload` of every event is
 `{"slot": "2020-01-05T00:00:00"}`, the expected arrival time. State type `file_event`.
 
-```bash
-cat > feed.json <<'EOF'
-{"format": "shape-behavior-params", "version": 1, "primitive": "file_arrival",
- "params": {"schedule": "hourly", "late_rate": 0.2, "late_delay": "20 minutes"}}
-EOF
-shape behave run file_arrival --params feed.json --population 12 --years 0.1 -o out/feeds
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 ### 11.5 `entity_lifecycle(states, update_rate, delete_rate)`
 
@@ -479,9 +459,7 @@ than the previous one when there is more than one state, `value` = the new versi
 (`text` = its state, `value` = its last version). Nothing follows a delete. State type
 `lifecycle_event`.
 
-```bash
-shape behave run entity_lifecycle --population 5000 --years 3 --seed 1 -o out/changes
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 ### 11.6 The parameters file
 

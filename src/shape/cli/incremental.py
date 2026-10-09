@@ -416,6 +416,7 @@ COMMANDS = {"continue": cmd_continue, "time-travel": cmd_time_travel}
 
 
 def run(a: argparse.Namespace) -> int:
+    """Dispatch parsed incremental arguments and return the command exit code."""
     return COMMANDS[a.cmd](a)
 
 

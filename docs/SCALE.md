@@ -1,5 +1,10 @@
 # Generating at scale
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 `shape generate DOMAIN --scale-mode MODE` runs a generation through the **scale router**, into one
 or more **sinks**, as a **job** that can be inspected, cancelled and resumed.
 
@@ -9,13 +14,7 @@ or more **sinks**, as a **job** that can be inspected, cancelled and resumed.
 | `local_mp` | generation on every core (`--max-workers N` or `SHAPE_THREADS` limits them); the output is the same as `local_single`'s |
 | `fabric_spark` | submits the run to a Fabric Spark notebook that writes Delta tables to a Lakehouse |
 
-```bash
-shape generate retail --scale medium --scale-mode local_mp -o out        # Parquet part files in out/
-shape generate retail --scale medium --scale-mode local_mp \
-    --sink parquet --sink lakehouse \
-    --sink-config parquet.output_dir=out --sink-config lakehouse.base_path=lake/Files/landing
-shape jobs list
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 Row counts are exact in every mode: a table has the rows of the scale preset, and every foreign key
 points at a key that exists in the full parent table, whichever chunk it is in. Seed for seed, the
@@ -26,10 +25,7 @@ two local modes write the same rows.
 A scale test with uniform keys misses the hot keys production has. `shape skew-rehearsal` generates
 a schema at scale with the key skew a profile measured, and says whether the generated data kept it:
 
-```bash
-shape skew-rehearsal PROFILE.shape --schema SCHEMA --scale S [--seed N] -o DIR \
-    [--columns TABLE.COLUMN,...] [--tolerance 0.02]
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `SCHEMA` is a domain or generation schema file, `S` one of its scale presets (local generation; Spark
 and Fabric modes are not offered). The tables are written to `DIR` as Parquet files, with
@@ -100,12 +96,7 @@ Every scale run is a job in the job store (`$SHAPE_JOBS_DIR`, default `~/.shape/
 per job, readable only by its owner, declaring `format: shape-job` and an integer `version`; a record from a newer release fails naming the release that reads it, and its unknown fields are kept on rewrite). A record holds what was asked, with secrets masked (sink settings, and the secrets of the `auth` block unless they are credential references), local output folders as absolute paths, and never
 a token.
 
-```bash
-shape jobs list
-shape jobs status JOB          # asks Fabric for a fabric_spark job
-shape jobs cancel JOB
-shape jobs resume JOB          # a failed or cancelled job
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 * **Local jobs.** `cancel` stops the run between chunks, also when the run is in another process
   (it reads its record as it reports progress). `resume` runs the stored request again and
@@ -119,11 +110,7 @@ shape jobs resume JOB          # a failed or cancelled job
 
 ## `fabric_spark`
 
-```bash
-export SHAPE_FABRIC_TOKEN=...   # an Entra token for the Fabric API
-shape generate retail --scale large --scale-mode fabric_spark \
-    --fabric-workspace WORKSPACE_GUID --fabric-lakehouse LAKEHOUSE_GUID --table-prefix demo_
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 The command writes the job spec (the schema, seed, row counts and chunk size; no credentials) to
 OneLake `Files/shape_jobs/<run>.json`, finds the `shape_spark_worker` notebook in the workspace or

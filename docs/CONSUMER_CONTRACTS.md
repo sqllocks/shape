@@ -1,5 +1,10 @@
 # Consumer data contracts
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 A team that consumes a dataset can state the parts it depends on, as a file, so that the
 producing team's CI fails **before** a change breaks them. A consumer contract is a
 contract v1 body (what `shape check` runs) limited to what the consumer needs,
@@ -54,11 +59,7 @@ from other repositories is not automated: consumers commit their files, or CI co
 
 ## Running them (producer CI)
 
-```
-shape contracts check-consumers PROFILE.shape [--consumers DIR] [--source NAME]
-        [--project shape.yml] [--require-consumers] [--baseline BASE.shape]
-        [-o REPORT.json] [--json]
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 It runs every consumer contract in `DIR` (default `contracts/consumers/` next to `shape.yml`,
 found from the working folder upwards) whose `source` matches the source. The source is
@@ -86,9 +87,7 @@ A consumer contract that cannot be checked against the producer's profile at all
 
 ### What a change breaks
 
-```
-shape contracts check-consumers new.shape --baseline base.shape
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 A rule that needs a value the profile does not hold because it was captured safe (the default
 `.shape`, `docs/PRIVACY_MODEL.md`: a `min` or `max` of a column whose extremes were removed, an

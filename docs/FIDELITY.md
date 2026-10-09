@@ -1,12 +1,15 @@
 # Fidelity report
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 `shape fidelity REFERENCE SYNTHETIC` (alias `shape compare`) scores how closely synthetic tables
 follow reference tables: every column from 0 to 100, every table as the mean of its columns, and
 the whole as the mean of its tables. The same function is `shape.generation.report.compare_tables`.
 
-```bash
-shape fidelity real/ synthetic/ -o report.html -o report.json --min-score 85
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `REFERENCE` and `SYNTHETIC` are a file or a directory of one file per table (Parquet, CSV or
 JSONL; `--input-format` forces one). Tables are paired by file name; two single files are paired

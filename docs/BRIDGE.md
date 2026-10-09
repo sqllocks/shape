@@ -1,13 +1,15 @@
 # `shape bridge`: Shape as a JSON protocol
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 `shape bridge` serves Shape's commands over standard input and output as a versioned JSON
 request/response protocol. Editors, notebooks, wrappers and agents use it to run Shape without
 parsing command-line text.
 
-```console
-$ echo '{"api_version": "1.0", "id": "r1", "command": "dry_run", "args": {"domain": "retail"}}' | shape bridge
-{"api_version": "1.1", "command": "dry_run", "id": "r1", "ok": true, "result": {...}, "warnings": []}
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 - `shape bridge` reads **one request per line** and writes **one response per line** until end of
   input (a long-lived session).
@@ -1350,13 +1352,7 @@ log. Job files and spilled results are created with mode `0600` in a `0700` dire
 
 A long session, one request per line:
 
-```console
-$ shape bridge --jobs-dir ./jobs <<'EOF'
-{"api_version": "1.0", "id": 1, "command": "list"}
-{"api_version": "1.0", "id": 2, "command": "preview", "args": {"domain": "retail", "rows": 2, "tables": ["store"]}}
-{"api_version": "1.0", "id": 3, "command": "generate", "args": {"domain": "retail", "scale": "small", "format": "parquet", "output_dir": "./out"}, "options": {"async": true}}
-EOF
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 The core workflow, driven from Python:
 

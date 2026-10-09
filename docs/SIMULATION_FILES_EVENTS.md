@@ -1,5 +1,10 @@
 # Simulating landing files and event streams
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 `sqllocks-shape-simulation` (`pip install 'sqllocks-shape[simulation]'`) turns generated tables into
 what an upstream system would produce over time: files landing in dated folders, versioned
 (SCD type 2) snapshots and deltas, a stream of events, both at once, and business-process events
@@ -30,12 +35,7 @@ cfg = FileDropConfig(domain="retail", base_path="landing", date_range_start="202
 result = FileDropSimulator(tables, cfg).run()
 ```
 
-```bash
-shape simulate file-drop retail --scale small --from 2024-01-01 --to 2024-03-31 \
-    --entity order --format parquet,csv --late 0.1 --duplicates 0.02 -o landing/
-shape simulate stream retail --table order --out-of-order 0.05 --replay 0.02 --sink file -o events.jsonl
-shape simulate workflow --preset order_fulfillment --entities 1000 -o workflow/
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `shape simulate` exits 0 when it is done and 2 for input it cannot use (an unknown table, a bad
 date, a sink it does not know).

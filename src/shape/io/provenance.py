@@ -45,6 +45,7 @@ def is_ignored(path: str | Path) -> bool:
 
 
 def sha256_file(path: str | Path) -> str:
+    """Return the SHA-256 hex digest of a file read in bounded chunks."""
     digest = hashlib.sha256()
     with open(path, "rb") as f:
         for block in iter(lambda: f.read(1 << 20), b""):

@@ -1,5 +1,10 @@
 # Reproducibility: the run tuple, the dataset id and replay
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 Every `shape pack run` writes a run manifest (`docs/SCENARIO_PACKS.md`). Two keys of it make a
 run comparable and replayable: the reproducibility tuple and the dataset id.
 
@@ -64,10 +69,7 @@ added, removed or duplicated, and values swapped between rows. What does not: `0
 
 ## Replay
 
-```bash
-shape pack replay out/20261003_101500_retail_small_s42_manifest.json my_pack.yaml
-shape pack replay MANIFEST.json my_spec.gsl.yaml --json
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `replay` regenerates the run from the manifest's domain, scale and seed, using the pack (or the
 spec) the run used, into a scratch directory that is removed afterwards, and compares the dataset id

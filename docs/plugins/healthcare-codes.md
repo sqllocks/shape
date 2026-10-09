@@ -1,5 +1,10 @@
 # Healthcare code sets (`sqllocks-shape-healthcare-codes`)
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 The API a domain pack builds on. Everything is importable from `shape_healthcare_codes`.
 Nothing reads the network at import or at lookup time: code sets are Arrow files built once by
 `shape healthcare-codes fetch` (free sets) or `shape healthcare-codes byo` (licensed sets you
@@ -173,11 +178,7 @@ Without network access, load the CMS zip you have, or your own delimited file wi
 columns (`drops` and `payment_years` are lists separated by blanks, `;` or `|`; `software`
 defaults to `user supplied`):
 
-```
-shape healthcare-codes fetch hcc_coefficients --file zip=2027-initial-model-software.zip
-shape healthcare-codes byo hcc_hierarchy 2027-initial-model-software.zip
-shape healthcare-codes byo hcc_coefficients my_coefficients.csv
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
 `risk.table_problems(mapping, hierarchy, coefficients)` lists every hierarchy category and every
 category variable that is not a category of the same model in the mapping (the 2027 tables have
@@ -233,12 +234,4 @@ detectors).
 
 ## Command
 
-```
-shape healthcare-codes list
-shape healthcare-codes fetch icd10cm ndc         # download at the pinned release, build
-shape healthcare-codes fetch hcpcs2 --file zip=october-2026-alpha-numeric-hcpcs-file.zip
-shape healthcare-codes byo cpt cpt.csv --map code=CPT --map long_desc=Descriptor
-shape healthcare-codes byo hcc_coefficients 2027-initial-model-software.zip
-shape healthcare-codes notices ndc
-shape healthcare-codes verify
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.

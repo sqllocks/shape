@@ -1,18 +1,14 @@
 # `shape demo`: demos for talks, clients and workshops
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 `shape demo` runs a **scenario** in one of three **modes** and records every run as a **session**
 that can be reported on and cleaned up.
 
-```bash
-shape demo list                                            # the scenarios
-shape demo run retail --rows 1000                          # inference: learn, generate, compare
-shape demo init --name here --local-path ./landing         # a connection profile: a folder
-shape demo run retail --mode seeding --connection here --rows 1000  # write the tables there
-shape demo status SESSION                                  # what a session made
-shape demo report SESSION --format html --output report.html
-shape demo cleanup SESSION                                 # remove exactly what it made
-shape demo notebook retail --mode seeding --output retail.ipynb  # a Fabric notebook for the scenario
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 Install the domains plugin (`sqllocks-shape-domains`) for the scenarios that generate a domain,
 and the Fabric plugin (`sqllocks-shape-fabric`) for the Lakehouse, Warehouse, SQL database and
@@ -21,13 +17,7 @@ not from PyPI:** the `sqllocks-shape` 0.9.0 on PyPI is the early-access profiler
 `shape demo` command, and the plugins are not on PyPI yet, so `pip install
 'sqllocks-shape[domains]'` cannot find them. From the release checkout:
 
-```bash
-python scripts/build_pure_wheel.py --out wheels
-pip wheel --no-deps -w wheels plugins/shape-domains plugins/shape-fabric \
-    plugins/shape-eventhubs plugins/shape-sqlserver
-pip install --find-links wheels wheels/sqllocks_shape-*.whl \
-    wheels/sqllocks_shape_domains-*.whl wheels/sqllocks_shape_fabric-*.whl
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 That is enough for every scenario and mode, the Lakehouse and Eventhouse targets and the
 notebooks. The domains plugin brings `faker`, which the `healthcare` scenario's inference mode
@@ -36,9 +26,7 @@ the Fabric plugin's `[sqlserver]` extra (the SQL Server plugin and `pyodbc`; on 
 `unixodbc` system package and the Microsoft ODBC Driver 18), and the Eventstream emitter its
 `[eventhubs]` extra. Both come from the same wheels folder:
 
-```bash
-pip install --find-links wheels 'sqllocks-shape-fabric[sqlserver,eventhubs]'
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 Without an extra, the target that needs it fails and names the extra to install.
 

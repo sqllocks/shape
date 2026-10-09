@@ -1,5 +1,10 @@
 # Schema importers
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 Teams describe their data in JSON Schema, OpenAPI, Avro, Protobuf, Pydantic models or a Power BI
 semantic model (TMDL). `shape import-schema` reads the **structure** of any of them (no data, no
 statistics) and writes a [generation spec](GENERATION_SPEC.md) that validates against the
@@ -7,19 +12,9 @@ published schema (`generation-spec-v1.schema.json`) and generates. `shape from-d
 for SQL DDL, and `shape from-dbt` for a dbt project; the importers choose a column's generator the
 same way.
 
-```bash
-shape import-schema order.schema.json -o order.gen.json
-shape import-schema api.yaml --from openapi -o api.gen.json --report api.report.json
-shape import-schema events.avsc -o events.gen.json --strict
-shape import-schema shop.proto -o shop.gen.json
-shape import-schema retail.SemanticModel -o retail.gen.json        # a TMDL project folder
-shape import-schema myapp.models:Order --from pydantic --allow-import -o order.gen.json
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
-```text
-shape import-schema FILE --from jsonschema|openapi|avro|protobuf|pydantic|tmdl
-                    -o OUT.gen.json [--report REPORT.json] [--strict] [--allow-import]
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 | Exit code | Meaning |
 |---|---|

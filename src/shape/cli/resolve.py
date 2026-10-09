@@ -221,6 +221,7 @@ def _dump(path: str, doc: dict[str, Any]) -> None:
 
 
 def cmd_run(a: argparse.Namespace) -> int:
+    """Run the resolve run subcommand with parsed arguments."""
     from shape.resolve import pair_metrics, read_truth, resolve
 
     config = _config(a)
@@ -283,6 +284,7 @@ def cmd_run(a: argparse.Namespace) -> int:
 
 
 def cmd_synth(a: argparse.Namespace) -> int:
+    """Run the resolve synth subcommand with parsed arguments."""
     from shape.resolve import make_duplicates, write_truth
 
     table = read_table(a.input)
@@ -317,6 +319,7 @@ def cmd_synth(a: argparse.Namespace) -> int:
 
 
 def run(a: argparse.Namespace) -> int:
+    """Dispatch parsed resolve arguments and return the command exit code."""
     return cmd_run(a) if a.resolve_cmd == "run" else cmd_synth(a)
 
 

@@ -1,15 +1,15 @@
 # The public dataset library
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 Realistic synthetic data usually starts from a profile of your own data. The dataset library
 removes that first step: it ships **safe profiles of public datasets** (statistics and formats,
 never rows), so you can try Shape, write tests or run a demo with no data of your own.
 
-```
-shape library list
-shape library show palmer-penguins
-shape generate --from dataset:palmer-penguins --rows 1000 --format csv -o penguins/
-shape library get iris -o iris.shape        # a copy of the profile to keep or edit
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `dataset:NAME` is accepted wherever `shape generate --from` takes a `.shape` file. It reads the
 profile that ships inside Shape and needs no network. (`library:NAME` is the prefix of

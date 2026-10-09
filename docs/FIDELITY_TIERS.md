@@ -1,15 +1,15 @@
 # Fidelity tiers 1 to 3
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 `shape fidelity` scores synthetic data column by column (`docs/FIDELITY.md`). The tiers look at what
 that score does not: joint structure, formats, drift and privacy. Tiers 1 and 2 compare a reference
 and a synthetic table; tier 3 holds research-grade tools. **Tier 3 is experimental.**
 
-```bash
-shape fidelity real/ synthetic/ --tier 1      # mixtures, conditional profiles, adversarial AUC, time
-shape fidelity real/ synthetic/ --tier 2      # formats, strings, cardinality, anomaly rate
-shape fidelity real/ synthetic/ --tier 3      # dependency trees and how much structure survives
-shape drift reference/ current/ --psi         # population stability index per column
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `REFERENCE` and `SYNTHETIC` are as for the base report (a file, or a directory of one file per
 table; tables are paired by name). The report is JSON (`--format json`, the default) or text

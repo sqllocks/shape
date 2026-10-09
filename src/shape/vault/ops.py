@@ -42,6 +42,7 @@ _ID = re.compile(r"[0-9a-f]{32}")
 
 
 def sha256_hex(raw: bytes) -> str:
+    """Return the SHA-256 hex digest of the supplied bytes."""
     return hashlib.sha256(raw).hexdigest()
 
 

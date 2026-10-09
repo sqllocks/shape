@@ -1,5 +1,10 @@
 # Data detective packs
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 A detective pack is a case: a generated batch of data with problems planted in it, a brief, hints
 and a way to check your answer. You look at the batch with Shape's own commands (`shape profile`,
 `shape diff`, `shape check`), say which table and column hold which failure mode, and Shape tells
@@ -12,18 +17,12 @@ the [failure mode catalog](FAILURE_MODES.md).
 
 ## How to play
 
-```
-shape detective list                                  # the packs, their level, how many problems
-shape detective start first-case -o case/             # writes the case; never the answer
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `case/` holds `data/` (one Parquet file per table), `baseline.shape` (the profile of the clean batch
 this one should look like) and the case's brief, a Markdown file (brief.md). Then look:
 
-```
-shape profile case/data --dataset --joint -o today.shape --capture full
-shape diff case/baseline.shape today.shape
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 The diff lists what changed against the baseline. A change that a diff cannot show (an earliest
 date that moved, a value that is no longer allowed) shows up in a contract written from what the
@@ -38,10 +37,7 @@ file:
 `mode` is a failure mode id (`shape failure-modes list`). For a column that was renamed, name the old
 column. Then:
 
-```
-shape detective hint first-case 1                     # a hint, counting from 1
-shape detective check first-case --answer answer.json
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `check` prints each finding as `found` (named and planted), `missed` (planted and not named) or
 `wrong` (named and not planted), and exits 0 when every planted finding is named and none is wrong,

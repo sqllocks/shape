@@ -1,15 +1,16 @@
 # Drift report: `shape publish-report`
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 `shape diff` answers "did this profile drift from that one?" with a JSON file. `shape publish-report`
 answers "how has this feed drifted over time?": it diffs a history of profiles, each with the one
 before it, and writes the changes as star tables plus a Power BI semantic model, so the history can
 be sliced by run, column, kind of change and date.
 
-```
-shape publish-report orders-2026-03-01.shape orders-2026-03-06.shape orders-2026-03-11.shape -o report/
-shape publish-report --registry orders --registry-root reg/ --since 2026-03-01 -o report/ --format csv
-shape fabric publish-report ...     # the same command in the fabric group
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 It needs the `sqllocks-shape-fabric` plugin ([fabric-commands](plugins/fabric-commands.md)).
 

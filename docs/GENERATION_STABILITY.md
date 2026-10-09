@@ -1,5 +1,14 @@
 # Generation stability: generator versions and pinned fixtures
 
+Status: available (early-access surface); coming (1.x policy).
+
+**Early access 0.9.1.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
+
+The compatibility promises below apply to the future 1.x line, not the current early-access release.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 Teams keep generated datasets as test fixtures and expect the same spec and seed to give the same
 data after they upgrade Shape. This page says when that holds, how to ask for it, and what it does
 not cover.
@@ -70,12 +79,7 @@ spec's pins for one run. The map is part of the published JSON Schema
 
 ### `shape pin`
 
-```bash
-shape pin shop.json                 # write the current version of everything the spec uses
-shape pin shop.json -o pinned.json  # ... to another file (SPEC is left alone)
-shape pin shop.json --json          # the result as JSON
-shape pin shop.json --check         # exit 1 and list the names that are not pinned
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 `shape pin` adds the names the spec uses and does not pin yet, at their current version. A pin that
 is already there is never moved, because moving it would change the data. The spec is edited
@@ -294,10 +298,7 @@ non-UTF-8 locale (`LC_ALL=C` with UTF-8 mode off on Linux and macOS; the ANSI co
 Windows), `TZ=Pacific/Chatham`, another `PYTHONHASHSEED` and another thread count. They run in the
 regular test suite, which CI runs on Linux, Windows and macOS.
 
-```bash
-python scripts/golden_bytes.py            # compare a fresh run with the corpus (exit 1 if not)
-python scripts/golden_bytes.py --update   # rewrite the corpus
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 SQL files name the Shape version in their first comment line, so a release rewrites the corpus
 (`--update`) as one of its steps; the test says so when the corpus was written by another version.

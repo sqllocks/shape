@@ -1,15 +1,15 @@
 # The starter scenario library
 
+Status: experimental.
+
+[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+
+
 Shape ships a small library of named, versioned scenarios, each with an **answer key**, and named
 **suites** that run several of them and compare every outcome with its key. They are for CI: plant
 a known problem in a built-in domain and check that your gates, or Shape's own, see it.
 
-```bash
-shape pack list --library                    # the scenarios and suites
-shape pack run library:nulls_injected        # run one; exit 0 when it meets its answer key
-shape suite run smoke                        # a suite; exit 0 when every scenario met its key
-shape suite run schema-evolution --scale tiny --json
-```
+Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 
 All the scenarios use the `retail` domain (the one built-in domain; `pip install
 'sqllocks-shape[domains]'`). A scenario runs at the scale you give (a preset of the domain, such as
