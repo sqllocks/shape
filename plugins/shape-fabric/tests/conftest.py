@@ -2,6 +2,42 @@ import pytest
 from shape_fabric.testing import sample_batches
 
 
+@pytest.fixture(autouse=True)
+def emulator_transport_diagnostics(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Keep management replies and failed ingestion replies in failed emulator test logs."""
+    if request.node.get_closest_marker("emulator") is None:
+        return
+
+    import json
+    import sys
+    from datetime import UTC, datetime
+    from urllib.parse import urlsplit
+
+    from shape_fabric import kusto
+
+    original = kusto.urllib_transport
+
+    def traced(method, url, headers, body, timeout):
+        result = original(method, url, headers, body, timeout)
+        status, _, data = result
+        path = urlsplit(url).path
+        if path == "/v1/rest/mgmt" or (path.startswith("/v1/rest/ingest/") and status >= 300):
+            record = {
+                "time": datetime.now(UTC).isoformat(),
+                "path": path,
+                "status": status,
+                "response": data.decode("utf-8", "replace"),
+            }
+            if path == "/v1/rest/mgmt":
+                record["command"] = body.decode("utf-8", "replace")
+            print("emulator transport: " + json.dumps(record), file=sys.stderr, flush=True)
+        return result
+
+    monkeypatch.setattr(kusto, "urllib_transport", traced)
+
+
 @pytest.fixture
 def batches():
     return sample_batches()
