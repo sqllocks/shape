@@ -521,14 +521,15 @@ class TargetOptions:
             put("manifest", self.manifest)
             if self.write_mode:
                 out["mode"] = _file_mode(self.write_mode)
-        elif name == "delta":
+        elif name in ("delta", "iceberg"):
             put("commit_rows", self.commit_rows)
             put("commit_seconds", self.commit_seconds)
             put("partition_by", self.partition_by)
             if self.write_mode:
                 mode = _file_mode(self.write_mode)
                 if mode == "fail":
-                    raise ValueError("a Delta target takes --write-mode overwrite or append")
+                    label = "Delta" if name == "delta" else "Iceberg"
+                    raise ValueError(f"a {label} target takes --write-mode overwrite or append")
                 out["mode"] = mode
         else:
             put("commit_rows", self.commit_rows)

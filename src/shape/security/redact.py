@@ -10,6 +10,7 @@ well.
 from __future__ import annotations
 
 import re
+from urllib.parse import unquote
 
 MASK = "***"
 
@@ -34,7 +35,24 @@ _PEM = re.compile(
 # Anchored on ``://`` (no scheme scan, which was quadratic on ``a.a.a...``); the password runs to
 # the last ``@`` of the authority, so a password that contains ``@`` is masked whole. The
 # authority ends at the next ``/``, so each scan stops at the next ``://`` (linear time).
-_URL_USER = re.compile(r"(://[^/\s?#@:]+:)[^/\s?#]+(@)")
+_URL_USER = re.compile(r"(://[^/?#@:]*:)[^/?#]+(@)")
+# URI query keys are decoded before database validation; apply that same decoding when
+# masking a queued request, including requests that will fail before a connection opens.
+_QUERY_PAIR = re.compile(r"([?&])([^=?&#\s\"'<>]+)=([^&#\s\"'<>]*)")
+_QUERY_SECRET = re.compile(
+    rf"(?i)(?:{_KEYS}|credential|access[_-]?key|private[_-]?key|passphrase|"
+    r"connection[_-]?string|passfile)"
+)
+# Iceberg accepts no URI query or fragment. Scrub their entire contents, including unknown
+# keys, before rejected requests reach job persistence. Whole URI values may contain whitespace.
+_ICEBERG_URI = re.compile(r"(?i)^\s*iceberg(?:\+file)?://")
+_ICEBERG_TAIL = re.compile(r"(?i)\b(iceberg(?:\+file)?://[^\s\"'<>?#]*)([?#])[^\s\"'<>]*")
+
+
+def _query_mask(match: re.Match[str]) -> str:
+    if _QUERY_SECRET.search(unquote(match[2])):
+        return f"{match[1]}{match[2]}={MASK}"
+    return match[0]
 
 
 def redact_text(text: str) -> str:
@@ -44,6 +62,11 @@ def redact_text(text: str) -> str:
     text = _BEARER.sub(rf"\1{MASK}", text)
     text = _BASIC.sub(rf"\1{MASK}", text)
     text = _URL_USER.sub(rf"\1{MASK}\2", text)
+    if _ICEBERG_URI.match(text):
+        text = re.sub(r"([?#])[\s\S]*", rf"\1{MASK}", text, count=1)
+    else:
+        text = _ICEBERG_TAIL.sub(rf"\1\2{MASK}", text)
+    text = _QUERY_PAIR.sub(_query_mask, text)
     return _PAIR.sub(lambda m: f"{m.group(1)}{m.group(2)}{MASK}", text)
 
 

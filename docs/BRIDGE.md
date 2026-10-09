@@ -1406,3 +1406,15 @@ print(drift["drifted"], [(n["column"], n["metric"]) for n in drift["not_measured
 ```
 
 (`call` is the helper above, with `"api_version": "1.2"` in the request.)
+
+Iceberg (API 1.2): `generate` accepts `to` (a sink URI), `sink_options` (an option
+object) and `confirm_remote` (boolean). `to` cannot combine with a file `format` or
+`output_dir`. An exact Iceberg table URI accepts one generated table; credential
+options are references, never secret literals. Local `iceberg+file://` writes need
+no confirmation; named `iceberg://` targets require confirmation. `profile.source`
+accepts both URI forms and namespace URIs, and `as_of` selects an earlier snapshot.
+Artifacts preserve Iceberg provenance. Existing API 1.1 requests remain unchanged.
+
+`profile.source_options` (API 1.2) accepts Iceberg catalog options and integer
+`snapshot_id`; credential values remain references. `as_of` and `snapshot_id` are
+mutually exclusive. Sink partition options can be a list of transform expressions.

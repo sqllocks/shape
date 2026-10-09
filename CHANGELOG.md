@@ -1843,3 +1843,8 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - The fidelity e-mail format pattern runs in linear time (#293).
 - The kql scale sink percent-encodes its database name (#295); Spark job and `COPY INTO` checks
   take whole values, and backticks in Spark column names are doubled (#300).
+
+- W9-16: optional native Apache Iceberg source and sink with local SQLite/file or
+  named catalogs, native nested types, width restoration, partition transforms,
+  snapshot micro-batches/fingerprints, time travel and namespace profiling. CLI
+  URI targets and additive bridge API 1.2 target arguments are supported.

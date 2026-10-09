@@ -552,3 +552,15 @@ jobs:
       - run: pip install -e '.[dev]'
       # the Fabric demo and content tests need their own requirements (fabric-demo job)
       - run: python -m pytest -q -m nightly --ignore=tests/demo/fabric --ignore=tests/demo/content
+
+  iceberg-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install -e '.[dev,iceberg]'
+      - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait iceberg-rest
+      - run: python -m pytest -q -m emulator tests/builtins/test_iceberg_emulator.py
+      - if: always()
+        run: docker compose -f ci/emulators/docker-compose.yml down -v

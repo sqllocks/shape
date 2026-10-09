@@ -126,7 +126,14 @@ def sink_config(items: list[str] | None, *, offline: bool = False) -> dict[str, 
 
     parsed = parse_sink_config(list(items or []))
     return {
-        sink: {key: _resolve(key, value, offline) for key, value in options.items()}
+        sink: {
+            key: (
+                value
+                if sink == "iceberg" and key in ("token", "credential")
+                else _resolve(key, value, offline)
+            )
+            for key, value in options.items()
+        }
         for sink, options in parsed.items()
     }
 

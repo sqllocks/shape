@@ -117,3 +117,9 @@ where the table was generated.
 <!-- preservation-table:end -->
 
 Only local tools are tested; Fabric-side preservation is not.
+
+Iceberg sink `fingerprint=True` (or a run context) stores a versioned
+`shape.fingerprint` record in each committed snapshot summary. The fingerprint
+covers that micro-batch, including restored Arrow widths, rather than the cumulative
+table. Inspect the selected snapshot's summary property through PyIceberg. This
+adds no file-footer or catalog credential information to the fingerprint.

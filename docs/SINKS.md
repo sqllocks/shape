@@ -249,3 +249,56 @@ A sink takes `write(uri, table, batches, **options)` and consumes `batches` incr
 **options)` returning an object with `write_batch`, `flush` (make everything so far visible and
 durable), `close` and `abort`; without it the stream drives `write` on a thread and relies on its
 own commit option. Check it with `shape.plugins.kit.check_sink` and `shape conformance`.
+
+### Apache Iceberg
+
+Install `pip install 'sqllocks-shape[iceberg]'`. The optional extra uses
+`pyiceberg[pyarrow,sql-sqlite,pyiceberg-core]>=0.9`; it loads only when Iceberg is used.
+`iceberg+file:///warehouse/ns/items` creates a local SQLite catalog at
+`/warehouse/catalog.db` on first write. `iceberg://catalog/ns/items` uses a named
+catalog from `~/.pyiceberg.yaml`, or options `catalog_type` (`rest`, `sql`, `glue`,
+`hive`), `uri` and `warehouse`. Glue and Hive option acceptance is untested against
+services. `credential` and `token` are references (`env://NAME`, private `file://PATH`
+or `kv://VAULT/NAME`); credentials and query parameters are refused in URIs.
+
+`IcebergSink.write(uri, table, batches, **options)` writes the table named by the
+URI. A table URI accepts one generated table per target. Default mode is
+`overwrite`; `append` preserves rows. Format version is 2; `format_version=1` is
+accepted. Schema differences refuse the write naming the column, with no evolution.
+`partition_by` accepts `id`, `day(ts)`, `month(ts)`, `bucket(16, id)` and
+`truncate(4, s)`; types and positive widths are checked before catalog writes.
+`commit_rows` and `commit_seconds` commit one snapshot per micro-batch; the first
+snapshot applies the mode, later snapshots append. `fingerprint=True` (or a run
+context) sets snapshot summary `shape.fingerprint` for that batch.
+
+| Arrow | Iceberg |
+| --- | --- |
+| int8, int16, int32 | int |
+| int64, uint32 | long |
+| uint64 | decimal(20,0) |
+| float32, float64 | float, double |
+| decimal precision <= 38 | decimal(p,s) |
+| string, binary, bool, date | string, binary, boolean, date |
+| time64 | time (microseconds) |
+| zoned / zone-less timestamp | timestamptz (UTC) / timestamp (microseconds) |
+| binary field with `uuid=true` metadata | uuid |
+| list, struct, map | native list, struct, map |
+
+Original widths and field metadata are recorded in field documentation and a
+`shape.iceberg.arrow-schema` format/version-1 table property. The source restores
+widths recursively; temporal values normalize to microseconds and zoned timestamps
+to UTC. Nanosecond timestamps/time refuse the column unless `truncate_ns=True`
+explicitly allows truncation. Decimal precision above 38 is refused.
+
+`IcebergSource.read` scans Arrow batches. `snapshot_id` (integer) or `as_of`
+(ISO timestamp), mutually exclusive, selects an earlier snapshot. Profile provenance
+records catalog, table identifier, snapshot id and snapshot summary `total-records`.
+A namespace URI (`iceberg://catalog/ns` or `iceberg+file:///warehouse/ns`) profiles
+all its tables. Nested columns follow opaque profiling semantics. Row-level deletes,
+MERGE, format 3, branches/tags, evolution and maintenance are unsupported.
+
+UUID logical fields may use `uuid=true` metadata on 16-byte binary or
+`shape.type=uuid` metadata on strings; native Arrow UUID fields are accepted too.
+String UUIDs read back in canonical hyphenated form. Invalid UUID values refuse the
+column without quoting its data. Decimal scale must be between zero and precision,
+as required by Iceberg; unsupported scales are rejected before catalog writes.

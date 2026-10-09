@@ -21,7 +21,7 @@ LOCAL_SCHEMES = frozenset({"file"})
 #: the folder sinks. A URI on one of these hosts is an emulator or a local service.
 LOCAL_NAMES = frozenset({"console", "file", "memory", "parquet"})
 #: ``duckdb://`` is a DuckDB file on this machine: its sink refuses a host (W2-10).
-LOCAL_URI_SCHEMES = frozenset({"file", "jsonl", "duckdb"})
+LOCAL_URI_SCHEMES = frozenset({"file", "jsonl", "duckdb", "iceberg+file"})
 LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 CONFIRM_ENV = "SHAPE_CONFIRM_REMOTE"
 

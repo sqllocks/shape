@@ -496,3 +496,24 @@ tests bad, `--bad` tests good, or a version cannot be tested, for example a shar
 `bisect layers` finds the layer of a pipeline where a change appears (exit 0 a layer shows it, 1
 none does, 2 unusable input). `timelapse` follows one column across the versions (`-o OUT.html` is
 one offline page). See `docs/HISTORY.md`.
+
+### Iceberg targets and profiles
+
+With `[iceberg]` installed, write one generated table to an exact table URI:
+
+```sh
+shape generate items.json --to iceberg+file:///warehouse/ns/items
+shape generate items.json --to iceberg+file:///warehouse/ns/items --write-mode append --commit-rows 10000
+shape profile iceberg+file:///warehouse/ns/items -o items.shape
+shape profile iceberg+file:///warehouse/ns -o namespace.shape
+```
+
+Named catalog writes use `--to iceberg://catalog/ns/items --yes`. Catalog options
+use `--sink-config iceberg.catalog_type=rest` and `iceberg.uri=https://catalog.example`;
+secrets use references such as `iceberg.token=env://ICEBERG_TOKEN`. URI secrets are
+refused. Local `iceberg+file` writes need no remote confirmation. Python source
+options provide `snapshot_id` and `as_of`; `shape profile --as-of` selects a timestamp.
+See `docs/SINKS.md` for native types, partition transforms and snapshot micro-batches.
+
+Partition transforms are repeatable quoted arguments, for example
+`--partition-by 'bucket(16, id)' --partition-by 'truncate(4, label)'`.

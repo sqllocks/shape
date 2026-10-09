@@ -14,6 +14,8 @@ plugin and is reached through the [plugin host](host.md). `shape plugins doctor`
 | `shape.sources` | `xml` | XML files: the elements picked by a record path become rows, repeated children become child tables (`.xml`; see [SOURCES.md](../SOURCES.md)) |
 | `shape.sources` | `abfss` | CSV, Parquet, JSONL and IPC files in OneLake and ADLS Gen2, by `abfss://` URI (extra `[azure]`; see [cloud-sources.md](cloud-sources.md)) |
 | `shape.sources` | `delta` | Delta tables: a local directory, or `delta+abfss://` in OneLake and ADLS Gen2 (extra `[azure]` for cloud tables) |
+| `shape.sources` | `iceberg` | Local SQLite/file or named catalog native Iceberg scans; optional `[iceberg]`. |
+| `shape.sinks` | `iceberg` | Native Iceberg tables, partition transforms and snapshots; optional `[iceberg]`. |
 | `shape.sinks` | `csv` | CSV file |
 | `shape.sinks` | `parquet` | Parquet file (snappy, dictionary encoding on; T-17; row groups of up to 1,048,576 rows) |
 | `shape.sinks` | `jsonl` | JSON Lines file |

@@ -54,6 +54,9 @@
       },
       "type": "object"
     },
+    "target": {
+      "type": "string"
+    },
     "total_rows": {
       "type": "integer"
     }

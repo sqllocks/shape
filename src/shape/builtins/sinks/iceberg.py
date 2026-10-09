@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import time
 from collections.abc import Iterable
 from typing import Any
@@ -11,9 +12,12 @@ import pyarrow as pa  # type: ignore[import-untyped]
 from shape.builtins._iceberg import (
     SCHEMA_KEY,
     catalog,
+    convert_batch,
+    data_files,
     decode_schema,
     dependency,
     encode_schema,
+    iceberg_schema,
     mapped_schema,
     parse,
     partition_spec,
@@ -28,19 +32,29 @@ class IcebergTableWriter:
         if mode not in ("overwrite", "append"):
             raise ValueError("Iceberg mode must be overwrite or append")
         version = options.get("format_version", 2)
-        if version not in (1, 2):
+        if isinstance(version, bool) or not isinstance(version, int) or version not in (1, 2):
             raise ValueError("Iceberg format_version must be 1 or 2")
         self._schema = schema
-        self._mapped = mapped_schema(schema, bool(options.get("truncate_ns", False)))
+        truncate_ns = options.get("truncate_ns", False)
+        if not isinstance(truncate_ns, bool):
+            raise ValueError("truncate_ns must be a boolean")
+        self._mapped = mapped_schema(schema, truncate_ns)
         dependency()
         spec = partition_spec(self._mapped, options.get("partition_by"))
         self.commit_rows = options.get("commit_rows")
         self.commit_seconds = options.get("commit_seconds")
         if self.commit_rows is not None and (
-            int(self.commit_rows) != self.commit_rows or self.commit_rows <= 0
+            isinstance(self.commit_rows, bool)
+            or not isinstance(self.commit_rows, int)
+            or self.commit_rows <= 0
         ):
             raise ValueError("commit_rows must be a positive integer")
-        if self.commit_seconds is not None and self.commit_seconds <= 0:
+        if self.commit_seconds is not None and (
+            isinstance(self.commit_seconds, bool)
+            or not isinstance(self.commit_seconds, (int, float))
+            or not math.isfinite(self.commit_seconds)
+            or self.commit_seconds <= 0
+        ):
             raise ValueError("commit_seconds must be positive")
         self._clock = options.get("clock", time.monotonic)
         self._since = self._clock()
@@ -55,19 +69,28 @@ class IcebergTableWriter:
             raise ValueError("an Iceberg sink URI must name a table")
         from pyiceberg.exceptions import NoSuchTableError
 
-        cat.create_namespace_if_not_exists(identifier[:-1])
+        try:
+            cat.create_namespace_if_not_exists(identifier[:-1])
+        except Exception:
+            raise ValueError(
+                "Iceberg namespace could not be created; check catalog access"
+            ) from None
         try:
             self.table = cat.load_table(identifier)
         except NoSuchTableError:
-            from pyiceberg.io.pyarrow import _pyarrow_to_schema_without_ids
-            from pyiceberg.schema import assign_fresh_schema_ids
-
-            self.table = cat.create_table(
-                identifier,
-                assign_fresh_schema_ids(_pyarrow_to_schema_without_ids(self._mapped)),
-                partition_spec=spec,
-                properties={"format-version": str(version), SCHEMA_KEY: encode_schema(schema)},
-            )
+            try:
+                self.table = cat.create_table(
+                    identifier,
+                    iceberg_schema(self._mapped),
+                    partition_spec=spec,
+                    properties={"format-version": str(version), SCHEMA_KEY: encode_schema(schema)},
+                )
+            except Exception:
+                raise ValueError(
+                    "Iceberg table could not be created; check schema and access"
+                ) from None
+        except Exception:
+            raise ValueError("Iceberg table could not be loaded; check catalog access") from None
         else:
             old = (
                 decode_schema(self.table.properties[SCHEMA_KEY])
@@ -78,18 +101,43 @@ class IcebergTableWriter:
                 if (
                     name not in old.names
                     or name not in schema.names
-                    or old.field(name) != schema.field(name)
+                    or not old.field(name).equals(schema.field(name), check_metadata=True)
                 ):
                     raise ValueError(
                         f"Iceberg schema differs at column {name}; "
                         "schema evolution is not supported"
                     )
+            if "partition_by" in options:
+                wanted = [
+                    (iceberg_schema(self._mapped).find_field(f.source_id).name, str(f.transform))
+                    for f in spec.fields
+                ]
+                existing = [
+                    (self.table.schema().find_field(f.source_id).name, str(f.transform))
+                    for f in self.table.spec().fields
+                ]
+                if wanted != existing:
+                    raise ValueError(
+                        "Iceberg partition schema differs; partition evolution is not supported"
+                    )
             if old.names != schema.names:
                 raise ValueError(f"Iceberg schema differs at column {schema.names[0]}: field order")
 
     def write_batch(self, batch: pa.RecordBatch) -> None:
-        if not batch.schema.equals(self._schema):
-            raise ValueError("Iceberg batch schema differs from the declared schema")
+        if not batch.schema.equals(self._schema, check_metadata=True):
+            column = next(
+                (
+                    name
+                    for name in dict.fromkeys([*self._schema.names, *batch.schema.names])
+                    if name not in self._schema.names
+                    or name not in batch.schema.names
+                    or not self._schema.field(name).equals(
+                        batch.schema.field(name), check_metadata=True
+                    )
+                ),
+                next(iter(self._schema.names), "<schema>"),
+            )
+            raise ValueError(f"Iceberg batch schema differs at column {column}")
         if batch.num_rows:
             self._pending.append(batch)
             self._pending_rows += batch.num_rows
@@ -110,25 +158,31 @@ class IcebergTableWriter:
     def _commit(self) -> None:
         whole = pa.Table.from_batches(self._pending, schema=self._schema)
         # Explicit, opt-in nanosecond truncation; all other conversions retain their values.
-        mapped = whole.cast(self._mapped, safe=False)
+        mapped = pa.Table.from_batches(
+            [convert_batch(batch, self._mapped, writing=True) for batch in whole.to_batches()],
+            schema=self._mapped,
+        )
         properties: dict[str, str] = {}
         if self._stamp:
             from shape.fingerprint import KEY, dump, for_sink
 
             properties[KEY] = dump(for_sink(self._name, whole, self._stamp))
         try:
-            if self._mode == "append":
+            if self._mode == "append" and "uuid" not in str(self.table.schema()):
                 self.table.append(mapped, snapshot_properties=properties)
             else:
                 # Table.overwrite emits DELETE and APPEND snapshots. A single overwrite
                 # producer commits both file changes atomically in one snapshot instead.
-                from pyiceberg.io.pyarrow import _dataframe_to_data_files
-
                 with self.table.transaction() as tx:
-                    with tx.update_snapshot(snapshot_properties=properties).overwrite() as update:
-                        for task in self.table.scan().plan_files():
-                            update.delete_data_file(task.file)
-                        for data_file in _dataframe_to_data_files(
+                    snapshots = tx.update_snapshot(snapshot_properties=properties)
+                    producer = (
+                        snapshots.fast_append() if self._mode == "append" else snapshots.overwrite()
+                    )
+                    with producer as update:
+                        if self._mode == "overwrite":
+                            for task in self.table.scan().plan_files():
+                                update.delete_data_file(task.file)
+                        for data_file in data_files(
                             table_metadata=tx.table_metadata,
                             write_uuid=update.commit_uuid,
                             df=mapped,
@@ -161,6 +215,11 @@ class IcebergSink:
     schemes = ("iceberg", "iceberg+file")
     extension = ""
 
+    def preflight(self, uri: str, tables: dict[str, Any]) -> None:
+        parse(uri, writing=True)
+        if len(tables) != 1:
+            raise ValueError("an Iceberg table URI accepts one generated table per target")
+
     def open_table(
         self, uri: str, table: str, schema: pa.Schema | None = None, **options: Any
     ) -> IcebergTableWriter:
@@ -172,7 +231,10 @@ class IcebergSink:
     def write(self, uri: str, table: str, batches: Iterable[pa.RecordBatch], **options: Any) -> int:
         stream = iter(batches)
         first = next(stream, None)
-        schema = first.schema if first is not None else options.pop("schema", None)
+        supplied = options.pop("schema", None)
+        schema = first.schema if first is not None else supplied
+        if supplied is not None and first is not None and not supplied.equals(first.schema):
+            raise ValueError("Iceberg first batch schema differs from the supplied schema")
         writer = self.open_table(uri, table, schema, **options)
         try:
             if first is not None:
