@@ -59,6 +59,7 @@ class FakeKusto:
         self.calls = 0
         self.tables: dict[str, list[str]] = {}  # KQL tables and their column names
         self.by_table: dict[str, list[dict[str, Any]]] = {}  # delivered rows, per KQL table
+        self.column_types: dict[str, dict[str, str]] = {}
 
     def __call__(
         self, method: str, url: str, headers: dict[str, str], body: bytes, timeout: float
@@ -93,6 +94,25 @@ class FakeKusto:
 
     def _mgmt(self, csl: str) -> tuple[int, dict[str, str], bytes]:
         names = _kql_names(csl)
+        if csl.startswith(".show table ") and csl.endswith(" schema as json"):
+            if names[0] not in self.tables:
+                return 400, {}, b"Entity not found"
+            schema = json.dumps(
+                {
+                    "Name": names[0],
+                    "OrderedColumns": [
+                        {"Name": column, "CslType": self.column_types.get(names[0], {}).get(column)}
+                        for column in self.tables[names[0]]
+                    ],
+                }
+            )
+            return (
+                200,
+                {},
+                json.dumps(
+                    {"Tables": [{"Columns": [{"ColumnName": "Schema"}], "Rows": [[schema]]}]}
+                ).encode(),
+            )
         if csl.startswith(".show tables"):
             literal = re.search(r"TableName == '((?:[^'\\]|\\.)*)'", csl)
             name = re.sub(r"\\(.)", r"\1", literal.group(1)) if literal else ""
@@ -101,12 +121,20 @@ class FakeKusto:
             if names[0] in self.tables:
                 return 400, {}, b"Entity already exists: table " + names[0].encode()
             self.tables[names[0]] = names[1:]
+            self.column_types[names[0]] = self._column_types(csl)
         elif csl.startswith(".create-merge table"):
             have = self.tables.setdefault(names[0], [])
             have.extend(n for n in names[1:] if n not in have)
+            self.column_types.setdefault(names[0], {}).update(self._column_types(csl))
+        elif csl.startswith(".alter table ") and " policy " not in csl:
+            if names[0] not in self.tables:
+                return 400, {}, b"Entity not found"
+            self.tables[names[0]] = names[1:]
+            self.column_types[names[0]] = self._column_types(csl)
         elif csl.startswith(".drop table"):
             self.tables.pop(names[0], None)
             self.by_table.pop(names[0], None)
+            self.column_types.pop(names[0], None)
         elif csl.startswith(".clear table"):
             if csl.endswith(" cache streamingingestion schema"):
                 return (
@@ -125,6 +153,11 @@ class FakeKusto:
                 )
             self.by_table[names[0]] = []
         return 200, {}, b"{}"
+
+    @staticmethod
+    def _column_types(csl: str) -> dict[str, str]:
+        pairs = re.findall(r"\['((?:[^'\\]|\\.)*)'\]:(\w+)", csl)
+        return {re.sub(r"\\(.)", r"\1", name): kind for name, kind in pairs}
 
 
 WORKSPACE_ID = "11111111-1111-4111-8111-111111111111"

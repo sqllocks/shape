@@ -9,6 +9,7 @@ the JSON mapping, ``.show tables``) are written from the documented API; the fir
 the first contact with a real engine.
 """
 
+import json
 import os
 import time
 import uuid
@@ -66,3 +67,43 @@ def test_awkward_column_names_survive_the_mapping():
         raise
     finally:
         w.client.mgmt(f".drop table ['{table}'] ifexists")
+
+
+def test_replace_resets_schema_preserves_identity_and_allows_a_new_writer_to_append():
+    import pyarrow as pa
+
+    table = f"shape_w_{uuid.uuid4().hex[:8]}"
+    writer = EventhouseWriter(URI)
+    original = pa.RecordBatch.from_pydict({"id": [1], "old_col": ["old"]})
+    replacement = pa.RecordBatch.from_pydict({"id": ["new"], "new_col": [42]})
+
+    def table_id():
+        response = writer.client.mgmt(f".show table ['{table}'] details | project TableId")
+        return response["Tables"][0]["Rows"][0][0]
+
+    try:
+        assert writer.write_table(table, [original]) == 1
+        assert count_when(writer, table, 1) == 1
+        identity = table_id()
+        assert writer.write_table(table, [replacement], write_mode="replace") == 1
+        assert count_when(writer, table, 1) == 1
+        assert table_id() == identity
+        response = writer.client.mgmt(f".show table ['{table}'] schema as json")
+        result = response["Tables"][0]
+        names = [column["ColumnName"] for column in result["Columns"]]
+        schema = json.loads(result["Rows"][0][names.index("Schema")])
+        assert [(column["Name"], column["CslType"]) for column in schema["OrderedColumns"]] == [
+            ("id", "string"),
+            ("new_col", "long"),
+        ]
+        assert writer.client.query(f"['{table}'] | project id, new_col") == [["new", 42]]
+
+        next_writer = EventhouseWriter(URI)
+        assert next_writer.write_table(table, [replacement], write_mode="append") == 1
+        assert count_when(next_writer, table, 2) == 2
+        assert next_writer.client.query(f"['{table}'] | project id, new_col") == [
+            ["new", 42],
+            ["new", 42],
+        ]
+    finally:
+        writer.client.mgmt(f".drop table ['{table}'] ifexists")

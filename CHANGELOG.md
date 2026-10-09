@@ -15,6 +15,8 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   newly created or changed tables.
 - Eventhouse truncate and replace wait for streamed rows to be sealed, using a
   configurable command timeout instead of the shorter ingestion timeout.
+- Eventhouse replacement resets rows and column types while preserving table identity,
+  avoiding stale streaming routes after dropping and recreating a table.
 
 ## Unreleased
 

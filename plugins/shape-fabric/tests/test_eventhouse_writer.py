@@ -46,9 +46,76 @@ def test_append_truncate_replace(batches):
     assert len(kusto.by_table["t"]) == 4
     w.write_table("t", batches, write_mode="replace")
     assert len(kusto.by_table["t"]) == 7
-    assert any(c.startswith(".drop table ['t'] ifexists") for _, c in kusto.commands)
+    assert [c for _, c in kusto.commands].count(".clear table ['t'] data") == 2
+    alterations = [c for _, c in kusto.commands if c.startswith(".alter table ['t'] (")]
+    assert len(alterations) == 2
+    assert alterations[-1].startswith(".alter table ['t'] (['id']:long,")
+    assert not any(c.startswith(".drop table ") for _, c in kusto.commands)
     w.write_table("fresh", batches, write_mode="append")
     assert len(kusto.by_table["fresh"]) == 7
+
+
+def test_replace_resets_column_types_and_avoids_placeholder_name_collisions():
+    import json
+    import re
+
+    kusto = FakeKusto()
+    identities = {}
+    routes = {}
+
+    def transport(method, url, headers, body, timeout):
+        if url.endswith("/mgmt"):
+            command = json.loads(body)["csl"]
+            if command.startswith((".create table ", ".create-merge table ")):
+                if "t" not in kusto.tables:
+                    identities["t"] = object()
+            elif command.startswith(".drop table "):
+                identities.pop("t", None)
+        elif "/ingest/" in url:
+            identity = routes.setdefault("t", identities["t"])
+            if identity is not identities["t"]:
+                # Reusing a table name can accept into the dropped incarnation's cached
+                # route. Altering its schema preserves the identity and current route.
+                kusto.requests.append(("t", len(body)))
+                return 200, {}, b"{}"
+        return kusto(method, url, headers, body, timeout)
+
+    writer = EventhouseWriter(URI, transport=transport)
+    original = pa.RecordBatch.from_pydict(
+        {"id": [1], "old_col": ["old"], "_shape_replace": [0], "_shape_replace_1": [0]}
+    )
+    replacement = pa.RecordBatch.from_pydict(
+        {"id": ["new"], "new_col": [42], "_shape_replace_2": [9]}
+    )
+    assert writer.write_table("t", [original]) == 1
+    assert writer.write_table("t", [replacement], write_mode="replace") == 1
+    assert writer.row_count("t") == 1
+    assert kusto.by_table["t"] == [{"id": "new", "new_col": 42, "_shape_replace_2": 9}]
+    assert kusto.tables["t"] == replacement.schema.names
+    assert kusto.column_types["t"] == {
+        "id": "string",
+        "new_col": "long",
+        "_shape_replace_2": "long",
+    }
+    alterations = [
+        command for _, command in kusto.commands if command.startswith(".alter table ['t'] (")
+    ]
+    assert len(alterations) == 2
+    placeholder = next(iter(kusto._column_types(alterations[0])))
+    assert placeholder not in set(original.schema.names) | set(replacement.schema.names)
+    mapping = next(
+        command for _, command in reversed(kusto.commands) if "ingestion json mapping" in command
+    )
+    literal = mapping.split("'shape_json' '", 1)[1].rsplit("'", 1)[0]
+    mapped = json.loads(re.sub(r"\\(.)", r"\1", literal))
+    assert [(column["column"], column["datatype"]) for column in mapped] == [
+        ("id", "string"),
+        ("new_col", "long"),
+        ("_shape_replace_2", "long"),
+    ]
+    next_writer = EventhouseWriter(URI, transport=transport)
+    assert next_writer.write_table("t", [replacement], write_mode="append") == 1
+    assert next_writer.row_count("t") == 2
 
 
 def test_table_management_waits_for_sealing_without_extending_ingestion_or_queries(batches):
@@ -56,6 +123,7 @@ def test_table_management_waits_for_sealing_without_extending_ingestion_or_queri
 
     kusto = FakeKusto()
     ordinary_limits = []
+    readiness_limits = []
 
     def transport(method, url, headers, body, timeout):
         command = json.loads(body).get("csl", "") if url.endswith("/mgmt") else ""
@@ -66,6 +134,8 @@ def test_table_management_waits_for_sealing_without_extending_ingestion_or_queri
             # transport deadline must fail before the replacement rows are accepted.
             if timeout < 105:
                 raise ConnectionError("streamed rows are still being sealed")
+        elif command.endswith(" cache streamingingestion schema"):
+            readiness_limits.append(timeout)
         elif not url.endswith("/mgmt"):
             ordinary_limits.append(timeout)
         return kusto(method, url, headers, body, timeout)
@@ -77,6 +147,7 @@ def test_table_management_waits_for_sealing_without_extending_ingestion_or_queri
     writer.write_table("t", batches, write_mode="replace")
     assert writer.row_count("t") == 7
     assert ordinary_limits and set(ordinary_limits) == {0.5}
+    assert readiness_limits and set(readiness_limits) == {0.5}
 
     short_writer = EventhouseWriter(URI, transport=transport, timeout=0.5, management_timeout=1)
     with pytest.raises(WriteError, match="after 0 accepted request.*still being sealed"):

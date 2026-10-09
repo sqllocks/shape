@@ -156,6 +156,10 @@ def create_strict_table_command(table: str, schema: pa.Schema) -> str:
     return f".create table {q(table)} ({_column_list(schema)})"
 
 
+def alter_table_command(table: str, schema: pa.Schema) -> str:
+    return f".alter table {q(table)} ({_column_list(schema)})"
+
+
 def mapping_name(table: str) -> str:
     return MAPPING_NAME
 
@@ -186,6 +190,10 @@ def drop_table_command(table: str) -> str:
 def show_table_command(table: str) -> str:
     # a literal, not an identifier: .show tables | where TableName == '<name>'
     return f".show tables | where TableName == {string_literal(check_name(table))} | count"
+
+
+def show_table_schema_command(table: str) -> str:
+    return f".show table {q(table)} schema as json"
 
 
 def dedupe_query(table: str) -> str:
@@ -301,6 +309,33 @@ class KustoClient:
         rows = tables[0].get("Rows") if tables else None
         return bool(rows and rows[0] and int(rows[0][0]) > 0)
 
+    def table_column_names(self, table: str) -> list[str]:
+        """Read existing column names before preparing destructive schema changes."""
+        doc = self.mgmt(show_table_schema_command(table))
+        try:
+            result = doc["Tables"][0]
+            names = [column["ColumnName"] for column in result["Columns"]]
+            rows = result["Rows"]
+            if len(rows) != 1:
+                raise ValueError("expected one table schema")
+            value = rows[0][names.index("Schema")]
+            if not isinstance(value, str):
+                raise ValueError("expected a JSON table schema")
+            columns = json.loads(value)["OrderedColumns"]
+            if not isinstance(columns, list):
+                raise ValueError("expected an ordered column list")
+            existing = []
+            for column in columns:
+                name = column["Name"]
+                if not isinstance(name, str) or not name:
+                    raise ValueError("expected a nonempty column name")
+                existing.append(name)
+            if len(set(existing)) != len(existing):
+                raise ValueError("duplicate table columns")
+        except (KeyError, IndexError, TypeError, ValueError) as exc:
+            raise ShapeError("eventhouse: invalid table-schema response") from exc
+        return existing
+
     def prepare(self, table: str, schema: pa.Schema, *, create: str = "merge") -> None:
         """Create (``create="merge"``: or extend) the table, its JSON mapping and its streaming
         policy; again only when another schema was prepared for the table since (its JSON mapping
@@ -334,7 +369,7 @@ class KustoClient:
         deadline = time.monotonic() + self.ready_timeout
         pause = self._busy_pause
         while True:
-            doc = self.mgmt(clear_schema_cache_command(table))
+            doc = self.mgmt(clear_schema_cache_command(table), timeout=self.timeout)
             try:
                 result = doc["Tables"][0]
                 names = [column["ColumnName"] for column in result["Columns"]]
