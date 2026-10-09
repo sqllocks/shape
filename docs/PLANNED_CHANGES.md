@@ -1,5 +1,24 @@
 # Planned changes: `shape-changes.yml`
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" PLANNED_CHANGES
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for PLANNED_CHANGES
+    ```
+
+
 A release adds a column, a migration changes a type, a source switches vendor. Until now the only
 ways to keep `shape diff --fail-on-drift` and the gates quiet were `--ignore`, a looser threshold
 or an `observe` gate, and all of those also hide changes nobody planned. A planned-change file
@@ -70,9 +89,8 @@ CI job). The first matching entry in file order wins.
 
 ## `shape diff`
 
-```
-shape diff base.shape today.shape --fail-on-drift --changes shape-changes.yml
-```
+[Run this example](#local-example-1).
+
 
 The `--json` result adds three lists next to `drifted` and `changes`:
 
@@ -85,9 +103,8 @@ The result's `semver` counts unplanned changes only; the planned ones are counte
 `semver.planned`. `--fail-on CLASS` never fails on an `expect` entry, and fails again one day after
 its `until`:
 
-```
-shape diff base.shape today.shape --fail-on breaking --changes shape-changes.yml
-```
+[Run this example](#local-example-2).
+
 
 A planned change is marked `(planned: ID)` in the lines `shape diff` prints on stderr.
 With a rolling-window baseline (`docs/PROJECT.md`) the lists describe the first run of the window,
@@ -140,11 +157,8 @@ A planned type change, with the mean allowed to move while the migration runs:
 
 ## Acknowledging a reported change
 
-```
-shape diff base.shape today.shape --json result.json        # exit 1: drift
-shape changes ack result.json --until 2026-12-31 --reason "reviewed with the owner" --by sam --all
-shape diff base.shape today.shape --fail-on-drift             # exit 0 inside the window
-```
+[Run this example](#local-example-5).
+
 
 `shape changes ack RESULT.json` turns the selected changes (`--all`: every change that is not
 already planned; `--change N`, 1-based, repeatable) into `expect` entries with `acknowledged_by`
@@ -170,3 +184,71 @@ Classifying a change as breaking, additive or cosmetic, notifications, approval 
 person and any server-side workflow are out of scope. Drift thresholds, kinds and severities are
 unchanged. `shape verify` applies entries only to the schema drift gate: the other gates have no
 drift kinds.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-1"></a>
+
+### Example 2
+
+<!-- example: 1 -->
+
+```bash {.runnable-reference}
+shape diff base.shape today.shape --fail-on-drift --changes shape-changes.yml
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape: note: today.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: base.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    bump: none (0 breaking, 0 additive, 0 cosmetic)
+    {"changes": [], "drifted": false, "expired": [], "planned": [], "planned_not_observed": [], "semver": {"additive": 0, "breaking": 0, "bump": "none", "cosmetic": 0, "planned": {"additive": 0, "breaking": 0, "cosmetic": 0}}}
+    ```
+
+<a id="local-example-2"></a>
+
+### Example 3
+
+<!-- example: 2 -->
+
+```bash {.runnable-reference}
+shape diff base.shape today.shape --fail-on breaking --changes shape-changes.yml
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape: note: today.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: base.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    bump: none (0 breaking, 0 additive, 0 cosmetic)
+    {"changes": [], "drifted": false, "expired": [], "fail_on": "breaking", "failed": false, "planned": [], "planned_not_observed": [], "semver": {"additive": 0, "breaking": 0, "bump": "none", "cosmetic": 0, "planned": {"additive": 0, "breaking": 0, "cosmetic": 0}}}
+    ```
+
+<a id="local-example-5"></a>
+
+### Example 6
+
+<!-- example: 5 -->
+
+```bash {.runnable-reference}
+shape diff base.shape today.shape --json result.json        # exit 1: drift
+shape changes ack result.json --until 2026-12-31 --reason "reviewed with the owner" --by sam --all
+shape diff base.shape today.shape --fail-on-drift             # exit 0 inside the window
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape: note: today.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: base.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    bump: none (0 breaking, 0 additive, 0 cosmetic)
+    shape: error: --all: there is no unplanned change in the result
+    shape: note: today.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: base.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    bump: none (0 breaking, 0 additive, 0 cosmetic)
+    {"changes": [], "drifted": false, "semver": {"additive": 0, "breaking": 0, "bump": "none", "cosmetic": 0}}
+    ```

@@ -1,11 +1,12 @@
-# Security Policy
+# Security policy
 
-Report suspected vulnerabilities privately to the maintainer at
-**sqllocks@sqlbites.com**, or through GitHub's private vulnerability reporting on
-this repository, rather than opening a public issue. Do not include real secrets,
-PII or customer datasets in reports.
+Status: available.
 
-Shape is in early access; only the latest release receives fixes.
+Report a suspected vulnerability privately to support@shapedata.ai or use GitHub private
+vulnerability reporting for this repository. Include the affected version, reproducible steps
+and impact. Do not attach production data, credentials or private profiles to public issues.
+<!-- owner: security maintainer — confirm supported patch versions and response expectations. -->
 
-Shape treats artifacts, packs, plugins, connector responses and reference assets as
-untrusted inputs. See `docs/THREAT_MODEL.md`.
+A safe capture is data minimisation, not anonymisation. Review profiles before sharing them.
+Plugins run as trusted Python code in the Shape process. See
+[What leaves my machine](docs/WHAT_LEAVES.md) for the code-backed review checklist.

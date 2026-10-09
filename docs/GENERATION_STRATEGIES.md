@@ -1,5 +1,8 @@
 # Generation strategies
 
+Status: experimental.
+
+
 A strategy fills one column of a table, one chunk at a time. This page is the contract the
 strategies of Phase 4 are written against; the engine side is in `docs/GENERATION_ENGINE.md` and the
 native kernel in `docs/GENERATION_KERNEL.md`.

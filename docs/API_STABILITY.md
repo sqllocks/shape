@@ -1,5 +1,12 @@
 # API Stability — Shape by SQLLocks
 
+Status: available (early-access surface); coming (1.x policy).
+
+**Early access 0.9.1.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
+
+The compatibility promises below apply to the future 1.x line, not the current early-access release.
+
+
 Shape 1.0 freezes the versioned specification and the public interfaces identified in `docs/specs/SHAPE_2.md`.
 
 Stable interfaces follow semantic-versioning compatibility through the 1.x line. Additive optional behavior is allowed; silent semantic changes are not. Experimental/internal modules are not covered unless explicitly promoted to Stable.

@@ -68,11 +68,13 @@ def validate_structure(obj: Any, depth: int = 0, *, allow_nonfinite: bool = Fals
 
 
 def scan_secrets(obj):
+    """Return credential-pattern names found in the serialized object."""
     text = json.dumps(obj, default=str, ensure_ascii=False)
     return tuple(name for name, p in SECRET_PATTERNS if p.search(text))
 
 
 def enforce_no_secrets(obj: Any) -> Any:
+    """Return the object or raise SecurityError when credential patterns are found."""
     hits = scan_secrets(obj)
     if hits:
         raise SecurityError("credential material detected: " + ",".join(hits))
@@ -80,6 +82,7 @@ def enforce_no_secrets(obj: Any) -> Any:
 
 
 def classification_allows(source, target):
+    """Return whether the target classification is at least the source level."""
     s = str(source).upper()
     t = str(target).upper()
     if s not in LEVELS or t not in LEVELS:
@@ -88,6 +91,7 @@ def classification_allows(source, target):
 
 
 def require_no_downgrade(source, target):
+    """Reject a sensitivity downgrade and return True otherwise."""
     if not classification_allows(source, target):
         raise SecurityError(f"classification downgrade denied: {source} -> {target}")
     return True
@@ -101,6 +105,7 @@ class SecurityReport:
 
 
 def inspect_shape(shape, classification="PUBLIC"):
+    """Validate structure and return credential-pattern findings and classification."""
     validate_structure(shape)
     hits = scan_secrets(shape)
     if str(classification).upper() not in LEVELS:

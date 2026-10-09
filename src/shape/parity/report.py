@@ -14,6 +14,7 @@ VERSION = 1
 def build_report(
     a: Side, b: Side, checks: list[Check], options: dict[str, Any] | None = None
 ) -> dict[str, Any]:
+    """Build a structured environment parity result report."""
     by_category = {c: {PASS: 0, FAIL: 0, NOT_MEASURED: 0} for c in CATEGORIES}
     for check in checks:
         by_category[check.category][check.status] += 1

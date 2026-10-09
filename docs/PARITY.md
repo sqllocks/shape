@@ -1,13 +1,37 @@
 # Environment parity: `shape parity`
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" PARITY
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for PARITY
+    ```
+
+
 After a development or test environment is wiped and reloaded, can anyone show that it still
 looks like production? `shape parity A B` answers by **shape only**: it never compares rows or
 values, so side A can be a share-safe profile that production hands over.
+
+<!-- example: 0 -->
+
+Syntax reference. Replace the named arguments with your inputs.
 
 ```
 shape parity A B [--dataset] [--source NAME] [--project shape.yml] [--no-project]
                  [--scaled] [--row-tolerance F] [--tables T,...] [-o REPORT.json] [--json]
 ```
+
 
 `A` is the reference (production), `B` the environment under test. Each is one of:
 
@@ -104,7 +128,24 @@ failed. The text form lists failures first, then what could not be measured, the
 
 ## Example: production hands over a safe profile
 
-```bash
+[Run this example](#local-example-2).
+
+
+Persisted-format compatibility: `tests/fixtures/parity/v1/report.json` is a frozen version 1
+report that later Shapes must still read (`tests/parity/test_compat.py`).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-2"></a>
+
+### Example 3
+
+<!-- example: 2 -->
+
+```bash {.runnable-reference}
 # in production
 shape profile data/ --dataset -o prod.shape
 shape profile safe prod.shape -o prod.safe.json
@@ -113,5 +154,28 @@ shape profile safe prod.shape -o prod.safe.json
 shape parity prod.safe.json dev-data/ --dataset --scaled --source orders -o parity.json
 ```
 
-Persisted-format compatibility: `tests/fixtures/parity/v1/report.json` is a frozen version 1
-report that later Shapes must still read (`tests/parity/test_compat.py`).
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape: note: /tmp/docs-reference-runs/PARITY/shape.yml defines 2 sources and none was selected: its source settings were not applied (use --source NAME)
+    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    {"shape_content_id": "f5aa5cd05dbb670cd59c18c96342ca86e548132c25fd07e343a6cd0cba95f772", "written": "prod.shape"}
+    shape: note: prod.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    {"unsafe": false, "written": "prod.safe.json"}
+    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    A: prod.safe.json (safe-profile, ee1af6cf4f7e)
+    B: dev-data (data, 8c68726c18f9)
+
+    NOT MEASURED (7)
+      distributions customers.age: a key or reference column: its values grow with the table
+      distributions customers.customer_id: a key or reference column: its values grow with the table
+      distributions customers.id: a key or reference column: its values grow with the table
+      distributions customers.income: a key or reference column: its values grow with the table
+      distributions orders.customer_id: a key or reference column: its values grow with the table
+      distributions orders.order_id: a key or reference column: its values grow with the table
+      distributions orders.salary: a key or reference column: its values grow with the table
+
+    parity: 131 passed, 0 failed, 7 not measured
+    ```

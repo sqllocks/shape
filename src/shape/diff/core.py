@@ -14,6 +14,7 @@ class Delta:
 
 
 def diff_mapping(a: dict[str, Any], b: dict[str, Any], prefix: str = "") -> list[Delta]:
+    """Return added, removed and changed paths in two nested mappings."""
     out: list[Delta] = []
     for k in sorted(set(a) | set(b)):
         p = f"{prefix}.{k}" if prefix else k

@@ -1,5 +1,7 @@
 # Safe-to-share bundle
 
+Status: experimental.
+
 A bundle is a zip of generated data, the run manifest when there is one, and `attestation.json`: a
 signed statement that named checks passed on exactly this data. It gives the person you hand the
 data to something to verify, instead of your word.
@@ -16,11 +18,16 @@ that the signer is trustworthy.
 
 ## Commands
 
+<!-- example: 0 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
 ```bash
 shape share-bundle create DATA_DIR --source SOURCE_DIR --classifications CLASSES.json \
     -o BUNDLE.zip [--key PRIVATE_KEY] [--top-k 20]
 shape share-bundle verify BUNDLE.zip [--public-key KEY]
 ```
+
 
 `DATA_DIR` and `SOURCE_DIR` hold one `NAME.csv`, `NAME.parquet` or `NAME.jsonl` per table, as for
 `shape verify --source`; a table is compared with the source table of the same name.
@@ -109,7 +116,7 @@ behind.
 | `attestation.json`, `manifest.json` | 8 MiB each | real ones are a few KiB |
 | one data file | 2 GiB | generous for generated tables; `verify` loads every table into memory anyway |
 | all data files | 8 GiB | the same reason |
-| expansion | refused past 100x once larger than 16 MiB, per file and in total | the Excel reader's zip-bomb guard (#282, #563); generated CSV and JSON lines pack 3-20x, Parquet about 1x |
+| expansion | refused past an expansion factor of 100 once larger than 16 MiB, per file and in total | the Excel reader's zip-bomb guard |
 
 | exit | meaning |
 |---|---|

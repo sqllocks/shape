@@ -1,5 +1,8 @@
 # External Reference Assets
 
+Status: experimental.
+
+
 Shape core is offline. Reference data is acquired separately, checksummed, licensed and then ingested locally.
 
 - `load_geonames_postal()` ingests standard GeoNames postal TSV and records SHA-256 provenance. GeoNames' current postal-code download readme states CC BY 4.0 in its text (https://download.geonames.org/export/zip/readme.txt; the link beside it still names the 3.0 URL) and requires attribution.

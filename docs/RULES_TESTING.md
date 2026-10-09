@@ -1,5 +1,24 @@
 # Testing your rules: mutation testing and backtesting
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" RULES_TESTING
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for RULES_TESTING
+    ```
+
+
 A contract (`shape check`, contract format v1) can look strict and still miss the faults that
 matter, and a new rule cannot be tried against the past before it is enforced. Two commands
 answer those questions:
@@ -11,10 +30,15 @@ Neither changes your data, your contract or your registry.
 
 ## `shape rules mutate`
 
+<!-- example: 0 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
 ```
 shape rules mutate DATA CONTRACT.json [--plan PLAN.json] [--seed N] [--rate R] [--diff]
                    [--min-score S] [-o REPORT.json] [--json]
 ```
+
 
 `DATA` is a data file or a folder of them (the files `shape profile` reads; one table per file).
 Each **mutant** is one corruption of `shape chaos` (`duplicates`, `orphan_keys`, `date_shift`,
@@ -98,9 +122,8 @@ Schema: `src/shape/schemas/shape-mutation-report-v1.schema.json`.
 
 Generate a domain and keep one table:
 
-```
-shape generate retail --mode 3nf --format csv --scale small -o data --seed 7
-```
+[Run this example](#local-example-3).
+
 
 A first contract for `data/order.csv`, `weak.json`, looks reasonable:
 
@@ -109,19 +132,8 @@ A first contract for `data/order.csv`, `weak.json`, looks reasonable:
              "order_total": {"dtype": "float"}}}
 ```
 
-```
-$ shape rules mutate data/order.csv weak.json --seed 1
-mutation score 0.0% (0 of 13 applicable mutants killed; seed 1, rate 0.05)
+[Run this example](#local-example-5).
 
-SURVIVED: no rule caught these (13)
-  duplicates.order  [250 cells]
-  orphan_keys.order.customer_id  [250 cells]
-  ...
-  negative_amounts.order.order_total  [250 cells]
-  case_whitespace.order.status  [250 cells]
-  null_creep.order.status  [250 cells]
-  ...
-```
 
 Not one of the 13 faults is caught. Adding one rule, `"unique": true` on `order_id`, kills the
 `duplicates` mutant and lifts the score to 7.7% (1 of 13). Rules that match what each surviving
@@ -136,27 +148,8 @@ mutant breaks do the rest (`better.json`):
   "order_date": {"nullable": false}}}
 ```
 
-```
-$ shape rules mutate data/order.csv better.json --seed 1
-mutation score 61.5% (8 of 13 applicable mutants killed; seed 1, rate 0.05)
+[Run this example](#local-example-7).
 
-SURVIVED: no rule caught these (5)
-  orphan_keys.order.customer_id  [250 cells]
-  orphan_keys.order.store_id  [250 cells]
-  orphan_keys.order.shipping_address_id  [250 cells]
-  orphan_keys.order.promotion_id  [250 cells]
-  pii_fill.order.order_date  [250 cells]
-
-killed (8)
-  duplicates.order  [250 cells]  by order.order_id.unique
-  negative_amounts.order.order_total  [250 cells]  by order.order_total.min
-  case_whitespace.order.status  [250 cells]  by order.status.allowed_values
-  ...
-rules that killed no mutant
-  order.order_id.dtype
-  order.order_id.nullable
-  order.order_total.dtype
-```
 
 The survivors are the finding. A contract has no cross-table rule, so orphan foreign keys pass a
 per-table check; and the dtype and nullable rules of `order_id` never fire because the mutants do
@@ -165,11 +158,16 @@ the unmutated profile catches the remaining five, and the score is 100.0%.
 
 ## `shape rules backtest`
 
+<!-- example: 8 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
 ```
 shape rules backtest REGISTRY NAME CONTRACT.json [--since DATE] [--until DATE]
                      [--window day|week|month] [--incidents FILE] [--fail-on-miss]
                      [--compare OLD_CONTRACT.json] [-o REPORT.json] [--json]
 ```
+
 
 Replays the contract over every committed version of `NAME` in a registry (`shape registry`,
 `REGISTRY.md`), oldest first. A version's date is its `business_date` metadata
@@ -261,3 +259,120 @@ The plan, the mutation report, the incidents file and the backtest report each d
 and an integer `version`. A reader accepts every version up to the one it knows and refuses a newer
 one with an error; the frozen version-1 documents in `tests/rules/data/` are checked against the
 schemas in `src/shape/schemas/` by the test suite.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-3"></a>
+
+### Example 4
+
+<!-- example: 3 -->
+
+```bash {.runnable-reference}
+shape generate retail --mode 3nf --format csv --scale small -o data --seed 7
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Wrote 9 csv files to data: 21,750 rows in 9 tables (0.30s)
+    ```
+
+<a id="local-example-5"></a>
+
+### Example 6
+
+<!-- example: 5 -->
+
+```bash {.runnable-reference}
+shape rules mutate data/order.csv weak.json --seed 1
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    mutation score 7.7% (1 of 13 applicable mutants killed; seed 1, rate 0.05)
+    these rules already fail on the unmutated data, so they cannot kill a mutant: order.amount.column_exists
+
+    SURVIVED: no rule caught these (12)
+      orphan_keys.order.customer_id  [250 cells]
+      orphan_keys.order.store_id  [250 cells]
+      orphan_keys.order.shipping_address_id  [250 cells]
+      orphan_keys.order.promotion_id  [250 cells]
+      negative_amounts.order.order_total  [250 cells]
+      case_whitespace.order.status  [250 cells]
+      pii_fill.order.order_date  [250 cells]
+      pii_fill.order.status  [250 cells]
+      type_change.order.order_total  [5000 cells]
+      null_creep.order.order_date  [250 cells]
+      null_creep.order.status  [250 cells]
+      null_creep.order.order_total  [250 cells]
+
+    killed (1)
+      duplicates.order  [250 cells]  by order.order_id.unique
+
+    by kind
+      case_whitespace         0.0%  (0/1)
+      duplicates            100.0%  (1/1)
+      negative_amounts        0.0%  (0/1)
+      null_creep              0.0%  (0/3)
+      orphan_keys             0.0%  (0/4)
+      pii_fill                0.0%  (0/2)
+      type_change             0.0%  (0/1)
+
+    by table
+      order                   7.7%  (1/13)
+
+    rules that killed no mutant
+      order.order_id.nullable
+      order.amount.min
+    ```
+
+<a id="local-example-7"></a>
+
+### Example 8
+
+<!-- example: 7 -->
+
+```bash {.runnable-reference}
+shape rules mutate data/order.csv better.json --seed 1
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    mutation score 30.8% (4 of 13 applicable mutants killed; seed 1, rate 0.05)
+    these rules already fail on the unmutated data, so they cannot kill a mutant: order.status.allowed_values
+
+    SURVIVED: no rule caught these (9)
+      orphan_keys.order.customer_id  [250 cells]
+      orphan_keys.order.store_id  [250 cells]
+      orphan_keys.order.shipping_address_id  [250 cells]
+      orphan_keys.order.promotion_id  [250 cells]
+      case_whitespace.order.status  [250 cells]
+      pii_fill.order.order_date  [250 cells]
+      pii_fill.order.status  [250 cells]
+      null_creep.order.order_date  [250 cells]
+      null_creep.order.order_total  [250 cells]
+
+    killed (4)
+      duplicates.order  [250 cells]  by order.order_id.unique
+      negative_amounts.order.order_total  [250 cells]  by order.order_total.min
+      type_change.order.order_total  [5000 cells]  by order.order_total.min
+      null_creep.order.status  [250 cells]  by order.status.nullable
+
+    by kind
+      case_whitespace         0.0%  (0/1)
+      duplicates            100.0%  (1/1)
+      negative_amounts      100.0%  (1/1)
+      null_creep             33.3%  (1/3)
+      orphan_keys             0.0%  (0/4)
+      pii_fill                0.0%  (0/2)
+      type_change           100.0%  (1/1)
+
+    by table
+      order                  30.8%  (4/13)
+    ```

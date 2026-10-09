@@ -267,6 +267,7 @@ class FidelityResult:
 def evaluate_fidelity(
     reference: Mapping[str, Any], observed: Mapping[str, Any], tolerance: float = 0.1
 ) -> FidelityResult:
+    """Score evidence similarity and apply the requested tolerance."""
     cert = certify_shapes(reference, observed)
     return FidelityResult(
         cert.score, cert.score >= 1 - float(tolerance), {d.name: d.score for d in cert.dimensions}

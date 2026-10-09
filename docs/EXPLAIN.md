@@ -1,11 +1,18 @@
 # `shape explain` and notebook display
 
+Status: experimental.
+
 ## `shape explain`
+
+<!-- example: 0 -->
+
+Syntax reference. Replace the named arguments with your inputs.
 
 ```
 shape explain DIFF.json [--json] [--classified COL1,COL2]
     [--baseline BASE.shape] [--current CURRENT.shape]
 ```
+
 
 `DIFF.json` is what `shape diff A.shape B.shape --json DIFF.json` writes, or the output of
 `shape drift`. The command prints a plain-English narrative: how many changes, in which columns

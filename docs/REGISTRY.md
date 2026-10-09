@@ -1,8 +1,32 @@
 # `shape registry`: a content-addressed history of artifacts
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" REGISTRY
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for REGISTRY
+    ```
+
+
+<!-- example: 0 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
 ```
 shape registry ROOT ACTION ...
 ```
+
 
 `ROOT` is a directory. Every version of a name is stored as the bytes you committed, under their
 sha256 (`objects/<sha256>`); `logs/<name>.jsonl` records each commit, `refs/<name>/latest` and
@@ -21,19 +45,13 @@ holds up to 500 real values per column and each column's minimum and maximum. Th
 scanned by the leak scanner and committed as it is (`profile_form` `safe`). `shape registry ...
 commit` refuses a raw one:
 
-```
-$ shape registry reg commit customers cust.shape
-shape: error: cust.shape is a raw profile: it holds real values from the data ...
-```
+[Run this example](#local-example-1).
+
 
 Commit the safe form instead:
 
-```bash
-shape registry reg commit customers cust.shape --safe            # converts, then commits
-shape profile safe cust.shape -o cust.safe.json                  # or write it yourself ...
-shape registry reg commit customers cust.safe.json               # ... and commit that
-shape profile validate --safe cust.safe.json                     # exit 0: no leak found
-```
+[Run this example](#local-example-2).
+
 
 A safe-profile JSON is scanned with the leak scanner before it is stored; one that fails (for
 example `shape profile safe --unsafe-full-fidelity` output) is not committed (exit 1). The safe
@@ -52,6 +70,10 @@ refused without being inflated.
 
 ## Commands
 
+<!-- example: 3 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
 ```bash
 shape registry ROOT commit NAME ARTIFACT [--meta KEY=VALUE]... [--business-date YYYY-MM-DD]
                                          [--safe [--k N] [--sensitive] | --allow-raw]
@@ -64,6 +86,7 @@ shape registry ROOT tag NAME TAG [REF]
 shape registry ROOT promote NAME SOURCE TARGET
 shape registry ROOT prune --before DATE [--name NAME ...] [--keep-last N] [--dry-run] [--json]
 ```
+
 
 A `REF` is `latest`, a tag, a promoted ref or a content id recorded for that name. `prune` removes
 old log entries and the objects nothing points at any more (see [Pruning](#pruning)).
@@ -90,11 +113,8 @@ old log entries and the objects nothing points at any more (see [Pruning](#pruni
 A registry only grows: every commit appends to `logs/<name>.jsonl` and adds an object. A team that
 commits on every pipeline run keeps it to a bounded size with `prune`:
 
-```bash
-shape registry reg prune --before 2026-06-01 --dry-run          # what would go; nothing changes
-shape registry reg prune --before 2026-06-01                    # every name
-shape registry reg prune --before 2026-06-01T00:00:00Z --name orders --keep-last 7 --json
-```
+[Run this example](#local-example-4).
+
 
 `--before` is a date (`YYYY-MM-DD`, midnight UTC) or an ISO 8601 timestamp with `Z` or an offset
 (`2026-06-01T02:00:00+02:00`); a timestamp without a zone is refused, because it names no instant.
@@ -211,3 +231,76 @@ the values of classified columns as `diff` does, and it returns no raw value for
 `shape bisect` finds the first committed version of a name that changed, `shape bisect layers`
 the layer of a pipeline where a change appears, and `shape timelapse` follows one column across
 the versions; see `docs/HISTORY.md`. They need raw profiles (`--allow-raw`).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-1"></a>
+
+### Example 2
+
+<!-- example: 1 -->
+
+```bash {.runnable-reference}
+shape registry reg commit customers cust.shape
+```
+
+??? info "Output (exit 2)"
+
+    ```text {.expected}
+    shape: error: cust.shape is a raw profile: it holds real values from the data (up to 500 per column), and a registry is made to be shared, backed up or put under git. Commit its safe form with `shape registry reg commit customers cust.shape --safe` (or the output of `shape profile safe`), or pass --allow-raw to store the real values
+    ```
+
+This command exits nonzero. Read the diagnostic; this transcript shows a refusal or failed check, not a passing gate.
+
+<a id="local-example-2"></a>
+
+### Example 3
+
+<!-- example: 2 -->
+
+```bash {.runnable-reference}
+shape registry reg commit customers cust.shape --safe            # converts, then commits
+shape profile safe cust.shape -o cust.safe.json                  # or write it yourself ...
+shape registry reg commit customers cust.safe.json               # ... and commit that
+shape profile validate --safe cust.safe.json                     # exit 0: no leak found
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape: note: cust.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    {"content_id": "642e7bf1414aae1e1b69020e7fd3643ee0070086510b33c3d99882808fd9944c"}
+    shape: note: cust.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    {"unsafe": false, "written": "cust.safe.json"}
+    {"content_id": "642e7bf1414aae1e1b69020e7fd3643ee0070086510b33c3d99882808fd9944c"}
+    CLEAN: no leaks found in cust.safe.json
+    ```
+
+<a id="local-example-4"></a>
+
+### Example 5
+
+<!-- example: 4 -->
+
+```bash {.runnable-reference}
+shape registry reg prune --before 2026-06-01 --dry-run          # what would go; nothing changes
+shape registry reg prune --before 2026-06-01                    # every name
+shape registry reg prune --before 2026-06-01T00:00:00Z --name customers --keep-last 7 --json
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    dry run: nothing changed; a prune would remove entries committed before 2026-06-01T00:00:00Z from reg
+      customers: 0 entries removed, 2 kept
+    objects removed: 0
+    bytes freed: 0
+    pruned entries committed before 2026-06-01T00:00:00Z from reg
+      customers: 0 entries removed, 2 kept
+    objects removed: 0
+    bytes freed: 0
+    {"bytes_freed": 0, "cutoff": "2026-06-01T00:00:00Z", "dry_run": false, "format": "shape-result", "names": {"customers": {"entries_kept": 2, "entries_removed": 0, "kept_because": {"keep_last": [], "ref": [], "tag": []}}}, "objects_removed": [], "skipped": [], "version": 1, "command": "registry prune", "exit_code": 0, "payload": {"bytes_freed": 0, "cutoff": "2026-06-01T00:00:00Z", "dry_run": false, "format": "shape-registry-prune", "names": {"customers": {"entries_kept": 2, "entries_removed": 0, "kept_because": {"keep_last": [], "ref": [], "tag": []}}}, "objects_removed": [], "skipped": [], "version": 1}}
+    ```

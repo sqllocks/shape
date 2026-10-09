@@ -1,45 +1,50 @@
 # Shape by SQLLocks
 
-**Shape as Code:** a portable, executable description of how data behaves, not merely its
-schema. Shape profiles your data into a `.shape` file, checks data against contracts, reports
-drift between two shapes, and generates realistic synthetic data from a shape or a schema.
+Profile your data, check a contract, compare drift and generate development rows.
 
-Install with `pip install sqllocks-shape`. Python imports use `import shape`, the command is
-`shape`, and artifacts use the `.shape` extension.
+Status: available.
 
-```python
-import shape
+**Early access 0.9.1.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 
-p = shape.profile("customers.csv")      # also: Parquet, JSONL, Delta tables, pandas, pyarrow
-shape.save(p, "customers.shape")
-print(p.summary())                      # small JSON-safe summary per column
-
-result = shape.check(p, {"columns": {"customer_id": {"unique": True, "nullable": False}}})
-print(result.passed, result.violations)
+```mermaid
+flowchart LR
+    A[Your data] --> P[Profile]
+    P --> C[Check a contract]
+    C --> D[Diff against a baseline]
+    D --> G[Generate development data]
 ```
 
-```bash
-shape profile customers.csv -o customers.shape --name customers --html report.html
-shape check customers.shape contract.json          # exit code 1 if the contract fails
-shape diff customers.shape customers_next.shape --fail-on-drift
+Start with [your first profile](tutorials/01-first-profile.md). You create a local CSV,
+save a `.shape` file and read its report. No cloud account is needed.
+Then [write a contract](tutorials/04-contract.md),
+[catch drift](tutorials/03-drift.md) and
+[generate from your profile](tutorials/05-generate-profile.md).
+Use [learning paths](LEARNING_PATHS.md) to choose the next step for your role.
+
+A profile describes a table's types, counts, nulls, distributions and relationships.
+A contract states what your data must satisfy. A diff shows how its behavior changes.
+A safe capture is data minimisation, not anonymisation. You review it before sharing.
+
+## Where platforms plug in
+
+```mermaid
+flowchart TB
+    F[Local files / DuckDB / PostgreSQL / MySQL] --> P[Profile]
+    L[OneLake / ADLS / Delta files] --> P
+    P --> C[Contract and drift checks]
+    P --> G[Generation]
+    G --> DB[DuckDB / PostgreSQL / MySQL]
+    G --> W[Snowflake / Databricks write targets]
+    G --> M[Fabric writers / local files]
+    C --> CI[GitHub Actions / pipeline exit codes]
+    M --> BI[Semantic model exports for Power BI]
 ```
 
-## Where to start
+[Database pages](databases/index.md) describe shipped adapters. Snowflake and Databricks
+are write targets; Shape does not profile from them yet. Account-dependent examples identify the platform you need.
 
-| If you want to | Read |
-|---|---|
-| install Shape and its optional extras | [Install](INSTALL.md) |
-| try it in five minutes | [Quickstart](QUICKSTART.md), then the [tutorial](TUTORIAL.md) |
-| profile files, folders and tables | [File sources](SOURCES.md) and [profiling notes](PROFILING_NOTES.md) |
-| catch drift and enforce contracts | [Drift](DRIFT.md) and [verifying data](VERIFY.md) |
-| generate synthetic data | [Schema design](DESIGN.md) and the [generation engine](GENERATION_ENGINE.md) |
-| run Shape in Fabric and Azure | [Fabric commands](plugins/fabric-commands.md) and [Fabric writers](plugins/fabric-writers.md) |
-| share a profile safely | [Privacy model](PRIVACY_MODEL.md) and the [safe-to-share bundle](SHARE_BUNDLE.md) |
-| look up a command or a function | [Command line](CLI.md) and [Python API](API.md) |
-| write a plugin | [Writing a plugin](plugins/authoring.md) and [Plugin API v1](plugins/api-v1.md) |
+## Choose your next page
 
-## Status
-
-Shape is in early access. What is stable, and what that promise covers, is set out in
-[CLI stability](CLI_STABILITY.md), [API stability](API_STABILITY.md) and the
-[release policy](RELEASE_POLICY.md). Shape is open source under the MIT license.
+[Install](INSTALL.md) · [Concepts](CONCEPTS.md) · [Read the report](READ_REPORT.md) ·
+[Troubleshooting](TROUBLESHOOTING.md) · [Known limitations](KNOWN_LIMITATIONS.md) ·
+[Python API](API.md) · [Changelog](CHANGELOG.md)

@@ -1,5 +1,8 @@
 # Shape 1.0 Normative Contract
 
+Status: experimental.
+
+
 Shape 1.0 defines a portable behavioral-data contract. Normative keywords MUST, SHOULD and MAY follow RFC 2119 meanings.
 
 A conforming implementation MUST:

@@ -1,5 +1,7 @@
 # Fingerprint
 
+Status: experimental.
+
 Once generated data leaves Shape it carries almost nothing about where it came from. A fingerprint
 is a small JSON document stored inside the file (a Parquet footer) or the table (a Delta table
 property) that says the data is synthetic, names the table, the run and the profile that produced
@@ -45,12 +47,17 @@ The reproducibility tuple must hold no floating-point numbers (the canonical for
 
 ## Commands
 
+<!-- example: 1 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
 ```bash
 shape fingerprint embed FILE|DELTA_DIR --run MANIFEST.json [--profile P.shape] [--key PRIVATE_KEY]
 shape fingerprint show FILE|DELTA_DIR
 shape fingerprint verify FILE|DELTA_DIR [--public-key KEY]
 shape generate SCHEMA -f parquet|delta -o DIR --fingerprint
 ```
+
 
 `embed` takes `table`, `dataset_id` and the reproducibility tuple from the run manifest
 (`shape pack run` writes `<run_id>_manifest.json`): the table is the manifest table whose

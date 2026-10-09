@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block extrahead %}
+{{ super() }}
+<link rel="alternate" type="text/plain" href="{{ 'llms.txt' | url }}" title="Documentation text index">
+<script src="{{ 'assets/javascripts/mermaid.min.js' | url }}"></script>
+{% endblock %}

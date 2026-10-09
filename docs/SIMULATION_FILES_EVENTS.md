@@ -1,5 +1,24 @@
 # Simulating landing files and event streams
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" SIMULATION_FILES_EVENTS
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for SIMULATION_FILES_EVENTS
+    ```
+
+
 `sqllocks-shape-simulation` (`pip install 'sqllocks-shape[simulation]'`) turns generated tables into
 what an upstream system would produce over time: files landing in dated folders, versioned
 (SCD type 2) snapshots and deltas, a stream of events, both at once, and business-process events
@@ -30,12 +49,8 @@ cfg = FileDropConfig(domain="retail", base_path="landing", date_range_start="202
 result = FileDropSimulator(tables, cfg).run()
 ```
 
-```bash
-shape simulate file-drop retail --scale small --from 2024-01-01 --to 2024-03-31 \
-    --entity order --format parquet,csv --late 0.1 --duplicates 0.02 -o landing/
-shape simulate stream retail --table order --out-of-order 0.05 --replay 0.02 --sink file -o events.jsonl
-shape simulate workflow --preset order_fulfillment --entities 1000 -o workflow/
-```
+[Run this example](#local-example-1).
+
 
 `shape simulate` exits 0 when it is done and 2 for input it cannot use (an unknown table, a bad
 date, a sink it does not know).
@@ -144,3 +159,30 @@ JSON Lines file per topic): it does not simulate a clock. These simulators do. T
 runner's writers (the `shape.sinks` plugins) and the emit runtime's sinks and encoders; nothing is
 implemented twice. A pack's timing fields (lateness, duplicates, backfill) still describe the
 landing for a consumer; to produce that behaviour, run the simulator with the same settings.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-1"></a>
+
+### Example 2
+
+<!-- example: 1 -->
+
+```bash {.runnable-reference}
+shape simulate file-drop retail --scale small --from 2024-01-01 --to 2024-03-31 \
+    --entity order --format parquet,csv --late 0.1 --duplicates 0.02 -o landing/
+shape simulate stream retail --table order --out-of-order 0.05 --replay 0.02 --sink file -o events.jsonl
+shape simulate workflow --preset order_fulfillment --entities 1000 -o workflow/
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    file-drop: 228 data files, 85 manifests, 85 done flags under landing/
+    {"order": {"files": 228, "formats": ["parquet", "csv"], "rows_written": 339}}
+    stream: 5000 events and 910 replays on topics order in 0.32s
+    {"state_distribution": {"cancelled": 147, "confirmed": 9, "created": 6, "delivered": 752, "returned": 76, "shipped": 10}, "stats": {"anomaly_count": 82, "config_seed": 42, "mean_completion_hours": 86.0822, "total_entities": 1000, "total_events": 2756}}
+    ```

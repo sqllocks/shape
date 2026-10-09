@@ -20,6 +20,8 @@ class BatchCheckpoint:
 
 
 class VectorStreamProfiler:
+    """Capture column batches and keep the most recent batch evidence."""
+
     def __init__(self) -> None:
         self.rows = 0
         self.batches = 0

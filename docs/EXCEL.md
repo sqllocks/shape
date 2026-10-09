@@ -1,18 +1,32 @@
 # Excel workbooks
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" EXCEL
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for EXCEL
+    ```
+
+
 `.xlsx` workbooks are read as a source (`shape profile book.xlsx`, and every command that reads a table file) and written
 as a sink (`shape generate ... -f excel`). Both need the `[excel]` extra (openpyxl): `pip install 'sqllocks-shape[excel]'`.
 Each statement below has a test in `tests/excel/`.
 
 ## Reading a workbook
 
-```bash
-shape profile book.xlsx -o book.shape                  # one table per visible sheet (a dataset)
-shape profile 'book.xlsx#Members' -o members.shape     # that sheet alone (hidden or not)
-shape profile book.xlsx --sheet Members -o members.shape
-shape profile 'book.xlsx#Members' -o t.shape           # an Excel table or a named range called Members
-shape profile book.xlsx --include-hidden -o all.shape  # read the hidden sheets too
-```
+[Run this example](#local-example-0).
+
 
 ```python
 shape.profile("book.xlsx")                     # dataset
@@ -77,10 +91,8 @@ because their examples are cell values.
 
 ## Writing a workbook
 
-```bash
-shape generate retail --scale small -f excel -o out/                       # out/retail.xlsx
-shape generate retail -f excel -o out/ --chaos-log out/_chaos_ground_truth.jsonl --drift-plan plan.json
-```
+[Run this example](#local-example-2).
+
 
 ```python
 from shape.generation.output import write_engine, write_result
@@ -110,3 +122,50 @@ The `excel` format writes **one workbook** for the whole dataset (`<domain>.xlsx
 The per-table sink (`shape.sinks` `excel`, `write(uri, table, batches)`, `<table>.xlsx`) is unchanged for code that calls it
 directly; `write_workbook` is the multi-sheet form, and a workbook it wrote reads back with the source above (identifier
 columns come back as text).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape profile book.xlsx -o book.shape                  # one table per visible sheet (a dataset)
+shape profile 'book.xlsx#Members' -o members.shape     # that sheet alone (hidden or not)
+shape profile book.xlsx --sheet Members -o members.shape
+shape profile 'book.xlsx#Members' -o t.shape           # an Excel table or a named range called Members
+shape profile book.xlsx --include-hidden -o all.shape  # read the hidden sheets too
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    {"shape_content_id": "e03bb7aa2cdfaa0e23f05b01d7b2cdf834f66ba600e76e7fded80821b489ff40", "written": "book.shape"}
+    {"shape_content_id": "cedc72f269c06521f29231cbdbef64f5d18bd4d2414ca244222e92241122ad42", "written": "members.shape"}
+    {"shape_content_id": "cedc72f269c06521f29231cbdbef64f5d18bd4d2414ca244222e92241122ad42", "written": "members.shape"}
+    {"shape_content_id": "cedc72f269c06521f29231cbdbef64f5d18bd4d2414ca244222e92241122ad42", "written": "t.shape"}
+    {"shape_content_id": "e03bb7aa2cdfaa0e23f05b01d7b2cdf834f66ba600e76e7fded80821b489ff40", "written": "all.shape"}
+    ```
+
+<a id="local-example-2"></a>
+
+### Example 3
+
+<!-- example: 2 -->
+
+```bash {.runnable-reference}
+shape generate retail --scale small -f excel -o out/                       # out/retail.xlsx
+shape generate retail -f excel -o out/ --chaos-log chaos.jsonl --drift-plan plan.json
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Wrote 1 excel files to out/: 21,750 rows in 9 tables (1.68s)
+    Wrote 1 excel files to out/: 21,750 rows in 9 tables (1.48s)
+    ```

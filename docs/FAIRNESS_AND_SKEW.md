@@ -1,5 +1,24 @@
 # Slices, representation and training-serving skew
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" FAIRNESS_AND_SKEW
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for FAIRNESS_AND_SKEW
+    ```
+
+
 A quality score for a whole table can hide a slice where the data is much worse: one region
 with most of the nulls, one group whose records fail validation, or a group that is
 under-represented compared with the population the data should describe. A model trained on one
@@ -17,12 +36,8 @@ are the columns you name.
 
 ## Sliced scorecards
 
-```bash
-shape scorecard out/ --schema gates.json --slice-by region
-shape scorecard out/ --schema gates.json --slice-by region,tier --min-slice-rows 50
-shape scorecard out/ --schema gates.json --slice-by region --max-slice-gap 10   # exit 1 over 10
-shape scorecard out/ --schema gates.json --slice-by region --reference population.csv --label churned
-```
+[Run this example](#local-example-0).
+
 
 A *slice* is each distinct value, or value combination, of the slice columns, in each table that
 holds all of them (other tables are listed under `skipped_tables`; if no table holds them the
@@ -111,14 +126,8 @@ card.to_dict()["slices"]["tables"]["customer"]["dimensions"]["completeness"]["wo
 
 ## Training-serving skew: `shape skew`
 
-```bash
-shape skew train/ serving/                                     # Markdown
-shape skew train.parquet serving.parquet --features x,price,country --label churned
-shape skew train/ serving/ --slice-by country -o skew.json     # JSON report; exit 1 if flagged
-shape skew train.shape serving.shape --json                    # two profiles
-shape skew train/ serving/ --threshold psi=0.25 --threshold null_rate=0.02
-shape skew train/ serving/ --project shape.yml --source orders
-```
+[Run this example](#local-example-2).
+
 
 `TRAIN` and `SERVING` are data (a file, or a folder with one file per table) or profiles. A
 single table on each side is paired whatever its name; with several, tables are paired by name
@@ -194,3 +203,480 @@ print(report.to_markdown())
 - PSI on 10 bins and the shares above are summaries; they cannot see a change in how features
   relate to each other (see the joint checks of [JOINT.md](JOINT.md)) or to the label.
 - Skew is a batch comparison of two datasets, not online or streaming monitoring.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape scorecard out/ --schema gates.json --slice-by region
+shape scorecard out/ --schema gates.json --slice-by region,tier --min-slice-rows 50
+shape scorecard out/ --schema gates.json --slice-by region --max-slice-gap 10   # exit 1 over 10
+shape scorecard out/ --schema gates.json --slice-by region --reference population.csv --label churned
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    # Shape data quality scorecard
+
+    **Generated:** 2026-10-09T17:00:48.082720+00:00  
+    **Data path:** out/  
+    **Shape version:** 0.9.1  
+    **Overall:** 100
+
+    | Dimension | Score | Trend | Checks | Failing |
+    |-----------|-------|-------|--------|---------|
+    | accuracy | n/a | - | 0 | 0 |
+    | completeness | 100 | - | 23 | 0 |
+    | conformity | 100 | - | 1 | 0 |
+    | consistency | n/a | - | 0 | 0 |
+    | timeliness | n/a | - | 0 | 0 |
+    | uniqueness | 100 | - | 1 | 0 |
+
+    ## Slices
+
+    Sliced by region; slices under 30 rows are pooled as `(small slices)`.
+
+    ### customers
+
+    | Dimension | Gap | Worst slice | Trend |
+    |-----------|-----|-------------|-------|
+    | accuracy | n/a |  | - |
+    | completeness | n/a |  | - |
+    | conformity | n/a |  | - |
+    | consistency | n/a |  | - |
+    | timeliness | n/a |  | - |
+    | uniqueness | n/a |  | - |
+
+    | Slice | Rows | Share |
+    |---|---|---|
+    | (small slices) | 20 | 1 |
+
+    ### orders
+
+    | Dimension | Gap | Worst slice | Trend |
+    |-----------|-----|-------------|-------|
+    | accuracy | n/a |  | - |
+    | completeness | 0 | north | - |
+    | conformity | n/a |  | - |
+    | consistency | n/a |  | - |
+    | timeliness | n/a |  | - |
+    | uniqueness | 0 | north | - |
+
+    | Slice | Rows | Share |
+    |---|---|---|
+    | north | 50 | 0.5 |
+    | south | 50 | 0.5 |
+
+    # Shape data quality scorecard
+
+    **Generated:** 2026-10-09T17:00:48.671545+00:00  
+    **Data path:** out/  
+    **Shape version:** 0.9.1  
+    **Overall:** 100
+
+    | Dimension | Score | Trend | Checks | Failing |
+    |-----------|-------|-------|--------|---------|
+    | accuracy | n/a | - | 0 | 0 |
+    | completeness | 100 | - | 23 | 0 |
+    | conformity | 100 | - | 1 | 0 |
+    | consistency | n/a | - | 0 | 0 |
+    | timeliness | n/a | - | 0 | 0 |
+    | uniqueness | 100 | - | 1 | 0 |
+
+    ## Slices
+
+    Sliced by region, tier; slices under 50 rows are pooled as `(small slices)`.
+
+    ### orders
+
+    | Dimension | Gap | Worst slice | Trend |
+    |-----------|-----|-------------|-------|
+    | accuracy | n/a |  | - |
+    | completeness | 0 | region=north, tier=standard | - |
+    | conformity | n/a |  | - |
+    | consistency | n/a |  | - |
+    | timeliness | n/a |  | - |
+    | uniqueness | 0 | region=north, tier=standard | - |
+
+    | Slice | Rows | Share |
+    |---|---|---|
+    | region=north, tier=standard | 50 | 0.5 |
+    | region=south, tier=standard | 50 | 0.5 |
+
+    # Shape data quality scorecard
+
+    **Generated:** 2026-10-09T17:00:49.358088+00:00  
+    **Data path:** out/  
+    **Shape version:** 0.9.1  
+    **Overall:** 100
+
+    | Dimension | Score | Trend | Checks | Failing |
+    |-----------|-------|-------|--------|---------|
+    | accuracy | n/a | - | 0 | 0 |
+    | completeness | 100 | - | 23 | 0 |
+    | conformity | 100 | - | 1 | 0 |
+    | consistency | n/a | - | 0 | 0 |
+    | timeliness | n/a | - | 0 | 0 |
+    | uniqueness | 100 | - | 1 | 0 |
+
+    ## Slices
+
+    Sliced by region; slices under 30 rows are pooled as `(small slices)`.
+
+    ### customers
+
+    | Dimension | Gap | Worst slice | Trend |
+    |-----------|-----|-------------|-------|
+    | accuracy | n/a |  | - |
+    | completeness | n/a |  | - |
+    | conformity | n/a |  | - |
+    | consistency | n/a |  | - |
+    | timeliness | n/a |  | - |
+    | uniqueness | n/a |  | - |
+
+    | Slice | Rows | Share |
+    |---|---|---|
+    | (small slices) | 20 | 1 |
+
+    ### orders
+
+    | Dimension | Gap | Worst slice | Trend |
+    |-----------|-----|-------------|-------|
+    | accuracy | n/a |  | - |
+    | completeness | 0 | north | - |
+    | conformity | n/a |  | - |
+    | consistency | n/a |  | - |
+    | timeliness | n/a |  | - |
+    | uniqueness | 0 | north | - |
+
+    | Slice | Rows | Share |
+    |---|---|---|
+    | north | 50 | 0.5 |
+    | south | 50 | 0.5 |
+
+    No gap above 10.
+    # Shape data quality scorecard
+
+    **Generated:** 2026-10-09T17:00:49.925383+00:00  
+    **Data path:** out/  
+    **Shape version:** 0.9.1  
+    **Overall:** 100
+
+    | Dimension | Score | Trend | Checks | Failing |
+    |-----------|-------|-------|--------|---------|
+    | accuracy | n/a | - | 0 | 0 |
+    | completeness | 100 | - | 23 | 0 |
+    | conformity | 100 | - | 1 | 0 |
+    | consistency | n/a | - | 0 | 0 |
+    | timeliness | n/a | - | 0 | 0 |
+    | uniqueness | 100 | - | 1 | 0 |
+
+    ## Slices
+
+    Sliced by region; slices under 30 rows are pooled as `(small slices)`.
+
+    ### customers
+
+    | Dimension | Gap | Worst slice | Trend |
+    |-----------|-----|-------------|-------|
+    | accuracy | n/a |  | - |
+    | completeness | n/a |  | - |
+    | conformity | n/a |  | - |
+    | consistency | n/a |  | - |
+    | timeliness | n/a |  | - |
+    | uniqueness | n/a |  | - |
+
+    | Slice | Rows | Share | Reference share | Ratio | Positive rate |
+    |---|---|---|---|---|---|
+    | (small slices) | 20 | 1 | 1 | 1 | 0.5 |
+
+    Disparity ratio of `churned` (lowest rate over highest): n/a
+
+    ### orders
+
+    | Dimension | Gap | Worst slice | Trend |
+    |-----------|-----|-------------|-------|
+    | accuracy | n/a |  | - |
+    | completeness | 0 | north | - |
+    | conformity | n/a |  | - |
+    | consistency | n/a |  | - |
+    | timeliness | n/a |  | - |
+    | uniqueness | 0 | north | - |
+
+    | Slice | Rows | Share | Reference share | Ratio | Positive rate |
+    |---|---|---|---|---|---|
+    | north | 50 | 0.5 | 0.5 | 1 | 0 |
+    | south | 50 | 0.5 | 0.5 | 1 | 1 |
+
+    Disparity ratio of `churned` (lowest rate over highest): 0 **below 0.8: flagged** (four-fifths screening heuristic, not a legal test)
+    ```
+
+<a id="local-example-2"></a>
+
+### Example 3
+
+<!-- example: 2 -->
+
+```bash {.runnable-reference}
+shape skew train/ serving/                                     # Markdown
+shape skew train.parquet serving.parquet --features x,price,country --label churned
+shape skew train/ serving/ --slice-by country -o skew.json     # JSON report; exit 1 if flagged
+shape skew train.shape serving.shape --json                    # two profiles
+shape skew train/ serving/ --threshold psi=0.25 --threshold null_rate=0.02
+shape skew train/ serving/ --project shape.yml --source orders
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    # Shape training-serving skew
+
+    **Result:** no skew flagged  
+    **Shape version:** 0.9.1  
+    **Thresholds:** psi=0.2, null_rate=0.05, unseen_category_share=0.01, out_of_range_share=0.01, min_slice_rows=30
+
+    ## customers
+
+    20 training rows, 20 serving rows
+
+    | Feature | PSI | Null rate (train, serving) | Unseen category share | Out of range share | Schema | Flags |
+    |---------|-----|----------------------------|-----------------------|--------------------|--------|-------|
+    | age | 0 | 0, 0 |  | 0 | ok |  |
+    | born | 0 | 0, 0 |  | 0 | ok |  |
+    | churned | 0 | 0, 0 |  |  | ok |  |
+    | city | 0 | 0, 0 | 0 |  | ok |  |
+    | customer_id | 0 | 0, 0 |  | 0 | ok |  |
+    | email | 0 | 0, 0 | 0 |  | ok |  |
+    | id | 0 | 0, 0 |  | 0 | ok |  |
+    | income | 0 | 0, 0 |  | 0 | ok |  |
+    | name | 0 | 0, 0 | 0 |  | ok |  |
+    | region | 0 | 0, 0 | 0 |  | ok |  |
+
+    ## orders
+
+    100 training rows, 100 serving rows
+
+    | Feature | PSI | Null rate (train, serving) | Unseen category share | Out of range share | Schema | Flags |
+    |---------|-----|----------------------------|-----------------------|--------------------|--------|-------|
+    | amount | 0 | 0, 0 |  | 0 | ok |  |
+    | churned | 0 | 0, 0 |  |  | ok |  |
+    | city | 0 | 0, 0 | 0 |  | ok |  |
+    | country | 0 | 0, 0 | 0 |  | ok |  |
+    | customer_email | 0 | 0, 0 | 0 |  | ok |  |
+    | customer_id | 0 | 0, 0 |  | 0 | ok |  |
+    | discount_code | 0 | 0, 0 | 0 |  | ok |  |
+    | iban | 0 | 0, 0 | 0 |  | ok |  |
+    | is_gift | 0 | 0, 0 |  |  | ok |  |
+    | notes | 0 | 0, 0 | 0 |  | ok |  |
+    | order_date | 0 | 0, 0 | 0 |  | ok |  |
+    | order_id | 0 | 0, 0 |  | 0 | ok |  |
+    | order_total | 0 | 0, 0 |  | 0 | ok |  |
+    | placed_at | 0 | 0, 0 | 0 |  | ok |  |
+    | region | 0 | 0, 0 | 0 |  | ok |  |
+    | salary | 0 | 0, 0 |  | 0 | ok |  |
+    | shipped_at | 0 | 0, 0 | 0 |  | ok |  |
+    | state | 0 | 0, 0 | 0 |  | ok |  |
+    | status | 0 | 0, 0 | 0 |  | ok |  |
+    | tier | 0 | 0, 0 | 0 |  | ok |  |
+    | zip | 0 | 0, 0 | 0 |  | ok |  |
+    | ssn |  | 0, 0 |  |  | ok |  |
+    | token |  | 0, 0 |  |  | ok |  |
+    shape: error: feature 'x' is not a column of the training data
+    # Shape training-serving skew
+
+    **Result:** no skew flagged  
+    **Shape version:** 0.9.1  
+    **Thresholds:** psi=0.2, null_rate=0.05, unseen_category_share=0.01, out_of_range_share=0.01, min_slice_rows=30
+
+    ## customers
+
+    20 training rows, 20 serving rows
+
+    | Feature | PSI | Null rate (train, serving) | Unseen category share | Out of range share | Schema | Flags |
+    |---------|-----|----------------------------|-----------------------|--------------------|--------|-------|
+    | age | 0 | 0, 0 |  | 0 | ok |  |
+    | born | 0 | 0, 0 |  | 0 | ok |  |
+    | churned | 0 | 0, 0 |  |  | ok |  |
+    | city | 0 | 0, 0 | 0 |  | ok |  |
+    | customer_id | 0 | 0, 0 |  | 0 | ok |  |
+    | email | 0 | 0, 0 | 0 |  | ok |  |
+    | id | 0 | 0, 0 |  | 0 | ok |  |
+    | income | 0 | 0, 0 |  | 0 | ok |  |
+    | name | 0 | 0, 0 | 0 |  | ok |  |
+    | region | 0 | 0, 0 | 0 |  | ok |  |
+
+    ## orders
+
+    100 training rows, 100 serving rows
+
+    | Feature | PSI | Null rate (train, serving) | Unseen category share | Out of range share | Schema | Flags |
+    |---------|-----|----------------------------|-----------------------|--------------------|--------|-------|
+    | amount | 0 | 0, 0 |  | 0 | ok |  |
+    | churned | 0 | 0, 0 |  |  | ok |  |
+    | city | 0 | 0, 0 | 0 |  | ok |  |
+    | country | 0 | 0, 0 | 0 |  | ok |  |
+    | customer_email | 0 | 0, 0 | 0 |  | ok |  |
+    | customer_id | 0 | 0, 0 |  | 0 | ok |  |
+    | discount_code | 0 | 0, 0 | 0 |  | ok |  |
+    | iban | 0 | 0, 0 | 0 |  | ok |  |
+    | is_gift | 0 | 0, 0 |  |  | ok |  |
+    | notes | 0 | 0, 0 | 0 |  | ok |  |
+    | order_date | 0 | 0, 0 | 0 |  | ok |  |
+    | order_id | 0 | 0, 0 |  | 0 | ok |  |
+    | order_total | 0 | 0, 0 |  | 0 | ok |  |
+    | placed_at | 0 | 0, 0 | 0 |  | ok |  |
+    | region | 0 | 0, 0 | 0 |  | ok |  |
+    | salary | 0 | 0, 0 |  | 0 | ok |  |
+    | shipped_at | 0 | 0, 0 | 0 |  | ok |  |
+    | state | 0 | 0, 0 | 0 |  | ok |  |
+    | status | 0 | 0, 0 | 0 |  | ok |  |
+    | tier | 0 | 0, 0 | 0 |  | ok |  |
+    | zip | 0 | 0, 0 | 0 |  | ok |  |
+    | ssn |  | 0, 0 |  |  | ok |  |
+    | token |  | 0, 0 |  |  | ok |  |
+
+    ### orders, country = US
+
+    100 training rows, 100 serving rows
+
+    | Feature | PSI | Null rate (train, serving) | Unseen category share | Out of range share | Schema | Flags |
+    |---------|-----|----------------------------|-----------------------|--------------------|--------|-------|
+    | amount | 0 | 0, 0 |  | 0 | ok |  |
+    | churned | 0 | 0, 0 |  |  | ok |  |
+    | city | 0 | 0, 0 | 0 |  | ok |  |
+    | customer_email | 0 | 0, 0 | 0 |  | ok |  |
+    | customer_id | 0 | 0, 0 |  | 0 | ok |  |
+    | discount_code | 0 | 0, 0 | 0 |  | ok |  |
+    | iban | 0 | 0, 0 | 0 |  | ok |  |
+    | is_gift | 0 | 0, 0 |  |  | ok |  |
+    | notes | 0 | 0, 0 | 0 |  | ok |  |
+    | order_date | 0 | 0, 0 | 0 |  | ok |  |
+    | order_id | 0 | 0, 0 |  | 0 | ok |  |
+    | order_total | 0 | 0, 0 |  | 0 | ok |  |
+    | placed_at | 0 | 0, 0 | 0 |  | ok |  |
+    | region | 0 | 0, 0 | 0 |  | ok |  |
+    | salary | 0 | 0, 0 |  | 0 | ok |  |
+    | shipped_at | 0 | 0, 0 | 0 |  | ok |  |
+    | state | 0 | 0, 0 | 0 |  | ok |  |
+    | status | 0 | 0, 0 | 0 |  | ok |  |
+    | tier | 0 | 0, 0 | 0 |  | ok |  |
+    | zip | 0 | 0, 0 | 0 |  | ok |  |
+    | ssn |  | 0, 0 |  |  | ok |  |
+    | token |  | 0, 0 |  |  | ok |  |
+    shape: note: train.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: serving.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    {"format": "shape-result", "version": 1, "shape_version": "0.9.1", "thresholds": {"psi": 0.2, "null_rate": 0.05, "unseen_category_share": 0.01, "out_of_range_share": 0.01, "label_rate_diff": null, "min_slice_rows": 30}, "flagged": false, "missing_tables": [], "tables": {"orders": {"mode": "profile", "train_rows": 100, "serving_rows": 100, "features": [{"feature": "amount", "schema": {"status": "ok", "train_type": "float", "serving_type": "float"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "churned", "schema": {"status": "ok", "train_type": "boolean", "serving_type": "boolean"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "city", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "country", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "customer_email", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "customer_id", "schema": {"status": "ok", "train_type": "integer", "serving_type": "integer"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "discount_code", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "iban", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "is_gift", "schema": {"status": "ok", "train_type": "boolean", "serving_type": "boolean"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "notes", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "order_date", "schema": {"status": "ok", "train_type": "datetime", "serving_type": "datetime"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "order_id", "schema": {"status": "ok", "train_type": "integer", "serving_type": "integer"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "order_total", "schema": {"status": "ok", "train_type": "float", "serving_type": "float"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "placed_at", "schema": {"status": "ok", "train_type": "datetime", "serving_type": "datetime"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "region", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "salary", "schema": {"status": "ok", "train_type": "integer", "serving_type": "integer"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "shipped_at", "schema": {"status": "ok", "train_type": "datetime", "serving_type": "datetime"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "ssn", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "state", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "status", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "tier", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "token", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "zip", "schema": {"status": "ok", "train_type": "integer", "serving_type": "integer"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}], "extra_in_serving": [], "label": null, "slices": null, "flagged": false}}, "command": "skew", "exit_code": 0, "payload": {"format": "shape-skew-report", "version": 1, "shape_version": "0.9.1", "thresholds": {"psi": 0.2, "null_rate": 0.05, "unseen_category_share": 0.01, "out_of_range_share": 0.01, "label_rate_diff": null, "min_slice_rows": 30}, "flagged": false, "missing_tables": [], "tables": {"orders": {"mode": "profile", "train_rows": 100, "serving_rows": 100, "features": [{"feature": "amount", "schema": {"status": "ok", "train_type": "float", "serving_type": "float"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "churned", "schema": {"status": "ok", "train_type": "boolean", "serving_type": "boolean"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "city", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "country", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "customer_email", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "customer_id", "schema": {"status": "ok", "train_type": "integer", "serving_type": "integer"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "discount_code", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "iban", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "is_gift", "schema": {"status": "ok", "train_type": "boolean", "serving_type": "boolean"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "notes", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "order_date", "schema": {"status": "ok", "train_type": "datetime", "serving_type": "datetime"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "order_id", "schema": {"status": "ok", "train_type": "integer", "serving_type": "integer"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "order_total", "schema": {"status": "ok", "train_type": "float", "serving_type": "float"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "placed_at", "schema": {"status": "ok", "train_type": "datetime", "serving_type": "datetime"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "region", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "salary", "schema": {"status": "ok", "train_type": "integer", "serving_type": "integer"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "shipped_at", "schema": {"status": "ok", "train_type": "datetime", "serving_type": "datetime"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "ssn", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "state", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "status", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "tier", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "token", "schema": {"status": "ok", "train_type": "string", "serving_type": "string"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}, {"feature": "zip", "schema": {"status": "ok", "train_type": "integer", "serving_type": "integer"}, "train_null_rate": 0.0, "serving_null_rate": 0.0, "null_rate_difference": 0.0, "psi": null, "unseen_category_share": null, "out_of_range_share": null, "notes": {"psi": "needs data on both sides; a profile holds no values", "unseen_category_share": "needs data on both sides; a profile holds no values", "out_of_range_share": "needs data on both sides; a profile holds no values"}, "flags": [], "flagged": false}], "extra_in_serving": [], "label": null, "slices": null, "flagged": false}}}}
+    # Shape training-serving skew
+
+    **Result:** no skew flagged  
+    **Shape version:** 0.9.1  
+    **Thresholds:** psi=0.25, null_rate=0.02, unseen_category_share=0.01, out_of_range_share=0.01, min_slice_rows=30
+
+    ## customers
+
+    20 training rows, 20 serving rows
+
+    | Feature | PSI | Null rate (train, serving) | Unseen category share | Out of range share | Schema | Flags |
+    |---------|-----|----------------------------|-----------------------|--------------------|--------|-------|
+    | age | 0 | 0, 0 |  | 0 | ok |  |
+    | born | 0 | 0, 0 |  | 0 | ok |  |
+    | churned | 0 | 0, 0 |  |  | ok |  |
+    | city | 0 | 0, 0 | 0 |  | ok |  |
+    | customer_id | 0 | 0, 0 |  | 0 | ok |  |
+    | email | 0 | 0, 0 | 0 |  | ok |  |
+    | id | 0 | 0, 0 |  | 0 | ok |  |
+    | income | 0 | 0, 0 |  | 0 | ok |  |
+    | name | 0 | 0, 0 | 0 |  | ok |  |
+    | region | 0 | 0, 0 | 0 |  | ok |  |
+
+    ## orders
+
+    100 training rows, 100 serving rows
+
+    | Feature | PSI | Null rate (train, serving) | Unseen category share | Out of range share | Schema | Flags |
+    |---------|-----|----------------------------|-----------------------|--------------------|--------|-------|
+    | amount | 0 | 0, 0 |  | 0 | ok |  |
+    | churned | 0 | 0, 0 |  |  | ok |  |
+    | city | 0 | 0, 0 | 0 |  | ok |  |
+    | country | 0 | 0, 0 | 0 |  | ok |  |
+    | customer_email | 0 | 0, 0 | 0 |  | ok |  |
+    | customer_id | 0 | 0, 0 |  | 0 | ok |  |
+    | discount_code | 0 | 0, 0 | 0 |  | ok |  |
+    | iban | 0 | 0, 0 | 0 |  | ok |  |
+    | is_gift | 0 | 0, 0 |  |  | ok |  |
+    | notes | 0 | 0, 0 | 0 |  | ok |  |
+    | order_date | 0 | 0, 0 | 0 |  | ok |  |
+    | order_id | 0 | 0, 0 |  | 0 | ok |  |
+    | order_total | 0 | 0, 0 |  | 0 | ok |  |
+    | placed_at | 0 | 0, 0 | 0 |  | ok |  |
+    | region | 0 | 0, 0 | 0 |  | ok |  |
+    | salary | 0 | 0, 0 |  | 0 | ok |  |
+    | shipped_at | 0 | 0, 0 | 0 |  | ok |  |
+    | state | 0 | 0, 0 | 0 |  | ok |  |
+    | status | 0 | 0, 0 | 0 |  | ok |  |
+    | tier | 0 | 0, 0 | 0 |  | ok |  |
+    | zip | 0 | 0, 0 | 0 |  | ok |  |
+    | ssn |  | 0, 0 |  |  | ok |  |
+    | token |  | 0, 0 |  |  | ok |  |
+    # Shape training-serving skew
+
+    **Result:** no skew flagged  
+    **Shape version:** 0.9.1  
+    **Thresholds:** psi=0.2, null_rate=0.05, unseen_category_share=0.01, out_of_range_share=0.01, min_slice_rows=30
+
+    ## customers
+
+    20 training rows, 20 serving rows
+
+    | Feature | PSI | Null rate (train, serving) | Unseen category share | Out of range share | Schema | Flags |
+    |---------|-----|----------------------------|-----------------------|--------------------|--------|-------|
+    | age | 0 | 0, 0 |  | 0 | ok |  |
+    | born | 0 | 0, 0 |  | 0 | ok |  |
+    | churned | 0 | 0, 0 |  |  | ok |  |
+    | city | 0 | 0, 0 | 0 |  | ok |  |
+    | customer_id | 0 | 0, 0 |  | 0 | ok |  |
+    | email | 0 | 0, 0 | 0 |  | ok |  |
+    | id | 0 | 0, 0 |  | 0 | ok |  |
+    | income | 0 | 0, 0 |  | 0 | ok |  |
+    | name | 0 | 0, 0 | 0 |  | ok |  |
+    | region | 0 | 0, 0 | 0 |  | ok |  |
+
+    ## orders
+
+    100 training rows, 100 serving rows
+
+    | Feature | PSI | Null rate (train, serving) | Unseen category share | Out of range share | Schema | Flags |
+    |---------|-----|----------------------------|-----------------------|--------------------|--------|-------|
+    | amount | 0 | 0, 0 |  | 0 | ok |  |
+    | churned | 0 | 0, 0 |  |  | ok |  |
+    | city | 0 | 0, 0 | 0 |  | ok |  |
+    | country | 0 | 0, 0 | 0 |  | ok |  |
+    | customer_email | 0 | 0, 0 | 0 |  | ok |  |
+    | customer_id | 0 | 0, 0 |  | 0 | ok |  |
+    | discount_code | 0 | 0, 0 | 0 |  | ok |  |
+    | iban | 0 | 0, 0 | 0 |  | ok |  |
+    | is_gift | 0 | 0, 0 |  |  | ok |  |
+    | notes | 0 | 0, 0 | 0 |  | ok |  |
+    | order_date | 0 | 0, 0 | 0 |  | ok |  |
+    | order_id | 0 | 0, 0 |  | 0 | ok |  |
+    | order_total | 0 | 0, 0 |  | 0 | ok |  |
+    | placed_at | 0 | 0, 0 | 0 |  | ok |  |
+    | region | 0 | 0, 0 | 0 |  | ok |  |
+    | salary | 0 | 0, 0 |  | 0 | ok |  |
+    | shipped_at | 0 | 0, 0 | 0 |  | ok |  |
+    | state | 0 | 0, 0 | 0 |  | ok |  |
+    | status | 0 | 0, 0 | 0 |  | ok |  |
+    | tier | 0 | 0, 0 | 0 |  | ok |  |
+    | zip | 0 | 0, 0 | 0 |  | ok |  |
+    | ssn |  | 0, 0 |  |  | ok |  |
+    | token |  | 0, 0 |  |  | ok |  |
+    ```

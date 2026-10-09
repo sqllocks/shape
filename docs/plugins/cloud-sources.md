@@ -1,5 +1,7 @@
 # Cloud sources: OneLake, ADLS Gen2 and Delta
 
+Status: experimental.
+
 Two built-in sources (`shape.sources`, see [builtins.md](builtins.md)) read cloud storage. Install
 their packages with `pip install 'sqllocks-shape[azure]'` (`adlfs`, `azure-identity`,
 `deltalake`). Nothing from those packages is imported until a read needs it.
@@ -53,10 +55,19 @@ The `sqllocks-shape-fabric` plugin adds a source (`shape.sources: semantic-model
 table of a Power BI or Fabric semantic model through `sempy` (semantic link). It runs inside a
 Fabric notebook, where `sempy` signs in as the notebook's user.
 
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+<!-- example: 0 -->
+
+**Needs a Fabric account. Not run in CI.**
+
 ```
 pip install 'sqllocks-shape-fabric[semantic-link]'
 shape profile semantic-model://Sales/Retail/Customer -o customer.shape
 ```
+
+<!-- owner: Fabric maintainer — supply the transcript for docs/plugins/cloud-sources.md example 0. -->
+
 
 `semantic-model://<workspace>/<model>/<table>`: workspace and model are names or GUIDs, and a `/`
 inside any part is written `%2F`. `shape profile-model` profiles every table of a model with its

@@ -1,5 +1,24 @@
 # Healthcare code sets (`sqllocks-shape-healthcare-codes`)
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](../contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" healthcare-codes
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for healthcare-codes
+    ```
+
+
 The API a domain pack builds on. Everything is importable from `shape_healthcare_codes`.
 Nothing reads the network at import or at lookup time: code sets are Arrow files built once by
 `shape healthcare-codes fetch` (free sets) or `shape healthcare-codes byo` (licensed sets you
@@ -173,11 +192,10 @@ Without network access, load the CMS zip you have, or your own delimited file wi
 columns (`drops` and `payment_years` are lists separated by blanks, `;` or `|`; `software`
 defaults to `user supplied`):
 
-```
-shape healthcare-codes fetch hcc_coefficients --file zip=2027-initial-model-software.zip
-shape healthcare-codes byo hcc_hierarchy 2027-initial-model-software.zip
-shape healthcare-codes byo hcc_coefficients my_coefficients.csv
-```
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+[Run this example](#local-example-3).
+
 
 `risk.table_problems(mapping, hierarchy, coefficients)` lists every hierarchy category and every
 category variable that is not a category of the same model in the mapping (the 2027 tables have
@@ -233,12 +251,92 @@ detectors).
 
 ## Command
 
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+[Run this example](#local-example-5).
+
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-3"></a>
+
+### Example 4
+
+<!-- example: 3 -->
+
+```bash {.runnable-reference}
+shape healthcare-codes fetch hcc_coefficients --file zip=2027-initial-model-software.zip
+shape healthcare-codes byo hcc_hierarchy 2027-initial-model-software.zip
+shape healthcare-codes byo hcc_coefficients my_coefficients.csv
 ```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    built /tmp/docs-reference-runs/healthcare-codes/healthcare-assets/hcc_coefficients.arrow
+    built /tmp/docs-reference-runs/healthcare-codes/healthcare-assets/hcc_hierarchy.arrow
+    built /tmp/docs-reference-runs/healthcare-codes/healthcare-assets/hcc_coefficients.arrow
+    ```
+
+<a id="local-example-5"></a>
+
+### Example 6
+
+<!-- example: 5 -->
+
+```bash {.runnable-reference}
 shape healthcare-codes list
-shape healthcare-codes fetch icd10cm ndc         # download at the pinned release, build
+shape healthcare-codes fetch icd10cm --file FY2016=FY2016.zip --file FY2017=FY2017.txt --file FY2018=FY2018.zip --file FY2019=FY2019.txt --file FY2020=FY2020.txt --file FY2021=FY2021.txt --file 2021-01=2021-01.zip --file FY2022=FY2022.zip --file 2022-04=2022-04.txt --file FY2023=FY2023.zip --file 2023-04=2023-04.zip --file FY2024=FY2024.zip --file FY2025=FY2025.zip --file FY2026=FY2026.zip --file FY2027=FY2027.zip --file tabular=tabular.zip
+shape healthcare-codes fetch ndc --file zip=ndc.zip
 shape healthcare-codes fetch hcpcs2 --file zip=october-2026-alpha-numeric-hcpcs-file.zip
 shape healthcare-codes byo cpt cpt.csv --map code=CPT --map long_desc=Descriptor
 shape healthcare-codes byo hcc_coefficients 2027-initial-model-software.zip
 shape healthcare-codes notices ndc
 shape healthcare-codes verify
 ```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    icd10cm         shipped built=shipped  public domain (attribution: Source: CDC/NCHS)
+    icd10pcs        fetch  built=-        US government work; the page states no copyright or reuse terms; a work of the US federal government (17 U.S.C. 105) [VERIFY]
+    hcpcs2          fetch  built=-        US government work; the page states no copyright or reuse terms; a work of the US federal government (17 U.S.C. 105); Level II only, CPT is never read [VERIFY]
+    ndc             fetch  built=-        public domain; CC0 1.0 (openFDA terms)
+    rxnorm          fetch  built=-        public domain (NLM); no UMLS licence for the prescribable subset; NLM asks for acknowledgement and a currency disclosure
+    pos             fetch  built=-        US government work; the page states no copyright or reuse terms; a work of the US federal government (17 U.S.C. 105) [VERIFY]
+    hcc             fetch  built=-        US government work; the page states no copyright or reuse terms; a work of the US federal government (17 U.S.C. 105) [VERIFY]
+    hcc_hierarchy   fetch  built=user     US government work; the page states no copyright or reuse terms; a work of the US federal government (17 U.S.C. 105) [VERIFY]
+    hcc_coefficients fetch  built=user     US government work; the page states no copyright or reuse terms; a work of the US federal government (17 U.S.C. 105) [VERIFY]
+    ccsr            fetch  built=-        no terms stated for the tool; AHRQ is a US federal agency [VERIFY]
+    mce_edits       fetch  built=-        US government work; the page states no copyright or reuse terms; a work of the US federal government (17 U.S.C. 105) [VERIFY]
+    nucc_taxonomy   byo    built=-        copyright American Medical Association; commercial use needs a licence
+    carc            byo    built=-        X12 copyright; no redistribution grant
+    rarc            byo    built=-        X12 copyright; no redistribution grant
+    icd10_who       byo    built=-        WHO copyright; no licence stated on the browser page [VERIFY]
+    icd10gm         byo    built=-        public domain per BfArM, but a download is a contract of use with BfArM
+    icd10am         byo    built=-        licensed by IHACPA; not read [VERIFY]
+    cpt             byo    built=-        licensed; no redistribution
+    snomed          byo    built=-        licensed; no redistribution
+    revenue_codes   byo    built=-        licensed; no redistribution
+    type_of_bill    byo    built=-        licensed; no redistribution
+    built /tmp/docs-reference-runs/healthcare-codes/healthcare-assets/icd10cm.arrow
+    built /tmp/docs-reference-runs/healthcare-codes/healthcare-assets/ndc.arrow
+    built /tmp/docs-reference-runs/healthcare-codes/healthcare-assets/hcpcs2.arrow
+    built /tmp/docs-reference-runs/healthcare-codes/healthcare-assets/cpt.arrow
+    built /tmp/docs-reference-runs/healthcare-codes/healthcare-assets/hcc_coefficients.arrow
+    FDA NDC Directory [fetch]
+      source:  https://www.accessdata.fda.gov/cder/ndctext.zip
+      release: daily file; the build records its date and SHA-256
+      licence: public domain; CC0 1.0 (openFDA terms)
+      page:    https://www.fda.gov/about-fda/about-website/website-policies (read 2026-10-02)
+      quote:   "Unless otherwise noted, the contents of the FDA website (www.fda.gov) are not copyrighted. They are in the public domain and may be republished, reprinted and otherwise used freely by anyone without the need to obtain permission from FDA."
+    cpt.arrow: ok rows=1 release=user supplied sha256=ea1324e412167faf
+    hcc_coefficients.arrow: ok rows=73 release=user supplied sha256=4a573409f0b15727
+    hcc_hierarchy.arrow: ok rows=30 release=user supplied sha256=d5fdf7a9b98e8ca8
+    hcpcs2.arrow: ok rows=3 release=October 2026 (file of 2026-09-23) sha256=bf8555d9f60e779c
+    icd10cm.arrow: ok rows=9 release=FY2027 (effective 2026-10-01) sha256=a88a9ae543c500b7
+    ndc.arrow: ok rows=4 release=FDA NDC Directory file of 2026-10-09 sha256=3cd82c08d3ee4efa
+    ```

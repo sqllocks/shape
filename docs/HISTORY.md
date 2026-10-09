@@ -1,5 +1,24 @@
 # History tools: `shape bisect` and `shape timelapse`
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" HISTORY
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for HISTORY
+    ```
+
+
 The registry (`docs/REGISTRY.md`) keeps every committed profile of a name with its business date.
 These commands read that history; they never read data and never change the registry.
 
@@ -21,59 +40,27 @@ be merged into windows (`--coarse`, `--window`).
 Plant a step in a 31-day history with `shape generate-drift`, commit each day with its business
 date, and find the day again.
 
-```bash
-# orders.gen.json is a generation schema; plan.json plants one event
-cat plan.json
-# {"start": "2026-03-01", "days": 31,
-#  "events": [{"kind": "distribution", "table": "orders", "column": "amount",
-#              "start": "2026-03-15", "scale": 1.3}]}
-
-shape generate-drift orders.gen.json plan.json -o feed --rows orders=2000 --format parquet
-# Planted 1 events over 31 days from 2026-03-01
-#   e1: distribution on orders.amount from 2026-03-15
-
-for d in $(ls feed | grep '^2026'); do
-  shape profile feed/$d/orders.parquet -o day.shape --sketches --capture full
-  shape registry shapes/registry commit orders day.shape --allow-raw --business-date $d
-done
-shape registry shapes/registry tag orders day1 <content id of the first commit>
-```
-
-```
-$ shape bisect shapes/registry orders --good day1 --bad latest
-first bad version: 2026-03-15  content id 5a03b17253e6
-last good version: 2026-03-14  content id 6ef0f474a611
-changes between them:
-  amount: mean_shift 50.1107 -> 65.0709
-  amount: distribution_shift {"p05": 34.105548, "p25": 43.460477, ... -> {"p05": 43.499661, ...
-  amount: distribution_change lognormal -> normal
-tested 6 version(s) of 30 candidate(s) (at most 7); read 7 profile(s)
-```
-
 The day (2026-03-15) and the column (`amount`) are the ones in `feed/ground_truth.json`. The answer
 key is what the tests of this feature compare against, for ranges of 1, 2 and 30 candidate
 versions.
 
-```
-$ shape timelapse shapes/registry orders --column amount --format text
-orders.amount  2026-03-01 .. 2026-03-31  31 frames, 1 change point(s)
-row_count   ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄  2000 .. 2000
-mean        ▁▁▁▁▁▁▁▁▁▁▁▁▁▁█████████████████  50.1296 .. 64.696
-std         ▁▁▁▂▁▁▁▁▁▁▂▁▁▁██▇█▇▇██▇▇██▇████  9.88416 .. 12.9758
-p50         ▁▁▁▁▁▁▁▁▁▁▁▁▁▁█████████████████  50.2142 .. 64.3773
-change                    ^                  at 2026-03-15
-$ shape timelapse shapes/registry orders --column amount --window week -o amount.html
-```
+[Run this example](#local-example-2).
+
 
 (The listing shows some of the lines; the command prints one per statistic.)
 
 ## `shape bisect`
+
+<!-- example: 3 -->
+
+Syntax reference. Replace the named arguments with your inputs.
 
 ```
 shape bisect REGISTRY NAME --good REF --bad REF [--column COL] [--kind KIND] [--contract FILE]
              [--source NAME] [--verify-all] [--coarse week|month] [--json]
              [--project FILE | --no-project] [diff threshold flags]
 ```
+
 
 `REF` is what `shape registry` accepts: `latest`, a tag, a promoted ref or a content id. The
 versions of `NAME` are ordered by their `business_date` (else by commit time); the candidates are
@@ -140,10 +127,15 @@ tests in order), `cost` (`versions_read`, `full_profile_tests`, `window_tests`),
 
 ## `shape bisect layers`
 
+<!-- example: 4 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
 ```
 shape bisect layers --layers SOURCE[,SOURCE...] --good-date D1 --bad-date D2
                     [--column COL] [--map LAYER.COL=COL]... [--project shape.yml] [--json]
 ```
+
 
 Each layer is a source of `shape.yml`, in pipeline order (raw, cleaned, published). A source's
 `baseline` gives its registry and name (`kind` does not matter here), and its thresholds and
@@ -170,11 +162,16 @@ The JSON has `"format": "shape-bisect-layers"`, `"version": 1`, `good_date`, `ba
 
 ## `shape timelapse`
 
+<!-- example: 5 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
 ```
 shape timelapse REGISTRY NAME --column COL [--table T] [--since DATE] [--until DATE]
                 [--window day|week|month] [-o OUT.json|OUT.html] [--format json|text]
                 [--project FILE | --no-project] [diff threshold flags]
 ```
+
 
 One **frame** per version, or per merged window with `--window` (versions of the same day, ISO
 week or month, merged with `merge_profiles`: profiles need `--sketches`; a window of one version is
@@ -244,3 +241,134 @@ Where the wording of the specification allows more than one reading, this is the
    with `shape diff` at the thresholds of the source; no threshold or default is changed here.
 7. **Layers.** A layer after the origin *persists* when a column changed at the origin is also
    changed in it, and otherwise *disappears*; a layer where the change comes back persists.
+
+## Example
+
+[Run this example](#local-example-0).
+
+## Example
+
+[Run this example](#local-example-1).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+# orders.gen.json is a generation schema; plan.json plants one event
+cat plan.json
+# {"start": "2026-03-01", "days": 31,
+#  "events": [{"kind": "distribution", "table": "orders", "column": "amount",
+#              "start": "2026-03-15", "scale": 1.3}]}
+
+shape generate-drift orders.gen.json plan.json -o feed --rows orders=200 --format parquet
+# Planted 1 events over 31 days from 2026-03-01
+#   e1: distribution on orders.amount from 2026-03-15
+
+for d in $(ls feed | grep '^2026'); do
+  shape profile feed/$d/orders.parquet -o day.shape --sketches --capture full
+  shape registry shapes/registry commit orders day.shape --allow-raw --business-date "$d"
+done
+shape registry shapes/registry tag orders day1 "$(python -c 'import json; print(json.loads(open("shapes/registry/logs/orders.jsonl").readline())["content_id"])')"
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    {
+      "start": "2026-03-01",
+      "days": 3,
+      "events": [
+        {
+          "kind": "distribution",
+          "table": "orders",
+          "column": "amount",
+          "start": "2026-03-02",
+          "scale": 1.3
+        }
+      ]
+    }
+    Planted 1 events over 3 days from 2026-03-01
+      e1: distribution on orders.amount from 2026-03-02
+
+    Written 7 files to feed/ (answer key: ground_truth.json)
+    shape: warning: --capture full keeps real values in day.shape; do not commit or share it
+    {"shape_content_id": "0cb35faaeb87e0b7baeb655c583d4222db902b30183fb72e8e185e1ebdb04bf7", "written": "day.shape"}
+    shape: warning: the registry now holds real values from the data (a raw profile); keep it as private as the data
+    {"content_id": "35ea68aedbec5f4bef5eeecec5a23a0403080ca69ed7f8d67b1528271a6e1555"}
+    shape: warning: --capture full keeps real values in day.shape; do not commit or share it
+    {"shape_content_id": "7d00f3f08859889f695af0d6c9af650933e25fd061c096776206e16b9dae3616", "written": "day.shape"}
+    shape: warning: the registry now holds real values from the data (a raw profile); keep it as private as the data
+    {"content_id": "59939ad1725d4dd126afa98fef92ceb02ee48cbf16701ffee7ff672ebe244598"}
+    shape: warning: --capture full keeps real values in day.shape; do not commit or share it
+    {"shape_content_id": "a098e95b2f043449865a8b2d84978c9d1319816d8180e64091106b3a097a700c", "written": "day.shape"}
+    shape: warning: the registry now holds real values from the data (a raw profile); keep it as private as the data
+    {"content_id": "13e204a587c294a1d030d629fac07614182ce04bfbff94e5d3356e3fda0ca2d1"}
+    {"content_id": "35ea68aedbec5f4bef5eeecec5a23a0403080ca69ed7f8d67b1528271a6e1555"}
+    ```
+
+<a id="local-example-1"></a>
+
+### Example 2
+
+<!-- example: 1 -->
+
+```bash {.runnable-reference}
+shape bisect shapes/registry orders --good day1 --bad latest
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    first bad version: 2026-03-02  content id 59939ad1725d
+    last good version: 2026-03-01  content id 35ea68aedbec
+    changes between them:
+      amount: mean_shift 39.5772 -> 50.9789
+      amount: distribution_shift {"p05": 23.8401, "p25": 34.16625, "p5... -> {"p05": 36.809, "p25": 43.53675, "p50...
+      amount: distribution_change normal -> lognormal
+      salary: new_categorical_values ["50001", "50002", "50003", "50005", ... -> ["50003", "50004", "50005", "50006", ...
+      churned, salary -> is_gift: dependency_broken 0.965 -> null
+      region, salary -> is_gift: dependency_broken 0.965 -> null
+      is_gift ~ salary: association_shift 0.2292 -> 0
+    tested 2 version(s) of 2 candidate(s) (at most 3); read 3 profile(s)
+    ```
+
+<a id="local-example-2"></a>
+
+### Example 3
+
+<!-- example: 2 -->
+
+```bash {.runnable-reference}
+shape timelapse shapes/registry orders --column amount --format text
+shape timelapse shapes/registry orders --column amount --window week -o amount.html
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    orders.amount  2026-03-01 .. 2026-03-03  3 frames, 1 change point(s)
+    row_count   ▄▄▄  200 .. 200
+    null_rate   ▄▄▄  0 .. 0
+    cardinality ▁▁█  199 .. 200
+    mean        ▁██  39.5772 .. 51.3736
+    std         ▁▄█  9.26509 .. 10.2495
+    p1          ▁█▆  15.7152 .. 24.9295
+    p5          ▁██  23.8401 .. 35.3844
+    p10         ▁██  28.4413 .. 38.9708
+    p25         ▁██  34.1662 .. 44.806
+    p50         ▁██  39.11 .. 51.4485
+    p75         ▁██  45.742 .. 58.3462
+    p90         ▁██  51.6936 .. 64.3103
+    p95         ▁██  55.0078 .. 66.5616
+    p99         ▁▇█  59.1229 .. 73.3921
+    change       ^   at 2026-03-02
+    {"change_points": ["2026-03-02"], "frames": 2, "written": "amount.html"}
+    ```

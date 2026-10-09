@@ -1,4 +1,8 @@
-# Python API reference
+# Python API guide
+
+Status: available (profiles, contracts and drift); experimental (other APIs).
+
+[Generated public reference](reference/api.md) documents the exported module surfaces in addition to this guide.
 
 Everything `import shape` exports (`shape.__all__`). Each signature below is the code's own
 (without annotations); `tests/api/test_public_api.py` fails when one of them and the code
@@ -10,6 +14,10 @@ the forms below (`README.md`); the modules that are stable are listed in
 model and query functions are documented as they behave today and may change.
 
 ## Profiles
+
+<!-- example: 0 -->
+
+Call signature:
 
 ```python
 shape.profile(source, *, name=None, version=None, as_of=None, delimiter=None, encoding=None, quotechar=None, header=True, string_columns=(), types=None, infer_types='auto', reference_pairs=None, joint=None, sheet=None, include_hidden=False, sketches=False, univariate=False, multivariate=False, sample=None, sample_method='random', sample_seed=None, decisions=None, validators=None, time_column=None)
@@ -39,6 +47,10 @@ A `Profile` has `to_dict()` (the full profile), `summary()` (a small JSON-safe d
 Raises `FileNotFoundError` for a missing path and `SourceError` (a `ValueError`) for an
 unsupported or empty source.
 
+<!-- example: 1 -->
+
+Call signature:
+
 ```python
 shape.save(p, path, capture='safe', *, k=5, column_k=None, classifications=None, vault=None, vault_policy=None, kek=None)
 ```
@@ -51,6 +63,10 @@ category values only where each category has at least `k` rows (`column_k`, `cla
 key) a safe capture also writes the value vault of the values it withheld (`docs/VAULT.md`).
 Raises `TypeError` when `p` is not a `Profile`.
 
+<!-- example: 2 -->
+
+Call signature:
+
 ```python
 shape.load(path)
 ```
@@ -59,6 +75,10 @@ Reads a `.shape` profile artifact written by `save` and returns the `Profile`. E
 the file raises `ArtifactError` (a `ShapeError`); a missing file raises `FileNotFoundError`.
 
 ## Contracts and drift
+
+<!-- example: 3 -->
+
+Call signature:
 
 ```python
 shape.check(profile, contract, data=None, *, strict=False, enforce_learned=False)
@@ -75,6 +95,10 @@ rule that does not fail the check is in `warnings`; `strict=True` puts every bro
 `violations`, and `enforce_learned=True` makes `learned` rules fail the check (`docs/CONTRACTS.md`).
 A malformed contract raises `ContractError` (a `ValueError`).
 
+<!-- example: 4 -->
+
+Call signature:
+
 ```python
 shape.diff(baseline, current, *, thresholds=None, ignore_columns=None, column_thresholds=None, only_columns=None, policy=None, planned=None, on=None, source=None, fail_on=None)
 ```
@@ -88,6 +112,10 @@ of `{column, kind, baseline, current, severity, score}`) and `to_dict()`. Every 
 (never drift), and `notes` says when the two profiles were sampled differently. `shape.diff` is
 also the `shape.diff` package; calling it runs this function.
 
+<!-- example: 5 -->
+
+Call signature:
+
 ```python
 shape.types_report(profile, contract=None, min_confidence=0.99)
 ```
@@ -97,6 +125,10 @@ The columns of `profile` whose declared, inferred or contract types disagree, as
 `shape types` prints (`docs/PROFILING_NOTES.md`, "Type inference").
 
 ## Generation
+
+<!-- example: 6 -->
+
+Call signature:
 
 ```python
 shape.generate(shape, n=None, seed=None, relationships=None, *, scale=None, mode=None, mixed_copula=False, identifiers=None)
@@ -120,12 +152,20 @@ key wins over both. `realistic` prints one line on standard error. Any other val
 `ValueError`, for every form (an evidence document has no identifier columns, so the switch
 changes nothing there). An unknown domain raises `DomainNotFoundError` (a `ShapeError`).
 
+<!-- example: 7 -->
+
+Call signature:
+
 ```python
 shape.plan(shape)
 ```
 
 Returns a `ReconstructionPlan`: what data generated from `shape` (a profile, its `to_dict()` or
 an evidence document) keeps and what it does not, as `PlanItem(evidence, status, reason)`.
+
+<!-- example: 8 -->
+
+Call signature:
 
 ```python
 shape.certify(target, observed, **kwargs)
@@ -135,6 +175,10 @@ Scores how well the evidence document `observed` matches `target` and returns a
 `FidelityCertificate` (`score`, `dimensions`, `degraded`, `unavailable`). `kwargs` are
 `degraded` and `unavailable` (tuples of evidence names). Both inputs are evidence documents,
 not profiles.
+
+<!-- example: 9 -->
+
+Call signature:
 
 ```python
 shape.timeline(versions)
@@ -146,6 +190,10 @@ and `changes()`. Raises `ValueError` for no versions or two at the same time.
 
 ## Shape models and queries
 
+<!-- example: 10 -->
+
+Call signature:
+
 ```python
 shape.query(shape, expression)
 ```
@@ -156,12 +204,20 @@ Evaluates a Shape Query over a Shape model document (v2, or a v1 capture migrate
 raises `ShapeQueryError` (SH2-028); a document that is not a model, such as a profile, raises
 `ModelError`. No code is evaluated (SH2-029). `shape.query` is also the `shape.query` package.
 
+<!-- example: 11 -->
+
+Call signature:
+
 ```python
 shape.view(shape)
 ```
 
 Returns a `ShapeView` with `query`, `column`, `relationship` and `classification` methods over
 the same documents. The document is read on the first call.
+
+<!-- example: 12 -->
+
+Call signature:
 
 ```python
 shape.ShapeBuilder()
@@ -170,12 +226,20 @@ shape.ShapeBuilder()
 Builds an immutable `Shape`: `add_field(FieldType)`, `add_evidence(key, Evidence)` and
 `join_sensitivity(Sensitivity)` return the builder; `finalize()` returns the `Shape`.
 
+<!-- example: 13 -->
+
+Call signature:
+
 ```python
 shape.Shape(shape_id, fields, sensitivity=<factory>, evidence=<factory>)
 ```
 
 An immutable Shape model: a UUID, a tuple of `FieldType`, a `Sensitivity` and a read-only
 mapping of `Evidence`.
+
+<!-- example: 14 -->
+
+Call signature:
 
 ```python
 shape.Evidence(provenance, value, method=None)
@@ -186,6 +250,10 @@ One piece of evidence with its `Provenance` and the method that produced it.
 `shape.Provenance` is a string enum: `OBSERVED`, `INFERRED`, `DECLARED`, `DERIVED`,
 `INTERPOLATED` and `EXTRAPOLATED`.
 
+<!-- example: 15 -->
+
+Call signature:
+
 ```python
 shape.Sensitivity(classifications=<factory>, categories=<factory>, compartments=<factory>, restrictions=<factory>)
 ```
@@ -195,6 +263,10 @@ union and `dominates(other)` is true when every set is a superset.
 
 ## Types
 
+<!-- example: 16 -->
+
+Call signature:
+
 ```python
 shape.LogicalType(kind, bit_width=None, precision=None, scale=None, unit=None, timezone=None, value_type=None, key_type=None, fields=())
 ```
@@ -203,11 +275,19 @@ An immutable logical type. `decimal` needs `precision` and `scale`, `list` and `
 need `value_type`, `map` needs `key_type` and `value_type`; otherwise `ValueError`. Other kinds
 are not validated (issue #260).
 
+<!-- example: 17 -->
+
+Call signature:
+
 ```python
 shape.FieldType(name, logical_type, nullable=True)
 ```
 
 A named, typed field.
+
+<!-- example: 18 -->
+
+Call signature:
 
 ```python
 shape.from_arrow_type(data_type)
@@ -215,6 +295,10 @@ shape.from_arrow_type(data_type)
 
 Converts a `pyarrow.DataType` to a `LogicalType` without silent narrowing; an unsupported type
 (`null`, `float16`, dictionary, union, ...) raises `ShapeTypeError`.
+
+<!-- example: 19 -->
+
+Call signature:
 
 ```python
 shape.schema_from_arrow(schema)

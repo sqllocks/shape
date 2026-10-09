@@ -1,5 +1,8 @@
 # Shape Manifesto
 
+Status: experimental.
+
+
 1. Shape represents behavior, not records.
 2. Shape never claims to recover original source records.
 3. Observed facts and inference are different things.

@@ -1,10 +1,28 @@
 # Testing with Shape: the pytest plugin and `shape seed`
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" TESTING_WITH_SHAPE
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for TESTING_WITH_SHAPE
+    ```
+
+
 ## The pytest plugin
 
-```bash
-pip install 'sqllocks-shape[pytest,domains]'
-```
+[Run this example](#local-example-0).
+
 
 The `pytest` extra installs pytest. The plugin itself is registered by the package through the
 `pytest11` entry point (`shape = "shape.testdata.pytest_plugin"`), as pytest plugins are, so it loads
@@ -62,12 +80,19 @@ passes none) and of every scenario marker. Use it to rerun a suite on other data
 
 ## `shape seed`
 
+<!-- example: 3 -->
+
+**Needs a PostgreSQL account. Not run in CI.**
+
 ```bash
 shape seed retail --target postgresql://shape@localhost:5432/shape --scale small --seed 7
 shape seed schema.json --target mssql://localhost:1433/test --mode truncate
 shape seed retail --target mysql://shape@localhost/shape --dry-run
 shape seed retail --target sql://./seed-scripts --scale tiny
 ```
+
+<!-- owner: PostgreSQL maintainer — supply the transcript for docs/TESTING_WITH_SHAPE.md example 3. -->
+
 
 `SPEC|DOMAIN` is an installed domain or a generation schema file (`shape from-ddl` writes one).
 `--target` is a database URI whose scheme picks the installed sink (`mssql` or `sqlserver`,
@@ -106,3 +131,24 @@ it; the error names them. Rerun with `--mode truncate` to replace them.
 The same call is available from Python: `shape.testdata.seed.seed_target(spec, target, scale=...,
 seed=..., mode=..., dry_run=..., sink_options=...)`, where `sink_options` carries what the command
 line cannot (`password`, `user`, `schema_name`, `credential`).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+pip install --quiet --no-deps --no-build-isolation -e "$SHAPE_DOCS_REPO" -e "$SHAPE_DOCS_REPO/plugins/shape-domains"
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    (no output)
+    ```

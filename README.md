@@ -5,35 +5,27 @@
 **Shape by SQLLocks** — Shape as Code: a portable, executable description of how
 data behaves, not merely its schema.
 
-> **Early access.** Profiling is available now; data generation and pipeline
-> integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
+> **Early access 0.9.1.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available.
+>
+> This release ships seeded domain generation, generation from profiles, file sinks for CSV, Parquet and JSONL, and plugins for dbt, databases, Fabric and streaming. Database sinks write to PostgreSQL, MySQL, DuckDB, Snowflake and Databricks.
 
-Install with `pip install sqllocks-shape`. Python imports use `import shape`, the
+Install with `pip install "sqllocks-shape[domains]"`. Python imports use `import shape`, the
 command is `shape`, and artifacts use the `.shape` extension.
 
 ## Quick start
 
-```python
-import shape
+Follow profile → check → diff → generate with local files.
 
-p = shape.profile("customers.csv")      # also: Parquet, JSONL, Delta tables, pandas, pyarrow
-shape.save(p, "customers.shape")   # the safe capture; capture="full" keeps real values
-print(p.summary())                      # small JSON-safe summary per column
-
-result = shape.check(p, {"columns": {"customer_id": {"unique": True, "nullable": False}}})
-print(result.passed, result.violations)
-
-drift = shape.diff(shape.load("customers.shape"), shape.profile("customers_next.csv"))
-print(drift.drifted, drift.changes)
-```
+Generate the retail input and write `contract.json` in [the starter tutorials](docs/TUTORIAL.md), then run:
 
 ```bash
-shape profile customers.csv -o customers.shape --name customers --html report.html --json summary.json
-shape check customers.shape contract.json          # exit 1 if the contract fails, 2 if a rule needs
-                                                     # a value the safe capture left out
-shape diff customers.shape customers_next.shape --fail-on-drift
+shape profile retail/ --dataset --name retail -o retail.shape --html report.html --json summary.json
+shape check retail.shape contract.json
+shape diff baseline.shape retail.shape --fail-on-drift --json drift.json
+shape generate --from retail.shape --scale small --seed 42 --format csv -o dev/ --json > dev-generation.json
 ```
 
+The tutorials show each command’s complete output and how to read it.
 A Delta table can be profiled as it was: `shape profile events/ --version 3 -o v3.shape`, or
 `--as-of 2026-06-02T00:00:00Z` for the newest version committed at or before that time (no zone
 means UTC); the API is `shape.profile(path, version=3)` and `shape.profile(path, as_of=...)`.
@@ -70,11 +62,7 @@ with a `tables` object is checked against such a dataset profile only; against a
 (`docs/PARITY.md`), and consumer teams state what they depend on in contracts that the producer's
 CI runs with `shape contracts check-consumers` (`docs/CONSUMER_CONTRACTS.md`).
 
-```bash
-shape --version
-shape inspect customers.shape                        # what a .shape file holds
-```
-
+See [the tested starter tutorials](docs/TUTORIAL.md) for commands and their complete output.
 ## A project file
 
 `shape init` writes a `shape.yml` that keeps a setup reviewable in git: named sources, a baseline
@@ -88,15 +76,7 @@ A shape can live in git like code: re-profiling unchanged data gives a **byte-id
 `.shape` (fixed container, no timestamps), so `git status` stays clean, and a real change gives a
 readable diff.
 
-```bash
-shape git-setup                       # once per repository
-shape profile orders.csv -o orders.shape --name orders
-git add .gitattributes orders.shape && git commit -m "orders shape"
-# next run, after the data changed:
-shape profile orders.csv -o orders.shape
-git diff                              # one changed line per changed property
-```
-
+See [the tested starter tutorials](docs/TUTORIAL.md) for commands and their complete output.
 ```diff
 -columns.email.null_rate: 0.0474
 +columns.email.null_rate: 0.2
@@ -134,7 +114,7 @@ Profiling, contracts (`check`) and drift (`diff`) are the supported surface, in 
 and in the `shape` CLI. `shape.profile()` reads files, Arrow tables, DataFrames and a list of row
 dicts. Generating data from a profile works (`shape.generate(profile, n)`, `shape generate
 --from PROFILE.shape`), and `shape plan PROFILE.shape` lists what generation keeps. `shape.query`
-and `shape query` read Shape model files, not profiles, and exit 2 for a profile. Other legacy
+and `shape query` read Shape model files, not profiles, and exit 2 for a profile. Other
 commands (such as `fidelity`) are experimental and will change.
 
 ## What a `.shape` file contains
@@ -163,3 +143,51 @@ See `docs/PRODUCT_ARCHITECTURE.md` and `docs/specs/`.
 ## License
 
 MIT. See `LICENSE` and `THIRD_PARTY_NOTICES.md`.
+
+## Python profile example
+
+Status: available. This example uses the Python API on local fixture files; the [example test environment](docs/contributing/EXAMPLES.md) prepares them.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](docs/contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" README
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for README
+    ```
+
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+python - <<'PYREADME'
+import shape
+
+p = shape.profile("customers.csv")      # also: Parquet, JSONL, Delta tables, pandas, pyarrow
+shape.save(p, "customers.shape")   # the safe capture; capture="full" keeps real values
+print(p.summary())                      # small JSON-safe summary per column
+
+result = shape.check(p, {"columns": {"customer_id": {"unique": True, "nullable": False}}})
+print(result.passed, result.violations)
+
+drift = shape.diff(shape.load("customers.shape"), shape.profile("customers_next.csv"))
+print(drift.drifted, drift.changes)
+PYREADME
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    <stdin>:10: ArtifactNotVerifiedWarning: customers.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    {'name': 'customers', 'row_count': 20, 'primary_key': ['customer_id'], 'columns': {'customer_id': {'dtype': 'integer', 'null_rate': 0.0, 'cardinality': 20, 'is_unique': True, 'is_primary_key': True, 'is_foreign_key': False, 'fk_ref_table': None, 'distribution': 'uniform', 'pattern': None, 'min': 1, 'max': 20, 'mean': 10.5, 'std': 5.916079783099616}, 'id': {'dtype': 'integer', 'null_rate': 0.0, 'cardinality': 20, 'is_unique': True, 'is_primary_key': False, 'is_foreign_key': False, 'fk_ref_table': None, 'distribution': 'uniform', 'pattern': None, 'min': 1, 'max': 20, 'mean': 10.5, 'std': 5.916079783099616}, 'age': {'dtype': 'integer', 'null_rate': 0.0, 'cardinality': 20, 'is_unique': True, 'is_primary_key': False, 'is_foreign_key': False, 'fk_ref_table': None, 'distribution': 'uniform', 'pattern': None, 'min': 21, 'max': 40, 'mean': 30.5, 'std': 5.916079783099616}, 'name': {'dtype': 'string', 'null_rate': 0.0, 'cardinality': 20, 'is_unique': True, 'is_primary_key': False, 'is_foreign_key': False, 'fk_ref_table': None, 'distribution': None, 'pattern': None, 'min': 'Person 1', 'max': 'Person 9', 'mean': None, 'std': None}, 'email': {'dtype': 'string', 'null_rate': 0.0, 'cardinality': 20, 'is_unique': True, 'is_primary_key': False, 'is_foreign_key': False, 'fk_ref_table': None, 'distribution': None, 'pattern': 'email', 'min': 'person10@example.test', 'max': 'person9@example.test', 'mean': None, 'std': None}, 'region': {'dtype': 'string', 'null_rate': 0.0, 'cardinality': 2, 'is_unique': False, 'is_primary_key': False, 'is_foreign_key': False, 'fk_ref_table': None, 'distribution': None, 'pattern': None, 'min': 'north', 'max': 'south', 'mean': None, 'std': None}, 'city': {'dtype': 'string', 'null_rate': 0.0, 'cardinality': 1, 'is_unique': False, 'is_primary_key': False, 'is_foreign_key': False, 'fk_ref_table': None, 'distribution': None, 'pattern': None, 'min': 'New York', 'max': 'New York', 'mean': None, 'std': None}, 'born': {'dtype': 'datetime', 'null_rate': 0.0, 'cardinality': 1, 'is_unique': False, 'is_primary_key': False, 'is_foreign_key': False, 'fk_ref_table': None, 'distribution': None, 'pattern': None, 'min': '1990-01-01', 'max': '1990-01-01', 'mean': None, 'std': None}, 'income': {'dtype': 'integer', 'null_rate': 0.0, 'cardinality': 20, 'is_unique': True, 'is_primary_key': False, 'is_foreign_key': False, 'fk_ref_table': None, 'distribution': 'uniform', 'pattern': None, 'min': 101, 'max': 120, 'mean': 110.5, 'std': 5.916079783099616}, 'churned': {'dtype': 'boolean', 'null_rate': 0.0, 'cardinality': 2, 'is_unique': False, 'is_primary_key': False, 'is_foreign_key': False, 'fk_ref_table': None, 'distribution': None, 'pattern': None, 'min': False, 'max': True, 'mean': None, 'std': None}}, 'sampling': {'method': 'none', 'seed': None, 'requested': None, 'population_rows': 20, 'sampled_rows': 20, 'internal': [], 'adequacy': 'insufficient', 'adequacy_reason': "20 rows profiled, fewer than 30 (the drift engine's minimum): rates, enums and fits are not stable"}}
+    True []
+    False []
+    ```

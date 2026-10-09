@@ -2085,9 +2085,7 @@ def _build_parser(plugin_commands=()):
     f.add_argument("csv", metavar="DATA", help="a CSV, Parquet or JSONL file")
     f.add_argument("--determinant", nargs="+", required=True, metavar="COLUMN")
     f.add_argument("--dependent", required=True, metavar="COLUMN")
-    q = sub.add_parser(
-        "privacy-k", help="the k-anonymity of DATA over the quasi-identifiers FIELDS"
-    )
+    q = sub.add_parser("privacy-k", help="the equivalence-group sizes of DATA over FIELDS")
     q.add_argument("csv", metavar="DATA", help="a CSV, Parquet or JSONL file")
     q.add_argument("fields", nargs="+", metavar="FIELD")
     cq = sub.add_parser(

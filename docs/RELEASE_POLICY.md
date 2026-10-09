@@ -1,4 +1,11 @@
 # 1.0 Release Policy
+
+Status: available (early-access surface); coming (1.x policy).
+
+**Early access 0.9.1.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
+
+The compatibility promises below apply to the future 1.x line, not the current early-access release.
+
 Semantic Versioning applies to the normative Shape contract and stable CLI exit classes. Patch releases may fix defects without weakening safety. Minor releases may add optional capabilities. New mandatory semantics require an explicitly versioned capability and may require a major release. Deprecations require a migration path.
 
 How a release is built, published and checked, and how to roll one back: the [release checklist](RELEASE_CHECKLIST.md).

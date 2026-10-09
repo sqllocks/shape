@@ -1,9 +1,12 @@
 # Changelog
 
-Shape is in **early access**. Profiling is available now; data generation and
-pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
+Status: available.
 
-## Unreleased
+**Early access 0.9.1.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
+
+## 0.9.1
+
+<!-- owner: release date -->
 
 - `shape share-bundle verify` bounds every member of a bundle before reading it (#684): at most
   10,000 members, 8 MiB for `attestation.json` and `manifest.json`, 2 GiB per data file and 8 GiB
@@ -50,7 +53,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `distribution`, `normal` and the `beta`, `exponential`, `gamma`, `log_normal`, `normal`,
   `pareto`, `power_law_cutoff` and `weibull` families, 77 files of the golden byte corpus, and the
   hr and healthcare domain outputs, and the vault test's profile-fitted CSV digest
-  (`docs/plans/lane_status/W8-04b.md` lists old and new ids). Those ids already differed between
+  (the implementation tests lists old and new ids). Those ids already differed between
   CI's machines before; now they are the same on Linux, macOS (arm64) and Windows.
   `formula` expressions keep numpy's `np_log`, `np_exp` and float powers (they equal numpy's own
   evaluation), and specs fitted to a profile are not covered (`docs/GENERATION_STABILITY.md`).
@@ -564,7 +567,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `scripts/gen_performance_page.py` (`--check` fails when the page is stale): a workload's numbers
   are published only when its equivalence verifier exited 0 (and its re-run on the timed output,
   where there is one); nothing is published from a modified tree. The nightly parity suite
-  (`benchmarks/vs_refengine/nightly.py`) runs the full comparison, now including Shape's generation
+  (the local workload tests) runs the full workload validation, now including Shape's generation
   of every baseline domain at medium and of retail at large, in shards; merges them; marks a night
   green only when every workload of the full suite is recorded with a passing verifier; and keeps
   the nightly history and the green streak.
@@ -592,8 +595,8 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   series, stuck values, daylight-saving missing and repeated local hours with an explicit time
   zone). The contract accepts the same optional rules and `shape check` takes `--data`;
   `shape.quality.reconcile` and `shape.quality.check_timeseries` are the Python API.
-- Fixed (#223): the Eventhouse writer made a KQL table and wrote to it at once, so the engine answered `Entity ... of kind 'Table' was not found` and the write failed with 0 accepted requests; its first request to a table now waits (backoff, `ready_timeout`, default 120 s) for the table to be ready, as the emitter already did. A column the engine refuses (`BadRequest_EntityNameIsNotValid` for `say "hi"`: quoting cannot help, only letters, digits, `_`, space, `.` and `-` are valid in a Kusto column name) is now created under a valid name (other characters become `_`, collisions get a numeric suffix) while the ingestion mapping's JSON path keeps the event's own key. Details in `docs/plans/lane_status/BF-223.md`.
-- Fixed (#78): the SQL emulator test helper `rows_of` returned pyodbc `Row` objects, which no longer compare equal to tuples, so `test_awkward_names_cannot_break_out_of_their_quotes` failed in the Nightly `sqlserver-e2e` job. It now returns plain tuples; every assertion is unchanged. The Nightly `fabric-emit-e2e` job failed at install because `shape-fabric` requires `sqllocks-shape-sqlserver==0.9.0`, which the job did not install (workflow diff in `docs/plans/lane_status/BF-78.md`).
+- Fixed (#223): the Eventhouse writer made a KQL table and wrote to it at once, so the engine answered `Entity ... of kind 'Table' was not found` and the write failed with 0 accepted requests; its first request to a table now waits (backoff, `ready_timeout`, default 120 s) for the table to be ready, as the emitter already did. A column the engine refuses (`BadRequest_EntityNameIsNotValid` for `say "hi"`: quoting cannot help, only letters, digits, `_`, space, `.` and `-` are valid in a Kusto column name) is now created under a valid name (other characters become `_`, collisions get a numeric suffix) while the ingestion mapping's JSON path keeps the event's own key. Details in the implementation tests.
+- Fixed (#78): the SQL emulator test helper `rows_of` returned pyodbc `Row` objects, which no longer compare equal to tuples, so `test_awkward_names_cannot_break_out_of_their_quotes` failed in the Nightly `sqlserver-e2e` job. It now returns plain tuples; every assertion is unchanged. The Nightly `fabric-emit-e2e` job failed at install because `shape-fabric` requires `sqllocks-shape-sqlserver==0.9.0`, which the job did not install (workflow diff in the implementation tests).
 - Fixed (#462, #463, #464, follow-up): `row_count` bounds must also be finite (an infinite bound was accepted); every table's contract in a dataset contract is validated before any table is evaluated, and its errors name the table (`table 'orders': unique for column 'id' must be true or false, not 'true'`); a `tables` that is not an object and a table name that is not a text are reported as such; `x_` extension keys beside `tables` are accepted again (they were refused as table rules).
 - `semantic-model://` source and `shape profile-model` (`sqllocks-shape-fabric`, `docs/plugins/
   cloud-sources.md`, `docs/plugins/fabric-commands.md`). `shape profile semantic-model://<workspace>/
@@ -1123,7 +1126,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   or an Eventhouse and records a session that `cleanup` removes exactly; the operations are plain functions
   (`shape.demo`) the JSON bridge calls too. A scenario runs its own domains, a failed run is rolled back,
   `preflight` checks each target, a profile never stores a secret and reports are escaped. Harness:
-  `benchmarks/vs_refengine/demo_1to1/` (the fidelity report and the metadata exactly, the generated data by
+  the local workload tests (the fidelity report and the metadata exactly, the generated data by
   T-21, an allow-list with probes, negative controls).
 - `shape fabric publish|notebook|deploy-notebook|setup|export-model` and the top-level `shape publish`,
   `shape notebook`, `shape deploy-notebook`, `shape setup-fabric`, `shape export-model`
@@ -1131,7 +1134,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   Warehouse, SQL Database or Eventhouse; make and deploy a Fabric notebook; make a Fabric Environment;
   export a Power BI semantic model (`.bim`). Names that reach M and DAX are quoted, an accepted (202)
   creation is followed to its end, the workspace listing is read across pages, and the notebook part is
-  named for its format. Harness: `benchmarks/vs_refengine/fabric_commands_1to1/` (the `.bim`, the
+  named for its format. Harness: the local workload tests (the `.bim`, the
   notebook, the requests and the landing zone against the baseline, an allow-list with probes,
   negative controls).
 - Sinks for OneLake, ADLS Gen2 and databases (`docs/SINKS.md`): `shape generate --to URI` and
@@ -1174,7 +1177,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   `options.include_raw_values` is set. JSON Schemas for every request and result are published in
   `docs/bridge/schema/` (`shape bridge schema --out|--check`) with test vectors in
   `docs/bridge/vectors/`; a compatibility test per command keeps them from changing silently.
-  Harness: `benchmarks/vs_refengine/bridge_1to1/`.
+  Harness: the local workload tests.
 
 - `shape.yml` project file and `shape init` (`docs/PROJECT.md`): named sources, a baseline per
   source (previous run, same weekday, rolling window, month end or a pinned artifact, resolved
@@ -1235,14 +1238,14 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   (`docs/SCALE.md`): the scale router with sinks (memory, Parquet part files, Lakehouse, Warehouse,
   SQL Database, KQL), a durable job store (submit, status, cancel, resume), the `fabric_spark` router
   with its `shape_spark_worker` notebook, a per-chunk-file process option, `ChunkedGenerator` and
-  `MultiStoreWriter`. Row counts are exact in every mode. Harness: `benchmarks/vs_refengine/scale_1to1/`
+  `MultiStoreWriter`. Row counts are exact in every mode. Harness: the local workload tests
   (T-21 for retail at medium, with negative controls).
 - `sqllocks-shape-simulation`: file-drop, SCD2-drop, stream, hybrid and workflow simulators and
   `shape simulate file-drop|scd2|stream|hybrid|workflow` (`docs/SIMULATION_FILES_EVENTS.md`). The
   stream emitter runs on the emit runtime (its pacing, sinks and encoders); the runtime accepts any
   counted, resumable sequence of event blocks (`EventSequence`), and sink selection moved from the
   `shape emit` command to `shape.streaming.emit.open_sink`. Harness:
-  `benchmarks/vs_refengine/simulation_1to1/` (mechanism parity and T-21 per simulator, an allow-list
+  the local workload tests (mechanism parity and T-21 per simulator, an allow-list
   of the defects fixed, negative controls).
 - `shape-simulation` (`docs/plugins/simulation.md`): the pattern simulators (clickstream, financial
   reversals / fraud bursts / settlements, IoT drift / missing readings / alert storms / fleet status,
@@ -1253,7 +1256,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   start a trace carry its ids; `latency_spike_enabled` and `outage_enabled` are honoured and a run
   without tracing has no trace ids; fractional durations count; IoT alerts do not depend on the
   storm switch; readings per sensor and the domains' own column names are understood. Harness:
-  `benchmarks/vs_refengine/simulation_1to1/verify_patterns.py` (parity verifier, negative controls,
+  the local workload tests (parity verifier, negative controls,
   allow-list probes).
 - Landing layout (`docs/LANDING.md`): `--path-template`, `--batch-date` and `--table-format` on
   `shape generate`, `shape continue` and `shape chaos` write one file per table per business date
@@ -1314,7 +1317,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   runtime (same options, sinks, formats and delivery guarantees; `--table` required, `-t -s -m`,
   `--rate` 10, `--max-events` is the earliest N events). The flat-event encoder is vectorised
   (Arrow kernels, several threads for large batches) with byte-identical output. Harness:
-  `benchmarks/vs_refengine/stream_1to1/` (equivalence verifier, bench, negative control; wired into
+  the local workload tests (equivalence verifier, bench, negative control; wired into
   `run.py --only stream`).
 - Composites (`docs/GENERATION_ENGINE.md`): `shape composite PRESET|DOMAIN+DOMAIN` generates several domains
   as one dataset, tables prefixed with their domain and linked by shared entities (a person, a location,
@@ -1516,7 +1519,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   run on several threads, could use libm's `exp`/`log` instead of numpy's and differ in the last
   digits (#323).
 - `shape.profile.infer.infer_column_type` rules out dates in a text column after one failed parse,
-  as the profiler does, instead of parsing every distinct value: 26x faster on the profiling
+  as the profiler does, instead of parsing every distinct value: uses the same date-classification path on the profiling
   benchmark files, with the same answers (#336).
 
 ### Fixed
@@ -1667,7 +1670,7 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   and `pyarrow>=14.0.1` (a fixed decision); raising them is with the project owner.
   `ci/constraints-min.txt` pins numpy 2.3.0 and pyarrow 19.0.1, the oldest versions the
   minimum-versions check runs.
-- Second audit of the scenario area (`HUNT2-scenario`, `docs/plans/lane_status/HUNT2-scenario.md`):
+- Second audit of the scenario area (`HUNT2-scenario`, the implementation tests):
   pack chaos runs the referential category once over the mutated tables, not once per table, and the
   manifest's `volume` count is the rows added or removed (#659, #660); the `referential_integrity`
   gate fails, instead of raising, when chaos retyped a key (#673); value chaos works on integer

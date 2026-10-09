@@ -1,5 +1,8 @@
 # State and compatibility policy
 
+Status: experimental.
+
+
 Shape writes files that outlive the release that wrote them: `.shape` artifacts, safe profiles,
 models, generation schemas and specs, scenario packs, registries, run manifests, contracts and
 signatures. This is the one policy for all of them. It is enforced by tests (see

@@ -115,6 +115,7 @@ def _directory(name: str, root: Path | None) -> Path:
 
 
 def load_scenario(name: str, root: Path | None = None) -> dict[str, Any]:
+    """Read and validate a local scenario specification."""
     path = _directory(name, root) / "scenario.json"
     doc = parse_scenario(read_json(path, f"scenario {name}"), f"scenario {name}")
     if doc["id"] != name:
@@ -123,6 +124,7 @@ def load_scenario(name: str, root: Path | None = None) -> dict[str, Any]:
 
 
 def load_expect(name: str, root: Path | None = None) -> dict[str, Any]:
+    """Read and validate a local scenario answer key."""
     path = _directory(name, root) / "expect.json"
     doc = parse_expect(read_json(path, f"answer key of {name}"), f"answer key of {name}")
     if doc["scenario"] != name:
