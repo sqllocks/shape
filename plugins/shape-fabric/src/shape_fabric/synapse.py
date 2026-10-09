@@ -207,7 +207,7 @@ class SynapseWriter(WarehouseWriter):
     def _folder(self, table: str) -> Any:
         return self.staging.join("staging", self.run_id, staging_slug(table))
 
-    def write_table(  # type: ignore[override]
+    def write_table(
         self,
         table: str,
         batches: Any,
@@ -244,6 +244,7 @@ class SynapseWriter(WarehouseWriter):
             columns=columns,
             primary_key=primary_key,
             options=options,
+            synapse=True,
         )
 
     def _copy_statement(self, schema_name: str, table: str, folder: Any) -> str:

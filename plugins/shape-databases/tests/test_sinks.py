@@ -1,5 +1,7 @@
 """Contract tests: the behaviour both sinks share, against the in-repo fake server."""
 
+import datetime as dt
+
 import pyarrow as pa
 import pytest
 from shape_databases import MySqlSink, PostgresSink, WriteError
@@ -183,7 +185,11 @@ def test_values_are_converted_for_the_driver(flavour):
     sink, uri, server = flavour
     sink.write(uri, "customer", iter([make_batch(1, 1)]))
     row = server.rows("customer")[0]
-    assert row[6].tzinfo is None and row[6].hour == 13  # UTC, zone dropped
+    assert row[6].hour == 13  # the UTC instant
+    if sink.dialect == "postgres":
+        assert row[6].utcoffset() == dt.timedelta(0)
+    else:
+        assert row[6].tzinfo is None
     assert row[7] == b"\x01" and row[4] is False
 
 
@@ -219,8 +225,9 @@ def test_a_long_string_widens_the_column_and_a_very_long_one_becomes_text(flavou
     batch = pa.RecordBatch.from_pydict({"a": ["x" * 300], "b": ["y" * 5000], "c": ["z"]})
     sink.write(uri, "t", iter([batch]))
     ddl = next(s for s in server.statements() if s.startswith("CREATE TABLE"))
-    assert "VARCHAR(300)" in ddl and "VARCHAR(255)" in ddl
-    assert "TEXT" in ddl
+    assert "VARCHAR" not in ddl
+    assert ddl.count("TEXT") == 3
+    assert server.rows("t") == [("x" * 300, "y" * 5000, "z")]
 
 
 def test_connection_option_is_used_as_is_and_not_closed(flavour):

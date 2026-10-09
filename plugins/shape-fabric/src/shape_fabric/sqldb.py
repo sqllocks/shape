@@ -230,6 +230,7 @@ def prepare_table(
     columns: Mapping[str, Mapping[str, Any]] | None = None,
     primary_key: Sequence[str] = (),
     options: str | None = None,
+    synapse: bool = False,
 ) -> bool:
     """Make the target ready for ``mode`` (see the module docstring); ``schema`` is normalized.
 
@@ -267,6 +268,7 @@ def prepare_table(
             columns=columns,
             primary_key=primary_key,
             options=options,
+            synapse=synapse,
         )
     )
     if exists:
@@ -359,7 +361,7 @@ class SqlDatabaseWriter:
         return _tsql.create_table_sql(
             schema_name or self.schema_name,
             table,
-            _tsql.normalize_schema(schema),
+            schema,
             warehouse=self.db.warehouse,
             columns=columns,
             primary_key=primary_key,
@@ -408,7 +410,6 @@ class SqlDatabaseWriter:
             raise ShapeError(
                 f"table {table!r} has no batches and no schema: pass schema= to create it empty"
             )
-        use_schema = _tsql.normalize_schema(use_schema)
         unknown = [k for k in plan.primary_key if k not in use_schema.names]
         if unknown and plan.mode == "upsert":
             raise ShapeError(f"primary key column {unknown[0]!r} is not a column of {table!r}")
@@ -550,7 +551,7 @@ class SqlDatabaseWriter:
 
         for raw in batches():
             _tsql.check_columns(first.schema, raw, table)
-            batch = _tsql.normalize_batch(raw)
+            batch = _tsql.normalize_batch(raw, warehouse=self.db.warehouse)
             if len(names) != batch.num_columns:
                 batch = batch.select(names)
             for start in range(0, batch.num_rows, batch_size):

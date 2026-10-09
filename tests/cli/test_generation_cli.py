@@ -27,6 +27,21 @@ RETAIL_TABLES = {
 }
 
 
+@pytest.fixture
+def retail_sql_schema(tmp_path):
+    from shape.generation.domains import load_domain
+
+    doc = load_domain("retail").schema.to_dict()
+    for table in doc["tables"].values():
+        for column in table["columns"].values():
+            if column["type"] == "decimal":
+                column["precision"] = 18
+                column["scale"] = 2
+    path = tmp_path / "retail-explicit-decimals.json"
+    path.write_text(json.dumps(doc))
+    return path
+
+
 def run(capsys, *argv):
     code = main([str(a) for a in argv])
     out = capsys.readouterr()
@@ -108,9 +123,18 @@ def test_generate_explicit_summary_format(capsys, flag):
     ("fmt", "suffix"),
     [("csv", "csv"), ("tsv", "tsv"), ("jsonl", "jsonl"), ("parquet", "parquet"), ("sql", "sql")],
 )
-def test_generate_formats(capsys, tmp_path, fmt, suffix):
+def test_generate_formats(capsys, tmp_path, fmt, suffix, retail_sql_schema):
     code, out, _ = run(
-        capsys, "generate", "retail", "--scale", "small", "-f", fmt, "-o", tmp_path, "--json"
+        capsys,
+        "generate",
+        retail_sql_schema if fmt == "sql" else "retail",
+        "--scale",
+        "small",
+        "-f",
+        fmt,
+        "-o",
+        tmp_path,
+        "--json",
     )
     assert code == 0, out
     files = {p.stem for p in tmp_path.glob(f"*.{suffix}")}
@@ -142,11 +166,11 @@ def test_generate_is_deterministic_and_seed_changes_it(capsys, tmp_path):
     assert not pq.read_table(a / "customer.parquet").equals(pq.read_table(c / "customer.parquet"))
 
 
-def test_generate_sql_options(capsys, tmp_path):
+def test_generate_sql_options(capsys, tmp_path, retail_sql_schema):
     code, *_ = run(
         capsys,
         "generate",
-        "retail",
+        retail_sql_schema,
         "--scale",
         "small",
         "-f",

@@ -436,10 +436,16 @@ def _generate_schema(
     if a.dry_run:
         plan = engine.dry_run()
         run.set(rows=plan.total_rows, tables=len(plan.order))
+        ddl = _target_ddl(a, engine.schema)
         if a.json:
-            _dump(plan.to_dict())
+            doc = plan.to_dict()
+            if ddl:
+                doc["ddl"] = ddl
+            _dump(doc)
         else:
             print(plan.render())
+            for statement in ddl:
+                print(statement["sql"])
         return 0 if plan.ok else 1
     return _generate(a, engine)
 
@@ -508,10 +514,16 @@ def _generate_from_profile(a: argparse.Namespace, rows: int | None) -> int:
     if a.dry_run:
         plan = engine.dry_run()
         run.set(rows=plan.total_rows, tables=len(plan.order))
+        ddl = _target_ddl(a, engine.schema)
         if a.json:
-            _dump({**plan.to_dict(), **_mark_vault(plan, mode)})
+            doc = {**plan.to_dict(), **_mark_vault(plan, mode)}
+            if ddl:
+                doc["ddl"] = ddl
+            _dump(doc)
         else:
             print(plan.render())
+            for statement in ddl:
+                print(statement["sql"])
             if vault_run is not None:
                 print(f"vault columns: {', '.join(mode['vaulted_columns'])}")
         return 0 if plan.ok else 1
@@ -877,3 +889,61 @@ def run(a: argparse.Namespace) -> int:
 
 
 __all__ = ["COMMANDS", "add_arguments", "load_target", "run"]
+
+
+def _target_ddl(a: argparse.Namespace, schema: GenSchema) -> list[dict[str, str]]:
+    """Resolve declared output column types without executing any generator or signing in."""
+    if not getattr(a, "to", None):
+        return []
+    import pyarrow as pa  # type: ignore[import-untyped]
+
+    from shape.cli.to import target_options
+    from shape.generation.output import sql_options
+    from shape.io.targets import sink_for_target
+    from shape.plugins.schemes import redact
+
+    opts = target_options(a, "parquet" if a.format == "summary" else a.format, list(a.to))
+    result = []
+    for uri in a.to:
+        name, sink = sink_for_target(uri)
+        ddl = getattr(sink, "ddl", None)
+        if not callable(ddl):
+            continue
+        for table in schema.tables.values():
+            fields = []
+            for col in table.columns.values():
+                typ = col.generator.get("output_type") or col.type
+                types = {
+                    "integer": pa.int64(),
+                    "int64": pa.int64(),
+                    "float": pa.float64(),
+                    "float64": pa.float64(),
+                    "boolean": pa.bool_(),
+                    "bool": pa.bool_(),
+                    "string": pa.string(),
+                    "uuid": pa.string(),
+                    "binary": pa.binary(),
+                    "date": pa.date32(),
+                    "timestamp": pa.timestamp("us"),
+                    "time": pa.time64("us"),
+                }
+                if typ == "decimal":
+                    if col.precision is None or col.scale is None:
+                        raise ValueError(
+                            f"column {table.name}.{col.name}: decimal needs precision and scale"
+                        )
+                    arrow = pa.decimal128(col.precision, col.scale)
+                else:
+                    arrow = types.get(str(typ), pa.string())
+                fields.append(pa.field(col.name, arrow))
+            options = {**opts.extra.get(name, {}), **sql_options(schema, table.name)}
+            if opts.write_mode:
+                options["write_mode"] = opts.write_mode
+            result.append(
+                {
+                    "target": redact(uri),
+                    "table": table.name,
+                    "sql": ddl(uri, table.name, pa.schema(fields), **options),
+                }
+            )
+    return result

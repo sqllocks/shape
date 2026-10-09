@@ -190,6 +190,30 @@ class DatabaseSink:
         connection is opened."""
         return resolve_password(options, self.password_env), {}
 
+    def ddl(self, uri: str, table: str, schema: pa.Schema, **options: Any) -> str:
+        """Resolve CREATE TABLE offline; no credential references or connection are opened."""
+        target = self.parse_target(uri)
+        name = _sql.check_identifier(
+            str(options.get("table_prefix") or "") + table, "table", self.dialect
+        )
+        schema_name = options.get("schema_name") or target.params.get("schema")
+        if schema_name is not None:
+            _sql.check_identifier(schema_name, "schema", self.dialect)
+        plan = Plan(
+            target,
+            "create",
+            1,
+            None,
+            schema_name,
+            name,
+            options.get("columns") or {},
+            options.get("primary_key") or (),
+            schema,
+            None,
+        )
+        self.check_schema(schema, plan)
+        return self.create_table_sql(plan, schema, None)
+
     def create_table_sql(self, plan: Plan, schema: pa.Schema, first: pa.RecordBatch | None) -> str:
         return _sql.create_table_sql(
             plan.schema_name,
@@ -213,6 +237,7 @@ class DatabaseSink:
 
     def check_schema(self, schema: pa.Schema, plan: Plan) -> None:
         """Refuse, before any connection, a column the table cannot hold."""
+        _sql.column_definitions(schema, None, plan.columns, plan.primary_key, self.dialect)
 
     def connect_params(self, plan: Plan) -> dict[str, Any]:
         raise NotImplementedError

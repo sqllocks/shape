@@ -192,6 +192,7 @@ class SnowflakeSink(DatabaseSink):
     def connect_params(self, plan: Plan) -> dict[str, Any]:
         t = plan.target
         params: dict[str, Any] = {"account": t.host, "user": t.user, "autocommit": False}
+        params["session_parameters"] = {"TIMEZONE": "UTC"}
         if t.database:
             params["database"] = t.database
         for key in ("schema", "warehouse", "role"):
@@ -237,7 +238,8 @@ class SnowflakeSink(DatabaseSink):
     def copy_sql(qualified: str, stage: str) -> str:
         # identifiers only, each checked and quoted
         return (
-            f"COPY INTO {qualified} FROM {stage} FILE_FORMAT = (TYPE = PARQUET) "
+            f"COPY INTO {qualified} FROM {stage} "
+            "FILE_FORMAT = (TYPE = PARQUET USE_LOGICAL_TYPE = TRUE) "
             "MATCH_BY_COLUMN_NAME = CASE_SENSITIVE PURGE = TRUE"
         )  # nosec B608
 

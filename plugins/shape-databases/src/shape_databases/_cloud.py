@@ -20,6 +20,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 import pyarrow.types as pat  # type: ignore[import-untyped]
 
+from shape.builtins.sinks.sql import _column_type
 from shape.errors import ShapeError
 
 from . import _sql
@@ -51,6 +52,8 @@ def _unsupported(field: pa.Field, dialect: str) -> ShapeError:
 
 
 def _decimal(field: pa.Field, t: pa.DataType) -> str:
+    if t.scale < 0 or t.scale > t.precision:
+        raise ShapeError(f"column {field.name!r}: decimal scale must be between 0 and precision")
     if t.precision > MAX_DECIMAL_PRECISION:
         raise ShapeError(
             f"column {field.name!r}: a decimal holds at most {MAX_DECIMAL_PRECISION} digits"
@@ -61,12 +64,22 @@ def _decimal(field: pa.Field, t: pa.DataType) -> str:
 def snowflake_type(field: pa.Field, meta: Mapping[str, Any] | None = None) -> str:
     """The Snowflake type that holds ``field``."""
     t = _value_type(field.type)
+    if (meta or {}).get("type") == "uuid" or (field.metadata or {}).get(b"type") == b"uuid":
+        return "VARCHAR(36)"
+    if (meta or {}).get("type") == "decimal" and not pat.is_decimal(t):
+        return _column_type(field, meta or {}, "tsql").replace("DECIMAL", "NUMBER")
     if pat.is_boolean(t):
         return "BOOLEAN"
     if pat.is_integer(t):
-        return "NUMBER(38,0)"
+        bits = t.bit_width
+        if pat.is_unsigned_integer(t):
+            if bits == 64:
+                return "DECIMAL(20,0)"
+            bits *= 2
+        digits = {8: 3, 16: 5, 32: 10, 64: 19}[bits]
+        return f"NUMBER({digits},0)"
     if pat.is_floating(t):
-        return "FLOAT"
+        return "FLOAT(24)" if t.bit_width <= 32 else "FLOAT"
     if pat.is_decimal(t):
         return "NUMBER" + _decimal(field, t)
     if pat.is_string(t) or pat.is_large_string(t):
@@ -89,27 +102,40 @@ def snowflake_type(field: pa.Field, meta: Mapping[str, Any] | None = None) -> st
     if pat.is_date(t):
         return "DATE"
     if pat.is_timestamp(t):
-        return "TIMESTAMP_NTZ" if t.tz is None else "TIMESTAMP_TZ"
+        prefix = "TIMESTAMP_NTZ" if t.tz is None else "TIMESTAMP_TZ"
+        precision = {"s": 0, "ms": 3, "us": 6, "ns": 9}[t.unit]
+        return f"{prefix}({precision})"
+    if pat.is_time(t):
+        precision = {"s": 0, "ms": 3, "us": 6, "ns": 9}[t.unit]
+        return f"TIME({precision})"
     if is_nested(t):
         return "VARIANT"
     raise _unsupported(field, "snowflake")
 
 
-def databricks_type(field: pa.Field) -> str:
+def databricks_type(field: pa.Field, meta: Mapping[str, Any] | None = None) -> str:
     """The Databricks (Delta) type that holds ``field``."""
     t = _value_type(field.type)
+    if (meta or {}).get("type") == "uuid" or (field.metadata or {}).get(b"type") == b"uuid":
+        return "VARCHAR(36)"
+    if (meta or {}).get("type") == "decimal" and not pat.is_decimal(t):
+        return _column_type(field, meta or {}, "tsql")
     if pat.is_boolean(t):
         return "BOOLEAN"
     if pat.is_integer(t):
         if pat.is_uint64(t):
             return "DECIMAL(20,0)"
-        wide = t.bit_width == 64 or (pat.is_unsigned_integer(t) and t.bit_width == 32)
-        return "BIGINT" if wide else "INT"
+        bits = t.bit_width * (2 if pat.is_unsigned_integer(t) else 1)
+        return {8: "TINYINT", 16: "SMALLINT", 32: "INT", 64: "BIGINT"}[bits]
     if pat.is_floating(t):
-        return "DOUBLE"
+        return "FLOAT" if t.bit_width <= 32 else "DOUBLE"
     if pat.is_decimal(t):
         return "DECIMAL" + _decimal(field, t)
     if pat.is_string(t) or pat.is_large_string(t) or is_nested(t):
+        if (pat.is_string(t) or pat.is_large_string(t)) and (meta or {}).get(
+            "max_length"
+        ) is not None:
+            return _column_type(field, meta or {}, "mysql")
         return "STRING"  # lists, structs and maps are JSON text
     if pat.is_binary(t) or pat.is_large_binary(t) or pat.is_fixed_size_binary(t):
         return "BINARY"
@@ -117,6 +143,8 @@ def databricks_type(field: pa.Field) -> str:
         return "DATE"
     if pat.is_timestamp(t):
         return "TIMESTAMP_NTZ" if t.tz is None else "TIMESTAMP"
+    if pat.is_time(t):
+        return "TIME(6)"
     raise _unsupported(field, "databricks")
 
 
@@ -135,7 +163,7 @@ def check_types(
         if dialect == "snowflake":
             snowflake_type(field, (columns or {}).get(field.name))
         else:
-            databricks_type(field)
+            databricks_type(field, (columns or {}).get(field.name))
 
 
 def create_table_sql(
@@ -153,7 +181,11 @@ def create_table_sql(
     lines = []
     for field in schema:
         meta = columns.get(field.name, {})
-        sql_type = snowflake_type(field, meta) if dialect == "snowflake" else databricks_type(field)
+        sql_type = (
+            snowflake_type(field, meta)
+            if dialect == "snowflake"
+            else databricks_type(field, (columns or {}).get(field.name))
+        )
         nullable = bool(meta.get("nullable", True)) and field.name not in primary_key
         lines.append(
             f"  {_sql.quote(field.name, dialect)} {sql_type}{'' if nullable else ' NOT NULL'}"

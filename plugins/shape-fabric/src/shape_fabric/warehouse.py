@@ -160,7 +160,6 @@ class WarehouseWriter:
             raise ShapeError(
                 f"table {table!r} has no batches and no schema: pass schema= to create it empty"
             )
-        use_schema = _tsql.normalize_schema(use_schema)
         folder = self._folder(table)
         created = False
         db = self.db

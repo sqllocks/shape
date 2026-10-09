@@ -27,9 +27,9 @@ def test_a_declared_length_fits_the_type(length: Any, warehouse: bool, sql: str)
     assert column_type(TEXT, {"max_length": length}, warehouse=warehouse) == sql
 
 
-def test_a_warehouse_string_longer_than_8000_is_refused() -> None:
+def test_a_synapse_columnstore_string_longer_than_8000_is_refused() -> None:
     with pytest.raises(ShapeError, match="8000"):
-        column_type(TEXT, {"max_length": 9000}, warehouse=True)
+        column_type(TEXT, {"max_length": 9000}, warehouse=True, synapse=True)
 
 
 @pytest.mark.parametrize("length", ["max", 1.5, -3, "ten", True])

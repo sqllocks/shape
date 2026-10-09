@@ -145,6 +145,7 @@ def _dimension(value: Any, what: str) -> int:
     if (
         isinstance(value, bool)
         or not isinstance(value, int | float)
+        or not math.isfinite(value)
         or value != int(value)
         or value < 0
     ):
@@ -160,21 +161,97 @@ def _identity_number(value: Any, what: str) -> int:
 
 
 def _column_type(field: pa.Field, meta: Mapping[str, Any], dialect: str) -> str:
-    logical = str(meta.get("type") or _logical_type(field.type))
-    table = _TYPES[dialect]
-    template = table.get(logical, table["string"])
-    arrow_type = field.type
-    precision = meta.get("precision") or (
-        arrow_type.precision if pat.is_decimal(arrow_type) else None
-    )
-    scale = meta.get("scale")
-    if scale is None:
-        scale = arrow_type.scale if pat.is_decimal(arrow_type) else 2
-    return template.format(
-        length=_dimension(meta.get("max_length") or 255, "max_length"),
-        precision=_dimension(precision or 18, "precision"),
-        scale=_dimension(scale, "scale"),
-    )
+    """Resolve a declared column without inspecting data or guessing decimal dimensions."""
+    t = field.type
+    if pat.is_dictionary(t):
+        t = t.value_type
+    logical = str(meta.get("type") or _logical_type(t))
+    metadata = field.metadata or {}
+    if logical == "uuid" or metadata.get(b"type") == b"uuid":
+        return _TYPES[dialect]["uuid"]
+    if pat.is_decimal(t) or logical == "decimal":
+        precision = t.precision if pat.is_decimal(t) else meta.get("precision")
+        scale = t.scale if pat.is_decimal(t) else meta.get("scale")
+        try:
+            p = _dimension(precision, "precision")
+            if (
+                dialect == "postgres"
+                and isinstance(scale, int | float)
+                and not isinstance(scale, bool)
+            ):
+                s = _dimension(abs(scale), "scale") * (-1 if scale < 0 else 1)
+            else:
+                s = _dimension(scale, "scale")
+        except ValueError as exc:
+            raise ValueError(f"column {field.name!r}: {exc}") from None
+        cap = {"postgres": 1000, "mysql": 65, "tsql": 38, "tsql-fabric-warehouse": 38}[dialect]
+        valid_scale = (
+            -1000 <= s <= 1000
+            if dialect == "postgres"
+            else 0 <= s <= min(p, 30 if dialect == "mysql" else p)
+        )
+        if not 1 <= p <= cap or not valid_scale:
+            raise ValueError(f"column {field.name!r}: invalid decimal precision/scale ({p},{s})")
+        return _TYPES[dialect]["decimal"].format(precision=p, scale=s)
+    if logical == "integer":
+        if not pat.is_integer(t):
+            return "BIGINT"
+        bits = t.bit_width
+        if pat.is_unsigned_integer(t):
+            if bits == 64:
+                return "NUMERIC(20,0)" if dialect == "postgres" else "DECIMAL(20,0)"
+            if bits == 8 and dialect == "tsql":
+                return "TINYINT"
+            bits *= 2
+        maps = {
+            "tsql": {8: "SMALLINT", 16: "SMALLINT", 32: "INT", 64: "BIGINT"},
+            "tsql-fabric-warehouse": {8: "SMALLINT", 16: "SMALLINT", 32: "INT", 64: "BIGINT"},
+            "postgres": {8: "SMALLINT", 16: "SMALLINT", 32: "INTEGER", 64: "BIGINT"},
+            "mysql": {8: "TINYINT", 16: "SMALLINT", 32: "INT", 64: "BIGINT"},
+        }
+        return maps[dialect][bits]
+    if logical == "float" and pat.is_floating(t) and t.bit_width <= 32:
+        return "FLOAT" if dialect == "mysql" else "REAL"
+    if pat.is_timestamp(t) or pat.is_time(t):
+        precision = min({"s": 0, "ms": 3, "us": 6, "ns": 9}[t.unit], 7 if dialect == "tsql" else 6)
+        if pat.is_time(t):
+            return f"TIME({precision})"
+        if t.tz is not None:
+            prefix = {
+                "tsql": "DATETIMEOFFSET",
+                "tsql-fabric-warehouse": "DATETIME2",
+                "postgres": "TIMESTAMPTZ",
+                "mysql": "TIMESTAMP",
+            }[dialect]
+            if dialect == "tsql-fabric-warehouse":
+                precision = 6
+        else:
+            prefix = {
+                "tsql": "DATETIME2",
+                "tsql-fabric-warehouse": "DATETIME2",
+                "postgres": "TIMESTAMP",
+                "mysql": "DATETIME",
+            }[dialect]
+        return f"{prefix}({precision})"
+    if logical == "string" or logical not in _TYPES[dialect]:
+        length = meta.get("max_length")
+        if length is None and not (pat.is_string(t) or pat.is_large_string(t)):
+            return _TYPES[dialect]["string"].format(length=255)
+        if length is None:
+            return {
+                "tsql": "NVARCHAR(MAX)",
+                "tsql-fabric-warehouse": "VARCHAR(MAX)",
+                "postgres": "TEXT",
+                "mysql": "TEXT",
+            }[dialect]
+        try:
+            length = _dimension(length, "max_length")
+        except ValueError as exc:
+            raise ValueError(f"column {field.name!r}: {exc}") from None
+        if length < 1:
+            raise ValueError(f"column {field.name!r}: max_length must be positive")
+        return _TYPES[dialect]["string"].format(length=length)
+    return _TYPES[dialect][logical]
 
 
 def _literal(value: Any, dialect: str) -> str:
@@ -196,7 +273,23 @@ def _literal(value: Any, dialect: str) -> str:
             return postgres_text(f"\\x{hexed}")
         return f"0x{hexed}" if dialect.startswith("tsql") else f"X'{hexed}'"
     if isinstance(value, dt.datetime):
-        text = value.replace(tzinfo=None).isoformat(sep=" ") if value.tzinfo else str(value)
+        if value.tzinfo is not None:
+            value = value.astimezone(dt.UTC)
+            if dialect in ("mysql", "tsql-fabric", "tsql-fabric-warehouse"):
+                value = value.replace(tzinfo=None)
+        # Drivers and zoned fidelity use microsecond instants; Arrow ns scalars may
+        # expose a datetime subclass whose isoformat would otherwise emit nanoseconds.
+        value = dt.datetime(
+            value.year,
+            value.month,
+            value.day,
+            value.hour,
+            value.minute,
+            value.second,
+            value.microsecond,
+            tzinfo=value.tzinfo,
+        )
+        text = str(value.isoformat(sep=" "))
     else:
         text = str(value) if not isinstance(value, (dt.date, dt.time)) else value.isoformat()
     escaped = text.replace("'", "''")
@@ -318,6 +411,10 @@ class SqlSink:
                         f"(columns: {', '.join(names)})"
                     )
                 columns = ", ".join(q(n) for n in names)
+                if dialect == "mysql" and any(
+                    pat.is_timestamp(f.type) and f.type.tz is not None for f in schema
+                ):
+                    handle.write("SET time_zone = '+00:00';\n\n")
                 if options.get("ddl", True):
                     handle.write(
                         self._ddl(

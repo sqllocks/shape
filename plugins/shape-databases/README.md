@@ -69,6 +69,9 @@ with the length of the stream.
 | `columns`, `primary_key`, `schema` | as for the `sql` sink: per-column `{type, nullable, max_length, precision, scale}`, key columns, and the Arrow schema for creating an empty table from no batches |
 | `password`, `credential`, `token_scope` | see Credentials |
 
+**Historical behavior before W9-03.** The following paragraph records the former
+writer; use [SQL type fidelity on write](#sql-type-fidelity-on-write) for current types.
+
 A missing table is created from the Arrow schema with the `sql` sink's types (`BIGINT`,
 `VARCHAR(n)`, `NUMERIC`/`DECIMAL`, `TIMESTAMP`/`DATETIME(6)`, `BOOLEAN`/`TINYINT(1)`, `BYTEA`/`LONGBLOB`,
 ...). String columns are sized to the first batch (at least 255); more than 4000 characters, and
@@ -125,6 +128,8 @@ fails the write rather than let them in silently.
 table `customer` is `"customer"` (not `CUSTOMER`) and is queried quoted. A name longer than 255
 characters, with a control character or a leading or trailing space, is refused with the name in the
 message before any connection; so are two columns of one name.
+
+**Historical map before W9-03.** See [the current map](#sql-type-fidelity-on-write).
 
 **Type map from Arrow** (a type not listed, such as `time` or `duration`, is refused before any
 connection, with the column's name):
@@ -189,6 +194,8 @@ space, `.`, `/` or a backtick is refused with the name in the message (use the l
 a column name with a space or one of `,;{}()=`, a tab or a newline (which Delta cannot hold) is
 refused; any name over 255 characters is refused; two columns that differ only in case are
 refused. All before any connection.
+
+**Historical map before W9-03.** See [the current map](#sql-type-fidelity-on-write).
 
 **Type map from Arrow** (a type not listed, such as `time` or `duration`, is refused before any
 connection, with the column's name):
@@ -314,3 +321,45 @@ up -d --wait postgres mysql`, with `SHAPE_POSTGRES_PASSWORD` / `SHAPE_MYSQL_PASS
 
 Its version always equals core's (`sqllocks-shape`), and it is released together with core.
 How plugins are written: `docs/plugins/authoring.md` in the repository.
+
+## SQL type fidelity on write
+
+Arrow types resolve directly to SQL DDL; integer widths and decimal precision are not
+inferred from values. The script and live PostgreSQL/MySQL maps are shared.
+
+| Arrow | PostgreSQL | MySQL | T-SQL | Fabric Warehouse | Snowflake | Databricks |
+|---|---|---|---|---|---|---|
+| int8 / int16 / int32 / int64 | SMALLINT / SMALLINT / INTEGER / BIGINT | TINYINT / SMALLINT / INT / BIGINT | SMALLINT / SMALLINT / INT / BIGINT | SMALLINT / SMALLINT / INT / BIGINT | NUMBER(3,0) / NUMBER(5,0) / NUMBER(10,0) / NUMBER(19,0) | TINYINT / SMALLINT / INT / BIGINT |
+| uint8 / uint16 / uint32 | next signed width | next signed width | TINYINT / INT / BIGINT | SMALLINT / INT / BIGINT | NUMBER(5,0) / NUMBER(10,0) / NUMBER(19,0) | SMALLINT / INT / BIGINT |
+| uint64 | NUMERIC(20,0) | DECIMAL(20,0) | DECIMAL(20,0) | DECIMAL(20,0) | DECIMAL(20,0) | DECIMAL(20,0) |
+| float32 | REAL | FLOAT | REAL | REAL | FLOAT(24) | FLOAT |
+| zoned timestamp | TIMESTAMPTZ(p) | TIMESTAMP(p) | DATETIMEOFFSET(p) | DATETIME2(6) | TIMESTAMP_TZ(p) | TIMESTAMP |
+| zone-less timestamp | TIMESTAMP(p) | DATETIME(p) | DATETIME2(p) | DATETIME2(p) | TIMESTAMP_NTZ(p) | TIMESTAMP_NTZ |
+| time32 / time64 | TIME(p) | TIME(p) | TIME(p) | TIME(p) | TIME(p) | TIME(6) |
+| uuid metadata | UUID | CHAR(36) | UNIQUEIDENTIFIER | VARCHAR(36) | VARCHAR(36) | VARCHAR(36) |
+
+Unsigned values use the next signed width; uint64 needs 20 decimal digits. T-SQL int8
+uses SMALLINT because TINYINT is unsigned. Timestamp/time units s, ms, us and ns mean
+0, 3, 6 and 9 fractional digits, capped at the dialect's limit (7 for T-SQL, 6 for
+PostgreSQL, MySQL and Fabric Warehouse). Snowflake supports 9; Databricks timestamps
+store microseconds. A zoned timestamp keeps its instant to the microsecond. Writes
+normalize to UTC, with +00:00 in offset-capable types; MySQL sets its write session to
+UTC, and Warehouse stores UTC in DATETIME2(6). Read-back comparisons normalize to
+UTC-aware values. The original zone name is not preserved. Zone-less values stay zone-less.
+
+Decimals always use the Arrow precision and scale, otherwise `columns.precision` and
+`columns.scale`; incomplete or invalid dimensions are refused with the column name.
+UUID is selected by `columns.type="uuid"` or Arrow field metadata `type=uuid`.
+String lengths come from `columns.max_length` (generation-schema declared widths are
+forwarded there). Unspecified strings are unbounded: TEXT for PostgreSQL/MySQL,
+NVARCHAR(MAX) for T-SQL, VARCHAR(MAX) in script Warehouse DDL, VARCHAR for Snowflake,
+and STRING for Databricks. The live Warehouse writer also uses VARCHAR(MAX) (the service stores up to 16 MB);
+indexed key columns remain bounded. Synapse retains its separate columnstore-compatible
+8000-character limit. The previous VARCHAR(255) default
+and first-batch string sizing are removed; a short first batch cannot truncate a later one.
+
+`shape generate schema.json --to postgresql://user@host/db --dry-run` prints the
+resolved CREATE TABLE statements without generating rows, signing in, connecting or
+writing. `--json` adds a `ddl` list to the generation plan, each with `target`, `table`
+and `sql`. SQL database sink adapters expose the optional offline
+`ddl(uri, table, arrow_schema, **options)` hook; values and credentials never enter DDL.

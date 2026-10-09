@@ -29,7 +29,9 @@ def test_default_mode_creates_and_writes_with_parameters(batches):
     assert len(rows) == 7
     # nanosecond timestamps cut to microseconds, time zones to UTC naive, NaN to NULL
     assert rows[0][7] == dt.datetime(2026, 1, 1, 12, 0, 0, 123456)
-    assert rows[0][8] == dt.datetime(2026, 1, 1, 12, 0, 0, 123456)  # the instant, in UTC
+    assert rows[0][8] == dt.datetime(
+        2026, 1, 1, 12, 0, 0, 123456, tzinfo=dt.UTC
+    )  # the instant, in UTC
     assert rows[0][4] is None and rows[1][4] == pytest.approx(1 / 3)
     assert rows[1][3] == Decimal("0.25") and rows[0][2] == "a" and rows[3][2] is None
 
@@ -243,13 +245,14 @@ def test_time_zones_are_converted_to_the_utc_instant():
     )
     server = FakeSqlServer()
     writer(server).write_table("tz", [batch])
-    assert server.rows("dbo", "tz") == [(dt.datetime(2026, 1, 1),)]  # not +09:00
+    assert server.rows("dbo", "tz") == [(dt.datetime(2026, 1, 1, tzinfo=dt.UTC),)]  # not +09:00
 
 
 def test_create_ddl_types_for_sql_database_and_warehouse():
     schema = sample_schema().append(pa.field("raw", pa.binary())).append(pa.field("u", pa.uint8()))
     ddl = writer(FakeSqlServer()).create_ddl("t", schema)
-    assert "[name] NVARCHAR(MAX) NULL" in ddl and "[seen] DATETIME2(6) NULL" in ddl
+    assert "[name] NVARCHAR(MAX) NULL" in ddl and "[seen] DATETIME2(7) NULL" in ddl
+    assert "[seen_tz] DATETIMEOFFSET(6) NULL" in ddl
     assert "[balance] DECIMAL(12,2) NULL" in ddl and "[score] FLOAT NULL" in ddl
     assert "[active] BIT NULL" in ddl and "[born] DATE NULL" in ddl
     assert "[segment] NVARCHAR(MAX) NULL" in ddl and "[raw] VARBINARY(MAX) NULL" in ddl
@@ -260,7 +263,7 @@ def test_create_ddl_types_for_sql_database_and_warehouse():
     )
     assert wh.db.warehouse
     ddl = wh.create_ddl("t", schema, primary_key=["id"])
-    assert "[name] VARCHAR(8000) NULL" in ddl and "[raw] VARBINARY(8000) NULL" in ddl
+    assert "[name] VARCHAR(MAX) NULL" in ddl and "[raw] VARBINARY(8000) NULL" in ddl
     assert "[u] SMALLINT NULL" in ddl  # the Warehouse has no TINYINT
     assert "NVARCHAR" not in ddl
     assert "CONSTRAINT [PK_t] PRIMARY KEY NONCLUSTERED ([id]) NOT ENFORCED" in ddl

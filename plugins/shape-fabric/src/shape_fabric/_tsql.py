@@ -19,6 +19,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 import pyarrow.types as pat  # type: ignore[import-untyped]
 
+from shape.builtins.sinks.sql import _column_type
 from shape.errors import ShapeError
 
 from ._auth import SCOPE_SQL, token_for
@@ -88,7 +89,12 @@ def _meta_int(meta: Mapping[str, Any], key: str) -> int | None:
 
 
 def column_type(
-    field: pa.Field, meta: Mapping[str, Any] | None = None, *, warehouse: bool, key: bool = False
+    field: pa.Field,
+    meta: Mapping[str, Any] | None = None,
+    *,
+    warehouse: bool,
+    key: bool = False,
+    synapse: bool = False,
 ) -> str:
     """The T-SQL type that holds Arrow ``field``. ``meta`` may give ``max_length``,
     ``precision``, ``scale`` and ``type`` (``"uuid"``). A type SQL cannot hold raises."""
@@ -96,6 +102,11 @@ def column_type(
     t = field.type
     if pat.is_dictionary(t):
         t = t.value_type
+    if meta.get("type") == "decimal" and not pat.is_decimal(t):
+        try:
+            return _column_type(field, meta, "tsql-fabric-warehouse" if warehouse else "tsql")
+        except ValueError as exc:
+            raise ShapeError(str(exc)) from None
     if pat.is_boolean(t):
         return "BIT"
     if pat.is_integer(t):
@@ -119,16 +130,14 @@ def column_type(
                 "cast it to a scale of 0 or more first"
             )
         return f"DECIMAL({t.precision},{t.scale})"
-    if pat.is_timestamp(t):
-        return "DATETIME2(6)"  # time zones are converted to UTC by normalize_batch
+    if pat.is_timestamp(t) or pat.is_time(t):
+        return _column_type(field, meta, "tsql-fabric-warehouse" if warehouse else "tsql")
     if pat.is_date(t):
         return "DATE"
-    if pat.is_time(t):
-        return "TIME(6)"
     if pat.is_binary(t) or pat.is_large_binary(t) or pat.is_fixed_size_binary(t):
         return "VARBINARY(8000)" if warehouse else "VARBINARY(MAX)"
     if pat.is_string(t) or pat.is_large_string(t):
-        if str(meta.get("type")) == "uuid":
+        if str(meta.get("type")) == "uuid" or (field.metadata or {}).get(b"type") == b"uuid":
             return "VARCHAR(36)" if warehouse else "UNIQUEIDENTIFIER"
         declared = _meta_int(meta, "max_length")
         char = "VARCHAR" if warehouse else "NVARCHAR"
@@ -136,7 +145,7 @@ def column_type(
             limit = 8000 if warehouse else 4000  # VARCHAR and NVARCHAR hold at most this
             if declared <= limit:
                 return f"{char}({declared})"
-            if warehouse:
+            if warehouse and synapse:
                 raise ShapeError(
                     f"column {field.name!r}: a Warehouse string holds at most 8000 characters "
                     f"(max_length {declared})"
@@ -144,7 +153,11 @@ def column_type(
             return f"{char}(MAX)"
         if key:
             return f"{char}({_KEY_COLUMN_LENGTH})"
-        return "VARCHAR(8000)" if warehouse else "NVARCHAR(MAX)"
+        return (
+            "VARCHAR(8000)"
+            if warehouse and synapse
+            else ("VARCHAR(MAX)" if warehouse else "NVARCHAR(MAX)")
+        )
     raise ShapeError(
         f"column {field.name!r} has type {t}, which a SQL column cannot hold: "
         "convert it (for example to a JSON string) before writing"
@@ -180,6 +193,7 @@ def create_table_sql(
     columns: Mapping[str, Mapping[str, Any]] | None = None,
     primary_key: Sequence[str] = (),
     options: str | None = None,
+    synapse: bool = False,
 ) -> str:
     """``CREATE TABLE`` for ``schema``. Key columns are ``NOT NULL``; a Warehouse key is
     declared ``NONCLUSTERED ... NOT ENFORCED`` (the Warehouse does not enforce keys).
@@ -195,7 +209,9 @@ def create_table_sql(
     lines = []
     for field in schema:
         meta = columns.get(field.name, {})
-        sql_type = column_type(field, meta, warehouse=warehouse, key=field.name in key)
+        sql_type = column_type(
+            field, meta, warehouse=warehouse, key=field.name in key, synapse=synapse
+        )
         nullable = bool(meta.get("nullable", True)) and field.name not in key
         identity = None if warehouse else identity_parts(meta)  # a Warehouse has no identity
         if identity is not None:
@@ -345,7 +361,7 @@ def insert_sql(schema_name: str, table: str, names: Sequence[str]) -> str:
 # --- values ------------------------------------------------------------------------------
 
 
-def normalize_batch(batch: pa.RecordBatch) -> pa.RecordBatch:
+def normalize_batch(batch: pa.RecordBatch, *, warehouse: bool = True) -> pa.RecordBatch:
     """``batch`` with the types the writers send: dictionaries decoded, nanosecond timestamps
     cut to microseconds (the Warehouse refuses ``timestamp(ns)``) and time zones converted to
     UTC, non-finite floats made NULL."""
@@ -355,10 +371,16 @@ def normalize_batch(batch: pa.RecordBatch) -> pa.RecordBatch:
         if pat.is_dictionary(t):
             col = col.cast(t.value_type)
             t = col.type
-        if pat.is_timestamp(t):
+        if pat.is_uint64(t):
+            # ODBC otherwise binds Python ints as signed BIGINT and overflows at 2**63.
+            col = col.cast(pa.decimal128(20, 0))
+        elif pat.is_timestamp(t):
             if t.tz is not None:
                 col = col.cast(pa.timestamp(t.unit, "UTC"))
-            col = col.cast(pa.timestamp("us"), safe=False)
+            col = col.cast(
+                pa.timestamp("us", "UTC" if t.tz is not None and not warehouse else None),
+                safe=False,
+            )
         elif pat.is_time(t) and t.unit == "ns":
             col = col.cast(pa.time64("us"), safe=False)
         elif pat.is_floating(t):
@@ -408,7 +430,14 @@ def widest_first(batch: pa.RecordBatch) -> bool:
 
 def rows_as_params(batch: pa.RecordBatch) -> list[tuple[Any, ...]]:
     """The rows of a normalized ``batch`` as parameter tuples of Python natives."""
-    columns = [c.to_pylist() for c in batch.columns]
+    # ODBC TIME_STRUCT has no fractional seconds. ISO text bound as a parameter
+    # lets the destination TIME(p) retain microseconds instead of silently dropping them.
+    columns = [
+        [None if value is None else value.isoformat() for value in c.to_pylist()]
+        if pat.is_time(c.type)
+        else c.to_pylist()
+        for c in batch.columns
+    ]
     rows = list(zip(*columns, strict=True)) if columns else []
     return [
         tuple(None if isinstance(v, float) and math.isnan(v) else v for v in row) for row in rows

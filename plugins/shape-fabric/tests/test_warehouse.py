@@ -48,7 +48,7 @@ def test_warehouse_types_are_used_and_a_connection_to_a_warehouse_is_assumed(bat
     w, server, _ = make()
     w.write_table("customer", batches)
     ddl = next(s for s in server.statements if s.startswith("CREATE TABLE"))
-    assert "VARCHAR(8000)" in ddl and "NVARCHAR" not in ddl and "DATETIME2(6)" in ddl
+    assert "VARCHAR(MAX)" in ddl and "NVARCHAR" not in ddl and "DATETIME2(6)" in ddl
 
 
 def test_staged_timestamps_are_microseconds_the_warehouse_cannot_read_nanoseconds(batches):

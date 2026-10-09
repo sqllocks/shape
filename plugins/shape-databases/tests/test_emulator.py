@@ -292,3 +292,54 @@ def test_mysql_wrong_password_fails_and_leaks_nothing(name):
     with pytest.raises(WriteError) as info:
         MySqlSink().write(MY_URI, name, iter([sample_batch()]), password=secret)
     assert secret not in str(info.value) and secret not in repr(info.value)
+
+
+@pytest.mark.parametrize("dialect", ["postgres", "mysql"])
+def test_w9_03_catalog_types_and_utc_microsecond_roundtrip(dialect, name):
+    """Service catalog and readback enforce the write maps, including a negative boundary."""
+    from shape.repro import dataset_id
+
+    conn = _pg_conn() if dialect == "postgres" else _my_conn()
+    sink = PostgresSink() if dialect == "postgres" else MySqlSink()
+    uri = PG_URI if dialect == "postgres" else MY_URI
+    schema = pa.schema(
+        [("small", pa.int16()), ("amount", pa.decimal128(12, 4)), ("at", pa.timestamp("us", "UTC"))]
+    )
+    value = dt.datetime(2024, 1, 2, 3, 4, 5, 999999, tzinfo=dt.timezone(dt.timedelta(hours=9)))
+    batch = pa.RecordBatch.from_pydict(
+        {
+            "small": [-32768, 32767],
+            "amount": [Decimal("-99999999.9999"), Decimal("0.0001")],
+            "at": [value, None],
+        },
+        schema=schema,
+    )
+    q = '"' if dialect == "postgres" else "`"
+    try:
+        sink.write(uri, name, [batch])
+        cur = conn.cursor()
+        cur.execute("SET TIME ZONE 'UTC'" if dialect == "postgres" else "SET time_zone = '+00:00'")
+        cur.execute(
+            "SELECT column_name, data_type, numeric_precision, numeric_scale "
+            "FROM information_schema.columns WHERE table_name = %s ORDER BY ordinal_position",
+            [name],
+        )
+        columns = cur.fetchall()
+        assert columns[0][1] == "smallint"
+        assert columns[1][2:] == (12, 4)
+        if dialect == "postgres":
+            assert columns[2][1] == "timestamp with time zone"
+        else:
+            assert columns[2][1] == "timestamp"
+        cur.execute(f"SELECT * FROM {q}{name}{q} ORDER BY small")  # nosec B608 - unique generated name
+        rows = cur.fetchall()
+        cur.close()
+        read = pa.Table.from_pylist(
+            [dict(zip(schema.names, r, strict=True)) for r in rows], schema=schema
+        )
+        assert read["at"][0].as_py() == value.astimezone(dt.UTC)
+        assert read["at"][0].as_py().utcoffset() == dt.timedelta(0)
+        assert dataset_id({"items": read}) == dataset_id({"items": pa.Table.from_batches([batch])})
+    finally:
+        _drop(conn, name)
+        conn.close()

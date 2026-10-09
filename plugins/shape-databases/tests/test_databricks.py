@@ -79,6 +79,7 @@ def test_the_connection_parameters(server):
         "catalog": "main",
         "schema": "demo",
         "access_token": TOKEN,
+        "session_configuration": {"spark.sql.session.timeZone": "UTC"},
     }
 
 
@@ -310,21 +311,22 @@ def test_255_characters_is_accepted(server):
 def test_type_map():
     f = pa.field
     cases = [
-        (pa.int8(), "INT"),
-        (pa.int16(), "INT"),
+        (pa.int8(), "TINYINT"),
+        (pa.int16(), "SMALLINT"),
         (pa.int32(), "INT"),
-        (pa.uint8(), "INT"),
+        (pa.uint8(), "SMALLINT"),
         (pa.uint16(), "INT"),
         (pa.int64(), "BIGINT"),
         (pa.uint32(), "BIGINT"),
         (pa.uint64(), "DECIMAL(20,0)"),
-        (pa.float32(), "DOUBLE"),
+        (pa.float32(), "FLOAT"),
         (pa.float64(), "DOUBLE"),
         (pa.decimal128(10, 2), "DECIMAL(10,2)"),
         (pa.string(), "STRING"),
         (pa.large_string(), "STRING"),
         (pa.bool_(), "BOOLEAN"),
         (pa.date32(), "DATE"),
+        (pa.time64("us"), "TIME(6)"),
         (pa.timestamp("us"), "TIMESTAMP_NTZ"),
         (pa.timestamp("us", "UTC"), "TIMESTAMP"),
         (pa.timestamp("ns", "Asia/Tokyo"), "TIMESTAMP"),
@@ -339,7 +341,7 @@ def test_type_map():
 
 
 @pytest.mark.parametrize(
-    "arrow", [pa.duration("us"), pa.time64("us"), pa.null(), pa.decimal256(40, 2)]
+    "arrow", [pa.duration("us"), pa.decimal128(12, -2), pa.null(), pa.decimal256(40, 2)]
 )
 def test_a_type_that_cannot_be_stored_is_refused_before_connecting(server, arrow):
     batch = pa.RecordBatch.from_arrays([pa.array([None], arrow)], names=["weird"])

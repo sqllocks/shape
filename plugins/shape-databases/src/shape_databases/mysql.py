@@ -94,6 +94,7 @@ class MySqlSink(DatabaseSink):
         if t.database:
             params["database"] = t.database
         params.setdefault("charset", DEFAULT_CHARSET)
+        params["init_command"] = "SET time_zone = '+00:00'"
         self._apply_tls(plan, params)
         params["local_infile"] = False
         params["autocommit"] = False

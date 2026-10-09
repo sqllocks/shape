@@ -299,3 +299,47 @@ def test_upsert_with_identity_keep_keeps_the_generated_identity_values(schema):
     table = f"{_tsql.ident(schema)}.[customer]"
     keys = [r[0] for r in query(f"SELECT customer_id FROM {table} ORDER BY customer_id")]
     assert keys == [1000 + 5 * i for i in range(10)]
+
+
+def test_w9_03_catalog_widths_decimal_and_datetimeoffset(schema):
+    import datetime as dt
+    from decimal import Decimal
+
+    from shape.repro import dataset_id
+
+    value = dt.datetime(2024, 1, 2, 3, 4, 5, 999999, tzinfo=dt.timezone(dt.timedelta(hours=9)))
+    arrow = pa.schema(
+        [("small", pa.int16()), ("amount", pa.decimal128(12, 4)), ("at", pa.timestamp("us", "UTC"))]
+    )
+    batch = pa.RecordBatch.from_pydict(
+        {
+            "small": [-32768, 32767],
+            "amount": [Decimal("-99999999.9999"), Decimal("0.0001")],
+            "at": [value, None],
+        },
+        schema=arrow,
+    )
+    SqlServerSink().write(uri_for(schema), "types", [batch], **LOGIN)
+    conn = _tsql.connect(CS)
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT DATA_TYPE, NUMERIC_PRECISION, NUMERIC_SCALE "
+            "FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? "
+            "ORDER BY ORDINAL_POSITION",
+            schema,
+            "types",
+        )
+        types = cursor.fetchall()
+        assert types[0][0] == "smallint"
+        assert tuple(types[1]) == ("decimal", 12, 4)
+        assert types[2][0] == "datetimeoffset"
+        from shape_sqlserver.source import SqlServerSource
+
+        read = pa.Table.from_batches(
+            SqlServerSource().read(uri_for(schema, table="types"), connection=conn)
+        )
+        assert read["at"][0].as_py() == value.astimezone(dt.UTC)
+        assert dataset_id({"items": read}) == dataset_id({"items": pa.Table.from_batches([batch])})
+    finally:
+        conn.close()

@@ -5,6 +5,12 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- SQL writes preserve Arrow integer widths, decimal dimensions, float32 and temporal precision.
+  Zoned values keep their instant to the microsecond and normalize to UTC; zone names are not
+  preserved. Undeclared strings are now unbounded instead of VARCHAR(255), and database writers
+  no longer size strings from the first batch. `shape generate --to ... --dry-run` includes the
+  resolved DDL without connecting or generating values. See `docs/SINKS.md`.
+
 - `shape share-bundle verify` bounds every member of a bundle before reading it (#684): at most
   10,000 members, 8 MiB for `attestation.json` and `manifest.json`, 2 GiB per data file and 8 GiB
   in total, and no member or total that inflates more than 100 times once past 16 MiB (the Excel
