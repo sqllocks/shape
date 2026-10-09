@@ -72,6 +72,9 @@ def _drift(table: str | None, column: str | None, record: dict[str, Any], policy
     prefix = f"tables.{table}." if table is not None else ""
     if kind in ("table_added", "table_removed"):
         path = f"tables.{table}"
+    elif kind in ("measure_change", "role_change"):
+        category = "measures" if kind == "measure_change" else "roles"
+        path = f"{prefix}{category}.{record['detail']['name']}"
     elif kind == "row_count_change":
         path = f"{prefix}rows"
     elif column is None:

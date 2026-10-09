@@ -227,3 +227,10 @@ of its algorithm; it is optional and additive in API v1, so a plugin that does n
 loading and counts as version 1. A plugin that raises it keeps the older versions selectable
 (`generate_versioned` / `sample_versioned`) so specs that pin them keep their data. See
 [GENERATION_STABILITY.md](../GENERATION_STABILITY.md).
+
+A source can optionally define `profile_metadata(uri, profile) -> profile` to attach declared
+metadata after a public `shape.profile` call for a single URI finishes. For example, the semantic-model source
+adds `hidden: true` for hidden columns. The hook must preserve the computed column statistics,
+profile name, provenance, sketches and capture state. It runs outside the reference profiler;
+sources without the hook keep the existing behavior. It must not expose credentials in metadata
+or exceptions. It is an optional extension; the v1 source Protocol remains unchanged.

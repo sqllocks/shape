@@ -201,3 +201,6 @@ removal that itself fails is a `RuntimeWarning`).
 
 Out of scope: serverless SQL pools, Synapse Spark pools and Synapse pipelines (those are
 `integrations/synapse`).
+
+Semantic model profiles preserve measures and TOM roles. Role-filtered source reads and exports
+from these profiles are described in [Semantic model profiles](../../docs/SEMANTIC_MODEL.md).

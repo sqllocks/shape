@@ -5,6 +5,13 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 
 ## Unreleased
 
+- W9-12: semantic model profiles retain table measures and read-only TOM roles. `semantic-model://`
+  accepts `as_role` for native DAX role-filtered reads, and plain profiles retain hidden columns.
+  `export-model --from-profile` preserves measures and roles; `known-answer MODEL.shape --measures
+  from-profile` computes supported aggregates and lists unsupported DAX under `skipped`.
+  Model diffs report `measure_change` and `role_change` with no numeric drift score.
+  See `docs/SEMANTIC_MODEL.md`.
+
 - `shape share-bundle verify` bounds every member of a bundle before reading it (#684): at most
   10,000 members, 8 MiB for `attestation.json` and `manifest.json`, 2 GiB per data file and 8 GiB
   in total, and no member or total that inflates more than 100 times once past 16 MiB (the Excel

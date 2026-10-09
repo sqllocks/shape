@@ -128,3 +128,13 @@ id or workspace id. It follows the [state and compatibility policy](specs/STATE_
 that names the first Shape release that reads it.
 
 Last recorded run: not run yet
+
+## Semantic model metadata and role reads
+
+See [Semantic model profiles](SEMANTIC_MODEL.md) for measures and read-only TOM roles.
+`semantic-model://` supports `as_role` for native role-filtered DAX reads and retains hidden-column
+metadata. `export-model --from-profile MODEL.shape` preserves model-owned measures and roles;
+`known-answer MODEL.shape --measures from-profile` computes supported aggregates and lists other
+expressions under `skipped`. Model-profile diffs report `measure_change` and `role_change`,
+excluded from numeric drift gates. The TOM connection is read-only and sempy requires its
+specified model permissions; Shape does not deploy roles to a live model.

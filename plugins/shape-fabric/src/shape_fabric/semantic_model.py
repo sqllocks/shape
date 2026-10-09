@@ -121,6 +121,7 @@ class SemanticModelExporter:
         include_measures: bool = True,
         schema_name: str = "dbo",
         measures: Mapping[str, Sequence[Mapping[str, Any]]] | None = None,
+        roles: Sequence[Mapping[str, Any]] = (),
     ) -> Path:
         """Write the model to ``output_path`` (parent folders are created); return the path."""
         tom = self.to_dict(
@@ -130,6 +131,7 @@ class SemanticModelExporter:
             include_measures=include_measures,
             schema_name=schema_name,
             measures=measures,
+            roles=roles,
         )
         path = Path(output_path)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -145,6 +147,7 @@ class SemanticModelExporter:
         include_measures: bool = True,
         schema_name: str = "dbo",
         measures: Mapping[str, Sequence[Mapping[str, Any]]] | None = None,
+        roles: Sequence[Mapping[str, Any]] = (),
     ) -> dict[str, Any]:
         """The TOM model as a dict. ``measures`` (table name to a list of ``{"name", "expression",
         "formatString"}``) replaces the default measures of the tables it names; a table it does
@@ -175,7 +178,7 @@ class SemanticModelExporter:
                 "culture": schema.model.locale.replace("_", "-"),
                 "tables": tables,
                 "relationships": [self._relationship(r) for r in schema.relationships],
-                "roles": [],
+                "roles": [dict(role) for role in roles],
                 "annotations": [
                     {"name": "generated_by", "value": f"Shape v{__version__}"},
                     {"name": "domain", "value": domain},

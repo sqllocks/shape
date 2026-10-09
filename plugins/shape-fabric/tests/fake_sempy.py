@@ -12,6 +12,7 @@ from __future__ import annotations
 import re
 import sys
 import types
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -21,6 +22,7 @@ _Q = r"'((?:[^']|'')*)'"
 _COL = r"\[((?:[^\]]|\]\])*)\]"
 _ALIAS = r'"((?:[^"]|"")*)"'
 _TOPN = re.compile(rf"EVALUATE SELECTCOLUMNS\(TOPN\((\d+), {_Q}\)((?:, {_ALIAS}, {_Q}{_COL})+)\)")
+_SELECT = re.compile(rf"EVALUATE SELECTCOLUMNS\({_Q}((?:, {_ALIAS}, {_Q}{_COL})+)\)")
 _PAIR = re.compile(rf", {_ALIAS}, {_Q}{_COL}")
 
 
@@ -38,6 +40,8 @@ class FakeModel:
     tables: dict[str, FakeTable]
     relationships: list[dict[str, Any]] = field(default_factory=list)
     id: str = "00000000-0000-0000-0000-0000000000aa"
+    measures: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+    roles: list[dict[str, Any]] = field(default_factory=list)
 
 
 class FakeFabric(types.ModuleType):
@@ -144,6 +148,61 @@ class FakeFabric(types.ModuleType):
             ],
         )
 
+    def list_measures(self, dataset: str, workspace: str | None = None) -> pd.DataFrame:
+        self._log("list_measures", dataset=dataset, workspace=workspace)
+        rows = []
+        for table, measures in self._model(dataset, workspace).measures.items():
+            for measure in measures:
+                rows.append(
+                    {
+                        "Table Name": table,
+                        "Measure Name": measure["name"],
+                        "Measure Expression": measure["expression"],
+                        "Measure Data Type": "Double",
+                        "Measure Description": "",
+                        "Data Category": "",
+                        "Detail Rows Definition": "",
+                        "Format String Definition": "",
+                        "Format String": measure.get("formatString", ""),
+                        "Measure Display Folder": measure.get("displayFolder", ""),
+                        "Measure Hidden": measure.get("hidden", False),
+                    }
+                )
+        return pd.DataFrame(
+            rows,
+            columns=[
+                "Table Name",
+                "Measure Name",
+                "Measure Expression",
+                "Measure Data Type",
+                "Measure Hidden",
+                "Measure Display Folder",
+                "Measure Description",
+                "Format String",
+                "Data Category",
+                "Detail Rows Definition",
+                "Format String Definition",
+            ],
+        )
+
+    @contextmanager
+    def connect_semantic_model(
+        self, dataset: str, readonly: bool = True, workspace: str | None = None
+    ):
+        self._log("connect_semantic_model", dataset=dataset, readonly=readonly, workspace=workspace)
+        roles = [
+            types.SimpleNamespace(
+                Name=r["name"],
+                ModelPermission=r["modelPermission"],
+                TablePermissions=[
+                    types.SimpleNamespace(Name=p["name"], FilterExpression=p["filterExpression"])
+                    for p in r.get("tablePermissions", [])
+                ],
+            )
+            for r in self._model(dataset, workspace).roles
+        ]
+        yield types.SimpleNamespace(model=types.SimpleNamespace(Roles=roles))
+
     def read_table(
         self,
         dataset: str,
@@ -169,19 +228,37 @@ class FakeFabric(types.ModuleType):
         return self._table(dataset, table, workspace).rows.copy()
 
     def evaluate_dax(
-        self, dataset: str, dax_string: str, workspace: str | None = None, **_: Any
+        self,
+        dataset: str,
+        dax_string: str,
+        workspace: str | None = None,
+        role: str | None = None,
+        **_: Any,
     ) -> pd.DataFrame:
-        self._log("evaluate_dax", dataset=dataset, dax=dax_string, workspace=workspace)
+        self._log("evaluate_dax", dataset=dataset, dax=dax_string, workspace=workspace, role=role)
         m = _TOPN.fullmatch(dax_string)
         if m is None:
-            raise ValueError(f"the fake cannot parse this DAX: {dax_string!r}")
-        n, table = int(m.group(1)), m.group(2).replace("''", "'")
+            plain = _SELECT.fullmatch(dax_string)
+            if plain is None:
+                raise ValueError(f"the fake cannot parse this DAX: {dax_string!r}")
+            n, table, raw_pairs = None, plain[1].replace("''", "'"), plain[2]
+        else:
+            n, table, raw_pairs = int(m[1]), m[2].replace("''", "'"), m[3]
         tbl = self._table(dataset, table, workspace)
         pairs = [
             (a.replace('""', '"'), t.replace("''", "'"), c.replace("]]", "]"))
-            for a, t, c in _PAIR.findall(m.group(3))
+            for a, t, c in _PAIR.findall(raw_pairs)
         ]
-        frame = tbl.rows.head(n)
+        frame = tbl.rows
+        if role is not None:
+            selected = next(r for r in self._model(dataset, workspace).roles if r["name"] == role)
+            for permission in selected.get("tablePermissions", []):
+                if permission["name"] == table:
+                    match = re.fullmatch(rf'{_Q}{_COL} = "([^"]*)"', permission["filterExpression"])
+                    if match is None:
+                        raise ValueError("fake role filter not supported")
+                    frame = frame[frame[match[2].replace("]]", "]")] == match[3]]
+        frame = frame if n is None else frame.head(n)
         out = {}
         for alias, t, c in pairs:
             if t != table:

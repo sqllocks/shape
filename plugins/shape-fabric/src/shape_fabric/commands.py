@@ -22,7 +22,7 @@ import os
 import sys
 from collections.abc import Callable, Iterator
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 SHAPE_API = "1.0"
 
@@ -139,7 +139,15 @@ def _check_domain_and_scale(domain: str, scale: str) -> None:
 
 def _configure_export_model(p: argparse.ArgumentParser) -> None:
     p.add_argument(
-        "domain", metavar="DOMAIN|SCHEMA.json", help="a domain, or a generation schema file"
+        "domain",
+        nargs="?",
+        metavar="DOMAIN|SCHEMA.json",
+        help="a domain, or a generation schema file",
+    )
+    p.add_argument(
+        "--from-profile",
+        metavar="MODEL.shape",
+        help="preserve a model profile's measures and roles",
     )
     p.add_argument("-s", "--scale", default="small", help="scale preset (default: small)")
     p.add_argument(
@@ -190,8 +198,26 @@ def _run_export_model(a: argparse.Namespace) -> int:
 
     from .semantic_model import SemanticModelExporter
 
-    is_file = Path(a.domain).is_file() or a.domain.lower().endswith(".json")
-    schema = load_target(a.domain, None if is_file else (a.mode or "3nf"))
+    measures: dict[str, list[dict[str, Any]]] | None = None
+    roles: list[dict[str, Any]] = []
+    if a.from_profile:
+        if a.domain is not None or a.mode is not None:
+            raise ValueError("--from-profile cannot be combined with DOMAIN or --mode")
+        import shape
+        from shape.generation.fit import fit_schema
+
+        from .semantic_metadata import export_metadata
+
+        profile = shape.load(a.from_profile)
+        schema = fit_schema(profile).schema
+        measures, roles = export_metadata(profile)
+        if not a.include_measures:
+            measures = {}
+    else:
+        if a.domain is None:
+            raise ValueError("export-model needs DOMAIN or --from-profile MODEL.shape")
+        is_file = Path(a.domain).is_file() or a.domain.lower().endswith(".json")
+        schema = load_target(a.domain, None if is_file else (a.mode or "3nf"))
     schema.generation.scale = a.scale
     exporter = SemanticModelExporter()
     tom = exporter.to_dict(
@@ -200,6 +226,8 @@ def _run_export_model(a: argparse.Namespace) -> int:
         source_name=a.source_name,
         include_measures=a.include_measures,
         schema_name=a.schema_name,
+        measures=measures,
+        roles=roles,
     )
     path = exporter.export_bim(
         schema,
@@ -208,16 +236,18 @@ def _run_export_model(a: argparse.Namespace) -> int:
         output_path=a.output,
         include_measures=a.include_measures,
         schema_name=a.schema_name,
+        measures=measures,
+        roles=roles,
     )
     tables = tom["model"]["tables"]
-    measures = sum(len(t.get("measures", [])) for t in tables)
+    measure_count = sum(len(t.get("measures", [])) for t in tables)
     print(f"Shape v{_version()} — Semantic Model Export")
     print()
     print(f"  Domain:        {a.domain}")
     print(f"  Source type:   {a.source_type}")
     print(f"  Tables:        {len(tables)}")
     print(f"  Relationships: {len(tom['model']['relationships'])}")
-    print(f"  DAX measures:  {measures}")
+    print(f"  DAX measures:  {measure_count}")
     print(f"  Output:        {path}")
     print()
     print("Import this .bim file into Tabular Editor or deploy via XMLA endpoint.")
@@ -266,8 +296,21 @@ def _run_known_answer(a: argparse.Namespace) -> int:
 
     from . import known_answer as ka
 
-    is_file = Path(a.domain).is_file() or a.domain.lower().endswith(".json")
-    schema = load_target(a.domain, None if is_file else "3nf")
+    source_profile = None
+    if a.measures == "from-profile":
+        import shape
+        from shape.generation.fit import PRESET, fit_schema
+
+        source_profile = shape.load(a.domain)
+        schema = fit_schema(source_profile).schema
+        if a.scale != "small":
+            raise ValueError(
+                "--measures from-profile uses the profile's row counts; leave --scale out"
+            )
+        a.scale = PRESET
+    else:
+        is_file = Path(a.domain).is_file() or a.domain.lower().endswith(".json")
+        schema = load_target(a.domain, None if is_file else "3nf")
     scales = schema.generation.scales
     if scales and a.scale not in scales:
         raise ValueError(
@@ -283,7 +326,8 @@ def _run_known_answer(a: argparse.Namespace) -> int:
             tables=tables,
             scale=a.scale,
             seed=engine.seed,
-            measures_file=a.measures,
+            measures_file=None if source_profile is not None else a.measures,
+            source_profile=source_profile,
             plants=a.plant,
         )
     except ka.PlantError as exc:
@@ -383,7 +427,7 @@ def _configure_publish_report(p: argparse.ArgumentParser) -> None:
         default="parquet",
         help="the format of the tables under data/ (default: parquet)",
     )
-    _diff_policy_arguments(p)
+    cast(Callable[[argparse.ArgumentParser], None], _diff_policy_arguments)(p)
 
 
 @_guarded
@@ -393,7 +437,7 @@ def _run_publish_report(a: argparse.Namespace) -> int:
     from . import drift_report as dr
     from .known_answer import KnownAnswerError
 
-    options = _diff_options(a)
+    options = cast(Callable[[argparse.Namespace], dict[str, Any]], _diff_options)(a)
     if a.policy and not Path(a.policy).is_file():
         raise KnownAnswerError(f"the policy file {a.policy} does not exist")
     if a.registry:

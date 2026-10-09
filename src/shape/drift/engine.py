@@ -80,6 +80,8 @@ DEFAULT_THRESHOLDS: dict[str, Any] = {
 }
 
 KIND_SEVERITY: dict[str, str] = {
+    "measure_change": "low",
+    "role_change": "low",
     "table_added": "high",
     "table_removed": "high",
     "column_added": "high",
@@ -1199,6 +1201,9 @@ def diff_records(
                     changes.append((tname, cname, ch))
                 if skipped is not None and not policy.skips(tname, cname):
                     skipped.extend(gaps)
+    from .model_metadata import records as metadata_records
+
+    changes.extend(metadata_records(baseline, current))
     out: list[tuple[str | None, str | None, dict[str, Any]]] = []
     for owner, col, record in changes:
         scope = owner if dataset else None

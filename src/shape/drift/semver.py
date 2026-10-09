@@ -23,6 +23,8 @@ BUMPS = ("major", "minor", "patch", "none")
 #: the default class of every drift kind (``null_rate_change`` and ``uniqueness_change`` are
 #: conditional: the value here is the class when their condition does not hold)
 DEFAULT_CLASSES: dict[str, str] = {
+    "measure_change": "cosmetic",
+    "role_change": "cosmetic",
     "table_removed": "breaking",
     "column_removed": "breaking",
     "dtype_change": "breaking",

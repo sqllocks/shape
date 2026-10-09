@@ -103,3 +103,10 @@ DAX (`max_rows`) are quoted, so a table or column name cannot end the expression
 Tests use a fake `sempy` (`plugins/shape-fabric/tests/fake_sempy.py`); a `live`-marked test
 (`test_live_semantic_model.py`) reads a real model where `FABRIC_WORKSPACE_ID` and
 `FABRIC_SEMANTIC_MODEL` are set.
+
+Semantic model measures, roles, `as_role` reads and hidden-column profile parity are documented
+in [Semantic model profiles](../SEMANTIC_MODEL.md).
+
+`as_role=NAME` uses a native DAX role-filtered read after checking TOM role names. Unknown roles
+are refused with the available names; `mode` cannot be combined with it. Hidden column metadata
+is retained by both plain `shape profile semantic-model://...` and `shape profile-model`.

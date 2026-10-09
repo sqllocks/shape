@@ -30,11 +30,11 @@ from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation, localcontext
 from fractions import Fraction
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
-import pyarrow as pa
-import pyarrow.compute as pc
-import pyarrow.parquet as pq
+import pyarrow as pa  # type: ignore[import-untyped]
+import pyarrow.compute as pc  # type: ignore[import-untyped]
+import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from shape.generation.schema import Column, GenSchema
 
@@ -195,20 +195,21 @@ class Measure:
     numerator: str | None = None  # a ratio's operands, by measure name
     denominator: str | None = None
     column_kind: str | None = None
+    home_table: str | None = None  # a model measure can live away from its data table
 
     @property
     def id(self) -> str:
-        return f"{self.table}.{self.name}"
+        return f"{self.home_table or self.table}.{self.name}"
 
     @property
     def dax(self) -> str:
-        return dax_measure(self.table, self.name)
+        return dax_measure(self.home_table or self.table, self.name)
 
     def document(self) -> dict[str, Any]:
         doc: dict[str, Any] = {
             "id": self.id,
             "name": self.name,
-            "table": self.table,
+            "table": self.home_table or self.table,
             "kind": self.kind,
             "column": self.column,
             "expression": self.expression,
@@ -338,7 +339,7 @@ def _measure_from_entry(
         operands = []
         for key in ("numerator", "denominator"):
             operand = entry.get(key)
-            if operand not in names:
+            if not isinstance(operand, str) or operand not in names:
                 raise KnownAnswerError(
                     f"{where}: the {key} {operand!r} is not a measure of this file"
                 )
@@ -448,7 +449,7 @@ def key_text(value: Any, kind: str) -> str | None:
     if kind == "boolean":
         return "true" if value else "false"
     if kind in ("timestamp", "date"):
-        return value.isoformat()
+        return str(value.isoformat())
     return str(value)
 
 
@@ -569,7 +570,7 @@ def _render(result: Result, places: int) -> str:
 
 
 def _column_values(table: pa.Table, column: str) -> list[Any]:
-    return table.column(column).to_pylist()
+    return cast(list[Any], table.column(column).to_pylist())
 
 
 def _slice_keys(
@@ -983,7 +984,7 @@ def load_answers(path: str | Path) -> dict[str, Any]:
                     or bottom == "0"
                 ):
                     raise bad(f"query {q['id']}: {frac!r} is not a fraction")
-    return doc
+    return cast(dict[str, Any], doc)
 
 
 # ---------------------------------------------------------------------------------------------
@@ -1010,7 +1011,7 @@ def write_model(schema: GenSchema, path: Path, measures: Sequence[Measure] | Non
     if measures is not None:
         given = {}
         for m in measures:
-            given.setdefault(m.table, []).append(
+            given.setdefault(m.home_table or m.table, []).append(
                 {"name": m.name, "expression": m.expression, "formatString": m.format_string}
             )
     tom = SemanticModelExporter().to_dict(schema, measures=given)
@@ -1025,6 +1026,7 @@ def build(
     scale: str,
     seed: int,
     measures_file: str | Path | None = None,
+    source_profile: Any = None,
     plants: Iterable[str] = (),
     progress: Callable[[str], None] | None = None,
 ) -> Built:
@@ -1040,13 +1042,24 @@ def build(
         planned.append(item)
     for tname, cname, total in planned:
         typed[tname] = plant_total(typed[tname], tname, schema.tables[tname].columns[cname], total)
-    if measures_file is not None:
+    custom: list[Measure] | None
+    metadata_skipped: list[dict[str, Any]] = []
+    if source_profile is not None:
+        if measures_file is not None:
+            raise KnownAnswerError("source_profile and measures_file cannot be combined")
+        from .semantic_metadata import profile_measures
+
+        measures, metadata_skipped = profile_measures(source_profile, schema, typed)
+        slices = default_slices(schema)
+        custom = measures
+    elif measures_file is not None:
         measures, slices = load_measures(measures_file, schema, typed)
-        custom: list[Measure] | None = measures
+        custom = measures
     else:
         measures, slices = default_measures(schema, typed), default_slices(schema)
         custom = None
     queries, skipped = compute_answers(schema, typed, measures, slices)
+    skipped.extend(metadata_skipped)
     answers: dict[str, Any] = {
         "format": FORMAT_ANSWERS,
         "version": ANSWERS_VERSION,
@@ -1069,7 +1082,15 @@ def build(
         pq.write_table(table, out / "data" / f"{name}.parquet")
         if progress:
             progress(name)
-    write_model(schema, out / "model.bim", custom)
+    if source_profile is None:
+        write_model(schema, out / "model.bim", custom)
+    else:
+        from .semantic_metadata import export_metadata
+
+        definitions, roles = export_metadata(source_profile)
+        SemanticModelExporter().export_bim(
+            schema, output_path=out / "model.bim", measures=definitions, roles=roles
+        )
     (out / "queries.dax").write_text(queries_dax(answers), encoding="utf-8")
     (out / "answers.json").write_text(dump_json(answers), encoding="utf-8")
     return Built(

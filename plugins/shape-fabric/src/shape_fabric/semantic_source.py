@@ -10,7 +10,8 @@ every consumer of the ``shape.sources`` Protocol. ``shape profile-model`` profil
 
 Options: ``columns`` (a subset, in the order given), ``batch_rows`` (default 65,536),
 ``max_rows`` (a cap, read as a DAX ``TOPN`` through ``evaluate_dax``) and ``mode`` (sempy's read
-mode, ``xmla`` or ``onelake`` where this sempy has one; not with ``max_rows``).
+mode, ``xmla`` or ``onelake`` where this sempy has one; not with ``max_rows``). ``as_role``
+reads through native role-filtered DAX and cannot be combined with ``mode``.
 
 ``sempy`` is imported only when a semantic-model URI is opened (:func:`fabric`), so this module
 and the rest of the plugin import and run without it.
@@ -40,7 +41,7 @@ NEEDS_SEMPY = (
     "semantic-model:// needs sempy (pip install 'sqllocks-shape-fabric[semantic-link]') "
     "and runs inside a Fabric notebook"
 )
-_OPTIONS = {"columns", "batch_rows", "max_rows", "mode"}
+_OPTIONS = {"columns", "batch_rows", "max_rows", "mode", "as_role"}
 
 # Semantic model data types (the ``Data Type`` of ``sempy.fabric.list_columns``) to Arrow. Fixed
 # decimal numbers (Power BI "currency") have four decimal places and 19 digits.
@@ -109,7 +110,9 @@ def fabric() -> Any:
 
 
 def _one_line(exc: BaseException) -> str:
-    return " ".join(str(exc).split())
+    from shape.security.redact import redact_text
+
+    return redact_text(" ".join(str(exc).split()))
 
 
 def _sempy_failed(workspace: str, model: str, exc: BaseException) -> ShapeError:
@@ -124,7 +127,7 @@ def _frame(fab: Any, name: str, ws: str, model: str, **kw: Any) -> Any:
     except ShapeError:
         raise
     except Exception as exc:  # noqa: BLE001 - sempy raises its own and HTTP errors
-        raise _sempy_failed(ws, model, exc) from exc
+        raise _sempy_failed(ws, model, exc) from None
 
 
 def _values(frame: Any, column: str) -> list[Any]:
@@ -137,7 +140,7 @@ def check_model(workspace: str, model: str) -> Any:
     try:
         workspaces = fab.list_workspaces()
     except Exception as exc:  # noqa: BLE001 - no sign-in, no network: one line, same fix
-        raise ShapeError(f"{NEEDS_SEMPY}: {_one_line(exc)}") from exc
+        raise ShapeError(f"{NEEDS_SEMPY}: {_one_line(exc)}") from None
     if workspace not in (*_values(workspaces, "Name"), *_values(workspaces, "Id")):
         raise ShapeError(f"semantic-model workspace {workspace} not found")
     datasets = _frame(fab, "list_datasets", workspace, model, workspace=workspace)
@@ -278,7 +281,7 @@ def _result_column(frame: Any, table: str, name: str, alias: str | None) -> Any:
 
 
 def _to_array(series: Any, field: pa.Field, table: str) -> pa.Array:
-    import pandas as pd
+    import pandas as pd  # type: ignore[import-untyped]
 
     typ = field.type
     try:
@@ -323,6 +326,11 @@ def topn_dax(table: str, columns: list[str], n: int) -> str:
     return f"EVALUATE SELECTCOLUMNS(TOPN({int(n)}, {dax_table(table)}), {pairs})"
 
 
+def select_dax(table: str, columns: list[str]) -> str:
+    pairs = ", ".join(f'"c{i}", {dax_column(table, c)}' for i, c in enumerate(columns))
+    return f"EVALUATE SELECTCOLUMNS({dax_table(table)}, {pairs})"
+
+
 def read_table(
     workspace: str,
     model: str,
@@ -331,24 +339,34 @@ def read_table(
     *,
     max_rows: int | None = None,
     mode: str | None = None,
+    as_role: str | None = None,
 ) -> pa.Table:
     """The rows of ``infos``' columns as one Arrow table."""
     schema = to_schema(infos)
+    if as_role is not None:
+        from .semantic_metadata import check_role
+
+        as_role = check_role(workspace, model, as_role)
+        if mode is not None:
+            raise ShapeError("mode does not apply to an as_role DAX read")
     if max_rows == 0:
         return schema.empty_table()
     fab = check_model(workspace, model)
-    if max_rows is not None:
+    if max_rows is not None or as_role is not None:
         if mode is not None:
             raise ShapeError("mode applies to reading a whole table, not with max_rows")
-        frame = _frame(
-            fab,
-            "evaluate_dax",
-            workspace,
-            model,
-            dataset=model,
-            dax_string=topn_dax(table, [c.name for c in infos], max_rows),
-            workspace=workspace,
-        )
+        names = [c.name for c in infos]
+        dax = topn_dax(table, names, max_rows) if max_rows is not None else select_dax(table, names)
+        dax_options: dict[str, Any] = {"dataset": model, "dax_string": dax, "workspace": workspace}
+        if as_role is None:
+            frame = _frame(fab, "evaluate_dax", workspace, model, **dax_options)
+        else:
+            try:
+                frame = fab.evaluate_dax(**dax_options, role=as_role)
+            except Exception:  # noqa: BLE001 - remote exceptions can carry credentials
+                raise ShapeError(
+                    f"semantic model {model} in workspace {workspace}: role DAX read failed"
+                ) from None
         return _to_table(frame, schema, table, dax=True)
     kw: dict[str, Any] = {"dataset": model, "table": table, "workspace": workspace}
     if mode is not None:
@@ -372,9 +390,31 @@ class SemanticModelSource:
     ) -> tuple[tuple[str, str, str], list[ColumnInfo]]:
         _check_options(options)
         parts = parse(uri)
+        if "as_role" in options:
+            from .semantic_metadata import check_role
+
+            check_role(parts[0], parts[1], options["as_role"])
         infos = _selected(column_infos(*parts), options.get("columns"), *parts)
         warn_unknown(*parts, infos)
         return parts, infos
+
+    def profile_metadata(self, uri: str, profile: Any) -> Any:
+        """Attach hidden metadata outside the unchanged reference profiler (T-03)."""
+        from shape.profile.reference import Profile
+
+        infos = column_infos(*parse(uri))
+        doc = profile.to_dict()
+        for column in infos:
+            if column.hidden and column.name in doc["columns"]:
+                doc["columns"][column.name]["hidden"] = True
+        return Profile(
+            doc,
+            name=profile.name,
+            provenance=profile.provenance,
+            sketches=profile.sketches,
+            capture=profile.capture if profile.capture_declared else None,
+            redaction_manifest=profile.redaction_manifest,
+        )
 
     def schema(self, uri: str, **options: Any) -> pa.Schema:
         """The Arrow schema from the model's column metadata; no rows are read."""
@@ -387,7 +427,13 @@ class SemanticModelSource:
         max_rows = _positive_int(options, "max_rows", None, 0)
         (workspace, model, table), infos = self._plan(uri, options)
         data = read_table(
-            workspace, model, table, infos, max_rows=max_rows, mode=options.get("mode")
+            workspace,
+            model,
+            table,
+            infos,
+            max_rows=max_rows,
+            mode=options.get("mode"),
+            as_role=options.get("as_role"),
         )
         return iter(data.to_batches(max_chunksize=batch_rows))
 

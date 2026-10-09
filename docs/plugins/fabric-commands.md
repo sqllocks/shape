@@ -274,3 +274,12 @@ query the answers do not have.
 
 The answers do not depend on any engine: they are computed from the Parquet files that were
 written, so a mismatch is the measure or the model, never the answer key.
+
+### Preserve a profiled semantic model
+
+`shape export-model --from-profile model.shape -o model.bim` fits the profile's table schema and
+preserves its measures and roles instead of inventing domain measures. `shape known-answer
+model.shape --measures from-profile -o answers` uses those measures, with unsupported DAX listed
+under `skipped`. Model profiles now retain `measures` per table and dataset `roles`; the TOM read
+is read-only. See [Semantic model profiles](../SEMANTIC_MODEL.md) for permissions and the supported
+known-answer expressions.
