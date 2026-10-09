@@ -22,6 +22,8 @@ validation:
 theme:
   name: material
   font: false
+  logo: assets/brand/shape-logo.svg
+  favicon: assets/brand/shape-mark.svg
   features:
   - navigation.sections
   - navigation.top
@@ -56,6 +58,8 @@ markdown_extensions:
     - name: mermaid
       class: shape-mermaid
       format: !!python/name:pymdownx.superfences.fence_code_format
+extra_css:
+- assets/stylesheets/brand.css
 extra_javascript:
 - assets/javascripts/diagrams.js
 nav:

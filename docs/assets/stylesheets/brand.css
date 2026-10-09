@@ -1,0 +1,137 @@
+/* Shape typography is bundled locally under the SIL Open Font License 1.1. */
+@font-face {
+  font-family: "Host Grotesk";
+  src: url("../fonts/host-grotesk.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fragment Mono";
+  src: url("../fonts/fragment-mono.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+:root {
+  --md-text-font: "Host Grotesk";
+  --md-code-font: "Fragment Mono";
+}
+[data-md-color-scheme="default"] {
+  --shape-frame: #E6E9EF;
+  --shape-panel: #FFFFFF;
+  --shape-well: #F5F5F7;
+  --shape-line: rgba(0,0,0,0.07);
+  --shape-ink: #1D1D1F;
+  --shape-ink-2: #66666B;
+  --shape-accent: #0071E3;
+  --shape-action-fill: #0071E3;
+  --shape-on-accent: #FFFFFF;
+  --shape-link-ink: #0066CD;
+  --shape-focus: #0071E3;
+}
+[data-md-color-scheme="slate"] {
+  --md-hue: 240;
+  --shape-frame: #0E0E10;
+  --shape-panel: #1C1C1E;
+  --shape-well: #242427;
+  --shape-line: rgba(255,255,255,0.075);
+  --shape-ink: #F5F5F7;
+  --shape-ink-2: #A1A1A6;
+  --shape-accent: #0A84FF;
+  --shape-action-fill: #0068D4;
+  --shape-on-accent: #FFFFFF;
+  --shape-link-ink: #7DB8FF;
+  --shape-focus: #7DB8FF;
+}
+[data-md-color-scheme] {
+  --md-default-bg-color: var(--shape-panel);
+  --md-default-fg-color: var(--shape-ink);
+  --md-default-fg-color--light: var(--shape-ink-2);
+  --md-default-fg-color--lighter: var(--shape-ink-2);
+  --md-default-fg-color--lightest: var(--shape-line);
+  --md-primary-fg-color: var(--shape-accent);
+  --md-primary-fg-color--light: var(--shape-accent);
+  --md-primary-fg-color--dark: var(--shape-action-fill);
+  --md-primary-bg-color: var(--shape-on-accent);
+  --md-primary-bg-color--light: var(--shape-on-accent);
+  --md-accent-fg-color: var(--shape-accent);
+  --md-accent-fg-color--transparent: var(--shape-line);
+  --md-accent-bg-color: var(--shape-on-accent);
+  --md-typeset-color: var(--shape-ink);
+  --md-typeset-a-color: var(--shape-link-ink);
+  --md-code-bg-color: var(--shape-well);
+  --md-code-fg-color: var(--shape-ink);
+  --md-code-hl-comment-color: var(--shape-ink-2);
+  --md-code-hl-string-color: var(--shape-ink);
+  --md-code-hl-number-color: var(--shape-link-ink);
+  --md-code-hl-keyword-color: var(--shape-link-ink);
+  --md-code-hl-function-color: var(--shape-link-ink);
+  --md-code-hl-operator-color: var(--shape-ink-2);
+  --md-code-hl-punctuation-color: var(--shape-ink-2);
+  --md-code-hl-name-color: var(--shape-ink);
+  --md-footer-bg-color: var(--shape-frame);
+  --md-footer-bg-color--dark: var(--shape-frame);
+  --md-footer-fg-color: var(--shape-ink);
+  --md-footer-fg-color--light: var(--shape-ink-2);
+  --md-footer-fg-color--lighter: var(--shape-ink-2);
+  --shape-border: var(--shape-line);
+}
+.md-header { background: var(--shape-frame); color: var(--shape-ink); border-bottom: 1px solid var(--shape-border); box-shadow: none; }
+.md-header__button.md-logo { display: block; margin: .2rem; padding: .3rem; }
+.md-header__button.md-logo img { height: 1.5rem; width: auto; }
+.shape-logo-dark { display: none; }
+[data-md-color-scheme="slate"] .shape-logo-light { display: none; }
+[data-md-color-scheme="slate"] .shape-logo-dark { display: inline; }
+.md-header__topic:first-child > .md-ellipsis { font-size: .8rem; font-weight: 500; }
+.shape-website-link { font-size: .72rem; white-space: nowrap; margin: 0 .5rem; }
+.md-search__form { background: var(--md-code-bg-color); color: var(--md-default-fg-color); }
+.md-search__input::placeholder { color: var(--md-default-fg-color--light); opacity: 1; }
+.md-search__icon, .md-search__icon[for="__search"] { color: var(--shape-ink-2); }
+.md-typeset h1, .md-typeset h2 { color: var(--shape-ink); font-weight: 600; letter-spacing: -.025em; }
+.md-typeset a:not(.md-button) { text-decoration: underline; text-underline-offset: .15em; }
+.md-typeset a.headerlink { color: var(--md-typeset-a-color); }
+.md-footer-meta { border-top: 1px solid var(--shape-border); }
+.shape-footer-links { display: flex; flex-wrap: wrap; gap: .5rem 1.1rem; padding: .45rem 0; }
+.shape-footer-links a { color: var(--md-typeset-a-color); }
+:focus-visible { outline: 2px solid var(--shape-focus); outline-offset: 3px; }
+@media (max-width: 600px) {
+  .md-header__button.md-logo img { height: 1.2rem; }
+  .md-header__title { margin-left: .2rem; }
+  .md-header__topic:first-child > .md-ellipsis { display: none; }
+  .shape-website-link { margin: 0 .15rem; font-size: .64rem; }
+  .md-header__button { margin: .1rem; padding: .25rem; }
+  .md-header__source { display: none; }
+}
+.md-search-result__meta {
+  background: var(--md-code-bg-color);
+  color: var(--md-default-fg-color--light);
+}
+.md-header__button.md-logo img.shape-logo-dark { display: none; }
+[data-md-color-scheme="slate"] .md-header__button.md-logo img.shape-logo-light { display: none; }
+[data-md-color-scheme="slate"] .md-header__button.md-logo img.shape-logo-dark { display: block; }
+.md-footer-meta.md-typeset .shape-footer-links a:not(.md-button) { color: var(--shape-link-ink); }
+
+.md-sidebar--primary, .md-sidebar--primary .md-nav { background: var(--shape-frame); }
+.md-sidebar--primary { border-right: 1px solid var(--shape-line); }
+.md-nav--primary .md-nav__title { background: var(--shape-frame); box-shadow: none; }
+.md-typeset .admonition, .md-typeset details { background: var(--shape-well); }
+.md-typeset .md-button--primary,
+.md-typeset .md-button--primary:hover,
+.md-typeset .md-button--primary:focus {
+  background: var(--shape-action-fill);
+  border-color: var(--shape-action-fill);
+  color: var(--shape-on-accent);
+}
+.md-nav--primary .md-nav__title { color: var(--shape-ink); }
+.md-logo img.shape-logo-light { display: block; }
+.md-logo img.shape-logo-dark { display: none; }
+[data-md-color-scheme="slate"] .md-logo img.shape-logo-light { display: none; }
+[data-md-color-scheme="slate"] .md-logo img.shape-logo-dark { display: block; }
+.md-nav--primary .md-nav__title[for="__drawer"] {
+  background: var(--shape-frame);
+  color: var(--shape-ink);
+}
+.md-search-result .md-search-result__article mark, .md-search-result mark {
+  color: var(--shape-link-ink);
+}
