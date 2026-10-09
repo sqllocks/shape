@@ -12,6 +12,7 @@ def emulator_transport_diagnostics(
 
     import json
     import sys
+    import time
     from datetime import UTC, datetime
     from urllib.parse import urlsplit
 
@@ -20,15 +21,39 @@ def emulator_transport_diagnostics(
     original = kusto.urllib_transport
 
     def traced(method, url, headers, body, timeout):
-        result = original(method, url, headers, body, timeout)
-        status, _, data = result
         path = urlsplit(url).path
+        started = time.monotonic()
+        command = body.decode("utf-8", "replace") if path == "/v1/rest/mgmt" else None
+        if command is not None:
+            print(
+                "emulator management started: "
+                + json.dumps({"time": datetime.now(UTC).isoformat(), "command": command}),
+                file=sys.stderr,
+                flush=True,
+            )
+        try:
+            result = original(method, url, headers, body, timeout)
+        except Exception as exc:
+            record = {
+                "time": datetime.now(UTC).isoformat(),
+                "path": path,
+                "elapsed": time.monotonic() - started,
+                "exception_type": type(exc).__name__,
+            }
+            if command is not None:
+                record["command"] = command
+            print(
+                "emulator transport exception: " + json.dumps(record), file=sys.stderr, flush=True
+            )
+            raise
+        status, _, data = result
         if path == "/v1/rest/mgmt" or (path.startswith("/v1/rest/ingest/") and status >= 300):
             record = {
                 "time": datetime.now(UTC).isoformat(),
                 "path": path,
                 "status": status,
                 "response": data.decode("utf-8", "replace"),
+                "elapsed": time.monotonic() - started,
             }
             if path == "/v1/rest/mgmt":
                 record["command"] = body.decode("utf-8", "replace")

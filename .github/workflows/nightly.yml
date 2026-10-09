@@ -238,7 +238,13 @@ jobs:
           import urllib.request
 
           # Startup stdout does not show whether a table survived or its streaming policy.
-          for command in (".show tables", ".show database NetDefaultDB schema as json"):
+          for command in (
+              ".show tables",
+              ".show database NetDefaultDB schema as json",
+              ".show operations | take 50",
+              ".show commands-and-queries | take 50",
+              ".show journal | take 50",
+          ):
               print(command, flush=True)
               request = urllib.request.Request(
                   "http://localhost:8080/v1/rest/mgmt",

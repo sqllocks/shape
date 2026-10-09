@@ -11,6 +11,8 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
   crashing, while retaining the minimum cohort check.
 - Bounded CSV profiling avoids CPU-scaled decoded read-ahead buffers.
 - Fabric setup reports portable source paths, and Synapse derives table labels from Windows paths.
+- Eventhouse emitters and writers synchronize streaming schema caches before ingesting into
+  newly created or changed tables.
 
 ## Unreleased
 
