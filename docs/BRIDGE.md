@@ -2,14 +2,29 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" BRIDGE
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for BRIDGE
+    ```
 
 
 `shape bridge` serves Shape's commands over standard input and output as a versioned JSON
 request/response protocol. Editors, notebooks, wrappers and agents use it to run Shape without
 parsing command-line text.
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-0).
+
 
 - `shape bridge` reads **one request per line** and writes **one response per line** until end of
   input (a long-lived session).
@@ -1352,7 +1367,8 @@ log. Job files and spilled results are created with mode `0600` in a `0700` dire
 
 A long session, one request per line:
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-112).
+
 
 The core workflow, driven from Python:
 
@@ -1402,3 +1418,47 @@ print(drift["drifted"], [(n["column"], n["metric"]) for n in drift["not_measured
 ```
 
 (`call` is the helper above, with `"api_version": "1.2"` in the request.)
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+echo '{"api_version": "1.0", "id": "r1", "command": "dry_run", "args": {"domain": "retail"}}' | shape bridge
+
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    {"api_version": "1.2", "command": "dry_run", "id": "r1", "ok": true, "result": {"domain": "retail", "estimated_bytes": 2472500, "generation_order": ["customer", "address", "product_category", "product", "promotion", "store", "order", "order_line", "return"], "issues": [], "missing_strategies": [], "ok": true, "planned_rows": {"address": 1500, "customer": 1000, "order": 5000, "order_line": 12500, "product": 500, "product_category": 50, "promotion": 200, "return": 850, "store": 150}, "scale": "small", "total_rows": 21750}, "warnings": []}
+    ```
+
+<a id="local-example-112"></a>
+
+### Example 113
+
+<!-- example: 112 -->
+
+```bash {.runnable-reference}
+shape bridge --jobs-dir ./jobs <<'EOF'
+{"api_version": "1.0", "id": 1, "command": "list"}
+{"api_version": "1.0", "id": 2, "command": "preview", "args": {"domain": "retail", "rows": 2, "tables": ["store"]}}
+{"api_version": "1.0", "id": 3, "command": "generate", "args": {"domain": "retail", "scale": "small", "format": "parquet", "output_dir": "./out"}, "options": {"async": true}}
+EOF
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    {"api_version": "1.2", "command": "list", "id": 1, "ok": true, "result": {"count": 14, "domains": [{"description": "Capital Markets domain with companies, daily prices, dividends, earnings, insider trades, and tick-level trades", "modes": ["3nf", "star"], "name": "capital_markets", "profiles": ["default"]}, {"description": "Education domain with students, courses, enrollments, grades, and financial aid", "modes": ["3nf", "star"], "name": "education", "profiles": ["default"]}, {"description": "Banking domain with accounts, transactions, loans, and fraud detection", "modes": ["3nf", "star"], "name": "financial", "profiles": ["default"]}, {"description": "Healthcare domain with patients, encounters, diagnoses, procedures, and claims", "modes": ["3nf", "star"], "name": "healthcare", "profiles": ["default"]}, {"description": "Human resources domain with employees, departments, compensation, and performance", "modes": ["3nf", "star"], "name": "hr", "profiles": ["default"]}, {"description": "Insurance domain with policies, claims, underwriting, and premium management", "modes": ["3nf", "star"], "name": "insurance", "profiles": ["default"]}, {"description": "IoT domain with devices, sensors, readings, alerts, and maintenance", "modes": ["3nf", "star"], "name": "iot", "profiles": ["default"]}, {"description": "Manufacturing domain with production lines, work orders, quality control, and equipment", "modes": ["3nf", "star"], "name": "manufacturing", "profiles": ["default"]}, {"description": "Marketing domain with campaigns, contacts, leads, opportunities, and conversions", "modes": ["3nf", "star"], "name": "marketing", "profiles": ["default"]}, {"description": "Pulse rideshare \u2014 riders, drivers, vehicles, seasonal trips across 4 US metros", "modes": ["3nf", "star"], "name": "pulse", "profiles": ["default"]}, {"description": "Real estate domain with properties, listings, offers, transactions, and inspections", "modes": ["3nf", "star"], "name": "real_estate", "profiles": ["default"]}, {"description": "Retail / E-Commerce domain with customers, products, orders, and returns", "modes": ["3nf", "star"], "name": "retail", "profiles": ["default"]}, {"description": "Supply chain domain with warehouses, purchasing, inventory, and logistics", "modes": ["3nf", "star"], "name": "supply_chain", "profiles": ["default"]}, {"description": "Telecom domain with subscribers, service lines, usage records, billing, and churn", "modes": ["3nf", "star"], "name": "telecom", "profiles": ["default"]}], "version": "0.9.1"}, "warnings": []}
+    {"api_version": "1.2", "command": "preview", "id": 2, "ok": true, "result": {"domain": "retail", "seed": 42, "tables": {"store": {"columns": ["store_id", "store_name", "store_type", "city", "state"], "data": [{"city": "Denver", "state": "ND", "store_id": 1, "store_name": "Store #0001", "store_type": "physical"}, {"city": "Oklahoma City", "state": "MO", "store_id": 2, "store_name": "Store #0002", "store_type": "warehouse"}], "preview_rows": 2, "total_rows": 150}}}, "warnings": []}
+    {"api_version": "1.2", "command": "generate", "id": 3, "ok": true, "result": {"cancellable": false, "command": "generate", "created_at": "2026-10-09T17:14:24.495+00:00", "error": null, "job_id": "job-4ed9d6276e55", "progress": {}, "result": null, "status": "running", "updated_at": "2026-10-09T17:14:24.495+00:00"}, "warnings": []}
+    ```

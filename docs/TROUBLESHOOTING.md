@@ -15,8 +15,7 @@ for the command you run. Read stderr as well as stdout. The tutorials show both 
 
 `shape doctor` reports environment and optional dependency checks. Cloud options can probe
 endpoints or authentication; a default local check is different from a cloud check.
-[Owner: support maintainer — add a captured doctor transcript for each supported environment;
-only the local CLI help is generated from this checkout today.]
+<!-- owner: support maintainer — supply doctor transcripts for additional environments. The local checkout transcript appears on the installation page. -->
 Check the installed core version and the plugin entry points before changing your source URI.
 
 ## Generation writes no files
@@ -30,8 +29,7 @@ shows the current writer options.
 
 Shape detects deletion vectors and column mapping and selects the optional DuckDB reader.
 You need the delta-fallback dependencies and its Delta extension. The extension may download
-on first use; that is a network call. [Owner: Delta maintainer — execute an extension-install
-and fallback transcript before publishing an installation command here.]
+on first use; that is a network call. <!-- owner: Delta maintainer — execute an extension-install and fallback transcript before publishing an installation command here. -->
 For version or as-of reads, confirm that the historical files remain available.
 
 ## Safe capture is refused

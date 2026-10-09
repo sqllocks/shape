@@ -2,7 +2,21 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" DESIGN
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for DESIGN
+    ```
 
 
 Designing a relational or a dimensional schema from a description of the data is mechanical once
@@ -11,7 +25,8 @@ attributes, keys, functional dependencies, hierarchies, history needs, and facts
 grain and measures), lints it, and writes DDL for a **3NF**, **star** or **snowflake** schema. The
 same input always gives the same bytes.
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-0).
+
 
 Exit codes: 0 ok, 1 a lint error (or a warning with `--strict`), 2 bad input. DDL is written to
 standard output when `-o` is not given; lint findings go to standard error.
@@ -175,3 +190,34 @@ group violates it and its determinant repeats (at most `max_group_ratio`, 0.5, d
 row); keys, supersets of keys, constant columns, determinants with nulls and non-minimal
 determinants are left out. The output is one entity per table with keys and dependencies. Facts,
 measures, hierarchies, history and references are not in the data: add them by hand.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape design retail.design.json --mode star --dialect postgres -o retail.sql --json retail.tables.json
+shape design retail.design.json --mode snowflake --lint        # the lint report only (JSON)
+shape design orders.csv --from-data --name orders -o orders.design.json
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    error: G001 design: mode 'star' needs facts, but the design has no facts
+    [
+      {
+        "code": "G001",
+        "message": "mode 'snowflake' needs facts, but the design has no facts",
+        "path": "design",
+        "severity": "error"
+      }
+    ]
+    ```

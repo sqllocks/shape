@@ -2,7 +2,21 @@
 
 Status: available.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" DRIFT
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for DRIFT
+    ```
 
 
 One engine answers "did the data change?": `shape.drift.engine`. `shape.diff` (two profiles),
@@ -20,7 +34,8 @@ d.semver             # {"bump": "major", "breaking": 1, "additive": 0, "cosmetic
 d.not_evaluable      # [{column, kind, captured_safe, reason}, ...]
 ```
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-1).
+
 
 A change is reported only when it passes its threshold, so a stable column produces no record.
 `severity` is fixed per kind. `score` is the size of the change from 0 to 1: a structural change
@@ -223,7 +238,8 @@ a `severity` entry that still counts is counted at its class. `--version-from X.
 `semver.next_version(version, bump)`) adds `semver.next_version`: `2.0.0`, `1.5.0`, `1.4.3` and
 `1.4.2` for the four bumps of `1.4.2`.
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-3).
+
 
 **Failing on a class.** `shape diff --fail-on breaking|additive|cosmetic` (and
 `shape.diff(..., fail_on=...)`, which sets `DiffResult.failed`) fails when an unplanned change of
@@ -304,7 +320,21 @@ shape.diff(
   contract may carry the same object as `"drift"`, so a team keeps one policy file:
   `shape diff a.shape b.shape --policy contract.json`. `shape check` ignores the `drift` key.
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+<!-- example: 5 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
+```
+shape diff BASE.shape CURRENT.shape
+    [--null-rate X] [--cardinality-ratio-max X] [--cardinality-ratio-min X]
+    [--mean-shift-std X] [--min-severity low|medium|high]
+    [--threshold KEY=VALUE]...           any threshold by name, e.g. category_tvd=0.2
+    [--column-threshold COLUMN:KEY=VALUE]...
+    [--ignore COL1,COL2] [--only COL1,COL2] [--policy POLICY.json]
+    [--json RESULT.json] [--fail-on-drift] [--fail-on breaking|additive|cosmetic]
+    [--version-from X.Y.Z]
+```
+
 
 On a terminal, a change's `baseline` and `current` lists (or mappings) of more than 20 entries
 show their first 20, and `values_omitted` says how many were left out on each side; piped or
@@ -389,7 +419,8 @@ name the table already has, raise `ShapeError` naming both the column and the ne
 day (not only from the start day). Events on a renamed column must use the name it has on their
 days. With `end` the rename is a window and the old name returns.
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-8).
+
 
 writes `feed/<date>/<table>.parquet`, `feed/_specs/<date>.json` (that day's schema) and
 `feed/ground_truth.json`. A plan may declare `"format": "shape-drift-plan"` and `"version": 1`;
@@ -430,3 +461,66 @@ plan.expected_changes(0, 10)
 (`column_removed` on the old name, `column_added` on the new one), and the key says they are one
 change. The starter scenarios (`docs/SCENARIO_LIBRARY.md`) plant add, rename, drop and retype on a
 schedule and check the diff against a written answer key.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-1"></a>
+
+### Example 2
+
+<!-- example: 1 -->
+
+```bash {.runnable-reference}
+shape diff baseline.shape today.shape --fail-on-drift --ignore order_id --null-rate 0.02
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape: note: today.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: baseline.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    bump: none (0 breaking, 0 additive, 0 cosmetic)
+    {"changes": [], "drifted": false, "semver": {"additive": 0, "breaking": 0, "bump": "none", "cosmetic": 0}}
+    ```
+
+<a id="local-example-3"></a>
+
+### Example 4
+
+<!-- example: 3 -->
+
+```bash {.runnable-reference}
+shape diff base.shape today.shape --fail-on breaking --version-from 1.4.2
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape: note: today.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: base.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    version: 1.4.2
+    bump: none (0 breaking, 0 additive, 0 cosmetic)
+    {"changes": [], "drifted": false, "fail_on": "breaking", "failed": false, "semver": {"additive": 0, "breaking": 0, "bump": "none", "cosmetic": 0, "next_version": "1.4.2"}}
+    ```
+
+<a id="local-example-8"></a>
+
+### Example 9
+
+<!-- example: 8 -->
+
+```bash {.runnable-reference}
+shape generate-drift orders.gen.json plan.json -o feed/ --rows orders=4000 --format parquet
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Planted 1 events over 3 days from 2026-03-01
+      e1: distribution on orders.amount from 2026-03-02
+
+    Written 7 files to feed// (answer key: ground_truth.json)
+    ```

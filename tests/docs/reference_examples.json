@@ -1,0 +1,1032 @@
+[
+  {
+    "page": "docs/API.md",
+    "index": 0,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/API.md",
+    "index": 1,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/API.md",
+    "index": 2,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/API.md",
+    "index": 3,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/API.md",
+    "index": 4,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/API.md",
+    "index": 5,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/API.md",
+    "index": 6,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/API.md",
+    "index": 7,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/API.md",
+    "index": 8,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/API.md",
+    "index": 9,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/API.md",
+    "index": 10,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/API.md",
+    "index": 11,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/API.md",
+    "index": 12,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/API.md",
+    "index": 13,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/API.md",
+    "index": 14,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/API.md",
+    "index": 15,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/API.md",
+    "index": 16,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/API.md",
+    "index": 17,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/API.md",
+    "index": 18,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/API.md",
+    "index": 19,
+    "kind": "signature"
+  },
+  {
+    "page": "docs/BRIDGE.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/BRIDGE.md",
+    "index": 112,
+    "kind": "local"
+  },
+  {
+    "page": "docs/CANARIES.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/CANARIES.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "docs/CHAOS.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/CI.md",
+    "index": 4,
+    "kind": "local"
+  },
+  {
+    "page": "docs/CLI.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/CLI.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/CLI.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "docs/CLI.md",
+    "index": 3,
+    "kind": "local"
+  },
+  {
+    "page": "docs/CLI.md",
+    "index": 4,
+    "kind": "local"
+  },
+  {
+    "page": "docs/CLI.md",
+    "index": 5,
+    "kind": "cloud:Kafka"
+  },
+  {
+    "page": "docs/CLI.md",
+    "index": 6,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/CONSUMER_CONTRACTS.md",
+    "index": 1,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/CONSUMER_CONTRACTS.md",
+    "index": 3,
+    "kind": "local"
+  },
+  {
+    "page": "docs/CONTAINER.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/CONTRACT_EMIT.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/DATASET_LIBRARY.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/DBT.md",
+    "index": 0,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/DBT.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/DBT.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "docs/DBT.md",
+    "index": 4,
+    "kind": "local"
+  },
+  {
+    "page": "docs/DBT.md",
+    "index": 6,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/DEMO.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/DEMO.md",
+    "index": 1,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/DEMO.md",
+    "index": 2,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/DESIGN.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/DETECTIVE.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/DETECTIVE.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/DETECTIVE.md",
+    "index": 3,
+    "kind": "local"
+  },
+  {
+    "page": "docs/DICTIONARY.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/DICTIONARY.md",
+    "index": 1,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/DRIFT.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/DRIFT.md",
+    "index": 3,
+    "kind": "local"
+  },
+  {
+    "page": "docs/DRIFT.md",
+    "index": 5,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/DRIFT.md",
+    "index": 8,
+    "kind": "local"
+  },
+  {
+    "page": "docs/DRIFT_REPORT.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/EMIT.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/EMIT.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/EMIT.md",
+    "index": 2,
+    "kind": "cloud:Kafka"
+  },
+  {
+    "page": "docs/EMIT.md",
+    "index": 3,
+    "kind": "cloud:Kafka"
+  },
+  {
+    "page": "docs/EMIT.md",
+    "index": 4,
+    "kind": "local"
+  },
+  {
+    "page": "docs/EMIT.md",
+    "index": 6,
+    "kind": "local"
+  },
+  {
+    "page": "docs/EXCEL.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/EXCEL.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "docs/EXPLAIN.md",
+    "index": 0,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/FABRIC_PLATFORM.md",
+    "index": 0,
+    "kind": "cloud:Fabric"
+  },
+  {
+    "page": "docs/FAIRNESS_AND_SKEW.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/FAIRNESS_AND_SKEW.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "docs/FIDELITY.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/FIDELITY_TIERS.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/FINGERPRINT.md",
+    "index": 1,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/GAMEDAY.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/GENERATION_ENGINE.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/GENERATION_ENGINE.md",
+    "index": 3,
+    "kind": "local"
+  },
+  {
+    "page": "docs/GENERATION_ENGINE.md",
+    "index": 6,
+    "kind": "local"
+  },
+  {
+    "page": "docs/GENERATION_ENGINE.md",
+    "index": 7,
+    "kind": "local"
+  },
+  {
+    "page": "docs/GENERATION_STABILITY.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/GENERATION_STABILITY.md",
+    "index": 5,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/HISTORY.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/HISTORY.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/HISTORY.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "docs/HISTORY.md",
+    "index": 3,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/HISTORY.md",
+    "index": 4,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/HISTORY.md",
+    "index": 5,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/IMPORTERS.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/IMPORTERS.md",
+    "index": 1,
+    "kind": "reference"
+  },
+  {
+    "page": "docs/INCREMENTAL.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/INCREMENTAL.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "docs/INCREMENTAL.md",
+    "index": 4,
+    "kind": "local"
+  },
+  {
+    "page": "docs/INSTALL.md",
+    "index": 0,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/INSTALL.md",
+    "index": 1,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/INSTALL.md",
+    "index": 2,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/INSTALL.md",
+    "index": 3,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/INSTALL.md",
+    "index": 4,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/INSTALL.md",
+    "index": 5,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/LANDING.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/MASK.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/MASK.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "docs/NOTIFICATIONS.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/PARITY.md",
+    "index": 0,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/PARITY.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "docs/PLANNED_CHANGES.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/PLANNED_CHANGES.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "docs/PLANNED_CHANGES.md",
+    "index": 5,
+    "kind": "local"
+  },
+  {
+    "page": "docs/PRIVACY_MODEL.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/PRIVACY_MODEL.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "docs/PROFILE_MERGE.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/PROFILE_REGISTRY.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/PROFILE_REGISTRY.md",
+    "index": 2,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/PROFILE_REGISTRY.md",
+    "index": 3,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/PROFILING_NOTES.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/PROFILING_NOTES.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "docs/PROFILING_NOTES.md",
+    "index": 3,
+    "kind": "local"
+  },
+  {
+    "page": "docs/PROFILING_NOTES.md",
+    "index": 10,
+    "kind": "local"
+  },
+  {
+    "page": "docs/PROJECT.md",
+    "index": 0,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/PROJECT.md",
+    "index": 2,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/PROPOSALS.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/PROPOSALS.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "docs/PROPOSALS.md",
+    "index": 4,
+    "kind": "local"
+  },
+  {
+    "page": "docs/PR_BOT.md",
+    "index": 1,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/QUICKSTART.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/QUICKSTART.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/QUICKSTART.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "docs/QUICKSTART.md",
+    "index": 3,
+    "kind": "local"
+  },
+  {
+    "page": "docs/REFERENCE_PACKS.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/REFERENCE_PACKS.md",
+    "index": 3,
+    "kind": "local"
+  },
+  {
+    "page": "docs/REFERENCE_PACKS.md",
+    "index": 5,
+    "kind": "local"
+  },
+  {
+    "page": "docs/REGISTRY.md",
+    "index": 0,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/REGISTRY.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/REGISTRY.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "docs/REGISTRY.md",
+    "index": 3,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/REGISTRY.md",
+    "index": 4,
+    "kind": "local"
+  },
+  {
+    "page": "docs/RELEASE_CHECKLIST.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/RELEASE_CHECKLIST.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/RELEASE_CHECKLIST.md",
+    "index": 2,
+    "kind": "cloud:GitHub"
+  },
+  {
+    "page": "docs/RELEASE_CHECKLIST.md",
+    "index": 3,
+    "kind": "cloud:GitHub"
+  },
+  {
+    "page": "docs/REPORT_CARD.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/REPRODUCIBILITY.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/RESOLVE.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/RULES_TESTING.md",
+    "index": 0,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/RULES_TESTING.md",
+    "index": 3,
+    "kind": "local"
+  },
+  {
+    "page": "docs/RULES_TESTING.md",
+    "index": 5,
+    "kind": "local"
+  },
+  {
+    "page": "docs/RULES_TESTING.md",
+    "index": 7,
+    "kind": "local"
+  },
+  {
+    "page": "docs/RULES_TESTING.md",
+    "index": 8,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/SCALE.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/SCALE.md",
+    "index": 1,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/SCALE.md",
+    "index": 2,
+    "kind": "cloud:Fabric"
+  },
+  {
+    "page": "docs/SCALE.md",
+    "index": 3,
+    "kind": "cloud:Fabric"
+  },
+  {
+    "page": "docs/SCENARIO_LIBRARY.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/SCENARIO_PACKS.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/SCORECARD.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/SHARE_BUNDLE.md",
+    "index": 0,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/SIGNING.md",
+    "index": 0,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/SIGNING.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/SIGNING.md",
+    "index": 3,
+    "kind": "local"
+  },
+  {
+    "page": "docs/SIGNING.md",
+    "index": 4,
+    "kind": "local"
+  },
+  {
+    "page": "docs/SIMULATION_FILES_EVENTS.md",
+    "index": 1,
+    "kind": "local"
+  },
+  {
+    "page": "docs/SINKS.md",
+    "index": 0,
+    "kind": "cloud:Fabric"
+  },
+  {
+    "page": "docs/SINKS.md",
+    "index": 2,
+    "kind": "cloud:PostgreSQL"
+  },
+  {
+    "page": "docs/SINKS.md",
+    "index": 4,
+    "kind": "local"
+  },
+  {
+    "page": "docs/TESTING_WITH_SHAPE.md",
+    "index": 0,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/TESTING_WITH_SHAPE.md",
+    "index": 3,
+    "kind": "cloud:PostgreSQL"
+  },
+  {
+    "page": "docs/TRANSFORMS.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/VAULT.md",
+    "index": 3,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/VERIFY.md",
+    "index": 0,
+    "kind": "local"
+  },
+  {
+    "page": "docs/VERIFY.md",
+    "index": 9,
+    "kind": "local"
+  },
+  {
+    "page": "docs/plugins/authoring.md",
+    "index": 0,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/plugins/authoring.md",
+    "index": 6,
+    "kind": "local"
+  },
+  {
+    "page": "docs/plugins/authoring.md",
+    "index": 7,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/plugins/behavior.md",
+    "index": 1,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/plugins/behavior.md",
+    "index": 8,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/plugins/behavior.md",
+    "index": 12,
+    "kind": "local"
+  },
+  {
+    "page": "docs/plugins/behavior.md",
+    "index": 13,
+    "kind": "local"
+  },
+  {
+    "page": "docs/plugins/behavior.md",
+    "index": 15,
+    "kind": "local"
+  },
+  {
+    "page": "docs/plugins/behavior.md",
+    "index": 16,
+    "kind": "local"
+  },
+  {
+    "page": "docs/plugins/cloud-sources.md",
+    "index": 0,
+    "kind": "cloud:Fabric"
+  },
+  {
+    "page": "docs/plugins/fabric-auth.md",
+    "index": 0,
+    "kind": "cloud:Fabric"
+  },
+  {
+    "page": "docs/plugins/fabric-commands.md",
+    "index": 0,
+    "kind": "cloud:Fabric"
+  },
+  {
+    "page": "docs/plugins/fabric-commands.md",
+    "index": 1,
+    "kind": "cloud:Fabric"
+  },
+  {
+    "page": "docs/plugins/fabric-commands.md",
+    "index": 2,
+    "kind": "cloud:Fabric"
+  },
+  {
+    "page": "docs/plugins/fabric-commands.md",
+    "index": 3,
+    "kind": "local"
+  },
+  {
+    "page": "docs/plugins/fabric-commands.md",
+    "index": 4,
+    "kind": "cloud:Fabric"
+  },
+  {
+    "page": "docs/plugins/fabric-commands.md",
+    "index": 5,
+    "kind": "local"
+  },
+  {
+    "page": "docs/plugins/fabric-commands.md",
+    "index": 7,
+    "kind": "local"
+  },
+  {
+    "page": "docs/plugins/fabric-writers.md",
+    "index": 1,
+    "kind": "cloud:Fabric"
+  },
+  {
+    "page": "docs/plugins/healthcare-codes.md",
+    "index": 3,
+    "kind": "local"
+  },
+  {
+    "page": "docs/plugins/healthcare-codes.md",
+    "index": 5,
+    "kind": "local"
+  },
+  {
+    "page": "docs/plugins/integrations.md",
+    "index": 0,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/plugins/integrations.md",
+    "index": 2,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/plugins/integrations.md",
+    "index": 3,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/plugins/integrations.md",
+    "index": 4,
+    "kind": "syntax"
+  },
+  {
+    "page": "docs/plugins/integrations.md",
+    "index": 6,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/plugins/simulation.md",
+    "index": 0,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/plugins/simulation.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "docs/plugins/sqlserver.md",
+    "index": 0,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/plugins/sqlserver.md",
+    "index": 1,
+    "kind": "cloud:Fabric"
+  },
+  {
+    "page": "docs/plugins/stability.md",
+    "index": 2,
+    "kind": "reference"
+  },
+  {
+    "page": "docs/plugins/streaming.md",
+    "index": 0,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "docs/plugins/streaming.md",
+    "index": 1,
+    "kind": "cloud:Kafka"
+  },
+  {
+    "page": "docs/plugins/streaming.md",
+    "index": 2,
+    "kind": "local"
+  },
+  {
+    "page": "CONTRIBUTING.md",
+    "index": 0,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "CONTRIBUTING.md",
+    "index": 1,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "CONTRIBUTING.md",
+    "index": 2,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "CONTRIBUTING.md",
+    "index": 3,
+    "kind": "bootstrap"
+  },
+  {
+    "page": "README.md",
+    "index": 0,
+    "kind": "local"
+  }
+]

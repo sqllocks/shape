@@ -2,9 +2,6 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
-
-
 `shape generate --scale-mode` (the SQL Database, Warehouse, Lakehouse and KQL sinks, and `fabric_spark`),
 `shape generate --to synapse://...` (a Synapse dedicated SQL pool),
 `shape emit` / `shape stream` (`eventhouse://`, `eventstream://`), `shape profile` (`onelake://`, `abfss://`)
@@ -31,6 +28,18 @@ and OneLake tokens; `SHAPE_FABRIC_TOKEN` / `SHAPE_FABRIC_STORAGE_TOKEN` still wi
 ## `--auth kerberos`: a SQL Server that takes Windows authentication only
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+<!-- example: 0 -->
+
+**Needs a Fabric account. Not run in CI.**
+
+```bash
+shape generate retail --to mssql://sql01.corp.example/shop \
+  --auth kerberos --keytab file:///etc/shape/svc.keytab --principal svc_shape@CORP.EXAMPLE
+```
+
+<!-- owner: Fabric maintainer — supply the transcript for docs/plugins/fabric-auth.md example 0. -->
+
 
 For `shape generate --to mssql://` and `shape emit` / `shape stream --to mssql://` (not
 `warehouse://`, not `--scale-mode` jobs). On Linux and macOS Shape runs

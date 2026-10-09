@@ -2,7 +2,21 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" SCENARIO_PACKS
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for SCENARIO_PACKS
+    ```
 
 
 A **scenario pack** is a YAML file that bundles a domain, a simulation kind, optional chaos,
@@ -10,7 +24,8 @@ validation gates and the landing paths of a run. A **generation spec** (GSL, `*.
 a pack and sets the schema, scale, seed, chaos, outputs and gates around it. Both run with
 `shape pack`:
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-0).
+
 
 Shape ships **no packs**, but it does ship a library of named starter scenarios with answer keys:
 `shape pack list --library` lists them and `shape pack run library:NAME` runs one and checks the
@@ -180,3 +195,48 @@ assert PackValidator().validate(pack, domain).is_valid
 result = PackRunner().run(pack, domain, scale="fabric_demo", seed=42, base_path="out")
 print(result.summary(), result.manifest.to_dict()["tables"])
 ```
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape pack validate my_pack.yaml            # check a pack against its domain; exit 1 on errors
+shape pack run my_pack.yaml --domain retail --scale fabric_demo --seed 42 -o out/
+shape pack run estate.gsl.yaml -o out/      # a spec supplies scale, seed, gates and chaos
+shape pack list packs/                      # the packs and specs under a directory
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    pack my_custom_pack
+    Warnings (1):
+      WARN:  No fabric_targets defined — pack cannot target Fabric resources
+    Pack validation: PASS (1 warnings)
+    Pack Run: SUCCESS
+      Pack:    my_custom_pack
+      Domain:  retail
+      Scale:   fabric_demo
+      Elapsed: 0.5s
+      Files:   3
+      Events:  0
+      warning: No fabric_targets defined — pack cannot target Fabric resources
+    Pack Run: SUCCESS
+      Pack:    my_custom_pack
+      Domain:  retail
+      Scale:   small
+      Elapsed: 0.6s
+      Files:   3
+      Events:  0
+      warning: No fabric_targets defined — pack cannot target Fabric resources
+    kind      domain        id                          path
+    file_drop retail        my_custom_pack              packs/retail/local.yaml
+    ```

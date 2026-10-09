@@ -2,7 +2,21 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](../contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" fabric-commands
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for fabric-commands
+    ```
 
 
 The `sqllocks-shape-fabric` plugin adds `shape fabric`, with eight commands, each also a top-level
@@ -31,6 +45,20 @@ database login: it applies to `publish -t sql-database|warehouse` only.
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
+<!-- example: 0 -->
+
+**Needs a Fabric account. Not run in CI.**
+
+```
+shape publish retail -t lakehouse --base-path onelake://MyWorkspace/MyLakehouse/Files
+shape publish retail -t sql-database --connection-string env://SHAPE_SQL_CONNECTION
+shape publish retail -t warehouse --connection-string env://WH --staging-path onelake://W/L/Files
+shape publish retail -t eventhouse --connection-string https://<query-uri-host> --database mydb
+```
+
+<!-- owner: Fabric maintainer — supply the transcript for docs/plugins/fabric-commands.md example 0. -->
+
+
 `DOMAIN` is a domain or a generation schema file. `-s/--scale`, `--seed`, `-m/--mode 3nf|star` as in
 `shape generate`. `--dry-run` generates and prints the table summary and publishes nothing.
 
@@ -55,6 +83,18 @@ Use [the tested starters](../TUTORIAL.md) for local commands and complete output
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
+<!-- example: 1 -->
+
+**Needs a Fabric account. Not run in CI.**
+
+```
+shape notebook retail --target lakehouse -o retail.ipynb      # or print the JSON: no -o
+shape deploy-notebook retail --workspace "Demo" --auth cli
+```
+
+<!-- owner: Fabric maintainer — supply the transcript for docs/plugins/fabric-commands.md example 1. -->
+
+
 The notebook installs Shape, generates the domain with `shape.generate`, checks foreign keys and
 writes Parquet files to the default Lakehouse (`--target lakehouse`), CSV files (`csv`) or shows a
 sample (`display`). `deploy-notebook` creates it as a Notebook item (`--notebook-name`, default
@@ -65,6 +105,18 @@ of the listing. A creation that Fabric accepts to finish later is followed to it
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
+<!-- example: 2 -->
+
+**Needs a Fabric account. Not run in CI.**
+
+```
+shape setup-fabric --workspace "Demo" --create-lakehouse
+shape setup-fabric --snippet        # print the cell to paste into a notebook instead
+```
+
+<!-- owner: Fabric maintainer — supply the transcript for docs/plugins/fabric-commands.md example 2. -->
+
+
 Creates the Fabric Environment item (`--env-name`, default `shape-env`) and, with
 `--create-lakehouse`, a Lakehouse (`--lakehouse-name`). An item that already exists is reused. The
 command prints the libraries to add to the Environment; adding them is done in Fabric.
@@ -72,6 +124,9 @@ command prints the libraries to add to the Environment; adding them is done in F
 ## `export-model`
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+[Run this example](#local-example-3).
+
 
 Writes a Tabular Object Model document (compatibility level 1604): typed columns, relationships,
 one Power Query partition per table for the source (`--source-type lakehouse|warehouse|sql_database`,
@@ -91,6 +146,17 @@ database's. For a Lakehouse the expression keeps the placeholders `{workspace_id
 ## `profile-model`
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+<!-- example: 4 -->
+
+**Needs a Fabric account. Not run in CI.**
+
+```
+shape profile-model Sales/Retail -o retail.shape [--tables Customer,Orders] [--max-rows 100000] [--json]
+```
+
+<!-- owner: Fabric maintainer — supply the transcript for docs/plugins/fabric-commands.md example 4. -->
+
 
 Profiles every table of a Power BI / Fabric semantic model as one dataset profile and records the
 model's relationships, the way `shape profile-db` does for a SQL Server schema. It needs `sempy`
@@ -125,6 +191,9 @@ not in the model, a bad `--max-rows`, no `-o`, `sempy` missing).
 ## `known-answer`
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+[Run this example](#local-example-5).
+
 
 Generates a dataset whose measure results are known exactly, so a model author can tell whether
 the measures return the right numbers. `DOMAIN` is a domain or a generation schema file; `-s/--scale`
@@ -215,6 +284,9 @@ non-decimal plant column). The same inputs give byte-identical `answers.json`, `
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
+[Run this example](#local-example-7).
+
+
 `RESULTS` is a CSV or JSON export of the queries of `queries.dax`:
 
 * a **folder** with one file per query, named by the query id (`q01.csv`, `q02.json`, ...); other
@@ -258,3 +330,107 @@ query the answers do not have.
 
 The answers do not depend on any engine: they are computed from the Parquet files that were
 written, so a mismatch is the measure or the model, never the answer key.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-3"></a>
+
+### Example 4
+
+<!-- example: 3 -->
+
+```bash {.runnable-reference}
+shape export-model retail --source-type warehouse --source-name Sales -o retail.bim
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Shape v0.9.1 — Semantic Model Export
+
+      Domain:        retail
+      Source type:   warehouse
+      Tables:        9
+      Relationships: 9
+      DAX measures:  33
+      Output:        retail.bim
+
+    Import this .bim file into Tabular Editor or deploy via XMLA endpoint.
+    ```
+
+<a id="local-example-5"></a>
+
+### Example 6
+
+<!-- example: 5 -->
+
+```bash {.runnable-reference}
+shape known-answer retail --scale fabric_demo -o ka/
+shape known-answer retail --seed 7 --measures measures.json --plant order_line.line_total=250000 -o ka/
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape: 125 (measure, slice) pair(s) skipped; see `skipped` in answers.json
+    Shape v0.9.1 — Known-answer dataset
+
+      Domain:   retail
+      Scale:    fabric_demo  (seed 42)
+      Tables:   9 (4670 rows)
+      Measures: 33
+      Queries:  8
+      Output:   ka
+
+    Run queries.dax in a DAX client against the model, save the results, then:
+      shape check-answers ka/answers.json RESULTS
+    Shape v0.9.1 — Known-answer dataset
+
+      Domain:   retail
+      Scale:    small  (seed 7)
+      Tables:   9 (21750 rows)
+      Measures: 2
+      Queries:  1
+      Planted:  order_line.line_total = 250000
+      Output:   ka
+
+    Run queries.dax in a DAX client against the model, save the results, then:
+      shape check-answers ka/answers.json RESULTS
+    ```
+
+<a id="local-example-7"></a>
+
+### Example 8
+
+<!-- example: 7 -->
+
+```bash {.runnable-reference}
+python - <<'PYRESULTS'
+import json
+answers = json.load(open('ka/answers.json'))
+results = {}
+for query in answers['queries']:
+    columns = [query['slice']] if query['slice'] else []
+    rows = []
+    for row in query['rows']:
+        result = dict(zip(columns, row['key']))
+        result.update(row['values'])
+        rows.append(result)
+    results[query['id']] = rows
+json.dump(results, open('results.json', 'w'))
+print('Wrote a local result fixture from the known answers')
+PYRESULTS
+shape check-answers ka/answers.json results.json
+shape check-answers ka/answers.json results.json --places 4
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Wrote a local result fixture from the known answers
+    All 2 values match the known answers.
+    All 2 values match the known answers.
+    ```

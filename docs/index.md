@@ -41,14 +41,10 @@ flowchart TB
 ```
 
 [Database pages](databases/index.md) describe shipped adapters. Snowflake and Databricks
-are write targets; Shape does not profile from them yet. Cloud examples needing an account
-stay owner placeholders until their commands have been run.
+are write targets; Shape does not profile from them yet. Account-dependent examples identify the platform you need.
 
 ## Choose your next page
 
 [Install](INSTALL.md) · [Concepts](CONCEPTS.md) · [Read the report](READ_REPORT.md) ·
 [Troubleshooting](TROUBLESHOOTING.md) · [Known limitations](KNOWN_LIMITATIONS.md) ·
 [Python API](API.md) · [Changelog](CHANGELOG.md)
-
-Industry Profile Packs are coming with Premium, healthcare first:
-[shapedata.ai](https://shapedata.ai/).

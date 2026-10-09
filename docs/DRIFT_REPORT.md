@@ -2,7 +2,24 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" DRIFT_REPORT
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape: warning: the registry now holds real values from the data (a raw profile); keep it as private as the data
+    shape: warning: the registry now holds real values from the data (a raw profile); keep it as private as the data
+    shape: warning: the registry now holds real values from the data (a raw profile); keep it as private as the data
+    Prepared local fixtures for DRIFT_REPORT
+    ```
 
 
 `shape diff` answers "did this profile drift from that one?" with a JSON file. `shape publish-report`
@@ -10,7 +27,8 @@ answers "how has this feed drifted over time?": it diffs a history of profiles, 
 before it, and writes the changes as star tables plus a Power BI semantic model, so the history can
 be sliced by run, column, kind of change and date.
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-0).
+
 
 It needs the `sqllocks-shape-fabric` plugin ([fabric-commands](plugins/fabric-commands.md)).
 
@@ -131,3 +149,70 @@ both versions; the format is covered by a compatibility test over a frozen versi
 The same inputs give byte-identical `drift.bim` and `report.json` and equal tables.
 
 Exit codes: `0` written; `1` a file could not be written; `2` the input is wrong (see above).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape publish-report orders-2026-03-01.shape orders-2026-03-06.shape orders-2026-03-11.shape -o report/
+shape publish-report --registry orders --registry-root reg/ --since 2026-03-01 -o report/ --format csv
+shape fabric publish-report orders-2026-03-01.shape orders-2026-03-06.shape orders-2026-03-11.shape -o fabric-report/     # the same command in the fabric group
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape: note: orders-2026-03-01.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: orders-2026-03-06.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: orders-2026-03-11.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    Shape v0.9.1 — Drift report
+
+      Profiles:  3 (2 runs)
+      Changes:   0
+      dim_column:        23 rows
+      dim_date:          6 rows
+      dim_kind:          36 rows
+      dim_run:           2 rows
+      fact_drift_change: 0 rows
+      Output:    report
+
+    Open drift.bim in Tabular Editor or Power BI Desktop; see docs/DRIFT_REPORT.md.
+    shape: note: /tmp/tmpo1pv7srb/profile is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: /tmp/tmp4fnu3opi/profile is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: /tmp/tmpjhkyk9lo/profile is not signed: its origin is not verified (check it with --verify PUBKEY)
+    Shape v0.9.1 — Drift report
+
+      Profiles:  3 (2 runs)
+      Changes:   0
+      dim_column:        23 rows
+      dim_date:          1 rows
+      dim_kind:          36 rows
+      dim_run:           2 rows
+      fact_drift_change: 0 rows
+      Output:    report
+
+    Open drift.bim in Tabular Editor or Power BI Desktop; see docs/DRIFT_REPORT.md.
+    shape: note: orders-2026-03-01.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: orders-2026-03-06.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: orders-2026-03-11.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    Shape v0.9.1 — Drift report
+
+      Profiles:  3 (2 runs)
+      Changes:   0
+      dim_column:        23 rows
+      dim_date:          6 rows
+      dim_kind:          36 rows
+      dim_run:           2 rows
+      fact_drift_change: 0 rows
+      Output:    fabric-report
+
+    Open drift.bim in Tabular Editor or Power BI Desktop; see docs/DRIFT_REPORT.md.
+    ```

@@ -5,55 +5,64 @@ video:
 ---
 # Generate a domain and load it into DuckDB
 
-Write a shipped domain into a local database and read one table.
+Write retail tables to a local database, inspect their keys and profile a table.
 
 Status: available. Generation from a profile is being hardened.
 
+You can run this walkthrough in an empty working directory without a cloud account. Each command below is followed by the complete output from a repository build. Run the steps in order: later commands use the files written earlier. When a command intentionally fails, the expected exit code is shown beside its output. Read the explanation after the output before moving on; the verdict and its evidence matter more than the presence of a new file.
+
 ## What you'll learn
 
-Generate seeded domain tables, use a sink and profile a DuckDB URI.
+Write retail tables to a local database, inspect their keys and profile a table.
 
 ## Prerequisites
 
-Use the repository's 0.9.1 core. Read [Install](../INSTALL.md) for the public package blocker.
-You need Python, the domains plugin, the databases and integrations plugins with DuckDB, and Git for the drift
-page. Start in an empty working directory. You do not need an account or production data.
+Install Shape with the domains extra; see [Install](../INSTALL.md). For the DuckDB walkthrough, install the databases and integrations plugins with their DuckDB extras. You need Python 3.11 or newer; the drift walkthrough also uses Git. Start in an empty directory and keep the generated rows local.
 
 ## Time
 
-Allow 10 minutes for reading and reviewing the output. This is a suggested allocation.
+About 15 minutes.
 
-## 1. Generate and load retail
+## 1. Generate into DuckDB
 
 ```bash {.runnable}
-python - <<'PYCODE'
-import shape
-from shape_databases import DuckDbSink
-result = shape.generate("retail", scale="small", seed=42)
-sink = DuckDbSink()
-for name, table in sorted(result.tables.items()):
-    sink.write("duckdb:///retail.duckdb", name, table.to_batches())
-    print(f"{name}: {table.num_rows} rows")
-print("Wrote retail.duckdb")
-PYCODE
+shape generate retail --scale small --seed 42 --to duckdb:///retail.duckdb --json > duckdb-generation.json
 ```
 
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    address: 1500 rows
-    customer: 1000 rows
-    order: 5000 rows
-    order_line: 12500 rows
-    product: 500 rows
-    product_category: 50 rows
-    promotion: 200 rows
-    return: 850 rows
-    store: 150 rows
-    Wrote retail.duckdb
+    (no output)
     ```
 
-## 2. Read a table back
+This command uses the same retail domain, small scale and seed 42 as the other starters, but writes to DuckDB instead of a CSV directory. The databases plugin handles the write target. The three slashes in `duckdb:///retail.duckdb` select a relative local file; they are part of the write URI form, not a typographical detail. The JSON result goes to a file, so no terminal output is expected here. Use a new working directory for the exercise so the destination is disposable and you do not confuse the new database with an existing development store.
+
+## 2. Inspect the tables and joins
+
+```bash {.runnable}
+python - <<'PYDATA'
+import duckdb
+con = duckdb.connect('retail.duckdb', read_only=True)
+print('Tables:', ', '.join(r[0] for r in con.execute('SHOW TABLES').fetchall()))
+print('Orders:', con.execute('SELECT count(*) FROM "order"').fetchone()[0])
+print('Orders without customers:', con.execute('SELECT count(*) FROM "order" o LEFT JOIN customer c ON o.customer_id = c.customer_id WHERE c.customer_id IS NULL').fetchone()[0])
+print('Order lines without orders:', con.execute('SELECT count(*) FROM order_line l LEFT JOIN "order" o ON l.order_id = o.order_id WHERE o.order_id IS NULL').fetchone()[0])
+con.close()
+PYDATA
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Tables: address, customer, order, order_line, product, product_category, promotion, return, store
+    Orders: 5000
+    Orders without customers: 0
+    Order lines without orders: 0
+    ```
+
+The table list shows all nine retail tables. The order count is 5,000. The two left joins count orders without a matching customer and order lines without a matching order; both counts are zero for this run. These checks inspect stored rows, so they test the write result as well as the generator's relationships. Quote the `order` table name because it is a SQL keyword. The connection is opened read-only for inspection and closed afterward. A zero orphan count covers these two links, not every possible integrity or business requirement. Add the checks your consumer needs instead of treating one join as a complete validation suite.
+
+## 3. Read a table back into a profile
 
 ```bash {.runnable}
 shape profile "duckdb://retail.duckdb?table=customer" --name customer -o customer.shape
@@ -65,7 +74,9 @@ shape profile "duckdb://retail.duckdb?table=customer" --name customer -o custome
     {"shape_content_id": "bb0ad274b2fc0875e1adb2e8cb76c6a586dbfdbe6a47cae2d0d703111093a209", "written": "customer.shape"}
     ```
 
-## 3. Check the single-table capture
+The read form is `duckdb://retail.duckdb?table=customer`: two slashes and an explicit table query. The integrations plugin reads the selected table. This differs from the write URI, which selects the database file as a target. Giving the profile the name customer keeps the artifact's identity clear when you compare it with later captures. The command reads the stored customer rows; it does not profile the entire database or automatically discover every table through this URI. To investigate a different table, select that table and save a separate observation with suitable naming.
+
+## 4. Validate the saved capture
 
 ```bash {.runnable}
 shape profile validate --safe customer.shape
@@ -78,12 +89,12 @@ shape profile validate --safe customer.shape
     CLEAN: no leaks found in customer.shape
     ```
 
-The write URI has three slashes: `duckdb:///retail.duckdb`. The read URI has two and selects a table: `duckdb://retail.duckdb?table=customer`. Safe validation of a multi-table `--dataset` profile fails in 0.9.1; this tutorial validates a single table.
+This single-table validation passes. The origin-verification note appears because the example artifact is unsigned; the data-minimisation verdict is a separate result. The successful single-table path contrasts with the documented multi-table dataset validator limitation you saw in the first tutorial. Before sharing a profile from your own data, review its retained information and the validation result. You now have a complete local round trip: a shipped domain produces related rows, the database writer stores them, SQL checks inspect them, and a source adapter reads a table for profiling. Reuse that sequence when you need a small database fixture for development.
 
 ## What's next
 
-[Continue](../LEARNING_PATHS.md).
+[Choose your learning path](../LEARNING_PATHS.md). Keep the artifacts you reviewed as evidence for the next decision. If a verdict differs on your machine, check that the input, seed, profile options and target file match before changing a threshold or replacing a baseline. Do not make a failing gate pass by deleting the rule that identified the problem.
 
 ## Related
 
-[Concepts](../CONCEPTS.md) · [Known limitations](../KNOWN_LIMITATIONS.md) · [Troubleshooting](../TROUBLESHOOTING.md)
+[Concepts](../CONCEPTS.md) · [Reading the HTML report](../READ_REPORT.md) · [Known limitations](../KNOWN_LIMITATIONS.md) · [Troubleshooting](../TROUBLESHOOTING.md)

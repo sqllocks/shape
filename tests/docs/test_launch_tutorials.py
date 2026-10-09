@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -28,6 +29,7 @@ def test_tutorial(page: Path, tmp_path: Path) -> None:
     assert len(blocks) == markdown.count("```bash {.runnable}"), "Missing expected output"
     env = {**os.environ, "NO_COLOR": "1", "COLUMNS": "100", "SHAPE_KERNEL": "python"}
     env["PYTHONPATH"] = str(ROOT / "src")
+    env["PATH"] = str(Path(sys.executable).parent) + ":" + env["PATH"]
     for command, code, expected_block in blocks:
         expected = "\n".join(line.removeprefix("    ") for line in expected_block.splitlines())
         if expected == "(no output)":
@@ -54,3 +56,7 @@ def test_tutorial_template() -> None:
             assert f"## {heading}" in text, (page, heading)
         assert re.search(r"^## 1\. ", text, re.M)
         assert "status: available" in text
+        prose = re.sub(r"\A---\n.*?\n---\n", "", text, flags=re.S)
+        prose = re.sub(r"<!--.*?-->", "", prose, flags=re.S)
+        prose = re.sub(r"(?ms)^\s*```.*?^\s*```[^\n]*\n?", "", prose)
+        assert 600 <= len(prose.split()) <= 1200, page

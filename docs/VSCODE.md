@@ -17,12 +17,12 @@ generate or run checks. It has no telemetry code or remote-request code in its e
 ## Requirements and evidence
 
 The extension manifest requires VS Code 1.90 or newer. Artifact viewing requires the Shape
-CLI; the code enforces a minimum of 0.9.0. These docs use 0.9.1. Git is needed for comparisons.
+CLI; the code enforces a minimum of 0.9.0.  Git is needed for comparisons.
 `shape.path` is a user-level executable setting, not a repository-controlled setting.
 
 Evidence: `editors/vscode/package.json`, `editors/vscode/src/extension.ts`, the bundled schemas
 and snippets. The repository workflow builds a `.vsix`; this page makes no marketplace claim.
-[Owner: editor maintainer — run a VS Code install transcript before publishing an install command.]
+<!-- owner: editor maintainer — run a VS Code install transcript before publishing an install command. -->
 
 ## Related
 

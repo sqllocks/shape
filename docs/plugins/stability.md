@@ -6,9 +6,6 @@ Status: available (early-access surface); coming (1.x policy).
 
 The compatibility promises below apply to the future 1.x line, not the current early-access release.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
-
-
 This page is the promise Shape makes to plugin authors about plugin API v1. The Protocols
 themselves are in [api-v1.md](api-v1.md) (generated from the code); how to write a plugin is in
 [authoring.md](authoring.md). Every claim below is enforced by a test in this repository
@@ -183,6 +180,15 @@ To check everything an installed distribution registers, through the same host t
 runtime:
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+<!-- example: 2 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
+```text
+python -m shape.plugins.kit my-plugin [--samples my_plugin.samples:SAMPLES]
+```
+
 
 It exits 0 when every plugin conforms, 1 when one does not, and 2 for a usage error. `check_installed`
 does the same from Python. Pin the Shape version range you test against, for example

@@ -2,7 +2,21 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](../contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" integrations
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for integrations
+    ```
 
 
 `sqllocks-shape-integrations` is one first-party plugin with a thin adapter for each tool a team
@@ -42,6 +56,15 @@ the library is missing they are skipped with the reason, never counted as passes
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
+<!-- example: 2 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
+```
+shape lineage emit MANIFEST.json --to URL|file://PATH [--namespace NS] [--token-env VAR]
+```
+
+
 It turns a run manifest into OpenLineage `RunEvent`s: `START`, then `COMPLETE`, or `FAIL` when
 the manifest records a failed gate. `--namespace` defaults to `shape`; it is the namespace of
 the job (`shape.<domain>`) and of the datasets.
@@ -79,6 +102,16 @@ extra.
 **Command:**
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+<!-- example: 3 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
+```
+shape mlflow log MANIFEST.json [--profile P.shape] [--verify-report R.json]
+                 [--experiment NAME] [--tracking-uri URI] [--allow-duplicate]
+```
+
 
 It logs one MLflow run (experiment `shape` unless `--experiment` says otherwise; created when
 missing; the tracking URI is `--tracking-uri` or MLflow's own default):
@@ -149,6 +182,17 @@ Anonymeter: see the note below.
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
+<!-- example: 4 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
+```
+shape evaluate sdmetrics  REAL_DIR SYNTH_DIR [--tables a,b] [-o REPORT.json] [--json]
+shape evaluate anonymeter REAL_DIR SYNTH_DIR --control CONTROL_DIR
+                          [--attacks singling-out,linkability,inference] [-o REPORT.json] [--json]
+```
+
+
 Tables are read from the directories the way `shape verify` reads them: every Parquet, CSV and
 JSONL file is one table, named by the file stem. `--tables` (SDMetrics) names the tables to
 evaluate; by default it is every table of `REAL_DIR`. Every table must exist in the other
@@ -193,6 +237,9 @@ library itself runs under NumPy 2 (the integration tests run it that way). Until
 publishes a release for NumPy 2, install it without its pins:
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+
+
 
 The `anonymeter` extra is declared so that the install command in every message stays the same
 once that release exists.
@@ -241,3 +288,40 @@ different type here than in Shape's own reader.
 
 **What is sent or written:** nothing. The source only reads the file you name; the helper only
 reads the directory you name; neither opens a network connection.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+pip install --quiet --no-deps --no-build-isolation -e "$SHAPE_DOCS_REPO/plugins/shape-integrations"
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    (no output)
+    ```
+
+<a id="local-example-6"></a>
+
+### Example 7
+
+<!-- example: 6 -->
+
+```bash {.runnable-reference}
+pip install --quiet --no-deps --no-build-isolation -e "$SHAPE_DOCS_REPO/plugins/shape-integrations"
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    (no output)
+    ```

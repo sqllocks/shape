@@ -2,12 +2,17 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
-
-
 ## `shape explain`
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+<!-- example: 0 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
+```
+shape explain DIFF.json [--json] [--classified COL1,COL2]
+    [--baseline BASE.shape] [--current CURRENT.shape]
+```
+
 
 `DIFF.json` is what `shape diff A.shape B.shape --json DIFF.json` writes, or the output of
 `shape drift`. The command prints a plain-English narrative: how many changes, in which columns

@@ -15,16 +15,16 @@ Use **available**, **experimental** or **coming** near the top of each page and 
 1. Title and one-line purpose.
 2. What you'll learn.
 3. Prerequisites, including links to actual setup pages.
-4. Time, stated as a suggested reading allocation, not a measured completion claim.
+4. Time, stated as a reading estimate.
 5. Numbered steps. Each shell command uses a `bash {.runnable}` fence. Follow it immediately with a collapsible `Output (exit N)` block containing the complete real combined output in a `text {.expected}` fence. Use `(no output)` for an empty stream.
 6. What's next.
 7. Related.
 
-Each tutorial starts in an empty directory. Commands run in order. The pytest harness creates a temporary directory per page, runs the exact commands, checks the exit code and compares the entire output. Do not hide errors, timing, paths or other fields through normalization. Use small local files and DuckDB. Do not require accounts. Configuration examples are labelled as configuration, not shell commands.
+Each tutorial starts in an empty directory. Commands run in order. The pytest harness creates a temporary directory per page, runs the exact commands, checks the exit code and compares the entire output. Starter transcripts compare every character. Reference examples retain complete real transcripts too. The reference harness validates declared runtime fields (elapsed time, temporary paths, generated job IDs and signing keys) by type, then compares all remaining text exactly. Never normalise data values, findings, scores or errors. Explain the variable fields beside the examples. Use small local files and DuckDB. Do not require accounts. Configuration examples are labelled as configuration, not shell commands.
 
 ## Evidence and links
 
-Run commands exactly as published. If you cannot run a command, omit it and leave `[Owner: role — reason]`. Do not invent sources, dates, calibration, prices or roadmap. Use only committed benchmark numbers with the machine named. Do not compare products. Safe capture is data minimisation, not anonymisation. Describe vendor code as reads, writes or exports. Snowflake and Databricks are write targets.
+Run commands exactly as published. Keep account-dependent examples and label them "Needs a <platform> account. Not run in CI." Record unresolved work in HTML owner comments, which are inventoried in the PR description and block tag deployment. Do not invent sources, dates, calibration, prices or roadmap. Use only committed benchmark numbers with the machine named. Do not compare products. Safe capture is data minimisation, not anonymisation. Describe vendor code as reads, writes or exports. Snowflake and Databricks are write targets.
 
 Use support@shapedata.ai for public contact. The only Premium item is Industry Profile Packs, coming, healthcare first, linked to https://shapedata.ai/. Optional `post:` and `video:` tutorial front matter contains only published URLs; empty values render no links.
 

@@ -2,14 +2,29 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" VERIFY
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for VERIFY
+    ```
 
 
 `shape verify` checks tables you generated or received against a schema, with a set of
 validation gates, and writes a report. The same gates, and a quarantine for what fails them,
 are available from Python as `shape.quality`.
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-0).
+
 
 A directory may mix Parquet, CSV and JSONL files: with `--format auto` (the default) every
 file is loaded as a table named after its file stem, each by its own extension. A table that
@@ -266,7 +281,8 @@ Contract v1 accepts the same two lists as optional top-level rules, `"timeseries
 `"reconcile"` (an older Shape refuses them as unknown keys). They check data, not a profile, so
 `shape check` takes the data too, and a contract with these rules and no data exits `2`:
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-9).
+
 
 ```python
 shape.check(profile, "contract.json", data=tables_or_path)
@@ -363,3 +379,197 @@ gates above.
 timeliness and uniqueness from them, with failing-row samples and an optional flag column. See
 [SCORECARD.md](SCORECARD.md). `--slice-by` scores them per slice; `shape skew` compares serving
 data with training data ([FAIRNESS_AND_SKEW.md](FAIRNESS_AND_SKEW.md)).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape verify out/ --schema gates.json                   # a directory of Parquet, CSV or JSONL files
+shape verify orders.csv --schema gates.json --strict    # exit 1 on warnings too
+shape verify out/ --schema gates.json --statistical -o report.md   # add KS / chi-squared tests
+shape verify out/ --schema gates.json -o report.json
+shape verify out/ --schema gates.json --config verify.json   # add range, temporal, drift, file gates
+shape verify out/ --source real/ --config verify.json        # add the memorization (and utility) gate
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Shape 0.9.1 - Verify
+
+    Data path:   out/
+    Schema:      gates.json
+    Statistical: no
+
+    Gate                         Status   Errors Warnings
+    -------------------------------------------------------
+    schema_conformance           PASS          0        7
+    null_constraint              PASS          0        0
+    unique_constraint            PASS          0        0
+    referential_integrity        PASS          0        0
+
+    Row counts:
+      customers: 20
+      orders: 100
+
+      WARN  [schema_conformance]: Table 'orders' column 'order_id': expected type compatible with 'string', got 'int64'
+      WARN  [schema_conformance]: Table 'orders' column 'customer_id': expected type compatible with 'string', got 'int64'
+      WARN  [schema_conformance]: Table 'orders' column 'amount': expected type compatible with 'string', got 'float64'
+      WARN  [schema_conformance]: Table 'orders' column 'order_total': expected type compatible with 'string', got 'float64'
+      WARN  [schema_conformance]: Table 'orders' column 'is_gift': expected type compatible with 'string', got 'bool'
+      WARN  [schema_conformance]: Table 'orders' column 'churned': expected type compatible with 'string', got 'bool'
+      WARN  [schema_conformance]: Table 'orders' column 'salary': expected type compatible with 'string', got 'int64'
+
+    Result: PASS
+    Shape 0.9.1 - Verify
+
+    Data path:   orders.csv
+    Schema:      gates.json
+    Statistical: no
+
+    Gate                         Status   Errors Warnings
+    -------------------------------------------------------
+    schema_conformance           PASS          0        7
+    null_constraint              PASS          0        0
+    unique_constraint            PASS          0        0
+    referential_integrity        PASS          0        0
+
+    Row counts:
+      orders: 100
+
+      WARN  [schema_conformance]: Table 'orders' column 'order_id': expected type compatible with 'string', got 'int64'
+      WARN  [schema_conformance]: Table 'orders' column 'customer_id': expected type compatible with 'string', got 'int64'
+      WARN  [schema_conformance]: Table 'orders' column 'amount': expected type compatible with 'string', got 'float64'
+      WARN  [schema_conformance]: Table 'orders' column 'order_total': expected type compatible with 'string', got 'float64'
+      WARN  [schema_conformance]: Table 'orders' column 'is_gift': expected type compatible with 'string', got 'bool'
+      WARN  [schema_conformance]: Table 'orders' column 'churned': expected type compatible with 'string', got 'bool'
+      WARN  [schema_conformance]: Table 'orders' column 'salary': expected type compatible with 'string', got 'int64'
+
+    Result: PASS
+    Shape 0.9.1 - Verify
+
+    Data path:   out/
+    Schema:      gates.json
+    Statistical: yes
+
+    Gate                         Status   Errors Warnings
+    -------------------------------------------------------
+    schema_conformance           PASS          0        7
+    null_constraint              PASS          0        0
+    unique_constraint            PASS          0        0
+    referential_integrity        PASS          0        0
+    distribution                 PASS          0        0
+
+    Row counts:
+      customers: 20
+      orders: 100
+
+      WARN  [schema_conformance]: Table 'orders' column 'order_id': expected type compatible with 'string', got 'int64'
+      WARN  [schema_conformance]: Table 'orders' column 'customer_id': expected type compatible with 'string', got 'int64'
+      WARN  [schema_conformance]: Table 'orders' column 'amount': expected type compatible with 'string', got 'float64'
+      WARN  [schema_conformance]: Table 'orders' column 'order_total': expected type compatible with 'string', got 'float64'
+      WARN  [schema_conformance]: Table 'orders' column 'is_gift': expected type compatible with 'string', got 'bool'
+      WARN  [schema_conformance]: Table 'orders' column 'churned': expected type compatible with 'string', got 'bool'
+      WARN  [schema_conformance]: Table 'orders' column 'salary': expected type compatible with 'string', got 'int64'
+
+    Result: PASS
+    Report written to report.md
+    Shape 0.9.1 - Verify
+
+    Data path:   out/
+    Schema:      gates.json
+    Statistical: no
+
+    Gate                         Status   Errors Warnings
+    -------------------------------------------------------
+    schema_conformance           PASS          0        7
+    null_constraint              PASS          0        0
+    unique_constraint            PASS          0        0
+    referential_integrity        PASS          0        0
+
+    Row counts:
+      customers: 20
+      orders: 100
+
+      WARN  [schema_conformance]: Table 'orders' column 'order_id': expected type compatible with 'string', got 'int64'
+      WARN  [schema_conformance]: Table 'orders' column 'customer_id': expected type compatible with 'string', got 'int64'
+      WARN  [schema_conformance]: Table 'orders' column 'amount': expected type compatible with 'string', got 'float64'
+      WARN  [schema_conformance]: Table 'orders' column 'order_total': expected type compatible with 'string', got 'float64'
+      WARN  [schema_conformance]: Table 'orders' column 'is_gift': expected type compatible with 'string', got 'bool'
+      WARN  [schema_conformance]: Table 'orders' column 'churned': expected type compatible with 'string', got 'bool'
+      WARN  [schema_conformance]: Table 'orders' column 'salary': expected type compatible with 'string', got 'int64'
+
+    Result: PASS
+    Report written to report.json
+    Shape 0.9.1 - Verify
+
+    Data path:   out/
+    Schema:      gates.json
+    Config:      verify.json
+    Statistical: no
+
+    Gate                         Status   Errors Warnings
+    -------------------------------------------------------
+    schema_conformance           PASS          0        7
+    null_constraint              PASS          0        0
+    unique_constraint            PASS          0        0
+    referential_integrity        PASS          0        0
+
+    Row counts:
+      customers: 20
+      orders: 100
+
+      WARN  [schema_conformance]: Table 'orders' column 'order_id': expected type compatible with 'string', got 'int64'
+      WARN  [schema_conformance]: Table 'orders' column 'customer_id': expected type compatible with 'string', got 'int64'
+      WARN  [schema_conformance]: Table 'orders' column 'amount': expected type compatible with 'string', got 'float64'
+      WARN  [schema_conformance]: Table 'orders' column 'order_total': expected type compatible with 'string', got 'float64'
+      WARN  [schema_conformance]: Table 'orders' column 'is_gift': expected type compatible with 'string', got 'bool'
+      WARN  [schema_conformance]: Table 'orders' column 'churned': expected type compatible with 'string', got 'bool'
+      WARN  [schema_conformance]: Table 'orders' column 'salary': expected type compatible with 'string', got 'int64'
+
+    Result: PASS
+    Shape 0.9.1 - Verify
+
+    Data path:   out/
+    Config:      verify.json
+    Source:      real/
+    Statistical: no
+
+    Gate                         Status   Errors Warnings
+    -------------------------------------------------------
+    memorization                 PASS          0        2
+
+    Row counts:
+      customers: 20
+      orders: 100
+
+      WARN  [memorization]: customers: no column is classified CONFIDENTIAL or above, so reproduced rows are reported but cannot fail the gate (set "classifications" in the verify configuration)
+      WARN  [memorization]: orders: no column is classified CONFIDENTIAL or above, so reproduced rows are reported but cannot fail the gate (set "classifications" in the verify configuration)
+
+    Result: PASS
+    ```
+
+<a id="local-example-9"></a>
+
+### Example 10
+
+<!-- example: 9 -->
+
+```bash {.runnable-reference}
+shape check orders.shape contract.json --data out/        # exit 1 on a violation
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape: note: orders.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    {"passed": true, "violations": []}
+    ```

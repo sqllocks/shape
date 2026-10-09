@@ -2,7 +2,21 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" CONSUMER_CONTRACTS
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for CONSUMER_CONTRACTS
+    ```
 
 
 A team that consumes a dataset can state the parts it depends on, as a file, so that the
@@ -59,7 +73,16 @@ from other repositories is not automated: consumers commit their files, or CI co
 
 ## Running them (producer CI)
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+<!-- example: 1 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
+```
+shape contracts check-consumers PROFILE.shape [--consumers DIR] [--source NAME]
+        [--project shape.yml] [--require-consumers] [--baseline BASE.shape]
+        [-o REPORT.json] [--json]
+```
+
 
 It runs every consumer contract in `DIR` (default `contracts/consumers/` next to `shape.yml`,
 found from the working folder upwards) whose `source` matches the source. The source is
@@ -87,7 +110,8 @@ A consumer contract that cannot be checked against the producer's profile at all
 
 ### What a change breaks
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-3).
+
 
 A rule that needs a value the profile does not hold because it was captured safe (the default
 `.shape`, `docs/PRIVACY_MODEL.md`: a `min` or `max` of a column whose extremes were removed, an
@@ -138,3 +162,27 @@ the profile of the base branch (for example the one `shape registry` holds).
 Both files declare `format` and an integer `version`. A consumer contract written for a newer
 version is refused with a message, never half read. Frozen version 1 documents live in
 `tests/fixtures/consumers/v1/` and must keep loading (`tests/consumers/test_compat.py`).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-3"></a>
+
+### Example 4
+
+<!-- example: 3 -->
+
+```bash {.runnable-reference}
+shape contracts check-consumers new.shape --baseline base.shape --source orders
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape: note: new.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: base.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    PASS  local-reader
+    1 of 1 consumers pass
+    ```

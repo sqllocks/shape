@@ -4,7 +4,9 @@ Status: available.
 
 **Early access 0.9.1.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 
-## 0.9.1 — [Owner: release date]
+## 0.9.1
+
+<!-- owner: release date -->
 
 - `shape share-bundle verify` bounds every member of a bundle before reading it (#684): at most
   10,000 members, 8 MiB for `attestation.json` and `manifest.json`, 2 GiB per data file and 8 GiB

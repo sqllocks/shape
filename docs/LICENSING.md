@@ -1,6 +1,6 @@
 # Licensing
 
-> Not legal advice. [Owner: counsel review before publishing]
+> Not legal advice. <!-- owner: counsel review before publishing -->
 
 Understand the code licence and the notices attached to data.
 

@@ -2,7 +2,21 @@
 
 Status: available.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" PROFILING_NOTES
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for PROFILING_NOTES
+    ```
 
 
 What `shape profile` (and `shape.profile`) does with CSV files, non-finite numbers, decimals, time zones, large
@@ -17,7 +31,8 @@ The delimiter is sniffed from the first 100 rows: comma, semicolon, tab or pipe,
 same number (two or more) of fields (quotes are respected, and a comma wins when it qualifies). Set it when sniffing
 guesses wrong, along with the other reader options:
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-0).
+
 
 ```python
 shape.profile("export.csv", delimiter=";", encoding="latin-1", quotechar="'", header=True)
@@ -55,7 +70,8 @@ A column that only looks like an identifier (a fixed width of five or more digit
 `zip` or `phone` over values of mixed width) stays an integer and `shape profile` warns, naming the columns and the option
 that keeps them as text. The options:
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-2).
+
 
 `shape.profile(path, string_columns=["zip"], types={"amount": "float"}, infer_types="off")` is the same from Python, and
 `shape.io.CsvOptions(string_columns=, column_types=, infer_types=)` for the readers. Types are `string`, `integer`, `float`,
@@ -110,7 +126,8 @@ reaches 0.1% (`SafeConfig.pii_pattern_floor`). See [PRIVACY_MODEL.md](PRIVACY_MO
 For a profile kept per run, write the safe form with `--compact` (one line, no null fields; it reads back the same) and
 pick the columns with `--columns A,B,*_id` or `--exclude 'raw_*'`:
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-3).
+
 
 ### Input budget for untrusted files
 
@@ -377,7 +394,8 @@ states them in each column's card as `mixture: k=2 ...` and `seasonality: period
 A profile says how much of the data it saw. Nothing is sampled unless you ask, and every table's profile records what was
 done, whether you asked or not.
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-10).
+
 
 ```python
 shape.profile("orders.csv", sample=100_000)                       # an int is a number of rows
@@ -507,3 +525,99 @@ min_confidence=0.99)` returns the same as a list of dicts. The findings:
 
 A profile written before type inference was recorded has no `type_inference`: `shape types` says so on stderr and compares
 only the contract. The findings become `type` proposals with `shape proposals propose --kinds type` (`docs/PROPOSALS.md`).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape profile export.csv -o export.shape --delimiter ';' --encoding latin-1
+shape profile raw.csv -o raw.shape --no-header          # columns are f0, f1, ...
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: export.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    {"shape_content_id": "6d093e05eddaf930c70203ffa852139c4007a26df4b083236be3515bb40f059d", "written": "export.shape"}
+    {"shape_content_id": "a605edae085e7c45531e83ad09147e7ab2b5b8237d5c8494cc8b0ecc15dc112a", "written": "raw.shape"}
+    ```
+
+<a id="local-example-2"></a>
+
+### Example 3
+
+<!-- example: 2 -->
+
+```bash {.runnable-reference}
+shape profile members.csv -o members.shape --string-columns zip,npi        # keep these as text
+shape profile members.csv -o members.shape --types types.json              # {"zip": "string", "amount": "float"}
+shape profile members.csv -o members.shape --infer-types off               # read every column as text
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: members.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    {"shape_content_id": "d3fd1943d642e07d8b12312432fc4bd78c95d3f2d4575d052ddb8f9c1623f6ca", "written": "members.shape"}
+    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: members.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    {"shape_content_id": "0f819d1eb8d21d6e3383a0d2333bcf76bf04dc31291fe1f27d6adcde7913cc30", "written": "members.shape"}
+    {"shape_content_id": "5983c8d28223c591e9620e2bc7f9bea100abbf66e0dfa41361f50d888c66a4f9", "written": "members.shape"}
+    ```
+
+<a id="local-example-3"></a>
+
+### Example 4
+
+<!-- example: 3 -->
+
+```bash {.runnable-reference}
+shape profile safe daily.shape -o daily.safe.json --compact --exclude 'notes,raw_*'
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape: note: daily.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    {"unsafe": false, "written": "daily.safe.json"}
+    ```
+
+<a id="local-example-10"></a>
+
+### Example 11
+
+<!-- example: 10 -->
+
+```bash {.runnable-reference}
+shape profile orders.csv -o orders.shape --sample 100000                       # 100,000 rows
+shape profile orders.csv -o orders.shape --sample 10% --sample-method systematic --sample-seed 7
+shape profile data/ --dataset -o shop.shape --sample 20%                       # each table
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    shape: note: profiled a random sample of 100 of 100 rows (seed 42)
+    {"shape_content_id": "2dfcbd3536f3d02c1b30242e1c213f718f9793e9ee16ea6e17ab38776e25ba09", "written": "orders.shape"}
+    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    shape: note: profiled a systematic sample of 10 of 100 rows (seed 7)
+    {"shape_content_id": "b5e327e3c20efdddc04d35b81ea4c6a5a57549389a1580eb139d571f2d904aef", "written": "orders.shape"}
+    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    shape: note: profiled a random sample of 4 of 20 rows (seed 42), table customers
+    shape: note: profiled a random sample of 20 of 100 rows (seed 42), table orders
+    {"shape_content_id": "e61f01b12dfbf067d390c120e7e78ec5a08e94c833ebdabb71f70c57ce96baf3", "written": "shop.shape"}
+    ```

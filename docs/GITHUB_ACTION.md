@@ -51,9 +51,7 @@ jobs:
           comment: 'false'
 ```
 
-[Owner: CI maintainer — run this workflow after the 0.9.1 public install is available; package
-publication currently blocks a successful hosted transcript. The local Action logic is tested
-below without posting a comment.]
+<!-- owner: CI maintainer — supply a hosted workflow transcript from a GitHub account. The local Action logic is tested below without posting a comment. -->
 
 ## Local action execution
 
@@ -83,7 +81,7 @@ just to turn the check green. See [When drift goes red](DRIFT_RED.md).
 
 The action outputs `verdict`, `findings` and `comment-path`. Comments on fork pull requests can
 be skipped when the token is read-only. Do not run untrusted contributor code with write secrets.
-[Owner: repository owner — select the required status check if you want to gate merges.]
+<!-- owner: repository owner — select the required status check if you want to gate merges. -->
 
 ## What's next
 

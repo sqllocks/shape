@@ -2,14 +2,29 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" SCORECARD
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for SCORECARD
+    ```
 
 
 `shape scorecard` runs the validation gates of [`shape verify`](VERIFY.md) and turns their
 results into one score per data quality dimension, with the failing rows behind each score.
 It adds no checks of its own: a score is computed from the checks that already exist.
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-0).
+
 
 Exit `0` when the scorecard was produced and `2` on an input error (missing data, bad schema,
 bad suppression file). The command reports quality; it does not fail a build, with one
@@ -148,3 +163,125 @@ The JSON scorecard declares `"format": "shape-scorecard"` and an integer `"versi
 A scorecard without slices is still written as version 1, byte for byte, so a stored trend
 history keeps loading; this release reads both versions from `--history`, and refuses a newer
 one with an error that says to upgrade Shape.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape scorecard out/ --schema gates.json                      # Markdown on standard output
+shape scorecard out/ --schema gates.json --json -o card.json  # JSON
+shape scorecard out/ --schema gates.json --config verify.json --samples 3
+shape scorecard out/ --schema gates.json --flag-output flagged/   # add a flag column to copies
+shape scorecard out/ --schema gates.json --slice-by region --max-slice-gap 10   # per slice
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    # Shape data quality scorecard
+
+    **Generated:** 2026-10-09T17:02:17.811415+00:00  
+    **Data path:** out/  
+    **Shape version:** 0.9.1  
+    **Overall:** 100
+
+    | Dimension | Score | Trend | Checks | Failing |
+    |-----------|-------|-------|--------|---------|
+    | accuracy | n/a | - | 0 | 0 |
+    | completeness | 100 | - | 23 | 0 |
+    | conformity | 100 | - | 1 | 0 |
+    | consistency | n/a | - | 0 | 0 |
+    | timeliness | n/a | - | 0 | 0 |
+    | uniqueness | 100 | - | 1 | 0 |
+    {"format": "shape-result", "version": 1, "command": "scorecard", "exit_code": 0}
+    # Shape data quality scorecard
+
+    **Generated:** 2026-10-09T17:02:19.406272+00:00  
+    **Data path:** out/  
+    **Shape version:** 0.9.1  
+    **Overall:** 100
+
+    | Dimension | Score | Trend | Checks | Failing |
+    |-----------|-------|-------|--------|---------|
+    | accuracy | n/a | - | 0 | 0 |
+    | completeness | 100 | - | 23 | 0 |
+    | conformity | 100 | - | 1 | 0 |
+    | consistency | n/a | - | 0 | 0 |
+    | timeliness | n/a | - | 0 | 0 |
+    | uniqueness | 100 | - | 1 | 0 |
+    # Shape data quality scorecard
+
+    **Generated:** 2026-10-09T17:02:20.186663+00:00  
+    **Data path:** out/  
+    **Shape version:** 0.9.1  
+    **Overall:** 100
+
+    | Dimension | Score | Trend | Checks | Failing |
+    |-----------|-------|-------|--------|---------|
+    | accuracy | n/a | - | 0 | 0 |
+    | completeness | 100 | - | 23 | 0 |
+    | conformity | 100 | - | 1 | 0 |
+    | consistency | n/a | - | 0 | 0 |
+    | timeliness | n/a | - | 0 | 0 |
+    | uniqueness | 100 | - | 1 | 0 |
+    # Shape data quality scorecard
+
+    **Generated:** 2026-10-09T17:02:21.034444+00:00  
+    **Data path:** out/  
+    **Shape version:** 0.9.1  
+    **Overall:** 100
+
+    | Dimension | Score | Trend | Checks | Failing |
+    |-----------|-------|-------|--------|---------|
+    | accuracy | n/a | - | 0 | 0 |
+    | completeness | 100 | - | 23 | 0 |
+    | conformity | 100 | - | 1 | 0 |
+    | consistency | n/a | - | 0 | 0 |
+    | timeliness | n/a | - | 0 | 0 |
+    | uniqueness | 100 | - | 1 | 0 |
+
+    ## Slices
+
+    Sliced by region; slices under 30 rows are pooled as `(small slices)`.
+
+    ### customers
+
+    | Dimension | Gap | Worst slice | Trend |
+    |-----------|-----|-------------|-------|
+    | accuracy | n/a |  | - |
+    | completeness | n/a |  | - |
+    | conformity | n/a |  | - |
+    | consistency | n/a |  | - |
+    | timeliness | n/a |  | - |
+    | uniqueness | n/a |  | - |
+
+    | Slice | Rows | Share |
+    |---|---|---|
+    | (small slices) | 20 | 1 |
+
+    ### orders
+
+    | Dimension | Gap | Worst slice | Trend |
+    |-----------|-----|-------------|-------|
+    | accuracy | n/a |  | - |
+    | completeness | 0 | north | - |
+    | conformity | n/a |  | - |
+    | consistency | n/a |  | - |
+    | timeliness | n/a |  | - |
+    | uniqueness | 0 | north | - |
+
+    | Slice | Rows | Share |
+    |---|---|---|
+    | north | 50 | 0.5 |
+    | south | 50 | 0.5 |
+
+    No gap above 10.
+    ```

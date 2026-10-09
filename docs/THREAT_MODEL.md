@@ -3,8 +3,7 @@
 Status: experimental.
 
 
-Review the shipped source and tests for each control. [Owner: security reviewer — confirm this
-threat model against the deployment before publishing an assurance statement.]
+Review the shipped source and tests for each control. <!-- owner: security reviewer — confirm this threat model against the deployment before publishing an assurance statement. -->
 
 ## Assets
 

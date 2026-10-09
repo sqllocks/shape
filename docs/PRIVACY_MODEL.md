@@ -2,7 +2,21 @@
 
 Status: available.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" PRIVACY_MODEL
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for PRIVACY_MODEL
+    ```
 
 
 A safe capture is data minimisation, not anonymisation. Aggregates, rare categories, small
@@ -22,7 +36,8 @@ path)` and `shape profile registry save`. The profile that `shape.profile()` ret
 not changed, so everything that compares it (the equivalence verifiers, the kernel parity checks)
 sees the same values as before.
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-0).
+
 
 ```python
 shape.save(profile, "orders.shape")                       # capture="safe"
@@ -98,7 +113,8 @@ real status codes, categories or region names with their frequencies), `--captur
 in the clear in the file you commit. A **value vault** keeps them in a separate file, encrypted with
 AES-256-GCM under a key you hold, and the `.shape` stays the safe, committable capture:
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-2).
+
 
 Only what the safe capture withheld is vaulted, column by column, as the policy says (`categories`,
 `extremes`, `all`, `none`; by column, by classification or by default). Without `--vault`, nothing
@@ -132,3 +148,63 @@ Every released cell must be absent or stand for at least the minimum cohort `k` 
 - a safe-profile column whose non-null rows are fewer than its `k` releases no value statistic (#395): `mean`, `std`, `quantiles`, `bounds` and `distribution_params` are `null`, since the mean of one row is the value. `--unsafe-full-fidelity` keeps them, and `shape profile validate --safe` reports such a statistic as a finding (rule `small-cohort-statistic`).
 
 This limits what a single release shows. It does not stop differencing across releases (see `differencing_risk`) and is not a sharing guarantee.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape profile orders.csv -o orders.shape                      # --capture safe is the default
+shape profile orders.csv -o orders.shape --k 10 --column-k status=25
+shape profile orders.csv -o orders.shape --classify ssn=CONFIDENTIAL --classify salary=SECRET
+shape profile orders.csv -o orders.full.shape --capture full  # real values: do not commit or share
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    {"shape_content_id": "df628a613f3894333c23e9393dce2090bcd2e4d85b2680aa12e7ba5fb8fd1cb5", "written": "orders.shape"}
+    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    {"shape_content_id": "bca50b3fa97121a44d1c6395f800a57600c80d2ed40fa9348e4f16a0b7284a17", "written": "orders.shape"}
+    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    {"shape_content_id": "df628a613f3894333c23e9393dce2090bcd2e4d85b2680aa12e7ba5fb8fd1cb5", "written": "orders.shape"}
+    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    shape: warning: --capture full keeps real values in orders.full.shape; do not commit or share it
+    {"shape_content_id": "0320083af8a193c72f4e302aa1bd6484eee33ddba696c5a5e3543088e9ffca2d", "written": "orders.full.shape"}
+    ```
+
+<a id="local-example-2"></a>
+
+### Example 3
+
+<!-- example: 2 -->
+
+```bash {.runnable-reference}
+shape profile orders.csv -o orders.shape --vault orders.shapevault \
+      --vault-policy policy.json --kek file://KEK.key
+shape generate --from orders.shape --vault orders.shapevault --kek file://KEK.key -f csv -o out
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    {"shape_content_id": "df628a613f3894333c23e9393dce2090bcd2e4d85b2680aa12e7ba5fb8fd1cb5", "vault": "orders.shapevault", "written": "orders.shape"}
+    shape: note: orders.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    profile fit: 96 approximate, 97 not modelled, 265 preserved, 2 vault (see `shape plan`)
+    shape: warning: output generated with orders.shapevault contains real values from the vault; treat it like the source data
+    Wrote 1 csv files to out: 100 rows in 1 tables (0.08s)
+    ```

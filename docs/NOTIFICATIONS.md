@@ -2,7 +2,21 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" NOTIFICATIONS
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for NOTIFICATIONS
+    ```
 
 
 When a scheduled check finds drift, someone has to know. After `shape diff`, `check`, `verify` or
@@ -45,7 +59,8 @@ before.
 For one run, add a target on the command line: `--notify REF` (repeatable) on `diff`, `check`,
 `verify` and `fidelity`. It is sent on every run of that command, on top of the file's targets.
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-1).
+
 
 `shape notify test [--project DIR]` sends a notification with `"verdict": "test"` to **every**
 configured target (whatever its `on` and `commands`), prints which were delivered and exits 1 if any
@@ -136,3 +151,28 @@ so a receiver that is reachable from the internet should always use one.
 
 Receivers should answer quickly with a 2xx and do their work afterwards: a slow receiver is waited for
 up to 10 seconds, three times.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-1"></a>
+
+### Example 2
+
+<!-- example: 1 -->
+
+```bash {.runnable-reference}
+shape diff --source orders current.shape --notify env://SHAPE_DRIFT_WEBHOOK
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape: note: current.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: /tmp/docs-reference-runs/NOTIFICATIONS/baseline.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    bump: none (0 breaking, 0 additive, 0 cosmetic)
+    shape: warning: notification to env://SHAPE_DRIFT_WEBHOOK failed: environment variable SHAPE_DRIFT_WEBHOOK is not set (env://SHAPE_DRIFT_WEBHOOK)
+    {"changes": [], "drifted": false, "project": {"baseline": {"entries": [{"artifact": "/tmp/docs-reference-runs/NOTIFICATIONS/baseline.shape"}], "kind": "pinned"}, "file": "/tmp/docs-reference-runs/NOTIFICATIONS/shape.yml", "format": "shape-project", "source": "orders", "version": 1}, "semver": {"additive": 0, "breaking": 0, "bump": "none", "cosmetic": 0}}
+    ```

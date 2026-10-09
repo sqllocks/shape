@@ -2,7 +2,21 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" CI
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for CI
+    ```
 
 
 The checking commands write the two reports CI systems read, every command ends with a
@@ -150,7 +164,8 @@ changes a registry or project file. It reads and checks the inputs, resolves the
 opening a connection or signing in, prints the planned actions, writes nothing and exits 0, or 2
 for an input the command would refuse:
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-4).
+
 
 - `actions` is a list of `{"action": "write" | "create" | "delete" | "send", "target": ...}`:
   `create` for a file that does not exist, `write` for one that does, `delete` for something
@@ -275,3 +290,131 @@ Every command's codes are in [`EXIT_CODES.md`](EXIT_CODES.md), generated from
 `shape.cli.exitcodes`; `python scripts/gen_exit_codes.py --check` fails when it is out of date
 and runs in `make check`. In short: 0 ok, 1 a check failed, 2 bad input, 3 and above a command's
 own verdict.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-4"></a>
+
+### Example 5
+
+<!-- example: 4 -->
+
+```bash {.runnable-reference}
+shape diff a.shape b.shape --junit reports/diff.xml --dry-run
+shape emit retail --sink kafka://user:secret@broker:9092/topic --dry-run --json
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    would create reports/diff.xml
+    {
+      "format": "shape-dry-run",
+      "version": 1,
+      "command": "emit",
+      "actions": [
+        {
+          "action": "send",
+          "target": "kafka://broker:9092/topic"
+        }
+      ],
+      "plan": {
+        "format": "shape-emit-plan",
+        "version": 1,
+        "command": "emit",
+        "target": {
+          "name": "retail",
+          "mode": null,
+          "seed": 42,
+          "scale": null,
+          "tables": [
+            {
+              "name": "customer",
+              "rows": 1000
+            },
+            {
+              "name": "address",
+              "rows": 1500
+            },
+            {
+              "name": "product_category",
+              "rows": 50
+            },
+            {
+              "name": "product",
+              "rows": 500
+            },
+            {
+              "name": "promotion",
+              "rows": 200
+            },
+            {
+              "name": "store",
+              "rows": 150
+            },
+            {
+              "name": "order",
+              "rows": 5000
+            },
+            {
+              "name": "order_line",
+              "rows": 12500
+            },
+            {
+              "name": "return",
+              "rows": 850
+            }
+          ],
+          "total_events": 21750
+        },
+        "event_order": "row",
+        "limits": {
+          "max_events": null,
+          "duration": null,
+          "events": 21750
+        },
+        "event_format": "json",
+        "envelope": "flat",
+        "destinations": [
+          {
+            "role": "sink",
+            "uri": "kafka://user:***@broker:9092/topic",
+            "kind": "emitter",
+            "scheme": "kafka",
+            "plugin": "kafka",
+            "event_format": "json"
+          }
+        ],
+        "credentials": [],
+        "checkpoint": {
+          "path": null,
+          "state": "fresh",
+          "offset": 0
+        },
+        "pacing": {
+          "mode": "unpaced",
+          "rate": null,
+          "arrivals": "constant",
+          "bursts": 0,
+          "ramps": 0,
+          "curve": null,
+          "max_rate": null,
+          "speed": null,
+          "day_seconds": null,
+          "expected_seconds": null,
+          "peak_events_per_minute": null
+        },
+        "drift_plan": null,
+        "answer_key": null,
+        "faults": {
+          "out_of_order": 0.0,
+          "anomaly_fraction": 0.0,
+          "duplicate_fraction": 0.0,
+          "poison_fraction": 0.0
+        }
+      }
+    }
+    ```

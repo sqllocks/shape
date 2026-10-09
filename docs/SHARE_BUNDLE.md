@@ -2,9 +2,6 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
-
-
 A bundle is a zip of generated data, the run manifest when there is one, and `attestation.json`: a
 signed statement that named checks passed on exactly this data. It gives the person you hand the
 data to something to verify, instead of your word.
@@ -21,7 +18,16 @@ that the signer is trustworthy.
 
 ## Commands
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+<!-- example: 0 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
+```bash
+shape share-bundle create DATA_DIR --source SOURCE_DIR --classifications CLASSES.json \
+    -o BUNDLE.zip [--key PRIVATE_KEY] [--top-k 20]
+shape share-bundle verify BUNDLE.zip [--public-key KEY]
+```
+
 
 `DATA_DIR` and `SOURCE_DIR` hold one `NAME.csv`, `NAME.parquet` or `NAME.jsonl` per table, as for
 `shape verify --source`; a table is compared with the source table of the same name.

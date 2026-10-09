@@ -2,7 +2,21 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" GENERATION_ENGINE
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for GENERATION_ENGINE
+    ```
 
 
 The engine turns a generation schema into tables, chunk by chunk. This page is the contract that
@@ -189,7 +203,8 @@ plus `ALTER TABLE ... ADD CONSTRAINT ... FOREIGN KEY`) into a generation schema.
 read wherever the dialect writes them: a table-level `FOREIGN KEY` constraint, an `ALTER TABLE`, or
 a column-level `REFERENCES` clause.
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-1).
+
 
 | Option | Meaning |
 |---|---|
@@ -314,7 +329,8 @@ composite is the concept's primary and the others get a bridge column
 `shared_<concept>_<domain>_<table>_id`, a foreign key to the primary's key. A preset may instead name its
 links (`person: hr.employee`, `retail: customer.customer_id`).
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-3).
+
 
 `generate`, `describe` and `presets` take a composite as their target too, and
 `shape.api.generate("enterprise", scale="small")` returns its tables. A composite has the `3nf` mode only.
@@ -415,8 +431,7 @@ short-lived arrays a large part of a run. Two cases:
   (`shape.generation.runtime.generation_memory`).
 
 `SHAPE_MEMORY_POOL=default` turns all of it off. Values are unaffected by pool selection; arrays remain valid with their original pool.
-[Owner: performance maintainer — commit a product measurement with the machine and workload
-before publishing allocator timing numbers.]
+<!-- owner: performance maintainer — commit a product measurement with the machine and workload before publishing allocator timing numbers. -->
 
 `shape.generation.keypos` finds the row of a key (`first_positions`, `first_rows`): for the primary key
 of a parent that is a sequence (`start`, `start + 1`, ...) the row is `key - start`, found by the native
@@ -446,7 +461,8 @@ backslash is written as `E'...'` with the backslash doubled, which reads the sam
 
 ## The command line
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-6).
+
 
 The generation path avoids importing pandas directly (see
 `shape.generation.arrowkit`), loads a sink on a writer thread, and, run as the program with no
@@ -473,7 +489,8 @@ In Python, `shape.api.generate("retail", scale="medium", seed=42, mode="star")` 
 Every command can log JSON lines and write its metrics, with the options before the command or
 environment variables:
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-7).
+
 
 | Option | Variable | Meaning |
 |---|---|---|
@@ -490,3 +507,508 @@ Use [the tested starters](TUTORIAL.md) for local commands and complete output.
 `tables` make it a generation schema (checked against the JSON Schema, then by `GenSchema.validate`;
 errors exit 1, warnings are printed), `name` and `fields` make it a contract, and anything else,
 including a document in another tool's format, exits 2.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-1"></a>
+
+### Example 2
+
+<!-- example: 1 -->
+
+```bash {.runnable-reference}
+shape from-ddl tables.sql                      # writes tables.gen.json
+shape from-ddl tables.sql -o shop.gen.json --domain shop -s medium:customer=5000,order=25000
+shape from-ddl tables.sql --no-smart           # type and name heuristics only
+shape from-ddl tables.sql --explain            # print every inference decision
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Shape DDL import (smart)
+
+      Source: tables.sql
+      Output: tables.gen.json
+      Tables: 1
+      Relationships: 0
+      Business rules: 1
+      Inferences: 4
+
+      orders: 4 columns (PK: order_id)
+
+    Schema written to tables.gen.json
+    Shape DDL import (smart)
+
+      Source: tables.sql
+      Output: shop.gen.json
+      Tables: 1
+      Relationships: 0
+      Business rules: 1
+      Inferences: 4
+
+      orders: 4 columns (PK: order_id)
+
+    Schema written to shop.gen.json
+    Shape DDL import
+
+      Source: tables.sql
+      Output: tables.gen.json
+      Tables: 1
+      Relationships: 0
+      Business rules: 0
+
+      orders: 4 columns (PK: order_id)
+
+    Schema written to tables.gen.json
+    Shape DDL import (smart)
+
+      Source: tables.sql
+      Output: tables.gen.json
+      Tables: 1
+      Relationships: 0
+      Business rules: 1
+      Inferences: 4
+
+      orders: 4 columns (PK: order_id)
+
+    Schema written to tables.gen.json
+
+    --- Inference Report ---
+
+      [TC-UNKNOWN] orders: Classified as UNKNOWN (confidence: 80%)
+      [CA-SCALE] orders: Root table — scale presets set (1K / 50K / 500K) (confidence: 90%)
+      [ND-MONETARY] orders.amount: Upgraded to log_normal distribution based on MONETARY semantic (confidence: 75%)
+      [BR-05] orders.amount: Monetary column amount >= 0 (confidence: 80%)
+    ```
+
+<a id="local-example-3"></a>
+
+### Example 4
+
+<!-- example: 3 -->
+
+```bash {.runnable-reference}
+shape presets --composites                    # the six presets: enterprise, healthcare_system, smart_factory,
+                                              # digital_commerce, campus, telecom_bundle
+shape composite enterprise --scale small      # a preset ...
+shape composite retail+hr+financial -f parquet -o out/    # ... or domains joined by '+'
+shape presets campus                          # rows per table, as for a domain
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Composite presets (6):
+
+      enterprise           Enterprise dataset combining retail, HR, and financial domains
+                           Domains: retail, hr, financial
+
+      healthcare_system    Healthcare system with insurance and HR
+                           Domains: healthcare, insurance, hr
+
+      smart_factory        Smart factory combining manufacturing, IoT, and supply chain
+                           Domains: manufacturing, iot, supply_chain
+
+      digital_commerce     Digital commerce with retail, marketing, and financial data
+                           Domains: retail, marketing, financial
+
+      campus               University campus combining education and HR
+                           Domains: education, hr
+
+      telecom_bundle       Telecom provider with marketing and billing
+                           Domains: telecom, marketing, financial
+
+    Shape Generation Result
+    ========================================
+    Schema: composite_financial_hr_retail
+    Domain: composite
+    Mode:   3nf
+    Seed:   42
+    Time:   0.2s
+
+    Table                             Rows  Columns
+    ---------------------------------------------
+    financial_branch                   200        9
+    financial_customer               1,000       10
+    financial_loan                     400        9
+    financial_loan_payment           4,800        7
+    financial_transaction_category           40        4
+    hr_department                       30        4
+    hr_position                         80        6
+    hr_employee                        500       11
+    financial_account                2,200        8
+    financial_card                   1,760        8
+    financial_statement             13,200        8
+    financial_transaction           10,000        9
+    financial_fraud_flag               200        6
+    hr_compensation                  1,500        6
+    hr_performance_review            1,250        7
+    hr_termination                      75        6
+    hr_time_off_request              2,500        7
+    hr_training                        100        5
+    hr_training_enrollment           2,000        7
+    retail_customer                  1,000        9
+    retail_address                   1,500       10
+    retail_product_category             50        4
+    retail_product                     500        6
+    retail_promotion                   300        6
+    retail_store                       150        5
+    retail_order                     5,000        8
+    retail_order_line               12,500        8
+    retail_return                      850        5
+    ---------------------------------------------
+    TOTAL                           63,685
+    Wrote 28 parquet files to out/: 63,685 rows in 28 tables (0.32s)
+    table                          fabric_demo         large        medium         small     warehouse        xlarge           xxl          xxxl
+    education_department                    25            25            25            25            25            25            25            25
+    education_instructor                   150           150           150           150           150           150           150           150
+    education_course                       300           300           300           300           300           300           300           300
+    education_student                      200       200,000        20,000         2,000     2,000,000     5,000,000    20,000,000   100,000,000
+    education_enrollment                 1,600     1,600,000       160,000        16,000    16,000,000    40,000,000   160,000,000   800,000,000
+    education_financial_aid                140       140,000        14,000         1,400     1,400,000     3,500,000    14,000,000    70,000,000
+    education_course_section               600           600           600           600           600           600           600           600
+    education_grade_appeal                  32        32,000         3,200           320       320,000       800,000     3,200,000    16,000,000
+    education_academic_standing            400       400,000        40,000         4,000     4,000,000    10,000,000    40,000,000   200,000,000
+    hr_department                           30            30            30            30            30            30            30            30
+    hr_position                             80            80            80            80            80            80            80            80
+    hr_employee                            100        50,000         5,000           500     5,000,000       500,000    20,000,000   100,000,000
+    hr_compensation                        300       150,000        15,000         1,500    15,000,000     1,500,000    60,000,000   300,000,000
+    hr_performance_review                  250       125,000        12,500         1,250    12,500,000     1,250,000    50,000,000   250,000,000
+    hr_time_off_request                    500       250,000        25,000         2,500    25,000,000     2,500,000   100,000,000   500,000,000
+    hr_training                            100           100           100           100           100           100           100           100
+    hr_training_enrollment                 400       200,000        20,000         2,000    20,000,000     2,000,000    80,000,000   400,000,000
+    hr_termination                          15         7,500           750            75       750,000        75,000     3,000,000    15,000,000
+    total                                5,222     3,155,785       316,735        32,830   101,971,285    67,126,285   550,201,285 2,751,001,285
+    ```
+
+<a id="local-example-6"></a>
+
+### Example 7
+
+<!-- example: 6 -->
+
+```bash {.runnable-reference}
+shape list                                   # installed domains and their modes
+shape presets retail                         # rows per table for every scale preset
+shape composite enterprise                   # several domains as one dataset (see Composites)
+shape describe retail --mode star --scale medium
+shape generate retail --scale medium --seed 42 --format parquet -o out/
+shape generate retail --dry-run              # the plan: order, rows, memory; generates nothing
+shape from-ddl tables.sql -o shop.gen.json && shape generate shop.gen.json -f csv -o out/
+shape validate shop.gen.json                 # a schema file, or a contract; exit 0, 1 or 2
+shape continue retail --input out/ -o delta/ # the next inserts, updates and deletes (docs/INCREMENTAL.md)
+shape time-travel retail --months 12 -o snaps/   # monthly snapshots of an evolving dataset
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    domain                  modes
+    capital_markets         3nf, star
+    education               3nf, star
+    financial               3nf, star
+    healthcare              3nf, star
+    hr                      3nf, star
+    insurance               3nf, star
+    iot                     3nf, star
+    manufacturing           3nf, star
+    marketing               3nf, star
+    pulse                   3nf, star
+    real_estate             3nf, star
+    retail                  3nf, star
+    supply_chain            3nf, star
+    telecom                 3nf, star
+    table                          fabric_demo         small        medium         large        xlarge     warehouse           xxl          xxxl
+    customer                               200         1,000        50,000       500,000     5,000,000     1,000,000    20,000,000   100,000,000
+    address                                300         1,500        75,000       750,000     7,500,000     1,500,000    30,000,000   150,000,000
+    product_category                        50            50            50            50            50            50            50            50
+    product                                100           500         5,000        25,000       100,000        50,000       200,000       500,000
+    store                                  150           150           150           150           150           150           150           150
+    promotion                              200           200           200           200           200           200           200           200
+    order                                1,000         5,000       500,000     5,000,000   100,000,000    10,000,000 1,000,000,00010,000,000,000
+    order_line                           2,500        12,500     1,250,000    12,500,000   250,000,000    25,000,000 2,500,000,00025,000,000,000
+    return                                 170           850        85,000       850,000    17,000,000     1,700,000   170,000,000 1,700,000,000
+    total                                4,670        21,750     1,965,400    19,625,400   379,600,400    39,250,400 3,720,200,40036,950,500,400
+    Shape Generation Result
+    ========================================
+    Schema: composite_financial_hr_retail
+    Domain: composite
+    Mode:   3nf
+    Seed:   42
+    Time:   0.2s
+
+    Table                             Rows  Columns
+    ---------------------------------------------
+    financial_branch                   200        9
+    financial_customer               1,000       10
+    financial_loan                     400        9
+    financial_loan_payment           4,800        7
+    financial_transaction_category           40        4
+    hr_department                       30        4
+    hr_position                         80        6
+    hr_employee                        500       11
+    financial_account                2,200        8
+    financial_card                   1,760        8
+    financial_statement             13,200        8
+    financial_transaction           10,000        9
+    financial_fraud_flag               200        6
+    hr_compensation                  1,500        6
+    hr_performance_review            1,250        7
+    hr_termination                      75        6
+    hr_time_off_request              2,500        7
+    hr_training                        100        5
+    hr_training_enrollment           2,000        7
+    retail_customer                  1,000        9
+    retail_address                   1,500       10
+    retail_product_category             50        4
+    retail_product                     500        6
+    retail_promotion                   300        6
+    retail_store                       150        5
+    retail_order                     5,000        8
+    retail_order_line               12,500        8
+    retail_return                      850        5
+    ---------------------------------------------
+    TOTAL                           63,685
+    retail_star  domain=retail  mode=star  scale=medium
+    Retail domain — star schema
+
+    table                               rows  columns  primary key
+    customer                          50,000        8  customer_id
+    address                           75,000       10  address_id
+    product_category                      50        4  category_id
+    product                            5,000        6  product_id
+    promotion                            200        6  promotion_id
+    store                                150        5  store_id
+    order                            500,000        8  order_id
+    order_line                     1,250,000        8  order_line_id
+    return                            85,000        5  return_id
+
+    customer
+      customer_id                 integer       sequence
+      first_name                  string        faker
+      last_name                   string        faker
+      email                       string        faker (nullable)
+      gender                      string        weighted_enum
+      loyalty_tier                string        weighted_enum
+      signup_date                 timestamp     temporal
+      is_active                   string        weighted_enum
+
+    address
+      address_id                  integer       sequence
+      customer_id                 integer       foreign_key
+      address_type                string        weighted_enum
+      street                      string        faker
+      city                        string        record_sample
+      state                       string        record_field
+      zip_code                    string        record_field
+      lat                         decimal       record_field
+      lng                         decimal       record_field
+      is_primary                  boolean       first_per_parent
+
+    product_category
+      category_id                 integer       sequence
+      category_name               string        reference_data
+      parent_category_id          integer       self_referencing (nullable)
+      level                       integer       self_ref_field
+
+    product
+      product_id                  integer       sequence
+      category_id                 integer       foreign_key
+      product_name                string        reference_data
+      unit_price                  decimal       distribution
+      product_status              string        lifecycle
+      cost                        decimal       correlated
+
+    promotion
+      promotion_id                integer       sequence
+      promo_name                  string        reference_data
+      promo_type                  string        weighted_enum
+      discount_pct                decimal       weighted_enum
+      start_date                  timestamp     temporal
+      end_date                    timestamp     derived
+
+    store
+      store_id                    integer       sequence
+      store_name                  string        pattern
+      store_type                  string        weighted_enum
+      city                        string        faker
+      state                       string        faker
+
+    order
+      order_id                    integer       sequence
+      customer_id                 integer       foreign_key
+      store_id                    integer       foreign_key
+      shipping_address_id         integer       foreign_key (nullable)
+      promotion_id                integer       foreign_key (nullable)
+      order_date                  timestamp     temporal
+      status                      string        weighted_enum
+      order_total                 decimal       computed
+
+    order_line
+      order_line_id               integer       sequence
+      order_id                    integer       foreign_key
+      product_id                  integer       foreign_key
+      quantity                    integer       distribution
+      promotion_id                integer       lookup (nullable)
+      unit_price                  decimal       lookup
+      discount_percent            decimal       conditional
+      line_total                  decimal       formula
+
+    return
+      return_id                   integer       sequence
+      order_id                    integer       foreign_key
+      reason                      string        weighted_enum
+      refund_amount               decimal       distribution
+      return_date                 timestamp     derived
+
+    relationships
+      address(customer_id) -> customer(customer_id)
+      product(category_id) -> product_category(category_id)
+      order(customer_id) -> customer(customer_id)
+      order(store_id) -> store(store_id)
+      order(shipping_address_id) -> address(address_id)
+      order(promotion_id) -> promotion(promotion_id)
+      order_line(order_id) -> order(order_id)
+      order_line(product_id) -> product(product_id)
+      return(order_id) -> order(order_id)
+
+    business rules: order_date_after_signup, return_after_order, cost_less_than_price, refund_leq_order_total, line_total_positive
+
+    scale presets: fabric_demo, small, medium, large, xlarge, warehouse, xxl, xxxl
+    Wrote 9 parquet files to out/: 1,965,400 rows in 9 tables (7.45s)
+    retail_3nf  domain=retail  mode=3nf  seed=42  scale=small
+    table                                 rows  columns   est. MB
+    customer                             1,000        8       0.5
+    product_category                        50        4       0.0
+    promotion                              200        6       0.0
+    store                                  150        5       0.0
+    address                              1,500       10       0.4
+    product                                500        6       0.1
+    order                                5,000        8       0.5
+    order_line                          12,500        8       0.8
+    return                                 850        5       0.1
+    total                               21,750                2.4
+    ok: nothing was generated
+    Shape DDL import (smart)
+
+      Source: tables.sql
+      Output: shop.gen.json
+      Tables: 1
+      Relationships: 0
+      Business rules: 1
+      Inferences: 4
+
+      orders: 4 columns (PK: order_id)
+
+    Schema written to shop.gen.json
+    Wrote 1 csv files to out/: 1,000 rows in 1 tables (0.03s)
+    {"errors": [], "kind": "generation-schema", "mode": "3nf", "name": "custom_ddl_import", "tables": 1, "valid": true, "warnings": []}
+    Source: out/ (39 tables)
+    Incremental Generation Result
+    ========================================
+      customer: +100 inserts, ~5000 updates, -1000 deletes
+      address: +100 inserts, ~7500 updates, -1500 deletes
+      product_category: +100 inserts, ~5 updates, -1 deletes
+      product: +100 inserts, ~500 updates, -100 deletes
+      promotion: +100 inserts, ~20 updates, -4 deletes
+      store: +100 inserts, ~15 updates, -3 deletes
+      order: +100 inserts, ~50000 updates, -10000 deletes
+      order_line: +100 inserts, ~125000 updates, -25000 deletes
+      return: +100 inserts, ~8500 updates, -1700 deletes
+      customers: +100 inserts, ~2 updates, -1 deletes
+      financial_account: +100 inserts, ~220 updates, -44 deletes
+      financial_branch: +100 inserts, ~20 updates, -4 deletes
+      financial_card: +100 inserts, ~176 updates, -35 deletes
+      financial_customer: +100 inserts, ~100 updates, -20 deletes
+      financial_fraud_flag: +100 inserts, ~20 updates, -4 deletes
+      financial_loan: +100 inserts, ~40 updates, -8 deletes
+      financial_loan_payment: +100 inserts, ~480 updates, -96 deletes
+      financial_statement: +100 inserts, ~1320 updates, -264 deletes
+      financial_transaction: +100 inserts, ~1000 updates, -200 deletes
+      financial_transaction_category: +100 inserts, ~4 updates, -1 deletes
+      hr_compensation: +100 inserts, ~150 updates, -30 deletes
+      hr_department: +100 inserts, ~3 updates, -1 deletes
+      hr_employee: +100 inserts, ~50 updates, -10 deletes
+      hr_performance_review: +100 inserts, ~125 updates, -25 deletes
+      hr_position: +100 inserts, ~8 updates, -1 deletes
+      hr_termination: +100 inserts, ~7 updates, -1 deletes
+      hr_time_off_request: +100 inserts, ~250 updates, -50 deletes
+      hr_training: +100 inserts, ~10 updates, -2 deletes
+      hr_training_enrollment: +100 inserts, ~200 updates, -40 deletes
+      orders: +100 inserts, ~100 updates, -20 deletes
+      retail_address: +100 inserts, ~150 updates, -30 deletes
+      retail_customer: +100 inserts, ~100 updates, -20 deletes
+      retail_order: +100 inserts, ~500 updates, -100 deletes
+      retail_order_line: +100 inserts, ~1250 updates, -250 deletes
+      retail_product: +100 inserts, ~50 updates, -10 deletes
+      retail_product_category: +100 inserts, ~5 updates, -1 deletes
+      retail_promotion: +100 inserts, ~30 updates, -6 deletes
+      retail_return: +100 inserts, ~85 updates, -17 deletes
+      retail_store: +100 inserts, ~15 updates, -3 deletes
+
+    Written 39 delta files to delta//
+    Time-Travel Result
+    ==================================================
+    Domain: retail
+    Snapshots: 13
+
+      Month           Date          Tables       Rows
+      ----------------------------------------------
+      Month 0        2023-01-01         9     21,750
+      Month 1        2023-02-01         9     22,401
+      Month 2        2023-03-01         9     23,071
+      Month 3        2023-04-01         9     23,762
+      Month 4        2023-05-01         9     24,475
+      Month 5        2023-06-01         9     25,209
+      Month 6        2023-07-01         9     25,967
+      Month 7        2023-08-01         9     26,745
+      Month 8        2023-09-01         9     27,549
+      Month 9        2023-10-01         9     28,374
+      Month 10       2023-11-01         9     29,224
+      Month 11       2023-12-01         9     30,103
+      Month 12       2024-01-01         9     31,007
+
+    Written 117 files to snaps//
+    ```
+
+<a id="local-example-7"></a>
+
+### Example 8
+
+<!-- example: 7 -->
+
+```bash {.runnable-reference}
+shape --log-json --metrics run.json generate retail --scale small
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    {"timestamp": "2026-10-09T17:01:17.723065+00:00", "level": "INFO", "logger": "shape", "message": "command started", "command": "generate"}
+    {"timestamp": "2026-10-09T17:01:18.122962+00:00", "level": "INFO", "logger": "shape", "message": "command finished", "command": "generate", "exit_code": 0, "metrics": {"run_id": "20261009T170117_generate", "total_elapsed_seconds": 0.3999, "total_rows": 0, "total_tables": 0, "tables": 9, "events": [], "command": "generate", "domain": "retail", "mode": "3nf", "scale": "small", "seed": 42, "format": "summary", "rows": 21750, "exit_code": 0}}
+    Shape Generation Result
+    ========================================
+    Schema: retail_3nf
+    Domain: retail
+    Mode:   3nf
+    Seed:   42
+    Time:   0.1s
+
+    Table                             Rows  Columns
+    ---------------------------------------------
+    customer                         1,000        8
+    address                          1,500       10
+    product_category                    50        4
+    product                            500        6
+    promotion                          200        6
+    store                              150        5
+    order                            5,000        8
+    order_line                      12,500        8
+    return                             850        5
+    ---------------------------------------------
+    TOTAL                           21,750
+    ```

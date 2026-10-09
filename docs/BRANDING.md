@@ -8,8 +8,6 @@ The source repository is [sqllocks/shape](https://github.com/sqllocks/shape).
 The documentation is published at https://docs.shapedata.ai/.
 Use support@shapedata.ai for public contact.
 
-Industry Profile Packs are coming with Premium, healthcare first:
-[shapedata.ai](https://shapedata.ai/).
 
 ## Related
 

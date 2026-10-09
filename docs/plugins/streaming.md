@@ -2,7 +2,21 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](../contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" streaming
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for streaming
+    ```
 
 
 Shape profiles streams it consumes. A **stream source** is a `shape.stream_sources` plugin that
@@ -16,6 +30,9 @@ and deduplication on offset.
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
+[Run this example](#local-example-0).
+
+
 Neither client library is imported until a read starts, so `shape plugins doctor` is clean
 without a broker. `shape plugins list` shows `shape.stream_sources:kafka` and
 `shape.stream_sources:eventhubs`.
@@ -23,6 +40,23 @@ without a broker. `shape plugins list` shows `shape.stream_sources:kafka` and
 ## Profile a stream
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+<!-- example: 1 -->
+
+**Needs a Kafka account. Not run in CI.**
+
+```bash
+# everything the topic holds now, as one profile
+shape stream-profile kafka://broker:9092/orders -o orders.json
+
+# 5-minute tumbling windows, written as they close, resumable
+shape stream-profile eventhubs://contoso.servicebus.windows.net/telemetry \
+    --window tumbling --size 5m --allowed-lateness 30s \
+    --windows telemetry.jsonl --checkpoint telemetry.ckpt --follow
+```
+
+<!-- owner: Kafka maintainer — supply the transcript for docs/plugins/streaming.md example 1. -->
+
 
 Exit codes: `0` done, `2` the input or the connection is wrong (nothing partial is hidden: the
 message says what).
@@ -55,6 +89,9 @@ No broker is needed to try, test or replay a stream. The same command, with the 
 lateness, event time, `--max-events` and checkpoints, reads:
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+[Run this example](#local-example-2).
+
 
 * **Sources:** a path or `file://` URI, a folder (its `.jsonl`, `.ndjson`, `.json`, `.csv`,
   `.parquet` files in name order; names starting with `.` or `_` are skipped), a glob (matches in
@@ -152,3 +189,49 @@ doubled for each further failure in a row and capped at 30 s; a delivered batch 
 * Nightly: `pytest -m emulator plugins/shape-kafka/tests plugins/shape-eventhubs/tests` against
   the containers of `ci/emulators/docker-compose.yml` (plan T-26). Locally:
   `docker compose -f ci/emulators/docker-compose.yml up -d --wait kafka azurite eventhubs`.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+pip install --quiet --no-deps --no-build-isolation -e "$SHAPE_DOCS_REPO/plugins/shape-kafka" -e "$SHAPE_DOCS_REPO/plugins/shape-eventhubs"
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    (no output)
+    ```
+
+<a id="local-example-2"></a>
+
+### Example 3
+
+<!-- example: 2 -->
+
+```bash {.runnable-reference}
+shape stream retail -t order --max-events 5000 --sink file -o orders.jsonl   # a stream to replay
+shape stream-profile orders.jsonl --window tumbling --size 30d --windows orders.windows.jsonl
+shape stream-profile file://landed/2026-06-02/ --window tumbling --size 5m --windows day.jsonl
+shape stream-profile 'landed/*.parquet' --event-time ts --window sliding --size 1h --slide 15m \
+    --windows history.jsonl
+shape stream-profile orders.jsonl -o events.json
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape stream: 5,000 events delivered, offset 5,000 of 5,000, complete, 557,779 events/s
+    {"uri": "orders.jsonl", "window": "tumbling", "events": 5000, "batches": 1, "windows": 49, "late_events": 0, "null_event_time": 0, "duplicate_rows": 0, "reconnects": 0, "checkpoints": 0, "written": ["orders.windows.jsonl"], "undecodable": 0, "rejected": 0}
+    shape: error: no such file: '/2026-06-02/'
+    {"uri": "landed/*.parquet", "window": "sliding", "events": 100, "batches": 1, "windows": 10, "late_events": 0, "null_event_time": 0, "duplicate_rows": 0, "reconnects": 0, "checkpoints": 0, "written": ["history.jsonl"], "undecodable": 0, "rejected": 0}
+    {"uri": "orders.jsonl", "window": "global", "events": 5000, "batches": 1, "windows": 1, "late_events": 0, "null_event_time": 0, "duplicate_rows": 0, "reconnects": 0, "checkpoints": 0, "written": ["events.json"], "undecodable": 0, "rejected": 0}
+    ```

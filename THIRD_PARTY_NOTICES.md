@@ -242,20 +242,20 @@ reference providers from other domains; those providers keep their own attributi
 
 | Domain | Source recorded here | Licence | Attribution / missing evidence |
 |---|---|---|---|
-| `capital_markets` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
-| `education` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
-| `financial` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
-| `healthcare` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
-| `hr` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
-| `insurance` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
-| `iot` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
-| `manufacturing` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
-| `marketing` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
-| `real_estate` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
+| `capital_markets` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). <!-- owner: domain maintainer — confirm upstream sources beyond the repository licence notice. --> |
+| `education` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). <!-- owner: domain maintainer — confirm upstream sources beyond the repository licence notice. --> |
+| `financial` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). <!-- owner: domain maintainer — confirm upstream sources beyond the repository licence notice. --> |
+| `healthcare` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). <!-- owner: domain maintainer — confirm upstream sources beyond the repository licence notice. --> |
+| `hr` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). <!-- owner: domain maintainer — confirm upstream sources beyond the repository licence notice. --> |
+| `insurance` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). <!-- owner: domain maintainer — confirm upstream sources beyond the repository licence notice. --> |
+| `iot` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). <!-- owner: domain maintainer — confirm upstream sources beyond the repository licence notice. --> |
+| `manufacturing` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). <!-- owner: domain maintainer — confirm upstream sources beyond the repository licence notice. --> |
+| `marketing` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). <!-- owner: domain maintainer — confirm upstream sources beyond the repository licence notice. --> |
+| `real_estate` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). <!-- owner: domain maintainer — confirm upstream sources beyond the repository licence notice. --> |
 | `retail` | SQLLocks lists; GeoNames US postal locations | MIT; CC-BY-4.0 | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). Includes GeoNames data licensed under CC-BY-4.0. |
-| `supply_chain` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
-| `telecom` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). [Owner: domain maintainer — confirm upstream sources beyond the repository licence notice.] |
-| `pulse` | No bundled reference files in the domain data directory | MIT (schema) | SQLLocks; [Owner: domain maintainer — confirm whether runtime reference providers need additional notices.] |
+| `supply_chain` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). <!-- owner: domain maintainer — confirm upstream sources beyond the repository licence notice. --> |
+| `telecom` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). <!-- owner: domain maintainer — confirm upstream sources beyond the repository licence notice. --> |
+| `pulse` | No bundled reference files in the domain data directory | MIT (schema) | SQLLocks; <!-- owner: domain maintainer — confirm whether runtime reference providers need additional notices. --> |
 
 ## Documentation diagrams
 

@@ -2,7 +2,21 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" SINKS
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for SINKS
+    ```
 
 
 Every output is a `shape.sinks` plugin: `Sink.write(uri, table, batches, **options) -> rows`. The
@@ -34,7 +48,23 @@ An unknown scheme is an error that lists the schemes installed.
 
 ## OneLake and ADLS Gen2 (`abfss://`, `delta+abfss://`)
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+<!-- example: 0 -->
+
+**Needs a Fabric account. Not run in CI.**
+
+```bash
+shape generate retail --scale small --seed 7 \
+  --to abfss://landing@myacct.dfs.core.windows.net/raw \
+  --table-format store=csv --batch-date 2026-10-02
+# raw/order/ingest_date=2026-10-02/order_20261002.parquet, raw/store/.../store_20261002.csv, ...
+
+shape stream retail -t order --to abfss://landing@myacct.dfs.core.windows.net/live \
+  --roll-seconds 30 --realtime --rate 200 --checkpoint-seconds 30
+shape generate retail --to delta+abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Tables
+```
+
+<!-- owner: Fabric maintainer — supply the transcript for docs/SINKS.md example 0. -->
+
 
 * **Layout.** `--path-template` (default `{table}/ingest_date={date}/{table}_{yyyymmdd}.{ext}`;
   with rolling `..._{part}.{ext}`): Hive-style date partitions. Tokens: `{table} {ext} {date}
@@ -108,7 +138,18 @@ query.
 
 ## Databases
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+<!-- example: 2 -->
+
+**Needs a PostgreSQL account. Not run in CI.**
+
+```bash
+shape generate retail --scale small --to mssql://myserver.database.windows.net/mydb \
+  --write-mode create
+shape stream retail -t order --to postgresql://me@dbhost/shape --commit-rows 500 --realtime --rate 100
+```
+
+<!-- owner: PostgreSQL maintainer — supply the transcript for docs/SINKS.md example 2. -->
+
 
 `--write-mode` is `create` (the default: never touches an existing table), `append`, `truncate`
 or `replace` (`mssql://` and `duckdb://` also take `upsert`, below); `--commit-rows N` commits every N rows so readers see rows during the run (a stream
@@ -186,7 +227,8 @@ refusal unless it passes `True` or sets the variable. Plugin commands such as
 
 ### DuckDB (`duckdb://`)
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-4).
+
 
 `pip install 'sqllocks-shape[duckdb]'` (the `sqllocks-shape-databases[duckdb]` extra; DuckDB is
 never a core dependency). `duckdb:///PATH.duckdb` is relative to the working directory and
@@ -238,3 +280,26 @@ A sink takes `write(uri, table, batches, **options)` and consumes `batches` incr
 **options)` returning an object with `write_batch`, `flush` (make everything so far visible and
 durable), `close` and `abort`; without it the stream drives `write` on a thread and relies on its
 own commit option. Check it with `shape.plugins.kit.check_sink` and `shape conformance`.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-4"></a>
+
+### Example 5
+
+<!-- example: 4 -->
+
+```bash {.runnable-reference}
+shape generate retail --scale small --to duckdb:///out/retail.duckdb
+shape emit retail --to duckdb:///out/retail.duckdb?schema=raw --write-mode append --max-events 10000
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Wrote 21,750 rows in 9 tables to duckdb:///out/retail.duckdb (0.52s)
+    shape emit: 10,000 events delivered, offset 10,000 of 21,750, max-events, 40,123 events/s
+    ```

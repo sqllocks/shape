@@ -2,7 +2,21 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" LANDING
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for LANDING
+    ```
 
 
 A source system drops files: one per table per day, in a folder named for the date, each table in
@@ -16,7 +30,8 @@ landing/customers/ingest_date=2026-08-04/customers_20260804.csv
 
 ## How-to
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-1).
+
 
 writes `landing/customer/ingest_date=2026-08-04/customer_20260804.csv` and
 `landing/order/ingest_date=2026-08-04/order_20260804.parquet` (and one file for every other table,
@@ -69,3 +84,25 @@ ParquetSink().write("landing/", "orders", batches,
 - Tables are written whole (a landing run generates them first), not streamed chunk by chunk.
 - One date per run, one file per table: late arrivals, repeated drops, `_done` flags and manifests
   over a date range belong to scenario packs (`docs/SCENARIO_PACKS.md`).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-1"></a>
+
+### Example 2
+
+<!-- example: 1 -->
+
+```bash {.runnable-reference}
+shape generate retail --scale small --format parquet --table-format customer=csv \
+    --batch-date 2026-08-04 -o landing/
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Landed 9 files under landing/: 21,750 rows in 9 tables (0.46s)
+    ```

@@ -2,7 +2,21 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](../contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" authoring
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for authoring
+    ```
 
 
 A plugin is an ordinary Python distribution that registers objects in one or more **entry-point
@@ -19,6 +33,9 @@ plugins). A complete small plugin, with a source, a detector and a command, is i
 ## Start from a template
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+[Run this example](#local-example-0).
+
 
 `shape plugins new NAME --group GROUP [-o DIR] [--author TEXT] [--dry-run]` writes a package that
 works and conforms from the first minute: `pyproject.toml` with the entry point in `GROUP`, a module
@@ -147,6 +164,9 @@ or, from a shell, with no samples (the shared rules only):
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
+[Run this example](#local-example-6).
+
+
 `check_plugin(group, obj, **sample)` picks the check from a group name.
 
 A strategy or distribution is keyed by `(seed, table, column, chunk)`. If your plugin promises
@@ -159,6 +179,9 @@ rows) is up to your own tests.
 ## 4. Install and try it
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+[Run this example](#local-example-7).
+
 
 The acceptance test for the kit does exactly this for `examples/plugin/`: it installs the
 example into a scratch directory outside the repository, runs the kit and the plugin's own
@@ -219,3 +242,278 @@ of its algorithm; it is optional and additive in API v1, so a plugin that does n
 loading and counts as version 1. A plugin that raises it keeps the older versions selectable
 (`generate_versioned` / `sample_versioned`) so specs that pin them keep their data. See
 [GENERATION_STABILITY.md](../GENERATION_STABILITY.md).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape plugins new acme-iban --group shape.detectors
+cd acme-iban
+pip install --quiet --no-deps --no-build-isolation -e .
+python -m pytest -q
+python -m shape.plugins.kit acme-iban
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    {
+      "name": "acme-iban",
+      "group": "shape.detectors",
+      "folder": "acme-iban",
+      "files": [
+        "acme-iban/pyproject.toml",
+        "acme-iban/README.md",
+        "acme-iban/src/acme_iban/__init__.py",
+        "acme-iban/tests/conftest.py",
+        "acme-iban/tests/test_conformance.py",
+        "acme-iban/.github/workflows/ci.yml"
+      ]
+    }
+    ..                                                                                           [100%]
+    2 passed in 0.55s
+    shape.detectors:acme-iban: ok (shared rules only: no sample given)
+    OK acme-iban: 1 plugin(s) conform to plugin API 1.0
+    ```
+
+<a id="local-example-6"></a>
+
+### Example 7
+
+<!-- example: 6 -->
+
+```bash {.runnable-reference}
+python -m shape.plugins.kit sqllocks-shape-dbt
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape.commands:dbt-report: ok (shared rules only: no sample given)
+    shape.commands:dbt-seeds: ok (shared rules only: no sample given)
+    shape.commands:from-dbt: ok (shared rules only: no sample given)
+    shape.commands:to-dbt-tests: ok (shared rules only: no sample given)
+    shape.sinks:dbt-seeds: ok (shared rules only: no sample given)
+    OK sqllocks-shape-dbt: 5 plugin(s) conform to plugin API 1.0
+    ```
+
+<a id="local-example-7"></a>
+
+### Example 8
+
+<!-- example: 7 -->
+
+```bash {.runnable-reference}
+pip install --quiet --no-deps --no-build-isolation -e acme-iban
+shape plugins list --group shape.detectors
+shape plugins info shape.detectors:iban
+shape plugins doctor
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    12 plugin(s)
+      shape.detectors:cpt        unloaded [sqllocks-shape-healthcare-codes]
+      shape.detectors:email      unloaded [sqllocks-shape]
+      shape.detectors:hcpcs      unloaded [sqllocks-shape-healthcare-codes]
+      shape.detectors:icd10      unloaded [sqllocks-shape-healthcare-codes]
+      shape.detectors:ipv4       unloaded [sqllocks-shape]
+      shape.detectors:mbi        unloaded [sqllocks-shape-healthcare-codes]
+      shape.detectors:member_id  unloaded [sqllocks-shape-healthcare-codes]
+      shape.detectors:ndc        unloaded [sqllocks-shape-healthcare-codes]
+      shape.detectors:npi        unloaded [sqllocks-shape-healthcare-codes]
+      shape.detectors:phone      unloaded [sqllocks-shape]
+      shape.detectors:presidio   unloaded [sqllocks-shape-integrations]
+      shape.detectors:us_ssn     unloaded [sqllocks-shape]
+    shape: error: no plugin 'shape.detectors:iban' (see `shape plugins list`)
+    plugin API 1.0: 179 plugin(s)
+      ok    shape.behaviors:entity_lifecycle [sqllocks-shape-behavior]
+      ok    shape.behaviors:equipment_maintenance [sqllocks-shape-behavior]
+      ok    shape.behaviors:event_sequence [sqllocks-shape-behavior]
+      ok    shape.behaviors:file_arrival [sqllocks-shape-behavior]
+      ok    shape.behaviors:healthcare_screening [sqllocks-shape-behavior]
+      ok    shape.behaviors:subscription [sqllocks-shape-behavior]
+      ok    shape.behaviors:telemetry_series [sqllocks-shape-behavior]
+      ok    shape.behaviors:transaction_stream [sqllocks-shape-behavior]
+      ok    shape.calendars:composite [sqllocks-shape]
+      ok    shape.calendars:us_federal [sqllocks-shape]
+      ok    shape.calendars:us_retail [sqllocks-shape]
+      ok    shape.chaos:file [sqllocks-shape]
+      ok    shape.chaos:referential [sqllocks-shape]
+      ok    shape.chaos:schema [sqllocks-shape]
+      ok    shape.chaos:temporal [sqllocks-shape]
+      ok    shape.chaos:value [sqllocks-shape]
+      ok    shape.chaos:volume [sqllocks-shape]
+      ok    shape.commands:behave [sqllocks-shape-behavior]
+      ok    shape.commands:check-answers [sqllocks-shape-fabric]
+      ok    shape.commands:ctgan [sqllocks-shape]
+      ok    shape.commands:dbt-report [sqllocks-shape-dbt]
+      ok    shape.commands:dbt-seeds [sqllocks-shape-dbt]
+      ok    shape.commands:deploy-notebook [sqllocks-shape-fabric]
+      ok    shape.commands:evaluate [sqllocks-shape-integrations]
+      ok    shape.commands:export-model [sqllocks-shape-fabric]
+      ok    shape.commands:fabric [sqllocks-shape-fabric]
+      ok    shape.commands:from-dbt [sqllocks-shape-dbt]
+      ok    shape.commands:healthcare-codes [sqllocks-shape-healthcare-codes]
+      ok    shape.commands:known-answer [sqllocks-shape-fabric]
+      ok    shape.commands:lineage [sqllocks-shape-integrations]
+      ok    shape.commands:mlflow [sqllocks-shape-integrations]
+      ok    shape.commands:notebook [sqllocks-shape-fabric]
+      ok    shape.commands:profile-db [sqllocks-shape-sqlserver]
+      ok    shape.commands:profile-model [sqllocks-shape-fabric]
+      ok    shape.commands:publish [sqllocks-shape-fabric]
+      ok    shape.commands:publish-report [sqllocks-shape-fabric]
+      ok    shape.commands:setup-fabric [sqllocks-shape-fabric]
+      ok    shape.commands:simulate [sqllocks-shape-simulation]
+      ok    shape.commands:to-dbt-tests [sqllocks-shape-dbt]
+      ok    shape.detectors:cpt [sqllocks-shape-healthcare-codes]
+      ok    shape.detectors:email [sqllocks-shape]
+      ok    shape.detectors:hcpcs [sqllocks-shape-healthcare-codes]
+      ok    shape.detectors:icd10 [sqllocks-shape-healthcare-codes]
+      ok    shape.detectors:ipv4 [sqllocks-shape]
+      ok    shape.detectors:mbi [sqllocks-shape-healthcare-codes]
+      ok    shape.detectors:member_id [sqllocks-shape-healthcare-codes]
+      ok    shape.detectors:ndc [sqllocks-shape-healthcare-codes]
+      ok    shape.detectors:npi [sqllocks-shape-healthcare-codes]
+      ok    shape.detectors:phone [sqllocks-shape]
+      ok    shape.detectors:presidio [sqllocks-shape-integrations]
+      ok    shape.detectors:us_ssn [sqllocks-shape]
+      ok    shape.distributions:bernoulli [sqllocks-shape]
+      ok    shape.distributions:beta [sqllocks-shape]
+      ok    shape.distributions:exponential [sqllocks-shape]
+      ok    shape.distributions:gamma [sqllocks-shape]
+      ok    shape.distributions:geometric [sqllocks-shape]
+      ok    shape.distributions:histogram [sqllocks-shape]
+      ok    shape.distributions:log_normal [sqllocks-shape]
+      ok    shape.distributions:lognormal [sqllocks-shape]
+      ok    shape.distributions:mixture [sqllocks-shape]
+      ok    shape.distributions:negative_binomial [sqllocks-shape]
+      ok    shape.distributions:normal [sqllocks-shape]
+      ok    shape.distributions:pareto [sqllocks-shape]
+      ok    shape.distributions:poisson [sqllocks-shape]
+      ok    shape.distributions:power_law_cutoff [sqllocks-shape]
+      ok    shape.distributions:triangular [sqllocks-shape]
+      ok    shape.distributions:truncated [sqllocks-shape]
+      ok    shape.distributions:uniform [sqllocks-shape]
+      ok    shape.distributions:weibull [sqllocks-shape]
+      ok    shape.distributions:zipf [sqllocks-shape]
+      ok    shape.domains:capital_markets [sqllocks-shape-domains]
+      ok    shape.domains:education [sqllocks-shape-domains]
+      ok    shape.domains:financial [sqllocks-shape-domains]
+      ok    shape.domains:healthcare [sqllocks-shape-domains]
+      ok    shape.domains:hr [sqllocks-shape-domains]
+      ok    shape.domains:insurance [sqllocks-shape-domains]
+      ok    shape.domains:iot [sqllocks-shape-domains]
+      ok    shape.domains:manufacturing [sqllocks-shape-domains]
+      ok    shape.domains:marketing [sqllocks-shape-domains]
+      ok    shape.domains:pulse [sqllocks-shape-domains]
+      ok    shape.domains:real_estate [sqllocks-shape-domains]
+      ok    shape.domains:retail [sqllocks-shape-domains]
+      ok    shape.domains:supply_chain [sqllocks-shape-domains]
+      ok    shape.domains:telecom [sqllocks-shape-domains]
+      ok    shape.emitters:console [sqllocks-shape]
+      ok    shape.emitters:eventhouse [sqllocks-shape-fabric]
+      ok    shape.emitters:eventhubs [sqllocks-shape-eventhubs]
+      ok    shape.emitters:eventstream [sqllocks-shape-fabric]
+      ok    shape.emitters:fhir [sqllocks-shape-healthcare-standards]
+      ok    shape.emitters:file [sqllocks-shape]
+      ok    shape.emitters:jsonl [sqllocks-shape]
+      ok    shape.emitters:kafka [sqllocks-shape-kafka]
+      ok    shape.fitters:auto [sqllocks-shape]
+      ok    shape.reports:html [sqllocks-shape]
+      ok    shape.reports:json [sqllocks-shape]
+      ok    shape.reports:md [sqllocks-shape]
+      ok    shape.sinks:abfss [sqllocks-shape]
+      ok    shape.sinks:csv [sqllocks-shape]
+      ok    shape.sinks:databricks [sqllocks-shape-databases]
+      ok    shape.sinks:dbt-seeds [sqllocks-shape-dbt]
+      ok    shape.sinks:delta [sqllocks-shape]
+      ok    shape.sinks:duckdb [sqllocks-shape-databases]
+      ok    shape.sinks:excel [sqllocks-shape]
+      ok    shape.sinks:fabric-mirror [sqllocks-shape]
+      ok    shape.sinks:fhir-bundle [sqllocks-shape-healthcare-standards]
+      ok    shape.sinks:fhir-ndjson [sqllocks-shape-healthcare-standards]
+      ok    shape.sinks:ipc [sqllocks-shape]
+      ok    shape.sinks:jsonl [sqllocks-shape]
+      ok    shape.sinks:mysql [sqllocks-shape-databases]
+      ok    shape.sinks:ncpdp [sqllocks-shape-healthcare-standards]
+      ok    shape.sinks:omop [sqllocks-shape-healthcare-standards]
+      ok    shape.sinks:parquet [sqllocks-shape]
+      ok    shape.sinks:postgres [sqllocks-shape-databases]
+      ok    shape.sinks:snowflake [sqllocks-shape-databases]
+      ok    shape.sinks:sql [sqllocks-shape]
+      ok    shape.sinks:sqlserver [sqllocks-shape-fabric]
+      ok    shape.sinks:synapse [sqllocks-shape-fabric]
+      ok    shape.sinks:tsv [sqllocks-shape]
+      ok    shape.sinks:warehouse [sqllocks-shape-fabric]
+      ok    shape.sinks:x12-277ca [sqllocks-shape-healthcare-standards]
+      ok    shape.sinks:x12-834 [sqllocks-shape-healthcare-standards]
+      ok    shape.sinks:x12-835 [sqllocks-shape-healthcare-standards]
+      ok    shape.sinks:x12-837i [sqllocks-shape-healthcare-standards]
+      ok    shape.sinks:x12-837p [sqllocks-shape-healthcare-standards]
+      ok    shape.sources:abfss [sqllocks-shape]
+      ok    shape.sources:csv [sqllocks-shape]
+      ok    shape.sources:delta [sqllocks-shape]
+      ok    shape.sources:duckdb [sqllocks-shape-integrations]
+      ok    shape.sources:hl7v2 [sqllocks-shape-healthcare-standards]
+      ok    shape.sources:ipc [sqllocks-shape]
+      ok    shape.sources:json [sqllocks-shape]
+      ok    shape.sources:jsonl [sqllocks-shape]
+      ok    shape.sources:mssql [sqllocks-shape-sqlserver]
+      ok    shape.sources:onelake [sqllocks-shape-fabric]
+      ok    shape.sources:parquet [sqllocks-shape]
+      ok    shape.sources:semantic-model [sqllocks-shape-fabric]
+      ok    shape.sources:x12 [sqllocks-shape-healthcare-standards]
+      ok    shape.sources:xml [sqllocks-shape]
+      ok    shape.strategies:address [sqllocks-shape]
+      ok    shape.strategies:bootstrap [sqllocks-shape]
+      ok    shape.strategies:choice [sqllocks-shape]
+      ok    shape.strategies:composite_fk_field [sqllocks-shape]
+      ok    shape.strategies:composite_foreign_key [sqllocks-shape]
+      ok    shape.strategies:computed [sqllocks-shape]
+      ok    shape.strategies:conditional [sqllocks-shape]
+      ok    shape.strategies:conditional_table [sqllocks-shape]
+      ok    shape.strategies:constant [sqllocks-shape]
+      ok    shape.strategies:correlated [sqllocks-shape]
+      ok    shape.strategies:derived [sqllocks-shape]
+      ok    shape.strategies:distribution [sqllocks-shape]
+      ok    shape.strategies:empirical [sqllocks-shape]
+      ok    shape.strategies:faker [sqllocks-shape]
+      ok    shape.strategies:first_per_parent [sqllocks-shape]
+      ok    shape.strategies:foreign_key [sqllocks-shape]
+      ok    shape.strategies:formula [sqllocks-shape]
+      ok    shape.strategies:hierarchy [sqllocks-shape]
+      ok    shape.strategies:hierarchy_field [sqllocks-shape]
+      ok    shape.strategies:lifecycle [sqllocks-shape]
+      ok    shape.strategies:locale [sqllocks-shape]
+      ok    shape.strategies:lookup [sqllocks-shape]
+      ok    shape.strategies:native [sqllocks-shape]
+      ok    shape.strategies:normal [sqllocks-shape]
+      ok    shape.strategies:pattern [sqllocks-shape]
+      ok    shape.strategies:record_field [sqllocks-shape]
+      ok    shape.strategies:record_sample [sqllocks-shape]
+      ok    shape.strategies:reference_data [sqllocks-shape]
+      ok    shape.strategies:scd2 [sqllocks-shape]
+      ok    shape.strategies:self_ref_field [sqllocks-shape]
+      ok    shape.strategies:self_referencing [sqllocks-shape]
+      ok    shape.strategies:sequence [sqllocks-shape]
+      ok    shape.strategies:temporal [sqllocks-shape]
+      ok    shape.strategies:uniform [sqllocks-shape]
+      ok    shape.strategies:uuid [sqllocks-shape]
+      ok    shape.strategies:weighted_enum [sqllocks-shape]
+      ok    shape.stream_sources:eventhubs [sqllocks-shape-eventhubs]
+      ok    shape.stream_sources:kafka [sqllocks-shape-kafka]
+      ok    shape.transforms:cdm [sqllocks-shape]
+      ok    shape.transforms:mask [sqllocks-shape]
+      ok    shape.transforms:star [sqllocks-shape]
+    all plugins load
+    ```

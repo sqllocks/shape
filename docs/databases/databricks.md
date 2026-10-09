@@ -24,7 +24,7 @@ Snowflake and Databricks are write targets; Shape does not profile from them yet
 
 ## Next step
 
-[Owner: platform maintainer — execute a Databricks write transcript with a test account before publishing commands.]
+<!-- owner: platform maintainer — execute a Databricks write transcript with a test account before publishing commands. -->
 
 These pages describe implementation behavior. They make no account or service-validation
 claim. Authentication, permissions and server limits remain properties of your deployment.

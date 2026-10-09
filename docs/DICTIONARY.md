@@ -2,16 +2,39 @@
 
 Status: available.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" DICTIONARY
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for DICTIONARY
+    ```
 
 
 A human-readable description of a dataset's tables and columns, written from a profile and,
 optionally, the project file. It reads the `.shape` profile and `shape.yml` only: it never reads
 the data, makes no network request and pushes nothing to a catalog.
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-0).
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+
+<!-- example: 1 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
+```
+shape dictionary PROFILE.shape [--project FILE | --no-project] [--source NAME]
+                 [--format md|html|json] [--examples] -o OUT
+```
+
 
 | Flag | Meaning |
 |---|---|
@@ -86,3 +109,31 @@ the installed Shape reads is refused with an error that says to upgrade
 (`shape.dictionary.render_markdown` and `render_html` accept any version-1 document).
 `tests/fixtures/dictionary/v1/` holds a frozen version 1 document with its Markdown and HTML, which
 every later Shape must still render byte for byte (`tests/dictionary/test_compat.py`).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape dictionary orders.shape --format md -o docs/orders.md
+shape dictionary orders.shape --project shape.yml --source orders --format html -o orders.html
+shape dictionary orders.shape --format json --examples -o orders.dictionary.json
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape: note: orders.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    {"columns": 23, "dictionary_version": 1, "format": "md", "output": "docs/orders.md", "tables": 1}
+    shape: note: orders.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    {"columns": 23, "dictionary_version": 1, "format": "html", "output": "orders.html", "tables": 1}
+    shape: note: orders.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    {"columns": 23, "dictionary_version": 1, "format": "json", "output": "orders.dictionary.json", "tables": 1}
+    ```

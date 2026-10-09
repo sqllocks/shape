@@ -2,7 +2,21 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" REFERENCE_PACKS
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for REFERENCE_PACKS
+    ```
 
 
 Shape ships reference data that works offline: a ZIP-to-city table, ISO code lists and the
@@ -16,7 +30,8 @@ dataset name. They all look a dataset up with `shape.generation.reference.load_d
 the datasets of packs as well as `<name>.json` files and registered datasets, so nothing changes
 for the caller.
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-0).
+
 
 ## The pack format
 
@@ -162,7 +177,8 @@ confirmed:
 machine, download the files yourself and build the packs locally (the script reads files, never
 the network):
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-3).
+
 
 `list-one.xml` is the SIX Group file at
 https://www.six-group.com/dam/download/financial-information/data-center/iso-currrency/lists/list-one.xml
@@ -199,7 +215,8 @@ A **validator** says whether a value is a valid code of some kind. It enters Sha
 shape.profile("orders.csv", validators={"iban": "iban", "country": ["iso3166_alpha2"]})
 ```
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-5).
+
 
 ```json
 {"columns": {"iban": {"valid_as": {"kind": "iban", "min_valid_rate": 0.999}}}}
@@ -250,3 +267,86 @@ the `iban-lengths` pack (`shape.validation.iban.IBAN_LENGTHS`).
 change that older readers could not read raises `version`; Shape refuses a pack with a version it
 does not know instead of reading part of it. `tests/reference/data/capsule_v1` is a committed
 version 1 pack that every later Shape must keep reading.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape reference list                      # every pack and dataset found
+shape reference show iso-3166-1           # manifest, fields and first rows
+shape profile orders.csv -o orders.shape \
+    --reference-pair zip,city,state=us_zip_city \
+    --validate country=iso3166_alpha2 --validate iban=iban
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    PACK          VERSION  DATASET       ROWS   LICENSE      ORIGIN
+    iban-lengths  1.0.0    iban_lengths  103    MIT          shipped
+    iso-3166-1    1.0.0    iso_3166_1    249    Unicode-3.0  shipped
+    iso-639-1     1.0.0    iso_639_1     183    Unicode-3.0  shipped
+    us-zip-city   1.0.0    us_zip_city   40979  CC-BY-4.0    shipped
+    iso-3166-1 1.0.0  (shipped: /workspace/shape/src/shape/refpacks/data/iso-3166-1)
+      source: Unicode CLDR 48.2 core.zip (https://unicode.org/Public/cldr/48.2/core.zip), sha256 d2844f9dbf6124d11a7b047f5381a467902d82a673be3d658f4c0791ffa0b83b: regions with idStatus regular in common/validity/region.xml that have a numeric code in common/supplemental/supplementalData.xml, without XK (a user-assigned code); English names from common/main/en.xml
+      retrieved: 2026-10-03
+      license: Unicode-3.0
+      attribution: Copyright (c) 2019-2025 Unicode, Inc. Data files of the Unicode Common Locale Data Repository (CLDR) are used under the Unicode License v3 (https://www.unicode.org/license.txt).
+      transformation_version: 1
+      sensitivity: public
+
+    dataset iso_3166_1: 249 rows, fields alpha2, alpha3, numeric, name
+      alpha2=AD  alpha3=AND  numeric=020  name=Andorra
+      alpha2=AE  alpha3=ARE  numeric=784  name=United Arab Emirates
+      alpha2=AF  alpha3=AFG  numeric=004  name=Afghanistan
+      alpha2=AG  alpha3=ATG  numeric=028  name=Antigua & Barbuda
+      alpha2=AI  alpha3=AIA  numeric=660  name=Anguilla
+    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    {"shape_content_id": "074a5609a612b6daef9bde0067ddb5aadd0026c9802ae6c33fa0661cccdbf6cb", "written": "orders.shape"}
+    ```
+
+<a id="local-example-3"></a>
+
+### Example 4
+
+<!-- example: 3 -->
+
+```bash {.runnable-reference}
+python scripts/build_reference_packs.py iso-4217 --source list-one.xml --out packs/iso-4217
+python scripts/build_reference_packs.py iso-639 --source ISO-639-2_utf-8.txt --out packs/iso-639
+export SHAPE_REFERENCE_PATH="$PWD/packs"
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    iso-4217: wrote packs/iso-4217/iso_4217.arrow (1 rows, sha256 4c6f0cc825120c33462d2435294362718e1d52e0a24d3d5292d97f7c5b3ee03b)
+    iso-639: wrote packs/iso-639/iso_639.arrow (1 rows, sha256 c8a6547ae24332f4a9d3c5a02b7ec8f53901b4021c7bd18cea6672e8bb7ba20a)
+    ```
+
+<a id="local-example-5"></a>
+
+### Example 6
+
+<!-- example: 5 -->
+
+```bash {.runnable-reference}
+shape profile orders.csv -o orders.shape --validate iban=iban --validate country=iso3166_alpha2
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    {"shape_content_id": "2de35ceba8a7ba7e641853441ebe290d23fae5ef57bea5ea75e28497d6caf21a", "written": "orders.shape"}
+    ```

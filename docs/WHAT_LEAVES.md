@@ -51,7 +51,7 @@ packages load; it does not confine their code. Evidence: `src/shape/plugins/host
 `src/shape/plugins/trust.py` and [the plugin trust model](plugins/trust-model.md).
 Install only packages you trust, pin versions and restrict the whole process where required.
 Credentials resolved by adapters remain subject to the adapter and driver's behavior.
-[Owner: security reviewer — review deployment-specific endpoints, identities and egress policy.]
+<!-- owner: security reviewer — review deployment-specific endpoints, identities and egress policy. -->
 
 ## Related
 

@@ -2,12 +2,26 @@
 
 Status: available (early-access surface); coming (1.x policy).
 
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" GENERATION_STABILITY
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for GENERATION_STABILITY
+    ```
+
+
 **Early access 0.9.1.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 
 The compatibility promises below apply to the future 1.x line, not the current early-access release.
-
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
-
 
 Teams keep generated datasets as test fixtures and expect the same spec and seed to give the same
 data after they upgrade Shape. This page says when that holds, how to ask for it, and what it does
@@ -79,7 +93,8 @@ spec's pins for one run. The map is part of the published JSON Schema
 
 ### `shape pin`
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-1).
+
 
 `shape pin` adds the names the spec uses and does not pin yet, at their current version. A pin that
 is already there is never moved, because moving it would change the data. The spec is edited
@@ -298,7 +313,8 @@ non-UTF-8 locale (`LC_ALL=C` with UTF-8 mode off on Linux and macOS; the ANSI co
 Windows), `TZ=Pacific/Chatham`, another `PYTHONHASHSEED` and another thread count. They run in the
 regular test suite, which CI runs on Linux, Windows and macOS.
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-5).
+
 
 SQL files name the Shape version in their first comment line, so a release rewrites the corpus
 (`--update`) as one of its steps; the test says so when the corpus was written by another version.
@@ -328,3 +344,48 @@ SQL files name the Shape version in their first comment line, so a release rewri
   parameters (correlations, calibrated copula coefficients) come from numpy's linear algebra and
   random generators and may differ in the last bits between machines. Save the fitted spec and
   generate from it to get the same bytes everywhere.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-1"></a>
+
+### Example 2
+
+<!-- example: 1 -->
+
+```bash {.runnable-reference}
+shape pin shop.json                 # write the current version of everything the spec uses
+shape pin shop.json -o pinned.json  # ... to another file (SPEC is left alone)
+shape pin shop.json --json          # the result as JSON
+shape pin shop.json --check         # exit 1 and list the names that are not pinned
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    pinned 8 generators in shop.json: conditional_table=1, distribution=1, faker=2, normal=1, sequence=1, temporal=1, uniform=1, weighted_enum=1
+    shop.json already pins all 8 generators it uses
+    {"added": {}, "generators": {"conditional_table": 1, "distribution": 1, "faker": 2, "normal": 1, "sequence": 1, "temporal": 1, "uniform": 1, "weighted_enum": 1}, "spec": "shop.json", "unused": [], "written": null, "format": "shape-result", "version": 1, "command": "pin", "exit_code": 0}
+    shop.json pins all 8 generators it uses
+    ```
+
+<a id="local-example-5"></a>
+
+### Example 6
+
+<!-- example: 5 -->
+
+```bash {.runnable-reference}
+python scripts/golden_bytes.py            # compare a fresh run with the corpus (exit 1 if not)
+python scripts/golden_bytes.py --update   # rewrite the corpus
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    418 files match the golden byte corpus
+    wrote 418 file digests to tests/generation/golden_bytes/hashes.json
+    ```

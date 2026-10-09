@@ -13,7 +13,7 @@ The 1.x compatibility promises describe future policy.
   They come from different adapters: databases writes; integrations reads.
 - `shape profile validate --safe` fails on multi-table `--dataset` profiles in 0.9.1.
   Single-table profiles pass in the tutorials. Do not treat that failure as proof of a leak
-  or bypass it as proof that a dataset is safe. [Owner: privacy maintainer — dataset validator fix.]
+  or bypass it as proof that a dataset is safe. <!-- owner: privacy maintainer — dataset validator fix. -->
 - Snowflake and Databricks are write targets. Shape does not profile from them yet.
 - Model queries read model payloads, not saved profile payloads. A profile passed to a query
   is rejected. See [Models](MODELS.md).

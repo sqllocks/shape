@@ -6,7 +6,7 @@ Status: available.
 
 Complete these tutorials in order. Each page also runs from an empty working directory, so you
 can repeat one without depending on files from another. The runnable blocks and their complete
-outputs are checked in CI. Installation is a prerequisite; see the current blocker on [Install](INSTALL.md).
+outputs are checked in CI. Installation is a prerequisite; see [Install](INSTALL.md).
 
 1. [Your first profile](tutorials/01-first-profile.md).
 2. [Read the report](tutorials/02-read-report.md).

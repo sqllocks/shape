@@ -2,7 +2,21 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" REPRODUCIBILITY
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for REPRODUCIBILITY
+    ```
 
 
 Every `shape pack run` writes a run manifest (`docs/SCENARIO_PACKS.md`). Two keys of it make a
@@ -69,7 +83,8 @@ added, removed or duplicated, and values swapped between rows. What does not: `0
 
 ## Replay
 
-Use [the tested starters](TUTORIAL.md) for local commands and complete output.
+[Run this example](#local-example-0).
+
 
 `replay` regenerates the run from the manifest's domain, scale and seed, using the pack (or the
 spec) the run used, into a scratch directory that is removed afterwards, and compares the dataset id
@@ -117,3 +132,33 @@ with the spec's pins and the latest versions; the field is additive, so `version
 
 A manifest without `reproducibility.identifiers` (W8-06) loads, reads as `reserved`, is written
 back without it and replays as a reserved run; the field is additive, so `version` stays 1.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape pack run my_pack.yaml --scale small --seed 42 -o original/ --json > original-run.json
+MANIFEST=$(python -c 'import json; print(str(next(__import__("pathlib").Path("original").rglob("*manifest*.json"))))')
+shape pack replay "$MANIFEST" my_pack.yaml
+shape pack run estate.gsl.yaml -o spec-original/ --json > spec-run.json
+MANIFEST=$(python -c 'import json; print(str(next(__import__("pathlib").Path("spec-original").rglob("*manifest*.json"))))')
+shape pack replay "$MANIFEST" estate.gsl.yaml --json
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Replay of run 20261009_170203_retail_small_s42
+      Recorded dataset id: sha256:64abbb26bc7b33d5cf8b0f5af993553077e33311759aab908d4e5d647e67a2f5
+      Replayed dataset id: sha256:64abbb26bc7b33d5cf8b0f5af993553077e33311759aab908d4e5d647e67a2f5
+    Result: MATCH
+    {"actual": "sha256:64abbb26bc7b33d5cf8b0f5af993553077e33311759aab908d4e5d647e67a2f5", "differences": [], "expected": "sha256:64abbb26bc7b33d5cf8b0f5af993553077e33311759aab908d4e5d647e67a2f5", "match": true, "run_id": "20261009_170206_retail_small_s42", "format": "shape-result", "version": 1, "command": "pack replay", "exit_code": 0}
+    ```

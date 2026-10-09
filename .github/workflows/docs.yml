@@ -7,6 +7,8 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+env:
+  SHAPE_DOCS_DBT_PACKAGES: ${{ runner.temp }}/docs-dbt-packages
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -19,8 +21,12 @@ jobs:
           python-version: '3.12'
       - uses: dtolnay/rust-toolchain@stable
       - run: pip install -r requirements-docs.txt
-      - run: pip install --no-deps -e . -e plugins/shape-domains -e plugins/shape-databases -e plugins/shape-integrations
-      - run: pytest -q tests/docs/test_launch_tutorials.py tests/docs/test_launch_api.py tests/docs/test_launch_site.py
+      - run: pip install --no-deps -e . $(for plugin in plugins/*/pyproject.toml; do printf ' -e %s' "${plugin%/pyproject.toml}"; done)
+      - run: python scripts/docs_dbt_packages.py --directory "$SHAPE_DOCS_DBT_PACKAGES"
+      - name: Block release documentation with unresolved owner notes
+        if: github.ref_type == 'tag'
+        run: python scripts/check_docs_owners.py --release
+      - run: pytest -q -n 3 -o tmp_path_retention_policy=failed tests/docs/test_launch_tutorials.py tests/docs/test_launch_api.py tests/docs/test_launch_site.py tests/docs/test_reference_examples.py tests/docs/test_owner_notes.py
       - run: mkdocs build --strict
       - run: python scripts/check_doc_links.py --site site
       - run: python scripts/check_user_facing.py --site site
@@ -47,7 +53,10 @@ jobs:
           python-version: '3.12'
       - uses: dtolnay/rust-toolchain@stable
       - run: pip install -r requirements-docs.txt
-      - run: pip install --no-deps -e . -e plugins/shape-domains -e plugins/shape-databases -e plugins/shape-integrations
+      - run: pip install --no-deps -e . $(for plugin in plugins/*/pyproject.toml; do printf ' -e %s' "${plugin%/pyproject.toml}"; done)
+      - name: Block tag publishing with unresolved owner notes
+        if: github.ref_type == 'tag'
+        run: python scripts/check_docs_owners.py --release
       - name: Publish versioned documentation
         env:
           DOCS_REF_TYPE: ${{ github.ref_type }}

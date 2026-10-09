@@ -2,7 +2,21 @@
 
 Status: experimental.
 
-[Owner: documentation maintainer — execute the removed command examples in a suitable local or test-account environment and record their complete output before restoring them.]
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](../contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" behavior
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for behavior
+    ```
 
 
 A domain-agnostic engine for things that *happen to entities over time*: a subscriber trials,
@@ -22,6 +36,9 @@ Status of this page: **API v1, stable for domain packs to build on.** The names 
 contract; the implementation behind them may get faster. Anything not listed here is private.
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+[Run this example](#local-example-1).
+
 
 ## 1. Concepts
 
@@ -262,6 +279,20 @@ warning). Distributed probabilities that do not sum to 1 are normalized (warning
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
+<!-- example: 8 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
+```
+shape behave run MODULES... --population N --years Y --seed S -o OUT
+      [--start 2020-01-01] [--population-spec FILE.json] [--window-years 1]
+      [--poll "7 days"] [--strict] [--params FILE.json]
+shape behave check MODULES...            # validate; exit 1 on problems
+shape behave import-gmf FILE [-o OUT.json] [--strict]
+shape behave examples [-o DIR]           # write the built-in example modules
+```
+
+
 `MODULES` are native or GMF JSON files, or the built-in example names `subscription`,
 `equipment_maintenance`, `healthcare_screening`. `run` writes `OUT/events/part-NNNN.parquet` (one
 file per window, so memory stays bounded), `OUT/entities.parquet` and `OUT/run.json` (seed,
@@ -377,6 +408,9 @@ Emits one event per step reached, `kind` = the step name.
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
+[Run this example](#local-example-12).
+
+
 ### 11.2 `telemetry_series(interval, unit, level, noise, drift, missing_rate, stuck_rate)`
 
 A regular reading per entity (a device), the first when it arrives.
@@ -395,6 +429,9 @@ Emits `kind` = `reading` with `value` and `unit`. State type `telemetry_reading`
 handler; it draws only through `ctx.uniform`).
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+[Run this example](#local-example-13).
+
 
 Memory stays bounded by the window: `--window-years` sets how much virtual time one output file
 holds. 10,000 devices at a 1-hour interval for a year is about 87.8 million events;
@@ -443,6 +480,9 @@ One entity per feed; every schedule slot (the first at the feed's start) has one
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
+[Run this example](#local-example-15).
+
+
 ### 11.5 `entity_lifecycle(states, update_rate, delete_rate)`
 
 Create, any number of updates and an optional delete per entity, so the event table can drive
@@ -460,6 +500,9 @@ than the previous one when there is more than one state, `value` = the new versi
 `lifecycle_event`.
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+[Run this example](#local-example-16).
+
 
 ### 11.6 The parameters file
 
@@ -491,3 +534,98 @@ the events themselves from per-entity processes on the virtual clock.
 | `transaction_stream` | `financial_patterns` | you need transactions as a Poisson process with refunds and reversals tied to the original. | you have transactions and accounts and want fraud bursts and settlement batches. |
 | `file_arrival` | `file_drop` | you need the arrival outcomes of a feed (on time, late, missing, duplicated) as events. | you need the files themselves: partitions, manifests, `_done` flags, backfills. |
 | `entity_lifecycle` | `scd2_file_drops` | you need create, update and delete events per entity (change data capture). | you need versioned rows and the full load plus daily delta files of a slowly changing dimension. |
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-1"></a>
+
+### Example 2
+
+<!-- example: 1 -->
+
+```bash {.runnable-reference}
+pip install --quiet --no-deps --no-build-isolation -e "$SHAPE_DOCS_REPO/plugins/shape-behavior"
+shape behave run subscription equipment_maintenance --population 100 --years 0.1 --seed 7 -o out/local
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    10 events for 100 entities in 0.3s -> out/local
+    ```
+
+<a id="local-example-12"></a>
+
+### Example 13
+
+<!-- example: 12 -->
+
+```bash {.runnable-reference}
+shape behave run event_sequence --population 10000 --years 1 --seed 7 -o out/funnel
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    21,945 events for 10,000 entities in 0.3s -> out/funnel
+    ```
+
+<a id="local-example-13"></a>
+
+### Example 14
+
+<!-- example: 13 -->
+
+```bash {.runnable-reference}
+cat > telemetry.json <<'EOF'
+{"format": "shape-behavior-params", "version": 1, "primitive": "telemetry_series",
+ "params": {"interval": "1 hour", "unit": "kPa", "level": 101.3, "noise": 0.4}}
+EOF
+shape behave run telemetry_series --params telemetry.json --population 100 --years 0.01 \
+    --window-years 0.02 --seed 7 -o out/telemetry
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    8,631 events for 100 entities in 0.4s -> out/telemetry
+    ```
+
+<a id="local-example-15"></a>
+
+### Example 16
+
+<!-- example: 15 -->
+
+```bash {.runnable-reference}
+cat > feed.json <<'EOF'
+{"format": "shape-behavior-params", "version": 1, "primitive": "file_arrival",
+ "params": {"schedule": "hourly", "late_rate": 0.2, "late_delay": "20 minutes"}}
+EOF
+shape behave run file_arrival --params feed.json --population 12 --years 0.1 -o out/feeds
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    10,745 events for 12 entities in 1.7s -> out/feeds
+    ```
+
+<a id="local-example-16"></a>
+
+### Example 17
+
+<!-- example: 16 -->
+
+```bash {.runnable-reference}
+shape behave run entity_lifecycle --population 5000 --years 3 --seed 1 -o out/changes
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    50,371 events for 5,000 entities in 0.4s -> out/changes
+    ```

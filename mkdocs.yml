@@ -213,6 +213,7 @@ nav:
 - Community:
   - Contributing: CONTRIBUTING.md
   - Docs style: contributing/DOCS_STYLE.md
+  - Tested examples: contributing/EXAMPLES.md
   - Governance: GOVERNANCE.md
   - Code of conduct: CODE_OF_CONDUCT.md
   - Changelog: CHANGELOG.md

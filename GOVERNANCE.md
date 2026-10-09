@@ -5,7 +5,7 @@ Status: available.
 **Early access 0.9.1.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 
 SQLLocks maintains Shape. The repository owner reviews and merges contributions.
-[Owner: repository owner — confirm the named maintainer roster and review delegation.]
+<!-- owner: repository owner — confirm the named maintainer roster and review delegation. -->
 
 ## Decisions
 
