@@ -184,12 +184,13 @@ def test_the_first_write_waits_for_a_table_created_a_moment_ago(batches):
 
 def test_a_table_that_never_becomes_ready_fails_the_write_after_the_wait(batches):
     calls = []
+    kusto = FakeKusto()
 
     def transport(method, url, headers, body, timeout):
         if "/v1/rest/ingest/" in url:
             calls.append(url)
             return NOT_FOUND[0], {}, NOT_FOUND[1]
-        return 200, {}, b"{}"
+        return kusto(method, url, headers, body, timeout)
 
     w = EventhouseWriter(URI, transport=transport, busy_pause=0.001, ready_timeout=0.05)
     with pytest.raises(WriteError, match="EntityNotFound"):

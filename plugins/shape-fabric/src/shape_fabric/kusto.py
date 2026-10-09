@@ -175,6 +175,10 @@ def streaming_policy_command(table: str) -> str:
     return f".alter table {q(table)} policy streamingingestion enable"
 
 
+def clear_schema_cache_command(table: str) -> str:
+    return f".clear table {q(table)} cache streamingingestion schema"
+
+
 def drop_table_command(table: str) -> str:
     return f".drop table {q(table)} ifexists"
 
@@ -303,10 +307,37 @@ class KustoClient:
             self.mgmt(streaming_policy_command(table))
         except (ShapeError, AuthError):
             pass
+        # Streaming nodes cache schema independently of successful management commands.
+        # Synchronize the table and mapping before sending data; otherwise the first ingest
+        # can still report EntityNotFound for minutes after creation.
+        self._clear_schema_cache(table)
         # A table has one mapping by that name, and this one replaced it: another schema
         # prepared for the same table must send its own mapping again.
         self.forget(table)
         self._prepared.add(mark)
+
+    def _clear_schema_cache(self, table: str) -> None:
+        deadline = time.monotonic() + self.ready_timeout
+        pause = self._busy_pause
+        while True:
+            doc = self.mgmt(clear_schema_cache_command(table))
+            try:
+                result = doc["Tables"][0]
+                names = [column["ColumnName"] for column in result["Columns"]]
+                status_column = names.index("Status")
+                statuses = [row[status_column] for row in result["Rows"]]
+            except (KeyError, IndexError, TypeError, ValueError) as exc:
+                raise ShapeError("eventhouse: invalid streaming schema-cache response") from exc
+            if not statuses or any(status not in ("Succeeded", "Failed") for status in statuses):
+                raise ShapeError("eventhouse: invalid streaming schema-cache node status")
+            if all(status == "Succeeded" for status in statuses):
+                return
+            # The command is safe to repeat when any node reports Failed. Keep the existing
+            # readiness bound and refuse to ingest until every node has synchronized.
+            if time.monotonic() + pause > deadline:
+                raise ShapeError("eventhouse: streaming schema-cache synchronization failed")
+            time.sleep(pause)
+            pause = min(pause * 2, 10.0)
 
     def forget(self, table: str) -> None:
         self._prepared = {m for m in self._prepared if m[0] != table}

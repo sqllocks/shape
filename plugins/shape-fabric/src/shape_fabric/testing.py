@@ -108,6 +108,21 @@ class FakeKusto:
             self.tables.pop(names[0], None)
             self.by_table.pop(names[0], None)
         elif csl.startswith(".clear table"):
+            if csl.endswith(" cache streamingingestion schema"):
+                return (
+                    200,
+                    {},
+                    json.dumps(
+                        {
+                            "Tables": [
+                                {
+                                    "Columns": [{"ColumnName": "NodeId"}, {"ColumnName": "Status"}],
+                                    "Rows": [["fake-node", "Succeeded"]],
+                                }
+                            ]
+                        }
+                    ).encode(),
+                )
             self.by_table[names[0]] = []
         return 200, {}, b"{}"
 
