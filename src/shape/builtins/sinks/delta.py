@@ -23,14 +23,54 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable, Iterable, Iterator
-from typing import Any
+from typing import Any, NoReturn
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
+from shape.builtins.sinks import delta_features as features
 from shape.builtins.sources.files import output_path
 from shape.plugins.schemes import require_scheme
 
 CLOUD_PREFIX = "delta+"
+
+
+def feature_plan(options: dict[str, Any]) -> dict[str, Any]:
+    """Report opt-in protocol requirements without opening storage."""
+    return features.feature_plan(options)
+
+
+def _uses_features(
+    dl: Any, location: str, options: dict[str, Any], storage: dict[str, str] | None
+) -> bool:
+    if features.parse(options).active:
+        return True
+    if location.startswith(("abfss://", "abfs://")):
+        # The default cloud path has no new metadata/network request. Its native
+        # writer already enforces stored invariants; inspect rules only on failure.
+        return False
+    else:
+        from pathlib import Path
+
+        if not (Path(location) / "_delta_log").is_dir():
+            return False
+        prior = features.existing_table(dl, location, storage)
+    constraints, generated = features.persisted_rules(prior)
+    return bool(constraints or generated)
+
+
+def _rejected_write(dl: Any, location: str, storage: dict[str, str] | None) -> NoReturn:
+    try:
+        prior = features.existing_table(dl, location, storage)
+        constraints, generated = features.persisted_rules(prior)
+    except Exception:
+        raise ValueError("Delta write refused; check the schema, path and sign-in") from None
+    if generated:
+        raise ValueError(
+            f"generated_columns {', '.join(sorted(generated))}: batch rejected"
+        ) from None
+    if constraints:
+        raise ValueError(f"constraint {', '.join(sorted(constraints))}: batch rejected") from None
+    raise ValueError("Delta write refused; check the schema, path and sign-in") from None
 
 
 def _deltalake() -> Any:
@@ -75,9 +115,13 @@ class DeltaTableWriter:
         options: dict[str, Any],
         storage: dict[str, str] | None,
     ) -> None:
-        self._write = _deltalake().write_deltalake
+        self._dl = _deltalake()
+        self._write = self._dl.write_deltalake
+        self._options = dict(options)
+        self._features = features.parse(options)
+        features.require_capabilities(self._dl, options, self._features)
         self._location = location
-        self._schema = _utc_timestamps(schema)
+        self._schema = schema if self._features.ntz else _utc_timestamps(schema)
         self._storage = storage
         self._partition_by = options.get("partition_by") or None
         self._mode = options.get("mode", "overwrite")
@@ -115,17 +159,26 @@ class DeltaTableWriter:
         self._commit(self._pending)
 
     def _commit(self, batches: list[pa.RecordBatch]) -> None:
-        reader = pa.RecordBatchReader.from_batches(
-            self._schema, iter([b.cast(self._schema) for b in batches])
-        )
-        self._write(
-            self._location,
-            reader,
-            mode=self._mode,
-            partition_by=self._partition_by,
-            storage_options=self._storage,
-            **_schema_mode(self._mode),
-        )
+        options = {**self._options, "mode": self._mode}
+        if _uses_features(self._dl, self._location, options, self._storage):
+            features.write_features(
+                self._dl, self._location, batches, self._schema, options, self._storage
+            )
+        else:
+            reader = pa.RecordBatchReader.from_batches(
+                self._schema, iter([b.cast(self._schema) for b in batches])
+            )
+            try:
+                self._write(
+                    self._location,
+                    reader,
+                    mode=self._mode,
+                    partition_by=self._partition_by,
+                    storage_options=self._storage,
+                    **_schema_mode(self._mode),
+                )
+            except Exception:
+                _rejected_write(self._dl, self._location, self._storage)
         self.rows += self._pending_rows
         self.commits += 1
         self._pending, self._pending_rows = [], 0
@@ -177,6 +230,8 @@ class DeltaSink:
             schema = options.get("schema")
         if schema is None:
             raise ValueError("a Delta table needs a schema: pass `schema`")
+        feature_options = features.parse(options)
+        features.require_capabilities(_deltalake(), options, feature_options)
         location, storage = _location(uri, table, options)
         return DeltaTableWriter(location, schema, options, storage)
 
@@ -189,7 +244,10 @@ class DeltaSink:
             raise ValueError(
                 "a Delta table needs a schema: pass `schema` when there are no batches"
             )
-        schema = _utc_timestamps(schema)
+        feature_options = features.parse(options)
+        dl = _deltalake()
+        features.require_capabilities(dl, options, feature_options)
+        schema = schema if feature_options.ntz else _utc_timestamps(schema)
         if options.get("fingerprint") and (
             options.get("commit_rows") or options.get("commit_seconds")
         ):
@@ -218,7 +276,7 @@ class DeltaSink:
             if uri.startswith(CLOUD_PREFIX):
                 raise ValueError("fingerprint writes a local Delta table only")
         location, storage = _location(uri, table, options)
-        write_deltalake = _deltalake().write_deltalake
+        write_deltalake = dl.write_deltalake
         rows = 0
         kept: list[pa.RecordBatch] = []
 
@@ -238,14 +296,21 @@ class DeltaSink:
                 yield cast
 
         mode = options.get("mode", "overwrite")
-        write_deltalake(
-            location,
-            pa.RecordBatchReader.from_batches(schema, counted()),
-            mode=mode,
-            partition_by=options.get("partition_by") or None,
-            storage_options=storage,
-            **_schema_mode(mode),
-        )
+        reader = pa.RecordBatchReader.from_batches(schema, counted())
+        if _uses_features(dl, location, options, storage):
+            features.write_features(dl, location, reader, schema, options, storage)
+        else:
+            try:
+                write_deltalake(
+                    location,
+                    reader,
+                    mode=mode,
+                    partition_by=options.get("partition_by") or None,
+                    storage_options=storage,
+                    **_schema_mode(mode),
+                )
+            except Exception:
+                _rejected_write(dl, location, storage)
         if stamp:
             from shape.fingerprint import KEY, dump, for_sink, set_delta_property
 

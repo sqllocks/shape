@@ -128,3 +128,32 @@ id or workspace id. It follows the [state and compatibility policy](specs/STATE_
 that names the first Shape release that reads it.
 
 Last recorded run: not run yet
+
+### Opt-in Delta table features
+
+Shape's default Delta output remains reader 1 / writer 2, zone-less timestamps
+rewritten to UTC, suitable for the existing Fabric readers. `column_mapping="name"`
+raises the protocol to reader 2 / writer 5 and adds physical-name/id schema
+metadata. `deletion_vectors=true` enables reader 3 / writer 7 and
+`delta.enableDeletionVectors=true`; Shape itself writes no deletion-vector actions.
+`timestamp_ntz=true` preserves zone-less timestamps with reader 3 / writer 7 and
+`timestampNtz`. `constraints` require writer 3 (`checkConstraints`) and
+`generated_columns` writer 4 (`generatedColumns`); a generated date can be used by
+`partition_by`. Ordinary `table_properties` do not change the protocol.
+
+These features are opt-in and compose at the highest protocol version. Spark
+runtimes that support the declared protocol/features can read them and maintain
+those tables. SQL analytics endpoint support depends on the Fabric endpoint's
+current supported Delta features; do not assume a reader that accepts the default
+protocol can accept mapped, DV-enabled or timestampNtz tables. Inspect the actual
+protocol with `shape doctor --delta-table PATH --json`; plan the minimum feature
+union with `shape generate ... --format delta --dry-run --json --sink-config ...`.
+Use the default write when a SQL endpoint or older Spark reader's support has not
+been confirmed. Shape does not alter the endpoint or disable its protocol checks.
+
+The writer's feature APIs are verified with deltalake 1.6.6. Unsupported APIs are
+refused naming the installed version and required capability; the optional extra's
+existing dependency floor is unchanged. Native DataFusion `QueryBuilder` reads
+mapped and advertised-DV tables correctly on that version; its PyArrow scanner
+requires Shape's existing DuckDB fallback for those features. See `docs/SINKS.md`
+for options, partitioned generated-column examples and pre-write validation costs.

@@ -1843,3 +1843,13 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - The fidelity e-mail format pattern runs in linear time (#293).
 - The kql scale sink percent-encodes its database name (#295); Spark job and `COPY INTO` checks
   take whole values, and backticks in Spark column names are doubled (#300).
+
+### W9-07: opt-in Delta table features
+
+- Delta `table_properties`, not-null/check `constraints`, `column_mapping="name"`,
+  `deletion_vectors=true`, `generated_columns` and `timestamp_ntz=true` use supported
+  delta-rs APIs, with capability refusals naming the installed and verified version.
+- Dry-run reports the feature protocol union; doctor reports actual protocol and
+  reader/writer feature lists. Failed validation names the rule or generated column
+  and keeps an existing table's version. Default output and pinned fixtures stay
+  unchanged. Renaming, deletion-vector actions and upsert are outside this package.

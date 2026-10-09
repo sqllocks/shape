@@ -459,9 +459,31 @@ def delta_features(path: str) -> dict[str, Any]:
     table = DeltaTable(path)
     protocol = table.protocol()
     features = list(getattr(protocol, "reader_features", None) or [])
+    conf = dict(table.metadata().configuration or {})
+    implicit_reader: set[str] = set()
+    implicit_writer: set[str] = set()
+    if conf.get("delta.columnMapping.mode", "none") != "none":
+        implicit_reader.add("columnMapping")
+        implicit_writer.add("columnMapping")
+    if any(k.startswith("delta.constraints.") for k in conf):
+        implicit_writer.add("checkConstraints")
+    import json
+
+    if any(
+        "delta.generationExpression" in f.get("metadata", {})
+        for f in json.loads(table.schema().to_json())["fields"]
+    ):
+        implicit_writer.add("generatedColumns")
     return {
         "reader_features": [str(f) for f in features],
-        "configuration": dict(table.metadata().configuration or {}),
+        "writer_features": [str(f) for f in (getattr(protocol, "writer_features", None) or [])],
+        "min_reader_version": protocol.min_reader_version,
+        "min_writer_version": protocol.min_writer_version,
+        "implicit_reader_features": sorted(implicit_reader - set(features)),
+        "implicit_writer_features": sorted(
+            implicit_writer - set(getattr(protocol, "writer_features", None) or [])
+        ),
+        "configuration": conf,
     }
 
 
@@ -495,6 +517,19 @@ def check_delta_limits(
             f"could not read the Delta table ({_brief(exc)})",
             "check the path and the sign-in",
         )
+    protocol_note = ""
+    if "min_reader_version" in found and "min_writer_version" in found:
+        protocol_note = (
+            f"; reader {found['min_reader_version']} / writer {found['min_writer_version']}"
+            f"; reader features: {', '.join(found.get('reader_features', [])) or 'none'}"
+            f"; writer features: {', '.join(found.get('writer_features', [])) or 'none'}"
+        )
+        if found.get("implicit_reader_features") or found.get("implicit_writer_features"):
+            readers = ", ".join(found.get("implicit_reader_features", [])) or "none"
+            writers = ", ".join(found.get("implicit_writer_features", [])) or "none"
+            protocol_note += (
+                f"; implicit reader features: {readers}; implicit writer features: {writers}"
+            )
     limits: list[str] = []
     feats = {f.lower() for f in found.get("reader_features", [])}
     conf = found.get("configuration", {})
@@ -511,12 +546,14 @@ def check_delta_limits(
         return Check(
             "delta.limits",
             "fail",
-            f"the table uses {' and '.join(limits)}, which delta-rs {version} cannot read in a "
-            "Python notebook",
+            f"the table uses {' and '.join(limits)}, which delta-rs {version} cannot read with "
+            "the PyArrow scanner" + protocol_note,
             "read it from Spark or a SQL endpoint, or rewrite the table without these features "
             "(for example `REORG TABLE ... APPLY (PURGE)` and `ALTER TABLE ... SET TBLPROPERTIES "
             "('delta.enableDeletionVectors' = false)`)",
         )
     return Check(
-        "delta.limits", "pass", f"no deletion vectors or column mapping (delta-rs {version})"
+        "delta.limits",
+        "pass",
+        f"no deletion vectors or column mapping (delta-rs {version})" + protocol_note,
     )

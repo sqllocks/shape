@@ -249,3 +249,76 @@ A sink takes `write(uri, table, batches, **options)` and consumes `batches` incr
 **options)` returning an object with `write_batch`, `flush` (make everything so far visible and
 durable), `close` and `abort`; without it the stream drives `write` on a thread and relies on its
 own commit option. Check it with `shape.plugins.kit.check_sink` and `shape conformance`.
+
+## Delta table features (opt-in)
+
+The default Delta write still uses reader **1** / writer **2**, no table features,
+and no configuration. Zone-less timestamps are rewritten to UTC, preserving their
+wall-clock value. Existing golden files and benchmark fixtures are unchanged.
+`DeltaSink.write` and `open_table` accept these options:
+
+| Option | Value and effect | Required protocol |
+|---|---|---|
+| `table_properties` | String-to-string object passed as `configuration` on creation; changed properties are committed after a successful append. Custom properties compose with `shape.fingerprint`. Feature/protocol and fingerprint properties are reserved for their dedicated options. | 1 / 2 for ordinary properties |
+| `constraints` | `{"not_null": ["id"], "check": {"positive": "amount >= 0"}}`; SQL check expressions are evaluated by delta-rs. `true` derives not-null checks from nonnullable Arrow fields. Checks are added after the first data commit. | reader 1 / writer 3; `checkConstraints` |
+| `column_mapping` | `"name"` creates a mapped table with stable physical names and positive ids in each field's metadata. Conversion of an existing unmapped table and renaming are table maintenance by another engine. | reader 2 / writer 5; `columnMapping` |
+| `deletion_vectors` | `true` enables `delta.enableDeletionVectors` and its reader/writer feature. This opt-in adds no deletion-vector actions, deletes, merges or upserts. Another engine may later update the table. | reader 3 / writer 7; `deletionVectors` |
+| `generated_columns` | `{"day": "CAST(ts AS DATE)"}` writes `delta.generationExpression`. The batch must supply the column with exactly the expression's result, including null semantics; disagreement is refused naming the column. | reader 1 / writer 4; `generatedColumns` |
+| `timestamp_ntz` | `true` retains zone-less timestamps; zoned timestamps keep their zone-aware instant. False retains the default UTC rewrite. | reader 3 / writer 7; `timestampNtz` |
+
+Protocols compose by taking the highest reader/writer version; writer 7 advertises
+feature lists. Delta-rs may add supporting features to the stored protocol. The
+installed version's public APIs are checked before writing. The implementation is
+verified with **deltalake 1.6.6**; this is a tested version, not a new dependency
+floor. A missing API produces an error naming the option, installed version and
+required capability, with 1.6.6 as the verified release. The `[delta]` extra's
+`deltalake>=0.17` floor is unchanged. No additional core dependency is introduced.
+
+Checks and generated expressions are validated before touching the destination;
+a rejected append keeps its previous table version and properties. Adding checks
+also validates existing rows. Opt-in validation materializes pending batches and
+uses a temporary local Delta table; adding checks to an existing table also reads
+its current rows. Choose appropriate micro-batch thresholds for large inputs.
+Existing constraints and generated expressions continue to apply on an append
+even when their options are omitted. Errors name rules/columns and omit native
+error bodies, which can contain row values or sign-in information.
+
+```python
+from shape.builtins.sinks.delta import DeltaSink
+
+DeltaSink().write(
+    "lake", "events", batches,
+    generated_columns={"day": "CAST(ts AS DATE)"},
+    partition_by=["day"],
+    constraints={"not_null": ["ts"], "check": {"recent": "day >= DATE '2026-01-01'"}},
+    table_properties={"owner": "analytics"},
+)
+```
+
+Use existing `--sink-config` options without new command-line flags:
+
+```sh
+shape generate retail --format delta -o lake --dry-run --json \
+  --sink-config delta.column_mapping=name \
+  --sink-config delta.deletion_vectors=true
+shape generate retail --format delta -o lake \
+  --sink-config 'delta.table_properties={"owner":"analytics"}'
+```
+
+`--dry-run` reports `delta_protocol` (minimum reader/writer versions and the feature
+union), resolves no sign-in, and creates no table. `shape doctor --delta-table
+lake/events --json` reports the actual reader/writer versions and both stored
+feature lists, while retaining its PyArrow-reader compatibility warning. For
+correct native readback of mapped or advertised-DV tables with deltalake 1.6.6,
+use its public DataFusion reader:
+
+```python
+from deltalake import DeltaTable, QueryBuilder
+import pyarrow as pa
+
+table = DeltaTable("lake/events")
+rows = pa.table(QueryBuilder().register("events", table).execute("SELECT * FROM events").read_all())
+```
+
+The native PyArrow scanner can return nulls for mapped columns or refuse the DV
+feature; Shape's existing W2-03 read fallback handles those cases through DuckDB.
