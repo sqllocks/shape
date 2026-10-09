@@ -294,6 +294,9 @@ class KustoClient:
         mark = (table, schema.to_string())
         if mark in self._prepared:
             return
+        # Management changes are not atomic: even if synchronization fails below, the new
+        # mapping may already have replaced the old one. Invalidate before changing it.
+        self.forget(table)
         first = (
             create_strict_table_command(table, schema)
             if create == "strict"
@@ -311,9 +314,6 @@ class KustoClient:
         # Synchronize the table and mapping before sending data; otherwise the first ingest
         # can still report EntityNotFound for minutes after creation.
         self._clear_schema_cache(table)
-        # A table has one mapping by that name, and this one replaced it: another schema
-        # prepared for the same table must send its own mapping again.
-        self.forget(table)
         self._prepared.add(mark)
 
     def _clear_schema_cache(self, table: str) -> None:

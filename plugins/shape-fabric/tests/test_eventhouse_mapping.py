@@ -9,9 +9,11 @@ from typing import Any
 from urllib.parse import parse_qs, unquote, urlsplit
 
 import pyarrow as pa
+import pytest
 from shape_fabric import EventhouseEmitter
 from shape_fabric.testing import FakeKusto
 
+from shape.errors import ShapeError
 from shape.streaming.emit.formats import with_event_fields
 
 
@@ -77,6 +79,32 @@ def test_one_table_per_shape_table_needs_one_mapping_each() -> None:
     EventhouseEmitter(kusto).emit("eventhouse://kql.example.test/db1?tls=false", batches)
     assert kusto.unmapped == []
     assert sum("mapping" in c for _, c in kusto.commands) == 2  # nothing to redo
+
+
+def test_a_failed_schema_change_does_not_reuse_an_obsolete_mapping() -> None:
+    class FailingCacheKusto(MappingKusto):
+        fail_cache = False
+
+        def _mgmt(self, csl):
+            if self.fail_cache and csl.endswith(" cache streamingingestion schema"):
+                return (
+                    200,
+                    {},
+                    (b'{"Tables":[{"Columns":[{"ColumnName":"Status"}],"Rows":[["Failed"]]}]}'),
+                )
+            return super()._mgmt(csl)
+
+    kusto = FailingCacheKusto()
+    emitter = EventhouseEmitter(kusto)
+    uri = "eventhouse://kql.example.test/db1/AllEvents?tls=false"
+    assert emitter.emit(uri, [_event("A", 0, a_col=1)], ready_timeout=0) == 1
+    kusto.fail_cache = True
+    with pytest.raises(ShapeError, match="schema-cache"):
+        emitter.emit(uri, [_event("B", 0, b_col="x")], ready_timeout=0)
+    kusto.fail_cache = False
+    assert emitter.emit(uri, [_event("A", 1, a_col=2)], ready_timeout=0) == 1
+    assert kusto.unmapped == []
+    assert [row["a_col"] for row in kusto.by_table["AllEvents"]] == [1, 2]
 
 
 def test_each_emit_uses_its_own_token_retries_and_timeout() -> None:
