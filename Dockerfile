@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1
 # Shape CLI image (PF-05): python:3.11-slim, the Shape wheel with the [azure] extra, a non-root
 # user. Used by the ADF Batch Custom activity (PF-04) and anywhere a pinned runtime is wanted.
 #
