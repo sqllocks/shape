@@ -32,7 +32,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 import pyarrow.csv as pacsv  # type: ignore[import-untyped]
 
-from ._memory import streaming_csv_pool
+from ._memory import csv_input_stream, streaming_csv_pool
 
 # Words that mean "this is a label, not a quantity". A column name is split into words (on
 # separators and at camelCase changes) and each word is matched whole.
@@ -204,10 +204,10 @@ def integer_columns(schema: pa.Schema) -> list[str]:
     return [f.name for f in schema if _is_integer_type(f.type)]
 
 
-def _first_block(path: str | Path, size: int) -> pa.BufferReader | None:
+def _first_block(path: str | Path, size: int, pool: Any = None) -> pa.BufferReader | None:
     """The first ``size`` bytes of the file (decompressed), up to the last line end in them, or
     ``None`` when the file is not longer than that (it is read as it is)."""
-    with pa.input_stream(str(path), compression="detect") as f:
+    with csv_input_stream(path, pool) as f:
         data = f.read(size + 1)
     if len(data) <= size:
         return None
@@ -248,7 +248,9 @@ def scan_text(
         # reads ahead in the background, even after it is closed, while the caller's own reader
         # of the same file is open: about 140 MB more peak memory in a bounded profile (INT-18,
         # shard P1). A block cut inside a quoted line end falls back to reading the file.
-        head = _first_block(path, read_options.block_size)
+        head = _first_block(
+            path, read_options.block_size, streaming_csv_pool(read_options.use_threads)
+        )
         if head is not None:
             try:
                 return _scan(head, wanted, read_options, parse_options, convert, max_batches)
@@ -266,12 +268,15 @@ def _scan(
     max_batches: int | None,
 ) -> dict[str, DigitStats]:
     stats = {c: DigitStats() for c in wanted}
+    pool = streaming_csv_pool(read_options.use_threads) if max_batches == 1 else None
+    if pool is not None and isinstance(source, (str, Path)):
+        source = csv_input_stream(source, pool)
     reader = pacsv.open_csv(
         source,
         read_options=read_options,
         parse_options=parse_options,
         convert_options=convert,
-        memory_pool=streaming_csv_pool(read_options.use_threads) if max_batches == 1 else None,
+        memory_pool=pool,
     )
     live = set(wanted)
     seen = 0
