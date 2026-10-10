@@ -1,0 +1,20 @@
+name: macOS bounded memory diagnostics
+on:
+  workflow_dispatch:
+  push:
+    branches: [diag/macos-mem]
+permissions: {contents: read}
+jobs:
+  memory:
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: python -m pip install -U pip
+      - run: pip install -e '.[dev,streaming,advanced,docs]' -e plugins/shape-domains -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric -e plugins/shape-kafka
+      - run: python scripts/diag_macos_memory.py --output diagnostics --runs 10
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: macos-bounded-memory, path: diagnostics}
