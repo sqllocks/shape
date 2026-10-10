@@ -76,7 +76,8 @@ jobs:
           --ignore=tests/demo/fabric --ignore=tests/demo/content
           --cov=shape --cov-fail-under=86
       # million-value differential and property tests: run without coverage tracing (10x faster)
-      - run: python -m pytest -q -m "heavy${{ matrix.os != 'ubuntu-latest' && ' and not realtime' || '' }}" tests/kernel tests/profile tests/streaming
+      # Keep passing peak-RSS diagnostics visible, including the allocator and startup peak.
+      - run: python -m pytest -q -rP -m "heavy${{ matrix.os != 'ubuntu-latest' && ' and not realtime' || '' }}" tests/kernel tests/profile tests/streaming
       # The pure-Python reference twin must pass on its own (SHAPE_KERNEL=python), and the
       # native kernel must be the one in use by default (SHAPE_KERNEL=rust fails loudly if not).
       - run: python -m pytest -q tests/kernel

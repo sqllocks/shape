@@ -10,6 +10,8 @@ pipeline integration are in progress. See `docs/plans/COMPLETION_PLAN.md`.
 - Safe-profile validation handles JSON row counts larger than a floating-point number without
   crashing, while retaining the minimum cohort check.
 - Bounded CSV profiling avoids CPU-scaled decoded read-ahead buffers.
+- Bounded profiling reclaims freed allocator pages after each batch, including on macOS; its
+  RSS regression test fixes Arrow's serial-reader executor sizes to avoid allocator scheduling noise.
 - Fabric setup reports portable source paths, and Synapse derives table labels from Windows paths.
 - Eventhouse emitters and writers synchronize streaming schema caches before ingesting into
   newly created or changed tables.

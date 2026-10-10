@@ -201,34 +201,49 @@ def test_python_kernel_gives_the_same_document(monkeypatch):
 def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
     """The 5M vs 50M check is benchmarks/vs_refengine/profile_1to1/rss_check.py; this is its
     small version: peak RSS of a CSV twice as large, both past the allocator ramp-up (about
-    20M rows), is within 10%."""
+    20M rows), is within 10%. Each scan fixes Arrow's serial-reader executor sizes."""
     import pyarrow.csv as pacsv
 
     code = (
-        "import sys\n"
+        "import json, sys\n"
         "from shape.profile.engine import profile\n"
-        "profile(sys.argv[1], mode='bounded')\n"
+        "import pyarrow as pa\n"
+        # Even with use_threads=False, raw read-ahead and pending decode continuations use
+        # Arrow's IO and CPU pools. Fix those executor sizes on every OS; bounded CSV
+        # decoding is already serial, and the profiling kernel keeps default parallelism.
+        "pa.set_io_thread_count(1)\n"
+        "pa.set_cpu_count(1)\n"
+        "def peak_rss():\n"
         # Linux: VmHWM belongs to this process's address space. ru_maxrss survives exec on
         # Linux, so in a child of pytest it reports the parent's (larger) peak for both sizes.
-        "if sys.platform.startswith('linux'):\n"
-        "    status = open('/proc/self/status').read().split('VmHWM:')[1]\n"
-        "    print(int(status.split()[0]) * 1024)\n"
-        "elif sys.platform == 'darwin':  # ru_maxrss is bytes on macOS\n"
-        "    import resource\n"
-        "    print(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)\n"
-        "else:  # Windows: the peak working set\n"
-        "    import ctypes\n"
-        "    from ctypes import wintypes as w\n"
-        "    class Counters(ctypes.Structure):\n"
-        "        _fields_ = [('cb', w.DWORD), ('faults', w.DWORD)] + [\n"
-        "            (n, ctypes.c_size_t)\n"
-        "            for n in ('peak', 'ws', 'a', 'b', 'c', 'd', 'pf', 'ppf')]\n"
-        "    c = Counters(); c.cb = ctypes.sizeof(c)\n"
-        "    k = ctypes.windll.kernel32; k.GetCurrentProcess.restype = w.HANDLE\n"
-        "    p = ctypes.windll.psapi\n"
-        "    p.GetProcessMemoryInfo.argtypes = [w.HANDLE, ctypes.c_void_p, w.DWORD]\n"
-        "    assert p.GetProcessMemoryInfo(k.GetCurrentProcess(), ctypes.byref(c), c.cb)\n"
-        "    print(c.peak)\n"
+        "    if sys.platform.startswith('linux'):\n"
+        "        status = open('/proc/self/status').read().split('VmHWM:')[1]\n"
+        "        return int(status.split()[0]) * 1024\n"
+        "    elif sys.platform == 'darwin':  # ru_maxrss is bytes on macOS\n"
+        "        import resource\n"
+        "        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss\n"
+        "    else:  # Windows: the peak working set\n"
+        "        import ctypes\n"
+        "        from ctypes import wintypes as w\n"
+        "        class Counters(ctypes.Structure):\n"
+        "            _fields_ = [('cb', w.DWORD), ('faults', w.DWORD)] + [\n"
+        "                (n, ctypes.c_size_t)\n"
+        "                for n in ('peak', 'ws', 'a', 'b', 'c', 'd', 'pf', 'ppf')]\n"
+        "        c = Counters(); c.cb = ctypes.sizeof(c)\n"
+        "        k = ctypes.windll.kernel32; k.GetCurrentProcess.restype = w.HANDLE\n"
+        "        p = ctypes.windll.psapi\n"
+        "        p.GetProcessMemoryInfo.argtypes = [w.HANDLE, ctypes.c_void_p, w.DWORD]\n"
+        "        assert p.GetProcessMemoryInfo(k.GetCurrentProcess(), ctypes.byref(c), c.cb)\n"
+        "        return c.peak\n"
+        "pool = pa.default_memory_pool()\n"
+        "initial_peak = peak_rss()\n"
+        "profile(sys.argv[1], mode='bounded')\n"
+        "peak = peak_rss()\n"
+        "print(json.dumps({'arrow_pool': pool.backend_name, 'initial_peak': initial_peak,\n"
+        "    'arrow_peak': pool.max_memory(), 'io_threads': pa.io_thread_count(),\n"
+        "    'cpu_threads': pa.cpu_count()}),\n"
+        "    file=sys.stderr)\n"
+        "print(peak, flush=True)\n"
     )
     peaks = {}
     for rows in (24_000_000, 48_000_000):
@@ -253,9 +268,13 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
             assert writer is not None
             writer.close()
         r = subprocess.run(
-            [sys.executable, "-c", code, str(p)], capture_output=True, text=True, check=True
+            [sys.executable, "-c", code, str(p)],
+            capture_output=True,
+            text=True,
+            check=True,
         )
         peaks[rows] = int(r.stdout.split()[-1])
+        print(f"{rows} rows: peak RSS {peaks[rows]} bytes; {r.stderr.strip()}")
         p.unlink()
     assert peaks[24_000_000] > 50 * 2**20, peaks  # a real measurement of the child
     assert abs(peaks[48_000_000] - peaks[24_000_000]) / peaks[24_000_000] < 0.10, peaks
