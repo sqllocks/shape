@@ -20,7 +20,7 @@ Some reference commands build wheels or install a sample plugin. Those examples 
 
 Notifications use a receiver bound to loopback. It accepts the request and forwards nothing. Database examples that run in CI use DuckDB files. The dbt examples use dbt's DuckDB adapter and pinned public package sources prepared by `scripts/docs_dbt_packages.py`; they do not need a warehouse account. Those package sources are copied into the disposable fixture so dbt can resolve them locally.
 
-The container example builds the repository's Dockerfile and profiles a mounted Parquet file. The documented build uses Linux host networking. `DOCS_CA_BUNDLE` points to the environment's CA bundle. `DOCS_PROXY_IP` supplies the proxy host address when a session uses a proxy; the test environment uses loopback when no proxy is configured. The CA is a BuildKit secret mount and is not copied into an image layer. Configure your own environment rather than copying another machine's proxy settings.
+The container example builds the repository's Dockerfile and profiles a mounted Parquet file. `DOCS_CA_BUNDLE` points to the environment's CA bundle. `DOCS_PROXY_IP` supplies the proxy host address when a session uses a proxy; the test environment uses loopback when no proxy is configured. The CA is a BuildKit secret mount and is not copied into an image layer. Configure your own environment rather than copying another machine's proxy settings.
 
 ## Reading the evidence
 

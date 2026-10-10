@@ -14,6 +14,8 @@ No unreleased changes.
 
 ### Fixed
 
+- CI provisions the executable documentation's pinned environment and released plugins, and
+  restores the Fabric talk kit and its unmeasured live-timings placeholder.
 - Safe-profile validation handles JSON row counts larger than a floating-point number without
   crashing, while retaining the minimum cohort check.
 - Bounded CSV profiling avoids CPU-scaled decoded read-ahead buffers.
