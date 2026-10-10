@@ -220,7 +220,7 @@ pip install --quiet --no-deps --no-build-isolation -e "$SHAPE_DOCS_REPO/plugins/
 ```bash {.runnable-reference}
 shape stream retail -t order --max-events 5000 --sink file -o orders.jsonl   # a stream to replay
 shape stream-profile orders.jsonl --window tumbling --size 30d --windows orders.windows.jsonl
-shape stream-profile file://landed/2026-06-02/ --window tumbling --size 5m --windows day.jsonl
+shape stream-profile landed/2026-06-02/ --event-time ts --window tumbling --size 5m --windows day.jsonl
 shape stream-profile 'landed/*.parquet' --event-time ts --window sliding --size 1h --slide 15m \
     --windows history.jsonl
 shape stream-profile orders.jsonl -o events.json
@@ -229,9 +229,9 @@ shape stream-profile orders.jsonl -o events.json
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    shape stream: 5,000 events delivered, offset 5,000 of 5,000, complete, 557,779 events/s
+    shape stream: 5,000 events delivered, offset 5,000 of 5,000, complete, 410,115 events/s
     {"uri": "orders.jsonl", "window": "tumbling", "events": 5000, "batches": 1, "windows": 49, "late_events": 0, "null_event_time": 0, "duplicate_rows": 0, "reconnects": 0, "checkpoints": 0, "written": ["orders.windows.jsonl"], "undecodable": 0, "rejected": 0}
-    shape: error: no such file: '/2026-06-02/'
+    {"uri": "landed/2026-06-02/", "window": "tumbling", "events": 100, "batches": 1, "windows": 20, "late_events": 0, "null_event_time": 0, "duplicate_rows": 0, "reconnects": 0, "checkpoints": 0, "written": ["day.jsonl"], "undecodable": 0, "rejected": 0}
     {"uri": "landed/*.parquet", "window": "sliding", "events": 100, "batches": 1, "windows": 10, "late_events": 0, "null_event_time": 0, "duplicate_rows": 0, "reconnects": 0, "checkpoints": 0, "written": ["history.jsonl"], "undecodable": 0, "rejected": 0}
     {"uri": "orders.jsonl", "window": "global", "events": 5000, "batches": 1, "windows": 1, "late_events": 0, "null_event_time": 0, "duplicate_rows": 0, "reconnects": 0, "checkpoints": 0, "written": ["events.json"], "undecodable": 0, "rejected": 0}
     ```

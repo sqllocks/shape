@@ -85,7 +85,7 @@ Read [concepts](CONCEPTS.md), [install](INSTALL.md), then complete the six
 
 **Intermediate — available:** [04 contract](tutorials/04-contract.md), [03 drift](tutorials/03-drift.md).
 
-**Advanced — available:** [CONTRIBUTING](CONTRIBUTING.md), [plugins/authoring](plugins/authoring.md), [contributing/DOCS STYLE](contributing/DOCS_STYLE.md).
+**Advanced — available:** [CONTRIBUTING](../CONTRIBUTING.md), [plugins/authoring](plugins/authoring.md), [contributing/DOCS STYLE](contributing/DOCS_STYLE.md).
 
 **Coming:** domain quality and plugin tutorial.
 

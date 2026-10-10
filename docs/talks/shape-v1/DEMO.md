@@ -1,5 +1,9 @@
 # Live demo runbook: Ship the Shape, Not the Data (October 3, 2026)
 
+Current Fabric setup is in the [runbook](../../../integrations/fabric/RUNBOOK.md).
+The later [live dry-run findings](../../plans/demo_status/DEMO-LIVE.md) record integration
+fixes and outstanding live checks; they are not a timing benchmark for this talk.
+
 | Demo | Slide | Where | Length | Status |
 |---|---|---|---|---|
 | **C1** Profile a whole schema, read the report | 10–11 | laptop | ~4 min | runs today (verified) |
@@ -25,10 +29,10 @@ Every command here was run on 2026-09-30 through `verify_snippets.sh` (`STATUS.m
 |---|---|---|
 | Demos | C1, **C2 in Fabric**, C3 | C1, **C2-local**, C3 |
 | Network | Fabric workspace | none needed |
-| Slide 14 | may show `LIVE_TIMINGS.md` rows, read exactly, with SKU and vCores | **no Fabric timings**; platform limits only |
+| Slide 14 | may show the committed Fabric dry-run timing record rows, read exactly, with SKU and vCores | **no Fabric timings**; platform limits only |
 | Slide 16 | "this is the notebook running in Fabric" | "the same calls run in the Fabric notebook in the repo"; show the pipeline as a diagram |
 
-Decide on **October 2**: Path A only if `demo/LIVE_TIMINGS.md` has every cell filled in and every
+Decide on **October 2**: Path A only if a committed Fabric dry-run timing record contains every required measurement and every
 runbook §11 box is ticked. Otherwise Path B. Either way the talk's timings don't change.
 
 ## 0. Preparation
@@ -36,7 +40,7 @@ runbook §11 box is ticked. Otherwise Path B. Either way the talk's timings don'
 ### 0.1 Before October 2
 
 1. Owner's Fabric dry run (`integrations/fabric/RUNBOOK.md` §11); record timings in
-   `demo/LIVE_TIMINGS.md`. (If it doesn't happen: Path B.)
+   a committed Fabric dry-run timing record. (If it doesn't happen: Path B.)
 2. `REQUIRE_READY=1 … verify_snippets.sh` exits 0 on the laptop you'll present from.
 3. One full rehearsal with a clock (checkpoints in `OUTLINE.md`).
 
@@ -128,7 +132,7 @@ Item names, parameters and expected results come from `integrations/fabric/RUNBO
 
 **Caveats:** the notebook's diff uses the default thresholds, so there's no `mean_shift`
 entry on day 2 (`DRIFT.md`). If `%%configure` didn't apply, carry on and quote no times.
-Only quote Fabric timings from `demo/LIVE_TIMINGS.md`.
+Only quote Fabric timings from a committed Fabric dry-run timing record.
 
 ## C2-local — The same pipeline on the laptop (slides 16–19, ~3 min) — Path B, or Fabric is down
 

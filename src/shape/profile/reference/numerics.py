@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from typing import Any, cast
 
 import numpy as np
+import numpy.typing as npt
 
 from ..sampling import FIT_SAMPLE_ROWS, FIT_SAMPLE_SEED
 
@@ -211,7 +213,7 @@ def _kolmogn_DMTW(n: int, d: float) -> float:
     h = k - nd
     m = 2 * k - 1
     H = np.zeros([m, m])
-    intm = np.arange(1, m + 1)
+    intm = cast(npt.NDArray[np.intp], np.arange(1, m + 1))
     v = 1.0 - h**intm
     w = np.empty(m)
     fac = 1.0
@@ -558,7 +560,7 @@ def _nelder_mead(func: Any, x0: Any, data: Any, xatol: float = 1e-4, fatol: floa
                 and np.max(np.abs(fsim[0] - fsim[1:])) <= fatol
             ):
                 break
-            xbar = np.add.reduce(sim[:-1], 0) / N
+            xbar = cast(Callable[[np.ndarray, int], np.ndarray], np.add.reduce)(sim[:-1], 0) / N
             xr = (1 + rho) * xbar - rho * sim[-1]
             fxr = f(xr)
             doshrink = 0

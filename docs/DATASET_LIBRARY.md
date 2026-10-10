@@ -144,7 +144,7 @@ shape library get iris -o iris.shape        # a copy of the profile to keep or e
       source_sha256: f204db2c753b0937caac3cb35258562c14f073e4bbc76be24b4c51ce22767a93
       attribution: Horst AM, Hill AP, Gorman KB (2020). palmerpenguins: Palmer Archipelago (Antarctica) penguin data. R package version 0.1.1; data collected by Kristen Gorman and the Palmer Station LTER, released under CC0 (https://allisonhorst.github.io/palmerpenguins/).
       use: shape generate --from dataset:palmer-penguins
-    shape: note: /workspace/shape/src/shape/library/datasets/palmer-penguins.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: <checkout>/src/shape/library/datasets/palmer-penguins.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
     profile fit: 79 approximate, 11 not modelled, 80 preserved (see `shape plan`)
     Wrote 1 csv files to penguins/: 1,000 rows in 1 tables (0.01s)
     wrote iris.shape

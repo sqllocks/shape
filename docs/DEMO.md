@@ -174,6 +174,23 @@ An input an operation cannot use raises `DemoError` (a `ValueError`); a missing 
 where messages go (`out`), where state lives and the network seams.
 
 
+## Quickstart command overview
+
+Use a disposable directory for these local commands. The complete run below
+records the outputs and obtains the session ID; replace `SESSION_ID` with the ID
+printed by your own run before inspecting, reporting or cleaning it up.
+
+```bash
+shape demo list
+shape demo run retail --rows 1000
+shape demo init --name here --local-path ./landing
+shape demo run retail --mode seeding --connection here --rows 1000
+shape demo status SESSION_ID
+shape demo report SESSION_ID --format html --output report.html
+shape demo cleanup SESSION_ID
+shape demo notebook retail --mode seeding --output retail.ipynb
+```
+
 ## Complete local run
 
 Run these commands in order after preparing the fixtures above.

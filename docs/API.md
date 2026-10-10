@@ -2,7 +2,7 @@
 
 Status: available (profiles, contracts and drift); experimental (other APIs).
 
-[Generated public reference](reference/api.md) documents the exported module surfaces in addition to this guide.
+[Generated public reference](https://docs.shapedata.ai/reference/api/) documents the exported module surfaces in addition to this guide. The site generates reference/api.md at build time.
 
 Everything `import shape` exports (`shape.__all__`). Each signature below is the code's own
 (without annotations); `tests/api/test_public_api.py` fails when one of them and the code

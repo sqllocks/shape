@@ -1,5 +1,9 @@
 # Speaker script: Ship the Shape, Not the Data (October 3, 2026)
 
+Current Fabric setup is in the [runbook](../../../integrations/fabric/RUNBOOK.md).
+The later [live dry-run findings](../../plans/demo_status/DEMO-LIVE.md) record integration
+fixes and outstanding live checks; they are not a timing benchmark for this talk.
+
 31 slides plus 5 backups, about 45 minutes. Each slide has: **On the slide**, **Say**
 (speaker notes, meant to be paraphrased) and **Next**. Numbers cite `NUMBERS.md` (N-xx).
 
@@ -31,7 +35,7 @@
   Say "the plan is", "it will", "is being built".
 - Shape is **early access**. Don't say "GA", "production-ready" or "certified".
 - Don't reuse numbers from *Stop Borrowing Contoso* (`STATUS.md`, F7).
-- Fabric timings: only rows from `demo/LIVE_TIMINGS.md`, and only after the owner's dry run
+- Fabric timings: only rows from a committed Fabric dry-run timing record, and only after the owner's dry run
   (R11). Until then, none.
 
 ---
@@ -302,7 +306,7 @@ sample and say so in the result. We never silently sample. Each surface has limi
 they're on the slide because you'll hit them. Profiling across partitions is planned; I'll
 show the design at the end."
 
-(If R11 is done, you may add one `LIVE_TIMINGS.md` row here, with SKU and vCores, read
+(If R11 is done, you may add one row from the committed Fabric dry-run timing record here, with SKU and vCores, read
 exactly. If not, no Fabric timing at all.)
 
 **Next:** "A profile is only useful if every one of those fields is right. How do we know?"
@@ -678,7 +682,7 @@ shape against last week's: you'll learn something about your data."
   4 cores, not Fabric, exact mode. Bounded mode and the engine aren't measured yet."
 - *Differential privacy?* "It isn't part of the safe-profile design on slide 25, which uses
   suppression and minimum group sizes. I won't claim more than that."
-- *How fast in Fabric?* Only `LIVE_TIMINGS.md` rows, with SKU and vCores. If R11 isn't done:
+- *How fast in Fabric?* Only the committed Fabric dry-run timing record rows, with SKU and vCores. If R11 isn't done:
   "I haven't published Fabric timings yet; the platform limits are on slide 14."
 - *Great Expectations, Tonic, Gretel?* "Different starting points. Shape's is a
   committable, diffable profile. Try them on the same table." No comparative claims.

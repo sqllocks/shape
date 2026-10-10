@@ -313,6 +313,11 @@ non-UTF-8 locale (`LC_ALL=C` with UTF-8 mode off on Linux and macOS; the ANSI co
 Windows), `TZ=Pacific/Chatham`, another `PYTHONHASHSEED` and another thread count. They run in the
 regular test suite, which CI runs on Linux, Windows and macOS.
 
+For a source checkout, `python scripts/golden_bytes.py` compares a fresh run with
+the committed corpus. Maintainers use `python scripts/golden_bytes.py --update`
+only when intentionally rewriting the corpus for an explained generator or writer
+version change; review and commit the resulting digests.
+
 [Run this example](#local-example-5).
 
 

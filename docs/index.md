@@ -47,4 +47,4 @@ are write targets; Shape does not profile from them yet. Account-dependent examp
 
 [Install](INSTALL.md) · [Concepts](CONCEPTS.md) · [Read the report](READ_REPORT.md) ·
 [Troubleshooting](TROUBLESHOOTING.md) · [Known limitations](KNOWN_LIMITATIONS.md) ·
-[Python API](API.md) · [Changelog](CHANGELOG.md)
+[Python API](API.md) · [Changelog](../CHANGELOG.md)

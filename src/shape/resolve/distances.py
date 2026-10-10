@@ -10,7 +10,8 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
+from typing import cast
 
 import numpy as np
 import numpy.typing as npt
@@ -77,7 +78,10 @@ def _levenshtein_chunk(a: Sequence[str], b: Sequence[str]) -> npt.NDArray[np.int
     p = len(a)
     la = np.fromiter((len(s) for s in a), dtype=np.int64, count=p)
     lb = np.fromiter((len(s) for s in b), dtype=np.int64, count=p)
-    ma, mb = int(la.max(initial=0)), int(lb.max(initial=0))
+    ma, mb = (
+        int(cast(Callable[..., np.int64], la.max)(initial=0)),
+        int(cast(Callable[..., np.int64], lb.max)(initial=0)),
+    )
     codes_a, codes_b = _codes(a, ma), _codes(b, mb)
     result = np.where(la == 0, lb, 0).astype(np.int64)
     prev = np.tile(np.arange(mb + 1, dtype=np.int64), (p, 1))

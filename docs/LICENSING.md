@@ -10,7 +10,7 @@ Status: available; Industry Profile Packs are coming.
 
 Shape code is MIT. Read [LICENSE](../LICENSE) and the full
 [third-party notices](../THIRD_PARTY_NOTICES.md) for bundled dependencies and reference data.
-Inbound contributions are under MIT with DCO sign-off; see [Contributing](CONTRIBUTING.md).
+Inbound contributions are under MIT with DCO sign-off; see [Contributing](../CONTRIBUTING.md).
 
 ## Your rows and profiles
 

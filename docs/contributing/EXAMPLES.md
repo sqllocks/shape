@@ -34,4 +34,4 @@ An example that connects to an external platform keeps its command and a visible
 
 ## Related
 
-[Documentation style](DOCS_STYLE.md) · [Contributing](../CONTRIBUTING.md) · [Starter tutorials](../TUTORIAL.md)
+[Documentation style](DOCS_STYLE.md) · [Contributing](../../CONTRIBUTING.md) · [Starter tutorials](../TUTORIAL.md)

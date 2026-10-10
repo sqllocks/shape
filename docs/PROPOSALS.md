@@ -383,7 +383,7 @@ shape check orders.shape contract.json          # exit 0: the contract passes on
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
     {"shape_content_id": "df628a613f3894333c23e9393dce2090bcd2e4d85b2680aa12e7ba5fb8fd1cb5", "written": "orders.shape"}
     shape: note: orders.shape is not signed: its origin is not verified (check it with --verify PUBKEY)

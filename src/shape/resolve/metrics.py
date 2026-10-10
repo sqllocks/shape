@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
+from typing import cast
 
 import numpy as np
 import numpy.typing as npt
@@ -41,7 +43,10 @@ def pair_metrics(predicted: npt.NDArray[np.int64], truth: npt.NDArray[np.int64])
     _, ti = np.unique(t, return_inverse=True)
     pred_pairs = _pairs(np.bincount(pi).astype(np.int64))
     true_pairs = _pairs(np.bincount(ti).astype(np.int64))
-    joint = np.unique(pi.astype(np.int64) * (int(ti.max()) + 1) + ti, return_counts=True)[1]
+    joint = np.unique(
+        pi.astype(np.int64) * (int(cast(Callable[[], np.int64], ti.max)()) + 1) + ti,
+        return_counts=True,
+    )[1]
     tp = _pairs(joint.astype(np.int64))
     precision = tp / pred_pairs if pred_pairs else 1.0
     recall = tp / true_pairs if true_pairs else 1.0

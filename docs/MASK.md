@@ -196,7 +196,7 @@ shape mask orders.csv -o ./masked/ --exclude notes --pii token=ssn --json
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
       Read customers: 20 rows x 10 columns
       Read orders: 100 rows x 23 columns
@@ -228,7 +228,7 @@ shape mask orders.csv -o ./masked/ --exclude notes --pii token=ssn --json
         Masked: customer_email (email), region (state), zip (zip), city (city), state (state), iban (iban), token (ssn), ssn (ssn)
 
     Written 2 PARQUET files to masked/
-    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
     {"files": ["masked/orders.csv"], "keyed": false, "columns_masked": {"orders": ["customer_email", "region", "zip", "city", "state", "iban", "token", "ssn"]}, "column_types": {"orders": {"customer_email": "email", "region": "state", "zip": "zip", "city": "city", "state": "state", "iban": "iban", "token": "ssn", "ssn": "ssn"}}, "stats": {"orders": {"total_cols": 23, "masked_cols": 8, "rows": 100}}, "format": "shape-result", "version": 1, "command": "mask", "exit_code": 0}
     ```
@@ -248,7 +248,7 @@ shape mask ./real_data/ -o ./masked/ --key-file mask.key      # chmod 600
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
       Read customers: 20 rows x 10 columns
       Read orders: 100 rows x 23 columns
@@ -261,7 +261,7 @@ shape mask ./real_data/ -o ./masked/ --key-file mask.key      # chmod 600
         Masked: customer_email (email), region (state), zip (zip), city (city), state (state), iban (iban), token (ssn), ssn (ssn)
 
     Written 2 CSV files to masked/
-    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
       Read customers: 20 rows x 10 columns
       Read orders: 100 rows x 23 columns

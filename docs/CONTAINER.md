@@ -73,7 +73,7 @@ Run these commands in order after preparing the fixtures above.
 ```bash {.runnable-reference}
 mkdir -p out
 export DOCKER_CONFIG="$PWD/docker-config"
-docker build --network host --add-host "proxy:$DOCS_PROXY_IP" --quiet --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --secret id=proxy_ca,src="$DOCS_CA_BUNDLE" -t shape-docs-examples .
+docker build --add-host "proxy:$DOCS_PROXY_IP" --quiet --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --secret id=proxy_ca,src="$DOCS_CA_BUNDLE" -t shape-docs-examples .
 docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/data:/data:ro" -v "$PWD/out:/work" shape-docs-examples \
   shape profile /data/orders.parquet -o /work/orders.shape --json /work/summary.json
 test -f out/orders.shape && printf 'Wrote out/orders.shape\n'

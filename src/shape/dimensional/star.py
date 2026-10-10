@@ -14,9 +14,10 @@ from __future__ import annotations
 import datetime as dt
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
+import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 
@@ -324,7 +325,9 @@ def build_date_dimension(start: dt.date, end: dt.date, fiscal_year_start: int = 
             "year": pa.array(year, type=pa.int64()),
             "quarter": pa.array((month - 1) // 3 + 1, type=pa.int64()),
             "month": pa.array(month, type=pa.int64()),
-            "month_name": pa.array([_MONTHS[m - 1] for m in month], type=pa.string()),
+            "month_name": pa.array(
+                [_MONTHS[m - 1] for m in cast(npt.NDArray[np.int64], month)], type=pa.string()
+            ),
             "week_of_year": pa.array(pc.iso_week(date32).to_numpy(), type=pa.int64()),
             "day_of_month": pa.array(dom, type=pa.int64()),
             "day_of_week": pa.array(dow + 1, type=pa.int64()),

@@ -295,7 +295,7 @@ shape profile orders.csv -o orders.shape \
     iso-3166-1    1.0.0    iso_3166_1    249    Unicode-3.0  shipped
     iso-639-1     1.0.0    iso_639_1     183    Unicode-3.0  shipped
     us-zip-city   1.0.0    us_zip_city   40979  CC-BY-4.0    shipped
-    iso-3166-1 1.0.0  (shipped: /workspace/shape/src/shape/refpacks/data/iso-3166-1)
+    iso-3166-1 1.0.0  (shipped: <checkout>/src/shape/refpacks/data/iso-3166-1)
       source: Unicode CLDR 48.2 core.zip (https://unicode.org/Public/cldr/48.2/core.zip), sha256 d2844f9dbf6124d11a7b047f5381a467902d82a673be3d658f4c0791ffa0b83b: regions with idStatus regular in common/validity/region.xml that have a numeric code in common/supplemental/supplementalData.xml, without XK (a user-assigned code); English names from common/main/en.xml
       retrieved: 2026-10-03
       license: Unicode-3.0
@@ -309,7 +309,7 @@ shape profile orders.csv -o orders.shape \
       alpha2=AF  alpha3=AFG  numeric=004  name=Afghanistan
       alpha2=AG  alpha3=ATG  numeric=028  name=Antigua & Barbuda
       alpha2=AI  alpha3=AIA  numeric=660  name=Anguilla
-    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
     {"shape_content_id": "074a5609a612b6daef9bde0067ddb5aadd0026c9802ae6c33fa0661cccdbf6cb", "written": "orders.shape"}
     ```
@@ -346,7 +346,7 @@ shape profile orders.csv -o orders.shape --validate iban=iban --validate country
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
     {"shape_content_id": "2de35ceba8a7ba7e641853441ebe290d23fae5ef57bea5ea75e28497d6caf21a", "written": "orders.shape"}
     ```

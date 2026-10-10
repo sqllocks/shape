@@ -18,11 +18,12 @@ from __future__ import annotations
 
 import math
 from functools import lru_cache
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import numpy.typing as npt
 
+from shape.generation._numpy_typing import Float64Ratio
 from shape.kernel import pmath
 
 from . import kernel_ops
@@ -131,4 +132,4 @@ def top_share_of(
     most children: how skewed a generated column really is."""
     counts = np.sort(np.bincount(parents, minlength=n_parents))[::-1]
     k = max(1, math.ceil(n_parents * fraction))
-    return float(counts[:k].sum() / counts.sum())
+    return float(cast(Float64Ratio, counts[:k].sum()) / counts.sum())

@@ -21,9 +21,9 @@ under ``benchmarks/`` in the repository). Differences, all on purpose:
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass, field
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -60,7 +60,10 @@ class ChowLiuResult:
 def _cut(x: npt.NDArray[np.float64], n_bins: int) -> npt.NDArray[np.int64]:
     """Equal-width bin of every value (0 to ``n_bins - 1``): ``pandas.cut(x, n_bins, labels=False)``
     (the first edge moves down by 0.1% of the range so the minimum falls in bin 0)."""
-    mn, mx = float(x.min()), float(x.max())
+    mn, mx = (
+        float(cast(Callable[[], np.float64], x.min)()),
+        float(cast(Callable[[], np.float64], x.max)()),
+    )
     if mn == mx:
         mn -= 0.001 * abs(mn) if mn != 0 else 0.001
         mx += 0.001 * abs(mx) if mx != 0 else 0.001
@@ -233,7 +236,10 @@ def population_stability_index(
     e, a = e[np.isfinite(e)], a[np.isfinite(a)]  # infinities have no bin; see psi_report
     if not len(e) or not len(a):
         return 0.0
-    mn, mx = min(e.min(), a.min()), max(e.max(), a.max())
+    mn, mx = (
+        min(cast(Callable[[], np.float64], e.min)(), cast(Callable[[], np.float64], a.min)()),
+        max(cast(Callable[[], np.float64], e.max)(), cast(Callable[[], np.float64], a.max)()),
+    )
     if mn == mx:
         return 0.0
     bins = np.linspace(mn, mx, n_bins + 1)

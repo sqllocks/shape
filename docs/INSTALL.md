@@ -23,7 +23,7 @@ python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" INSTALL
 
 **Early access 0.9.1.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 
-You need Python 3.11 or newer. Install Shape and its domain plugin:
+Supported Python: 3.11–3.14, the versions exercised by the CI matrix. Install Shape and its domain plugin:
 
 ```bash
 pip install "sqllocks-shape[domains]"
@@ -41,6 +41,14 @@ The Snowflake and Databricks drivers are extras of `sqllocks-shape-databases`.
 The [database pages](databases/index.md) explain their behavior.
 Use only the extras your workflow needs. Installing a plugin gives its code the same
 process permissions as core; see [What leaves my machine](WHAT_LEAVES.md).
+
+## Offline installation locks
+
+`python scripts/offline_lock.py generate LOCKDIR` writes a hashed core dependency
+lock and one `requirements-<extra>.txt` per extra (`yaml`, `sign`, `delta`, `delta-fallback`, `excel`, `azure`, `pandas`, `pytest`, `scipy`, `advanced`, `faker`, `ctgan`, `kafka`, `eventhubs`, `fabric`, `sqlserver`, `domains`, `simulation`, `dbt`, `healthcare`, `integrations`, `all`, `postgres`, `mysql`, `databases`, `duckdb`, `docs`, `streaming`, `dev`).
+Run `python scripts/offline_lock.py check LOCKDIR` to verify the lock files before
+using them for an offline installation. Resolve and download dependencies while
+network access is available; generating the locks needs a package index.
 
 ## Related
 

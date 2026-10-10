@@ -55,4 +55,4 @@ Credentials resolved by adapters remain subject to the adapter and driver's beha
 
 ## Related
 
-[Known limitations](KNOWN_LIMITATIONS.md) · [Licensing](LICENSING.md) · [Security policy](SECURITY.md)
+[Known limitations](KNOWN_LIMITATIONS.md) · [Licensing](LICENSING.md) · [Security policy](../SECURITY.md)

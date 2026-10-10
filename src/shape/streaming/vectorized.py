@@ -7,9 +7,10 @@ from __future__ import annotations
 
 from collections.abc import Iterable, MutableSet
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
+import numpy.typing as npt
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,7 +62,10 @@ def deduplicate_ids(ids: Iterable[Any], seen: MutableSet[Any]) -> np.ndarray:
         firsts: dict[Any, int] = {}
         for i, x in enumerate(values if mixed else a.tolist()):
             firsts.setdefault(x, i)
-        unique, first = np.asarray(list(firsts), dtype=object), np.asarray(list(firsts.values()))
+        unique, first = (
+            np.asarray(list(firsts), dtype=object),
+            cast(npt.NDArray[np.intp], np.asarray(list(firsts.values()))),
+        )
     for value, row in zip(unique.tolist(), first.tolist(), strict=True):
         if value not in seen:
             seen.add(value)

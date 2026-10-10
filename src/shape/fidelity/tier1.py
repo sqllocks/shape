@@ -28,9 +28,10 @@ from __future__ import annotations
 
 import math
 import warnings
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from types import ModuleType
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -331,8 +332,8 @@ class Tier1Profiler:
                 column=col.name,
                 mean_gap_seconds=float(gaps.mean()),
                 std_gap_seconds=float(gaps.std(ddof=1)),
-                min_gap_seconds=float(gaps.min()),
-                max_gap_seconds=float(gaps.max()),
+                min_gap_seconds=float(cast(Callable[[], np.float64], gaps.min)()),
+                max_gap_seconds=float(cast(Callable[[], np.float64], gaps.max)()),
                 autocorrelation_lag1=ac1,
                 autocorrelation_lag7=ac7,
                 gap_distribution=gap_dist,
@@ -416,7 +417,12 @@ def _gap_distribution(stats: Any, gaps: npt.NDArray[np.float64]) -> str | None:
     try:
         with np.errstate(all="ignore"):
             p_exp = stats.kstest(
-                positive, "expon", args=(float(positive.min()), float(positive.mean()))
+                positive,
+                "expon",
+                args=(
+                    float(cast(Callable[[], np.float64], positive.min)()),
+                    float(positive.mean()),
+                ),
             )[1]
             # A frozen distribution's cdf, not the string "norm" with args: SciPy 1.18 resolves
             # the string to the bare ``ndtr`` ufunc and calls it with (x, loc, scale).

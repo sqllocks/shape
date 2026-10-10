@@ -752,9 +752,9 @@ def _profile_object_column(c: _Col, row_count: int, top_n: int = 500) -> _Work:
         pattern = detect_pattern(pa.array(text, pa.string()), cardinality)
         lens = np.array([len(t) for t in text], dtype=np.float64)
         string_length = {
-            "min": float(lens.min()),
+            "min": float(cast(Callable[[], np.float64], lens.min)()),
             "mean": round(float(lens.sum(dtype=np.float64) / len(lens)), 2),
-            "max": float(lens.max()),
+            "max": float(cast(Callable[[], np.float64], lens.max)()),
             "p95": float(np.percentile(lens, 95)),
         }
     null_rate = null_count / n_total if n_total and row_count else 0.0

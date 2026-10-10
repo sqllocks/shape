@@ -76,4 +76,4 @@ Do not use this page's model flow as a substitute for the profile safe-capture t
 
 ## Related
 
-[Concepts](CONCEPTS.md) · [CLI reference](reference/cli.md) · [Known limitations](KNOWN_LIMITATIONS.md)
+[Concepts](CONCEPTS.md) · [CLI reference](https://docs.shapedata.ai/reference/cli/) · [Known limitations](KNOWN_LIMITATIONS.md)

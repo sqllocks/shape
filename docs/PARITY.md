@@ -158,12 +158,12 @@ shape parity prod.safe.json dev-data/ --dataset --scaled --source orders -o pari
 
     ```text {.expected}
     shape: note: /tmp/docs-reference-runs/PARITY/shape.yml defines 2 sources and none was selected: its source settings were not applied (use --source NAME)
-    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
     {"shape_content_id": "f5aa5cd05dbb670cd59c18c96342ca86e548132c25fd07e343a6cd0cba95f772", "written": "prod.shape"}
     shape: note: prod.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
     {"unsafe": false, "written": "prod.safe.json"}
-    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
     A: prod.safe.json (safe-profile, ee1af6cf4f7e)
     B: dev-data (data, 8c68726c18f9)

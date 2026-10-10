@@ -545,7 +545,7 @@ shape profile raw.csv -o raw.shape --no-header          # columns are f0, f1, ..
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: export.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: export.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
     {"shape_content_id": "6d093e05eddaf930c70203ffa852139c4007a26df4b083236be3515bb40f059d", "written": "export.shape"}
     {"shape_content_id": "a605edae085e7c45531e83ad09147e7ab2b5b8237d5c8494cc8b0ecc15dc112a", "written": "raw.shape"}
@@ -566,10 +566,10 @@ shape profile members.csv -o members.shape --infer-types off               # rea
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: members.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: members.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
     {"shape_content_id": "d3fd1943d642e07d8b12312432fc4bd78c95d3f2d4575d052ddb8f9c1623f6ca", "written": "members.shape"}
-    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: members.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: members.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
     {"shape_content_id": "0f819d1eb8d21d6e3383a0d2333bcf76bf04dc31291fe1f27d6adcde7913cc30", "written": "members.shape"}
     {"shape_content_id": "5983c8d28223c591e9620e2bc7f9bea100abbf66e0dfa41361f50d888c66a4f9", "written": "members.shape"}
@@ -607,15 +607,15 @@ shape profile data/ --dataset -o shop.shape --sample 20%                       #
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
     shape: note: profiled a random sample of 100 of 100 rows (seed 42)
     {"shape_content_id": "2dfcbd3536f3d02c1b30242e1c213f718f9793e9ee16ea6e17ab38776e25ba09", "written": "orders.shape"}
-    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
     shape: note: profiled a systematic sample of 10 of 100 rows (seed 7)
     {"shape_content_id": "b5e327e3c20efdddc04d35b81ea4c6a5a57549389a1580eb139d571f2d904aef", "written": "orders.shape"}
-    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
     shape: note: profiled a random sample of 4 of 20 rows (seed 42), table customers
     shape: note: profiled a random sample of 20 of 100 rows (seed 42), table orders

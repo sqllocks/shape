@@ -1,5 +1,9 @@
 # Numbers used in the talk (October 3, 2026)
 
+Current Fabric setup is in the [runbook](../../../integrations/fabric/RUNBOOK.md).
+The later [live dry-run findings](../../plans/demo_status/DEMO-LIVE.md) record integration
+fixes and outstanding live checks; they are not a timing benchmark for this talk.
+
 Every number that appears on a slide or in the speaker notes is listed here with its source
 file and, for any measurement, the machine it was measured on. `SCRIPT.md` cites these by ID
 (N-xx). If a number is not in this file, don't say it.
@@ -22,7 +26,7 @@ values: the planned features in section 6 of the talk have no numbers, and the t
 - **Bounded mode and the Rust engine are being built and have not been measured.** No speed
   or memory number for either exists, and the talk gives none. In particular there is **no
   measurement of flat memory in bounded mode**.
-- **No Fabric timing exists yet.** `demo/LIVE_TIMINGS.md` is an empty placeholder until the
+- **No Fabric timing exists yet.** A committed Fabric dry-run timing record is required from the
   owner's dry run (R11). Local timings must never be presented as Fabric timings. If the dry
   run doesn't happen before October 3, the talk quotes no Fabric timings at all.
 
@@ -60,7 +64,7 @@ divided by the median wall-clock. Also in `demo/BENCHMARKS.md` (generated from t
 | N-23 | D3, 5M × 10, Parquet | 4.89 s | 1,021,983 | 2,107 MB |
 | N-24 | D4, 100k × 200, Parquet | 4.40 s | 22,704 | 508 MB |
 
-Say it the way `demo/TALK.md` does: "On a 4-core machine, profiling a 1M-row, 20-column
+Say it the way `docs/talks/shape-v1/SCRIPT.md` does: "On a 4-core machine, profiling a 1M-row, 20-column
 Parquet file took 1.9 s and peaked at 638 MB. Five million rows by ten columns took 4.8 s and
 2,107 MB." Memory grows with the data in exact mode; slide 21 says so.
 
@@ -136,16 +140,16 @@ Source: plan §12.1.
 
 ## Live Fabric timings
 
-None on 2026-09-30. `demo/LIVE_TIMINGS.md` is still a placeholder (no cell filled in). After
+None on 2026-09-30. A committed Fabric dry-run timing record had not been recorded for this talk. After
 the owner's dry run (R11), add rows here as N-9x, copying the SKU, vCores, runtime, row
-counts and seconds exactly as recorded, and cite `demo/LIVE_TIMINGS.md` at its commit. Until
+counts and seconds exactly as recorded, and cite a committed Fabric dry-run timing record at its commit. Until
 then the talk quotes no Fabric timing (fallback path, `DEMO.md`).
 
 ## Live Fabric timings
 
-None on 2026-09-30. `demo/LIVE_TIMINGS.md` is still a placeholder (no cell filled in). After
+None on 2026-09-30. A committed Fabric dry-run timing record had not been recorded for this talk. After
 the owner's dry run (R11), add rows here as N-9x, copying the SKU, vCores, runtime, row
-counts and seconds exactly as recorded, and cite `demo/LIVE_TIMINGS.md` at its commit. Until
+counts and seconds exactly as recorded, and cite a committed Fabric dry-run timing record at its commit. Until
 then the talk quotes no Fabric timing (fallback path, `DEMO.md`).
 
 ## Planned and being-built features: no numbers

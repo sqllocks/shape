@@ -542,98 +542,98 @@ SHAPE_DEBUG=1 shape check missing.shape contract.json
 
     ```text {.expected}
     Traceback (most recent call last):
-      File "/workspace/shape/.venv/bin/shape", line 6, in <module>
+      File "<checkout>/.venv/bin/shape", line 6, in <module>
         sys.exit(main())
                  ^^^^^^
-      File "/workspace/shape/src/shape/cli/main.py", line 2281, in main
+      File "<checkout>/src/shape/cli/main.py", line 2281, in main
         code = _main(argv)
                ^^^^^^^^^^^
-      File "/workspace/shape/src/shape/cli/main.py", line 2318, in _main
+      File "<checkout>/src/shape/cli/main.py", line 2318, in _main
         return errors.guarded(lambda: _logged(opts, argv))
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      File "/workspace/shape/src/shape/cli/errors.py", line 149, in guarded
+      File "<checkout>/src/shape/cli/errors.py", line 149, in guarded
         return fn()
                ^^^^
-      File "/workspace/shape/src/shape/cli/main.py", line 2318, in <lambda>
+      File "<checkout>/src/shape/cli/main.py", line 2318, in <lambda>
         return errors.guarded(lambda: _logged(opts, argv))
                                       ^^^^^^^^^^^^^^^^^^^
-      File "/workspace/shape/src/shape/cli/main.py", line 2338, in _logged
+      File "<checkout>/src/shape/cli/main.py", line 2338, in _logged
         return _dispatch(argv)
                ^^^^^^^^^^^^^^^
-      File "/workspace/shape/src/shape/cli/main.py", line 2440, in _dispatch
+      File "<checkout>/src/shape/cli/main.py", line 2440, in _dispatch
         return _dispatch_command(argv)
                ^^^^^^^^^^^^^^^^^^^^^^^
-      File "/workspace/shape/src/shape/cli/main.py", line 2507, in _dispatch_command
+      File "<checkout>/src/shape/cli/main.py", line 2507, in _dispatch_command
         return machine.run(machine.command_path(used, a), a, lambda: _route(a))
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      File "/workspace/shape/src/shape/cli/machine.py", line 403, in run
+      File "<checkout>/src/shape/cli/machine.py", line 403, in run
         return fn()
                ^^^^
-      File "/workspace/shape/src/shape/cli/main.py", line 2507, in <lambda>
+      File "<checkout>/src/shape/cli/main.py", line 2507, in <lambda>
         return machine.run(machine.command_path(used, a), a, lambda: _route(a))
                                                                      ^^^^^^^^^
-      File "/workspace/shape/src/shape/cli/main.py", line 2813, in _route
+      File "<checkout>/src/shape/cli/main.py", line 2813, in _route
         return run_registry(a)
                ^^^^^^^^^^^^^^^
-      File "/workspace/shape/src/shape/cli/registry.py", line 359, in run
+      File "<checkout>/src/shape/cli/registry.py", line 359, in run
         return _checkout(r, a)
                ^^^^^^^^^^^^^^^
-      File "/workspace/shape/src/shape/cli/registry.py", line 284, in _checkout
+      File "<checkout>/src/shape/cli/registry.py", line 284, in _checkout
         data = r.checkout(a.name, a.ref)
                ^^^^^^^^^^^^^^^^^^^^^^^^^
-      File "/workspace/shape/src/shape/registry/local.py", line 297, in checkout
+      File "<checkout>/src/shape/registry/local.py", line 297, in checkout
         h = self.resolve(name, ref)
             ^^^^^^^^^^^^^^^^^^^^^^^
-      File "/workspace/shape/src/shape/registry/local.py", line 294, in resolve
+      File "<checkout>/src/shape/registry/local.py", line 294, in resolve
         raise RegistryError(f"{name}@{ref} is not recorded in the registry")
     shape.registry.local.RegistryError: orders@nope is not recorded in the registry
     Traceback (most recent call last):
-      File "/workspace/shape/.venv/bin/shape", line 6, in <module>
+      File "<checkout>/.venv/bin/shape", line 6, in <module>
         sys.exit(main())
                  ^^^^^^
-      File "/workspace/shape/src/shape/cli/main.py", line 2281, in main
+      File "<checkout>/src/shape/cli/main.py", line 2281, in main
         code = _main(argv)
                ^^^^^^^^^^^
-      File "/workspace/shape/src/shape/cli/main.py", line 2318, in _main
+      File "<checkout>/src/shape/cli/main.py", line 2318, in _main
         return errors.guarded(lambda: _logged(opts, argv))
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      File "/workspace/shape/src/shape/cli/errors.py", line 149, in guarded
+      File "<checkout>/src/shape/cli/errors.py", line 149, in guarded
         return fn()
                ^^^^
-      File "/workspace/shape/src/shape/cli/main.py", line 2318, in <lambda>
+      File "<checkout>/src/shape/cli/main.py", line 2318, in <lambda>
         return errors.guarded(lambda: _logged(opts, argv))
                                       ^^^^^^^^^^^^^^^^^^^
-      File "/workspace/shape/src/shape/cli/main.py", line 2338, in _logged
+      File "<checkout>/src/shape/cli/main.py", line 2338, in _logged
         return _dispatch(argv)
                ^^^^^^^^^^^^^^^
-      File "/workspace/shape/src/shape/cli/main.py", line 2440, in _dispatch
+      File "<checkout>/src/shape/cli/main.py", line 2440, in _dispatch
         return _dispatch_command(argv)
                ^^^^^^^^^^^^^^^^^^^^^^^
-      File "/workspace/shape/src/shape/cli/main.py", line 2507, in _dispatch_command
+      File "<checkout>/src/shape/cli/main.py", line 2507, in _dispatch_command
         return machine.run(machine.command_path(used, a), a, lambda: _route(a))
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      File "/workspace/shape/src/shape/cli/machine.py", line 403, in run
+      File "<checkout>/src/shape/cli/machine.py", line 403, in run
         return fn()
                ^^^^
-      File "/workspace/shape/src/shape/cli/main.py", line 2507, in <lambda>
+      File "<checkout>/src/shape/cli/main.py", line 2507, in <lambda>
         return machine.run(machine.command_path(used, a), a, lambda: _route(a))
                                                                      ^^^^^^^^^
-      File "/workspace/shape/src/shape/cli/main.py", line 2700, in _route
+      File "<checkout>/src/shape/cli/main.py", line 2700, in _route
         return _run(_cmd_check, a)
                ^^^^^^^^^^^^^^^^^^^
-      File "/workspace/shape/src/shape/cli/main.py", line 93, in _run
+      File "<checkout>/src/shape/cli/main.py", line 93, in _run
         return fn(a)
                ^^^^^
-      File "/workspace/shape/src/shape/cli/main.py", line 670, in _cmd_check
+      File "<checkout>/src/shape/cli/main.py", line 670, in _cmd_check
         profile = shape.load(a.shape)
                   ^^^^^^^^^^^^^^^^^^^
-      File "/workspace/shape/src/shape/profile/reference/profile.py", line 920, in load
+      File "<checkout>/src/shape/profile/reference/profile.py", line 920, in load
         manifest, parts = read_artifact(str(path))
                           ^^^^^^^^^^^^^^^^^^^^^^^^
-      File "/workspace/shape/src/shape/artifact/io.py", line 168, in read_artifact
+      File "<checkout>/src/shape/artifact/io.py", line 168, in read_artifact
         result = _read_artifact(path, *args, **kwargs)
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      File "/workspace/shape/src/shape/artifact/io.py", line 209, in _read_artifact
+      File "<checkout>/src/shape/artifact/io.py", line 209, in _read_artifact
         with zipfile.ZipFile(path) as z:
              ^^^^^^^^^^^^^^^^^^^^^
       File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/zipfile/__init__.py", line 1353, in __init__
@@ -715,7 +715,7 @@ shape doctor
       OK      deltalake     1.6.6
       OK      openpyxl      3.1.5
       OK      sklearn       1.9.1
-      missing tzdata        needed for time zones on a system without a time-zone database (Windows)
+      OK      tzdata        2026.3
 
     Result: OK
     ```

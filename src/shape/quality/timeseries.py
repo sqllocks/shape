@@ -16,9 +16,9 @@ A rule names a table and its time column, and any of three checks::
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, cast
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import numpy as np
@@ -450,7 +450,7 @@ def _stuck(
             run["group"] = labels[int(g[s])]
         run["value"] = vals[s].as_py()
         runs.append(run)
-    longest = int(lengths[long].max())
+    longest = int(cast(Callable[[], np.int64], lengths[long].max)())
     return [
         _finding(
             "timeseries.stuck",

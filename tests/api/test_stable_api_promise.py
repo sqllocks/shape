@@ -147,7 +147,7 @@ def test_generation_spec_page_links_to_the_promise() -> None:
 
 
 def test_contributing_explains_the_baseline() -> None:
-    text = (ROOT / "docs" / "CONTRIBUTING.md").read_text(encoding="utf-8")
+    text = (ROOT / "CONTRIBUTING.md").read_text(encoding="utf-8")
     assert "stable_api_compat.py --write" in text and "new major version" in text
 
 

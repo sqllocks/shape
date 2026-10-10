@@ -22,7 +22,7 @@ Check the installed core version and the plugin entry points before changing you
 
 A profile generation command without a format produces a summary and writes nothing.
 Choose a format and output directory. [The generation tutorial](tutorials/05-generate-profile.md)
-uses the Python API and explicitly writes the result. The [CLI reference](reference/cli.md)
+uses the Python API and explicitly writes the result. The [CLI reference](https://docs.shapedata.ai/reference/cli/)
 shows the current writer options.
 
 ## Delta reports a reader feature error
