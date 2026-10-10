@@ -18,7 +18,7 @@ Pin exactly these versions (the owner's working set from the live dry run, 2026-
 `fabric-user-data-functions` is provided by the platform. This set resolves together with
 `fabric-user-data-functions` 1.0.142 and the Shape wheel on Python 3.11, and every helper behind
 the functions runs on it (checked locally in a Python 3.11 venv with exactly these versions;
-`docs/plans/demo_status/DEMO-LIVE.md`, F-6).
+the implementation tests, F-6).
 
 ## Private libraries (the Shape wheel: upload the file, never resolve it by name)
 

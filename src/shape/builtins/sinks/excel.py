@@ -24,6 +24,8 @@ SHEET_NAME_LIMIT = 31
 
 
 class ExcelSink:
+    """Write Arrow batches to an Excel workbook."""
+
     name = "excel"
     schemes = ("file",)
     extension = "xlsx"

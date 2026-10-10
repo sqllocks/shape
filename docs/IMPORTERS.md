@@ -1,5 +1,24 @@
 # Schema importers
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" IMPORTERS
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for IMPORTERS
+    ```
+
+
 Teams describe their data in JSON Schema, OpenAPI, Avro, Protobuf, Pydantic models or a Power BI
 semantic model (TMDL). `shape import-schema` reads the **structure** of any of them (no data, no
 statistics) and writes a [generation spec](GENERATION_SPEC.md) that validates against the
@@ -7,19 +26,18 @@ published schema (`generation-spec-v1.schema.json`) and generates. `shape from-d
 for SQL DDL, and `shape from-dbt` for a dbt project; the importers choose a column's generator the
 same way.
 
-```bash
-shape import-schema order.schema.json -o order.gen.json
-shape import-schema api.yaml --from openapi -o api.gen.json --report api.report.json
-shape import-schema events.avsc -o events.gen.json --strict
-shape import-schema shop.proto -o shop.gen.json
-shape import-schema retail.SemanticModel -o retail.gen.json        # a TMDL project folder
-shape import-schema myapp.models:Order --from pydantic --allow-import -o order.gen.json
-```
+[Run this example](#local-example-0).
+
+
+<!-- example: 1 -->
+
+Syntax reference. Replace the named arguments with your inputs.
 
 ```text
 shape import-schema FILE --from jsonschema|openapi|avro|protobuf|pydantic|tmdl
                     -o OUT.gen.json [--report REPORT.json] [--strict] [--allow-import]
 ```
+
 
 | Exit code | Meaning |
 |---|---|
@@ -223,3 +241,64 @@ Importing data or statistics (these read structure only); writing JSON Schema, A
 from a spec; publishing TMDL to a Fabric workspace or editing a Power BI project in place;
 compiling Protobuf with `protoc`, or resolving `import` beyond the directory of the input. The
 TMDL export of a star design is in [DESIGN.md](DESIGN.md#tmdl).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape import-schema order.schema.json -o order.gen.json
+shape import-schema api.yaml --from openapi -o api.gen.json --report api.report.json
+shape import-schema events.avsc -o events.gen.json --strict
+shape import-schema shop.proto -o shop.gen.json
+shape import-schema retail.SemanticModel -o retail.gen.json        # a TMDL project folder
+shape import-schema myapp.models:Order --from pydantic --allow-import -o order.gen.json
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Shape schema import (jsonschema)
+      Source: order.schema.json
+      Output: order.gen.json
+      Tables: 1, columns: 2
+      Relationships: 0
+      Imported elements: 3, not imported: 0
+    Shape schema import (openapi)
+      Source: api.yaml
+      Output: api.gen.json
+      Tables: 1, columns: 1
+      Relationships: 0
+      Imported elements: 3, not imported: 0
+    Shape schema import (avro)
+      Source: events.avsc
+      Output: events.gen.json
+      Tables: 1, columns: 1
+      Relationships: 0
+      Imported elements: 2, not imported: 0
+    Shape schema import (protobuf)
+      Source: shop.proto
+      Output: shop.gen.json
+      Tables: 1, columns: 2
+      Relationships: 0
+      Imported elements: 3, not imported: 0
+    Shape schema import (tmdl)
+      Source: retail.SemanticModel
+      Output: retail.gen.json
+      Tables: 1, columns: 1
+      Relationships: 0
+      Imported elements: 2, not imported: 0
+    Shape schema import (pydantic)
+      Source: myapp.models:Order
+      Output: order.gen.json
+      Tables: 1, columns: 2
+      Relationships: 0
+      Imported elements: 4, not imported: 0
+    ```

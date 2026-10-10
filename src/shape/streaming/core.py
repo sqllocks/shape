@@ -16,6 +16,7 @@ class StreamCheckpoint:
 
 
 def consume(iterable: Iterable[T], fn: Callable[[T], None]):
+    """Apply a callback to each item and return the consumed count."""
     count = 0
     for item in iterable:
         fn(item)
@@ -29,6 +30,7 @@ async def aconsume(
     checkpoint_every: int = 1000,
     checkpoint: Callable[[StreamCheckpoint], None] | None = None,
 ) -> int:
+    """Consume an asynchronous source and optionally record periodic checkpoints."""
     count = 0
     async for item in source:
         fn(item)
@@ -43,5 +45,6 @@ async def aconsume(
 async def bounded_map(source: AsyncIterable[T], fn: Callable[[T], T]) -> AsyncIterator[T]:
     # Pull-based async iteration naturally applies backpressure: no next item is requested until
     # yield resumes.
+    """Transform asynchronous items with pull-based iteration."""
     async for item in source:
         yield fn(item)

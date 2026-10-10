@@ -4,6 +4,7 @@ from __future__ import annotations
 
 
 def replay_with_failures(events, handler, checkpoint_store, fail_after=None):
+    """Resume event handling from a checkpoint with optional injected failure."""
     cp = checkpoint_store.load()
     start = 0 if cp is None else cp.sequence
     processed = 0

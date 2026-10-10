@@ -1,5 +1,7 @@
 # Fabric writers and the `onelake://` source (`sqllocks-shape-fabric`)
 
+Status: experimental.
+
 Writers for Lakehouse files, SQL databases, Warehouses and Synapse dedicated SQL pools (`COPY INTO`),
 Eventhouses and Eventstreams,
 and a source that reads lakehouse tables and files by `onelake://` URI. The API and the write modes
@@ -94,10 +96,19 @@ default, `schema_name`, `columns`, `primary_key`), stages the rows as Parquet fi
 loaded equals the number staged (otherwise the write fails and a table this call created is dropped),
 and deletes the staged files, also when a step fails.
 
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+<!-- example: 1 -->
+
+**Needs a Fabric account. Not run in CI.**
+
 ```
 shape generate retail --to synapse://myws.sql.azuresynapse.net/pool1 \
   --auth cli --sink-config synapse.staging_path=abfss://stage@myacct.dfs.core.windows.net/shape
 ```
+
+<!-- owner: Fabric maintainer — supply the transcript for docs/plugins/fabric-writers.md example 1. -->
+
 
 | URI part or option | meaning |
 |---|---|

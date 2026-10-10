@@ -1,5 +1,8 @@
 # Plugin trust model
 
+Status: experimental.
+
+
 Plugins are **trusted, in-process Python code**. Installing a plugin is the same decision as
 installing any other Python package: it runs with the permissions of the process that loads
 it, it can read and write what that process can, and Shape does not sandbox, isolate or
@@ -36,7 +39,7 @@ What you should do:
 An organisation that runs Shape in a shared pipeline can control which plugin code can load at
 all. The check runs in `PluginHost` **before a plugin is imported**; a plugin it refuses has the
 status `blocked`, is never imported, and `get` raises `PluginLoadError` (the CLI prints
-`shape: error: plugin sources:kafka (sqllocks-shape-kafka 0.9.0) is not on the plugin allow-list
+`shape: error: plugin sources:kafka (sqllocks-shape-kafka 0.9.1) is not on the plugin allow-list
 PATH` and exits 2). A blocked plugin does not stop commands that do not use it. Shape's own
 built-ins are always allowed.
 
@@ -66,7 +69,7 @@ message to upgrade). The JSON Schema is `src/shape/schemas/plugin-allowlist-v1.s
   "plugins": [
     {
       "distribution": "sqllocks-shape-kafka",
-      "version": "==0.9.0",
+      "version": "==0.9.1",
       "record_sha256": "<sha256 of the installed RECORD file>",
       "names": ["stream_sources:kafka", "emitters:kafka"]
     }
@@ -79,7 +82,7 @@ message to upgrade). The JSON Schema is `src/shape/schemas/plugin-allowlist-v1.s
 | Key | Meaning |
 |---|---|
 | `plugins[].distribution` | Required. The distribution name (`-`, `_` and `.` are equivalent). A plugin from a distribution that is not listed is blocked. Listed twice is an error. |
-| `plugins[].version` | Optional PEP 440 specifier (`==0.9.0`, `>=0.9,<1`). The installed version must satisfy it. Evaluating it needs the `packaging` package; without it the plugin is blocked. |
+| `plugins[].version` | Optional PEP 440 specifier (`==0.9.1`, `>=0.9,<1`). The installed version must satisfy it. Evaluating it needs the `packaging` package; without it the plugin is blocked. |
 | `plugins[].names` | Optional `group:name` list (`sources:kafka` or `shape.sources:kafka`). Only these plugins of the distribution may load. |
 | `plugins[].record_sha256` | Optional. The sha256 of the distribution's `RECORD`. When given, `RECORD` must match it and every file `RECORD` gives a hash for must match that hash; the first changed or missing file is named in the reason. |
 | `require_signature` | Default `false`. When `true`, every listed distribution must carry a valid signature (below). |

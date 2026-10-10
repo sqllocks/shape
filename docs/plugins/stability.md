@@ -1,5 +1,11 @@
 # Plugin API v1: stability promise
 
+Status: available (early-access surface); coming (1.x policy).
+
+**Early access 0.9.1.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
+
+The compatibility promises below apply to the future 1.x line, not the current early-access release.
+
 This page is the promise Shape makes to plugin authors about plugin API v1. The Protocols
 themselves are in [api-v1.md](api-v1.md) (generated from the code); how to write a plugin is in
 [authoring.md](authoring.md). Every claim below is enforced by a test in this repository
@@ -173,9 +179,16 @@ def test_my_detector():
 To check everything an installed distribution registers, through the same host that loads it at
 runtime:
 
+Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
+
+<!-- example: 2 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
 ```text
 python -m shape.plugins.kit my-plugin [--samples my_plugin.samples:SAMPLES]
 ```
+
 
 It exits 0 when every plugin conforms, 1 when one does not, and 2 for a usage error. `check_installed`
 does the same from Python. Pin the Shape version range you test against, for example

@@ -1,0 +1,28 @@
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="{{ lang.t('header') }}">
+    <a class="md-header__button md-logo" data-md-component="logo" href="{{ nav.homepage.url | url }}" aria-label="Shape documentation home">
+      {% include "partials/logo.html" %}
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Open navigation">
+      {% include ".icons/material/menu.svg" %}
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic"><span class="md-ellipsis">Documentation</span></div>
+        <div class="md-header__topic" data-md-component="header-topic"><span class="md-ellipsis">{{ page.title if page else config.site_name }}</span></div>
+      </div>
+    </div>
+    <a class="shape-website-link" href="https://shapedata.ai/">shapedata.ai</a>
+    {% if config.theme.palette and config.theme.palette is not mapping %}
+      {% include "partials/palette.html" %}
+      {% include "partials/javascripts/palette.html" %}
+    {% endif %}
+    {% if "material/search" in config.plugins and config.plugins["material/search"].config.enabled %}
+      <label class="md-header__button md-icon" for="__search" aria-label="Search documentation">
+        {% include ".icons/material/magnify.svg" %}
+      </label>
+      {% include "partials/search.html" %}
+    {% endif %}
+    <div class="md-header__source">{% include "partials/source.html" %}</div>
+  </nav>
+</header>

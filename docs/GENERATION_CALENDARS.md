@@ -1,5 +1,8 @@
 # Calendars and timestamps
 
+Status: experimental.
+
+
 How generated timestamps get their month, day-of-week and hour profiles, their holidays, paydays
 and trends, and how a profile of real timestamps is read back. Calendars are code, not data: they
 work offline and give the same answer everywhere (D-11).

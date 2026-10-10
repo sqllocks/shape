@@ -1,0 +1,60 @@
+{
+  "capture": {
+    "k": 5,
+    "mode": "safe"
+  },
+  "content_hashes": {
+    "profile.json": "39d2b2de2537bf1e2794d25f3ff74c79cc300d6388b3d1b9c5f8e616accef4c5"
+  },
+  "format": "shape",
+  "format_version": 2,
+  "kind": "profile",
+  "min_shape_version": "0.9.0",
+  "name": "orders",
+  "redaction_manifest": {
+    "k_default": 5,
+    "tables": {
+      "orders": {
+        "amount": {
+          "bounds_winsorized": false,
+          "categories_dropped": 0,
+          "cells_suppressed": 0,
+          "k": 5,
+          "pattern_only": false,
+          "reason": null,
+          "sensitive": false,
+          "suppressed": {}
+        },
+        "id": {
+          "bounds_winsorized": true,
+          "categories_dropped": 0,
+          "cells_suppressed": 0,
+          "k": 5,
+          "pattern_only": true,
+          "reason": "high_cardinality",
+          "sensitive": true,
+          "suppressed": {
+            "distribution_params": "sensitive",
+            "max_value": "sensitive",
+            "min_value": "sensitive",
+            "value_counts_ext": "sensitive"
+          }
+        },
+        "status": {
+          "bounds_winsorized": false,
+          "categories_dropped": 0,
+          "cells_suppressed": 0,
+          "k": 5,
+          "pattern_only": false,
+          "reason": null,
+          "sensitive": false,
+          "suppressed": {}
+        }
+      }
+    },
+    "unsafe": false
+  },
+  "shape_content_id": "39d2b2de2537bf1e2794d25f3ff74c79cc300d6388b3d1b9c5f8e616accef4c5",
+  "shape_version": "0.9.1",
+  "version": 2
+}

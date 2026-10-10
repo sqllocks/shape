@@ -5,6 +5,7 @@ from __future__ import annotations
 
 
 def composite_keys(n: int, start: int = 0, prefix: str = "C"):
+    """Return entity and partition key arrays for a row range."""
     import numpy as np
 
     i = np.arange(start, start + n, dtype=np.int64)
@@ -13,6 +14,7 @@ def composite_keys(n: int, start: int = 0, prefix: str = "C"):
 
 
 def foreign_keys(n: int, parent_count: int, seed: int = 0):
+    """Generate seeded parent row indices within the supplied parent count."""
     if parent_count < 1:
         raise ValueError("parent_count")
     import numpy as np
@@ -22,6 +24,7 @@ def foreign_keys(n: int, parent_count: int, seed: int = 0):
 
 
 def parent_child_keys(parent_count: int, children_per_parent: int):
+    """Return repeated parent indices and per-parent child ordinals."""
     import numpy as np
 
     if parent_count < 0 or children_per_parent < 0:

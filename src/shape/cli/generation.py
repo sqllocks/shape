@@ -873,6 +873,7 @@ COMMANDS = {
 
 
 def run(a: argparse.Namespace) -> int:
+    """Dispatch parsed generation arguments and return the command exit code."""
     return COMMANDS[a.cmd](a)
 
 

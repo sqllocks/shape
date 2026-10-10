@@ -230,6 +230,8 @@ def _store(uri: str, options: dict[str, Any]) -> _Local | _Remote:
 
 
 class FabricMirrorSink:
+    """Write batches into the configured Fabric mirroring landing layout."""
+
     name = "fabric-mirror"
     schemes = ("file", "abfss", "abfs")
 

@@ -10,6 +10,7 @@ class ReleaseDecision:
 
 
 def release_decision(fidelity_certificate, k_result=None, min_k=5):
+    """Apply the fidelity result and minimum equivalence-group threshold to a release decision."""
     reasons = []
     if not fidelity_certificate.passed:
         reasons.append("fidelity_tolerance_failed")

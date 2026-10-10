@@ -15,6 +15,7 @@ METHODS = ("connected", "center")
 
 
 def connected_components(n: int, pairs: npt.NDArray[np.int64]) -> npt.NDArray[np.int64]:
+    """Return component assignments for the supplied row-pair edges."""
     parent = list(range(n))
 
     def find(x: int) -> int:
@@ -34,6 +35,7 @@ def connected_components(n: int, pairs: npt.NDArray[np.int64]) -> npt.NDArray[np
 def center_clusters(
     n: int, pairs: npt.NDArray[np.int64], scores: npt.NDArray[np.float64]
 ) -> npt.NDArray[np.int64]:
+    """Assign rows to score-ordered cluster centers."""
     pairs = np.asarray(pairs, dtype=np.int64).reshape(-1, 2)
     lo, hi = pairs.min(axis=1), pairs.max(axis=1)
     order = np.lexsort((hi, lo, -np.asarray(scores, dtype=np.float64)))

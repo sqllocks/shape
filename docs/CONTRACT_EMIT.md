@@ -1,18 +1,31 @@
 # Emitting a contract: DDL, JSON Schema, pandera, Great Expectations
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" CONTRACT_EMIT
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for CONTRACT_EMIT
+    ```
+
+
 A v1 contract (the file `shape check` reads, `src/shape/contracts/v1.py`) says what a table must
 hold. `shape to-dbt-tests` turns it into dbt tests ([DBT.md](DBT.md)). `shape contract emit` turns
 it into the other places data is validated: database constraints, a JSON Schema for a row payload,
 a pandera schema for a Python pipeline, or a Great Expectations suite. It does not run any of them.
 
-```bash
-shape contract emit examples/contracts/orders.contract.json --to ddl -o orders.sql
-shape contract emit orders.contract.json --to ddl --dialect postgres -o orders.pg.sql
-shape contract emit orders.contract.json --to jsonschema -o orders.schema.json
-shape contract emit orders.contract.json --to pandera -o orders_schema.py
-shape contract emit orders.contract.json --to gx -o orders_suite.json
-shape contract emit orders.contract.json --to jsonschema --strict    # exit 1 if anything is lost
-```
+[Run this example](#local-example-0).
+
 
 The same contract and options always give the same bytes (no timestamp, no id, sorted keys).
 What a target cannot say is **listed, never silently dropped** (`not_expressed`), and kept as
@@ -276,3 +289,31 @@ dbt has its own command (`shape to-dbt-tests`, [DBT.md](DBT.md)). Running the em
 against a database or a data frame is not part of `shape check`. Reading a pandera schema or a GX
 suite written by hand is not supported (a hand-written JSON Schema or suite is read for what
 `contract_from` understands, nothing more).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape contract emit examples/contracts/orders.contract.json --to ddl -o orders.sql
+shape contract emit orders.contract.json --to ddl --dialect postgres -o orders.pg.sql
+shape contract emit orders.contract.json --to jsonschema -o orders.schema.json
+shape contract emit orders.contract.json --to pandera -o orders_schema.py
+shape contract emit orders.contract.json --to gx -o orders_suite.json
+shape contract emit orders.contract.json --to jsonschema --strict    # exit 1 if anything is lost
+```
+
+??? info "Output (exit 1)"
+
+    ```text {.expected}
+    not expressible in jsonschema: orders.order_id: unique: uniqueness is a property of the whole table, not of one row
+    ```
+
+This command exits nonzero. Read the diagnostic; this transcript shows a refusal or failed check, not a passing gate.

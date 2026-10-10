@@ -175,6 +175,7 @@ def location_from_spec(spec) -> Location:
 
 
 def scope_from_specs(specs, weights=None, exclude=()):
+    """Build a weighted location scope with optional excluded locations."""
     locs = tuple(location_from_spec(x) for x in specs)
     if weights is None:
         return LocationScope(

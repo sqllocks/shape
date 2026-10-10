@@ -44,6 +44,7 @@ def _u64(start, n, seed, stream):
 
 
 def generate_addresses(asset: CompiledAddressAsset, n: int, seed: int = 0, start: int = 0):
+    """Generate seeded address arrays from a compiled reference asset."""
     import numpy as np
 
     if n < 0 or start < 0:

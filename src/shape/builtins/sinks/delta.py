@@ -164,6 +164,8 @@ def _utc_type(t: pa.DataType) -> pa.DataType:
 
 
 class DeltaSink:
+    """Write Arrow batches to a Delta table directory."""
+
     name = "delta"
     schemes = ("file", "delta+abfss", "delta+abfs")
     extension = ""  # no file extension: a directory per table

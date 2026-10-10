@@ -16,6 +16,8 @@ class VersionedShape:
 
 
 class ShapeTimeline:
+    """Keep strictly ordered dated versions for interpolation and drift comparison."""
+
     def __init__(self, versions):
         self.versions = tuple(sorted(versions, key=lambda x: x.at))
         if not self.versions:

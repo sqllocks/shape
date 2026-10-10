@@ -52,7 +52,7 @@ postgres=["sqllocks-shape-databases[postgres]==0.9.1"]
 mysql=["sqllocks-shape-databases[mysql]==0.9.1"]
 databases=["sqllocks-shape-databases[postgres,mysql]==0.9.1"]
 duckdb=["sqllocks-shape-databases[duckdb]==0.9.1"]
-docs=["mkdocs>=1.6,<2","mkdocs-material>=9.5,<10"]
+docs=["mkdocs>=1.6,<2","mkdocs-material>=9.5,<10","mkdocstrings[python]>=1,<2","mike>=2,<3"]
 streaming=["confluent-kafka>=2.5,<4","azure-eventhub>=5.12,<6"]
 dev=["setuptools>=68","pytest>=9.0.3","pytest-cov>=6","coverage>=7.10","hypothesis>=6.115","ruff>=0.8","mypy>=1.13","pip-audit>=2.7","build>=1.2","pyyaml>=6","pandas>=2","deltalake>=0.17","twine>=5","cryptography>=50,<51","xxhash>=3.5","maturin>=1.15,<2","import-linter>=2","vulture>=2.11","bandit>=1.8","py-spy>=0.4","sqlglot>=25","openpyxl>=3.1","defusedxml>=0.7","scipy>=1.11","pyspark>=4.0,<5","faker>=24","duckdb>=1.2","fsspec>=2024.2","jsonschema>=4.18","fastavro>=1.9","protobuf>=5"]
 

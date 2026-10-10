@@ -1,5 +1,24 @@
 # Chaos: deterministic data-quality fault injection
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" CHAOS
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for CHAOS
+    ```
+
+
 `shape.chaos` injects the faults real pipelines meet, on purpose and repeatably, into generated
 data. It has six categories: **schema**, **value**, **file**, **referential**, **temporal** and
 **volume**. A seeded engine decides when each fires; mutators decide what changes.
@@ -53,17 +72,8 @@ The categories below are randomised: a scheduler decides what fires and each mut
 own rows. To corrupt a table in a known way and score a quality check against the answer, use named
 corruptions, each with a rate, and the **ground-truth log** they write.
 
-```
-shape chaos retail --scale small --seed 7 -o corrupted/ \
-    --corrupt duplicates=0.02@order \
-    --corrupt orphan_keys=0.01@order.customer_id \
-    --corrupt date_shift=0.03@order.order_date:days=14 \
-    --corrupt negative_amounts=0.02@order.order_total \
-    --corrupt case_whitespace=0.05@order.status \
-    --corrupt pii_fill=0.05@customer.email \
-    --corrupt type_change=1@order.shipping_address_id \
-    --corrupt null_creep=0.02@order.promotion_id:step=0.01
-```
+[Run this example](#local-example-1).
+
 
 writes the corrupted tables to `corrupted/` and the log to `corrupted/_chaos_ground_truth.jsonl`.
 The tables are generated, or read from `--input DIR` (the files `shape generate` writes); the same
@@ -243,3 +253,41 @@ rows of the mutations performed. `schema`, `value` (`wrong_types`) and `volume` 
 schema or the row count by design, `file` returns the corrupted bytes of the batch's CSV
 rendering as a single `payload` column, and `referential` sees one table, so only duplicate keys
 can fire (call `ReferentialChaosMutator` with a dict of tables for orphan keys).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-1"></a>
+
+### Example 2
+
+<!-- example: 1 -->
+
+```bash {.runnable-reference}
+shape chaos retail --scale small --seed 7 -o corrupted/ \
+    --corrupt duplicates=0.02@order \
+    --corrupt orphan_keys=0.01@order.customer_id \
+    --corrupt date_shift=0.03@order.order_date:days=14 \
+    --corrupt negative_amounts=0.02@order.order_total \
+    --corrupt case_whitespace=0.05@order.status \
+    --corrupt pii_fill=0.05@customer.email \
+    --corrupt type_change=1@order.shipping_address_id \
+    --corrupt null_creep=0.02@order.promotion_id:step=0.01
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    duplicates         order                                 100 rows
+    orphan_keys        order.customer_id                      51 rows
+    date_shift         order.order_date                      153 rows
+    negative_amounts   order.order_total                     102 rows
+    case_whitespace    order.status                          255 rows
+    pii_fill           customer.email                         50 rows
+    type_change        order.shipping_address_id           5,100 rows
+    null_creep         order.promotion_id                    102 rows
+
+    Wrote 9 files to corrupted/ and 814 changes to corrupted/_chaos_ground_truth.jsonl
+    ```

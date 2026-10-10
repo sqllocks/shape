@@ -1,33 +1,36 @@
 # `shape demo`: demos for talks, clients and workshops
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Output appears beneath each command. `…` elides the wheel byte size and, where shown, elapsed times, session IDs and timestamps. These values vary between builds or runs. The harness validates those fields and compares the remaining output exactly. Temporary paths, job IDs and generated signing keys also vary.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" DEMO
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for DEMO
+    ```
+
+
 `shape demo` runs a **scenario** in one of three **modes** and records every run as a **session**
 that can be reported on and cleaned up.
 
-```bash
-shape demo list                                            # the scenarios
-shape demo run retail --rows 1000                          # inference: learn, generate, compare
-shape demo init --name here --local-path ./landing         # a connection profile: a folder
-shape demo run retail --mode seeding --connection here --rows 1000  # write the tables there
-shape demo status SESSION                                  # what a session made
-shape demo report SESSION --format html --output report.html
-shape demo cleanup SESSION                                 # remove exactly what it made
-shape demo notebook retail --mode seeding --output retail.ipynb  # a Fabric notebook for the scenario
-```
+[Run this example](#local-example-0).
 
-Install the domains plugin (`sqllocks-shape-domains`) for the scenarios that generate a domain,
-and the Fabric plugin (`sqllocks-shape-fabric`) for the Lakehouse, Warehouse, SQL database and
-Eventhouse targets, the semantic model and the Spark mode. **Install from the release's wheels,
-not from PyPI:** the `sqllocks-shape` 0.9.0 on PyPI is the early-access profiler and has no
-`shape demo` command, and the plugins are not on PyPI yet, so `pip install
-'sqllocks-shape[domains]'` cannot find them. From the release checkout:
 
-```bash
-python scripts/build_pure_wheel.py --out wheels
-pip wheel --no-deps -w wheels plugins/shape-domains plugins/shape-fabric \
-    plugins/shape-eventhubs plugins/shape-sqlserver
-pip install --find-links wheels wheels/sqllocks_shape-*.whl \
-    wheels/sqllocks_shape_domains-*.whl wheels/sqllocks_shape_fabric-*.whl
-```
+Install Shape with `pip install "sqllocks-shape[domains]"` for local domain scenarios.
+Fabric scenarios also need the Fabric plugin and a Fabric account. The commands below show
+how to build and install wheels from this checkout for a source run.
+
+[Run this example](#local-example-1).
+
 
 That is enough for every scenario and mode, the Lakehouse and Eventhouse targets and the
 notebooks. The domains plugin brings `faker`, which the `healthcare` scenario's inference mode
@@ -36,9 +39,8 @@ the Fabric plugin's `[sqlserver]` extra (the SQL Server plugin and `pyodbc`; on 
 `unixodbc` system package and the Microsoft ODBC Driver 18), and the Eventstream emitter its
 `[eventhubs]` extra. Both come from the same wheels folder:
 
-```bash
-pip install --find-links wheels 'sqllocks-shape-fabric[sqlserver,eventhubs]'
-```
+[Run this example](#local-example-2).
+
 
 Without an extra, the target that needs it fails and names the extra to install.
 
@@ -170,3 +172,170 @@ demo_cleanup(result["session_id"])
 An input an operation cannot use raises `DemoError` (a `ValueError`); a missing session raises
 `SessionNotFoundError`. A run that fails is a result with `success: false`. `DemoRuntime` carries
 where messages go (`out`), where state lives and the network seams.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape demo list
+shape demo run retail --rows 1000 --json > inference-session.json
+shape demo init --name here --local-path ./landing
+shape demo run retail --mode seeding --connection here --rows 1000 --json > seed-session.json
+SESSION=$(python -c 'import json; print(json.load(open("seed-session.json"))["session_id"])')
+shape demo status "$SESSION"
+shape demo report "$SESSION" --format html --output report.html
+shape demo cleanup "$SESSION"
+shape demo notebook retail --mode seeding --output retail.ipynb
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Name             Modes                          Domains                  Default rows  Description
+    retail           inference, streaming, seeding  retail                        100,000  Retail domain — customers, products, orders, order lines.
+    adventureworks   inference, seeding             retail                         50,000  Conference 'Retire AdventureWorks' demo: the retail domain's...
+    healthcare       inference, streaming, seeding  healthcare                     50,000  Healthcare domain — patients, encounters, medications, claim...
+    enterprise       seeding                        retail, hr, financial         200,000  Enterprise composite — retail + hr + financial across all 4 ...
+    === Shape Demo — retail (inference) ===
+      >> […] Profiling source data: domain defaults
+         Profiled 9 table(s)
+         Built schema: 9 tables
+      >> […] Generating synthetic data: small scale preset: 21,800 rows
+         Generated 21,800 total rows
+      >> […] Comparing distributions
+         Fidelity score: 96.7%
+    Fidelity Report
+    Table                Column                    Type        Pass
+    -----------------------------------------------------------------
+    address              address_id                integer       OK
+    address              address_type              string        OK
+    address              city                      string      FAIL
+    address              customer_id               integer       OK
+    address              is_primary                boolean       OK
+    address              lat                       float         OK
+    address              lng                       float         OK
+    address              state                     string        OK
+    address              street                    string        OK
+    address              zip_code                  integer       OK
+    customer             customer_id               integer       OK
+    customer             email                     string        OK
+    customer             first_name                string        OK
+    customer             gender                    string        OK
+    customer             is_active                 boolean       OK
+    customer             last_name                 string        OK
+    customer             loyalty_tier              string        OK
+    customer             signup_date               datetime      OK
+    order                customer_id               integer       OK
+    order                order_date                datetime      OK
+    order                order_id                  integer       OK
+    order                order_total               float         OK
+    order                promotion_id              integer       OK
+    order                shipping_address_id       integer       OK
+    order                status                    string        OK
+    order                store_id                  integer       OK
+    order_line           discount_percent          integer       OK
+    order_line           line_total                float         OK
+    order_line           order_id                  integer       OK
+    order_line           order_line_id             integer       OK
+    order_line           product_id                integer       OK
+    order_line           promotion_id              integer       OK
+    order_line           quantity                  integer       OK
+    order_line           unit_price                float         OK
+    product              category_id               integer       OK
+    product              cost                      float         OK
+    product              product_id                integer       OK
+    product              product_name              string        OK
+    product              product_status            string        OK
+    product              unit_price                float         OK
+    product_category     category_id               integer       OK
+    product_category     category_name             string      FAIL
+    product_category     level                     integer       OK
+    product_category     parent_category_id        integer       OK
+    promotion            discount_pct              integer       OK
+    promotion            end_date                  datetime      OK
+    promotion            promo_name                string        OK
+    promotion            promo_type                string        OK
+    promotion            promotion_id              integer       OK
+    promotion            start_date                datetime      OK
+    return               order_id                  integer       OK
+    return               reason                    string        OK
+    return               refund_amount             float         OK
+    return               return_date               datetime      OK
+    return               return_id                 integer       OK
+    store                city                      string        OK
+    store                state                     string        OK
+    store                store_id                  integer       OK
+    store                store_name                string        OK
+    store                store_type                string        OK
+
+    Fidelity score: 96.7%
+      >> […] Complete
+    === Done in …s ===
+    Connection profile 'here' saved. Use with: shape demo run SCENARIO --connection here
+    === Shape Demo — retail (seeding) ===
+      >> […] Generating synthetic data: small scale preset: 21,750 rows (local)
+         retail: 21,750 rows in 9 tables
+      >> […] Complete
+    === Done in …s ===
+    Session: …
+    Scenario: retail (seeding)
+    Status: Success
+    Started: …
+    Artifacts: 9
+    Report written to: report.html
+      Removed: file/customer
+      Removed: file/product_category
+      Removed: file/promotion
+      Removed: file/store
+      Removed: file/address
+      Removed: file/order_line
+      Removed: file/order
+      Removed: file/product
+      Removed: file/return
+    Notebook written to: retail.ipynb
+    ```
+
+<a id="local-example-1"></a>
+
+### Example 2
+
+<!-- example: 1 -->
+
+```bash {.runnable-reference}
+python scripts/build_pure_wheel.py --out wheels
+pip wheel --quiet --no-build-isolation --no-deps -w wheels plugins/shape-domains plugins/shape-fabric \
+    plugins/shape-eventhubs plugins/shape-sqlserver
+pip install --quiet --no-deps --find-links wheels wheels/sqllocks_shape-*.whl \
+    wheels/sqllocks_shape_domains-*.whl wheels/sqllocks_shape_fabric-*.whl
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    sqllocks_shape-0.9.1-py3-none-any.whl  …
+    checks passed: tag py3-none-any, < 28,600,000 bytes, no compiled code, RECORD valid
+    ```
+
+<a id="local-example-2"></a>
+
+### Example 3
+
+<!-- example: 2 -->
+
+```bash {.runnable-reference}
+pip install --quiet --no-deps --find-links wheels "sqllocks-shape-fabric[sqlserver,eventhubs]"
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    (no output)
+    ```

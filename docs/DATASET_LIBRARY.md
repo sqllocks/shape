@@ -1,15 +1,30 @@
 # The public dataset library
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" DATASET_LIBRARY
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for DATASET_LIBRARY
+    ```
+
+
 Realistic synthetic data usually starts from a profile of your own data. The dataset library
 removes that first step: it ships **safe profiles of public datasets** (statistics and formats,
 never rows), so you can try Shape, write tests or run a demo with no data of your own.
 
-```
-shape library list
-shape library show palmer-penguins
-shape generate --from dataset:palmer-penguins --rows 1000 --format csv -o penguins/
-shape library get iris -o iris.shape        # a copy of the profile to keep or edit
-```
+[Run this example](#local-example-0).
+
 
 `dataset:NAME` is accepted wherever `shape generate --from` takes a `.shape` file. It reads the
 profile that ships inside Shape and needs no network. (`library:NAME` is the prefix of
@@ -93,3 +108,44 @@ the credit it asks for and why it is a good example. If the licence is on the li
 maintainer adds it to `SOURCES` in `scripts/build_dataset_library.py`, builds the profile, adds the
 credit to `THIRD_PARTY_NOTICES.md` and a row to the table above. Datasets with personal data are
 not added unless the licence and the source make clear that the data was released for reuse.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape library list
+shape library show palmer-penguins
+shape generate --from dataset:palmer-penguins --rows 1000 --format csv -o penguins/
+shape library get iris -o iris.shape        # a copy of the profile to keep or edit
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    abalone                  CC-BY-4.0    4177 rows  Abalone
+    adult-income             CC-BY-4.0   48842 rows  Adult (census income)
+    breast-cancer-wisconsin  CC-BY-4.0     569 rows  Breast Cancer Wisconsin (Diagnostic)
+    iris                     CC-BY-4.0     150 rows  Iris
+    palmer-penguins          CC0-1.0       344 rows  Palmer penguins
+    wine                     CC-BY-4.0     178 rows  Wine
+    palmer-penguins: Palmer penguins
+      license: CC0-1.0
+      rows: 344
+      source_url: https://raw.githubusercontent.com/allisonhorst/palmerpenguins/main/inst/extdata/penguins.csv
+      retrieved: 2026-10-03
+      source_sha256: f204db2c753b0937caac3cb35258562c14f073e4bbc76be24b4c51ce22767a93
+      attribution: Horst AM, Hill AP, Gorman KB (2020). palmerpenguins: Palmer Archipelago (Antarctica) penguin data. R package version 0.1.1; data collected by Kristen Gorman and the Palmer Station LTER, released under CC0 (https://allisonhorst.github.io/palmerpenguins/).
+      use: shape generate --from dataset:palmer-penguins
+    shape: note: /workspace/shape/src/shape/library/datasets/palmer-penguins.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    profile fit: 79 approximate, 11 not modelled, 80 preserved (see `shape plan`)
+    Wrote 1 csv files to penguins/: 1,000 rows in 1 tables (0.01s)
+    wrote iris.shape
+    ```

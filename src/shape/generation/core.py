@@ -11,6 +11,7 @@ class FidelityResult:
 
 
 def generate_numeric(summary: dict, n: int, seed: int = 0):
+    """Generate seeded numeric values from moments and optional bounds."""
     r = random.Random(seed)
     mu = summary.get("mean") or 0.0
     var = summary.get("variance_population") or 0.0
@@ -29,6 +30,7 @@ def generate_numeric(summary: dict, n: int, seed: int = 0):
 
 
 def compare_numeric(target: dict, observed: dict, tolerances=None):
+    """Compare numeric summary fields against their configured tolerances."""
     tolerances = tolerances or {"mean": 0.05, "variance_population": 0.15}
     d = {}
     for k, t in tolerances.items():

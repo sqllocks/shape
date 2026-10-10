@@ -98,10 +98,12 @@ def composition(host: PluginHost | None = None) -> Composition:
 
 
 def preset_names(host: PluginHost | None = None) -> list[str]:
+    """Return the sorted names of the shipped composite presets."""
     return [p.name for p in composition(host).presets]
 
 
 def get_preset(name: str, host: PluginHost | None = None) -> Preset:
+    """Return a composite preset by name; reject an unknown name."""
     for preset in composition(host).presets:
         if preset.name == name:
             return preset

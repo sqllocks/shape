@@ -179,6 +179,7 @@ def build_report(
     baseline_info: dict[str, Any] | None = None,
     directory: str | None = None,
 ) -> dict[str, Any]:
+    """Build a structured consumer contract result report."""
     failed = sum(1 for r in results if r["status"] == "fail")
     report: dict[str, Any] = {
         "format": FORMAT,
@@ -197,6 +198,7 @@ def build_report(
 
 
 def render_text(report: dict[str, Any]) -> str:
+    """Render consumer contract results as a text report."""
     lines: list[str] = []
     s = report["summary"]
     if not report["consumers"]:

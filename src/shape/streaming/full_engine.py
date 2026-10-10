@@ -76,6 +76,8 @@ def profile_text_semantic(values: Any) -> tuple[dict[str, Any], tuple[Any, ...]]
 
 
 class FullEvidenceEngine:
+    """Compute stream evidence with a worker thread pool."""
+
     def __init__(self, workers: int = 3) -> None:
         self._pool = ThreadPoolExecutor(max_workers=workers)
 

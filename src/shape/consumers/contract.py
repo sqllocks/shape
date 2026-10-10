@@ -177,6 +177,7 @@ def _names_something(body: dict[str, Any]) -> bool:
 
 
 def parse(doc: Any, path: str = "<memory>") -> ConsumerContract:
+    """Validate a consumer contract document and return its parsed representation."""
     found = problems(doc)
     if found:
         raise ConsumerContractError(f"{path}: not a valid consumer contract", tuple(found))

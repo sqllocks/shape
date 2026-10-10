@@ -654,6 +654,8 @@ class JsonLinesAlertSink:
 
 @dataclass(frozen=True, slots=True)
 class LiveSnapshot:
+    """Counters and latency measurements captured from a live emission run."""
+
     events: int
     overall: float | None  # mean over the tables that have started; None before the first event
     tables: dict[str, float]  # the tables that have started

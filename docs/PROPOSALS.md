@@ -1,5 +1,24 @@
 # Proposals and decision files
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" PROPOSALS
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for PROPOSALS
+    ```
+
+
 Some facts about a dataset cannot be settled by a profile alone: whether a column is a foreign key
 to another table, whether it holds personal data, what it means, and which rules a dataset should
 obey. Shape **proposes** these with the evidence and a confidence, you **accept, reject or defer**
@@ -7,14 +26,8 @@ each one, and the decision file keeps your answer, so the question does not come
 next re-profile. Accepted rules become a contract that `shape check` reads (see
 [Rules](#rules)).
 
-```bash
-shape profile data/ --dataset -o shop.shape
-shape proposals propose shop.shape --data data/ -d decisions.json
-shape proposals list -d decisions.json --status pending --min-confidence 0.9
-shape proposals decide -d decisions.json "relationship:orders.customer_id->customers.customer_id" \
-    accept --actor ana --note "orders belong to customers"
-shape generate --from shop.shape --decisions decisions.json -o out/
-```
+[Run this example](#local-example-0).
+
 
 ## Commands
 
@@ -103,15 +116,8 @@ Writing a contract by hand is slow, so most datasets have none or a thin one. A 
 holds the evidence for most rules, so Shape proposes them, you decide, and the accepted ones become
 a contract v1 file that `shape check` reads.
 
-```bash
-shape profile orders.csv -o orders.shape
-shape proposals propose orders.shape -d decisions.json --kinds pii,rule
-shape proposals list -d decisions.json --kind rule --min-confidence 0.85
-shape proposals decide -d decisions.json rule:orders.order_id.unique accept --actor ana --note "key"
-shape proposals decide -d decisions.json rule:orders.status.allowed_values accept --actor ana
-shape proposals contract -d decisions.json -o contract.json
-shape check orders.shape contract.json          # exit 0: the contract passes on that profile
-```
+[Run this example](#local-example-2).
+
 
 `shape proposals propose PROFILE.shape [PROFILE.shape ...] -d DECISIONS.json --kinds rule` (and
 `propose_rules(profiles, ...)` in `shape.proposals`) proposes contract v1 rules. A dataset
@@ -201,9 +207,8 @@ sensitive is no longer found and goes stale (below).
 
 Give a week of daily captures to learn what holds across them:
 
-```bash
-shape proposals propose mon.shape tue.shape wed.shape -d decisions.json --kinds rule
-```
+[Run this example](#local-example-4).
+
 
 Single-table profiles are matched by position and take the first one's table name. A table
 profiled in only some of them gets no rules.
@@ -300,3 +305,186 @@ says so. The JSON Schemas are `src/shape/schemas/decisions-v1.schema.json` and
 * **Pending** proposals that a later run no longer finds are withdrawn; decided ones stay.
 * A re-profile keeps a proposal's first `proposed_at` and updates its evidence and confidence.
 * Auto-accept is off by default.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape profile data/ --dataset -o shop.shape
+shape proposals propose shop.shape --data data/ -d decisions.json
+shape proposals list -d decisions.json --status pending --min-confidence 0.9
+shape proposals decide -d decisions.json "relationship:orders.customer_id->customers.customer_id" \
+    accept --actor ana --note "orders belong to customers"
+shape generate --from shop.shape --decisions decisions.json --format csv -o out/
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    {"shape_content_id": "54ecf06034ce4a15fdffbbb2c26aab78bf3036a0ad7dee874b907b226d896e1d", "written": "shop.shape"}
+    shape: note: shop.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    {
+      "written": "decisions.json",
+      "proposals": 29,
+      "added": 29,
+      "updated": 0,
+      "withdrawn": 0,
+      "skipped_rejected": [],
+      "auto_accepted": [],
+      "stale": []
+    }
+    1.00  pending   pii:customers.email
+    0.95  pending   semantic:customers.email
+    0.90  pending   relationship:address.customer_id->customers.customer_id
+    0.90  pending   relationship:order_line.order_id->orders.order_id
+    0.90  pending   relationship:order_line.product_id->product.product_id
+    0.90  pending   relationship:order_line.promotion_id->promotion.promotion_id
+    0.90  pending   relationship:orders.customer_id->customers.customer_id
+    0.90  pending   relationship:orders.promotion_id->promotion.promotion_id
+    0.90  pending   relationship:orders.store_id->store.store_id
+    0.90  pending   relationship:product.category_id->product_category.category_id
+    0.90  pending   relationship:return.order_id->orders.order_id
+    {
+      "proposal": "relationship:orders.customer_id->customers.customer_id",
+      "status": "accepted",
+      "actor": "ana",
+      "at": "2026-10-09T17:01:54Z",
+      "note": "orders belong to customers"
+    }
+    shape: note: shop.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    profile fit: 452 approximate, 199 not modelled, 615 preserved (see `shape plan`)
+    Wrote 9 csv files to out/: 21,750 rows in 9 tables (0.12s)
+    ```
+
+<a id="local-example-2"></a>
+
+### Example 3
+
+<!-- example: 2 -->
+
+```bash {.runnable-reference}
+shape profile orders.csv -o orders.shape
+shape proposals propose orders.shape -d decisions.json --kinds pii,rule
+shape proposals list -d decisions.json --kind rule --min-confidence 0.85
+shape proposals decide -d decisions.json rule:orders.order_id.unique accept --actor ana --note "key"
+shape proposals decide -d decisions.json rule:orders.status.allowed_values accept --actor ana
+shape proposals contract -d decisions.json -o contract.json
+shape check orders.shape contract.json          # exit 0: the contract passes on that profile
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    /workspace/shape/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+      kind, table = _read_files([path], threads, csv)
+    {"shape_content_id": "df628a613f3894333c23e9393dce2090bcd2e4d85b2680aa12e7ba5fb8fd1cb5", "written": "orders.shape"}
+    shape: note: orders.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    {
+      "written": "decisions.json",
+      "proposals": 102,
+      "added": 102,
+      "updated": 0,
+      "withdrawn": 4,
+      "skipped_rejected": [],
+      "auto_accepted": [],
+      "stale": []
+    }
+    0.90  pending   rule:orders.amount.dtype
+    0.90  pending   rule:orders.churned.dtype
+    0.90  pending   rule:orders.city.dtype
+    0.90  pending   rule:orders.country.dtype
+    0.90  pending   rule:orders.customer_email.dtype
+    0.90  pending   rule:orders.customer_id.dtype
+    0.90  pending   rule:orders.discount_code.dtype
+    0.90  pending   rule:orders.iban.dtype
+    0.90  pending   rule:orders.is_gift.dtype
+    0.90  pending   rule:orders.notes.dtype
+    0.90  pending   rule:orders.order_date.dtype
+    0.90  pending   rule:orders.order_id.dtype
+    0.90  pending   rule:orders.order_total.dtype
+    0.90  pending   rule:orders.placed_at.dtype
+    0.90  pending   rule:orders.region.dtype
+    0.90  pending   rule:orders.salary.dtype
+    0.90  pending   rule:orders.shipped_at.dtype
+    0.90  pending   rule:orders.ssn.dtype
+    0.90  pending   rule:orders.state.dtype
+    0.90  pending   rule:orders.status.dtype
+    0.90  pending   rule:orders.tier.dtype
+    0.90  pending   rule:orders.token.dtype
+    0.90  pending   rule:orders.zip.dtype
+    0.86  pending   rule:orders.customer_email.pattern
+    0.86  pending   rule:orders.fd.customer_email->churned
+    0.86  pending   rule:orders.fd.customer_email->customer_id
+    0.86  pending   rule:orders.fd.customer_email->is_gift
+    0.86  pending   rule:orders.fd.customer_email->region
+    0.86  pending   rule:orders.fd.customer_id->churned
+    0.86  pending   rule:orders.fd.customer_id->customer_email
+    0.86  pending   rule:orders.fd.customer_id->is_gift
+    0.86  pending   rule:orders.fd.customer_id->region
+    0.86  pending   rule:orders.fd.order_date->churned
+    0.86  pending   rule:orders.fd.order_date->placed_at
+    0.86  pending   rule:orders.fd.order_date->region
+    0.86  pending   rule:orders.fd.order_date->shipped_at
+    0.86  pending   rule:orders.fd.placed_at->churned
+    0.86  pending   rule:orders.fd.placed_at->order_date
+    0.86  pending   rule:orders.fd.placed_at->region
+    0.86  pending   rule:orders.fd.placed_at->shipped_at
+    0.86  pending   rule:orders.fd.shipped_at->churned
+    0.86  pending   rule:orders.fd.shipped_at->order_date
+    0.86  pending   rule:orders.fd.shipped_at->placed_at
+    0.86  pending   rule:orders.fd.shipped_at->region
+    0.86  pending   rule:orders.iban.pattern
+    0.86  pending   rule:orders.ssn.pattern
+    0.86  pending   rule:orders.token.pattern
+    0.86  pending   rule:orders.zip.pattern
+    shape: error: no proposal 'rule:orders.order_id.unique' in the decision file
+    {
+      "proposal": "rule:orders.status.allowed_values",
+      "status": "accepted",
+      "actor": "ana",
+      "at": "2026-10-09T17:02:00Z",
+      "note": ""
+    }
+    {
+      "written": "contract.json",
+      "rules": 1
+    }
+    shape: note: orders.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    {"passed": true, "violations": []}
+    ```
+
+<a id="local-example-4"></a>
+
+### Example 5
+
+<!-- example: 4 -->
+
+```bash {.runnable-reference}
+shape proposals propose mon.shape tue.shape wed.shape -d decisions.json --kinds rule
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape: note: mon.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: tue.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: wed.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    {
+      "written": "decisions.json",
+      "proposals": 107,
+      "added": 8,
+      "updated": 99,
+      "withdrawn": 1,
+      "skipped_rejected": [],
+      "auto_accepted": [],
+      "stale": []
+    }
+    ```

@@ -1,12 +1,30 @@
 # Fidelity report
 
+Status: experimental.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" FIDELITY
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for FIDELITY
+    ```
+
+
 `shape fidelity REFERENCE SYNTHETIC` (alias `shape compare`) scores how closely synthetic tables
 follow reference tables: every column from 0 to 100, every table as the mean of its columns, and
 the whole as the mean of its tables. The same function is `shape.generation.report.compare_tables`.
 
-```bash
-shape fidelity real/ synthetic/ -o report.html -o report.json --min-score 85
-```
+[Run this example](#local-example-0).
+
 
 `REFERENCE` and `SYNTHETIC` are a file or a directory of one file per table (Parquet, CSV or
 JSONL; `--input-format` forces one). Tables are paired by file name; two single files are paired
@@ -83,3 +101,489 @@ metric above (non-finite numbers are `null`).
 `shape emit --live-target ...` computes this same score on a running event stream and alerts when it
 drifts; at any moment it equals `shape fidelity` of the reference against the events delivered so
 far (`docs/EMIT.md`, "Live fidelity"; checked by `benchmarks/live_fidelity/run.py`).
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+shape fidelity real/ synthetic/ -o report.html -o report.json --min-score 85
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    {
+      "extra_tables": [],
+      "failures": [],
+      "issues": [],
+      "missing_tables": [],
+      "overall_score": 95.77639751552795,
+      "passed": true,
+      "tables": {
+        "customers": {
+          "columns": {
+            "age": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": 0.0,
+              "mean_delta": 0.0,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": 1.0,
+              "value_overlap": null
+            },
+            "born": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": 0.0,
+              "mean_delta": 0.0,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 85.71428571428571,
+              "std_ratio": 0.0,
+              "value_overlap": null
+            },
+            "churned": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": 1.0,
+              "chi2_statistic": 0.0,
+              "dtype_match": true,
+              "ks_statistic": null,
+              "mean_delta": null,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": null,
+              "value_overlap": 1.0
+            },
+            "city": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": null,
+              "mean_delta": null,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 85.71428571428571,
+              "std_ratio": null,
+              "value_overlap": 1.0
+            },
+            "customer_id": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": 0.0,
+              "mean_delta": 0.0,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": 1.0,
+              "value_overlap": null
+            },
+            "email": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": 1.0,
+              "chi2_statistic": 0.0,
+              "dtype_match": true,
+              "ks_statistic": null,
+              "mean_delta": null,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": null,
+              "value_overlap": 1.0
+            },
+            "id": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": 0.0,
+              "mean_delta": 0.0,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": 1.0,
+              "value_overlap": null
+            },
+            "income": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": 0.0,
+              "mean_delta": 0.0,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": 1.0,
+              "value_overlap": null
+            },
+            "name": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": 1.0,
+              "chi2_statistic": 0.0,
+              "dtype_match": true,
+              "ks_statistic": null,
+              "mean_delta": null,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": null,
+              "value_overlap": 1.0
+            },
+            "region": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": 1.0,
+              "chi2_statistic": 0.0,
+              "dtype_match": true,
+              "ks_statistic": null,
+              "mean_delta": null,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": null,
+              "value_overlap": 1.0
+            }
+          },
+          "extra_columns": [],
+          "issues": [],
+          "missing_columns": [],
+          "present": true,
+          "row_count_real": 20,
+          "row_count_synth": 20,
+          "score": 97.14285714285714
+        },
+        "orders": {
+          "columns": {
+            "amount": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": 0.0,
+              "mean_delta": 0.0,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": 1.0,
+              "value_overlap": null
+            },
+            "churned": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": 1.0,
+              "chi2_statistic": 0.0,
+              "dtype_match": true,
+              "ks_statistic": null,
+              "mean_delta": null,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": null,
+              "value_overlap": 1.0
+            },
+            "city": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": null,
+              "mean_delta": null,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 85.71428571428571,
+              "std_ratio": null,
+              "value_overlap": 1.0
+            },
+            "country": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": null,
+              "mean_delta": null,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 85.71428571428571,
+              "std_ratio": null,
+              "value_overlap": 1.0
+            },
+            "customer_email": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": 1.0,
+              "chi2_statistic": 0.0,
+              "dtype_match": true,
+              "ks_statistic": null,
+              "mean_delta": null,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": null,
+              "value_overlap": 1.0
+            },
+            "customer_id": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": 0.0,
+              "mean_delta": 0.0,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": 1.0,
+              "value_overlap": null
+            },
+            "discount_code": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": null,
+              "mean_delta": null,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 85.71428571428571,
+              "std_ratio": null,
+              "value_overlap": 1.0
+            },
+            "iban": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": null,
+              "mean_delta": null,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 85.71428571428571,
+              "std_ratio": null,
+              "value_overlap": 1.0
+            },
+            "is_gift": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": 1.0,
+              "chi2_statistic": 0.0,
+              "dtype_match": true,
+              "ks_statistic": null,
+              "mean_delta": null,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": null,
+              "value_overlap": 1.0
+            },
+            "notes": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": null,
+              "mean_delta": null,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 85.71428571428571,
+              "std_ratio": null,
+              "value_overlap": 1.0
+            },
+            "order_date": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": 0.0,
+              "mean_delta": 0.0,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": 1.0,
+              "value_overlap": null
+            },
+            "order_id": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": 0.0,
+              "mean_delta": 0.0,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": 1.0,
+              "value_overlap": null
+            },
+            "order_total": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": 0.0,
+              "mean_delta": 0.0,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": 1.0,
+              "value_overlap": null
+            },
+            "placed_at": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": 0.0,
+              "mean_delta": 0.0,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": 1.0,
+              "value_overlap": null
+            },
+            "region": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": 1.0,
+              "chi2_statistic": 0.0,
+              "dtype_match": true,
+              "ks_statistic": null,
+              "mean_delta": null,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": null,
+              "value_overlap": 1.0
+            },
+            "salary": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": 0.0,
+              "mean_delta": 0.0,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": 1.0,
+              "value_overlap": null
+            },
+            "shipped_at": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": 0.0,
+              "mean_delta": 0.0,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": 1.0,
+              "value_overlap": null
+            },
+            "ssn": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": 1.0,
+              "chi2_statistic": 0.0,
+              "dtype_match": true,
+              "ks_statistic": null,
+              "mean_delta": null,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": null,
+              "value_overlap": 1.0
+            },
+            "state": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": null,
+              "mean_delta": null,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 85.71428571428571,
+              "std_ratio": null,
+              "value_overlap": 1.0
+            },
+            "status": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": null,
+              "mean_delta": null,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 85.71428571428571,
+              "std_ratio": null,
+              "value_overlap": 1.0
+            },
+            "tier": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": null,
+              "mean_delta": null,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 85.71428571428571,
+              "std_ratio": null,
+              "value_overlap": 1.0
+            },
+            "token": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": 1.0,
+              "chi2_statistic": 0.0,
+              "dtype_match": true,
+              "ks_statistic": null,
+              "mean_delta": null,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 100.0,
+              "std_ratio": null,
+              "value_overlap": 1.0
+            },
+            "zip": {
+              "cardinality_ratio": 1.0,
+              "chi2_pvalue": null,
+              "chi2_statistic": null,
+              "dtype_match": true,
+              "ks_statistic": 0.0,
+              "mean_delta": 0.0,
+              "null_rate_delta": 0.0,
+              "present": true,
+              "score": 85.71428571428571,
+              "std_ratio": 0.0,
+              "value_overlap": null
+            }
+          },
+          "extra_columns": [],
+          "issues": [],
+          "missing_columns": [],
+          "present": true,
+          "row_count_real": 100,
+          "row_count_synth": 100,
+          "score": 94.40993788819877
+        }
+      },
+      "thresholds": {
+        "min_column": null,
+        "min_overall": 85.0,
+        "min_table": 70.0
+      }
+    }
+    ```

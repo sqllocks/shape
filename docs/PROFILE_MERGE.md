@@ -1,20 +1,29 @@
 # Mergeable profiles
 
+Status: available.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" PROFILE_MERGE
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for PROFILE_MERGE
+    ```
+
+
 Daily captures roll up into weekly or monthly baselines, and the partitions of a large table
 profile separately and combine, without reading the data again.
 
-```bash
-# profile each partition, keeping the mergeable sketch state (it holds real values, so only a
-# full capture keeps it: do not commit or share these files)
-shape profile day1.parquet -o day1.shape --sketches --capture full
-shape profile day2.parquet -o day2.shape --sketches --capture full
+[Run this example](#local-example-0).
 
-# combine them
-shape profile merge day1.shape day2.shape -o week.shape --name week --capture full
-
-# profiles written without --sketches can still be merged for their exact statistics
-shape profile merge a.shape b.shape -o ab.shape --exact-only
-```
 
 ```python
 import shape
@@ -126,3 +135,81 @@ A merged profile records the content id of every input, in order, in `merge.inpu
 merged profile's own content id changes with its inputs, and merging a merged profile names that
 profile, so the history stays walkable. When every input had sketch state, the merged profile has
 the merged sketch state too, and can be merged again.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-0"></a>
+
+### Example 1
+
+<!-- example: 0 -->
+
+```bash {.runnable-reference}
+# profile each partition, keeping the mergeable sketch state (it holds real values, so only a
+# full capture keeps it: do not commit or share these files)
+shape profile day1.parquet -o day1.shape --sketches --capture full
+shape profile day2.parquet -o day2.shape --sketches --capture full
+
+# combine them
+shape profile merge day1.shape day2.shape -o week.shape --name week --capture full
+
+# profiles written without --sketches can still be merged for their exact statistics
+shape profile merge a.shape b.shape -o ab.shape --exact-only
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape: warning: --capture full keeps real values in day1.shape; do not commit or share it
+    {"shape_content_id": "70bc5c098e851f87a095f44b59dcc7ee6efb3b57651ab5fef337ee6ea97fa73b", "written": "day1.shape"}
+    shape: warning: --capture full keeps real values in day2.shape; do not commit or share it
+    {"shape_content_id": "aca90fa231d0ace0aefe95c8ae0bc9f29ac6866d22a6bc6f2ea00d75c1e6d279", "written": "day2.shape"}
+    shape: note: day1.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: day2.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: warning: --capture full keeps real values in week.shape; do not commit or share it
+    {
+      "written": "week.shape",
+      "name": "week",
+      "shape_content_id": "c394cda2cd521caed0b79b6bfb9e69fbce5121e5b03e359098a42a35ae1d2079",
+      "mode": "sketched",
+      "merged_from": [
+        {
+          "name": "orders",
+          "shape_content_id": "70bc5c098e851f87a095f44b59dcc7ee6efb3b57651ab5fef337ee6ea97fa73b",
+          "row_count": 50,
+          "sketches": true
+        },
+        {
+          "name": "day2",
+          "shape_content_id": "aca90fa231d0ace0aefe95c8ae0bc9f29ac6866d22a6bc6f2ea00d75c1e6d279",
+          "row_count": 50,
+          "sketches": true
+        }
+      ]
+    }
+    shape: note: a.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    shape: note: b.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    {
+      "written": "ab.shape",
+      "name": "orders",
+      "shape_content_id": "70621cbb570ba8b67113d7819cdbf55dd15c0dfb1273865bc8ddfc64e5a63f1d",
+      "mode": "exact-only",
+      "merged_from": [
+        {
+          "name": "orders",
+          "shape_content_id": "38fa4c1303b2d9f144e4deecd4536a36c0572ea928f09be8fc8fc173d659306e",
+          "row_count": 100,
+          "sketches": false
+        },
+        {
+          "name": "orders",
+          "shape_content_id": "38fa4c1303b2d9f144e4deecd4536a36c0572ea928f09be8fc8fc173d659306e",
+          "row_count": 100,
+          "sketches": false
+        }
+      ]
+    }
+    ```

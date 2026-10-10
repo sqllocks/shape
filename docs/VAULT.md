@@ -1,5 +1,7 @@
 # The value vault
 
+Status: experimental.
+
 The default `.shape` is safe to commit: a sensitive column keeps statistics and formats only, and
 a category is kept only where every released category has enough rows (`docs/PRIVACY_MODEL.md`).
 Some users still need the exact values back when they generate: the real list of status codes,
@@ -98,6 +100,10 @@ classification exits 2 and names it.
 
 ## Commands
 
+<!-- example: 3 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
 ```bash
 shape vault keygen -o KEK.key
 shape profile orders.csv -o orders.shape --classify email=CONFIDENTIAL \
@@ -108,6 +114,7 @@ shape vault rekey orders.shape orders.shapevault --kek file://OLD.key --new-kek 
       --out-shape orders2.shape --out-vault orders2.shapevault [--key SIGNING_KEY] [--dry-run]
 shape generate --from orders.shape --vault orders.shapevault --kek file://KEK.key -f csv -o out
 ```
+
 
 The Python API is `shape.save(profile, path, capture="safe", vault=PATH, vault_policy=POLICY,
 kek=KEK)` (`kek` is 32 bytes or a credential reference).

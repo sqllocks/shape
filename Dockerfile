@@ -12,17 +12,28 @@
 # --- stage 1: build the platform wheel (with the Rust kernel) from this checkout --------------
 FROM python:3.11-slim AS build
 ENV RUSTUP_HOME=/opt/rustup CARGO_HOME=/opt/cargo PATH=/opt/cargo/bin:$PATH
-RUN apt-get update \
+RUN --mount=type=secret,id=proxy_ca,mode=0444 \
+    sed -i 's|http://deb.debian.org|https://deb.debian.org|g' /etc/apt/sources.list.d/debian.sources \
+    && if [ -f /run/secrets/proxy_ca ]; then \
+         printf 'Acquire::https::CaInfo "/run/secrets/proxy_ca";\n' > /etc/apt/apt.conf.d/99docs-ca; \
+       fi \
+    && apt-get update \
     && apt-get install -y --no-install-recommends build-essential ca-certificates curl \
-    && rm -rf /var/lib/apt/lists/*
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+    && rm -rf /var/lib/apt/lists/* /etc/apt/apt.conf.d/99docs-ca
+RUN --mount=type=secret,id=proxy_ca,mode=0444 \
+    if [ -f /run/secrets/proxy_ca ]; then export CURL_CA_BUNDLE=/run/secrets/proxy_ca SSL_CERT_FILE=/run/secrets/proxy_ca; fi; \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
     | sh -s -- -y --profile minimal --default-toolchain stable
-RUN pip install --no-cache-dir "maturin>=1.15,<2"
+RUN --mount=type=secret,id=proxy_ca,mode=0444 \
+    if [ -f /run/secrets/proxy_ca ]; then export PIP_CERT=/run/secrets/proxy_ca; fi; \
+    pip install --no-cache-dir "maturin>=1.15,<2"
 WORKDIR /src
 COPY pyproject.toml README.md LICENSE THIRD_PARTY_NOTICES.md ./
 COPY rust ./rust
 COPY src ./src
-RUN maturin build --release --out /dist
+RUN --mount=type=secret,id=proxy_ca,mode=0444 \
+    if [ -f /run/secrets/proxy_ca ]; then export CARGO_HTTP_CAINFO=/run/secrets/proxy_ca; fi; \
+    maturin build --release --out /dist
 # Install the wheel with [azure] into a prefix here, where binutils is, and slim it before the
 # runtime stage copies it: the 500 MB gate counts the uncompressed layers (what `docker images`
 # reports with the classic image store), and the runtime packages alone came to 389 MB unstripped.
@@ -32,7 +43,9 @@ RUN maturin build --release --out /dist
 # - pip unpacks a wheel's library symlinks as copies (libarrow_python.so, .so.2500, .so.2500.1.0):
 #   put the symlinks back.
 # The runtime stage dlopen()s every shared object, so a damaged one fails the build.
-RUN pip install --no-compile --ignore-installed --prefix=/install "$(ls /dist/sqllocks_shape-*.whl)[azure]" \
+RUN --mount=type=secret,id=proxy_ca,mode=0444 \
+    if [ -f /run/secrets/proxy_ca ]; then export PIP_CERT=/run/secrets/proxy_ca; fi; \
+    pip install --no-compile --ignore-installed --prefix=/install "$(ls /dist/sqllocks_shape-*.whl)[azure]" \
  && site=/install/lib/python3.11/site-packages \
  && rm -rf "$site"/pyarrow/include "$site"/pyarrow/tests "$site"/pyarrow/*flight* \
            "$site"/pyarrow/*.pyx "$site"/pyarrow/*.pxd "$site"/pyarrow/*.pxi \

@@ -31,7 +31,16 @@ ROOT = Path(__file__).resolve().parent.parent
 REPO_URL = "https://github.com/sqllocks/shape"
 SKIP_DOCS = ("plans", "talks")
 # Pages that scripts/mkdocs_hooks.py generates at build time (they have no source file).
-GENERATED = ("docs/reference/cli.md", "docs/reference/performance.md")
+GENERATED = (
+    "docs/reference/cli.md",
+    "docs/reference/performance.md",
+    "docs/reference/api.md",
+    "docs/CONTRIBUTING.md",
+    "docs/GOVERNANCE.md",
+    "docs/SECURITY.md",
+    "docs/CODE_OF_CONDUCT.md",
+    "docs/CHANGELOG.md",
+)
 _LINK = re.compile(r"\]\((<[^>]+>|[^)\s]+)(?:\s+\"[^\"]*\")?\)")
 _REF = re.compile(r"^\s{0,3}\[[^\]]+\]:\s+(\S+)")
 _FENCE = re.compile(r"^\s*(```|~~~)")

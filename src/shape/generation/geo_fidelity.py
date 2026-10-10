@@ -13,6 +13,7 @@ class GeoFidelity:
 
 
 def geographic_fidelity(reference_weights, rows, field="state", tolerance=0.10):
+    """Compare observed geography proportions with reference weights."""
     c = Counter(r.get(field) for r in rows)
     n = sum(c.values()) or 1
     obs = {k: v / n for k, v in c.items()}

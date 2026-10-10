@@ -237,6 +237,8 @@ class EmitReport:
 
 
 class EmitRunner:
+    """Run an event sequence through a configured sink and emission policy."""
+
     def __init__(
         self,
         plan: EventSequence,

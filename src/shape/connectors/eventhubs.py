@@ -6,6 +6,8 @@ from ._columns import rows_to_columns
 
 
 class EventHubsBatchAdapter:
+    """Decode Event Hubs message bodies into column batches."""
+
     def __init__(self, decoder):
         self.decoder = decoder
 
