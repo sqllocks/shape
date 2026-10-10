@@ -182,6 +182,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/docs-container"
           cd "$RUNNER_TEMP/docs-container"
           python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" CONTAINER
+          docker pull python:3.11-slim
           docker build --add-host "proxy:$DOCS_PROXY_IP" --quiet --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --secret id=proxy_ca,src="$DOCS_CA_BUNDLE" -t shape-docs-examples .
       - name: Prove the namespace has no route out
         run: |
