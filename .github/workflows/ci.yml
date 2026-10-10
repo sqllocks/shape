@@ -146,8 +146,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
-      SHAPE_DOCS_DBT_PACKAGES: ${{ runner.temp }}/docs-dbt-packages
-      PIP_FIND_LINKS: ${{ runner.temp }}/docs-build-wheels
       DOCS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
       DOCS_PROXY_IP: 127.0.0.1
     steps:
@@ -155,6 +153,10 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - uses: dtolnay/rust-toolchain@stable
+      - name: Documentation dependency caches
+        run: |
+          echo "SHAPE_DOCS_DBT_PACKAGES=$RUNNER_TEMP/docs-dbt-packages" >> "$GITHUB_ENV"
+          echo "PIP_FIND_LINKS=$RUNNER_TEMP/docs-build-wheels" >> "$GITHUB_ENV"
       - run: python -m pip install -U pip
       - run: python -m pip install -r requirements-docs.txt
       - name: Core and all released plugins from this checkout
