@@ -14,7 +14,7 @@ def inventory() -> dict[str, list[str]]:
     for path in sorted((ROOT / "src/shape").rglob("*.py")):
         parts = path.relative_to(ROOT / "src").with_suffix("").parts
         module = ".".join(parts[:-1] if parts[-1] == "__init__" else parts)
-        tree = ast.parse(path.read_text())
+        tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in tree.body:
             if not isinstance(node, (ast.Assign, ast.AnnAssign)):
                 continue

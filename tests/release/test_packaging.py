@@ -56,6 +56,7 @@ def core_sdist(tmp_path_factory: pytest.TempPathFactory) -> Path:
         cwd=ROOT,
         capture_output=True,
         text=True,
+        encoding="utf-8",
         check=False,
     )
     assert run.returncode == 0, run.stdout + run.stderr

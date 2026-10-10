@@ -377,13 +377,34 @@ import numpy as np
 from shape.streaming.dedupe import Deduplicator
 from shape.streaming.keyed import KeyedSketches
 
-def peak_rss():
+def resident_rss():
+    # Sample retained state at completed-batch boundaries. A lifetime high-water mark
+    # also includes transient sorting/hash buffers and allocator-unused pages.
+    import gc
+    import pyarrow as pa
+    from shape.profile._memory import release_unused
+    gc.collect()
+    release_unused(pa.default_memory_pool())
     if sys.platform.startswith("linux"):
-        return int(open("/proc/self/status").read().split("VmHWM:")[1].split()[0]) * 1024
-    if sys.platform == "darwin":
-        import resource
-        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        return int(open("/proc/self/status").read().split("VmRSS:")[1].split()[0]) * 1024
     import ctypes
+    if sys.platform == "darwin":
+        class M(ctypes.Structure):
+            _fields_ = [("virtual", ctypes.c_uint64), ("resident", ctypes.c_uint64),
+                        ("resident_max", ctypes.c_uint64),
+                        ("user", ctypes.c_int32 * 2), ("system", ctypes.c_int32 * 2),
+                        ("policy", ctypes.c_int32), ("suspend", ctypes.c_int32)]
+        libc = ctypes.CDLL(None)
+        task = ctypes.c_uint32.in_dll(libc, "mach_task_self_").value
+        info = M()
+        count = ctypes.c_uint32(ctypes.sizeof(info) // ctypes.sizeof(ctypes.c_uint32))
+        libc.task_info.argtypes = [ctypes.c_uint32, ctypes.c_uint32,
+                                   ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint32)]
+        libc.task_info.restype = ctypes.c_int
+        status = libc.task_info(task, 20, ctypes.byref(info), ctypes.byref(count))
+        if status:
+            raise RuntimeError("task_info could not read resident memory: " + str(status))
+        return info.resident
     from ctypes import wintypes as w
     class C(ctypes.Structure):
         _fields_ = [("cb", w.DWORD), ("faults", w.DWORD)] + [
@@ -393,7 +414,7 @@ def peak_rss():
     p = ctypes.windll.psapi
     p.GetProcessMemoryInfo.argtypes = [w.HANDLE, ctypes.c_void_p, w.DWORD]
     assert p.GetProcessMemoryInfo(k.GetCurrentProcess(), ctypes.byref(c), c.cb)
-    return c.peak
+    return c.ws
 
 events, keys, batch = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
 checkpoint = int(sys.argv[4])
@@ -422,10 +443,10 @@ while done < events:
     kept += int(dedupe.filter(k).sum())
     done += n
     if at_checkpoint is None and done >= checkpoint:
-        at_checkpoint = peak_rss()
+        at_checkpoint = resident_rss()
         print("checkpoint state: " + state_bytes(), file=sys.stderr)
 print("final state: " + state_bytes(), file=sys.stderr)
-print(at_checkpoint, peak_rss(), len(sketches), len(dedupe), kept)
+print(at_checkpoint, resident_rss(), len(sketches), len(dedupe), kept)
 """
 
 
