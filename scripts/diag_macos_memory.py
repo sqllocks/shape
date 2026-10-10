@@ -42,6 +42,14 @@ result = {'peak_rss': peak, 'current_rss': info.resident_size,
     'arrow_peak': pool.max_memory(), 'arrow_bytes': pool.bytes_allocated(),
     'malloc': {name: getattr(stats, name) for name, _ in stats._fields_},
     'rust_allocation_counters': 'not exposed by the kernel'}
+from shape.profile.engine import configure_threads
+result['kernel_threads'] = configure_threads()
+result['cpu_count'] = os.cpu_count()
+result['supported_arrow_backends'] = pa.supported_memory_backends()
+if 'mimalloc' in pa.supported_memory_backends():
+    native_pool = pa.mimalloc_memory_pool()
+    result['mimalloc_peak'] = native_pool.max_memory()
+    result['mimalloc_bytes'] = native_pool.bytes_allocated()
 print('DIAGNOSTIC ' + json.dumps(result), flush=True)
 vmmap = subprocess.run(['/usr/bin/vmmap', '--summary', str(os.getpid())],
     capture_output=True, text=True)

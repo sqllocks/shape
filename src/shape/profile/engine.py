@@ -145,6 +145,7 @@ def profile_table(
     for batch in src.batches():
         state.update(batch)
         if opts.mode == "bounded":
+            del batch
             # Reclaim freed decode/read-ahead pages before the next batch, rather than letting
             # sixteen batches of allocator caches contribute to a scheduling-dependent RSS peak.
             release_unused(pool)

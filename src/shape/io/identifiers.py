@@ -32,6 +32,8 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.compute as pc  # type: ignore[import-untyped]
 import pyarrow.csv as pacsv  # type: ignore[import-untyped]
 
+from ._memory import streaming_csv_pool
+
 # Words that mean "this is a label, not a quantity". A column name is split into words (on
 # separators and at camelCase changes) and each word is matched whole.
 _NAME_WORDS = frozenset(
@@ -265,7 +267,11 @@ def _scan(
 ) -> dict[str, DigitStats]:
     stats = {c: DigitStats() for c in wanted}
     reader = pacsv.open_csv(
-        source, read_options=read_options, parse_options=parse_options, convert_options=convert
+        source,
+        read_options=read_options,
+        parse_options=parse_options,
+        convert_options=convert,
+        memory_pool=streaming_csv_pool(read_options.use_threads) if max_batches == 1 else None,
     )
     live = set(wanted)
     seen = 0
