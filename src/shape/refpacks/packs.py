@@ -296,7 +296,12 @@ class Pack:
                 f"reference pack {self.name}: {entry['file']} does not match its checksum"
             )
         try:
-            table = pa.ipc.open_file(io.BytesIO(data)).read_all()
+            # Keep cached buffers independent of Python file callbacks and finish
+            # IPC work before a short-lived command starts interpreter teardown.
+            with pa.ipc.open_file(
+                pa.BufferReader(data), options=pa.ipc.IpcReadOptions(use_threads=False)
+            ) as reader:
+                table = reader.read_all()
         except pa.ArrowInvalid:
             raise ReferencePackError(
                 f"reference pack {self.name}: {entry['file']} is not an Arrow IPC file"

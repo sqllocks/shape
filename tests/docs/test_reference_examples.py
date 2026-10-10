@@ -116,7 +116,7 @@ def test_reference_page(page: str, tmp_path: Path, webhook: str) -> None:
         )
         crypto = page.endswith(("SIGNING.md", "PRIVACY_MODEL.md"))
         actual = comparable(run.stdout.rstrip("\n"), tmp_path, ROOT, crypto=crypto)
-        recorded = comparable(expected, tmp_path, ROOT, crypto=crypto)
+        recorded = comparable(expected, tmp_path, ROOT, crypto=crypto, recorded=True)
         if actual != recorded:
             difference = list(difflib.unified_diff(recorded.splitlines(), actual.splitlines()))
             pytest.fail(f"{page}:{number}; transcript: {transcript}\n" + "\n".join(difference[:80]))

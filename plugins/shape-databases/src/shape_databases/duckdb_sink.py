@@ -77,6 +77,9 @@ WRITE_MODES = (*_sql.WRITE_MODES, "upsert")
 DEFAULT_SCHEMA = "main"
 _VIEW = "shape_batch"
 _SCHEMA_LOCK = threading.Lock()  # two transactions creating the same schema conflict in DuckDB
+# A last connection closing while another opens can race DuckDB's file-handle cache.
+# Serialize only open/close calls; independent table transactions still run in parallel.
+_CONNECTION_LOCK = threading.Lock()
 _INTS = {
     (True, 8): "TINYINT",
     (True, 16): "SMALLINT",
@@ -271,7 +274,8 @@ class DuckDbSink:
         commit_rows: int | None,
     ) -> int:
         try:
-            con = duckdb.connect(path)
+            with _CONNECTION_LOCK:
+                con = duckdb.connect(path)
         except duckdb.Error as exc:
             raise ShapeError(f"cannot open the DuckDB database {path}: {exc}") from None
         committed = [0]
@@ -306,7 +310,8 @@ class DuckDbSink:
                     committed[0],
                 )
         finally:
-            con.close()
+            with _CONNECTION_LOCK:
+                con.close()
         raise failure
 
     @staticmethod

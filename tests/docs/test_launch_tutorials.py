@@ -23,6 +23,9 @@ BLOCK = re.compile(
 @pytest.mark.parametrize("page", PAGES, ids=lambda p: p.stem)
 def test_tutorial(page: Path, tmp_path: Path) -> None:
     """A page runs in isolation, including its expected error exits."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from docs_profile_fingerprints import comparable_ids
+
     markdown = page.read_text()
     blocks = BLOCK.findall(markdown)
     assert blocks, f"No runnable steps in {page}"
@@ -44,7 +47,9 @@ def test_tutorial(page: Path, tmp_path: Path) -> None:
             timeout=120,
         )
         assert run.returncode == int(code), f"{command}\n{run.stdout}"
-        assert run.stdout.rstrip("\n") == expected, f"{command}\n{run.stdout}"
+        assert comparable_ids(
+            run.stdout.rstrip("\n"), tmp_path, ROOT, recorded=False
+        ) == comparable_ids(expected, tmp_path, ROOT, recorded=True), f"{command}\n{run.stdout}"
 
 
 def test_tutorial_template() -> None:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -48,10 +49,39 @@ CRYPTO_FIELDS = (
 )
 
 
-def comparable(text: str, work: Path, root: Path, *, crypto: bool = False) -> str:
+def comparable(
+    text: str, work: Path, root: Path, *, crypto: bool = False, recorded: bool = False
+) -> str:
     """Validate field shapes and canonicalise only declared runtime values."""
     text = text.replace(str(work), "<work>").replace(str(root), "<checkout>")
     text = re.sub(r"/tmp/docs-reference-runs/[^/\s\"']+", "<work>", text)
     for pattern, replacement in RUNTIME_FIELDS + (CRYPTO_FIELDS if crypto else ()):
         text = re.sub(pattern, replacement, text)
+    from docs_profile_fingerprints import comparable_ids
+
+    text = comparable_ids(text, work, root, recorded=recorded)
+
+    # BLAS implementations differ in the final decimal places of Gaussian-mixture
+    # parameters. Only these named arrays are presentation-normalised; BIC, AIC,
+    # scores, row counts, findings and thresholds remain exact.
+    def gmm_array(match: re.Match[str]) -> str:
+        return re.sub(
+            r"-?\d+\.\d+(?:[eE][+-]?\d+)?",
+            lambda number: f"{float(number.group(0)):.12g}",
+            match.group(0),
+        )
+
+    for match in reversed(list(re.finditer(r'"gmm_fits":\s*', text))):
+        try:
+            fits, end = json.JSONDecoder().raw_decode(text[match.end() :])
+        except json.JSONDecodeError:
+            continue
+        if isinstance(fits, dict):
+            stop = match.end() + end
+            section = re.sub(
+                r'"(?:means|stds|weights)":\s*\[[^\]]*\]',
+                gmm_array,
+                text[match.end() : stop],
+            )
+            text = text[: match.end()] + section + text[stop:]
     return text

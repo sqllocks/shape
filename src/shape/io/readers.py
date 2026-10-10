@@ -34,6 +34,7 @@ import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from shape.security.jsondepth import check_json_depth, check_json_file
 
+from ._memory import csv_input_stream, streaming_csv_pool
 from .budget import check_parquet
 from .excel import (
     is_workbook_spec,
@@ -354,14 +355,27 @@ def _open_csv_stream(
     """A streaming CSV reader: types come from the first block, and memory stays bounded. The
     first block also settles which integer columns are identifiers."""
     ro, po, co = _csv_options(path, opts, columns, schema)
+    pool = streaming_csv_pool(opts.use_threads)
     try:
-        reader = pacsv.open_csv(path, read_options=ro, parse_options=po, convert_options=co)
+        reader = pacsv.open_csv(
+            csv_input_stream(path, pool),
+            read_options=ro,
+            parse_options=po,
+            convert_options=co,
+            memory_pool=pool,
+        )
         _refuse_duplicate_columns(path, reader.schema.names)
         found = _identifier_text(path, opts, schema, reader.schema, ro, po, co, first_block=True)
         if found:
             reader.close()
             ro, po, co = _csv_options(path, opts, columns, schema, text=found)
-            reader = pacsv.open_csv(path, read_options=ro, parse_options=po, convert_options=co)
+            reader = pacsv.open_csv(
+                csv_input_stream(path, pool),
+                read_options=ro,
+                parse_options=po,
+                convert_options=co,
+                memory_pool=pool,
+            )
         return reader
     except pa.ArrowKeyError as exc:
         raise _csv_columns_error(path, opts, columns, schema) from exc
@@ -381,12 +395,16 @@ def _stream_schema(
     P1). The first block of a reader of the head is the first block of the file."""
     ro, po, co = _csv_options(path, opts, columns, schema)
     try:
-        with pa.input_stream(str(path), compression="detect") as f:
+        with csv_input_stream(path, streaming_csv_pool(opts.use_threads)) as f:
             head = f.read(2 * ro.block_size)
 
         def probe(ro: Any, po: Any, co: Any) -> pa.Schema:
             with pacsv.open_csv(
-                pa.BufferReader(head), read_options=ro, parse_options=po, convert_options=co
+                pa.BufferReader(head),
+                read_options=ro,
+                parse_options=po,
+                convert_options=co,
+                memory_pool=streaming_csv_pool(opts.use_threads),
             ) as reader:
                 return reader.schema
 
@@ -512,6 +530,15 @@ def _select_fields(schema: pa.Schema, columns: list[str] | None, origin: Path) -
 def _slice(batch: pa.RecordBatch, size: int) -> Iterator[pa.RecordBatch]:
     for start in range(0, batch.num_rows, size):
         yield batch.slice(start, size)
+
+
+def _csv_batches(reader: Any, size: int, pool: Any) -> Iterator[pa.RecordBatch]:
+    for raw in reader:
+        yield from _slice(raw, size)
+        # Drop the completed block before the next decode, then return its freed buffers.
+        del raw
+        if pool is not None:
+            pool.release_unused()
 
 
 def _table_batches(table: pa.Table, size: int) -> Iterator[pa.RecordBatch]:
@@ -670,7 +697,7 @@ def _files_source(
                 # out_schema holds the types (identifiers included) settled when the source was
                 # opened, so the first file is not scanned a second time
                 reader = _open_csv_stream(p, csv, columns, out_schema)
-                stream = (b for raw in reader for b in _slice(raw, size))
+                stream = _csv_batches(reader, size, streaming_csv_pool(csv.use_threads))
             else:
                 table = (
                     first_table[0]
@@ -684,6 +711,7 @@ def _files_source(
                 if batch is None:
                     break
                 yield _conform(batch, out_schema, str(p)) if i or refined else batch
+                del batch
 
     stem = _source_name(paths[0]) if len(paths) == 1 else paths[0].parent.name or "table"
     rows = None
