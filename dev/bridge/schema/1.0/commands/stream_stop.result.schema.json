@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "status": {
+      "enum": [
+        "stopped",
+        "stop_timeout"
+      ]
+    },
+    "stream_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "stream_id",
+    "status"
+  ],
+  "title": "stream_stop result",
+  "type": "object",
+  "x-api-version": "1.0"
+}

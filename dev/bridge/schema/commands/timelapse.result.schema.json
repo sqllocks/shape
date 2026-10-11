@@ -1,0 +1,236 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "change_points": {},
+    "column": {
+      "type": "string"
+    },
+    "format": {
+      "const": "shape-timelapse"
+    },
+    "frames": {
+      "anyOf": [
+        {
+          "items": {
+            "additionalProperties": true,
+            "properties": {
+              "cardinality": {},
+              "change_point": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "changes": {
+                "items": {
+                  "additionalProperties": true,
+                  "properties": {
+                    "after": {},
+                    "before": {},
+                    "column": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "kind": {
+                      "type": "string"
+                    },
+                    "redacted": {
+                      "type": "boolean"
+                    },
+                    "score": {},
+                    "severity": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "column",
+                    "kind"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "date": {
+                "type": "string"
+              },
+              "end": {
+                "type": "string"
+              },
+              "form": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "gap": {
+                "type": "boolean"
+              },
+              "mean": {},
+              "null_rate": {},
+              "quantiles": {},
+              "redacted": {
+                "type": "boolean"
+              },
+              "row_count": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "std": {},
+              "top_values": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "additionalProperties": true,
+                      "properties": {
+                        "share": {},
+                        "value": {}
+                      },
+                      "required": [
+                        "share"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "versions": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "date",
+              "end",
+              "versions",
+              "form",
+              "gap"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        {
+          "properties": {
+            "bytes": {
+              "type": "integer"
+            },
+            "content_id": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "spilled": {
+              "const": true
+            }
+          },
+          "required": [
+            "spilled",
+            "content_id",
+            "path",
+            "bytes"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "name": {
+      "type": "string"
+    },
+    "since": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "source": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "table": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "until": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "version": {
+      "type": "integer"
+    },
+    "window": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "format",
+    "version",
+    "name",
+    "column",
+    "frames"
+  ],
+  "title": "timelapse result",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.2"
+}

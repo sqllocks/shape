@@ -1,0 +1,73 @@
+{
+  "api_version": "1.0",
+  "cases": [
+    {
+      "name": "good-schema",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "schema_path": "${DIR}/schema.json"
+        },
+        "command": "validate",
+        "id": "good-schema"
+      },
+      "response": {
+        "api_version": "1.0",
+        "command": "validate",
+        "id": "good-schema",
+        "ok": true,
+        "result": {
+          "errors": [],
+          "kind": "generation-schema",
+          "mode": "3nf",
+          "name": "scale_t",
+          "relationship_count": 2,
+          "table_count": 3,
+          "valid": true,
+          "warnings": [
+            {
+              "location": "tables.customer.columns.score.generator",
+              "message": "Strategy 'distribution' expects key 'distribution'"
+            },
+            {
+              "location": "tables.order.columns.score.generator",
+              "message": "Strategy 'distribution' expects key 'distribution'"
+            },
+            {
+              "location": "tables.order_line.columns.amount.generator",
+              "message": "Strategy 'distribution' expects key 'distribution'"
+            }
+          ]
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "missing-file",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "schema_path": "${DIR}/missing.json"
+        },
+        "command": "validate",
+        "id": "missing-file"
+      },
+      "response": {
+        "api_version": "1.0",
+        "command": "validate",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "file not found: ${DIR}/missing.json"
+        },
+        "id": "missing-file",
+        "ok": false,
+        "warnings": []
+      }
+    }
+  ],
+  "command": "validate",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

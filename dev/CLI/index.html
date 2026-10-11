@@ -1,0 +1,7018 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Shape as Code — a portable, executable description of how data behaves.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.shapedata.ai/dev/CLI/">
+      
+      
+        <link rel="prev" href="../plugins/integrations/">
+      
+      
+        <link rel="next" href="../reference/cli/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/brand/shape-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Command line - Shape by SQLLocks</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../assets/stylesheets/brand.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+
+<link rel="alternate" type="text/plain" href="../llms.txt" title="Documentation text index">
+<script src="../assets/javascripts/mermaid.min.js"></script>
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#the-shape-command-line" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a class="md-header__button md-logo" data-md-component="logo" href=".." aria-label="Shape documentation home">
+      <img class="shape-logo-light" src="../assets/brand/shape-logo.svg" alt="Shape">
+<img class="shape-logo-dark" src="../assets/brand/shape-logo-white.svg" alt="Shape">
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Open navigation">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic"><span class="md-ellipsis">Documentation</span></div>
+        <div class="md-header__topic" data-md-component="header-topic"><span class="md-ellipsis">Command line</span></div>
+      </div>
+    </div>
+    <a class="shape-website-link" href="https://shapedata.ai/">shapedata.ai</a>
+    
+      <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <label class="md-header__button md-icon" for="__search" aria-label="Search documentation">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    <div class="md-header__source"><a href="https://github.com/sqllocks/shape" class="md-source" title="Source repository">sqllocks/shape</a></div>
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Shape by SQLLocks" class="md-nav__button md-logo" aria-label="Shape by SQLLocks" data-md-component="logo">
+      <img class="shape-logo-light" src="../assets/brand/shape-logo.svg" alt="Shape">
+<img class="shape-logo-dark" src="../assets/brand/shape-logo-white.svg" alt="Shape">
+    </a>
+    Shape by SQLLocks
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/sqllocks/shape" class="md-source" title="Source repository">sqllocks/shape</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Start here
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Start here
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../INSTALL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONCEPTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GLOSSARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LEARNING_PATHS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Learning paths
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../QUICKSTART/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TUTORIAL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Starter tutorials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Starter tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Starter tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/01-first-profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1 Your first profile
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/02-read-report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2 Read the report
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/03-drift/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3 Commit a shape and catch drift
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/04-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4 Write a contract and check it
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/05-generate-profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5 Generate dev data from a profile
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/06-domain-duckdb/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6 Generate a domain into DuckDB
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Understand your results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Understand your results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../READ_REPORT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTML report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ANATOMY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Anatomy of a shape
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DRIFT_RED/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    When drift goes red
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Profiling
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SOURCES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROFILING_NOTES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROFILE_MERGE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mergeable profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROFILE_REGISTRY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profile registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FINGERPRINT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fingerprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../JOINT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Joint distributions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FAIRNESS_AND_SKEW/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Slices and skew
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EXPLAIN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explain and notebooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DICTIONARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data dictionary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SCORECARD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scorecards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RESOLVE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Duplicate detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DETECTIVE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data detective packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REFERENCE_PACKS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference packs and validators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DATASET_LIBRARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Public dataset library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts, checks and drift
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contracts, checks and drift
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DRIFT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drift
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRACTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONSUMER_CONTRACTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Consumer contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CANARIES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canaries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment parity
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DRIFT_REPORT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drift report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../VERIFY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verifying data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRACT_EMIT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Emitting a contract
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RULES_TESTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing your rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TESTING_WITH_SHAPE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing with Shape
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROPOSALS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proposals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PLANNED_CHANGES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planned changes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Generation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DESIGN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_ENGINE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_STRATEGIES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_CALENDARS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calendars and timestamps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_SPEC/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation spec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_STABILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_KERNEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation kernel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LOCALES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Locales
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SCENARIO_PACKS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scenario packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SCENARIO_LIBRARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scenario library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../IMPORTERS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema importers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CHAOS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chaos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GAMEDAY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Game days
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FAILURE_MODES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Failure modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../INCREMENTAL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Incremental data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TRANSFORMS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transforms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SIMULATION_FILES_EVENTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulating files and events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SCALE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generating at scale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FIDELITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fidelity report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FIDELITY_TIERS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fidelity tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REPORT_CARD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report card
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outputs and integration
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Outputs and integration
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SINKS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sinks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LANDING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Landing layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EMIT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Emitting events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FABRIC_MIRROR/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric mirroring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EXCEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Excel workbooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DBT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dbt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BRIDGE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON bridge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DEMO/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Demos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTAINER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Container image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FABRIC_PLATFORM/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric platform inventory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CI/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shape in CI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PR_BOT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pull request check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../NOTIFICATIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Webhook notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Projects and history
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Projects and history
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROJECT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project file
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REGISTRY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../HISTORY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    History tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REPRODUCIBILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproducibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Privacy and trust
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Privacy and trust
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PRIVACY_MODEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Privacy model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../MASK/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Masking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../VAULT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Value vault
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SHARE_BUNDLE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Safe-to-share bundle
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SIGNING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../THREAT_MODEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SECURITY_SPECIFICATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugins
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Plugins
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/builtins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Built-in plugins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/authoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Writing a plugin
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/api-v1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugin API v1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/host/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugin host
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/stability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stability promise
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/trust-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trust model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/cloud-sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cloud sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/fabric-auth/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric sign-in
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/fabric-commands/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric commands
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/fabric-writers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric writers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/sqlserver/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQL Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/streaming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/simulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/behavior/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Behavior models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/healthcare-codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Healthcare code sets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/healthcare-standards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Healthcare standards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/integrations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integrations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command line
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command line
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#run-the-local-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the local examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exit-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exit codes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#-json-and-dry-run-on-every-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --json and --dry-run on every command
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shape-vault" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shape vault
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shape-migrate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shape migrate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-each-command-expects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What each command expects
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#non-local-targets-and-chaos-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Non-local targets and chaos input
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#failure-modes-detective-library-canary-and-game-day" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Failure modes, detective, library, canary and game day
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shape-suite-shape-seed-and-the-starter-library" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shape suite, shape seed and the starter library
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shape-doctor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shape doctor
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="shape doctor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#connectivity-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connectivity checks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#content-ids-across-source-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Content ids across source formats
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shape-demo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shape demo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-project-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The project file
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shape-dictionary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shape dictionary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#editor-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Editor support
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Change classes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#planned-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Planned changes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parity-and-consumer-contracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parity and consumer contracts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-pull-request-check-the-badge-notifications-and-plugin-templates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The pull request check, the badge, notifications and plugin templates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#registries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Registries
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#history-shape-bisect-and-shape-timelapse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        History: shape bisect and shape timelapse
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-local-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete local run
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Complete local run">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 1
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 2
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 3
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 4
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 5
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI reference (generated)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CLI_STABILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EXIT_CODES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exit codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API_STABILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance (generated)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_12_8" id="__nav_12_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specifications
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specifications
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/SHAPE_MODEL_V2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shape model v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/SHAPE_2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Normative contract v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/SHAPE_ARTIFACT_SPEC/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/STATE_AND_COMPATIBILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State and compatibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/STREAMING_SEMANTICS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming semantics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../MODELS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API generated
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Project
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PRODUCT_ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RELEASE_POLICY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release policy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RELEASE_CHECKLIST/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release checklist
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../V1_DONE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definition of done for 1.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Help and trust
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Help and trust
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TROUBLESHOOTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FAQ/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../KNOWN_LIMITATIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Known limitations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../WHAT_LEAVES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    What leaves my machine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LICENSING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Licensing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SECURITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../databases/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platforms
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_15" id="__nav_15_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Platforms
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/duckdb/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DuckDB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/postgresql/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PostgreSQL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/mysql/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/snowflake/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Snowflake
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/databricks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Databricks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../VSCODE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VS Code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GITHUB_ACTION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GitHub Action
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16" >
+        
+          
+          <label class="md-nav__link" for="__nav_16" id="__nav_16_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Community
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Community
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/DOCS_STYLE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs style
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/EXAMPLES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tested examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GOVERNANCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CODE_OF_CONDUCT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code of conduct
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../POSTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Posts and videos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#run-the-local-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the local examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exit-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exit codes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#-json-and-dry-run-on-every-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --json and --dry-run on every command
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shape-vault" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shape vault
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shape-migrate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shape migrate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-each-command-expects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What each command expects
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#non-local-targets-and-chaos-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Non-local targets and chaos input
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#failure-modes-detective-library-canary-and-game-day" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Failure modes, detective, library, canary and game day
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shape-suite-shape-seed-and-the-starter-library" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shape suite, shape seed and the starter library
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shape-doctor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shape doctor
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="shape doctor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#connectivity-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connectivity checks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#content-ids-across-source-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Content ids across source formats
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shape-demo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shape demo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-project-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The project file
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shape-dictionary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shape dictionary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#editor-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Editor support
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#change-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Change classes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#planned-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Planned changes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parity-and-consumer-contracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parity and consumer contracts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-pull-request-check-the-badge-notifications-and-plugin-templates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The pull request check, the badge, notifications and plugin templates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#registries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Registries
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#history-shape-bisect-and-shape-timelapse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        History: shape bisect and shape timelapse
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-local-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete local run
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Complete local run">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 1
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 2
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 3
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 4
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 5
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="the-shape-command-line">The <code>shape</code> command line<a class="headerlink" href="#the-shape-command-line" title="Permanent link">&para;</a></h1>
+<p>Status: experimental.</p>
+<h2 id="run-the-local-examples">Run the local examples<a class="headerlink" href="#run-the-local-examples" title="Permanent link">&para;</a></h2>
+<p>The examples below use disposable local files from this checkout. The <a href="../contributing/EXAMPLES/">example test environment</a> sets <code>SHAPE_DOCS_REPO</code>, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.</p>
+<!-- example: 999 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>python<span class="w"> </span><span class="s2">"</span><span class="nv">$SHAPE_DOCS_REPO</span><span class="s2">/scripts/docs_example_setup.py"</span><span class="w"> </span>CLI
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>Prepared local fixtures for CLI
+</code></pre></div>
+</details>
+<p>Run it as <code>shape ...</code>, or as <code>python -m shape ...</code> when the <code>shape</code> script is not on <code>PATH</code> (an
+environment that is not activated, a CI step, a notebook). Both start the same program.</p>
+<h2 id="exit-codes">Exit codes<a class="headerlink" href="#exit-codes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>ok</td>
+</tr>
+<tr>
+<td>1</td>
+<td>a check failed, drift was found, a signature or leak scan failed, or constraints did not hold after <code>--sql-constraints disable</code> loaded the rows (the error names each one)</td>
+</tr>
+<tr>
+<td>2</td>
+<td>bad input: a missing or unreadable file, the wrong kind of file, a bad argument</td>
+</tr>
+<tr>
+<td>3 and above</td>
+<td>a command's own verdict (a certificate below its threshold, a failed contract, an incompatible change); each command's <code>--help</code> says which</td>
+</tr>
+<tr>
+<td>141</td>
+<td>standard output was closed before the command finished (<code>shape ... \| head</code>); nothing is printed</td>
+</tr>
+</tbody>
+</table>
+<p>The classes, and what is stable about each command, are promised in
+<a href="../CLI_STABILITY/">CLI_STABILITY.md</a>.</p>
+<p>Every command's codes are listed in <code>docs/EXIT_CODES.md</code> (generated from <code>shape.cli.exitcodes</code>) and
+at the end of its <code>--help</code>.</p>
+<h2 id="-json-and-dry-run-on-every-command"><code>--json</code> and <code>--dry-run</code> on every command<a class="headerlink" href="#-json-and-dry-run-on-every-command" title="Permanent link">&para;</a></h2>
+<p><code>--json</code> prints exactly one JSON document on standard output (<code>format: "shape-result"</code>, <code>version: 1</code>,
+<code>command</code>, <code>exit_code</code>, and the keys of what the command prints); the text goes to standard error.
+Where <code>--json</code> takes a file (<code>profile</code>, <code>diff</code>, <code>check</code>, <code>design</code>) it keeps that meaning, and
+<code>--json -</code> writes the document to standard output. <code>--dry-run</code> is on every command that writes: it
+prints what would be written or sent (<code>format: "shape-dry-run"</code> with <code>--json</code>), writes nothing and
+exits 0, or 2 for invalid input. <code>--junit FILE</code> and <code>--sarif FILE</code> on <code>diff</code>, <code>check</code>, <code>verify</code>,
+<code>fidelity</code> and <code>profile validate --safe</code> write CI reports. See <code>docs/CI.md</code>.</p>
+<h2 id="errors">Errors<a class="headerlink" href="#errors" title="Permanent link">&para;</a></h2>
+<p>An expected error is one line on stderr and exit code 2:</p>
+<p><a href="#local-example-0">Run this example</a>.</p>
+<p>The same wording is used for the same problem everywhere (<code>shape: error: file not found: PATH</code>
+for a missing file). A bug in Shape is not hidden: it keeps its Python traceback. To see the
+traceback of an expected error as well, put <code>--debug</code> before the command, or set <code>SHAPE_DEBUG=1</code>:</p>
+<p><a href="#local-example-1">Run this example</a>.</p>
+<h2 id="shape-vault"><code>shape vault</code><a class="headerlink" href="#shape-vault" title="Permanent link">&para;</a></h2>
+<p><code>shape vault keygen|inspect|verify|rekey</code> manage the value vault, an encrypted file of the values a
+safe capture withheld (<code>docs/VAULT.md</code>). <code>shape profile --vault OUT.shapevault --vault-policy
+POLICY.json --kek REF</code> writes one with the profile; <code>shape generate --from X.shape --vault VAULT
+--kek REF [--verify PUBKEY]</code> and <code>shape plan X.shape --vault VAULT --kek REF</code> use it. A key is
+always a reference (<code>env://NAME</code>, <code>file://PATH</code>, a path), never a literal value.</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>shape vault keygen -o KEK.key</code></td>
+<td>writes a key-encryption key: 32 random bytes, base64, mode 0600; never overwrites</td>
+</tr>
+<tr>
+<td><code>shape vault inspect VAULT [--json]</code></td>
+<td>prints the header; needs no key</td>
+</tr>
+<tr>
+<td><code>shape vault verify VAULT --shape X.shape [--kek REF] [--verify PUBKEY] [--json]</code></td>
+<td>checks hash, ids, signature and, with a key, every column</td>
+</tr>
+<tr>
+<td><code>shape vault rekey X.shape VAULT --kek OLD --new-kek NEW --out-shape X2.shape --out-vault V2.shapevault [--key SIGNING_KEY] [--dry-run] [--json]</code></td>
+<td>re-encrypts under a new key; never in place</td>
+</tr>
+</tbody>
+</table>
+<p>Exit codes: 0 valid; 1 a wrong key, a hash, id, signature or authentication mismatch; 2 a malformed
+vault, a newer <code>version</code>, an unusable key, policy or path, or other bad input. <code>shape git-setup</code>
+also adds <code>*.shapevault</code> to <code>.gitignore</code>.</p>
+<h2 id="shape-migrate"><code>shape migrate</code><a class="headerlink" href="#shape-migrate" title="Permanent link">&para;</a></h2>
+<p><code>shape migrate SRC DST</code> (also installed as <code>shape-migrate</code>) writes a migrated copy of a persisted
+file, offline: a <code>.shape</code> artifact, or a safe profile, model, run manifest, contract or any other
+JSON kind in <a href="../specs/STATE_AND_COMPATIBILITY/">the state and compatibility policy</a>.</p>
+<p><a href="#local-example-2">Run this example</a>.</p>
+<p>It never rewrites in place or overwrites a file, records <code>migrated_from</code> and <code>source_content_id</code>,
+refuses a downgrade (<code>--to N</code> below the file's version), reads its result back and checks the
+content id before publishing it, and migrates a file that is already current to nothing. <code>--kind
+KIND</code> names a JSON file that is not recognised by itself. Exit codes: 0 migrated, no-op or dry run;
+1 the source failed <code>--verify</code>; 2 refused or bad input. Strict reading of every format (<code>SHAPE_STRICT_FORMATS=1</code>) is described in
+the policy.</p>
+<h2 id="what-each-command-expects">What each command expects<a class="headerlink" href="#what-each-command-expects" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>shape profile SRC -o OUT.shape</code> reads CSV, Parquet, JSONL, a folder or glob of them, or a Delta
+  table, and writes a <strong>profile</strong>. The profile is the <strong>safe capture</strong> by default (<code>--capture
+  safe</code>): a sensitive column keeps statistics and formats only, and a category is kept only if
+  every released category has at least <code>k</code> rows (<code>--k N</code>, default 5; <code>--column-k COLUMN=N</code>;
+  <code>--classify COLUMN=LEVEL</code>, where <code>CONFIDENTIAL</code> or higher makes a column sensitive). The <code>--json</code>
+  summary and the <code>--html</code> report are redacted the same way. <code>--capture full</code> keeps real values,
+  says so in the artifact and prints <code>shape: warning: --capture full keeps real values in OUT; do
+  not commit or share it</code> once; <code>--k</code>, <code>--column-k</code> and <code>--classify</code> are errors with it (exit 2).
+  <code>shape profile validate --safe OUT.shape</code> exits 0 for the default and 1 for a full capture.
+  <code>shape profile registry save</code> takes the same options. See <code>docs/PRIVACY_MODEL.md</code>. A table with 0 rows prints <code>shape: warning: ... has 0 rows</code>
+  (the profile is still written); <code>--fail-on-empty</code> exits 2 instead and writes nothing. A Delta
+  table with deletion vectors or column mapping is read with DuckDB (extra <code>delta-fallback</code>) and
+  says so on stderr; see the README. <code>--time-column COL</code> names the date or timestamp column that
+  each numeric column's seasonality is measured against (default: the table's only one; with
+  <code>--univariate</code>; <code>docs/PROFILING_NOTES.md</code>).</li>
+<li><code>shape profile SRC -o OUT.shape --sketches --capture full</code> also keeps the mergeable sketch state
+  in the file (it holds real values: <code>--sketches</code> without <code>--capture full</code> exits 2);
+  <code>shape profile merge A.shape B.shape ... -o OUT.shape [--name N] [--exact-only] [--capture
+  safe|full]</code> combines profiles
+  of partitions or days into the profile of their union, without reading the data again. Exit 2
+  when an input lacks the sketch state the statistics need (and <code>--exact-only</code> is not given), or
+  the profiles do not share their columns. See <code>docs/PROFILE_MERGE.md</code>.</li>
+<li><code>shape profile</code> can profile a sample: <code>--sample N|P%</code> (N rows or P% of them; nothing is sampled
+  without it), <code>--sample-method random|systematic|head</code> (default <code>random</code>) and <code>--sample-seed S</code>
+  (default 42). The profile records the sample and its adequacy, and <code>shape profile</code> prints
+  <code>shape: note: profiled a random sample of N of M rows (seed S)</code> to stderr (one line per table
+  with <code>--dataset</code>); an invalid value (0 rows, a percentage outside 0 to 100, an unknown method)
+  exits 2. <code>--decisions DECISIONS.json</code> reads the accepted <code>type</code> decisions of a decision file as
+  <code>--types</code> (a <code>--types</code> file wins for a column both name). See
+  <a href="../PROFILING_NOTES/#sampling">PROFILING_NOTES.md</a>.</li>
+<li><code>shape types PROFILE.shape [--contract CONTRACT.json] [--min-confidence C] [--json]</code> lists the
+  columns whose declared, inferred or contract types disagree: a declared <code>string</code> that holds
+  integers or ISO dates, a <code>float</code> that holds whole numbers, an <code>integer</code> the identifier rule
+  calls a suspect, an inferred type that fewer than <code>C</code> (default 0.99) of the values fit, and a
+  contract <code>dtype</code> that differs from the profile's. Each line names the table, the column, both
+  types, the confidence and the option that would change it (<code>--types</code>, <code>--string-columns</code>). Exit
+  0 with no findings, 1 with findings, 2 for bad input; <code>--json</code> prints the findings as a list
+  (the same as <code>shape.types_report(profile, contract, min_confidence)</code>). See
+  <a href="../PROFILING_NOTES/#type-inference">PROFILING_NOTES.md</a>.</li>
+<li><code>shape check</code>, <code>shape diff</code>, <code>shape plan</code>, <code>shape generate --from</code> read profiles, safe captures
+  included. <code>shape diff</code> lists a comparison a safe capture makes impossible under
+  <code>not_evaluable</code> and does not count it as drift. <code>shape check</code> exits 0 when every rule passes, 1
+  when a rule is violated, and 2 when a rule needs a value a safe capture left out (<code>shape: error:
+  not evaluable: COLUMN was captured safe (statistics and formats only); re-profile with --capture
+  full</code>) and nothing is violated. <code>shape generate --from</code> and <code>shape plan</code> generate such a column
+  from its pattern and length distribution and mark it <code>approximate</code>.
+  <code>shape check PROFILE CONTRACT [--json OUT] [--strict] [--enforce-learned]</code>: a rule may carry a
+  <code>strength</code>: <code>hard</code> (the default) fails, <code>soft</code> is a warning, <code>learned</code> is a warning unless
+  <code>--enforce-learned</code>, and <code>--strict</code> makes every broken rule fail; an unknown rule or strength
+  is a malformed contract (exit 2; <code>docs/CONTRACTS.md</code>, "Rule strength").
+  <code>shape check --data DATA</code> also checks the contract's <code>timeseries</code> and <code>reconcile</code> rules against
+  data (<code>docs/VERIFY.md</code>).
+  <code>shape diff</code> prints its result on standard output as one JSON line. On a terminal, a list of
+  more than 20 values (a <code>new_categorical_values</code> change of a column with thousands of values) is
+  cut to its first 20, with the number left out under the change's <code>values_omitted</code>, and stderr
+  says how many were left out; a pipe or a redirect gets the complete result. <code>--json FILE</code>
+  writes the complete result to FILE instead and prints nothing on standard output; <code>--json -</code>
+  prints the complete <code>shape-result</code> document. Notes on how the two profiles
+  were read (<code>notes</code>, a sampled profile against a full one) are also printed on stderr.
+  <code>shape diff</code> also compares two captures (<code>shape capture ... -o X.json</code>): it prints the changes,
+  or writes them with <code>--json OUT</code> instead, and exits 1 under <code>--fail-on-drift</code> when there is any. The
+  thresholds, <code>--ignore</code>, <code>--only</code> and <code>--policy</code> are the profile engine's and are refused there.
+  <code>shape diff</code> adds <code>notes</code> to its result when the two profiles were sampled differently, and
+  compares <code>row_count_change</code> on the sources' row counts (<code>population_rows</code>) when both profiles
+  state them.</li>
+<li><code>shape explain DIFF.json</code> explains a <code>shape diff --json</code> or <code>shape drift</code> result in plain
+  English, deterministically (<code>docs/EXPLAIN.md</code>).</li>
+<li><code>shape rules mutate DATA CONTRACT.json</code> plants the corruptions of <code>shape chaos</code> one at a time and
+  reports which rules of the contract catch them (<code>--plan</code>, <code>--seed</code>, <code>--rate</code>, <code>--diff</code>,
+  <code>--min-score S</code>: exit 1 below S, <code>-o REPORT.json</code>, <code>--json</code>). <code>shape rules backtest REGISTRY NAME
+  CONTRACT.json</code> replays a contract over every committed version of a registry name (<code>--since</code>,
+  <code>--until</code>, <code>--window day|week|month</code>, <code>--incidents FILE</code>, <code>--fail-on-miss</code>: exit 1 on a missed
+  incident, <code>--compare OLD_CONTRACT.json</code>, <code>-o</code>, <code>--json</code>). Exit 2 for unusable input. See
+  <code>docs/RULES_TESTING.md</code>.</li>
+<li><code>shape inspect ARTIFACT.shape</code> prints what an artifact holds, a profile or a model (for a
+  profile, its sampling record per table: how many rows it saw, or <code>not recorded</code> for a profile
+  written by an older Shape). <code>shape show</code> is an alias of <code>shape inspect</code>.
+  A numeric column of a profile made with <code>shape profile --univariate</code> carries the univariate
+  depth fields (best family by BIC and the fitted candidates, zero share and zero inflation,
+  heaping, Benford conformity, tail index, a Gaussian mixture and seasonality against the time
+  column), so <code>shape show</code> prints them; <code>shape profile --json</code>
+  and <code>--html</code> show them too (<code>docs/PROFILING_NOTES.md</code>). They are off by default: they add work
+  for every numeric column. With <code>shape profile --multivariate</code>, the table's <code>joint</code> entry carries the multivariate depth entries
+  (two-column determinants, multivariate outliers, PCA, cohorts and the mixed-type copula;
+  <code>docs/JOINT.md</code>), which <code>shape show</code> prints and the <code>--html</code> report lists under the table.</li>
+<li><code>shape generate --from PROFILE.shape --mixed-copula</code> links the numeric and categorical columns
+  by the profile's mixed-type Gaussian copula (<code>joint.copula</code>): each column keeps exactly its
+  generated values, only their order across rows changes. Without the flag the output is what it
+  was. <code>shape plan PROFILE.shape --mixed-copula</code> lists the columns the copula orders (the flag is
+  also <code>mixed_copula=True</code> of <code>shape.generate</code>). See <a href="../JOINT/">JOINT.md</a>.</li>
+<li><code>shape capture SRC</code> reads everything <code>shape profile</code> reads (CSV, Parquet, JSONL, a folder or
+  glob, a Delta table with <code>--version N</code> or <code>--as-of TIMESTAMP</code>, an <code>abfss://</code> source) and writes a
+  <strong>model</strong> (JSON, or a model <code>.shape</code> with <code>-o OUT.shape</code>), which <code>shape query</code>,
+  <code>shape compatibility</code> and <code>shape plan</code> read. <code>--dataset</code> captures a folder of one file per table
+  as a model with one table each. The model has the same content whatever the file format; the
+  one difference is what the format itself carries: a CSV holds text and numbers only, so a date
+  column is text there and a timestamp in Parquet (both are captured as text values). It is not a
+  second way to profile; use <code>shape profile</code> for that.</li>
+<li><code>shape design INPUT.json</code> reads a <strong>design input</strong> and writes DDL for a 3NF, star or snowflake
+  schema, after linting it; <code>shape design DATA.csv --from-data</code> builds a design input from data.
+  See <a href="../DESIGN/">DESIGN.md</a>. <code>--tmdl DIR</code> also writes the star or snowflake design as a TMDL
+  semantic model.</li>
+<li><code>shape import-schema FILE -o OUT.gen.json</code> imports a JSON Schema, OpenAPI, Avro, Protobuf,
+  Pydantic or TMDL schema as a generation spec, with <code>--from</code>, <code>--report</code>, <code>--strict</code> and
+  <code>--allow-import</code> (Pydantic runs the module it imports). Exit 1 means <code>--strict</code> found an element
+  that was not imported; 2 is a malformed or ambiguous input. See <a href="../IMPORTERS/">IMPORTERS.md</a>.</li>
+<li><code>shape contract emit CONTRACT.json --to ddl|jsonschema|pandera|gx</code> writes a contract as database
+  DDL, a JSON Schema, a pandera schema or a Great Expectations suite, listing what the target cannot
+  say (<code>--strict</code> fails on it). See <a href="../CONTRACT_EMIT/">CONTRACT_EMIT.md</a>.</li>
+<li><code>shape pin SPEC [-o OUT] [--json]</code> writes into a generation spec the current generator version of
+  every strategy and distribution it uses (its <code>generators</code> map), so the same spec and seed give the
+  same dataset id in every 1.x release; a pin that is there is kept. <code>shape pin SPEC --check</code>
+  writes nothing: exit 1 and the names the spec does not pin, 0 when all are pinned, 2 for a spec
+  that is not valid or pins a version this Shape does not have. See
+  <a href="../GENERATION_STABILITY/">GENERATION_STABILITY.md</a>.</li>
+<li><code>--identifiers reserved|realistic</code> on <code>shape generate</code> (also with <code>--from</code> and <code>--scale-mode</code>),
+  <code>shape composite</code>, <code>shape demo run</code> and <code>shape pack run</code> is the run switch of the identifier
+  values (e-mail addresses, URIs, phone numbers, social security numbers): <code>reserved</code> values cannot
+  belong to a real person, <code>realistic</code> ones can, so never use them for data that leaves a test
+  system. Without the flag, a <code>pack run</code> spec's <code>scenario.identifiers</code> applies, then the schema's
+  top-level <code>"identifiers"</code>, then <code>reserved</code>; a column's own <code>domains</code> or <code>range</code> key wins over
+  all of them. A run with realistic identifiers prints one line on standard error
+  (<code>shape: realistic identifiers are on: ...</code>), and <code>pack run</code> records the mode in its manifest
+  (<code>reproducibility.identifiers</code>, which <code>pack replay</code> uses). Any other value exits 2. See
+  <a href="../GENERATION_STRATEGIES/">GENERATION_STRATEGIES.md</a>.</li>
+<li><code>shape compatibility BEFORE AFTER</code> compares two Shape <strong>models</strong> (made by <code>shape capture</code> or
+  written as model JSON), not profiles. Compare two profiles with <code>shape diff</code>. To check a feed
+  for schema changes, capture it each day and compare with the baseline; a renamed or dropped
+  column is reported as <code>removed</code> and a changed type as <code>type_changed</code> (exit 5):</li>
+</ul>
+<p><a href="#local-example-3">Run this example</a>.</p>
+<ul>
+<li><code>shape fidelity REFERENCE SYNTHETIC</code> compares data with data: CSV, Parquet, JSONL or a folder
+  of one file per table. Given a captured evidence document (<code>REFERENCE.json</code>) it certifies the
+  CSV against it instead. A <code>.shape</code> file (a profile or a model) is not data and is refused with a one-line message; profile the synthetic data and
+  run <code>shape diff</code>.</li>
+<li><code>shape proposals propose|list|decide|contract</code> keeps the answers to what a profile cannot settle
+  alone (foreign keys, personal data, meaning) in a decision file; <code>shape generate --from</code> and
+  <code>shape plan</code> take it with <code>--decisions</code>. <code>propose --kinds rule</code> (one or several profiles) proposes
+  contract rules with evidence and a confidence, <code>list --status stale</code> shows accepted rules whose
+  evidence no longer holds after a re-profile, and <code>contract -d DECISIONS.json -o CONTRACT.json
+  [--merge EXISTING.json]</code> writes the accepted rules as a contract <code>shape check</code> reads (exit 2 on a
+  conflict with a rule in the file merged into). See <a href="../PROPOSALS/#rules">PROPOSALS.md</a>.</li>
+<li><code>shape report-card REAL SYNTHETIC</code> runs the fidelity scores and tiers, the utility gate, the
+  memorization gate and (with <code>--holdout</code>) a membership-inference test, and writes one card as
+  JSON, Markdown or HTML (<code>-o</code>, by extension). Exit 0 when every section that ran passed, 1 when
+  one failed or a <code>--require</code>d one did not run, 2 for unusable input. See
+  <a href="../REPORT_CARD/">REPORT_CARD.md</a>.</li>
+<li>A generation schema file (what <code>shape from-ddl</code> and <code>shape learn</code> write) is JSON, or YAML when
+  it is named <code>.yaml</code> or <code>.yml</code> (needs PyYAML). Every command that takes one (<code>generate</code>,
+  <code>describe</code>, <code>presets</code>, <code>emit</code>, <code>stream</code>, <code>continue</code>, <code>time-travel</code>, <code>chaos</code>, <code>generate-drift</code>,
+  <code>validate</code>) reads both.</li>
+<li>
+<p><code>shape proposals propose|list|decide</code> keeps the answers to what a profile cannot settle alone
+  (foreign keys, personal data, meaning) in a decision file; <code>shape generate --from</code> and
+  <code>shape plan</code> take it with <code>--decisions</code>. See <a href="../PROPOSALS/">PROPOSALS.md</a>.</p>
+</li>
+<li>
+<p><code>shape reference list|show</code> lists the reference packs Shape can find (ZIP to city, ISO codes,
+  IBAN lengths; your own in <code>SHAPE_REFERENCE_PATH</code>) and shows one with its manifest and first
+  rows; a pack whose file does not match its checksum is exit 2. <code>shape profile --validate
+  COLUMN=KIND</code> stores how many values of a column are valid IBANs, ISO codes or US ZIPs. See
+  <a href="../REFERENCE_PACKS/">REFERENCE_PACKS.md</a>.</p>
+</li>
+<li><code>shape fingerprint embed|show|verify</code> writes, reads and checks a signed statement inside a Parquet
+  file or Delta table that the data is synthetic and which run made it; <code>shape generate
+  --fingerprint</code> writes it at generation time (exit 0 valid, 1 digest or signature mismatch, 2 none,
+  a newer version or bad input). See <a href="../FINGERPRINT/">FINGERPRINT.md</a>.</li>
+<li><code>shape share-bundle create|verify</code> checks generated data against its source (memorization gate and
+  a top-values check) and writes a zip with a signed attestation, or, for <code>verify</code>, recomputes its
+  dataset id and checks it (<code>create</code>: 1 a check failed, nothing written; <code>verify</code>: 1 tampered or
+  failing, 2 malformed). Evidence that the checks passed, not a privacy guarantee. See
+  <a href="../SHARE_BUNDLE/">SHARE_BUNDLE.md</a>.</li>
+<li>
+<p><code>shape skew-rehearsal PROFILE.shape --schema SCHEMA --scale S -o DIR</code> generates at scale with the
+  profile's key skew and reports, per column, the profile's top share against the generated one
+  (exit 1 outside the tolerance, 2 no frequency data for a requested column). See
+  <a href="../SCALE/#skew-rehearsal">SCALE.md</a>.</p>
+</li>
+<li>
+<p><code>shape scorecard DATA</code> scores data quality by dimension (<a href="../SCORECARD/">SCORECARD.md</a>); with
+  <code>--slice-by COLUMN</code> it scores every slice and exits 1 when <code>--max-slice-gap</code> is exceeded.
+  <code>shape skew TRAIN SERVING</code> compares serving data with training data (data or profiles) and
+  exits 0 when nothing is flagged, 1 when a feature is flagged, 2 for unusable input
+  (<a href="../FAIRNESS_AND_SKEW/">FAIRNESS_AND_SKEW.md</a>).</p>
+</li>
+<li>
+<p><code>shape bridge</code> serves Shape's commands as a versioned JSON protocol on standard input and output
+  (one request and one response per line; <code>--once</code> for a single request; <code>--jobs-dir DIR</code> for the
+  job files). <code>shape bridge schema --out DIR</code> writes its JSON Schemas and <code>--check DIR</code> verifies a
+  directory against them. See <a href="../BRIDGE/"><code>BRIDGE.md</code></a>.</p>
+</li>
+<li>
+<p><code>shape resolve run FILE</code> finds duplicate entities in a CSV, Parquet or JSONL file and writes
+  golden records; <code>shape resolve synth FILE -o OUT</code> plants seeded duplicates and writes the true
+  clusters. See <a href="../RESOLVE/">RESOLVE.md</a>. Bad options or an unreadable file exit 2.</p>
+</li>
+</ul>
+<h2 id="non-local-targets-and-chaos-input">Non-local targets and chaos input<a class="headerlink" href="#non-local-targets-and-chaos-input" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Commands that write to a non-local target (<code>generate --to</code>, <code>emit</code>, <code>stream</code>,
+  <code>generate --scale-mode --sink</code>) need <code>--yes</code>, or <code>SHAPE_CONFIRM_REMOTE=1</code> (exactly <code>1</code>), or <code>y</code> at
+  the prompt on a terminal; otherwise they exit 2 with
+  <code>shape: error: refusing to write to non-local target URI without confirmation; pass --yes or set
+  SHAPE_CONFIRM_REMOTE=1</code>. Paths, <code>file://</code>, <code>duckdb://</code>, <code>console</code> and <code>localhost</code>/<code>127.0.0.1</code>/<code>::1</code> are local,
+  and <code>--dry-run</code> needs no confirmation. See <code>docs/SINKS.md</code>.</li>
+<li><code>shape chaos --input DIR</code> corrupts only tables listed in <code>DIR/_shape_provenance.json</code> (matching
+  sha256) or Parquet files with the <code>shape_synthetic</code> marker; <code>--allow-real-input</code> overrides, and
+  <code>-o</code> may not be the input folder. See <code>docs/CHAOS.md</code>.</li>
+<li><code>shape generate -o</code>, <code>continue</code>, <code>time-travel</code>, <code>pack run</code> and <code>chaos</code> write
+  <code>_shape_provenance.json</code> beside the tables (<code>format: shape-provenance</code>, <code>version: 1</code>).</li>
+</ul>
+<h2 id="failure-modes-detective-library-canary-and-game-day">Failure modes, detective, library, canary and game day<a class="headerlink" href="#failure-modes-detective-library-canary-and-game-day" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>shape failure-modes list [--json]</code> and <code>shape failure-modes show ID</code> print the failure mode
+  catalog (<code>docs/FAILURE_MODES.md</code>). <code>shape suite run failure-modes</code> runs the scenario of every
+  entry and checks that every check the entry names fires; it exits 1 when one does not.</li>
+<li><code>shape detective list</code>, <code>start NAME -o DIR</code>, <code>hint NAME N</code> and <code>check NAME --answer ANSWER.json</code>
+  play a data detective pack (<code>docs/DETECTIVE.md</code>). <code>check</code> exits 0 when every planted finding is
+  named and none is wrong, 1 otherwise, 2 for a malformed answer or an unknown pack.</li>
+<li><code>shape library list</code>, <code>show NAME</code> and <code>get NAME -o X.shape</code> print and copy the safe profiles of
+  public datasets (<code>docs/DATASET_LIBRARY.md</code>); <code>shape generate --from dataset:NAME</code> generates from
+  one with no network.</li>
+<li><code>shape canary make (library:NAME | ID) [--rows N] [--seed N] [--marker COLUMN=VALUE] [--format
+  csv|parquet|jsonl] -o DIR [--dry-run]</code> writes a marked batch with planted failures;
+  <code>shape canary check canary.json --result RESULT.json...</code> exits 0 when every expected detection is
+  present, 1 when one is missing (a blind spot), 2 for malformed input (<code>docs/CANARIES.md</code>).</li>
+<li><code>shape gameday run PLAN.json -o DIR [--seed N] [--dry-run]</code> plants failures in copies of your
+  local data and runs the checks you list; it exits 0 when every expectation was detected, 1 when
+  one was missed, 2 for a malformed plan (<code>docs/GAMEDAY.md</code>).</li>
+</ul>
+<h2 id="shape-suite-shape-seed-and-the-starter-library"><code>shape suite</code>, <code>shape seed</code> and the starter library<a class="headerlink" href="#shape-suite-shape-seed-and-the-starter-library" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>shape pack list --library</code> lists the starter scenarios and suites; <code>shape pack run library:NAME</code>
+  runs one and compares it with its answer key. <code>shape suite run NAME|FILE [--scale small]
+  [--seed N] [-o DIR] [--json]</code> runs a suite (<code>smoke</code>, <code>schema-evolution</code> or a <code>shape-suite</code> file):
+  exit 0 when every scenario met its key, 1 when one did not (the scenario, the expectation and
+  the observation are printed), 2 for a malformed suite or an unknown scenario. See
+  <code>docs/SCENARIO_LIBRARY.md</code>.</li>
+<li><code>shape seed SPEC|DOMAIN --target URI [--scale S] [--seed N] [--mode create|truncate|append]
+  [--dry-run] [--json]</code> writes the generated tables into a database (<code>mssql</code>, <code>postgres</code>, <code>mysql</code>)
+  or, with <code>sql://DIR</code>, into one ordered INSERT script per table, parents first. Exit 0 when
+  seeded or planned, 1 when <code>--mode create</code> found an existing table or <code>--mode append</code> a primary key
+  already in its table (nothing written), 2 for bad input or a failed write. See <code>docs/TESTING_WITH_SHAPE.md</code>, which also describes the pytest
+  plugin.</li>
+</ul>
+<h2 id="shape-doctor"><code>shape doctor</code><a class="headerlink" href="#shape-doctor" title="Permanent link">&para;</a></h2>
+<p><a href="#local-example-4">Run this example</a>.</p>
+<p>It shows the Shape version, the Python, which kernel is in use (<code>rust</code> is the compiled kernel;
+<code>python</code> is the pure-Python fallback, selected with <code>SHAPE_KERNEL</code>), and each package with what it
+is needed for. Exit code 0 unless a required package is missing (then 1); a missing optional
+package never fails it. <code>shape doctor --json</code> prints the same facts as one JSON object. For
+plugins, run <code>shape plugins doctor</code>.</p>
+<h3 id="connectivity-checks">Connectivity checks<a class="headerlink" href="#connectivity-checks" title="Permanent link">&para;</a></h3>
+<p>Three options add checks that touch the network or a cloud sign-in. Each is off unless you ask for
+it, so plain <code>shape doctor</code> stays offline. Every check is one line with a status, <code>PASS</code>, <code>WARN</code> or
+<code>FAIL</code>, and a <code>Next:</code> step for a warning or failure. A warning never changes the exit code; a
+failure exits 1. A malformed target is an input error (exit 2).</p>
+<!-- example: 5 -->
+
+<p><strong>Needs a Kafka account. Not run in CI.</strong></p>
+<div class="highlight"><pre><span></span><code>shape doctor --fabric onelake://WORKSPACE/ITEM [--auth cli|msi|spn|device-code|fabric ...]
+shape doctor --broker kafka://host:9092[,host2:9092]/topic
+shape doctor --broker eventhubs://NAMESPACE/HUB [--auth ...]
+shape doctor --delta-table PATH
+</code></pre></div>
+<!-- owner: Kafka maintainer — supply the transcript for docs/CLI.md example 5. -->
+
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Checks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--fabric</code></td>
+<td><code>fabric.onelake</code>: DNS, TCP and TLS to the OneLake endpoint; <code>fabric.auth</code>: sign-in with the <code>--auth</code> mode (default <code>cli</code>); <code>fabric.item</code>: the workspace and item exist and you may read them (404 means not found, 403 means no permission)</td>
+</tr>
+<tr>
+<td><code>--broker</code> (repeatable)</td>
+<td><code>broker.dns</code>, <code>broker.tcp</code>, <code>broker.tls</code> (Event Hubs, port 5671) and <code>broker.auth</code> (Event Hubs: a token from <code>--auth</code>; Kafka: a metadata request through <code>confluent-kafka</code> when installed, otherwise a warning). <code>--no-auth-check</code> skips the sign-in</td>
+</tr>
+<tr>
+<td><code>--delta-table</code></td>
+<td><code>delta.limits</code>: deletion vectors and column mapping, which delta-rs cannot read in a Python notebook; the fix names Spark or a table rewrite</td>
+</tr>
+</tbody>
+</table>
+<p><strong>IPv6.</strong> When a broker name resolves to an IPv6 address that does not answer while an IPv4
+address does, <code>broker.tcp</code> is a warning that names the address (a client that tries IPv6 first
+stalls); when nothing answers it is a failure that says IPv6 may be the cause.</p>
+<p><strong>Sign-in.</strong> <code>--auth</code>, <code>--tenant-id</code>, <code>--client-id</code>, <code>--client-secret</code>, <code>--sql-user</code> and
+<code>--sql-password</code> work as in <code>shape emit</code> (see the credential references in
+<a href="../SECURITY_SPECIFICATION/">SECURITY_SPECIFICATION.md</a>); a secret is always a reference such as
+<code>env://NAME</code>. A token is used for one request and never printed. <code>--auth</code> needs the <code>shape-fabric</code>
+plugin; without it the sign-in line fails and says so. <code>--timeout SECONDS</code> bounds each step
+(default 5).</p>
+<p><strong><code>--json</code></strong> prints every check as an entry of <code>checks</code>, each with <code>id</code>, <code>status</code>, <code>message</code> and
+<code>next</code>, next to the earlier keys; <code>ok</code> is false when any check failed.</p>
+<p>Live variants of these checks are marked <code>live</code> in the test suite and need network access.</p>
+<h2 id="content-ids-across-source-formats">Content ids across source formats<a class="headerlink" href="#content-ids-across-source-formats" title="Permanent link">&para;</a></h2>
+<p><code>shape_content_id</code> is the hash of the whole profile, including the typed minimum and maximum of
+each column. The same rows read from CSV and from Parquet can therefore have different ids, for
+example when a date column's minimum is a string tag in one and a date in the other, although
+<code>shape diff</code> finds no drift between them. Compare profiles with <code>shape diff</code>, not by id, when the
+sources differ in format.</p>
+<h2 id="shape-demo"><code>shape demo</code><a class="headerlink" href="#shape-demo" title="Permanent link">&para;</a></h2>
+<p><code>shape demo init|list|run|preflight|cleanup|status|notebook|report</code> runs scenarios for talks, clients and
+workshops and cleans up after them; see <code>docs/DEMO.md</code>. Exit 0 done, 1 a run failed, a cleanup could not
+remove something or a preflight check failed, 2 bad input.</p>
+<h2 id="the-project-file">The project file<a class="headerlink" href="#the-project-file" title="Permanent link">&para;</a></h2>
+<p><code>shape init</code> scaffolds a project and <code>shape project validate</code> checks its <code>shape.yml</code>; <code>profile</code>,
+<code>diff</code>, <code>check</code> and <code>verify</code> read it when it is present, and their flags override it
+(<code>--project FILE</code>, <code>--no-project</code>, <code>--source NAME</code>, <code>diff --baseline-date</code>). See
+<code>docs/PROJECT.md</code>.</p>
+<h2 id="shape-dictionary"><code>shape dictionary</code><a class="headerlink" href="#shape-dictionary" title="Permanent link">&para;</a></h2>
+<p><code>shape dictionary PROFILE.shape [--project FILE | --no-project] [--source NAME] [--format md|html|json] [--examples] -o OUT</code>
+writes a data dictionary (one entry per table and column) from a profile and <code>shape.yml</code>. Example
+and top values need <code>--examples</code> and are never written for a column classified <code>CONFIDENTIAL</code> or
+higher. Exit 0 done, 2 a missing or unreadable profile, an invalid <code>shape.yml</code> or a source that is
+not in the project. See <code>docs/DICTIONARY.md</code>.</p>
+<h2 id="editor-support">Editor support<a class="headerlink" href="#editor-support" title="Permanent link">&para;</a></h2>
+<p>The VS Code extension in <code>editors/vscode/</code> completes and validates <code>shape.yml</code>, offers snippets,
+and shows a <code>.shape</code> file as the text <code>shape cat FILE</code> prints (read-only), with <strong>Shape: Compare
+with Git HEAD</strong> for a diff. It needs <code>shape</code> 0.9.0 or newer (the <code>shape.path</code> setting, else <code>PATH</code>).
+See <code>editors/vscode/README.md</code>.</p>
+<h2 id="change-classes">Change classes<a class="headerlink" href="#change-classes" title="Permanent link">&para;</a></h2>
+<p><code>shape diff</code> classes every change as breaking, additive or cosmetic and prints a closing line
+<code>bump: major (2 breaking, 1 additive, 4 cosmetic)</code> on stderr; the <code>--json</code> result and the line on
+stdout carry <code>class</code>, <code>class_reason</code> and <code>semver</code> (<code>docs/DRIFT.md</code>, "Change classes").
+<code>--fail-on breaking|additive|cosmetic</code> exits 1 when an unplanned change of that class or a stricter
+one is reported (it may be combined with <code>--fail-on-drift</code>; the run fails when either fails), and
+<code>--version-from X.Y.Z</code> adds <code>semver.next_version</code>. A class other than those three, or a version that
+is not <code>X.Y.Z</code>, exits 2. A drift policy that names an unknown kind or class exits 2 too.</p>
+<h2 id="planned-changes">Planned changes<a class="headerlink" href="#planned-changes" title="Permanent link">&para;</a></h2>
+<p><code>shape changes validate|list|add|ack</code> manages <code>shape-changes.yml</code>, the reviewable list of planned
+changes that <code>diff</code>, <code>check</code> and <code>verify</code> read (<code>--changes FILE</code>, <code>--no-changes</code>, <code>--on DATE</code>). Exit
+0 done, 1 <code>validate</code> found problems, 2 bad input. See <code>docs/PLANNED_CHANGES.md</code>.</p>
+<h2 id="parity-and-consumer-contracts">Parity and consumer contracts<a class="headerlink" href="#parity-and-consumer-contracts" title="Permanent link">&para;</a></h2>
+<p><code>shape parity A B</code> checks that environment B has the same shape as environment A (tables, columns,
+types, keys, relationships, null rates, distributions, table sizes); exit 0 parity, 1 a check
+failed, 2 unusable input. See <code>docs/PARITY.md</code>. <code>shape contracts validate FILE</code> checks a consumer
+contract file (exit 0 valid, 2 not, with every problem and its key path), and
+<code>shape contracts check-consumers PROFILE.shape</code> runs the consumer contracts of a source in the
+producer's CI (exit 0 every consumer passes, 1 one is broken, 2 unusable input; <code>--baseline</code>
+marks the violations a change introduced). See <code>docs/CONSUMER_CONTRACTS.md</code>.</p>
+<h2 id="the-pull-request-check-the-badge-notifications-and-plugin-templates">The pull request check, the badge, notifications and plugin templates<a class="headerlink" href="#the-pull-request-check-the-badge-notifications-and-plugin-templates" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>shape ci comment RESULT.json... [-o FILE] [--max-findings 50] [--title TEXT]</code> renders the Markdown
+  comment of a pull request from <code>shape-result</code> documents; <code>shape ci post-comment --body-file FILE
+  --repo OWNER/REPO --pr N</code> creates or updates the one Shape comment (the token comes from
+  <code>GITHUB_TOKEN</code>). Exit 0, 2 for a missing file or a document that is not a <code>shape-result</code>; for
+  <code>post-comment</code> also 1 for an HTTP error other than 403 and 404 (those print a notice and exit 0).
+  See <code>docs/PR_BOT.md</code>, the action <code>uses: sqllocks/shape@&lt;tag&gt;</code>.</li>
+<li><code>shape badge RESULT.json... -o badge.svg [--label shape]</code> writes the status badge: passing, drift,
+  failing or unknown. See <code>docs/CI.md</code>.</li>
+<li><code>shape notify test [--project DIR]</code> sends a test notification to every target of <code>notifications:</code> in
+  <code>shape.yml</code>; <code>--notify REF</code> on <code>diff</code>, <code>check</code>, <code>verify</code> and <code>fidelity</code> adds a target for one run.
+  Exit 1 when a delivery failed, 2 without a project or notifications. See <code>docs/NOTIFICATIONS.md</code>.</li>
+<li><code>shape plugins new NAME --group GROUP [-o DIR] [--author TEXT]</code> creates a plugin package from a
+  template. See <code>docs/plugins/authoring.md</code>.</li>
+</ul>
+<h2 id="registries">Registries<a class="headerlink" href="#registries" title="Permanent link">&para;</a></h2>
+<p><code>shape registry</code> (content-addressed artifacts) and <code>shape profile registry</code> (named profiles) are
+different stores. See <code>docs/REGISTRY.md</code> and <code>docs/PROFILE_REGISTRY.md</code>.</p>
+<p><code>shape registry ROOT prune --before DATE [--name NAME ...] [--keep-last N] [--dry-run] [--json]</code>
+removes the log entries committed before DATE and the objects nothing points at any more; every
+version a ref or tag points at, and the newest N entries of each name, are kept. <code>--json</code> prints the
+<code>shape-result</code> document with the report (<code>format</code> <code>shape-registry-prune</code>, <code>version</code> 1) as its
+<code>payload</code>. Exit 0 pruned or dry run, 2 bad input (a bad
+date, an unknown name, a bad <code>--keep-last</code>, a held <code>prune.lock</code>). See
+<a href="../REGISTRY/#pruning">REGISTRY.md</a>.</p>
+<h2 id="history-shape-bisect-and-shape-timelapse">History: <code>shape bisect</code> and <code>shape timelapse</code><a class="headerlink" href="#history-shape-bisect-and-shape-timelapse" title="Permanent link">&para;</a></h2>
+<!-- example: 6 -->
+
+<p>Syntax reference. Replace the named arguments with your inputs.</p>
+<div class="highlight"><pre><span></span><code>shape bisect REGISTRY NAME --good REF --bad REF [--column COL] [--kind KIND] [--contract FILE]
+             [--verify-all] [--coarse week|month] [--json] [--source NAME] [threshold flags]
+shape bisect layers --layers SOURCE[,SOURCE...] --good-date D1 --bad-date D2 [--column COL]
+             [--map LAYER.COL=COL]... [--project shape.yml] [--json]
+shape timelapse REGISTRY NAME --column COL [--table T] [--since DATE] [--until DATE]
+             [--window day|week|month] [-o OUT.json|OUT.html] [--format json|text]
+</code></pre></div>
+<p><code>bisect</code> finds the first committed version of <code>NAME</code> that changed (exit 0; exit 2 when <code>--good</code>
+tests bad, <code>--bad</code> tests good, or a version cannot be tested, for example a share-safe profile).
+<code>bisect layers</code> finds the layer of a pipeline where a change appears (exit 0 a layer shows it, 1
+none does, 2 unusable input). <code>timelapse</code> follows one column across the versions (<code>-o OUT.html</code> is
+one offline page). See <code>docs/HISTORY.md</code>.</p>
+<h2 id="complete-local-run">Complete local run<a class="headerlink" href="#complete-local-run" title="Permanent link">&para;</a></h2>
+<p>Run these commands in order after preparing the fixtures above.</p>
+<p><a id="local-example-0"></a></p>
+<h3 id="example-1">Example 1<a class="headerlink" href="#example-1" title="Permanent link">&para;</a></h3>
+<!-- example: 0 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>shape<span class="w"> </span>registry<span class="w"> </span>reg<span class="w"> </span>checkout<span class="w"> </span>orders<span class="w"> </span>nope
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 2)</summary>
+<div class="expected highlight"><pre><span></span><code>shape: error: orders@nope is not recorded in the registry
+</code></pre></div>
+</details>
+<p>This command exits nonzero. Read the diagnostic; this transcript shows a refusal or failed check, not a passing gate.</p>
+<p><a id="local-example-1"></a></p>
+<h3 id="example-2">Example 2<a class="headerlink" href="#example-2" title="Permanent link">&para;</a></h3>
+<!-- example: 1 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>shape<span class="w"> </span>--debug<span class="w"> </span>registry<span class="w"> </span>reg<span class="w"> </span>checkout<span class="w"> </span>orders<span class="w"> </span>nope
+<span class="nv">SHAPE_DEBUG</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>shape<span class="w"> </span>check<span class="w"> </span>missing.shape<span class="w"> </span>contract.json
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 1)</summary>
+<div class="expected highlight"><pre><span></span><code>Traceback (most recent call last):
+  File "&lt;checkout&gt;/.venv/bin/shape", line 6, in &lt;module&gt;
+    sys.exit(main())
+             ^^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/main.py", line 2281, in main
+    code = _main(argv)
+           ^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/main.py", line 2318, in _main
+    return errors.guarded(lambda: _logged(opts, argv))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/errors.py", line 149, in guarded
+    return fn()
+           ^^^^
+  File "&lt;checkout&gt;/src/shape/cli/main.py", line 2318, in &lt;lambda&gt;
+    return errors.guarded(lambda: _logged(opts, argv))
+                                  ^^^^^^^^^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/main.py", line 2338, in _logged
+    return _dispatch(argv)
+           ^^^^^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/main.py", line 2440, in _dispatch
+    return _dispatch_command(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/main.py", line 2507, in _dispatch_command
+    return machine.run(machine.command_path(used, a), a, lambda: _route(a))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/machine.py", line 403, in run
+    return fn()
+           ^^^^
+  File "&lt;checkout&gt;/src/shape/cli/main.py", line 2507, in &lt;lambda&gt;
+    return machine.run(machine.command_path(used, a), a, lambda: _route(a))
+                                                                 ^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/main.py", line 2813, in _route
+    return run_registry(a)
+           ^^^^^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/registry.py", line 359, in run
+    return _checkout(r, a)
+           ^^^^^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/registry.py", line 284, in _checkout
+    data = r.checkout(a.name, a.ref)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/registry/local.py", line 297, in checkout
+    h = self.resolve(name, ref)
+        ^^^^^^^^^^^^^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/registry/local.py", line 294, in resolve
+    raise RegistryError(f"{name}@{ref} is not recorded in the registry")
+shape.registry.local.RegistryError: orders@nope is not recorded in the registry
+Traceback (most recent call last):
+  File "&lt;checkout&gt;/.venv/bin/shape", line 6, in &lt;module&gt;
+    sys.exit(main())
+             ^^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/main.py", line 2281, in main
+    code = _main(argv)
+           ^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/main.py", line 2318, in _main
+    return errors.guarded(lambda: _logged(opts, argv))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/errors.py", line 149, in guarded
+    return fn()
+           ^^^^
+  File "&lt;checkout&gt;/src/shape/cli/main.py", line 2318, in &lt;lambda&gt;
+    return errors.guarded(lambda: _logged(opts, argv))
+                                  ^^^^^^^^^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/main.py", line 2338, in _logged
+    return _dispatch(argv)
+           ^^^^^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/main.py", line 2440, in _dispatch
+    return _dispatch_command(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/main.py", line 2507, in _dispatch_command
+    return machine.run(machine.command_path(used, a), a, lambda: _route(a))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/machine.py", line 403, in run
+    return fn()
+           ^^^^
+  File "&lt;checkout&gt;/src/shape/cli/main.py", line 2507, in &lt;lambda&gt;
+    return machine.run(machine.command_path(used, a), a, lambda: _route(a))
+                                                                 ^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/main.py", line 2700, in _route
+    return _run(_cmd_check, a)
+           ^^^^^^^^^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/main.py", line 93, in _run
+    return fn(a)
+           ^^^^^
+  File "&lt;checkout&gt;/src/shape/cli/main.py", line 670, in _cmd_check
+    profile = shape.load(a.shape)
+              ^^^^^^^^^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/profile/reference/profile.py", line 920, in load
+    manifest, parts = read_artifact(str(path))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/artifact/io.py", line 168, in read_artifact
+    result = _read_artifact(path, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "&lt;checkout&gt;/src/shape/artifact/io.py", line 209, in _read_artifact
+    with zipfile.ZipFile(path) as z:
+         ^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/zipfile/__init__.py", line 1353, in __init__
+    self.fp = io.open(file, filemode)
+              ^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'missing.shape'
+</code></pre></div>
+</details>
+<p>This command exits nonzero. Read the diagnostic; this transcript shows a refusal or failed check, not a passing gate.</p>
+<p><a id="local-example-2"></a></p>
+<h3 id="example-3">Example 3<a class="headerlink" href="#example-3" title="Permanent link">&para;</a></h3>
+<!-- example: 2 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>shape<span class="w"> </span>migrate<span class="w"> </span>old.shape<span class="w"> </span>new.shape<span class="w"> </span>--dry-run<span class="w">   </span><span class="c1"># print the plan, write nothing</span>
+shape<span class="w"> </span>migrate<span class="w"> </span>old.shape<span class="w"> </span>new.shape<span class="w">             </span><span class="c1"># new file + new.shape.receipt.json; old.shape kept</span>
+shape<span class="w"> </span>migrate<span class="w"> </span>old.shape<span class="w"> </span>new-signed.shape<span class="w"> </span>--verify<span class="w"> </span>old.pub<span class="w"> </span>--sign-key<span class="w"> </span>release.key<span class="w">   </span><span class="c1"># a signed source</span>
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>{"destination": null, "dry_run": true, "plan": {"kind": "artifact", "noop": true, "result_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "source_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "source_version": 2, "steps": [], "target_version": 2}, "receipt": null, "written": false}
+{"destination": null, "dry_run": false, "plan": {"kind": "artifact", "noop": true, "result_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "source_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "source_version": 2, "steps": [], "target_version": 2}, "receipt": null, "written": false}
+{"destination": null, "dry_run": false, "plan": {"kind": "artifact", "noop": true, "result_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "source_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "source_version": 2, "steps": [], "target_version": 2}, "receipt": null, "written": false}
+</code></pre></div>
+</details>
+<p><a id="local-example-3"></a></p>
+<h3 id="example-4">Example 4<a class="headerlink" href="#example-4" title="Permanent link">&para;</a></h3>
+<!-- example: 3 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>shape<span class="w"> </span>capture<span class="w"> </span>orders.parquet<span class="w"> </span>-o<span class="w"> </span>orders-base.shape
+<span class="w">  </span>shape<span class="w"> </span>capture<span class="w"> </span>orders-today.parquet<span class="w"> </span>-o<span class="w"> </span>orders-today.shape
+<span class="w">  </span>shape<span class="w"> </span>compatibility<span class="w"> </span>orders-base.shape<span class="w"> </span>orders-today.shape<span class="w"> </span>--mode<span class="w"> </span>backward
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>{"shape_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "written": "orders-base.shape"}
+{"shape_content_id": "3db012279effb591c5c20f9d053c296849287d97ee137090352b73fc28f0a667", "written": "orders-today.shape"}
+shape: note: orders-base.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+shape: note: orders-today.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+{"compatible": true, "issues": [], "mode": "backward"}
+</code></pre></div>
+</details>
+<p><a id="local-example-4"></a></p>
+<h3 id="example-5">Example 5<a class="headerlink" href="#example-5" title="Permanent link">&para;</a></h3>
+<!-- example: 4 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>shape<span class="w"> </span>doctor
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>Shape 0.9.1
+  python    3.12.14  (Linux-6.18.44-x86_64-with-glibc2.41)
+  kernel    python  (pure Python; set SHAPE_KERNEL=rust)
+
+Required
+  OK      numpy         2.5.3
+  OK      pyarrow       25.0.1
+
+Optional
+  OK      cryptography  50.0.2
+  OK      yaml          6.0.3
+  OK      pandas        3.0.6
+  OK      scipy         1.18.1
+  OK      deltalake     1.6.6
+  OK      openpyxl      3.1.5
+  OK      sklearn       1.9.1
+  OK      tzdata        2026.3
+
+Result: OK
+</code></pre></div>
+</details>
+<p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Command+line&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FCLI%2F">Report a problem with this page</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  <div class="md-copyright__highlight">Shape by SQLLocks</div>
+  <div>Copyright SQLLocks. Released under the MIT license.</div>
+  <nav class="shape-footer-links" aria-label="Website, project and support">
+    <a href="https://shapedata.ai/">shapedata.ai</a>
+    <a href="https://github.com/sqllocks/shape">GitHub</a>
+    <a href="https://pypi.org/project/sqllocks-shape/">PyPI</a>
+    <a href="mailto:support@shapedata.ai">Support</a>
+    <a href="https://github.com/sqllocks/shape/blob/main/LICENSE">License (MIT)</a>
+    <a href="https://github.com/sqllocks/shape/blob/main/SECURITY.md">Security</a>
+  </nav>
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "navigation.indexes", "search.suggest", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../assets/javascripts/diagrams.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "api_version": {
+      "pattern": "^(0|[1-9][0-9]{0,3})\\.(0|[1-9][0-9]{0,3})$",
+      "type": "string"
+    },
+    "args": {
+      "additionalProperties": false,
+      "properties": {
+        "connection": {
+          "description": "a connection name or reference",
+          "type": "string"
+        },
+        "domain": {
+          "description": "the domain, where the scenario takes one",
+          "type": "string"
+        },
+        "dry_run": {
+          "description": "plan the demo without running it",
+          "type": "boolean"
+        },
+        "input_file": {
+          "description": "an input data file, where the scenario takes one",
+          "type": "string"
+        },
+        "mode": {
+          "description": "the demo mode (default: inference)",
+          "type": "string"
+        },
+        "output_formats": {
+          "description": "output formats to write",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "rows": {
+          "description": "rows to generate (default 50000)",
+          "minimum": 1,
+          "type": "integer"
+        },
+        "scale_mode": {
+          "description": "auto, local_single, local_mp or fabric_spark",
+          "type": "string"
+        },
+        "scenario": {
+          "description": "the scenario name (default: retail)",
+          "type": "string"
+        },
+        "seed": {
+          "description": "the seed (default 42)",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "command": {
+      "const": "demo_run"
+    },
+    "id": {
+      "maxLength": 128,
+      "type": [
+        "string",
+        "integer",
+        "null"
+      ]
+    },
+    "options": {
+      "additionalProperties": false,
+      "properties": {
+        "async": {
+          "default": false,
+          "description": "for a command that can run as a job: return a job id at once and run in the background",
+          "type": "boolean"
+        },
+        "include_raw_values": {
+          "default": false,
+          "description": "return raw values (minimum, maximum, category values, offending values) even for classified columns; off by default",
+          "type": "boolean"
+        },
+        "max_inline_bytes": {
+          "default": 262144,
+          "description": "a result part larger than this is written to a file and returned as a reference",
+          "minimum": 1024,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "command"
+  ],
+  "title": "demo_run request",
+  "type": "object",
+  "x-api-version": "1.0"
+}

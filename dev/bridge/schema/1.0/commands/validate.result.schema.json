@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "errors": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "location": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "location",
+          "message"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "string"
+    },
+    "name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "relationship_count": {
+      "type": "integer"
+    },
+    "table_count": {
+      "type": "integer"
+    },
+    "valid": {
+      "type": "boolean"
+    },
+    "warnings": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "location": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "location",
+          "message"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "valid",
+    "kind",
+    "table_count",
+    "relationship_count",
+    "errors",
+    "warnings"
+  ],
+  "title": "validate result",
+  "type": "object",
+  "x-api-version": "1.0"
+}

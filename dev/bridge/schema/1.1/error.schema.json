@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "enum": [
+        "auth.missing_credentials",
+        "auth.rejected",
+        "input.invalid_schema",
+        "input.invalid_value",
+        "input.job_interrupted",
+        "input.job_state",
+        "input.not_found",
+        "input.unknown_domain",
+        "input.unknown_format",
+        "input.unknown_job",
+        "input.unknown_proposal",
+        "input.unknown_source",
+        "input.unsupported_format_version",
+        "internal.error",
+        "io.read_failed",
+        "io.sink_failed",
+        "io.write_failed",
+        "policy.capability_unavailable",
+        "policy.not_permitted",
+        "policy.signature_invalid",
+        "privacy.raw_values_withheld",
+        "usage.invalid_argument",
+        "usage.invalid_json",
+        "usage.invalid_request",
+        "usage.missing_argument",
+        "usage.request_too_large",
+        "usage.unknown_argument",
+        "usage.unknown_command",
+        "usage.unsupported_version"
+      ]
+    },
+    "group": {
+      "enum": [
+        "usage",
+        "input",
+        "policy",
+        "privacy",
+        "io",
+        "auth",
+        "internal"
+      ]
+    },
+    "hint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "message": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "code",
+    "group",
+    "message",
+    "hint"
+  ],
+  "title": "bridge error",
+  "type": "object",
+  "x-api-version": "1.1"
+}

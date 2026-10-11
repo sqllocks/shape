@@ -1,0 +1,129 @@
+{
+  "api_version": "1.2",
+  "cases": [
+    {
+      "name": "session",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "session_id": "s-1"
+        },
+        "command": "demo_status",
+        "id": "session"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "demo_status",
+        "id": "session",
+        "ok": true,
+        "result": {
+          "manifest": {
+            "artifacts": [
+              {
+                "detail": "",
+                "name": "customer",
+                "row_count": 40,
+                "target": "synthetic"
+              },
+              {
+                "detail": "",
+                "name": "order",
+                "row_count": 1200,
+                "target": "synthetic"
+              }
+            ],
+            "error": null,
+            "fabric_run_id": null,
+            "finished_at": "<any>",
+            "metrics": {},
+            "mode": "inference",
+            "notebook_item_id": null,
+            "params": {},
+            "scale_mode": null,
+            "scenario": "retail",
+            "session_id": "<any>",
+            "started_at": "<any>",
+            "success": true,
+            "workspace_id": null
+          },
+          "session_id": "<any>"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-session",
+      "request": {
+        "api_version": "1.2",
+        "args": {
+          "session_id": "ghost"
+        },
+        "command": "demo_status",
+        "id": "unknown-session"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "demo_status",
+        "error": {
+          "code": "input.invalid_value",
+          "group": "input",
+          "hint": null,
+          "message": "no session 'ghost' found in ${DIR}/shape-home/sessions"
+        },
+        "id": "unknown-session",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "needs-a-session",
+      "request": {
+        "api_version": "1.0",
+        "args": {},
+        "command": "demo_status",
+        "id": "needs-a-session"
+      },
+      "response": {
+        "api_version": "1.2",
+        "command": "demo_status",
+        "error": {
+          "code": "usage.missing_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "demo_status needs the argument 'session_id'"
+        },
+        "id": "needs-a-session",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "demo_status",
+  "format": "shape-bridge-vectors",
+  "sessions": {
+    "s-1": {
+      "artifacts": [
+        {
+          "detail": "",
+          "name": "customer",
+          "row_count": 40,
+          "target": "synthetic"
+        },
+        {
+          "detail": "",
+          "name": "order",
+          "row_count": 1200,
+          "target": "synthetic"
+        }
+      ],
+      "finished_at": "2026-01-01T00:00:01",
+      "mode": "inference",
+      "scenario": "retail",
+      "session_id": "s-1",
+      "started_at": "2026-01-01T00:00:00",
+      "success": true
+    }
+  },
+  "version": 1
+}

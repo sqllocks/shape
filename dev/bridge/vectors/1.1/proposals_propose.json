@@ -1,0 +1,119 @@
+{
+  "api_version": "1.1",
+  "cases": [
+    {
+      "name": "shop",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "data": [
+            "${DIR}/shop"
+          ],
+          "decisions": "${DIR}/decisions.json",
+          "profile": "${DIR}/shop.shape"
+        },
+        "command": "proposals_propose",
+        "id": "shop"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "proposals_propose",
+        "id": "shop",
+        "ok": true,
+        "result": {
+          "added": 5,
+          "auto_accepted": [],
+          "decisions": "${DIR}/decisions.json",
+          "proposal_ids": [
+            "pii:customers.email",
+            "relationship:orders.customer_id->customers.customer_id",
+            "semantic:customers.email",
+            "pii:customers.full_name",
+            "semantic:customers.full_name"
+          ],
+          "proposals": 5,
+          "skipped": [],
+          "skipped_rejected": [],
+          "unchanged": 0,
+          "updated": 0,
+          "withdrawn": 0
+        },
+        "warnings": [
+          {
+            "code": "artifact_not_verified",
+            "message": "${DIR}/shop.shape is not signed: its origin is not verified (check it with --verify PUBKEY)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "missing-profile",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "decisions": "${DIR}/decisions.json",
+          "profile": "${DIR}/none.shape"
+        },
+        "command": "proposals_propose",
+        "id": "missing-profile"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "proposals_propose",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "file not found: ${DIR}/none.shape"
+        },
+        "id": "missing-profile",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-kind",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "decisions": "${DIR}/decisions.json",
+          "kinds": [
+            "mystery"
+          ],
+          "profile": "${DIR}/shop.shape"
+        },
+        "command": "proposals_propose",
+        "id": "unknown-kind"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "proposals_propose",
+        "error": {
+          "code": "usage.invalid_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "argument 'kinds' may only hold relationship, pii, semantic, got 'mystery'"
+        },
+        "id": "unknown-kind",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "proposals_propose",
+  "format": "shape-bridge-vectors",
+  "setup": [
+    {
+      "api_version": "1.1",
+      "args": {
+        "dataset": true,
+        "output": "${DIR}/shop.shape",
+        "source": "${DIR}/shop"
+      },
+      "command": "profile",
+      "id": "setup"
+    }
+  ],
+  "version": 1
+}

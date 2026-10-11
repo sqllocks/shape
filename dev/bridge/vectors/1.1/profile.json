@@ -1,0 +1,132 @@
+{
+  "api_version": "1.1",
+  "cases": [
+    {
+      "name": "a-csv",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "output": "${DIR}/a.shape",
+          "source": "${DIR}/a.csv"
+        },
+        "command": "profile",
+        "id": "a-csv"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "profile",
+        "id": "a-csv",
+        "ok": true,
+        "result": {
+          "content_id": "<any>",
+          "name": "a",
+          "path": "${DIR}/a.shape",
+          "summary": "<any>",
+          "tables": {
+            "a": {
+              "columns": 4,
+              "rows": 40
+            }
+          }
+        },
+        "warnings": [
+          {
+            "code": "profile_file_holds_values",
+            "message": "${DIR}/a.shape is the full profile: it holds real values (value counts and extremes); keep it private or share a safe profile"
+          }
+        ]
+      }
+    },
+    {
+      "name": "missing-source",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "output": "${DIR}/m.shape",
+          "source": "${DIR}/missing.csv"
+        },
+        "command": "profile",
+        "id": "missing-source"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "profile",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "file not found: ${DIR}/missing.csv"
+        },
+        "id": "missing-source",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "source-name",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "output": "${DIR}/orders.shape",
+          "project": "${DIR}/shape.yml",
+          "source": "orders"
+        },
+        "command": "profile",
+        "id": "source-name"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "profile",
+        "id": "source-name",
+        "ok": true,
+        "result": {
+          "content_id": "<any>",
+          "name": "orders",
+          "path": "${DIR}/orders.shape",
+          "summary": "<any>",
+          "tables": {
+            "orders": {
+              "columns": 4,
+              "rows": 40
+            }
+          }
+        },
+        "warnings": [
+          {
+            "code": "profile_file_holds_values",
+            "message": "${DIR}/orders.shape is the full profile: it holds real values (value counts and extremes); keep it private or share a safe profile"
+          }
+        ]
+      }
+    },
+    {
+      "name": "bad-project",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "output": "${DIR}/o.shape",
+          "project": "${DIR}/none.yml",
+          "source": "orders"
+        },
+        "command": "profile",
+        "id": "bad-project"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "profile",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "file not found: ${DIR}/none.yml"
+        },
+        "id": "bad-project",
+        "ok": false,
+        "warnings": []
+      }
+    }
+  ],
+  "command": "profile",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

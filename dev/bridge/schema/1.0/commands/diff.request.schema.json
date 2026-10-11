@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "api_version": {
+      "pattern": "^(0|[1-9][0-9]{0,3})\\.(0|[1-9][0-9]{0,3})$",
+      "type": "string"
+    },
+    "args": {
+      "additionalProperties": false,
+      "properties": {
+        "after": {
+          "description": "the current .shape profile",
+          "type": "string"
+        },
+        "before": {
+          "description": "the baseline .shape profile",
+          "type": "string"
+        },
+        "column_thresholds": {
+          "description": "column name to {metric: threshold}",
+          "type": "object"
+        },
+        "ignore_columns": {
+          "description": "columns to leave out",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "only_columns": {
+          "description": "compare only these columns",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "policy": {
+          "description": "a named drift policy",
+          "type": "string"
+        },
+        "thresholds": {
+          "description": "metric name to threshold, as for `shape diff --threshold`",
+          "type": "object"
+        }
+      },
+      "required": [
+        "before",
+        "after"
+      ],
+      "type": "object"
+    },
+    "command": {
+      "const": "diff"
+    },
+    "id": {
+      "maxLength": 128,
+      "type": [
+        "string",
+        "integer",
+        "null"
+      ]
+    },
+    "options": {
+      "additionalProperties": false,
+      "properties": {
+        "async": {
+          "default": false,
+          "description": "for a command that can run as a job: return a job id at once and run in the background",
+          "type": "boolean"
+        },
+        "include_raw_values": {
+          "default": false,
+          "description": "return raw values (minimum, maximum, category values, offending values) even for classified columns; off by default",
+          "type": "boolean"
+        },
+        "max_inline_bytes": {
+          "default": 262144,
+          "description": "a result part larger than this is written to a file and returned as a reference",
+          "minimum": 1024,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "command",
+    "args"
+  ],
+  "title": "diff request",
+  "type": "object",
+  "x-api-version": "1.0"
+}

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "errors": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "location": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "location",
+          "message"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "valid": {
+      "type": "boolean"
+    },
+    "warnings": {
+      "items": {
+        "additionalProperties": true,
+        "properties": {
+          "location": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "location",
+          "message"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "valid",
+    "errors"
+  ],
+  "title": "contract_validate result",
+  "type": "object",
+  "x-api-version": "1.1",
+  "x-since": "1.1"
+}

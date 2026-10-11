@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    {
+      "additionalProperties": true,
+      "properties": {
+        "cancellable": {
+          "type": "boolean"
+        },
+        "command": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "group": {
+                  "type": "string"
+                },
+                "hint": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "group",
+                "message",
+                "hint"
+              ],
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "job_id": {
+          "type": "string"
+        },
+        "progress": {
+          "additionalProperties": {},
+          "type": "object"
+        },
+        "result": {},
+        "status": {
+          "enum": [
+            "running",
+            "submitted",
+            "succeeded",
+            "failed",
+            "cancelled",
+            "interrupted"
+          ]
+        },
+        "updated_at": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "job_id",
+        "command",
+        "status",
+        "created_at",
+        "updated_at",
+        "progress",
+        "result",
+        "error",
+        "cancellable"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": true,
+      "properties": {
+        "cancelled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "cancelled"
+      ],
+      "type": "object"
+    }
+  ],
+  "title": "job_cancel result",
+  "x-api-version": "1.2",
+  "x-since": "1.0"
+}

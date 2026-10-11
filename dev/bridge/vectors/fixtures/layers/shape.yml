@@ -1,0 +1,15 @@
+format: shape-project
+version: 1
+sources:
+  raw:
+    path: raw.csv
+    baseline:
+      kind: previous_run
+      registry: reg
+      name: layer_raw
+  clean:
+    path: clean.csv
+    baseline:
+      kind: previous_run
+      registry: reg
+      name: layer_clean

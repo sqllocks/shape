@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "content_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string"
+    },
+    "provenance": {
+      "additionalProperties": {},
+      "type": "object"
+    },
+    "summary": {
+      "anyOf": [
+        {
+          "additionalProperties": {},
+          "type": "object"
+        },
+        {
+          "properties": {
+            "bytes": {
+              "type": "integer"
+            },
+            "content_id": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "spilled": {
+              "const": true
+            }
+          },
+          "required": [
+            "spilled",
+            "content_id",
+            "path",
+            "bytes"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "tables": {
+      "additionalProperties": {
+        "additionalProperties": true,
+        "properties": {
+          "columns": {
+            "type": "integer"
+          },
+          "rows": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rows",
+          "columns"
+        ],
+        "type": "object"
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "path",
+    "content_id",
+    "name",
+    "tables",
+    "summary"
+  ],
+  "title": "profile result",
+  "type": "object",
+  "x-api-version": "1.0"
+}

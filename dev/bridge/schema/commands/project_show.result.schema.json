@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "file": {
+      "type": "string"
+    },
+    "format": {
+      "type": "string"
+    },
+    "gates": {
+      "additionalProperties": {
+        "enum": [
+          "observe",
+          "enforce"
+        ]
+      },
+      "type": "object"
+    },
+    "name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sources": {
+      "additionalProperties": {
+        "additionalProperties": true,
+        "properties": {
+          "baseline": {
+            "anyOf": [
+              {
+                "additionalProperties": {},
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contract": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dataset": {
+            "type": "boolean"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "dataset",
+          "contract",
+          "baseline"
+        ],
+        "type": "object"
+      },
+      "type": "object"
+    },
+    "version": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "file",
+    "format",
+    "version",
+    "name",
+    "sources",
+    "gates"
+  ],
+  "title": "project_show result",
+  "type": "object",
+  "x-api-version": "1.2",
+  "x-since": "1.1"
+}

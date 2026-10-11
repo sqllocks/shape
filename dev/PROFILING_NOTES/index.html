@@ -1,0 +1,7080 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Shape as Code — a portable, executable description of how data behaves.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.shapedata.ai/dev/PROFILING_NOTES/">
+      
+      
+        <link rel="prev" href="../SOURCES/">
+      
+      
+        <link rel="next" href="../PROFILE_MERGE/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/brand/shape-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Profiling notes - Shape by SQLLocks</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../assets/stylesheets/brand.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+
+<link rel="alternate" type="text/plain" href="../llms.txt" title="Documentation text index">
+<script src="../assets/javascripts/mermaid.min.js"></script>
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#profiling-notes-inputs-odd-values-and-size" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a class="md-header__button md-logo" data-md-component="logo" href=".." aria-label="Shape documentation home">
+      <img class="shape-logo-light" src="../assets/brand/shape-logo.svg" alt="Shape">
+<img class="shape-logo-dark" src="../assets/brand/shape-logo-white.svg" alt="Shape">
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Open navigation">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic"><span class="md-ellipsis">Documentation</span></div>
+        <div class="md-header__topic" data-md-component="header-topic"><span class="md-ellipsis">Profiling notes</span></div>
+      </div>
+    </div>
+    <a class="shape-website-link" href="https://shapedata.ai/">shapedata.ai</a>
+    
+      <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <label class="md-header__button md-icon" for="__search" aria-label="Search documentation">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    <div class="md-header__source"><a href="https://github.com/sqllocks/shape" class="md-source" title="Source repository">sqllocks/shape</a></div>
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Shape by SQLLocks" class="md-nav__button md-logo" aria-label="Shape by SQLLocks" data-md-component="logo">
+      <img class="shape-logo-light" src="../assets/brand/shape-logo.svg" alt="Shape">
+<img class="shape-logo-dark" src="../assets/brand/shape-logo-white.svg" alt="Shape">
+    </a>
+    Shape by SQLLocks
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/sqllocks/shape" class="md-source" title="Source repository">sqllocks/shape</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Start here
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Start here
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../INSTALL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONCEPTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GLOSSARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LEARNING_PATHS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Learning paths
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../QUICKSTART/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TUTORIAL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Starter tutorials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Starter tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Starter tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/01-first-profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1 Your first profile
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/02-read-report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2 Read the report
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/03-drift/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3 Commit a shape and catch drift
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/04-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4 Write a contract and check it
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/05-generate-profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5 Generate dev data from a profile
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/06-domain-duckdb/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6 Generate a domain into DuckDB
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Understand your results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Understand your results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../READ_REPORT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTML report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ANATOMY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Anatomy of a shape
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DRIFT_RED/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    When drift goes red
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Profiling
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SOURCES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling notes
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#run-the-local-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the local examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#csv-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CSV files
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#identifiers-are-not-numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Identifiers are not numbers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nan-infinity-and-single-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NaN, infinity and single values
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decimals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decimals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#time-zones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Time zones
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#personal-data-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Personal-data patterns
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Size
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Size">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#input-budget-for-untrusted-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input budget for untrusted files
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#joint-analysis-and-placeholders" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Joint analysis and placeholders
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#univariate-depth-model-selection-zeros-heaping-benford-tail-index" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Univariate depth: model selection, zeros, heaping, Benford, tail index
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Univariate depth: model selection, zeros, heaping, Benford, tail index">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#model-selection-distribution_candidates-distribution_by_bic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model selection: distribution_candidates, distribution_by_bic
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#zeros-zero_share-zero_inflation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Zeros: zero_share, zero_inflation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#heaping-heaping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Heaping: heaping
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benford-benford" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benford: benford
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tail-index-tail_index" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tail index: tail_index
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mixtures-and-seasonality-mixture-seasonality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mixtures and seasonality: mixture, seasonality
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mixtures and seasonality: mixture, seasonality">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gaussian-mixture-mixture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gaussian mixture: mixture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#seasonality-seasonality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Seasonality: seasonality
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sampling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Sampling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-sampling-record" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The sampling record
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adequacy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adequacy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#internal-samples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Internal samples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#type-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type inference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Type inference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shape-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shape types
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-local-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete local run
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Complete local run">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 1
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 3
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 4
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 11
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROFILE_MERGE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mergeable profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROFILE_REGISTRY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profile registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FINGERPRINT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fingerprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../JOINT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Joint distributions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FAIRNESS_AND_SKEW/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Slices and skew
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EXPLAIN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explain and notebooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DICTIONARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data dictionary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SCORECARD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scorecards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RESOLVE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Duplicate detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DETECTIVE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data detective packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REFERENCE_PACKS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference packs and validators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DATASET_LIBRARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Public dataset library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts, checks and drift
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contracts, checks and drift
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DRIFT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drift
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRACTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONSUMER_CONTRACTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Consumer contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CANARIES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canaries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment parity
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DRIFT_REPORT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drift report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../VERIFY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verifying data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRACT_EMIT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Emitting a contract
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RULES_TESTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing your rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TESTING_WITH_SHAPE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing with Shape
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROPOSALS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proposals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PLANNED_CHANGES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planned changes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Generation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DESIGN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_ENGINE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_STRATEGIES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_CALENDARS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calendars and timestamps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_SPEC/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation spec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_STABILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_KERNEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation kernel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LOCALES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Locales
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SCENARIO_PACKS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scenario packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SCENARIO_LIBRARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scenario library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../IMPORTERS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema importers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CHAOS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chaos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GAMEDAY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Game days
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FAILURE_MODES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Failure modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../INCREMENTAL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Incremental data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TRANSFORMS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transforms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SIMULATION_FILES_EVENTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulating files and events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SCALE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generating at scale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FIDELITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fidelity report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FIDELITY_TIERS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fidelity tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REPORT_CARD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report card
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outputs and integration
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Outputs and integration
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SINKS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sinks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LANDING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Landing layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EMIT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Emitting events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FABRIC_MIRROR/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric mirroring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EXCEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Excel workbooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DBT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dbt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BRIDGE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON bridge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DEMO/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Demos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTAINER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Container image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FABRIC_PLATFORM/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric platform inventory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CI/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shape in CI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PR_BOT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pull request check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../NOTIFICATIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Webhook notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Projects and history
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Projects and history
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROJECT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project file
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REGISTRY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../HISTORY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    History tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REPRODUCIBILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproducibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Privacy and trust
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Privacy and trust
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PRIVACY_MODEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Privacy model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../MASK/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Masking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../VAULT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Value vault
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SHARE_BUNDLE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Safe-to-share bundle
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SIGNING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../THREAT_MODEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SECURITY_SPECIFICATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugins
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Plugins
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/builtins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Built-in plugins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/authoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Writing a plugin
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/api-v1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugin API v1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/host/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugin host
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/stability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stability promise
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/trust-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trust model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/cloud-sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cloud sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/fabric-auth/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric sign-in
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/fabric-commands/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric commands
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/fabric-writers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric writers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/sqlserver/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQL Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/streaming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/simulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/behavior/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Behavior models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/healthcare-codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Healthcare code sets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/healthcare-standards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Healthcare standards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/integrations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integrations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CLI/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command line
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI reference (generated)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CLI_STABILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EXIT_CODES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exit codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API_STABILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance (generated)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_12_8" id="__nav_12_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specifications
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specifications
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/SHAPE_MODEL_V2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shape model v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/SHAPE_2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Normative contract v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/SHAPE_ARTIFACT_SPEC/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/STATE_AND_COMPATIBILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State and compatibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/STREAMING_SEMANTICS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming semantics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../MODELS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API generated
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Project
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PRODUCT_ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RELEASE_POLICY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release policy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RELEASE_CHECKLIST/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release checklist
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../V1_DONE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definition of done for 1.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Help and trust
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Help and trust
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TROUBLESHOOTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FAQ/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../KNOWN_LIMITATIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Known limitations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../WHAT_LEAVES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    What leaves my machine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LICENSING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Licensing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SECURITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../databases/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platforms
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_15" id="__nav_15_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Platforms
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/duckdb/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DuckDB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/postgresql/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PostgreSQL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/mysql/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/snowflake/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Snowflake
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/databricks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Databricks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../VSCODE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VS Code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GITHUB_ACTION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GitHub Action
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16" >
+        
+          
+          <label class="md-nav__link" for="__nav_16" id="__nav_16_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Community
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Community
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/DOCS_STYLE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs style
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/EXAMPLES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tested examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GOVERNANCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CODE_OF_CONDUCT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code of conduct
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../POSTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Posts and videos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#run-the-local-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the local examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#csv-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CSV files
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#identifiers-are-not-numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Identifiers are not numbers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nan-infinity-and-single-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NaN, infinity and single values
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decimals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decimals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#time-zones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Time zones
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#personal-data-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Personal-data patterns
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Size
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Size">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#input-budget-for-untrusted-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Input budget for untrusted files
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#joint-analysis-and-placeholders" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Joint analysis and placeholders
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#univariate-depth-model-selection-zeros-heaping-benford-tail-index" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Univariate depth: model selection, zeros, heaping, Benford, tail index
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Univariate depth: model selection, zeros, heaping, Benford, tail index">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#model-selection-distribution_candidates-distribution_by_bic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model selection: distribution_candidates, distribution_by_bic
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#zeros-zero_share-zero_inflation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Zeros: zero_share, zero_inflation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#heaping-heaping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Heaping: heaping
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benford-benford" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benford: benford
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tail-index-tail_index" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tail index: tail_index
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mixtures-and-seasonality-mixture-seasonality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mixtures and seasonality: mixture, seasonality
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mixtures and seasonality: mixture, seasonality">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gaussian-mixture-mixture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gaussian mixture: mixture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#seasonality-seasonality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Seasonality: seasonality
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sampling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sampling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Sampling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-sampling-record" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The sampling record
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adequacy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adequacy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#internal-samples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Internal samples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#type-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type inference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Type inference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shape-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        shape types
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-local-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete local run
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Complete local run">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 1
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 3
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 4
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 11
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="profiling-notes-inputs-odd-values-and-size">Profiling notes: inputs, odd values and size<a class="headerlink" href="#profiling-notes-inputs-odd-values-and-size" title="Permanent link">&para;</a></h1>
+<p>Status: available.</p>
+<h2 id="run-the-local-examples">Run the local examples<a class="headerlink" href="#run-the-local-examples" title="Permanent link">&para;</a></h2>
+<p>The examples below use disposable local files from this checkout. The <a href="../contributing/EXAMPLES/">example test environment</a> sets <code>SHAPE_DOCS_REPO</code>, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.</p>
+<!-- example: 999 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>python<span class="w"> </span><span class="s2">"</span><span class="nv">$SHAPE_DOCS_REPO</span><span class="s2">/scripts/docs_example_setup.py"</span><span class="w"> </span>PROFILING_NOTES
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>Prepared local fixtures for PROFILING_NOTES
+</code></pre></div>
+</details>
+<p>What <code>shape profile</code> (and <code>shape.profile</code>) does with CSV files, non-finite numbers, decimals, time zones, large
+inputs, sampling and column types. Each statement here has a test in <code>tests/profile/test_profile_issues.py</code> or
+<code>tests/profile/test_audit_profile.py</code>; the sections on sampling and type inference are tested in
+<code>tests/profile/test_sampling.py</code>, <code>tests/profile/test_type_inference.py</code>, <code>tests/cli/test_profile_sampling_cli.py</code> and
+<code>tests/cli/test_types_command.py</code>.</p>
+<h2 id="csv-files">CSV files<a class="headerlink" href="#csv-files" title="Permanent link">&para;</a></h2>
+<p>The delimiter is sniffed from the first 100 rows: comma, semicolon, tab or pipe, whichever splits every row into the
+same number (two or more) of fields (quotes are respected, and a comma wins when it qualifies). Set it when sniffing
+guesses wrong, along with the other reader options:</p>
+<p><a href="#local-example-0">Run this example</a>.</p>
+<div class="highlight"><pre><span></span><code><span class="n">shape</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span><span class="s2">"export.csv"</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">";"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"latin-1"</span><span class="p">,</span> <span class="n">quotechar</span><span class="o">=</span><span class="s2">"'"</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<p>A CSV that still comes out as one column whose name contains <code>;</code>, tab, <code>|</code> or <code>,</code> gives a warning that names the
+delimiter to pass. <code>shape.io.CsvOptions</code> (the fused engine and <code>stream-profile</code>) has the same <code>delimiter</code>, <code>encoding</code> and
+<code>quotechar</code>, and sniffs when <code>delimiter</code> is not set.</p>
+<p>Shapes of file that are read rather than refused:</p>
+<ul>
+<li>A file whose first data row has one field more than the header (a trailing delimiter on every row, for example) has
+  its first field read as a row label, not as a column: the header names the remaining fields. A file where only a later
+  row has the extra field is refused.</li>
+<li>A file with a header and no rows is a table of no rows, with text columns.</li>
+<li>Whole numbers of up to 76 digits are read (as <code>dtype: float</code> past 64 bits); wider ones are refused naming the column.</li>
+</ul>
+<p>Clear errors: a file that is not UTF-8 (or not in the <code>encoding</code> given) names the file and says to pass <code>encoding=</code> /
+<code>--encoding</code>; an empty file names the file; a <code>quotechar</code> or <code>delimiter</code> longer than one character is a <code>ValueError</code>.
+A path may be a <code>file://</code> URL or start with <code>~</code>.</p>
+<p><code>PROFILE_THREADS</code> sets the profiler's thread count (a positive integer; <code>0</code> or unset: every core). With <code>1</code>, pyarrow's
+process-wide thread pools hold one thread while the profile runs and get their sizes back when it returns.</p>
+<h2 id="identifiers-are-not-numbers">Identifiers are not numbers<a class="headerlink" href="#identifiers-are-not-numbers" title="Permanent link">&para;</a></h2>
+<p>A CSV column of ZIP codes, NDCs, NPIs or member numbers is digits, and plain type inference reads it as an integer:
+<code>02134</code> becomes 2134 and the placeholder <code>00000</code> becomes 0. Shape reads an integer column as <strong>text</strong> when</p>
+<ul>
+<li>some value has a leading zero (two or more digits, the first <code>0</code>), whatever the column is called, or</li>
+<li>every value is digits of one width of five or more <strong>and</strong> the column name says it is an identifier (<code>zip</code>, <code>postal</code>,
+  <code>npi</code>, <code>ndc</code>, <code>mrn</code>, <code>member_id</code>, <code>patient_number</code>, <code>code</code>, ...).</li>
+</ul>
+<p>A column that only looks like an identifier (a fixed width of five or more digits without such a name, or a name such as
+<code>zip</code> or <code>phone</code> over values of mixed width) stays an integer and <code>shape profile</code> warns, naming the columns and the option
+that keeps them as text. The options:</p>
+<p><a href="#local-example-2">Run this example</a>.</p>
+<p><code>shape.profile(path, string_columns=["zip"], types={"amount": "float"}, infer_types="off")</code> is the same from Python, and
+<code>shape.io.CsvOptions(string_columns=, column_types=, infer_types=)</code> for the readers. Types are <code>string</code>, <code>integer</code>, <code>float</code>,
+<code>boolean</code>, <code>date</code>, <code>datetime</code> (or an Arrow type name). A text column the reader fixed stays text: its digits are not
+re-typed as numbers by the profiler's own detectors, and <code>value_counts_ext</code> and the minimum show <code>00000</code>. The safe profile describes the column as text of a fixed length (no mean, bounds or quantiles of a "ZIP number").
+With <code>--infer-types off</code> the profiler's detectors type the text (dates, booleans, numbers), except that digits with
+leading zeros stay text.</p>
+<p><code>shape learn</code> and <code>shape generate --from</code> turn a column of digit text of one width into a <code>{digits:N}</code> pattern (random
+digits, zeros included) or, when the profile lists every value, a value set whose labels stay text, so generated ZIPs
+and NPIs keep their width and leading zeros. Writers quote text, and every reader in Shape applies the same rule, so a
+generated CSV reads back as the same text.</p>
+<h2 id="nan-infinity-and-single-values">NaN, infinity and single values<a class="headerlink" href="#nan-infinity-and-single-values" title="Permanent link">&para;</a></h2>
+<p>A float column keeps three things apart: nulls (<code>null_count</code>), NaN (<code>nan_count</code>) and +/- infinity (<code>inf_count</code>). The last
+two are left out of cardinality, min, max, mean, standard deviation, quantiles and the distribution fit, and the profile
+only carries them when they are not zero. <code>std</code> is <code>null</code> for a column with fewer than two values.</p>
+<h2 id="decimals">Decimals<a class="headerlink" href="#decimals" title="Permanent link">&para;</a></h2>
+<p>A decimal column is reported with <code>dtype: float</code> (the profile's dtype vocabulary has no decimal), and <code>precision</code> and
+<code>scale</code> beside it, as declared by the source (<code>decimal128(10, 2)</code> gives 10 and 2). The fields are <code>null</code> for every other
+column.</p>
+<h2 id="time-zones">Time zones<a class="headerlink" href="#time-zones" title="Permanent link">&para;</a></h2>
+<p>A timestamp column with a time zone is profiled on its wall clock, with the UTC offset kept in the min, max and value
+keys. UTC and fixed offsets (<code>+05:30</code>) need no time-zone database. A named zone (<code>America/New_York</code>) does: on a system
+without one (Windows without the <code>tzdata</code> package) the profile stops with an error that names the zone and says
+<code>pip install tzdata</code>. A zone name the database does not know (<code>Mars/Base</code>) is reported as an unknown time zone.</p>
+<h2 id="personal-data-patterns">Personal-data patterns<a class="headerlink" href="#personal-data-patterns" title="Permanent link">&para;</a></h2>
+<p>For every text column the profile records <code>pattern_rates</code> (the share of non-null values that are wholly an SSN, email
+address, IP address or IBAN, and of the detected <code>pattern</code>) and <code>pattern_contains_rates</code> (the share that contain an SSN, an
+email address or a Luhn-valid card number inside longer text). Both are measured on every distinct value, up to 50,000 per
+column and an evenly spaced sample of them beyond that, so 1% sparse values show. <code>pattern</code> itself is still one label for
+a column that is at least 90% one pattern. <code>shape profile safe</code> keeps a column pattern-only when any of those families
+reaches 0.1% (<code>SafeConfig.pii_pattern_floor</code>). See <a href="../PRIVACY_MODEL/">PRIVACY_MODEL.md</a>.</p>
+<h2 id="size">Size<a class="headerlink" href="#size" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A text column of unique long documents</td>
+<td>1.8 KB for the profile of 2,000 documents of 20 KB each (the values are not stored: a text column with more than 500 distinct values, at least 95% of the non-null count, lists none)</td>
+</tr>
+<tr>
+<td>A stored text value (count key, minimum, maximum)</td>
+<td>cut to 256 characters, with an ellipsis</td>
+</tr>
+<tr>
+<td><code>.shape</code>, 1,000 distinct integer values per column</td>
+<td>about 23 KB per column (<code>enum_values</code> plus the top 500 values)</td>
+</tr>
+<tr>
+<td><code>shape profile safe</code> JSON</td>
+<td>about 2.2 KB per column, 0.9 KB per column with <code>--compact</code> (integer columns with 1,000 distinct values)</td>
+</tr>
+<tr>
+<td>Correlation matrix</td>
+<td>grows with the square of the numeric columns, so past 256 of them each column keeps its 25 strongest partners (a pair stays when either column keeps it) and the table is marked <code>correlation_truncated</code></td>
+</tr>
+</tbody>
+</table>
+<p>For a profile kept per run, write the safe form with <code>--compact</code> (one line, no null fields; it reads back the same) and
+pick the columns with <code>--columns A,B,*_id</code> or <code>--exclude 'raw_*'</code>:</p>
+<p><a href="#local-example-3">Run this example</a>.</p>
+<h3 id="input-budget-for-untrusted-files">Input budget for untrusted files<a class="headerlink" href="#input-budget-for-untrusted-files" title="Permanent link">&para;</a></h3>
+<p>A Parquet file of a few kilobytes can declare a hundred million rows and take gigabytes once read.
+Before a Parquet file is read, two optional budgets are checked against its footer (no data page is
+read for the check), summed over the files of one source:</p>
+<ul>
+<li><code>SHAPE_MAX_INPUT_ROWS</code>: the rows the footers declare;</li>
+<li><code>SHAPE_MAX_INPUT_BYTES</code>: the decoded size they imply (rows times the width of each fixed-width
+  column, and for string, binary and nested columns at least their uncompressed bytes and offsets).</li>
+</ul>
+<p>A file over either budget is refused with an error that names the variable. Unset or blank, nothing
+is checked; anything but a positive integer is an error. The decoded size of a dictionary-encoded
+string column depends on its values, which the footer does not hold, and compressed CSV or JSONL
+files declare no size, so for those the row budget (Parquet) or the process memory limit is the
+control. Set both budgets, and a memory limit, when profiling files you did not produce.</p>
+<h2 id="joint-analysis-and-placeholders">Joint analysis and placeholders<a class="headerlink" href="#joint-analysis-and-placeholders" title="Permanent link">&para;</a></h2>
+<p>Beside the per-column statistics, <code>shape profile</code> records what holds across columns: placeholder
+values (<code>00000</code>, <code>-1</code>, <code>N/A</code>, <code>1900-01-01</code>, ...), approximate functional dependencies, two-column
+keys, association measures, conditional tables and the share of implausible rows (<code>docs/JOINT.md</code>).
+The cross-column analysis reads a deterministic sample (at most 20,000 rows for a table that
+small, 5,000 for a larger one) and a bounded number of columns and pairs, so its cost does not grow
+with the table; it is on for a single table and off for a dataset (several tables), <code>--joint</code> /
+<code>joint=True</code> turn it on and <code>--no-joint</code> / <code>joint=False</code> off, and <code>SHAPE_PROFILE_JOINT=0|1</code> decides when
+the call does not. <code>--reference-pair COLS=REFERENCE</code> checks
+that columns hold real combinations against a reference file.</p>
+<h2 id="univariate-depth-model-selection-zeros-heaping-benford-tail-index">Univariate depth: model selection, zeros, heaping, Benford, tail index<a class="headerlink" href="#univariate-depth-model-selection-zeros-heaping-benford-tail-index" title="Permanent link">&para;</a></h2>
+<p>The fields below are <strong>opt-in</strong>: <code>shape profile --univariate</code> (<code>shape.profile(...,
+univariate=True)</code>) computes them; without it a profile carries none of them and is otherwise the
+same. They add Python work for every numeric column, more than the benchmark gate of the default
+profile allows, so they are not computed by default (the implementation tests).</p>
+<p>With it, every numeric column with at least <strong>20 finite values</strong> (integers, floats, and decimals
+read as numbers) gains the fields below, each only where it applies; a text, boolean or date column gains
+none, and a column with fewer values gains none at all. They are computed once, in Python, over the
+column's values, so <code>SHAPE_KERNEL=rust</code> and <code>python</code> give the same numbers, and they do not need
+scipy. They sit beside <code>distribution</code>, <code>distribution_params</code> and <code>fit_score</code>, which are unchanged
+(the best of normal, uniform, exponential and lognormal by KS statistic on 2,000 values, still what
+generation uses); nothing here feeds generation, contract rules or the share-safe profile (its
+allow-list is unchanged, so none of these fields leave with a safe profile).</p>
+<p><strong>What is read.</strong> The count of zeros, the range, and for a count column the mean and variance read
+every value, in steps of 262,144 values (no copy of the column). The rest reads a deterministic
+sample: at most <strong>50,000</strong> values for heaping, Benford and the tail index, and at most <strong>10,000</strong>
+for model selection. A column at or under a cap is read whole; a longer one is cut into as many runs
+of consecutive rows as the cap (as equal as possible) and one row is drawn at random from each, by
+<code>default_rng(42)</code>, so the sample is the same on every run, every row has the same chance of being
+in it, and a column that repeats with a period cannot line up with it. The caps are well under the
+100,000 values the issue allows because every numeric column pays for them when they are asked for. Cost is bounded in the number of rows: a test
+(<code>tests/profile/test_univariate_profile.py</code>, marked <code>heavy</code>) runs a 10-million-row column in under
+10 s with a peak of temporary memory under 20% of the column's own size.</p>
+<p><code>shape.profile.univariate.univariate_stats(values, integer=...)</code> computes the fields for any array
+of numbers, and <code>describe(column)</code> gives a column's fields as short text lines.</p>
+<h3 id="model-selection-distribution_candidates-distribution_by_bic">Model selection: <code>distribution_candidates</code>, <code>distribution_by_bic</code><a class="headerlink" href="#model-selection-distribution_candidates-distribution_by_bic" title="Permanent link">&para;</a></h3>
+<p>Six families are fitted by maximum likelihood to the model sample (n values), unlike the existing
+fit, which also allows a free location. The lognormal, exponential, gamma and Weibull are fitted
+only when <strong>every</strong> value is positive.</p>
+<table>
+<thead>
+<tr>
+<th>Family</th>
+<th>Parameters (k)</th>
+<th>Fit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>normal</code></td>
+<td><code>mu</code>, <code>sigma</code> (2)</td>
+<td>mean and population standard deviation</td>
+</tr>
+<tr>
+<td><code>lognormal</code></td>
+<td><code>mu</code>, <code>sigma</code> of ln x (2)</td>
+<td>mean and population standard deviation of ln x</td>
+</tr>
+<tr>
+<td><code>exponential</code></td>
+<td><code>scale</code> = mean (1)</td>
+<td>the mean (no location)</td>
+</tr>
+<tr>
+<td><code>uniform</code></td>
+<td><code>low</code>, <code>high</code> (2)</td>
+<td>minimum and maximum</td>
+</tr>
+<tr>
+<td><code>gamma</code></td>
+<td><code>shape</code>, <code>scale</code> (2)</td>
+<td><code>ln k - psi(k) = ln(mean) - mean(ln x)</code> solved by Newton's method, <code>scale = mean / k</code></td>
+</tr>
+<tr>
+<td><code>weibull</code></td>
+<td><code>shape</code>, <code>scale</code> (2)</td>
+<td>the profile likelihood equation in the shape, solved by a bracketed Newton method</td>
+</tr>
+</tbody>
+</table>
+<p>For each family: <code>params</code>, <code>log_likelihood</code>, <code>aic</code> = <code>2k - 2 LL</code>, <code>bic</code> = <code>k ln n - 2 LL</code>, and <code>ks</code>,
+the KS statistic of the model against the sample's empirical CDF. <code>distribution_by_bic</code> is the
+family with the lowest BIC (the first listed on a tie). The difference between two BICs says how
+much better one family is than another: a gap above 10 is strong evidence.</p>
+<p>Not computed (no fields): fewer than 20 finite values, a constant column, and a family whose fit is
+degenerate (a gamma or Weibull shape above 100,000, which is a point mass for practical purposes).
+Selection is by likelihood on the sample, so a heavily rounded or discrete column can favour the
+uniform or a skewed family by accident: read <code>distribution_by_bic</code> with <code>heaping</code> and <code>zero_share</code>.</p>
+<h3 id="zeros-zero_share-zero_inflation">Zeros: <code>zero_share</code>, <code>zero_inflation</code><a class="headerlink" href="#zeros-zero_share-zero_inflation" title="Permanent link">&para;</a></h3>
+<p><code>zero_share</code> is the share of zeros among the finite values, for float columns and for integer
+columns of non-negative values (an integer column with a negative value has neither field).
+<code>zero_inflation</code> is for integer columns of non-negative values only:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">"observed"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.335</span><span class="p">,</span><span class="w"> </span><span class="nt">"poisson_expected"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.122</span><span class="p">,</span><span class="w"> </span><span class="nt">"nb_expected"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.22</span><span class="p">,</span><span class="w"> </span><span class="nt">"inflated"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span>
+</code></pre></div>
+<p><code>poisson_expected</code> is <code>exp(-mean)</code>. <code>nb_expected</code> is the zero probability of a negative binomial
+fitted by moments: with mean m and sample variance v, <code>r = m^2 / (v - m)</code> and
+<code>(r / (r + m))^r</code>; a column whose variance does not exceed its mean has no overdispersion, and its
+negative binomial is its Poisson. <code>inflated</code> is true when the observed share exceeds <strong>both</strong>
+expected shares by more than three standard errors (<code>sqrt(p(1 - p) / n)</code> at that model's own <code>p</code>)
+<strong>and</strong> is at least 0.05. A column of all zeros is not inflated. The test is conservative: the
+overdispersion that zero inflation causes is partly absorbed by the negative binomial.</p>
+<h3 id="heaping-heaping">Heaping: <code>heaping</code><a class="headerlink" href="#heaping-heaping" title="Permanent link">&para;</a></h3>
+<p>Values piled on round numbers (manual entry, estimation) are measured for the units 5, 10, 100
+and 1,000, on the non-zero values of the sample (a zero is a zero, not a round number):</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">"resolution"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"unit"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="nt">"observed_share"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.68</span><span class="p">,</span><span class="w"> </span><span class="nt">"expected_share"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.205</span><span class="p">,</span><span class="w"> </span><span class="nt">"ratio"</span><span class="p">:</span><span class="w"> </span><span class="mf">3.3171</span><span class="p">,</span><span class="w"> </span><span class="nt">"heaped"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span>
+</code></pre></div>
+<ul>
+<li><code>resolution</code> is the coarsest of 0.001, 0.01, 0.1, 1, 5, 10, 100 and 1,000 that every value is a
+  multiple of. A column of whole hundreds has resolution 100 and is <strong>not</strong> heaped on 5, 10 or 100:
+  only a unit above its resolution is tested (here 1,000). A column whose values are on no grid of
+  0.001 or coarser (continuous measurements) has no <code>heaping</code> field.</li>
+<li><code>observed_share</code> is the share of values that are multiples of the unit.</li>
+<li><code>expected_share</code> is the share a column spread evenly over its grid would have: the number of
+  multiples of the unit between the sample's minimum and maximum (zero excluded), over the number of
+  grid points between them. A unit is tested only when the grid has at least 20 points and the
+  range holds at least two multiples of it, so a 1 to 10 rating scale is never "heaped on 5".</li>
+<li><code>ratio</code> is <code>observed_share / expected_share</code>. <code>heaped</code> is true when some unit has a ratio of at
+  least 2 and an observed share of at least 0.1. The reported unit is, among the units that satisfy
+  that, the one with the largest excess <code>observed_share - expected_share</code> (among all tested units
+  when none does), so values heaped on tens report 10, not the 5 and 100 that contain it.</li>
+<li>An integer-valued float column counts as an integer column.</li>
+</ul>
+<p>A skewed column (many small values) can show a ratio above 1 with no manual rounding; the 2 and
+0.1 limits keep that rare, and the field is evidence, not proof.</p>
+<h3 id="benford-benford">Benford: <code>benford</code><a class="headerlink" href="#benford-benford" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">"applicable"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"digits"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.301</span><span class="p">,</span><span class="w"> </span><span class="mf">0.176</span><span class="p">,</span><span class="w"> </span><span class="err">...</span><span class="p">],</span><span class="w"> </span><span class="nt">"mad"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0021</span><span class="p">,</span><span class="w"> </span><span class="nt">"conformity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"close"</span><span class="p">}</span>
+</code></pre></div>
+<p>Computed when the column has <strong>at least 100</strong> finite values, <strong>every value is positive</strong>, and the
+largest is at least <strong>100 times</strong> the smallest (two orders of magnitude); otherwise
+<code>{"applicable": false, "reason": ...}</code> with the reason (<code>fewer than 100 values</code>, <code>contains values
+that are not positive</code>, <code>spans fewer than two orders of magnitude</code>). <code>digits</code> are the shares of the
+first significant digits 1 to 9 in the sample. <code>mad</code> is the mean absolute difference from Benford's
+shares <code>log10(1 + 1/d)</code>, and <code>conformity</code> is Nigrini's class: <code>close</code> below 0.006, <code>acceptable</code> below
+0.012, <code>marginal</code> below 0.015, else <code>nonconformity</code>. Amounts spread over several orders of
+magnitude follow the law; ages, ids, prices set by hand and anything with a fixed range do not, and
+the field then says nothing about fraud. The classes are bands of a noisy statistic: the MAD of 1,000
+values varies by about 0.003.</p>
+<h3 id="tail-index-tail_index">Tail index: <code>tail_index</code><a class="headerlink" href="#tail-index-tail_index" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">"alpha"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.52</span><span class="p">,</span><span class="w"> </span><span class="nt">"k"</span><span class="p">:</span><span class="w"> </span><span class="mi">71</span><span class="p">,</span><span class="w"> </span><span class="nt">"se"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.18</span><span class="p">,</span><span class="w"> </span><span class="nt">"heavy"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span>
+</code></pre></div>
+<p>Computed from the <strong>positive</strong> values of the sample when there are at least <strong>50</strong>. With the values
+sorted, <code>k = max(10, round(sqrt(n)))</code> and <code>X(k+1)</code> the (k+1)-th largest, the Hill estimator is
+<code>alpha = 1 / mean(ln(X(i) / X(k+1)))</code> over the <code>k</code> largest, with standard error <code>alpha / sqrt(k)</code>.
+<code>heavy</code> is true when <code>alpha</code> is below 2 (the variance is infinite). Not computed for fewer than 50
+positive values or when the top values are all equal. The Hill estimator assumes a Pareto-like
+tail, and <code>alpha</code> depends on <code>k</code>: a lognormal or exponential column gets a finite <code>alpha</code> that
+means "tail heavier than normal", not a true power law.</p>
+<p><code>shape diff</code> reports changes in these fields as <code>zero_inflation_change</code>, <code>heaping_change</code>,
+<code>benford_change</code> and <code>tail_change</code> (<code>docs/DRIFT.md</code>). <code>shape show</code> and <code>shape cat</code> print every field, and the <code>--html</code> report states them in each
+column's card (<code>Profile.summary()</code> and <code>--json</code> keep their pinned key set). A profile written before these
+fields existed loads, displays and diffs as before, with the fields absent and the four kinds not
+reported.</p>
+<h2 id="mixtures-and-seasonality-mixture-seasonality">Mixtures and seasonality: <code>mixture</code>, <code>seasonality</code><a class="headerlink" href="#mixtures-and-seasonality-mixture-seasonality" title="Permanent link">&para;</a></h2>
+<p>Two more fields describe a numeric column beyond one family: whether it is a blend of populations
+(<code>mixture</code>) and whether it repeats over time (<code>seasonality</code>). They are part of the opt-in
+univariate depth above (<code>shape profile --univariate</code>, <code>shape.profile(..., univariate=True)</code>). Both are computed in Python over numpy,
+so <code>SHAPE_KERNEL=rust</code> and <code>python</code> give the same numbers. Neither is in the share-safe profile: a
+component mean or a standard deviation is a value, so <code>shape profile safe</code> leaves both out (its
+allow-list is unchanged, and the leak scanner passes a safe profile of a table that has both).
+<code>distribution</code>, <code>distribution_candidates</code> and the other fields are unchanged, and nothing here feeds
+generation. <code>shape diff</code> reports changes as <code>mixture_change</code> and <code>seasonality_change</code>
+(<code>docs/DRIFT.md</code>).</p>
+<h3 id="gaussian-mixture-mixture">Gaussian mixture: <code>mixture</code><a class="headerlink" href="#gaussian-mixture-mixture" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">"k"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nt">"components"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="nt">"mean"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="nt">"sd"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="nt">"weight"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.7</span><span class="p">,</span><span class="w"> </span><span class="nt">"mean"</span><span class="p">:</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span><span class="w"> </span><span class="nt">"sd"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">}],</span>
+<span class="w"> </span><span class="nt">"bic_by_k"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"1"</span><span class="p">:</span><span class="w"> </span><span class="mf">43083.9</span><span class="p">,</span><span class="w"> </span><span class="nt">"2"</span><span class="p">:</span><span class="w"> </span><span class="mf">39350.2</span><span class="p">,</span><span class="w"> </span><span class="nt">"3"</span><span class="p">:</span><span class="w"> </span><span class="mf">39373.3</span><span class="p">,</span><span class="w"> </span><span class="nt">"4"</span><span class="p">:</span><span class="w"> </span><span class="mf">39399.0</span><span class="p">},</span><span class="w"> </span><span class="nt">"multimodal"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span>
+</code></pre></div>
+<p><strong>Minimum sample:</strong> at least <strong>200 finite values</strong>; a constant column has none. <strong>Sample:</strong> a column
+of more than <strong>4,000</strong> values is read through the same deterministic stratified sample as the rest
+of the univariate depth (<code>default_rng(42)</code>, one row per run of consecutive rows, so the same on every
+run); a shorter one is read whole. The cap is under the 100,000 values the specification allows
+because EM runs four times per numeric column on every profile.</p>
+<p><strong>Fit.</strong> For each <code>k</code> from 1 to 4 a mixture of <code>k</code> normal densities is fitted by expectation
+maximisation on the sample, standardised first. The start is deterministic and quantile-based: the
+sorted sample is cut into <code>k</code> runs of equal size, and each run's share, mean and standard deviation
+are the starting weight, mean and spread (no random state). Each iteration computes the
+responsibilities <code>r_ij = w_j N(x_i; mu_j, sd_j) / sum_l w_l N(x_i; mu_l, sd_l)</code> and sets
+<code>w_j = mean_i r_ij</code>, <code>mu_j = sum_i r_ij x_i / sum_i r_ij</code> and <code>sd_j^2 = sum_i r_ij (x_i - mu_j)^2 /
+sum_i r_ij</code>. A standard deviation never falls below 0.1% of the column's (so a spike of repeated
+values does not make the likelihood infinite). EM stops after <strong>200 iterations</strong>, or when the mean
+log-likelihood per value improves by less than <strong>1e-6</strong>. The model has <code>3k - 1</code> parameters and
+<code>BIC = (3k - 1) ln n - 2 LL</code>, with <code>LL</code> the log-likelihood of the values on their own scale; <code>bic_by_k</code>
+lists the four, and <code>k</code> is the lowest (the smaller <code>k</code> on a tie).</p>
+<p><code>components</code> are in order of mean, each with its <code>weight</code>, <code>mean</code> and <code>sd</code>. <code>multimodal</code> is true
+when <code>k &gt;= 2</code> and every component's weight is at least <strong>0.05</strong>. It says "BIC prefers several
+components, none of them marginal", not that the density has several peaks: a skewed column
+(a log-normal, an exponential) is often fitted with three or four overlapping components and reads
+<code>multimodal</code>. Read it with <code>distribution_by_bic</code> and the component means: components a fraction of a
+standard deviation apart are one skewed population, not two.</p>
+<h3 id="seasonality-seasonality">Seasonality: <code>seasonality</code><a class="headerlink" href="#seasonality-seasonality" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">"applicable"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"time_column"</span><span class="p">:</span><span class="w"> </span><span class="s2">"day"</span><span class="p">,</span><span class="w"> </span><span class="nt">"granularity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"day"</span><span class="p">,</span><span class="w"> </span><span class="nt">"period"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span>
+<span class="w"> </span><span class="nt">"strength"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.81</span><span class="p">,</span><span class="w"> </span><span class="nt">"acf"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.66</span><span class="p">,</span><span class="w"> </span><span class="nt">"seasonal"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}</span>
+</code></pre></div>
+<p><strong>The time column</strong> is the table's only date or timestamp column, or the one named by the profile
+option <code>time_column</code> (<code>shape.profile(..., time_column="day")</code>, <code>shape profile --time-column day</code>).
+For a dict of tables the name applies to each table that has it, and is an error when none does; a
+name that is not a date or timestamp column is an error. Workbook sheets are not analysed. Rows with
+a null time and values that are not finite are left out; a time zone is ignored (the stored instant
+is used).</p>
+<p><strong>Aggregation, in one pass.</strong> Each numeric column is averaged per <strong>day</strong>, or per <strong>hour</strong> when the
+time column spans fewer than 14 days. The pass reads the table 262,144 rows at a time, so its cost
+is linear in the rows and its memory does not grow with them (<code>tests/profile/test_seasonality.py</code>,
+marked <code>heavy</code>, runs a 10-million-row table under 10 s with a peak of temporary memory under 20% of
+one column). A period with no value is filled by linear interpolation; a series in which fewer than
+half of the periods hold a value is not computed.</p>
+<p><strong>Candidate periods.</strong> 24 on the hourly series, 7 on the daily series, 12 on the monthly means of
+daily data (the mean of all values in each calendar month) and 52 on the weekly means (consecutive
+runs of 7 days from the first day); a candidate counts only when <strong>at least three full periods</strong>
+exist (72 hours, 21 days, 36 months, 156 weeks).</p>
+<p><strong>Statistics for each candidate.</strong> <code>acf</code> is the sample autocorrelation of the series at the period,
+<code>sum (y_t - m)(y_{t+p} - m) / sum (y_t - m)^2</code>. <code>strength</code> comes from a classical decomposition
+<code>y = trend + seasonal + remainder</code>: the trend is the centred moving average of window <code>p</code> (a 2 x p
+average when <code>p</code> is even), the seasonal figure is the mean of the detrended values at each position
+of the period, centred to sum to zero, and</p>
+<p><code>strength = max(0, 1 - var(remainder) / var(seasonal + remainder))</code></p>
+<p>so 0 means no repeating pattern and 1 a pattern with no noise. The candidate with the largest
+strength is reported (the smaller period on a tie), with its <code>granularity</code> (<code>hour</code>, <code>day</code>, <code>week</code>
+or <code>month</code>); <code>seasonal</code> is true when its strength is <strong>at least 0.6</strong>. A trend alone is not seasonal,
+because the moving average removes it. White noise gives a strength near <code>1 / (periods)</code> and is not
+seasonal.</p>
+<p><strong>Not computed</strong> (<code>applicable: false</code> and a <code>reason</code>, a column still gets the entry): no date or
+timestamp column; more than one and none named; fewer than three full periods of any candidate; a
+constant series; more than half of the periods empty; a time column spanning more than 2,000,000
+days. A text, boolean or date column has no <code>seasonality</code>, and neither has the time column itself.</p>
+<p>A profile written before these fields existed loads, displays and diffs as before, with the fields
+absent and the two diff kinds not reported. <code>shape show</code> prints both fields, and the <code>--html</code> report
+states them in each column's card as <code>mixture: k=2 ...</code> and <code>seasonality: period 7 days, strength
+0.81 (seasonal)</code>.</p>
+<h2 id="sampling">Sampling<a class="headerlink" href="#sampling" title="Permanent link">&para;</a></h2>
+<p>A profile says how much of the data it saw. Nothing is sampled unless you ask, and every table's profile records what was
+done, whether you asked or not.</p>
+<p><a href="#local-example-10">Run this example</a>.</p>
+<div class="highlight"><pre><span></span><code><span class="n">shape</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span><span class="s2">"orders.csv"</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="mi">100_000</span><span class="p">)</span>                       <span class="c1"># an int is a number of rows</span>
+<span class="n">shape</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span><span class="s2">"orders.csv"</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">sample_method</span><span class="o">=</span><span class="s2">"head"</span><span class="p">)</span>     <span class="c1"># a float above 0 and up to 1 is a fraction</span>
+<span class="n">shape</span><span class="o">.</span><span class="n">profile</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="s2">"10%"</span><span class="p">,</span> <span class="n">sample_seed</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>The rows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>random</code> (default)</td>
+<td>a uniform sample without replacement: numpy's legacy <code>RandomState(seed).choice</code>, then sorted, so the rows keep their order</td>
+</tr>
+<tr>
+<td><code>systematic</code></td>
+<td><code>k</code> rows evenly spread with a step of <code>N / k</code> (every step-th row; the step need not be whole) from a seeded random start</td>
+</tr>
+<tr>
+<td><code>head</code></td>
+<td>the first <code>k</code> rows (the seed has no effect)</td>
+</tr>
+</tbody>
+</table>
+<p>The seed is 42 unless you give one, and it is recorded. The rows depend on nothing else: the same rows are chosen on every
+run, in both kernel modes (<code>SHAPE_KERNEL=rust</code> and <code>python</code>), and for a file, a folder, a glob, a Delta table (with
+<code>version</code> or <code>as_of</code>), an Arrow table and a data frame; the position is counted in the order the source reads back (a folder
+is its files in name order). An invalid value (0 rows, a fraction outside (0, 1], an unknown method, a seed outside
+0 to 4294967295) is an input error (exit 2). Asking for as many rows as the table has, or more, reads it whole.
+The table is read whole before it is sampled: sampling cuts the work of the statistics, not the read.</p>
+<p>With <code>--dataset</code> (or a dict of tables) each table is sampled on its own. Foreign keys are detected on the sampled child
+rows against the parent's whole key column, because independent samples of a parent and a child share few keys and
+would hide a relationship that is there. A reference-pair check (<code>--reference-pair</code>) always reads the whole table.</p>
+<h3 id="the-sampling-record">The sampling record<a class="headerlink" href="#the-sampling-record" title="Permanent link">&para;</a></h3>
+<p>Every table profile has <code>sampling</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>method</code></td>
+<td><code>random</code>, <code>systematic</code>, <code>head</code>, or <code>none</code> when the whole table was read</td>
+</tr>
+<tr>
+<td><code>seed</code></td>
+<td>the seed of a sampled profile, else <code>null</code></td>
+</tr>
+<tr>
+<td><code>requested</code></td>
+<td>what was asked for: <code>{"rows": N}</code> or <code>{"fraction": F}</code>, else <code>null</code></td>
+</tr>
+<tr>
+<td><code>population_rows</code></td>
+<td>the rows the source had (exact: the source is read whole before it is sampled)</td>
+</tr>
+<tr>
+<td><code>sampled_rows</code></td>
+<td>the rows profiled; <code>row_count</code> is the same number</td>
+</tr>
+<tr>
+<td><code>internal</code></td>
+<td>the samples the statistics take of their own, below</td>
+</tr>
+<tr>
+<td><code>adequacy</code>, <code>adequacy_reason</code></td>
+<td><code>adequate</code>, <code>limited</code> or <code>insufficient</code>, and why</td>
+</tr>
+</tbody>
+</table>
+<p><code>shape profile</code> prints <code>shape: note: profiled a random sample of 100000 of 2500000 rows (seed 42)</code> to stderr when
+<code>--sample</code> is given (one line per table of a dataset, ending <code>, table NAME</code>), and never otherwise. <code>shape show</code> prints the
+record per table (<code>not recorded</code> for a profile written by an older Shape), the <code>--json</code> summary and the HTML report carry
+it, and <code>shape diff</code> adds a note to its result (<code>notes</code> in <code>--json</code>, present only when there is one) when the two profiles
+were sampled by different methods, or one was sampled and the other not. <code>row_count_change</code> compares the sources'
+<code>population_rows</code> when both profiles state it, not the sizes of their samples.</p>
+<h3 id="adequacy">Adequacy<a class="headerlink" href="#adequacy" title="Permanent link">&para;</a></h3>
+<p>Each column has <code>adequacy</code>:</p>
+<ul>
+<li><code>non_null</code>: the values seen;</li>
+<li><code>null_rate_se</code>: the standard error of the null rate, <code>sqrt(p (1 - p) / n)</code> with <code>n</code> the rows profiled, times the finite
+  population correction <code>sqrt((N - n) / (N - 1))</code> when the source's <code>N</code> rows are known; 0 when every row was read;</li>
+<li><code>min_detectable_share</code>: <code>1 - 0.05^(1/n)</code> over the column's <code>non_null</code> values: the smallest share a value needs to be
+  seen at least once with 95% probability.</li>
+</ul>
+<p>The table's <code>sampling.adequacy</code> follows from the rows profiled <code>n</code> (a table read whole counts too: exact about its rows,
+it says little about values it has not got):</p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>insufficient</code></td>
+<td>fewer than 30 rows (the drift engine's <code>min_rows</code>)</td>
+</tr>
+<tr>
+<td><code>limited</code></td>
+<td><code>min_detectable_share(n)</code> is above 0.01: from 30 to 298 rows, a value must be more than 1% of the rows to be seen</td>
+</tr>
+<tr>
+<td><code>adequate</code></td>
+<td>otherwise (299 rows or more)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="internal-samples">Internal samples<a class="headerlink" href="#internal-samples" title="Permanent link">&para;</a></h3>
+<p>Some statistics sample inside themselves, whatever you asked for. The record lists the ones the profile's statistics used:</p>
+<table>
+<thead>
+<tr>
+<th><code>analysis</code></th>
+<th>When</th>
+<th>Rows, method, seed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>pattern_detection</code></td>
+<td>a string column of more than 1,000 values</td>
+<td>1,000, <code>random</code>, 42</td>
+</tr>
+<tr>
+<td><code>pattern_rates</code></td>
+<td>a string column of more than 50,000 distinct values</td>
+<td>50,000 distinct values, <code>systematic</code>, no seed</td>
+</tr>
+<tr>
+<td><code>type_inference</code></td>
+<td>a string column of more than 50,000 distinct values</td>
+<td>50,000 distinct values, <code>systematic</code>, no seed</td>
+</tr>
+<tr>
+<td><code>distribution_fit</code></td>
+<td>a numeric column of more than 2,000 values</td>
+<td>2,000, <code>random</code>, 42</td>
+</tr>
+<tr>
+<td><code>joint</code></td>
+<td>a table of more than 20,000 rows</td>
+<td>5,000 rows, <code>systematic</code> with a seeded offset in each stride (seed 7)</td>
+</tr>
+<tr>
+<td><code>kendall_tau</code></td>
+<td>a numeric association of more than 500 rows</td>
+<td>500, <code>systematic</code>, no seed</td>
+</tr>
+<tr>
+<td><code>reference_pairs</code></td>
+<td>a reference-pair check on more than a million rows</td>
+<td>1,000,000, <code>systematic</code>, no seed</td>
+</tr>
+<tr>
+<td><code>univariate</code></td>
+<td><code>--univariate</code>, a numeric column of more than 10,000 finite values</td>
+<td>50,000 (10,000 for model selection), <code>stratified</code>: one value at random from each run of consecutive rows, seed 42</td>
+</tr>
+<tr>
+<td><code>multivariate_outliers</code></td>
+<td>the joint analysis's multivariate outliers over more than 600 rows</td>
+<td>600 rows for FAST-MCD's starts, <code>random</code>, seed 20260327 (the fit and the rate read every analysed row)</td>
+</tr>
+<tr>
+<td><code>cohorts</code></td>
+<td>cohorts over more than 2,000 analysed rows</td>
+<td>2,000, <code>random</code>, seed 20260328</td>
+</tr>
+</tbody>
+</table>
+<p>Each entry has <code>analysis</code>, <code>rows</code>, <code>method</code>, <code>seed</code> and, for the column analyses, the <code>columns</code> it applied to. The
+statistics of a sampled table sample inside the rows that were kept. A test fails when a code path draws a sample that is not
+registered here (<code>shape.profile.sampling.INTERNAL</code>).</p>
+<h2 id="type-inference">Type inference<a class="headerlink" href="#type-inference" title="Permanent link">&para;</a></h2>
+<p>Every column has <code>type_inference</code>: where its type came from and how well the values fit it.</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type</code></td>
+<td>the profile's <code>dtype</code></td>
+</tr>
+<tr>
+<td><code>source</code></td>
+<td><code>declared</code> (a typed source: Parquet, Delta, Excel, an Arrow table, a data frame), <code>inferred</code> (CSV, JSON, text, Python values), <code>option</code> (<code>--types</code>, <code>--string-columns</code>, <code>--infer-types off</code>) or <code>identifier_rule</code> (a column the identifier rule kept as text)</td>
+</tr>
+<tr>
+<td><code>confidence</code></td>
+<td>the share of non-null values that parse as <code>type</code>; 1.0 for <code>option</code>; <code>null</code> for no values</td>
+</tr>
+<tr>
+<td><code>parse_shares</code></td>
+<td>the share of non-null values that parse as each of <code>integer</code>, <code>float</code>, <code>boolean</code>, <code>date</code>, <code>datetime</code></td>
+</tr>
+<tr>
+<td><code>identifier</code></td>
+<td>the identifier rule's reason (why it kept the column as text, or why an integer column is only a suspect), else <code>null</code></td>
+</tr>
+<tr>
+<td><code>declared</code>, <code>inferred</code></td>
+<td>for a <code>declared</code> column: its declared type, and the narrowest type every value parses as</td>
+</tr>
+<tr>
+<td><code>candidate</code></td>
+<td>for an inferred text column that is mostly one narrower type: that type (the <code>confidence</code> is then its share)</td>
+</tr>
+</tbody>
+</table>
+<p>The shares are counted over the distinct values weighted by their counts for text, and over the values for numbers and
+timestamps. They are exact, except for a text column of more than 50,000 distinct values, whose shares are measured on
+50,000 evenly spread distinct values (each weighted by its count) so that the cost does not grow with the number of
+distinct values; the record lists that column under <code>internal</code> as <code>type_inference</code>.</p>
+<p>Integers parse as floats; <code>integer</code> also counts a float that is a whole number; <code>boolean</code> is the six words
+<code>true false yes no 0 1</code> in any case; <code>date</code> is an ISO <code>YYYY-MM-DD</code> that is a real date; <code>datetime</code> is ISO 8601 with an
+optional time and zone. The profiler types text as numbers, booleans or datetimes only when every value parses (its own
+rules for dates are wider than ISO), so such a column has confidence 1.0.</p>
+<p>A column that is 97% integers with 3% stray text is not an integer to the reader: its type is <code>string</code>, its <code>confidence</code> is
+0.97, its <code>candidate</code> is <code>integer</code> and <code>parse_shares.integer</code> is 0.97. <code>shape types</code> reports it.</p>
+<h3 id="shape-types"><code>shape types</code><a class="headerlink" href="#shape-types" title="Permanent link">&para;</a></h3>
+<p><code>shape types PROFILE.shape [--contract CONTRACT.json] [--min-confidence C] [--json]</code> lists the columns whose types need a
+second look, with the table, the column, both types, the confidence and the option that would change it (<code>--types</code>,
+<code>--string-columns</code>); exit 0 with no findings, 1 with findings, 2 for bad input. <code>shape.types_report(profile, contract=None,
+min_confidence=0.99)</code> returns the same as a list of dicts. The findings:</p>
+<ul>
+<li><code>declared_differs</code>: a <code>string</code> that holds integers, floats, booleans, dates or datetimes, or a <code>float</code> that holds whole
+  numbers;</li>
+<li><code>identifier_suspect</code>: an integer column the identifier rule calls a suspect (every value has five or more digits, or its
+  name says it holds identifiers), or would have kept as text;</li>
+<li><code>low_confidence</code>: a type inferred from text with a <code>confidence</code> below <code>C</code> (default 0.99, strict: a column at exactly <code>C</code>
+  is not reported);</li>
+<li><code>contract_differs</code>: a column whose contract <code>dtype</code> differs from the profile's.</li>
+</ul>
+<p>A profile written before type inference was recorded has no <code>type_inference</code>: <code>shape types</code> says so on stderr and compares
+only the contract. The findings become <code>type</code> proposals with <code>shape proposals propose --kinds type</code> (<code>docs/PROPOSALS.md</code>).</p>
+<h2 id="complete-local-run">Complete local run<a class="headerlink" href="#complete-local-run" title="Permanent link">&para;</a></h2>
+<p>Run these commands in order after preparing the fixtures above.</p>
+<p><a id="local-example-0"></a></p>
+<h3 id="example-1">Example 1<a class="headerlink" href="#example-1" title="Permanent link">&para;</a></h3>
+<!-- example: 0 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>shape<span class="w"> </span>profile<span class="w"> </span>export.csv<span class="w"> </span>-o<span class="w"> </span>export.shape<span class="w"> </span>--delimiter<span class="w"> </span><span class="s1">';'</span><span class="w"> </span>--encoding<span class="w"> </span>latin-1
+shape<span class="w"> </span>profile<span class="w"> </span>raw.csv<span class="w"> </span>-o<span class="w"> </span>raw.shape<span class="w"> </span>--no-header<span class="w">          </span><span class="c1"># columns are f0, f1, ...</span>
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>&lt;checkout&gt;/src/shape/profile/reference/sources.py:430: UserWarning: export.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+  kind, table = _read_files([path], threads, csv)
+{"shape_content_id": "6d093e05eddaf930c70203ffa852139c4007a26df4b083236be3515bb40f059d", "written": "export.shape"}
+{"shape_content_id": "a605edae085e7c45531e83ad09147e7ab2b5b8237d5c8494cc8b0ecc15dc112a", "written": "raw.shape"}
+</code></pre></div>
+</details>
+<p><a id="local-example-2"></a></p>
+<h3 id="example-3">Example 3<a class="headerlink" href="#example-3" title="Permanent link">&para;</a></h3>
+<!-- example: 2 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>shape<span class="w"> </span>profile<span class="w"> </span>members.csv<span class="w"> </span>-o<span class="w"> </span>members.shape<span class="w"> </span>--string-columns<span class="w"> </span>zip,npi<span class="w">        </span><span class="c1"># keep these as text</span>
+shape<span class="w"> </span>profile<span class="w"> </span>members.csv<span class="w"> </span>-o<span class="w"> </span>members.shape<span class="w"> </span>--types<span class="w"> </span>types.json<span class="w">              </span><span class="c1"># {"zip": "string", "amount": "float"}</span>
+shape<span class="w"> </span>profile<span class="w"> </span>members.csv<span class="w"> </span>-o<span class="w"> </span>members.shape<span class="w"> </span>--infer-types<span class="w"> </span>off<span class="w">               </span><span class="c1"># read every column as text</span>
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>&lt;checkout&gt;/src/shape/profile/reference/sources.py:430: UserWarning: members.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+  kind, table = _read_files([path], threads, csv)
+{"shape_content_id": "d3fd1943d642e07d8b12312432fc4bd78c95d3f2d4575d052ddb8f9c1623f6ca", "written": "members.shape"}
+&lt;checkout&gt;/src/shape/profile/reference/sources.py:430: UserWarning: members.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+  kind, table = _read_files([path], threads, csv)
+{"shape_content_id": "0f819d1eb8d21d6e3383a0d2333bcf76bf04dc31291fe1f27d6adcde7913cc30", "written": "members.shape"}
+{"shape_content_id": "5983c8d28223c591e9620e2bc7f9bea100abbf66e0dfa41361f50d888c66a4f9", "written": "members.shape"}
+</code></pre></div>
+</details>
+<p><a id="local-example-3"></a></p>
+<h3 id="example-4">Example 4<a class="headerlink" href="#example-4" title="Permanent link">&para;</a></h3>
+<!-- example: 3 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>shape<span class="w"> </span>profile<span class="w"> </span>safe<span class="w"> </span>daily.shape<span class="w"> </span>-o<span class="w"> </span>daily.safe.json<span class="w"> </span>--compact<span class="w"> </span>--exclude<span class="w"> </span><span class="s1">'notes,raw_*'</span>
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>shape: note: daily.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+{"unsafe": false, "written": "daily.safe.json"}
+</code></pre></div>
+</details>
+<p><a id="local-example-10"></a></p>
+<h3 id="example-11">Example 11<a class="headerlink" href="#example-11" title="Permanent link">&para;</a></h3>
+<!-- example: 10 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>shape<span class="w"> </span>profile<span class="w"> </span>orders.csv<span class="w"> </span>-o<span class="w"> </span>orders.shape<span class="w"> </span>--sample<span class="w"> </span><span class="m">100000</span><span class="w">                       </span><span class="c1"># 100,000 rows</span>
+shape<span class="w"> </span>profile<span class="w"> </span>orders.csv<span class="w"> </span>-o<span class="w"> </span>orders.shape<span class="w"> </span>--sample<span class="w"> </span><span class="m">10</span>%<span class="w"> </span>--sample-method<span class="w"> </span>systematic<span class="w"> </span>--sample-seed<span class="w"> </span><span class="m">7</span>
+shape<span class="w"> </span>profile<span class="w"> </span>data/<span class="w"> </span>--dataset<span class="w"> </span>-o<span class="w"> </span>shop.shape<span class="w"> </span>--sample<span class="w"> </span><span class="m">20</span>%<span class="w">                       </span><span class="c1"># each table</span>
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>&lt;checkout&gt;/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+  kind, table = _read_files([path], threads, csv)
+shape: note: profiled a random sample of 100 of 100 rows (seed 42)
+{"shape_content_id": "2dfcbd3536f3d02c1b30242e1c213f718f9793e9ee16ea6e17ab38776e25ba09", "written": "orders.shape"}
+&lt;checkout&gt;/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+  kind, table = _read_files([path], threads, csv)
+shape: note: profiled a systematic sample of 10 of 100 rows (seed 7)
+{"shape_content_id": "b5e327e3c20efdddc04d35b81ea4c6a5a57549389a1580eb139d571f2d904aef", "written": "orders.shape"}
+&lt;checkout&gt;/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
+  kind, table = _read_files([path], threads, csv)
+shape: note: profiled a random sample of 4 of 20 rows (seed 42), table customers
+shape: note: profiled a random sample of 20 of 100 rows (seed 42), table orders
+{"shape_content_id": "e61f01b12dfbf067d390c120e7e78ec5a08e94c833ebdabb71f70c57ce96baf3", "written": "shop.shape"}
+</code></pre></div>
+</details>
+<p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Profiling+notes&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FPROFILING_NOTES%2F">Report a problem with this page</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  <div class="md-copyright__highlight">Shape by SQLLocks</div>
+  <div>Copyright SQLLocks. Released under the MIT license.</div>
+  <nav class="shape-footer-links" aria-label="Website, project and support">
+    <a href="https://shapedata.ai/">shapedata.ai</a>
+    <a href="https://github.com/sqllocks/shape">GitHub</a>
+    <a href="https://pypi.org/project/sqllocks-shape/">PyPI</a>
+    <a href="mailto:support@shapedata.ai">Support</a>
+    <a href="https://github.com/sqllocks/shape/blob/main/LICENSE">License (MIT)</a>
+    <a href="https://github.com/sqllocks/shape/blob/main/SECURITY.md">Security</a>
+  </nav>
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "navigation.indexes", "search.suggest", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../assets/javascripts/diagrams.js"></script>
+      
+    
+  </body>
+</html>
