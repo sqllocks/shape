@@ -22,12 +22,28 @@ Evidence: `plugins/shape-databases/src/shape_databases/databricks.py` and shared
 The integrations source definitions are in `plugins/shape-integrations/src/shape_integrations/`.
 Snowflake and Databricks are write targets; Shape does not profile from them yet.
 
-## Next step
+## Write receipt
 
-<!-- owner: platform maintainer — execute a Databricks write transcript with a test account before publishing commands. -->
+Owner-run on 2026-10-11 in a clean Windows 11 VM, Python 3.12.10, using Shape 0.9.1 installed from PyPI. The target was Databricks Free Edition’s serverless SQL warehouse. The personal access token was in `DATABRICKS_TOKEN`, outside the URI; keep it in your environment when running the command.
 
-These pages describe implementation behavior. They make no account or service-validation
-claim. Authentication, permissions and server limits remain properties of your deployment.
+Fill in the workspace, warehouse, catalog and schema identifiers below. Target identifiers are substituted in both the command and output.
+
+```powershell
+shape generate retail --scale small --seed 42 --to "databricks://<WORKSPACE_HOST>/sql/1.0/warehouses/<WAREHOUSE_ID>?catalog=<CATALOG>&schema=<SCHEMA>" --write-mode create --yes
+```
+
+Owner-reported output, exit 0:
+
+```text
+Sunday, October 11, 2026 6:55:25 PM
+shape 0.9.1
+Wrote 21,750 rows in 9 tables to databricks://<WORKSPACE_HOST>/sql/1.0/warehouses/<WAREHOUSE_ID>?catalog=<CATALOG>&schema=<SCHEMA> (108.30s)
+```
+
+The elapsed time records this single run. The [Owner-run receipt](https://github.com/sqllocks/shape/blob/main/docs/plans/evidence/owner-notes/databricks-write.md) records the install command, warehouse configuration and all nine persisted table counts verified with `COUNT(*)` in the SQL Editor.
+
+The receipt records one test-account run. Authentication, permissions and server limits
+remain properties of your deployment.
 Do not publish credentials in a profile, project file or issue.
 
 ## Related
