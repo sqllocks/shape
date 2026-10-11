@@ -283,3 +283,53 @@ dependency set (the plugin reads files only).
 **Verdict: ready to integrate.** Resolve `docs/DBT.md` on the rebase; run the nightly
 `dbt-build` job once to confirm 32 resources / 24 tests.
 
+## W9-11 — Fabric Eventhouse source (issue #12), `lane/W9-11` at `68f2b67`
+
+**What it builds.** `shape.sources` entry `eventhouse`
+(`plugins/shape-fabric/src/shape_fabric/eventhouse_source.py`): schema from
+`.show table T schema as json`, rows paged through the query endpoint in a stable order,
+`batch_size`, emitter sign-in (`token`, `SHAPE_EVENTHOUSE_TOKEN`, Entra), KQL-to-Arrow type map
+(with `decimal256(57,28)` for the full KQL decimal range), `sample_rows` via `T | sample N`,
+catalog counts from `.show table T details`, whole-database multi-table profile with the
+emitter's `_shape_table`/`_shape_seq` columns excluded, `dedupe=true`; `shape profile`,
+`shape diff` and the bridge accept the URI; docs (`docs/plugins/fabric-writers.md`,
+`docs/FABRIC_PLATFORM.md`) and changelog; fake transport in `shape_fabric/testing.py`; one
+emulator read-back in `test_kusto_emulator.py`; one live read-back. Core: a source may expose
+`profile_tables` and the CLI/bridge resolve such a source through `profile_or_load`
+(`src/shape/profile/reference/profile.py`, `sources.py`, `bridge/handlers/flow.py`,
+`cli/main.py`). 15 files.
+
+**Against the issue's Wanted list.** Items 1–5 each have named tests in
+`plugins/shape-fabric/tests/test_eventhouse_source.py` (46 tests, both kernels). **Nothing on
+the Wanted list is missing.** The kustainer emulator job and the live read-back were not run.
+
+**CI on the head** (run 37859304475, 2026-10-08): 23 of 25 pass. Failing: `zero-network`
+(*base*), `test (macos-latest, 3.11)` (*base*). **No lane-attributable failure.** The status
+file's two blockers (42 mypy errors, the Kafka flush stall) were the builder's environment;
+CI's mypy and matrix are green, and W9-08 fixes the stall.
+
+**Base.** `7f700d3`; 25 behind. Dry merge onto `release/0.9.1`: one conflict,
+`plugins/shape-fabric/tests/test_kusto_emulator.py` (REL-091 touched it too);
+`plugins/shape-fabric/src/shape_fabric/testing.py`, `src/shape/cli/main.py`,
+`docs/FABRIC_PLATFORM.md`, `docs/plugins/fabric-writers.md` auto-merge.
+
+**Overlap with other lanes** (own files, 15): `src/shape/cli/main.py`,
+`src/shape/bridge/handlers/flow.py`, `src/shape/profile/reference/profile.py` with W9-01;
+`src/shape/cli/main.py` with W9-08; `src/shape/bridge/handlers/flow.py`,
+`src/shape/profile/reference/profile.py` with W9-16; `docs/FABRIC_PLATFORM.md` with W9-07 and
+W9-12. The important one: W9-01 and W9-11 each add a plugin-capability hook to `profile()`
+(`profile_database` and `profile_tables`) in the same function; they do not conflict textually
+against the release, but against each other they will, and two hooks for "a source that yields
+several tables" is one too many. The lead should integrate W9-01 first and have W9-11 rebase
+onto it, either keeping both hooks with a comment or folding `profile_tables` into the
+`profile_database` dispatch.
+
+**Risks.** No dependency change (one entry point added to the fabric plugin). No test
+deletions; the only `pytest.skip` is the live test naming its setting. The core change is
+additive but sits in the reference profiler's entry function, which the equivalence gates
+protect: the diff keeps file profiling untouched, and CI's parity-adjacent tests passed.
+
+**Verdict: ready to integrate, after W9-01.** Rebase onto the release with W9-01 landed,
+reconcile the two hooks, resolve `test_kusto_emulator.py`, and run the nightly kusto emulator
+job once.
+
