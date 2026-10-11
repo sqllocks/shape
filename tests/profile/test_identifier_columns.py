@@ -274,11 +274,80 @@ class _Readers:
     counted."""
 
     def __init__(self, monkeypatch):
+        import os
+        import stat
+
         self.live: set[int] = set()
         self.most = 0
         self.opened = 0
+        self.file_streams = weakref.WeakSet()
         real = pacsv.open_csv
         readers = self
+
+        def from_file(source):
+            if isinstance(source, (str, os.PathLike)):
+                return True
+            if isinstance(source, pa.NativeFile) and source in readers.file_streams:
+                return True
+            try:
+                return stat.S_ISREG(os.fstat(source.fileno()).st_mode)
+            except (AttributeError, OSError, ValueError):
+                return False
+
+        def constructor(real_constructor):
+            file_constructor = real_constructor.__name__ in (
+                "OSFile",
+                "MemoryMappedFile",
+                "memory_map",
+                "from_file",
+                "create",
+            )
+
+            def construct(*args, **kwargs):
+                source = (
+                    args[0]
+                    if args
+                    else next(
+                        (
+                            kwargs[key]
+                            for key in ("source", "stream", "path", "file")
+                            if key in kwargs
+                        ),
+                        None,
+                    )
+                )
+                stream = real_constructor(*args, **kwargs)
+                if (file_constructor and source is not None) or from_file(source):
+                    readers.file_streams.add(stream)
+                return stream
+
+            return construct
+
+        class StreamConstructor(type):
+            def __call__(cls, *args, **kwargs):
+                return constructor(cls.original)(*args, **kwargs)
+
+            def __instancecheck__(cls, instance):
+                return isinstance(instance, cls.original)
+
+            def __subclasscheck__(cls, subclass):
+                return issubclass(subclass, cls.original)
+
+            def __getattr__(cls, name):
+                value = getattr(cls.original, name)
+                return constructor(value) if name in ("from_file", "create") else value
+
+        for name in (
+            "OSFile",
+            "MemoryMappedFile",
+            "BufferedInputStream",
+            "CompressedInputStream",
+            "PythonFile",
+        ):
+            original = getattr(pa, name)
+            monkeypatch.setattr(pa, name, StreamConstructor(name, (), {"original": original}))
+        for name in ("memory_map", "input_stream"):
+            monkeypatch.setattr(pa, name, constructor(getattr(pa, name)))
 
         class Reader:
             def __init__(self, inner):
@@ -306,7 +375,10 @@ class _Readers:
 
         def open_csv(source, *a, **k):
             inner = real(source, *a, **k)
-            return Reader(inner) if isinstance(source, (str, Path)) else inner
+            counted = isinstance(source, (str, Path)) or (
+                isinstance(source, pa.NativeFile) and source in readers.file_streams
+            )
+            return Reader(inner) if counted else inner
 
         monkeypatch.setattr(pacsv, "open_csv", open_csv)
 
