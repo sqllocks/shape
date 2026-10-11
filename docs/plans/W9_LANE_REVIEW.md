@@ -247,3 +247,39 @@ listed in the status file.
 accepts (or reverses) the live-test skip change. Run `kafka-e2e` and `eventhubs-e2e` nightly
 once for the keyed round trips.
 
+## W9-10 — dbt II (issue #11), `lane/W9-10` at `a523717`
+
+**What it builds.** In `plugins/shape-dbt`: `from-dbt` reads `semantic_models` (entities to
+keys, dimensions to types with granularity, measures with aggregation; conflicts named) and
+lists singular tests in the metadata document without parsing their SQL; `to-dbt-tests` writes
+singular tests for rules generics cannot express (`pattern` as dialect regexp for duckdb,
+postgres, snowflake, bigquery; true-rate bounds; non-numeric min/max), idempotent with `--merge`,
+exact round trip; `dbt-report` gains `impact` (`format: shape-dbt-impact`, `version: 1`) listing
+metrics and exposures per drifted or failing column; `dbt-seeds --semantic-models`;
+`docs/DBT.md`; the jaffle-shop example gains a semantic model, metric, exposure and singular
+test; changelog. 16 files, all in the plugin, docs and example.
+
+**Against the issue's Wanted list.** Items 1–6 each have named tests in
+`plugins/shape-dbt/tests/test_w9_10.py` (20 cases) and `test_example_documents_all_resources`.
+The nightly `dbt-build` job's expected counts move from 31/23 to 32/24 for the new singular test
+(explicit in `test_dbt_build.py`; the two removed assertion lines are those counts). **Nothing on
+the Wanted list is missing.** The `-m dbt` build against DuckDB (nightly) has not run.
+
+**CI on the head** (run 37859301967, 2026-10-08): 23 of 25 pass. Failing: `zero-network`
+(*base*), `test (macos-latest, 3.11)` (*base*). **No lane-attributable failure.** (The
+builder's local full-suite stall in `test_remote_confirmation.py` was the installed-Kafka flush
+that W9-08 fixes; CI did not hit it.)
+
+**Base.** `7f700d3`; 25 behind. Dry merge onto `release/0.9.1`: one conflict, `docs/DBT.md`;
+`plugins/shape-dbt/src/shape_dbt/commands.py` auto-merges.
+
+**Overlap with other lanes:** none beyond the changelog and plan files. The most isolated lane
+in the set.
+
+**Risks.** No dependency change ("No new dependency was added to core or plugin"); no skip or
+xfail; the two changed assertions are the documented count bump. `dbt-core` stays out of the
+dependency set (the plugin reads files only).
+
+**Verdict: ready to integrate.** Resolve `docs/DBT.md` on the rebase; run the nightly
+`dbt-build` job once to confirm 32 resources / 24 tests.
+
