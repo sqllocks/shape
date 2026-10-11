@@ -4896,6 +4896,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#alpine-and-musllinux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alpine and musllinux
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#related" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5588,6 +5599,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#alpine-and-musllinux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alpine and musllinux
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#related" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5646,6 +5668,14 @@ The 1.x compatibility promises describe future policy.</p>
   small local tutorial. Optional analyses and generation may materialize tables.</li>
 <li>Plugins run in the same process. Allow-lists restrict loading, not plugin behavior.</li>
 </ul>
+<h2 id="alpine-and-musllinux">Alpine and musllinux<a class="headerlink" href="#alpine-and-musllinux" title="Permanent link">&para;</a></h2>
+<p><code>confluent-kafka</code> has no musllinux wheels for ARM64 or x86_64 and builds from source.
+The <code>[kafka]</code> and <code>[all]</code> extras require librdkafka <strong>2.16 or newer</strong>, development
+headers and C build tools. Alpine's <code>librdkafka-dev</code> is currently older, so installing
+that package alone is insufficient. Build the matching native library before
+running pip; see the <a href="../INSTALL/#alpine-and-musllinux">Alpine installation steps</a>,
+which match the release smoke environment, or
+<a href="https://github.com/confluentinc/librdkafka#building">Confluent's build instructions</a>.</p>
 <h2 id="related">Related<a class="headerlink" href="#related" title="Permanent link">&para;</a></h2>
 <p><a href="../TROUBLESHOOTING/">Troubleshooting</a> · <a href="../WHAT_LEAVES/">What leaves my machine</a></p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Known+limitations&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FKNOWN_LIMITATIONS%2F">Report a problem with this page</a></p>

@@ -5656,7 +5656,8 @@ A contract states what your data must satisfy. A diff shows how its behavior cha
 A safe capture is data minimisation, not anonymisation. You review it before sharing.</p>
 <h2 id="where-platforms-plug-in">Where platforms plug in<a class="headerlink" href="#where-platforms-plug-in" title="Permanent link">&para;</a></h2>
 <pre class="shape-mermaid"><code>flowchart TB
-    F[Local files / DuckDB / PostgreSQL / MySQL] --&gt; P[Profile]
+    F[Local files / DuckDB / SQL Server] --&gt; P[Profile]
+    E[PostgreSQL / MySQL exports] --&gt; F
     L[OneLake / ADLS / Delta files] --&gt; P
     P --&gt; C[Contract and drift checks]
     P --&gt; G[Generation]
@@ -5665,7 +5666,8 @@ A safe capture is data minimisation, not anonymisation. You review it before sha
     G --&gt; M[Fabric writers / local files]
     C --&gt; CI[GitHub Actions / pipeline exit codes]
     M --&gt; BI[Semantic model exports for Power BI]</code></pre>
-<p><a href="databases/">Database pages</a> describe shipped adapters. Snowflake and Databricks
+<p><a href="databases/">Database pages</a> describe shipped adapters. PostgreSQL and MySQL
+are write targets; export their data to CSV or Parquet before profiling. Snowflake and Databricks
 are write targets; Shape does not profile from them yet. Account-dependent examples identify the platform you need.</p>
 <h2 id="choose-your-next-page">Choose your next page<a class="headerlink" href="#choose-your-next-page" title="Permanent link">&para;</a></h2>
 <p><a href="INSTALL/">Install</a> · <a href="CONCEPTS/">Concepts</a> · <a href="READ_REPORT/">Read the report</a> ·

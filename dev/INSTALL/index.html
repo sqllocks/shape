@@ -397,6 +397,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#alpine-and-musllinux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alpine and musllinux
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#offline-installation-locks" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5759,6 +5770,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#alpine-and-musllinux" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alpine and musllinux
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#offline-installation-locks" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5942,6 +5964,33 @@ The Snowflake and Databricks drivers are extras of <code>sqllocks-shape-database
 The <a href="../databases/">database pages</a> explain their behavior.
 Use only the extras your workflow needs. Installing a plugin gives its code the same
 process permissions as core; see <a href="../WHAT_LEAVES/">What leaves my machine</a>.</p>
+<h2 id="alpine-and-musllinux">Alpine and musllinux<a class="headerlink" href="#alpine-and-musllinux" title="Permanent link">&para;</a></h2>
+<p><code>confluent-kafka</code> has no musllinux wheels for ARM64 or x86_64, so pip builds it
+from source on Alpine Linux. The <code>[kafka]</code>, <code>[streaming]</code> and <code>[all]</code> extras need
+librdkafka <strong>2.16 or newer</strong>, its development headers and C build tools.
+Alpine's <code>librdkafka-dev</code> package currently provides an older version.</p>
+<p>Run these commands as root in your Alpine environment before installing Shape.
+They build librdkafka 2.16.0 with the same dependencies and source checksum as
+<code>scripts/release_smoke_alpine.sh</code>. <code>unixodbc-dev</code> also supports the SQL Server
+driver included in <code>[all]</code>.</p>
+<div class="highlight"><pre><span></span><code>apk<span class="w"> </span>add<span class="w"> </span>--no-cache<span class="w"> </span>bash<span class="w"> </span>libstdc++<span class="w"> </span>build-base<span class="w"> </span>unixodbc-dev<span class="w"> </span>curl<span class="w"> </span>openssl-dev<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>cyrus-sasl-dev<span class="w"> </span>zstd-dev<span class="w"> </span>lz4-dev<span class="w"> </span>curl-dev
+curl<span class="w"> </span>--fail<span class="w"> </span>--silent<span class="w"> </span>--show-error<span class="w"> </span>--location<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>https://github.com/confluentinc/librdkafka/archive/refs/tags/v2.16.0.tar.gz<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output<span class="w"> </span>/tmp/librdkafka.tar.gz
+<span class="nb">echo</span><span class="w"> </span><span class="s1">'e6b61de61d3282879a88e4ee3d9f634a8b05bf78a9198dfc25c4820c0c9ed231  /tmp/librdkafka.tar.gz'</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sha256sum<span class="w"> </span>-c<span class="w"> </span>-
+tar<span class="w"> </span>-xzf<span class="w"> </span>/tmp/librdkafka.tar.gz<span class="w"> </span>-C<span class="w"> </span>/tmp
+<span class="o">(</span>
+<span class="w">  </span><span class="nb">cd</span><span class="w"> </span>/tmp/librdkafka-2.16.0
+<span class="w">  </span>./configure<span class="w"> </span>--prefix<span class="o">=</span>/usr
+<span class="w">  </span>make<span class="w"> </span>-j2
+<span class="w">  </span>make<span class="w"> </span>install
+<span class="o">)</span>
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"sqllocks-shape[all]"</span>
+</code></pre></div>
+<p>For other musllinux environments, follow
+<a href="https://github.com/confluentinc/librdkafka#building">Confluent's librdkafka build instructions</a>
+to install the library and development headers before installing the extras.</p>
 <h2 id="offline-installation-locks">Offline installation locks<a class="headerlink" href="#offline-installation-locks" title="Permanent link">&para;</a></h2>
 <p><code>python scripts/offline_lock.py generate LOCKDIR</code> writes a hashed core dependency
 lock and one <code>requirements-&lt;extra&gt;.txt</code> per extra (<code>yaml</code>, <code>sign</code>, <code>delta</code>, <code>delta-fallback</code>, <code>excel</code>, <code>azure</code>, <code>pandas</code>, <code>pytest</code>, <code>scipy</code>, <code>advanced</code>, <code>faker</code>, <code>ctgan</code>, <code>kafka</code>, <code>eventhubs</code>, <code>fabric</code>, <code>sqlserver</code>, <code>domains</code>, <code>simulation</code>, <code>dbt</code>, <code>healthcare</code>, <code>integrations</code>, <code>all</code>, <code>postgres</code>, <code>mysql</code>, <code>databases</code>, <code>duckdb</code>, <code>docs</code>, <code>streaming</code>, <code>dev</code>).

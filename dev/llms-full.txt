@@ -25247,12 +25247,14 @@ and the runtime retries the batch (
   a destination may see a message twice and never zero times. Kafka, Event Hubs and Eventstream
   do not deduplicate;
 Eventhouse does not either
-: read it with
+.
 shape_fabric.eventhouse.dedupe_query(table)
-(
-summarize take_any(*) by _shape_table,
-  _shape_seq
-).
+returns KQL text
+  (
+summarize take_any(*) by _shape_table, _shape_seq
+); run it in your KQL client.
+  Shape does not read Eventhouse tables directly. To profile their data, export
+  to Parquet or CSV and profile the file.
 Backpressure.
 A full producer queue (Kafka), a throttled service (Event Hubs
 server-busy
@@ -31543,8 +31545,18 @@ generation parameters and reference data. Do not assume a seed recreates source 
 all measured properties survive profile fitting.
 Does Shape read Snowflake and Databricks?
 ¶
-Not yet. The databases plugin writes to them. PostgreSQL, MySQL and DuckDB reads come from
-the integrations plugin. See
+Not directly in 0.9.1. The databases plugin writes to Snowflake, Databricks,
+PostgreSQL and MySQL. Export their data to Parquet or CSV and profile the file.
+DuckDB reads come from the integrations plugin. The other database and platform
+sources are
+mssql
+,
+onelake
+and
+semantic-model
+.
+Reading PostgreSQL and MySQL tables directly is planned (W9-01, issue #2).
+See
 Databases
 .
 How do I ask for a platform or domain?
@@ -45723,6 +45735,87 @@ Use only the extras your workflow needs. Installing a plugin gives its code the 
 process permissions as core; see
 What leaves my machine
 .
+Alpine and musllinux
+¶
+confluent-kafka
+has no musllinux wheels for ARM64 or x86_64, so pip builds it
+from source on Alpine Linux. The
+[kafka]
+,
+[streaming]
+and
+[all]
+extras need
+librdkafka
+2.16 or newer
+, its development headers and C build tools.
+Alpine's
+librdkafka-dev
+package currently provides an older version.
+Run these commands as root in your Alpine environment before installing Shape.
+They build librdkafka 2.16.0 with the same dependencies and source checksum as
+scripts/release_smoke_alpine.sh
+.
+unixodbc-dev
+also supports the SQL Server
+driver included in
+[all]
+.
+apk
+add
+--no-cache
+bash
+libstdc++
+build-base
+unixodbc-dev
+curl
+openssl-dev
+\
+cyrus-sasl-dev
+zstd-dev
+lz4-dev
+curl-dev
+curl
+--fail
+--silent
+--show-error
+--location
+\
+https://github.com/confluentinc/librdkafka/archive/refs/tags/v2.16.0.tar.gz
+\
+--output
+/tmp/librdkafka.tar.gz
+echo
+'e6b61de61d3282879a88e4ee3d9f634a8b05bf78a9198dfc25c4820c0c9ed231  /tmp/librdkafka.tar.gz'
+|
+sha256sum
+-c
+-
+tar
+-xzf
+/tmp/librdkafka.tar.gz
+-C
+/tmp
+(
+cd
+/tmp/librdkafka-2.16.0
+./configure
+--prefix
+=
+/usr
+make
+-j2
+make
+install
+)
+python
+-m
+pip
+install
+"sqllocks-shape[all]"
+For other musllinux environments, follow
+Confluent's librdkafka build instructions
+to install the library and development headers before installing the extras.
 Offline installation locks
 ¶
 python scripts/offline_lock.py generate LOCKDIR
@@ -46730,6 +46823,27 @@ A folder is one partitioned table unless you select dataset mode. Mixed column s
 Exact profiling can scan all input. Do not infer a memory or elapsed-time guarantee from a
   small local tutorial. Optional analyses and generation may materialize tables.
 Plugins run in the same process. Allow-lists restrict loading, not plugin behavior.
+Alpine and musllinux
+¶
+confluent-kafka
+has no musllinux wheels for ARM64 or x86_64 and builds from source.
+The
+[kafka]
+and
+[all]
+extras require librdkafka
+2.16 or newer
+, development
+headers and C build tools. Alpine's
+librdkafka-dev
+is currently older, so installing
+that package alone is insufficient. Build the matching native library before
+running pip; see the
+Alpine installation steps
+,
+which match the release smoke environment, or
+Confluent's build instructions
+.
 Related
 ¶
 Troubleshooting
@@ -69537,16 +69651,30 @@ Choose a local or server writer and distinguish it from a profiling source.
 Status: available.
 shape-databases
 writes generated Arrow batches to DuckDB, PostgreSQL, MySQL, Snowflake and
-Databricks. Optional driver imports happen when a connection opens.
+Databricks. Optional driver imports happen when a connection opens. Shape writes to
+PostgreSQL and MySQL through
+shape-databases
+; neither has a direct profiling source
+in 0.9.1. Export their data to Parquet or CSV and profile the file.
+The shipped database and platform sources are
+mssql
+,
+duckdb
+,
+onelake
+and
+semantic-model
+. DuckDB reads come from
 shape-integrations
-supplies database reads for PostgreSQL, MySQL and DuckDB. Snowflake and Databricks are write
-targets; Shape does not profile from them yet.
+. Snowflake and Databricks
+are write targets; export their data to Parquet or CSV before profiling.
+Reading PostgreSQL and MySQL tables directly is planned (W9-01, issue #2).
 DuckDB
 : a local file, covered by the sixth starter tutorial.
 PostgreSQL
-: COPY writes and integrations reads.
+: COPY writes; profile a CSV or Parquet export.
 MySQL
-: bound batched INSERT writes and integrations reads.
+: bound batched INSERT writes; profile a CSV or Parquet export.
 Snowflake
 : staged Parquet and COPY INTO writes.
 Databricks
@@ -69574,7 +69702,7 @@ Connection and data handling
 ¶
 The
 mysql
-URI selects the database. Non-loopback hosts default to certificate and hostname verification; explicit TLS options override it. NaN and infinity are written as NULL. The integrations plugin reads a selected table through its MySQL source.
+URI selects the database. Non-loopback hosts default to certificate and hostname verification; explicit TLS options override it. NaN and infinity are written as NULL.
 The databases plugin imports its optional driver only when opening a connection. A missing
 driver fails the command instead of silently selecting another sink. Create mode refuses an
 existing table. Append, truncate and replace have different effects; review the target before
@@ -69583,10 +69711,82 @@ idempotency decision.
 Evidence:
 plugins/shape-databases/src/shape_databases/mysql.py
 and shared adapter helpers.
-The integrations source definitions are in
-plugins/shape-integrations/src/shape_integrations/
-.
-Snowflake and Databricks are write targets; Shape does not profile from them yet.
+Shape writes to MySQL through
+shape-databases
+; it does not read MySQL
+tables directly in 0.9.1.
+Profile an export
+¶
+Export the data to Parquet or CSV, then profile the local file.
+Reading PostgreSQL and MySQL tables directly is planned (W9-01, issue #2).
+Needs a MySQL account. Not run in CI.
+For numeric
+order_id
+and
+amount
+columns, export from the MySQL client. The
+NULL
+token preserves missing amounts
+for Shape's CSV reader:
+SELECT
+order_id
+,
+COALESCE
+(
+CAST
+(
+amount
+AS
+CHAR
+),
+'NULL'
+)
+AS
+amount
+INTO
+OUTFILE
+'/var/lib/mysql-files/orders.csv'
+FIELDS
+TERMINATED
+BY
+','
+OPTIONALLY
+ENCLOSED
+BY
+'"'
+ESCAPED
+BY
+'"'
+LINES
+TERMINATED
+BY
+'\n'
+FROM
+orders
+;
+INTO OUTFILE
+writes on the server, requires the
+FILE
+privilege and is constrained
+by
+secure_file_priv
+. The destination must not already exist. Copy that file to
+your machine as
+orders-data.csv
+, then add its column header and profile it:
+printf
+'order_id,amount\n'
+>
+orders.csv
+cat
+orders-data.csv
+>>
+orders.csv
+shape
+profile
+orders.csv
+-o
+orders.shape
 Next step
 ¶
 These pages describe implementation behavior. They make no account or service-validation
@@ -69617,7 +69817,7 @@ The sink accepts the
 postgresql
 and
 postgres
-URI schemes. Non-loopback hosts default to TLS verify-full; explicit URI options can override that. Credentials can come from an option or environment reference. The integrations plugin reads a selected table through its PostgreSQL source.
+URI schemes. Non-loopback hosts default to TLS verify-full; explicit URI options can override that. Credentials can come from an option or environment reference.
 The databases plugin imports its optional driver only when opening a connection. A missing
 driver fails the command instead of silently selecting another sink. Create mode refuses an
 existing table. Append, truncate and replace have different effects; review the target before
@@ -69626,10 +69826,40 @@ idempotency decision.
 Evidence:
 plugins/shape-databases/src/shape_databases/postgres.py
 and shared adapter helpers.
-The integrations source definitions are in
-plugins/shape-integrations/src/shape_integrations/
+Shape writes to PostgreSQL through
+shape-databases
+; it does not read PostgreSQL
+tables directly in 0.9.1.
+Profile an export
+¶
+Export the data to Parquet or CSV, then profile the local file.
+Reading PostgreSQL and MySQL tables directly is planned (W9-01, issue #2).
+Needs a PostgreSQL account. Not run in CI.
+In
+psql
+, export a table to a
+client-side CSV with a header:
+\
+copy
+public
 .
-Snowflake and Databricks are write targets; Shape does not profile from them yet.
+orders
+TO
+'orders.csv'
+WITH
+(
+FORMAT
+csv
+,
+HEADER
+true
+)
+Then profile the exported file:
+shape
+profile
+orders.csv
+-o
+orders.shape
 Next step
 ¶
 These pages describe implementation behavior. They make no account or service-validation
@@ -69719,7 +69949,8 @@ A safe capture is data minimisation, not anonymisation. You review it before sha
 Where platforms plug in
 ¶
 flowchart TB
-    F[Local files / DuckDB / PostgreSQL / MySQL] --> P[Profile]
+    F[Local files / DuckDB / SQL Server] --> P[Profile]
+    E[PostgreSQL / MySQL exports] --> F
     L[OneLake / ADLS / Delta files] --> P
     P --> C[Contract and drift checks]
     P --> G[Generation]
@@ -69729,7 +69960,8 @@ flowchart TB
     C --> CI[GitHub Actions / pipeline exit codes]
     M --> BI[Semantic model exports for Power BI]
 Database pages
-describe shipped adapters. Snowflake and Databricks
+describe shipped adapters. PostgreSQL and MySQL
+are write targets; export their data to CSV or Parquet before profiling. Snowflake and Databricks
 are write targets; Shape does not profile from them yet. Account-dependent examples identify the platform you need.
 Choose your next page
 ¶
@@ -80440,7 +80672,7 @@ get
 raises
 PluginLoadError
 (the CLI prints
-shape: error: plugin sources:kafka (sqllocks-shape-kafka 0.9.1) is not on the plugin allow-list
+shape: error: plugin stream_sources:kafka (sqllocks-shape-kafka 0.9.1) is not on the plugin allow-list
 PATH
 and exits 2). A blocked plugin does not stop commands that do not use it. Shape's own
 built-ins are always allowed.
@@ -80557,9 +80789,9 @@ plugins[].names
 Optional
 group:name
 list (
-sources:kafka
+stream_sources:kafka
 or
-shape.sources:kafka
+shape.stream_sources:kafka
 ). Only these plugins of the distribution may load.
 plugins[].record_sha256
 Optional. The sha256 of the distribution's

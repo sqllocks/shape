@@ -5798,7 +5798,7 @@ restrict it. Shape never claims otherwise.</p>
 <p>An organisation that runs Shape in a shared pipeline can control which plugin code can load at
 all. The check runs in <code>PluginHost</code> <strong>before a plugin is imported</strong>; a plugin it refuses has the
 status <code>blocked</code>, is never imported, and <code>get</code> raises <code>PluginLoadError</code> (the CLI prints
-<code>shape: error: plugin sources:kafka (sqllocks-shape-kafka 0.9.1) is not on the plugin allow-list
+<code>shape: error: plugin stream_sources:kafka (sqllocks-shape-kafka 0.9.1) is not on the plugin allow-list
 PATH</code> and exits 2). A blocked plugin does not stop commands that do not use it. Shape's own
 built-ins are always allowed.</p>
 <h3 id="switching-it-on">Switching it on<a class="headerlink" href="#switching-it-on" title="Permanent link">&para;</a></h3>
@@ -5849,7 +5849,7 @@ message to upgrade). The JSON Schema is <code>src/shape/schemas/plugin-allowlist
 </tr>
 <tr>
 <td><code>plugins[].names</code></td>
-<td>Optional <code>group:name</code> list (<code>sources:kafka</code> or <code>shape.sources:kafka</code>). Only these plugins of the distribution may load.</td>
+<td>Optional <code>group:name</code> list (<code>stream_sources:kafka</code> or <code>shape.stream_sources:kafka</code>). Only these plugins of the distribution may load.</td>
 </tr>
 <tr>
 <td><code>plugins[].record_sha256</code></td>

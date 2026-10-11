@@ -6427,9 +6427,11 @@ new rows. Secrets are never command-line values: see <code>docs/SINKS.md</code>.
 <li><strong>At-least-once.</strong> <code>emit</code> returns after acknowledgement. A transient failure raises
   <code>OSError</code>/<code>ConnectionError</code>/<code>TimeoutError</code> and the runtime retries the batch (<code>--retries</code>), so
   a destination may see a message twice and never zero times. Kafka, Event Hubs and Eventstream
-  do not deduplicate; <strong>Eventhouse does not either</strong>: read it with
-  <code>shape_fabric.eventhouse.dedupe_query(table)</code> (<code>summarize take_any(*) by _shape_table,
-  _shape_seq</code>).</li>
+  do not deduplicate; <strong>Eventhouse does not either</strong>.
+  <code>shape_fabric.eventhouse.dedupe_query(table)</code> returns KQL text
+  (<code>summarize take_any(*) by _shape_table, _shape_seq</code>); run it in your KQL client.
+  Shape does not read Eventhouse tables directly. To profile their data, export
+  to Parquet or CSV and profile the file.</li>
 <li><strong>Backpressure.</strong> A full producer queue (Kafka), a throttled service (Event Hubs
   <code>server-busy</code>, Eventhouse 429/503) is waited for inside <code>emit</code>; the bounded queue then blocks the
   generator. Nothing is dropped. A service that stays busy past <code>busy_retries</code> is a retryable

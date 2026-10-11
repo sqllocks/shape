@@ -5174,6 +5174,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#profile-an-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profile an export
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#next-step" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5643,6 +5654,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#profile-an-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profile an export
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#next-step" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5690,17 +5712,36 @@
 <h2 id="what-the-code-does">What the code does<a class="headerlink" href="#what-the-code-does" title="Permanent link">&para;</a></h2>
 <p>Writes bound batched multi-row INSERT statements through PyMySQL. MySQL DDL commits implicitly; row rollback does not restore a replaced or truncated table.</p>
 <h2 id="connection-and-data-handling">Connection and data handling<a class="headerlink" href="#connection-and-data-handling" title="Permanent link">&para;</a></h2>
-<p>The <code>mysql</code> URI selects the database. Non-loopback hosts default to certificate and hostname verification; explicit TLS options override it. NaN and infinity are written as NULL. The integrations plugin reads a selected table through its MySQL source.</p>
+<p>The <code>mysql</code> URI selects the database. Non-loopback hosts default to certificate and hostname verification; explicit TLS options override it. NaN and infinity are written as NULL.</p>
 <p>The databases plugin imports its optional driver only when opening a connection. A missing
 driver fails the command instead of silently selecting another sink. Create mode refuses an
 existing table. Append, truncate and replace have different effects; review the target before
 you select a destructive mode. A write error can report committed rows, so a retry needs an
 idempotency decision.</p>
 <p>Evidence: <code>plugins/shape-databases/src/shape_databases/mysql.py</code> and shared adapter helpers.
-The integrations source definitions are in <code>plugins/shape-integrations/src/shape_integrations/</code>.
-Snowflake and Databricks are write targets; Shape does not profile from them yet.</p>
+Shape writes to MySQL through <code>shape-databases</code>; it does not read MySQL
+tables directly in 0.9.1.</p>
+<h2 id="profile-an-export">Profile an export<a class="headerlink" href="#profile-an-export" title="Permanent link">&para;</a></h2>
+<p>Export the data to Parquet or CSV, then profile the local file.</p>
+<p>Reading PostgreSQL and MySQL tables directly is planned (W9-01, issue #2).</p>
+<p><strong>Needs a MySQL account. Not run in CI.</strong> For numeric <code>order_id</code> and <code>amount</code>
+columns, export from the MySQL client. The <code>NULL</code> token preserves missing amounts
+for Shape's CSV reader:</p>
+<div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">order_id</span><span class="p">,</span><span class="w"> </span><span class="k">COALESCE</span><span class="p">(</span><span class="k">CAST</span><span class="p">(</span><span class="n">amount</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="nb">CHAR</span><span class="p">),</span><span class="w"> </span><span class="s1">'NULL'</span><span class="p">)</span><span class="w"> </span><span class="k">AS</span><span class="w"> </span><span class="n">amount</span>
+<span class="k">INTO</span><span class="w"> </span><span class="n">OUTFILE</span><span class="w"> </span><span class="s1">'/var/lib/mysql-files/orders.csv'</span>
+<span class="n">FIELDS</span><span class="w"> </span><span class="n">TERMINATED</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="s1">','</span><span class="w"> </span><span class="n">OPTIONALLY</span><span class="w"> </span><span class="n">ENCLOSED</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="s1">'"'</span><span class="w"> </span><span class="n">ESCAPED</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="s1">'"'</span>
+<span class="n">LINES</span><span class="w"> </span><span class="n">TERMINATED</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="s1">'\n'</span>
+<span class="k">FROM</span><span class="w"> </span><span class="n">orders</span><span class="p">;</span>
+</code></pre></div>
+<p><code>INTO OUTFILE</code> writes on the server, requires the <code>FILE</code> privilege and is constrained
+by <code>secure_file_priv</code>. The destination must not already exist. Copy that file to
+your machine as <code>orders-data.csv</code>, then add its column header and profile it:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">printf</span><span class="w"> </span><span class="s1">'order_id,amount\n'</span><span class="w"> </span>&gt;<span class="w"> </span>orders.csv
+cat<span class="w"> </span>orders-data.csv<span class="w"> </span>&gt;&gt;<span class="w"> </span>orders.csv
+shape<span class="w"> </span>profile<span class="w"> </span>orders.csv<span class="w"> </span>-o<span class="w"> </span>orders.shape
+</code></pre></div>
 <h2 id="next-step">Next step<a class="headerlink" href="#next-step" title="Permanent link">&para;</a></h2>
-<!-- owner: database maintainer — execute a MySQL read/write transcript against a disposable server before publishing commands. -->
+<!-- owner: database maintainer — execute a MySQL export/write transcript against a disposable server before publishing commands. -->
 
 <p>These pages describe implementation behavior. They make no account or service-validation
 claim. Authentication, permissions and server limits remain properties of your deployment.

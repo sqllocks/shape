@@ -5146,6 +5146,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#profile-an-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profile an export
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#next-step" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5643,6 +5654,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#profile-an-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profile an export
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#next-step" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5690,17 +5712,27 @@
 <h2 id="what-the-code-does">What the code does<a class="headerlink" href="#what-the-code-does" title="Permanent link">&para;</a></h2>
 <p>Writes batches with psycopg 3 COPY FROM STDIN. By default the table and rows are one transaction. With commit_rows, prior commits remain after a later failure.</p>
 <h2 id="connection-and-data-handling">Connection and data handling<a class="headerlink" href="#connection-and-data-handling" title="Permanent link">&para;</a></h2>
-<p>The sink accepts the <code>postgresql</code> and <code>postgres</code> URI schemes. Non-loopback hosts default to TLS verify-full; explicit URI options can override that. Credentials can come from an option or environment reference. The integrations plugin reads a selected table through its PostgreSQL source.</p>
+<p>The sink accepts the <code>postgresql</code> and <code>postgres</code> URI schemes. Non-loopback hosts default to TLS verify-full; explicit URI options can override that. Credentials can come from an option or environment reference.</p>
 <p>The databases plugin imports its optional driver only when opening a connection. A missing
 driver fails the command instead of silently selecting another sink. Create mode refuses an
 existing table. Append, truncate and replace have different effects; review the target before
 you select a destructive mode. A write error can report committed rows, so a retry needs an
 idempotency decision.</p>
 <p>Evidence: <code>plugins/shape-databases/src/shape_databases/postgres.py</code> and shared adapter helpers.
-The integrations source definitions are in <code>plugins/shape-integrations/src/shape_integrations/</code>.
-Snowflake and Databricks are write targets; Shape does not profile from them yet.</p>
+Shape writes to PostgreSQL through <code>shape-databases</code>; it does not read PostgreSQL
+tables directly in 0.9.1.</p>
+<h2 id="profile-an-export">Profile an export<a class="headerlink" href="#profile-an-export" title="Permanent link">&para;</a></h2>
+<p>Export the data to Parquet or CSV, then profile the local file.</p>
+<p>Reading PostgreSQL and MySQL tables directly is planned (W9-01, issue #2).</p>
+<p><strong>Needs a PostgreSQL account. Not run in CI.</strong> In <code>psql</code>, export a table to a
+client-side CSV with a header:</p>
+<div class="highlight"><pre><span></span><code><span class="err">\</span><span class="k">copy</span><span class="w"> </span><span class="k">public</span><span class="p">.</span><span class="n">orders</span><span class="w"> </span><span class="k">TO</span><span class="w"> </span><span class="s1">'orders.csv'</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="p">(</span><span class="n">FORMAT</span><span class="w"> </span><span class="n">csv</span><span class="p">,</span><span class="w"> </span><span class="n">HEADER</span><span class="w"> </span><span class="k">true</span><span class="p">)</span>
+</code></pre></div>
+<p>Then profile the exported file:</p>
+<div class="highlight"><pre><span></span><code>shape<span class="w"> </span>profile<span class="w"> </span>orders.csv<span class="w"> </span>-o<span class="w"> </span>orders.shape
+</code></pre></div>
 <h2 id="next-step">Next step<a class="headerlink" href="#next-step" title="Permanent link">&para;</a></h2>
-<!-- owner: database maintainer — execute a PostgreSQL read/write transcript against a disposable server before publishing commands. -->
+<!-- owner: database maintainer — execute a PostgreSQL export/write transcript against a disposable server before publishing commands. -->
 
 <p>These pages describe implementation behavior. They make no account or service-validation
 claim. Authentication, permissions and server limits remain properties of your deployment.
