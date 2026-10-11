@@ -39,7 +39,7 @@ What you should do:
 An organisation that runs Shape in a shared pipeline can control which plugin code can load at
 all. The check runs in `PluginHost` **before a plugin is imported**; a plugin it refuses has the
 status `blocked`, is never imported, and `get` raises `PluginLoadError` (the CLI prints
-`shape: error: plugin sources:kafka (sqllocks-shape-kafka 0.9.1) is not on the plugin allow-list
+`shape: error: plugin stream_sources:kafka (sqllocks-shape-kafka 0.9.1) is not on the plugin allow-list
 PATH` and exits 2). A blocked plugin does not stop commands that do not use it. Shape's own
 built-ins are always allowed.
 
@@ -83,7 +83,7 @@ message to upgrade). The JSON Schema is `src/shape/schemas/plugin-allowlist-v1.s
 |---|---|
 | `plugins[].distribution` | Required. The distribution name (`-`, `_` and `.` are equivalent). A plugin from a distribution that is not listed is blocked. Listed twice is an error. |
 | `plugins[].version` | Optional PEP 440 specifier (`==0.9.1`, `>=0.9,<1`). The installed version must satisfy it. Evaluating it needs the `packaging` package; without it the plugin is blocked. |
-| `plugins[].names` | Optional `group:name` list (`sources:kafka` or `shape.sources:kafka`). Only these plugins of the distribution may load. |
+| `plugins[].names` | Optional `group:name` list (`stream_sources:kafka` or `shape.stream_sources:kafka`). Only these plugins of the distribution may load. |
 | `plugins[].record_sha256` | Optional. The sha256 of the distribution's `RECORD`. When given, `RECORD` must match it and every file `RECORD` gives a hash for must match that hash; the first changed or missing file is named in the reason. |
 | `require_signature` | Default `false`. When `true`, every listed distribution must carry a valid signature (below). |
 | `trusted_keys` | `key_id` and `public_key`, a path (relative to the allow-list file) of a public key file as `shape keygen` writes it. The key id must match the file. |

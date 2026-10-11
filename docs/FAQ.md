@@ -33,8 +33,13 @@ all measured properties survive profile fitting.
 
 ## Does Shape read Snowflake and Databricks?
 
-Not yet. The databases plugin writes to them. PostgreSQL, MySQL and DuckDB reads come from
-the integrations plugin. See [Databases](databases/index.md).
+Not directly in 0.9.1. The databases plugin writes to Snowflake, Databricks,
+PostgreSQL and MySQL. Export their data to Parquet or CSV and profile the file.
+DuckDB reads come from the integrations plugin. The other database and platform
+sources are `mssql`, `onelake` and `semantic-model`.
+
+Reading PostgreSQL and MySQL tables directly is planned (W9-01, issue #2).
+See [Databases](databases/index.md).
 
 ## How do I ask for a platform or domain?
 

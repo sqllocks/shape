@@ -29,7 +29,8 @@ A safe capture is data minimisation, not anonymisation. You review it before sha
 
 ```mermaid
 flowchart TB
-    F[Local files / DuckDB / PostgreSQL / MySQL] --> P[Profile]
+    F[Local files / DuckDB / SQL Server] --> P[Profile]
+    E[PostgreSQL / MySQL exports] --> F
     L[OneLake / ADLS / Delta files] --> P
     P --> C[Contract and drift checks]
     P --> G[Generation]
@@ -40,7 +41,8 @@ flowchart TB
     M --> BI[Semantic model exports for Power BI]
 ```
 
-[Database pages](databases/index.md) describe shipped adapters. Snowflake and Databricks
+[Database pages](databases/index.md) describe shipped adapters. PostgreSQL and MySQL
+are write targets; export their data to CSV or Parquet before profiling. Snowflake and Databricks
 are write targets; Shape does not profile from them yet. Account-dependent examples identify the platform you need.
 
 ## Choose your next page

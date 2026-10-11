@@ -5,13 +5,19 @@ Choose a local or server writer and distinguish it from a profiling source.
 Status: available.
 
 `shape-databases` writes generated Arrow batches to DuckDB, PostgreSQL, MySQL, Snowflake and
-Databricks. Optional driver imports happen when a connection opens. `shape-integrations`
-supplies database reads for PostgreSQL, MySQL and DuckDB. Snowflake and Databricks are write
-targets; Shape does not profile from them yet.
+Databricks. Optional driver imports happen when a connection opens. Shape writes to
+PostgreSQL and MySQL through `shape-databases`; neither has a direct profiling source
+in 0.9.1. Export their data to Parquet or CSV and profile the file.
+
+The shipped database and platform sources are `mssql`, `duckdb`, `onelake` and
+`semantic-model`. DuckDB reads come from `shape-integrations`. Snowflake and Databricks
+are write targets; export their data to Parquet or CSV before profiling.
+
+Reading PostgreSQL and MySQL tables directly is planned (W9-01, issue #2).
 
 - [DuckDB](duckdb.md): a local file, covered by the sixth starter tutorial.
-- [PostgreSQL](postgresql.md): COPY writes and integrations reads.
-- [MySQL](mysql.md): bound batched INSERT writes and integrations reads.
+- [PostgreSQL](postgresql.md): COPY writes; profile a CSV or Parquet export.
+- [MySQL](mysql.md): bound batched INSERT writes; profile a CSV or Parquet export.
 - [Snowflake](snowflake.md): staged Parquet and COPY INTO writes.
 - [Databricks](databricks.md): bound INSERT writes to SQL warehouses.
 

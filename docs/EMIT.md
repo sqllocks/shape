@@ -239,9 +239,11 @@ What every emitter owes the runtime (and what `shape.streaming.emit.contract` te
 * **At-least-once.** `emit` returns after acknowledgement. A transient failure raises
   `OSError`/`ConnectionError`/`TimeoutError` and the runtime retries the batch (`--retries`), so
   a destination may see a message twice and never zero times. Kafka, Event Hubs and Eventstream
-  do not deduplicate; **Eventhouse does not either**: read it with
-  `shape_fabric.eventhouse.dedupe_query(table)` (`summarize take_any(*) by _shape_table,
-  _shape_seq`).
+  do not deduplicate; **Eventhouse does not either**.
+  `shape_fabric.eventhouse.dedupe_query(table)` returns KQL text
+  (`summarize take_any(*) by _shape_table, _shape_seq`); run it in your KQL client.
+  Shape does not read Eventhouse tables directly. To profile their data, export
+  to Parquet or CSV and profile the file.
 * **Backpressure.** A full producer queue (Kafka), a throttled service (Event Hubs
   `server-busy`, Eventhouse 429/503) is waited for inside `emit`; the bounded queue then blocks the
   generator. Nothing is dropped. A service that stays busy past `busy_retries` is a retryable
