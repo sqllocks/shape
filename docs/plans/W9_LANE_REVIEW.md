@@ -384,3 +384,35 @@ other kinds, and list `docs/SEMANTIC_MODEL.md` where `tests/release/test_docs.py
 docs page (the `mkdocs.yml` nav / docs index). Then re-dispatch CI; integrate after W9-08
 because of `drift/engine.py`.
 
+## W9-13 — BigQuery sink and source (issue #14), `lane/W9-13` at `1249af9`
+
+**What it builds (on the pushed head): nothing beyond W9-01.** The branch is `lane/W9-01`'s
+head plus one commit that adds `docs/plans/lane_status/W9-13.md`. The status file says the
+partial implementation (a `bigquery` module, `FakeBigQuery`, acceptance tests for Wanted 1–7,
+docs) "remains local and uncommitted" in the builder's sandbox and was not pushed, and that
+the lane stopped on a Wanted-3 question: Arrow decimals BigQuery cannot create (negative scale,
+scale above precision) under the issue's inequalities.
+
+**Against the issue's Wanted list.** Items 1–7 are all missing from the branch. The lead
+answered the question on #14 at 2026-10-09 02:10 UTC (require `0 <= scale <= precision`, refuse
+otherwise before any connection, tests for both boundaries); the lane's head was committed at
+01:37 UTC, so the answer has not been acted on.
+
+**CI on the head:** none dispatched. Local checks recorded against the uncommitted tree
+(ruff, format, mypy 3.11 clean; 849 passed, 1 failed in both kernels: the databases plugin's
+exact entry-point conformance list without the new entries).
+
+**Base.** `lane/W9-01` at `88a46ab` (contains W9-01 whole), itself on `7f700d3`; 25 behind
+the release. Dry merge onto `release/0.9.1` conflicts only where W9-01 does (`docs/CLI.md`).
+
+**Overlap.** Identical to W9-01's; nothing of its own.
+
+**Risks.** The real risk is lost work: the partial implementation exists only in a builder
+sandbox that may no longer exist. The `[bigquery]` extra (`google-cloud-bigquery`,
+`google-cloud-bigquery-storage`) is specified by the issue and not yet in any pushed file.
+
+**Verdict: needs a fix round, and it is not a 0.10.0 candidate as it stands.** Resume from the
+lead's decision: push the partial tree (or rebuild it from the issue), add the two decimal
+boundary tests, update the conformance entry-point list, then dispatch CI. It depends on W9-01
+landing first and must be rebased onto the release after that.
+
