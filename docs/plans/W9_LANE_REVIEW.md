@@ -199,3 +199,51 @@ report and the doctor check must reach the Delta sink through the plugin registr
 (2) Dispatch CI again; the matrix has never run this lane's tests. (3) Resolve `docs/SINKS.md`
 on the rebase; integrate after or together with W9-03, which edits the same two files.
 
+## W9-08 — Kafka and Event Hubs message metadata (issue #9), `lane/W9-08` at `e3cf7a5`
+
+**What it builds.** Emit options on both transports (`key` from a column or `a|b`, static and
+column `headers`, `partition` / `partition_key`, `timestamp` broker or `event_time`; the D-12
+key moves to header/property `shape-key` when a column is the key; `shape-*` names cannot be
+shadowed; unknown columns refused before the first message); read options `with_key`,
+`with_headers`, `with_timestamp` (+ `_shape_properties`, `_shape_partition_key` on Event Hubs)
+adding typed metadata columns that drift ignores unless selected; `shape emit` and
+`shape stream-profile` flags; docs (`docs/EMIT.md`, `docs/CLI.md`, both READMEs) and changelog.
+Core: `src/shape/streaming/messages.py` (`StreamMessage` gains `key`, `headers`, `properties`,
+`partition_key`; `decode_messages` gains the four flags), new `streaming/emit/metadata.py`,
+`cli/emit.py`, `streaming/cli.py`, `diff/core.py`, `drift/engine.py`. 29 files.
+
+**Against the issue's Wanted list.** Items 1–5 each have named tests
+(`tests/streaming/test_message_metadata.py`, each plugin's `tests/test_message_metadata.py`,
+`test_wanted4_cli_options`, `test_wanted5_documented_options`); the CLI surface snapshot was
+regenerated additively as the lead allowed (comment 2026-10-08). Emulator and live keyed round
+trips were added but not run. **Nothing on the Wanted list is missing.**
+
+**CI on the head** (run 37866298685, 2026-10-09): 22 of 25 pass. Failing: `zero-network`
+(*base*), `test (macos-latest, 3.11)` (*base*, the heavy memory test), `bench-quick`
+(*FRZ-01*). **No lane-attributable failure.**
+
+**Base.** `7f700d3`; 25 behind. Dry merge onto `release/0.9.1`: three conflicts,
+`docs/CLI.md`, `docs/EMIT.md`, `tests/cli/test_remote_confirmation.py` (REL-091 and the lane
+both changed `test_emit_with_yes_gets_past_the_confirmation`); `src/shape/cli/emit.py`,
+`src/shape/cli/main.py`, `src/shape/diff/core.py` auto-merge.
+
+**Overlap with other lanes** (own files, 29): `src/shape/cli/main.py`, `docs/CLI.md`,
+`tests/cli/cli_surface_v1.json` with W9-01; `src/shape/cli/main.py` with W9-11;
+`src/shape/drift/engine.py` with W9-12; `docs/CLI.md` with W9-16. W9-09 (not started) will edit
+the same `emitter.py`, `source.py`, `formats.py` and `messages.py` paths and must be built on
+top of this lane (see `docs/plans/wp/W9-09.md`).
+
+**Risks.** No dependency change. Test edits to flag for the lead: in both plugins'
+`tests/test_live.py` the existing `need()` helper changed from `assert value, "<NAME> is not set
+(live tests need it)"` (the Kafka file's docstring: "nothing is silently skipped") to
+`pytest.skip(f"missing live setting: {name}")`. That is the databases plugin's convention and the
+issue's own test-plan wording, but it changes the live-test policy of two existing files from
+fail to skip; the lead should accept it explicitly or ask for the old behaviour back. The
+`test_remote_confirmation.py` change strengthens the test with a core-only fake emitter (it also
+fixes the real-broker flush that W9-10 and W9-11 hit). The additive CLI snapshot refresh is
+listed in the status file.
+
+**Verdict: ready to integrate**, after the rebase resolves the three conflicts and the lead
+accepts (or reverses) the live-test skip change. Run `kafka-e2e` and `eventhubs-e2e` nightly
+once for the keyed round trips.
+
