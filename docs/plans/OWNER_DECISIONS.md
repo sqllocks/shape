@@ -205,3 +205,11 @@ Date: **2026-10-11**. Note: `docs/GITHUB_ACTION.md:84`. Decision: **KEEP OPEN**.
 Evidence row: `docs/plans/OWNER_ANSWERS_DRAFT.md:26` (note `docs/GITHUB_ACTION.md:84`).
 
 Evidence relied on: `docs/GITHUB_ACTION.md:32–52,76–84`; `action.yml:91–100`; `.github/workflows/ci.yml:1–18,55–77`; `.github/workflows/docs.yml:10–33` (workflow/job declarations are evidence of configuration, not live branch-protection state).
+
+## required-status-check-hosted
+
+Date: **2026-10-11**. Note: `docs/GITHUB_ACTION.md:84` in OWNER_NOTES_TRIAGE.md. Decision: **RESOLVE** after the Owner-run hosted evidence. This supersedes the earlier KEEP OPEN deferral without changing that historical entry.
+
+> Required status check: the `shape` job; demonstrated in sqllocks/shape-action-demo ruleset 24896836; 2026-10-11
+
+Evidence relied on: `docs/plans/evidence/owner-notes/github-action-pass.md`, `docs/plans/evidence/owner-notes/github-action-drift.md` and `docs/plans/evidence/owner-notes/github-action-ruleset.md`; read-only GitHub job logs, PR comments, active ruleset and blocked PR state. The required check is the job name `shape`; the documentation does not configure a reader’s branch protection.
