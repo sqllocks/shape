@@ -42,6 +42,13 @@ The [database pages](databases/index.md) explain their behavior.
 Use only the extras your workflow needs. Installing a plugin gives its code the same
 process permissions as core; see [What leaves my machine](WHAT_LEAVES.md).
 
+On Alpine Linux, Kafka's Python dependency builds from source on both ARM64 and x86_64.
+Before installing `[kafka]`, `[streaming]` or `[all]`, install the build tools and
+system drivers with `apk add build-base librdkafka-dev unixodbc-dev`.
+Use an Alpine release that supplies librdkafka 2.14 or newer. Shape 0.9.1 limits
+`confluent-kafka` to versions below 2.15 so it builds with Alpine's librdkafka 2.14.1;
+newer Python client versions require a newer system library.
+
 ## Offline installation locks
 
 `python scripts/offline_lock.py generate LOCKDIR` writes a hashed core dependency

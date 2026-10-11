@@ -21,7 +21,9 @@ classifiers = [
     "Operating System :: OS Independent",
     "Topic :: Database",
 ]
-dependencies = ["sqllocks-shape==0.9.1", "confluent-kafka>=2.5,<4"]
+# No musllinux wheels: 2.14.2 builds with Alpine's librdkafka 2.14.1.
+# 2.15+ needs a newer native library than Alpine supplies; keep [kafka]/[all] installable.
+dependencies = ["sqllocks-shape==0.9.1", "confluent-kafka>=2.5,<2.15"]
 
 [project.urls]
 Homepage = "https://github.com/sqllocks/shape"
