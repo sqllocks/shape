@@ -165,7 +165,7 @@ def claims(text: str, items: list[Capability], planned: list[dict]) -> list[tupl
                         not match.groupdict().get("scheme")
                         and not re.match(r"(?:Shape\s+)?profil", match[0], re.I)
                         and re.match(
-                            r"(?:['’]s)?\s+(?:(?:project|job|layout|schema)(?:['’]s)?\s+)?"
+                            r"(?:['’]s\s+|(?:['’]s)?\s+(?:project|job|layout|schema)(?:['’]s)?\s+)"
                             r"(?:files?|artifacts?|[\w-]+\.(?:json|ya?ml|csv|parquet))\b",
                             cleaned[sentence.start() + target_end :],
                             re.I,
