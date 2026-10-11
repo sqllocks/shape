@@ -86,3 +86,67 @@ new round-trip tests. The `profile()` dispatch adds a plugin lookup on every `:/
 `docs/databases/index.md` / `postgresql.md` / `mysql.md` (they claim integration-plugin reads
 that do not exist at 0.9.1; with W9-01 landed they should point at the databases plugin).
 
+## W9-03 — Type fidelity on write (issue #4), `lane/W9-03` at `a88683b`
+
+**What it builds.** One Arrow-to-SQL map per dialect in `src/shape/builtins/sinks/sql.py`
+(`tsql`, `tsql-fabric-warehouse`, `postgres`, `mysql`) and `shape_databases/_cloud.py`
+(Snowflake, Databricks): integer widths kept, signed `int8` as `SMALLINT` on T-SQL (lead
+decision 2026-10-08), unsigned to the next width, `float32` to `REAL`/`FLOAT(24)`, zoned
+timestamps normalised to UTC with the instant kept to the microsecond, `TIME(p)`, decimals only
+with explicit `(p,s)` (a declared `decimal` without dimensions is refused naming the column),
+strings from `max_length` or a declared width, else unbounded (`TEXT`/`VARCHAR(MAX)`/`STRING`),
+first-batch sizing removed; `shape generate --to ... --dry-run` prints the resolved DDL; docs and
+changelog. Fabric Warehouse, SQL DB and Synapse writers (`plugins/shape-fabric`) follow the same
+map. 38 files.
+
+**Against the issue's Wanted list.** Items 1, 2, 3, 5 and 6 have named tests
+(`tests/builtins/test_w9_03_types.py`, `tests/cli/test_w9_03_ddl.py`,
+`plugins/shape-databases/tests/test_w9_03.py`, `plugins/shape-fabric/tests/test_w9_03.py`).
+**Item 4 is not met and the lane has stopped on it:** 16 pinned assertions (the golden SQL
+writer tests, W8-04 and W8-04b corpus assertions) fail because item 1 and item 2 change the
+emitted DDL. The lane's byte audit of all 418 corpus outputs found exactly 206 changed DDL lines
+(192 item-2 string defaults, 14 item-1 temporal types), 24 outputs refused for undeclared
+decimals, and zero INSERT or value-byte differences. The lead's third comment on #4
+(2026-10-09 02:10 UTC) authorised precisely those updates (the 192 string lines, the 14 temporal
+lines, the 24 refusals with inputs unchanged, every changed line listed with its rule). The lane
+head was committed at 00:55 UTC, before that comment, and its status still asks the question.
+So the remaining work is the authorised pinned-assertion update, not a decision.
+
+One consequence the status records only in passing needs the lead's eyes: the built-in
+`retail` domain declares decimal columns without precision, so after this lane
+`shape generate retail --to <any SQL sink>` and `shape seed retail` **refuse** with
+"missing `address.lat` dimensions" (the lane rewrote `plugins/shape-databases/tests/test_seed.py`
+to seed a copy of the retail schema with `precision=18, scale=2` added, and added a test that the
+unchanged domain is refused). That follows the issue's "no silent (18,2)" rule, but it turns a
+0.9.1 quick-start path (`--to postgresql://...` of a domain) into an error at 0.10.0 unless the
+domain schemas declare `(p,s)`, and declaring them in the 14 domain schemas is a change to pinned
+domain output that §6.4 and W8-04 guard. The lead decides which (declare precision in the domain
+schemas as a separate lane, or document the refusal and the `columns` override).
+
+**CI on the head:** **no run was dispatched** on this lane at all. The status records
+CI-matched local runs (ruff, format, mypy 3.11 clean, 473 focused tests pass) and the broad
+touched-area selections failing only the 16 pinned assertions in both kernels.
+
+**Base.** `7f700d3`; 25 behind the release. Dry merge onto `release/0.9.1`: conflicts in
+`CHANGELOG.md` and `docs/SINKS.md` (REL-091 edited both); `plugins/shape-fabric/README.md` and
+`src/shape/cli/generation.py` auto-merge.
+
+**Overlap with other lanes** (own files, 38): `src/shape/cli/generation.py` and `docs/SINKS.md`
+with W9-07; `plugins/shape-databases/README.md` and `shape_databases/testing.py` with W9-01;
+`plugins/shape-fabric/README.md` with W9-12; `docs/SINKS.md` with W9-16. The largest
+lane-vs-lane surface in the set: three sinks' modules in `shape-databases`, four in
+`shape-fabric`, the core `sql.py` writer.
+
+**Risks.** No dependency change. 57 removed test lines: the five `test_seed.py` functions that
+grep showed as removed are rewritten in place (same names, new `retail_schema` fixture), and the
+removed assertions are the old DDL expectations (`VARCHAR(255)`, `NUMBER(38,0)`, naive-UTC
+timestamps) replaced by the exact new types; the status says no assertion was skipped, xfailed
+or loosened, and the diff agrees. New emulator and live tests are marked and were not run. The
+behaviour change is wide (every SQL sink's DDL) and intended by the issue.
+
+**Verdict: needs a lead decision, then a fix round.** Decision: the domain-schema consequence
+above. Fix round: apply the lead's 2026-10-09 02:10 authorisation (update the 16 pinned
+assertions as itemised, inputs unchanged, each line listed with its rule in the status file),
+rerun the corpus tests, then dispatch CI (none exists yet) and run `databases-e2e` and
+`sqlserver-e2e` nightly once for the catalog read-backs.
+
