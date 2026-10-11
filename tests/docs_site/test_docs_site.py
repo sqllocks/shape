@@ -99,6 +99,7 @@ def test_generated_pages_agree_between_the_hook_and_the_link_check() -> None:
     assert set(links.GENERATED) == {
         f"docs/{hooks.CLI_PAGE}",
         f"docs/{hooks.PERFORMANCE_PAGE}",
+        "docs/reference/capabilities.md",
         "docs/reference/api.md",
         "docs/CONTRIBUTING.md",
         "docs/GOVERNANCE.md",

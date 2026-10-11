@@ -27,6 +27,11 @@ def items():
     [
         ("Shape profiles Snowflake tables directly", True),
         ("Shape writes to Snowflake", False),
+        ("Shape profiles Excel workbooks", False),
+        ("Shape profiles XLSX workbooks", False),
+        ("Shape profiles XLSB workbooks", True),
+        ("Shape profiles UnregisteredFormat files", True),
+        ("Shape profiles NDJSON files", False),
         ("Shape profiles UnregisteredStore tables directly.", True),
         ("Shape reads UnregisteredStore.", True),
         ("Shape writes to UnregisteredStore.", True),
@@ -99,6 +104,8 @@ def test_registered_handlers_and_command_status(items):
     for group in GROUP_COMMAND:
         for record in host.records(group):
             obj = host.get(group, record.name)
+            if group == "shape.sources":
+                assert callable(obj.read), f"{record.name} has no real source reader"
             direction = "reads" if group in {"shape.sources", "shape.stream_sources"} else "writes"
             assert any(
                 c.name == record.name
@@ -133,3 +140,66 @@ def test_public_scope(tmp_path):
         "docs/page.md",
         "plugins/shape-fake/README.md",
     }
+
+
+def test_every_profile_file_format_has_a_real_reader_and_table_entry(items, tmp_path):
+    """Exercise the CLI's extension, workbook and delimiter-sniffing dispatch."""
+    import subprocess
+
+    import openpyxl
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    from shape.io import readers
+    from shape.io.excel import XLSX_SUFFIXES
+    from shape.profile.reference import sources
+
+    accepted = {}
+    for suffix in {*sources._SUFFIXES, *readers._SUFFIX_KIND}:
+        try:
+            accepted[suffix] = sources._kind(Path("input" + suffix))
+        except sources.SourceError:
+            pass  # IO supports additional formats that the profile path dispatch does not accept.
+    accepted.update(dict.fromkeys(XLSX_SUFFIXES, "xlsx"))
+    for suffix, kind in accepted.items():
+        assert any(
+            c.direction == "reads" and c.command == "profile" and suffix in c.extensions
+            for c in items
+        ), f"profile accepts {suffix}, but the capability table has no read entry"
+        path = tmp_path / ("input" + suffix)
+        if kind == "csv":
+            path.write_text("value,label\n1,first\n2,second\n")
+        elif kind == "parquet":
+            pq.write_table(pa.table({"value": [1, 2], "label": ["first", "second"]}), path)
+        elif kind == "jsonl":
+            path.write_text('{"value":1,"label":"first"}\n{"value":2,"label":"second"}\n')
+        elif kind == "xlsx":
+            book = openpyxl.Workbook()
+            for row in (("value", "label"), (1, "first"), (2, "second")):
+                book.active.append(row)
+            book.save(path)
+        else:
+            pytest.fail(f"new profile format {kind}: add a real reader fixture")
+        output = tmp_path / "profile.shape"
+        result = subprocess.run(
+            [sys.executable, "-m", "shape", "profile", str(path), "-o", str(output)],
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, f"{suffix}: {result.stderr}"
+        assert output.is_file()
+    for delimiter in readers._DELIMITERS:
+        path = tmp_path / "sniff.csv"
+        path.write_text(
+            "\n".join(
+                delimiter.join(row) for row in (("value", "label"), ("1", "first"), ("2", "second"))
+            )
+            + "\n"
+        )
+        assert readers.sniff_delimiter(path) == delimiter
+        result = subprocess.run(
+            [sys.executable, "-m", "shape", "profile", str(path), "-o", str(output)],
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, result.stderr

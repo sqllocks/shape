@@ -42,6 +42,7 @@ LABELS = {
     "dbt-seeds": "dbt seeds",
     "semantic-model": "Semantic model",
     "fabric-mirror": "Fabric mirror",
+    "xlsx": "Excel",
 }
 GROUP_COMMAND = {
     "shape.sources": "profile",
@@ -62,6 +63,7 @@ class Capability:
     schemes: tuple[str, ...]
     package: str
     extras: tuple[str, ...]
+    extensions: tuple[str, ...] = ()
 
     @property
     def status(self) -> str:
@@ -83,12 +85,19 @@ def install_extras(
     declared = project.get("optional-dependencies", {})
     found = set(declared).intersection((name, *schemes))
     # The declaring module includes the adapter's lazy-driver error and INSTALL constants.
-    module = inspect.getmodule(type(obj))
+    module = inspect.getmodule(obj if inspect.isfunction(obj) else type(obj))
     text = inspect.getsource(module) if module is not None else ""
+    if inspect.isfunction(obj):
+        # A dispatcher module may also contain unrelated cloud install hints.
+        text = inspect.getsource(obj)
+        text += "\n" + repr(inspect.getdoc(module) or "")
     for package, extras in re.findall(r"(sqllocks-shape(?:-[\w-]+)?)\[([\w,.-]+)\]", text):
         if package == project["name"]:
             found.update(e for e in extras.split(",") if e in declared)
     for extra in re.findall(r"extra\s+`*\[([\w-]+)\]", text):
+        if extra in declared:
+            found.add(extra)
+    for extra in re.findall(r"\[([\w-]+)\]`*\s+extra", text):
         if extra in declared:
             found.add(extra)
     for node in ast.walk(ast.parse(text)):
@@ -102,6 +111,37 @@ def install_extras(
         ):
             found.add(node.args[1].value)
     return tuple(sorted(found))
+
+
+def profile_file_formats() -> dict[str, tuple[tuple[str, ...], object]]:
+    """The profiler's extension dispatch and workbook branch, with their real readers.
+
+    The general IO reader's extension map is broader than shape profile's dispatch;
+    it must not be used to invent CLI formats. CSV delimiter sniffing is performed
+    by _read_files through _csv_options and sniff_delimiter.
+    """
+    from shape.io.excel import XLSX_SUFFIXES, read_workbook
+    from shape.profile.reference import sources
+
+    formats: dict[str, list[str]] = {}
+    dispatch = ast.parse(inspect.getsource(sources._kind))
+    suffixes = {
+        node.value
+        for node in ast.walk(dispatch)
+        if isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and re.fullmatch(r"\.[a-z0-9]+", node.value)
+    }
+    for suffix in sorted(suffixes):
+        kind = sources._kind(Path("capability" + suffix))
+        formats.setdefault(kind, []).append(suffix)
+    # profile() checks is_workbook_spec before its ordinary load_columns path.
+    for suffix in XLSX_SUFFIXES:
+        formats.setdefault("xlsx", []).append(suffix)
+    return {
+        kind: (tuple(sorted(extensions)), read_workbook if kind == "xlsx" else sources._read_files)
+        for kind, extensions in formats.items()
+    }
 
 
 def capabilities() -> list[Capability]:
@@ -159,6 +199,19 @@ def capabilities() -> list[Capability]:
         for record in host.records(group):
             if record.source in projects:
                 add(host.get(group, record.name), record.name, record.source, group)
+    for kind, (extensions, reader) in profile_file_formats().items():
+        result.append(
+            Capability(
+                LABELS.get(kind, kind.capitalize()),
+                kind,
+                "reads",
+                "profile",
+                ("file",),
+                "sqllocks-shape",
+                install_extras(reader, projects["sqllocks-shape"], kind, ("file",)),
+                extensions,
+            )
+        )
     add(FileStreamSource(), "file", "sqllocks-shape", "shape.stream_sources")
     for fmt in FORMATS:
         add(FileStreamSource(), fmt, "sqllocks-shape", "shape.stream_sources")
@@ -213,6 +266,9 @@ def render(items: list[Capability] | None = None) -> str:
             urls = ", ".join(
                 f"`{s}://`" if s != "-" else "`shape stream-profile -`" for s in schemes
             )
+            extensions = sorted({e for c in handlers for e in c.extensions})
+            if extensions:
+                urls += " (" + ", ".join(f"`{e}`" for e in extensions) + ")"
             locations.append(f"{which.title()}: {urls}")
             packages = sorted(
                 {"core" if c.package == "sqllocks-shape" else c.package for c in handlers}

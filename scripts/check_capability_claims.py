@@ -16,7 +16,7 @@ WORDS = r"(?:[\w'-]+\s+){0,8}?"
 PROPER_NAME = r"(?-i:[A-Z][A-Za-z0-9-]*(?:\s+[A-Z][A-Za-z0-9-]*){0,3})"
 PATTERNS = (
     ("reads", r"\bprofil(?:e|es|ing)\s+" + WORDS + r"from\s+(?P<system>{systems})\b(?!://)"),
-    ("reads", r"\bprofil(?:e|es|ing)\s+(?P<system>{systems})\s+tables?\b"),
+    ("reads", r"\bprofil(?:e|es|ing)\s+(?P<system>{systems})\s+(?:tables?|files?|workbooks?)\b"),
     ("reads", r"\bread(?:s|ing)?\s+" + WORDS + r"(?P<system>{systems})\b(?!://)"),
     (
         "reads",
@@ -34,7 +34,12 @@ PATTERNS = (
     ("reads", r"\bshape\s+(?P<command>profile|stream-profile)\s+(?P<scheme>[a-z][\w+.-]*)://"),
     ("writes", r"--to\s+(?P<scheme>[a-z][\w+.-]*)://"),
     # A direct Shape claim about an unknown proper name must not escape the inventory.
-    ("reads", r"\bShape\s+profil(?:e|es|ing)\s+(?P<unknown>" + PROPER_NAME + r")\s+tables?\b"),
+    (
+        "reads",
+        r"\bShape\s+profil(?:e|es|ing)\s+(?P<unknown>"
+        + PROPER_NAME
+        + r")\s+(?:tables?|files?|workbooks?)\b",
+    ),
     ("reads", r"\bShape\s+reads?\s+(?:from\s+)?(?P<unknown>" + PROPER_NAME + r")\b"),
     (
         "writes",
@@ -82,7 +87,7 @@ def claims(text: str, items: list[Capability], planned: list[dict]) -> list[tupl
             routes.setdefault(scheme.casefold(), set()).add(c.command)
         key = c.system.casefold()
         supported.setdefault(key, set()).add(c.direction)
-        for alias in (c.system, c.name, *c.schemes):
+        for alias in (c.system, c.name, *c.schemes, *(e.lstrip(".") for e in c.extensions)):
             aliases.setdefault(alias.casefold(), key)
     # Scheme aliases carry the union of registered handlers for that URI (not the first row).
     for c in items:
@@ -156,11 +161,15 @@ def claims(text: str, items: list[Capability], planned: list[dict]) -> list[tupl
                     ]
                 )
                 for raw, target_end in objects:
-                    if not match.groupdict().get("scheme") and re.match(
-                        r"(?:['’]s)?\s+(?:(?:project|job|layout|schema)(?:['’]s)?\s+)?"
-                        r"(?:files?|artifacts?|[\w-]+\.(?:json|ya?ml|csv|parquet))\b",
-                        cleaned[sentence.start() + target_end :],
-                        re.I,
+                    if (
+                        not match.groupdict().get("scheme")
+                        and not re.match(r"(?:Shape\s+)?profil", match[0], re.I)
+                        and re.match(
+                            r"(?:['’]s)?\s+(?:(?:project|job|layout|schema)(?:['’]s)?\s+)?"
+                            r"(?:files?|artifacts?|[\w-]+\.(?:json|ya?ml|csv|parquet))\b",
+                            cleaned[sentence.start() + target_end :],
+                            re.I,
+                        )
                     ):
                         continue
                     if re.match(
