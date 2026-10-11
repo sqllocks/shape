@@ -283,7 +283,7 @@ python scripts/set_version.py 1.0.0 --dry-run   # the 16 files it will change
 
 This fixture intentionally bumps the source version without adding release notes,
 so the version check reports the missing heading. The final command previews the
-check target; run `make check` for the actual release validation outside this
+local test target; run `make check` for the actual release validation outside this
 documentation fixture, and require every gate to pass.
 
 <!-- example: 1 -->
@@ -291,7 +291,7 @@ documentation fixture, and require every gate to pass.
 ```bash {.runnable-reference}
 python scripts/check_versions.py --release --expect 1.0.0
    python scripts/check_plugin_skeletons.py
-   make --silent --dry-run check
+   make --silent --dry-run test
 ```
 
 ??? info "Output (exit 0)"
@@ -299,30 +299,7 @@ python scripts/check_versions.py --release --expect 1.0.0
     ```text {.expected}
     FAIL CHANGELOG.md has no '## 1.0.0' section
     plugin skeletons OK (12 distributions, version 1.0.0)
-    ruff check src tests plugins benchmarks/vs_refengine
-    ruff format --check src tests plugins benchmarks/vs_refengine
-    mypy
-    python -m compileall -q src/shape
-    vulture src/shape scripts/vulture_whitelist.py --min-confidence 80
-    lint-imports
-    python scripts/check_requirements.py
-    python scripts/check_secrets.py
-    python scripts/check_user_facing.py
-    python scripts/gen_exit_codes.py --check
-    python scripts/gen_failure_modes.py --check
-    python scripts/check_shipped_data.py
-    python scripts/check_plugin_skeletons.py
-    python scripts/check_versions.py
-    python scripts/check_release_workflows.py
-    python scripts/check_conformance_coverage.py
-    python scripts/cli_surface.py --check
-    python scripts/check_v1_done.py
-    pytest -q -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric --ignore=tests/demo/content --cov=shape --cov-fail-under=86
-    pytest -q -m heavy tests/kernel tests/profile tests/streaming
-    SHAPE_KERNEL=python pytest -q tests/kernel
-    cargo fmt --manifest-path rust/shape-kernel/Cargo.toml --check
-    cargo clippy --manifest-path rust/shape-kernel/Cargo.toml --all-targets -- -D warnings
-    cargo test --manifest-path rust/shape-kernel/Cargo.toml
+    pytest -m "not emulator and not live"
     ```
 
 This command exits nonzero. Read the diagnostic; this transcript shows a refusal or failed check, not a passing gate.

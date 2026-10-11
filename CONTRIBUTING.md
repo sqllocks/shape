@@ -149,9 +149,9 @@ issues through [the security policy](SECURITY.md).
 ## Development command examples
 
 The source-test environment prepares the inputs for these commands. The bootstrap uses
-already installed development dependencies. The dry run lists the checks without running
-them; use `make check` above for the complete verification. The kernel examples give you
-a smaller local test target.
+already installed development dependencies. The dry run previews the local test
+command without running it; use `make check` above for the complete verification.
+The kernel examples give you a smaller local test target.
 
 <!-- example: 0 -->
 
@@ -170,36 +170,13 @@ PIP_NO_DEPS=1 PIP_QUIET=1 make --silent bootstrap
 <!-- example: 1 -->
 
 ```bash {.runnable-reference}
-make --silent --dry-run check
+make --silent --dry-run test
 ```
 
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    ruff check src tests plugins benchmarks/vs_refengine
-    ruff format --check src tests plugins benchmarks/vs_refengine
-    mypy
-    python -m compileall -q src/shape
-    vulture src/shape scripts/vulture_whitelist.py --min-confidence 80
-    lint-imports
-    python scripts/check_requirements.py
-    python scripts/check_secrets.py
-    python scripts/check_user_facing.py
-    python scripts/gen_exit_codes.py --check
-    python scripts/gen_failure_modes.py --check
-    python scripts/check_shipped_data.py
-    python scripts/check_plugin_skeletons.py
-    python scripts/check_versions.py
-    python scripts/check_release_workflows.py
-    python scripts/check_conformance_coverage.py
-    python scripts/cli_surface.py --check
-    python scripts/check_v1_done.py
-    pytest -q -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric --ignore=tests/demo/content --cov=shape --cov-fail-under=86
-    pytest -q -m heavy tests/kernel tests/profile tests/streaming
-    SHAPE_KERNEL=python pytest -q tests/kernel
-    cargo fmt --manifest-path rust/shape-kernel/Cargo.toml --check
-    cargo clippy --manifest-path rust/shape-kernel/Cargo.toml --all-targets -- -D warnings
-    cargo test --manifest-path rust/shape-kernel/Cargo.toml
+    pytest -m "not emulator and not live"
     ```
 
 <!-- example: 2 -->
