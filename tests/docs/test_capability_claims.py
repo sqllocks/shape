@@ -170,6 +170,17 @@ def test_public_scope(tmp_path):
     }
 
 
+def test_io_only_registration_does_not_hide_a_planned_capability(items, monkeypatch):
+    import gen_capabilities_page as generator
+
+    monkeypatch.setattr(
+        generator,
+        "planned_capabilities",
+        lambda: [{"system": "JSON", "direction": "reads", "w9": "W9-TEST", "issue": 1}],
+    )
+    assert "JSON reads: planned (W9-TEST" in generator.render(items)
+
+
 def test_every_profile_file_format_has_a_real_reader_and_table_entry(items, tmp_path):
     """Exercise the CLI's extension, workbook and delimiter-sniffing dispatch."""
     import subprocess

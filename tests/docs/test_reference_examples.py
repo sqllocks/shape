@@ -122,6 +122,11 @@ def test_reference_page(page: str, tmp_path: Path, webhook: str) -> None:
             pytest.fail(f"{page}:{number}; transcript: {transcript}\n" + "\n".join(difference[:80]))
         if number == "999" and (tmp_path / ".venv/bin/python").exists():
             env["PATH"] = str(tmp_path / ".venv/bin") + ":" + env["PATH"]
+            # Bootstrap copied a complete checkout. Keep editable builds and
+            # imports in this page's copy: rebuilding the shared native library
+            # can invalidate another page's mapped code and cause SIGBUS.
+            env["SHAPE_DOCS_REPO"] = str(tmp_path)
+            env["PYTHONPATH"] = str(tmp_path / "src") + ":."
 
 
 def test_restored_example_inventory() -> None:

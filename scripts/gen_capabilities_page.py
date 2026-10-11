@@ -327,7 +327,9 @@ def render(items: list[Capability] | None = None) -> str:
     ]
     for row in planned_capabilities():
         if not any(
-            c.system.casefold() == row["system"].casefold() and c.direction == row["direction"]
+            c.exposed
+            and c.system.casefold() == row["system"].casefold()
+            and c.direction == row["direction"]
             for c in items
         ):
             out.append(
