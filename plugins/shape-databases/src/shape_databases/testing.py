@@ -457,7 +457,10 @@ class FakeSnowflakeCursor:
                 raise FakeDriverError("stage does not exist")
             path = Path(m[1].replace("''", "'").replace("\\\\", "\\")[len("file://") :])
             s.put_paths.append(path)
-            s.stages[key][path.name] = pq.read_table(path)
+            # Own the reader explicitly: a path-based Dataset scan can leave a
+            # background file handle alive after read_table returns on Windows.
+            with pa.OSFile(str(path), "rb") as source:
+                s.stages[key][path.name] = pq.read_table(source)
             s.uploaded.append((path.name, s.stages[key][path.name]))
             self._set(("source", "target", "status"), [(path.name, path.name, "UPLOADED")])
             return
