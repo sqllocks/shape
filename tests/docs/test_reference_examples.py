@@ -115,7 +115,13 @@ def test_reference_page(page: str, tmp_path: Path, webhook: str) -> None:
             + run.stdout[-1000:]
         )
         crypto = page.endswith(("SIGNING.md", "PRIVACY_MODEL.md"))
-        actual = comparable(run.stdout.rstrip("\n"), tmp_path, ROOT, crypto=crypto)
+        actual = comparable(
+            run.stdout.rstrip("\n"),
+            tmp_path,
+            ROOT,
+            crypto=crypto,
+            source_checkout=Path(env["SHAPE_DOCS_REPO"]),
+        )
         recorded = comparable(expected, tmp_path, ROOT, crypto=crypto, recorded=True)
         if actual != recorded:
             difference = list(difflib.unified_diff(recorded.splitlines(), actual.splitlines()))

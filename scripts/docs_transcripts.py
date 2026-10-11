@@ -50,9 +50,20 @@ CRYPTO_FIELDS = (
 
 
 def comparable(
-    text: str, work: Path, root: Path, *, crypto: bool = False, recorded: bool = False
+    text: str,
+    work: Path,
+    root: Path,
+    *,
+    crypto: bool = False,
+    recorded: bool = False,
+    source_checkout: Path | None = None,
 ) -> str:
     """Validate field shapes and canonicalise only declared runtime values."""
+    if source_checkout is not None:
+        # Isolated editable installs move source warning locations. Preserve the
+        # filename, line and warning; only canonicalise these code directories.
+        for directory in ("src", "plugins", "scripts"):
+            text = text.replace(str(source_checkout / directory) + "/", f"<checkout>/{directory}/")
     text = text.replace(str(work), "<work>").replace(str(root), "<checkout>")
     text = re.sub(r"/tmp/docs-reference-runs/[^/\s\"']+", "<work>", text)
     for pattern, replacement in RUNTIME_FIELDS + (CRYPTO_FIELDS if crypto else ()):

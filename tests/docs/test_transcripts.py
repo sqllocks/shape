@@ -26,3 +26,20 @@ def test_elided_run_metadata(tmp_path: Path) -> None:
     actual = "Session: 1234abcd\nStarted: 2026-01-01T12:00:00.123\n[1.2s] Done in 1.2s"
     shown = "Session: …\nStarted: …\n[…] Done in …s"
     assert comparable(actual, tmp_path, ROOT) == comparable(shown, tmp_path, ROOT)
+
+
+def test_private_checkout_paths_preserve_warning_and_fixture_details(tmp_path: Path) -> None:
+    """A copied install changes code locations, never warning or artifact evidence."""
+    location = "plugins/shape-dbt/src/shape_dbt/commands.py:353"
+    warning = "ArtifactNotVerifiedWarning: orders.shape is not signed"
+    actual = f"{tmp_path}/{location}: {warning}\nartifact: {tmp_path}/orders.shape"
+    shown = f"{ROOT}/{location}: {warning}\nartifact: {tmp_path}/orders.shape"
+    normalized = comparable(actual, tmp_path, ROOT, source_checkout=tmp_path)
+    assert normalized == comparable(shown, tmp_path, ROOT)
+    for changed in (
+        actual.replace(":353:", ":354:"),
+        actual.replace("not signed", "verified"),
+        actual.replace("artifact: ", "wrong artifact: "),
+    ):
+        assert comparable(changed, tmp_path, ROOT, source_checkout=tmp_path) != normalized
+    assert "artifact: <work>/orders.shape" in normalized
