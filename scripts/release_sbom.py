@@ -413,6 +413,11 @@ def environment(dist: Path, out: Path, *, core: Path | None = None) -> list[str]
             check=True,
         )
     sbom = json.loads(out.read_text(encoding="utf-8"))
+    # Reproducible cyclonedx-py output omits the serial number, but GitHub's
+    # SBOM attestation action requires it. Derive it from the document so the
+    # attested SBOM remains reproducible and identifies its exact contents.
+    sbom["serialNumber"] = f"urn:uuid:{uuid.uuid5(SERIAL_NAMESPACE, _dump(sbom))}"
+    out.write_text(_dump(sbom), encoding="utf-8")
     # cyclonedx-py makes the core (named by --pyproject) the subject, not a component
     listed = [sbom.get("metadata", {}).get("component", {}), *sbom.get("components", [])]
     have = {(normalize(c.get("name", "")), c.get("version")) for c in listed}
