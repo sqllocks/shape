@@ -183,16 +183,22 @@ def render(items: list[Capability] | None = None) -> str:
         "Generated from core and the installed release plugins' registrations at build time.",
         "Reads means profiling data; writes means generating, seeding or emitting data.",
         "",
-        "| System | Reads | Writes | URL scheme or command | Package | Install extra |",
-        "|---|---|---|---|---|---|",
+        "| System | Reads | Writes | URL scheme or command | Package | Install extra | Status |",
+        "|---|---|---|---|---|---|---|",
     ]
     for system in sorted({c.system for c in items}, key=str.casefold):
         rows = [c for c in items if c.system == system]
 
         def direction(which: str, rows: list[Capability] = rows) -> str:
             commands = sorted({f"{c.command} ({c.status})" for c in rows if c.direction == which})
-            return "yes: " + ", ".join(commands) if commands else "no"
+            return "yes" if commands else "no"
 
+        statuses = []
+        for which in ("reads", "writes"):
+            commands = sorted({f"{c.command} ({c.status})" for c in rows if c.direction == which})
+            if commands:
+                statuses.append(f"{which.title()}: {', '.join(commands)}")
+        statuses_text = "<br>".join(statuses)
         locations = []
         providers = []
         extras = []
@@ -221,7 +227,7 @@ def render(items: list[Capability] | None = None) -> str:
         extras_text = "<br>".join(extras)
         out.append(
             f"| {system} | {direction('reads')} | {direction('writes')} | "
-            f"{locations_text} | {packages_text} | {extras_text} |"
+            f"{locations_text} | {packages_text} | {extras_text} | {statuses_text} |"
         )
     out += [
         "",

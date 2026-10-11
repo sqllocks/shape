@@ -101,7 +101,7 @@ def test_registered_handlers_and_command_status(items):
             "experimental" if level(c.command.split()[0]) == "experimental" else "available"
         )
     page = render(items)
-    assert "| Snowflake | no | yes: " in page
+    assert "| Snowflake | no | yes |" in page
     assert "Status follows the stability of the command" in page
 
 
