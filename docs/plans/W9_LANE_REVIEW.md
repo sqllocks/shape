@@ -416,3 +416,32 @@ lead's decision: push the partial tree (or rebuild it from the issue), add the t
 boundary tests, update the conformance entry-point list, then dispatch CI. It depends on W9-01
 landing first and must be rebased onto the release after that.
 
+## W9-14 — Amazon Redshift sink and source (issue #15), `lane/W9-14` at `aa7530b`
+
+**What it builds (on the pushed head): nothing beyond W9-01.** `lane/W9-01` plus
+`docs/plans/lane_status/W9-14.md`. The partial Redshift module, `FakeRedshift`, `FakeS3`, AWS
+fakes, acceptance tests (38 red, then 41 passing locally) and docs stay uncommitted. The lane
+stopped on Wanted 2: `redshift_connector` binds parameters server-side, and Redshift's `COPY`
+needs the S3 location and IAM role as string literals, which the issue's "nothing in a statement
+built from a value" rule forbids.
+
+**Against the issue's Wanted list.** Items 1–7 are all missing from the branch. The lead
+answered on #15 at 2026-10-09 02:10 UTC (a COPY-only exception for the two non-secret values,
+validated against two regular expressions, single-quoted, marked for the security linter, with
+rejection and quote-injection tests); the head was committed at 01:38 UTC.
+
+**CI on the head:** none. Local checks on the uncommitted tree: ruff 1 error (a long SQL
+line), mypy clean, 997 passed and 2 failed in both kernels (the conformance entry-point list;
+one CLI fixture missing its schema version).
+
+**Base.** `lane/W9-01` at `88a46ab`; 25 behind the release; conflicts as W9-01.
+
+**Overlap.** Identical to W9-01's.
+
+**Risks.** Lost work, as W9-13. The `[redshift]` extra (`redshift-connector`, `boto3`) is not in
+any pushed file. The PostgreSQL emulator must not be used to claim Redshift behaviour (issue).
+
+**Verdict: needs a fix round; not a 0.10.0 candidate as it stands.** Resume from the lead's
+decision (apply the two validation patterns and the tests it names), fix the two local failures
+and the lint error, push, dispatch CI; after W9-01.
+
