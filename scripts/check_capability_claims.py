@@ -31,8 +31,11 @@ PATTERNS = (
         + WORDS
         + r"(?:into|to)\s+(?P<system>{systems})\b(?!://)",
     ),
-    ("reads", r"\bshape\s+(?P<command>profile|stream-profile)\s+(?P<scheme>[a-z][\w+.-]*)://"),
-    ("writes", r"--to\s+(?P<scheme>[a-z][\w+.-]*)://"),
+    (
+        "reads",
+        r"\bshape\s+(?P<command>profile|stream-profile)\s+[\"']?(?P<scheme>[a-z][\w+.-]*)://",
+    ),
+    ("writes", r"--to\s+[\"']?(?P<scheme>[a-z][\w+.-]*)://"),
     # A direct Shape claim about an unknown proper name must not escape the inventory.
     (
         "reads",
@@ -169,6 +172,7 @@ def claims(text: str, items: list[Capability], planned: list[dict]) -> list[tupl
                     if (
                         not match.groupdict().get("scheme")
                         and not re.match(r"(?:Shape\s+)?profil", match[0], re.I)
+                        and raw.casefold() == "json"
                         and (
                             METADATA_SUFFIX.match(content[target_end:])
                             or SCHEMA_FORMAT.match(raw + content[target_end:])
@@ -206,6 +210,31 @@ def claims(text: str, items: list[Capability], planned: list[dict]) -> list[tupl
                     if match.groupdict().get("scheme"):
                         commands = routes.get(raw.casefold(), set())
                         command = match.groupdict().get("command")
+                        if command == "profile" and raw.casefold() == "file":
+                            from urllib.parse import unquote, urlsplit
+
+                            # A path-only reader must not inherit another format's file:// route.
+                            start = sentence.start() + match.end() - len("file://")
+                            uri = re.match(r"\S+", cleaned[start:])[0].rstrip(".,;)'\"")
+                            path = unquote(urlsplit(uri).path)
+                            extension = "" if path.endswith("/") else Path(path).suffix.casefold()
+                            formats = {
+                                c.system
+                                for c in items
+                                if c.exposed and c.command == command and extension in c.extensions
+                            }
+                            if formats and not any(
+                                c.exposed
+                                and c.command == command
+                                and c.system in formats
+                                and "file" in c.schemes
+                                for c in items
+                            ):
+                                line = cleaned.count("\n", 0, sentence.start() + match.start()) + 1
+                                failures.add(
+                                    (line, direction, f"{', '.join(sorted(formats))} via file://")
+                                )
+                                continue
                         if (
                             command in commands
                             if command

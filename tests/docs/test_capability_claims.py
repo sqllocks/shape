@@ -30,6 +30,13 @@ def items():
         ("Shape profiles Excel workbooks", False),
         ("Shape profiles XLSX workbooks", False),
         ("Shape profiles XLSB workbooks", True),
+        ("shape profile file:///workbook.xlsx", True),
+        ("shape profile file:///workbook.xlsm", True),
+        ("shape profile file:///table.csv", False),
+        ("shape profile file:///workbooks.xlsx/", False),
+        ('shape profile "file:///workbook.xlsx"', True),
+        ('shape profile "snowflake://account/db"', True),
+        ('--to "bigquery://project/dataset"', True),
         ("Shape profiles UnregisteredFormat files", True),
         ("Shape profiles NDJSON files", False),
         ("Shape reads Excel files", False),
@@ -39,6 +46,8 @@ def items():
         ("Shape profiles JSON files", True),
         ("Shape profiles XML files", True),
         ("Shape reads Snowflake Schema directly", True),
+        ("Shape reads Snowflake through a shape-resolve-config JSON file.", True),
+        ("Shape reads PostgreSQL using a reference dataset name.", True),
         (
             "shape import-schema FILE -o OUT.gen.json reads a JSON Schema (draft 2020-12 and 7).",
             False,
@@ -282,3 +291,38 @@ def test_io_registration_does_not_claim_an_unreachable_profile_reader(
             text=True,
         )
         assert result.returncode == 2, result.stderr
+
+
+@pytest.mark.parametrize("suffix", (".xlsx", ".xlsm"))
+def test_workbook_location_does_not_invent_a_file_uri(items, tmp_path, suffix):
+    """Workbook dispatch accepts a path but bypasses the ordinary file-URI normalizer."""
+    import subprocess
+
+    import openpyxl
+    from gen_capabilities_page import render
+
+    path = tmp_path / ("workbook" + suffix)
+    book = openpyxl.Workbook()
+    book.active.append(["value"])
+    book.active.append([1])
+    book.save(path)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "shape",
+            "profile",
+            path.as_uri(),
+            "-o",
+            str(tmp_path / "out.shape"),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    workbook = next(c for c in items if c.command == "profile" and suffix in c.extensions)
+    assert workbook.exposed
+    assert not workbook.schemes
+    row = next(line for line in render(items).splitlines() if line.startswith("| Excel |"))
+    assert "Reads: `shape profile FILE`" in row
+    assert "Reads: `file://`" not in row

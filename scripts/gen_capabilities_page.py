@@ -220,9 +220,9 @@ def capabilities() -> list[Capability]:
                 kind,
                 "reads",
                 "profile",
-                ("file",),
+                (),  # This dispatch accepts paths; schemes come only from registrations.
                 "sqllocks-shape",
-                install_extras(reader, projects["sqllocks-shape"], kind, ("file",)),
+                install_extras(reader, projects["sqllocks-shape"], kind, ()),
                 extensions,
             )
         )
@@ -281,7 +281,14 @@ def render(items: list[Capability] | None = None) -> str:
                 continue
             schemes = sorted({s for c in handlers for s in c.schemes})
             urls = ", ".join(
-                f"`{s}://`" if s != "-" else "`shape stream-profile -`" for s in schemes
+                [f"`{s}://`" if s != "-" else "`shape stream-profile -`" for s in schemes]
+                + sorted(
+                    {
+                        f"`shape {c.command} FILE`"
+                        for c in handlers
+                        if c.extensions and not c.schemes
+                    }
+                )
             )
             extensions = sorted({e for c in handlers for e in c.extensions})
             if extensions:
