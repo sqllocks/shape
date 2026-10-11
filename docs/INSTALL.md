@@ -42,12 +42,38 @@ The [database pages](databases/index.md) explain their behavior.
 Use only the extras your workflow needs. Installing a plugin gives its code the same
 process permissions as core; see [What leaves my machine](WHAT_LEAVES.md).
 
-On Alpine Linux, Kafka's Python dependency builds from source on both ARM64 and x86_64.
-Before installing `[kafka]`, `[streaming]` or `[all]`, install the build tools and
-system drivers with `apk add build-base librdkafka-dev unixodbc-dev`.
-Use an Alpine release that supplies librdkafka 2.14 or newer. Shape 0.9.1 limits
-`confluent-kafka` to versions below 2.15 so it builds with Alpine's librdkafka 2.14.1;
-newer Python client versions require a newer system library.
+## Alpine and musllinux
+
+`confluent-kafka` has no musllinux wheels for ARM64 or x86_64, so pip builds it
+from source on Alpine Linux. The `[kafka]`, `[streaming]` and `[all]` extras need
+librdkafka **2.16 or newer**, its development headers and C build tools.
+Alpine's `librdkafka-dev` package currently provides an older version.
+
+Run these commands as root in your Alpine environment before installing Shape.
+They build librdkafka 2.16.0 with the same dependencies and source checksum as
+`scripts/release_smoke_alpine.sh`. `unixodbc-dev` also supports the SQL Server
+driver included in `[all]`.
+
+```sh
+apk add --no-cache libstdc++ build-base unixodbc-dev curl openssl-dev \
+  cyrus-sasl-dev zstd-dev lz4-dev curl-dev
+curl --fail --silent --show-error --location \
+  https://github.com/confluentinc/librdkafka/archive/refs/tags/v2.16.0.tar.gz \
+  --output /tmp/librdkafka.tar.gz
+echo 'e6b61de61d3282879a88e4ee3d9f634a8b05bf78a9198dfc25c4820c0c9ed231  /tmp/librdkafka.tar.gz' | sha256sum -c -
+tar -xzf /tmp/librdkafka.tar.gz -C /tmp
+(
+  cd /tmp/librdkafka-2.16.0
+  ./configure --prefix=/usr
+  make -j2
+  make install
+)
+python -m pip install "sqllocks-shape[all]"
+```
+
+For other musllinux environments, follow
+[Confluent's librdkafka build instructions](https://github.com/confluentinc/librdkafka#building)
+to install the library and development headers before installing the extras.
 
 ## Offline installation locks
 

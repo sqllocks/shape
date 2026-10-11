@@ -7,6 +7,14 @@ pip install sqllocks-shape-kafka          # or: pip install 'sqllocks-shape[kafk
 shape stream-profile kafka://broker:9092/orders -o orders.json
 ```
 
+On Alpine/musllinux, `confluent-kafka` has no ARM64 or x86_64 wheels and builds from
+source. Installing this plugin, `sqllocks-shape[kafka]` or `sqllocks-shape[all]` needs
+librdkafka **2.16 or newer**, development headers and C build tools. Alpine's
+`librdkafka-dev` is currently older. Build the library first using the
+[Alpine installation steps](../../docs/INSTALL.md#alpine-and-musllinux), which match
+`scripts/release_smoke_alpine.sh`, or
+[Confluent's build instructions](https://github.com/confluentinc/librdkafka#building).
+
 `kafka://host1:9092,host2:9092/TOPIC` reads one topic as Arrow micro-batches. Message bodies are
 JSON objects; their fields become columns, and `_shape_event_time` carries the event time (the
 body's `_shape_event_time`, or the message timestamp). Shape keeps its own position: the consumer

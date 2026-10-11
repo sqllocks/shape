@@ -29,6 +29,16 @@ The 1.x compatibility promises describe future policy.
   small local tutorial. Optional analyses and generation may materialize tables.
 - Plugins run in the same process. Allow-lists restrict loading, not plugin behavior.
 
+## Alpine and musllinux
+
+`confluent-kafka` has no musllinux wheels for ARM64 or x86_64 and builds from source.
+The `[kafka]` and `[all]` extras require librdkafka **2.16 or newer**, development
+headers and C build tools. Alpine's `librdkafka-dev` is currently older, so installing
+that package alone is insufficient. Build the matching native library before
+running pip; see the [Alpine installation steps](INSTALL.md#alpine-and-musllinux),
+which match the release smoke environment, or
+[Confluent's build instructions](https://github.com/confluentinc/librdkafka#building).
+
 ## Related
 
 [Troubleshooting](TROUBLESHOOTING.md) · [What leaves my machine](WHAT_LEAVES.md)
