@@ -333,3 +333,54 @@ protect: the diff keeps file profiling untouched, and CI's parity-adjacent tests
 reconcile the two hooks, resolve `test_kusto_emulator.py`, and run the nightly kusto emulator
 job once.
 
+## W9-12 — Power BI semantic models II (issue #13), `lane/W9-12` at `cb17290`
+
+**What it builds.** In `plugins/shape-fabric`: `profile-model` records each table's measures
+and the dataset's roles (verified against installed `semantic-link-sempy` 0.14.2:
+`list_measures`, `connect_semantic_model(..., readonly=True)`, `evaluate_dax(..., role=)`; the
+exact calls and source hashes are in the status file); `semantic-model://` reads under a role
+(`as_role`), unknown roles refused with the names listed; `export-model --from-profile`
+carries measures and roles into the `.bim`; `known-answer --measures from-profile` with
+uncomputable DAX under `skipped`; `shape diff` reports `measure_change` and `role_change`,
+scored zero and excluded from the numeric gate; W2-06's `hidden: true` gap closed through a new
+optional source hook `profile_metadata` in `src/shape/api.py` (the reference profiler directory
+is byte-for-byte unchanged, checked with `git diff --exit-code`); new `docs/SEMANTIC_MODEL.md`,
+`docs/FABRIC_PLATFORM.md`, plugin pages, changelog. Core: `src/shape/drift/{core,engine,
+model_metadata,policy,semver}.py`, `src/shape/api.py`. 24 files.
+
+**Against the issue's Wanted list.** Items 1–6 each have named tests in
+`plugins/shape-fabric/tests/test_w9_12.py` (48 tests, both kernels), including the item-5
+parity test both ways. **Nothing on the Wanted list is missing.** The live measure/role fixture
+is an Owner decision the issue itself defers.
+
+**CI on the head** (run 37866301140, 2026-10-09): 15 of 25 pass. **Lane-attributable:** all
+nine `test (os, python)` jobs and `min-versions` fail the same two tests:
+`tests/project/test_semver_cli.py::test_project_schema_lists_every_change_kind` (the
+`shape.yml` JSON Schema `src/shape/schemas/shape-project-v1.schema.json` lists every drift kind
+with its `breaking|additive|cosmetic` enum; `measure_change` and `role_change` are not in it)
+and the docs-inventory assertion in `tests/release/test_docs.py` (the new
+`docs/SEMANTIC_MODEL.md` is not in the documented page list). Everything else on the matrix
+passed (17,877 tests). Also failing: `zero-network` (*base*).
+
+**Base.** `7f700d3`; 25 behind. Dry merge onto `release/0.9.1`: three conflicts,
+`CHANGELOG.md`, `docs/plugins/authoring.md`, `docs/plugins/fabric-commands.md` (REL-091 edited
+all three); `docs/FABRIC_PLATFORM.md`, `docs/plugins/cloud-sources.md`,
+`plugins/shape-fabric/README.md` auto-merge.
+
+**Overlap with other lanes** (own files, 24): `src/shape/drift/engine.py` with W9-08 (both
+add kinds that drift ignores or scores zero); `docs/FABRIC_PLATFORM.md` with W9-07 and W9-11;
+`plugins/shape-fabric/README.md` with W9-03.
+
+**Risks.** No dependency change (the plugin's `semantic-link` extra floor stays `>=0.8`; an
+older install gets a named error). No skip or xfail; the 6 removed test lines are rewrites in
+`test_w9_12.py`'s own module and the Fabric report registry test gained two `NO_THRESHOLD`
+entries. Core drift semver tables gain two kinds; the project schema must follow (the failing
+test exists to enforce exactly that). 20 setup errors in the builder's broad runs were the
+DuckDB delta-extension download (environment).
+
+**Verdict: needs a fix round** (small): add `measure_change` and `role_change` (enum
+`breaking|additive|cosmetic`) to `src/shape/schemas/shape-project-v1.schema.json` next to the
+other kinds, and list `docs/SEMANTIC_MODEL.md` where `tests/release/test_docs.py` expects every
+docs page (the `mkdocs.yml` nav / docs index). Then re-dispatch CI; integrate after W9-08
+because of `drift/engine.py`.
+
