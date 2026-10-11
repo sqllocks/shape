@@ -13,6 +13,7 @@ from gen_capabilities_page import ROOT, Capability, capabilities, planned_capabi
 # Keep claim grammar here. Bounded phrases stop at sentence/clause boundaries and exclude
 # reading an export or a profile artifact, which does not claim a live database source.
 WORDS = r"(?:[\w'-]+\s+){0,8}?"
+PROPER_NAME = r"(?-i:[A-Z][A-Za-z0-9-]*(?:\s+[A-Z][A-Za-z0-9-]*){0,3})"
 PATTERNS = (
     ("reads", r"\bprofil(?:e|es|ing)\s+" + WORDS + r"from\s+(?P<system>{systems})\b(?!://)"),
     ("reads", r"\bprofil(?:e|es|ing)\s+(?P<system>{systems})\s+tables?\b"),
@@ -32,6 +33,17 @@ PATTERNS = (
     ),
     ("reads", r"\bshape\s+(?P<command>profile|stream-profile)\s+(?P<scheme>[a-z][\w+.-]*)://"),
     ("writes", r"--to\s+(?P<scheme>[a-z][\w+.-]*)://"),
+    # A direct Shape claim about an unknown proper name must not escape the inventory.
+    ("reads", r"\bShape\s+profil(?:e|es|ing)\s+(?P<unknown>" + PROPER_NAME + r")\s+tables?\b"),
+    ("reads", r"\bShape\s+reads?\s+(?:from\s+)?(?P<unknown>" + PROPER_NAME + r")\b"),
+    (
+        "writes",
+        r"\bShape\s+(?:writes?|generates?|seeds?)\s+"
+        + WORDS
+        + r"(?:to|into)\s+(?P<unknown>"
+        + PROPER_NAME
+        + r")\b",
+    ),
 )
 NEGATION = re.compile(r"\b(?:not|never|cannot|no|unsupported)\b|\b\w+n['’]t\b", re.I)
 PLANNED = re.compile(r"\b(?:planned|coming|next release)\b", re.I)
@@ -83,7 +95,10 @@ def claims(text: str, items: list[Capability], planned: list[dict]) -> list[tupl
     for scheme, system in _KNOWN.items():
         key = aliases.get(scheme, aliases.get(system.casefold(), system.casefold()))
         aliases.setdefault(scheme, key)
-        aliases.setdefault(system.casefold(), key)
+        if scheme in routes:
+            aliases[system.casefold()] = key
+        else:
+            aliases.setdefault(system.casefold(), key)
     plans: dict[tuple[str, str], set[str]] = {}
     for row in planned:
         key = row["system"].casefold()
@@ -127,13 +142,14 @@ def claims(text: str, items: list[Capability], planned: list[dict]) -> list[tupl
                 prefix = content[: match.start()].rsplit(",", 1)[-1]
                 if NEGATION.search(" ".join(prefix.split()[-5:])):
                     continue
-                if "scheme" not in match.groupdict() and EXPORT.search(
-                    match[0].split(match["system"])[0]
-                ):
+                system = match.groupdict().get("system") or match.groupdict().get("unknown")
+                if system and EXPORT.search(match[0].split(system)[0]):
                     continue
                 objects = (
                     [(match["scheme"], match.end())]
                     if match.groupdict().get("scheme")
+                    else [(match["unknown"], match.end("unknown"))]
+                    if match.groupdict().get("unknown")
                     else [
                         (m[0], match.start("system") + m.end())
                         for m in re.finditer(systems, match["system"], re.I)

@@ -27,6 +27,9 @@ def items():
     [
         ("Shape profiles Snowflake tables directly", True),
         ("Shape writes to Snowflake", False),
+        ("Shape profiles UnregisteredStore tables directly.", True),
+        ("Shape reads UnregisteredStore.", True),
+        ("Shape writes to UnregisteredStore.", True),
         ("Reads an NCPDP layout file you supply.", False),
         ("Shape reads SQL Server and Snowflake.", True),
         ("Shape reads Snowflake and SQL Server.", True),
@@ -95,7 +98,16 @@ def test_registered_handlers_and_command_status(items):
     host = default_host()
     for group in GROUP_COMMAND:
         for record in host.records(group):
-            assert any(c.name == record.name and c.package == record.source for c in items)
+            obj = host.get(group, record.name)
+            direction = "reads" if group in {"shape.sources", "shape.stream_sources"} else "writes"
+            assert any(
+                c.name == record.name
+                and c.package == record.source
+                and c.direction == direction
+                and set(obj.schemes).issubset(c.schemes)
+                and c.command.startswith(GROUP_COMMAND[group].split()[0])
+                for c in items
+            )
     for c in items:
         assert c.status == (
             "experimental" if level(c.command.split()[0]) == "experimental" else "available"

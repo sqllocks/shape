@@ -113,6 +113,7 @@ def capabilities() -> list[Capability]:
     from shape.plugins.api.v1 import GROUPS
     from shape.plugins.host import PluginHost
     from shape.plugins.registry import register_builtins
+    from shape.plugins.schemes import _KNOWN
     from shape.streaming.file_source import FORMATS, FileStreamSource
     from shape.testdata.seed import SCRIPT_SCHEME, SINK_FOR_SCHEME
 
@@ -133,7 +134,9 @@ def capabilities() -> list[Capability]:
         if not schemes or not all(isinstance(s, str) and s for s in schemes):
             raise ValueError(f"{group}:{name} has no usable schemes")
         family = name.split("-", 1)[0]
-        system = LABELS.get(family, LABELS.get(name, name.replace("-", " ").capitalize()))
+        system = LABELS.get(
+            family, _KNOWN.get(name, LABELS.get(name, name.replace("-", " ").capitalize()))
+        )
         direction = "reads" if group in ("shape.sources", "shape.stream_sources") else "writes"
         extra = install_extras(obj, projects[package], name, schemes)
         commands = [GROUP_COMMAND[group]]
