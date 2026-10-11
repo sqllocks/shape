@@ -445,3 +445,34 @@ any pushed file. The PostgreSQL emulator must not be used to claim Redshift beha
 decision (apply the two validation patterns and the tests it names), fix the two local failures
 and the lint error, push, dispatch CI; after W9-01.
 
+## W9-15 — Oracle Database sink and source (issue #16), `lane/W9-15` at `4582655`
+
+**What it builds (on the pushed head): nothing beyond W9-01.** `lane/W9-01` plus
+`docs/plans/lane_status/W9-15.md`. The partial implementation (thin-mode array DML, version and
+parameter reads, 128-byte quoted identifiers, the type map, password and wallet references, the
+empty-string rule, catalog sampling, `FakeOracle`, 64 passing local tests) stays uncommitted.
+The lane stopped on Wanted 6: python-oracledb 3.0's `fetch_df_batches` cannot read RAW, BLOB,
+CLOB or INTERVAL columns that Wanted 4 writes.
+
+**Against the issue's Wanted list.** Items 1–7 are all missing from the branch. The lead
+answered on #16 at 2026-10-09 02:10 UTC (keep `fetch_df_batches` as the default; a bounded
+cursor fallback with `fetchmany(batch_rows)` and `fetch_lobs=False` for those types, converted
+to Arrow per batch, provenance `read_path: "cursor"`, tests that both paths agree); the head was
+committed at 01:38 UTC.
+
+**CI on the head:** none. Local checks on the uncommitted tree: ruff 2 errors, strict mypy 2
+errors in the partial module, 929 passed and 2 failed in both kernels (conformance list; a CLI
+fixture's schema format).
+
+**Base.** `lane/W9-01` at `88a46ab`; 25 behind the release; conflicts as W9-01.
+
+**Overlap.** Identical to W9-01's. The issue also adds an `oracle` service to
+`ci/emulators/docker-compose.yml` and a nightly emulator run, which will touch the same compose
+file W9-16 edits.
+
+**Risks.** Lost work, as W9-13. The `[oracle]` extra (`oracledb>=3.0`) is not in any pushed
+file.
+
+**Verdict: needs a fix round; not a 0.10.0 candidate as it stands.** Resume from the lead's
+decision, push, dispatch CI; after W9-01.
+
