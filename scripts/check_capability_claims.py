@@ -53,6 +53,9 @@ PATTERNS = (
 NEGATION = re.compile(r"\b(?:not|never|cannot|no|unsupported)\b|\b\w+n['’]t\b", re.I)
 PLANNED = re.compile(r"\b(?:planned|coming|next release)\b", re.I)
 EXPORT = re.compile(r"\b(?:export(?:s|ed)?|files?|artifacts?)\b", re.I)
+METADATA_SUFFIX = re.compile(r"\s+(?:document\s+(?:described|defined)\s+by\b|event['’]s\b)", re.I)
+SCHEMA_FORMAT = re.compile(r"^JSON\s+Schema\b", re.I)
+METADATA_CONTEXT = re.compile(r"\b(?:shape-[\w-]+-config|reference dataset name)\b", re.I)
 
 
 def source_files(root: Path = ROOT) -> list[Path]:
@@ -83,16 +86,18 @@ def claims(text: str, items: list[Capability], planned: list[dict]) -> list[tupl
     supported: dict[str, set[str]] = {}
     routes: dict[str, set[str]] = {}
     for c in items:
-        for scheme in c.schemes:
-            routes.setdefault(scheme.casefold(), set()).add(c.command)
         key = c.system.casefold()
-        supported.setdefault(key, set()).add(c.direction)
-        for alias in (c.system, c.name, *c.schemes, *(e.lstrip(".") for e in c.extensions)):
+        supported.setdefault(key, set())
+        if c.exposed:
+            supported[key].add(c.direction)
+        for alias in (c.system, c.name, *(e.lstrip(".") for e in c.extensions)):
             aliases.setdefault(alias.casefold(), key)
-    # Scheme aliases carry the union of registered handlers for that URI (not the first row).
-    for c in items:
         for scheme in c.schemes:
-            supported.setdefault(aliases[scheme.casefold()], set()).add(c.direction)
+            # Shared file:// handlers must not grant one format another format's reads.
+            aliases.setdefault(scheme.casefold(), scheme.casefold())
+            if c.exposed:
+                routes.setdefault(scheme.casefold(), set()).add(c.command)
+                supported.setdefault(aliases[scheme.casefold()], set()).add(c.direction)
     # The runtime also names unsupported schemes in its capability errors. Recognise
     # those names in prose without granting them any direction.
     from shape.plugins.schemes import _KNOWN
@@ -161,6 +166,17 @@ def claims(text: str, items: list[Capability], planned: list[dict]) -> list[tupl
                     ]
                 )
                 for raw, target_end in objects:
+                    if (
+                        not match.groupdict().get("scheme")
+                        and not re.match(r"(?:Shape\s+)?profil", match[0], re.I)
+                        and (
+                            METADATA_SUFFIX.match(content[target_end:])
+                            or SCHEMA_FORMAT.match(raw + content[target_end:])
+                            or METADATA_CONTEXT.search(content)
+                            or re.match(r"reads?\s+as\s+", match[0], re.I)
+                        )
+                    ):
+                        continue
                     if (
                         not match.groupdict().get("scheme")
                         and not re.match(r"(?:Shape\s+)?profil", match[0], re.I)

@@ -64,6 +64,7 @@ class Capability:
     package: str
     extras: tuple[str, ...]
     extensions: tuple[str, ...] = ()
+    exposed: bool = True
 
     @property
     def status(self) -> str:
@@ -154,6 +155,7 @@ def capabilities() -> list[Capability]:
     from shape.plugins.host import PluginHost
     from shape.plugins.registry import register_builtins
     from shape.plugins.schemes import _KNOWN
+    from shape.profile.reference.sources import _is_url
     from shape.streaming.file_source import FORMATS, FileStreamSource
     from shape.testdata.seed import SCRIPT_SCHEME, SINK_FOR_SCHEME
 
@@ -168,6 +170,7 @@ def capabilities() -> list[Capability]:
     host = PluginHost(entry_points=lambda: eps.values(), project_config={})
     register_builtins(host)
     result = []
+    file_formats = profile_file_formats()
 
     def add(obj: object, name: str, package: str, group: str) -> None:
         schemes = tuple(obj.schemes)
@@ -179,6 +182,13 @@ def capabilities() -> list[Capability]:
         )
         direction = "reads" if group in ("shape.sources", "shape.stream_sources") else "writes"
         extra = install_extras(obj, projects[package], name, schemes)
+        exposed = True
+        if group == "shape.sources":
+            exposed = any(_is_url(f"{s}://capability") for s in schemes) or any(
+                obj.can_open(f"file:///capability{suffix}")
+                for extensions, _reader in file_formats.values()
+                for suffix in extensions
+            )
         commands = [GROUP_COMMAND[group]]
         if group == "shape.sinks":
             commands = [f"generate --format {name}"] if "file" in schemes else []
@@ -193,13 +203,17 @@ def capabilities() -> list[Capability]:
         if group == "shape.sinks" and name == "sql":
             schemes = (*schemes, SCRIPT_SCHEME.removesuffix("://"))
         for command in commands:
-            result.append(Capability(system, name, direction, command, schemes, package, extra))
+            result.append(
+                Capability(
+                    system, name, direction, command, schemes, package, extra, exposed=exposed
+                )
+            )
 
     for group in GROUP_COMMAND:
         for record in host.records(group):
             if record.source in projects:
                 add(host.get(group, record.name), record.name, record.source, group)
-    for kind, (extensions, reader) in profile_file_formats().items():
+    for kind, (extensions, reader) in file_formats.items():
         result.append(
             Capability(
                 LABELS.get(kind, kind.capitalize()),
@@ -238,12 +252,15 @@ def render(items: list[Capability] | None = None) -> str:
         "",
         "Generated from core and the installed release plugins' registrations at build time.",
         "Reads means profiling data; writes means generating, seeding or emitting data.",
+        "Registrations without a route through those commands are shown as no.",
         "",
         "| System | Reads | Writes | URL scheme or command | Package | Install extra | Status |",
         "|---|---|---|---|---|---|---|",
     ]
     for system in sorted({c.system for c in items}, key=str.casefold):
         rows = [c for c in items if c.system == system]
+        registered = rows
+        rows = [c for c in rows if c.exposed]
 
         def direction(which: str, rows: list[Capability] = rows) -> str:
             commands = sorted({f"{c.command} ({c.status})" for c in rows if c.direction == which})
@@ -254,7 +271,7 @@ def render(items: list[Capability] | None = None) -> str:
             commands = sorted({f"{c.command} ({c.status})" for c in rows if c.direction == which})
             if commands:
                 statuses.append(f"{which.title()}: {', '.join(commands)}")
-        statuses_text = "<br>".join(statuses)
+        statuses_text = "<br>".join(statuses) or "—"
         locations = []
         providers = []
         extras = []
@@ -281,9 +298,18 @@ def render(items: list[Capability] | None = None) -> str:
                 }
             )
             extras.append(f"{which.title()}: {'; '.join(installs)}")
-        locations_text = "<br>".join(locations)
-        packages_text = "<br>".join(providers)
-        extras_text = "<br>".join(extras)
+        locations_text = "<br>".join(locations) or "—"
+        packages_text = "<br>".join(providers) or ", ".join(
+            sorted({"core" if c.package == "sqllocks-shape" else c.package for c in registered})
+        )
+        extras_text = "<br>".join(extras) or "; ".join(
+            sorted(
+                {
+                    f"{c.package}[{','.join(c.extras)}]" if c.extras else f"{c.package}: none"
+                    for c in registered
+                }
+            )
+        )
         out.append(
             f"| {system} | {direction('reads')} | {direction('writes')} | "
             f"{locations_text} | {packages_text} | {extras_text} | {statuses_text} |"

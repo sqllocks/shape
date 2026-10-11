@@ -35,6 +35,31 @@ def items():
         ("Shape reads Excel files", False),
         ("Shape reads XLSB files", True),
         ("Shape reads Snowflake files", True),
+        ("Shape profiles Arrow IPC files", True),
+        ("Shape profiles JSON files", True),
+        ("Shape profiles XML files", True),
+        ("Shape reads Snowflake Schema directly", True),
+        (
+            "shape import-schema FILE -o OUT.gen.json reads a JSON Schema (draft 2020-12 and 7).",
+            False,
+        ),
+        (
+            "GenSchema.to_dict() and GenSchema.from_dict() read and write the JSON document "
+            "described by shape/schemas/generation-schema-v1.json.",
+            False,
+        ),
+        (
+            "The model's model_json_schema() is read by the JSON Schema importer, "
+            "so its rules apply.",
+            False,
+        ),
+        ("--config FILE reads a shape-resolve-config JSON file; flags override it.", False),
+        ("Reference dataset name used as a path to read a JSON file", False),
+        (
+            "A column of a CSV or Parquet file is read as a JSON event's would be "
+            "(nested values as text, a timestamp as ISO text).",
+            False,
+        ),
         ("Shape profiles UnregisteredStore tables directly.", True),
         ("Shape reads UnregisteredStore.", True),
         ("Shape writes to UnregisteredStore.", True),
@@ -166,7 +191,10 @@ def test_every_profile_file_format_has_a_real_reader_and_table_entry(items, tmp_
     accepted.update(dict.fromkeys(XLSX_SUFFIXES, "xlsx"))
     for suffix, kind in accepted.items():
         assert any(
-            c.direction == "reads" and c.command == "profile" and suffix in c.extensions
+            c.exposed
+            and c.direction == "reads"
+            and c.command == "profile"
+            and suffix in c.extensions
             for c in items
         ), f"profile accepts {suffix}, but the capability table has no read entry"
         path = tmp_path / ("input" + suffix)
@@ -206,3 +234,40 @@ def test_every_profile_file_format_has_a_real_reader_and_table_entry(items, tmp_
             text=True,
         )
         assert result.returncode == 0, result.stderr
+
+
+@pytest.mark.parametrize("name,suffix", [("ipc", ".arrow"), ("json", ".json"), ("xml", ".xml")])
+def test_io_registration_does_not_claim_an_unreachable_profile_reader(
+    name, suffix, items, tmp_path
+):
+    """These IO readers work, but neither local path nor file URI reaches them from profile."""
+    import subprocess
+
+    import pyarrow as pa
+    from gen_capabilities_page import render
+
+    from shape.plugins.host import default_host
+
+    path = tmp_path / ("input" + suffix)
+    if name == "ipc":
+        table = pa.table({"value": [1, 2]})
+        with pa.OSFile(str(path), "wb") as stream, pa.ipc.new_file(stream, table.schema) as writer:
+            writer.write_table(table)
+    elif name == "json":
+        path.write_text('[{"value":1},{"value":2}]')
+    else:
+        path.write_text("<rows><row><value>1</value></row><row><value>2</value></row></rows>")
+    reader = default_host().get("shape.sources", name)
+    options = {"record": "row"} if name == "xml" else {}
+    assert sum(batch.num_rows for batch in reader.read(path.as_uri(), **options)) == 2
+    registered = next(c for c in items if c.name == name and c.direction == "reads")
+    assert not registered.exposed
+    assert f"| {registered.system} | no |" in render(items)
+    for source in (str(path), path.as_uri()):
+        assert reader.can_open(source)
+        result = subprocess.run(
+            [sys.executable, "-m", "shape", "profile", source, "-o", str(tmp_path / "out.shape")],
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 2, result.stderr
