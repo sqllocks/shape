@@ -476,3 +476,97 @@ file.
 **Verdict: needs a fix round; not a 0.10.0 candidate as it stands.** Resume from the lead's
 decision, push, dispatch CI; after W9-01.
 
+## W9-16 — Apache Iceberg sink and source (issue #17), `lane/W9-16` at `f05fdd1`
+
+**What it builds.** Built-in `iceberg` sink and source beside Delta
+(`src/shape/builtins/sinks/iceberg.py`, `sources/iceberg.py`, `_iceberg.py`, `catalog.py`):
+`iceberg+file://<warehouse>/<ns>/<table>` with a SQLite catalog created on first write, and
+`iceberg://<catalog>/<ns>/<table>` for catalogs named in `~/.pyiceberg.yaml` or by options
+(`rest`, `sql`, `glue`, `hive`; credentials as references only); overwrite and append, format
+version 2 (1 accepted), partition transforms checked against column types, micro-batch
+snapshots, schema-mismatch refusal, `shape.fingerprint` in the snapshot summary; the documented
+type map with native nested types; `snapshot_id` / `as_of` reads with provenance; namespace
+profiles; `shape generate --to`, `shape profile` and the bridge (API 1.2, additive); docs
+(`docs/SINKS.md`, `docs/CLI.md`, `docs/BRIDGE.md`, `docs/FINGERPRINT.md`, builtins inventory)
+and changelog. Also: the `[iceberg]` extra in `pyproject.toml` (lead-approved wording
+`pyiceberg[pyarrow,sql-sqlite,pyiceberg-core]>=0.9`), `.github/workflows/ci.yml` (the core
+`test`, `min-versions` and `zero-network` jobs now install `[iceberg]`), `nightly.yml` (a new
+Iceberg REST-catalog emulator job), `ci/emulators/docker-compose.yml` (REST catalog + MinIO).
+33 files of its own, on top of W8-07.
+
+**Against the issue's Wanted list.** Items 1–5 each have named tests in
+`tests/builtins/test_iceberg.py`, `tests/bridge/test_iceberg.py`,
+`tests/security/test_iceberg_credentials.py` (105 tests, both kernels; a 0.9.1-floor run of
+PyIceberg too), plus the emulator module (not run; no Docker in the builder's session).
+**Nothing on the Wanted list is missing.** Item 4's nested-column profiling "as W8-07 defines"
+is why the lane sits on W8-07.
+
+**CI on the head** (run 37866440596, 2026-10-09): 13 of 25 pass. **Lane-attributable:** all
+nine `test (os, python)` jobs and `min-versions` fail the same two tests:
+`tests/release/test_docs.py::test_install_page_lists_every_offline_lock_set` (`docs/INSTALL.md`'s
+extras list lacks `iceberg`) and `tests/release/test_shipped_data.py::test_the_repository_passes`
+(`shape/builtins/_iceberg.py` imports `urllib.request`, "a network client, outside an explicit
+fetch module"); the `build` job fails the same shipped-data check
+(`scripts/check_shipped_data.py --wheel`). The other 18,076 tests passed. Also failing:
+`zero-network` (*base*; its own zero-network tests may add to it, the log was not read),
+`bench-quick` (*FRZ-01*).
+
+**Base.** `lane/W8-07` at `7a7e002` (contained whole), on `7f700d3`; 25 behind the release.
+**W8-07 is itself `wip`** (POST_LAUNCH item 9: 4 failures and 36 setup errors in `make check`
+on its base), so W9-16 cannot land before W8-07 is accepted or W9-16 is rebased without it.
+Dry merge onto `release/0.9.1`: four conflicts, `.github/workflows/ci.yml` (REL-091 changed the
+same jobs), `docs/BRIDGE.md`, `docs/CLI.md`, `docs/SINKS.md`; `nightly.yml`, `pyproject.toml`,
+`src/shape/io/targets.py`, the bridge schema files auto-merge.
+
+**Overlap with other lanes** (own files, 33): `src/shape/bridge/handlers/flow.py`,
+`src/shape/profile/reference/profile.py`, `src/shape/security/redact.py`, `docs/BRIDGE.md`,
+`docs/CLI.md`, the bridge request schema and `tests/bridge/test_compat_1_1.py` with W9-01;
+`src/shape/bridge/handlers/flow.py`, `src/shape/profile/reference/profile.py` with W9-11;
+`docs/SINKS.md` with W9-03 and W9-07; `docs/CLI.md` with W9-08. The widest core footprint after
+W9-01, and the only lane that edits the workflows and compose file (W9-15 will too).
+
+**Risks.** New optional dependency (approved) that the core CI jobs now install on every PR
+(a deliberate choice recorded in the status file: "actual SQLite/file acceptance runs on every
+PR"; the lead should confirm the extra install surface on `min-versions` and `zero-network`).
+Workflow edits conflict with REL-091's. The shipped-data policy violation is real (a network
+client imported in a built-in module); the fix is the repository's "explicit fetch module"
+pattern, not an allow-list. No skip, xfail or deleted test; the single skip is the pre-existing
+optional `shape_databases` one. New persisted schema property `format=shape.iceberg.arrow-schema`,
+`version=1` with a compatibility test (W1-01 rule met).
+
+**Verdict: needs a fix round, after W8-07.** (1) Move the `urllib.request` use in
+`src/shape/builtins/_iceberg.py` behind the explicit fetch module the shipped-data check
+accepts; (2) add `iceberg` to `docs/INSTALL.md`'s offline-lock extras list; (3) rebase onto the
+release and resolve `ci.yml`, `docs/BRIDGE.md`, `docs/CLI.md`, `docs/SINKS.md`; (4) re-dispatch
+CI and run the new nightly Iceberg emulator job once. Land only once W8-07 is accepted.
+
+---
+
+## Recommended integration order for 0.10.0
+
+Dependencies first: W9-13, W9-14 and W9-15 contain W9-01 and need it merged before they can
+be rebased; W9-16 contains W8-07 and needs it accepted. Then the order that keeps the merges
+small: isolated lanes early, lanes that share core files right after the lane they share them
+with, and the lanes still in a fix round or waiting on a decision last so the base they rebase
+onto stops moving.
+
+| # | Lane | Why here | Conflicts to expect at that point |
+|---|---|---|---|
+| 1 | **W9-01** | ready; three lanes stack on it; smallest core footprint of the source lanes | `docs/CLI.md` vs the release |
+| 2 | **W9-10** | ready; no overlap with anything | `docs/DBT.md` vs the release |
+| 3 | **W9-08** | ready; shares only `cli/main.py` (W9-01, already in) and `drift/engine.py` (W9-12, later) | `docs/CLI.md`, `docs/EMIT.md`, `tests/cli/test_remote_confirmation.py` vs the release; `cli/main.py` vs W9-01 (adjacent hunks) |
+| 4 | **W9-11** | ready after W9-01; its `profile()` hook must be reconciled with W9-01's | `test_kusto_emulator.py` vs the release; `profile.py`, `flow.py`, `cli/main.py` vs W9-01 |
+| 5 | **W9-12** | one small fix round; shares `drift/engine.py` with W9-08 (in) | `CHANGELOG.md`, `docs/plugins/authoring.md`, `docs/plugins/fabric-commands.md` vs the release; `drift/engine.py` vs W9-08 |
+| 6 | **W9-07** | one fix round (import contract); shares `cli/generation.py` and `docs/SINKS.md` with W9-03 (next) | `docs/SINKS.md` vs the release |
+| 7 | **W9-03** | lead decision + fix round; largest sink-side diff, so it goes after the lanes it would otherwise displace | `CHANGELOG.md`, `docs/SINKS.md` vs the release; `generation.py`, `SINKS.md` vs W9-07; `shape-databases` README and `testing.py` vs W9-01; `shape-fabric` README vs W9-12 |
+| 8 | **W8-07**, then **W9-16** | W8-07 must be accepted first (it is not in this review's scope and is `wip`); W9-16 then needs its fix round and a rebase that resolves the workflow conflict | `ci.yml`, `docs/BRIDGE.md`, `docs/CLI.md`, `docs/SINKS.md` vs the release; `profile.py`, `flow.py`, `redact.py` vs W9-01 and W9-11 |
+| 9 | **W9-13, W9-14, W9-15** | not candidates until their implementations are pushed and CI-green; they rebase onto the release with W9-01 in, in any order (they do not touch each other's files; all three add to `shape-databases` and its conformance list, so land them one at a time) | the conformance entry-point list, `shape-databases` README/pyproject, and for W9-15 the compose file vs W9-16 |
+
+Two things to settle before step 1: run FRZ-01 (or accept `bench-quick` red) so that a green
+matrix means something again, and decide whether lanes merge or rebase onto `release/0.9.1`
+(every lane is 25 commits behind it; a merge keeps the builders' checkouts valid). Nothing in
+this order changes a decision, gate or tolerance.
+
+Lanes ready today, in order: W9-01, W9-10, W9-08, W9-11. Fix rounds: W9-12 (two one-line
+fixes), W9-07 (import contract), W9-16 (two fixes and a rebase, after W8-07). Lead decision:
+W9-03 (domain decimal precision), then its fix round. Not candidates: W9-13, W9-14, W9-15.
