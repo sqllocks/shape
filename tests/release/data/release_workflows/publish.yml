@@ -182,7 +182,6 @@ jobs:
           INDEX: ${{ (github.event_name == 'workflow_dispatch' && inputs.repository == 'testpypi') && 'testpypi' || 'pypi' }}
         run: |
           for py in 3.11 3.14; do
-            docker run --rm --platform ${{ matrix.platform }} -e VERSION -e INDEX -v "$PWD:/src" -w /src "python:${py}-alpine" sh -c '
-              apk add --no-cache libstdc++ build-base unixodbc-dev librdkafka-dev >/dev/null &&
-              python scripts/release_smoke.py --version "$VERSION" --source "$INDEX" --kernel rust'
+            docker run --rm --platform ${{ matrix.platform }} -e VERSION -e SMOKE_SOURCE="$INDEX" -e SMOKE_ATTEMPTS=5 \
+              -v "$PWD:/src" -w /src "python:${py}-alpine" sh scripts/release_smoke_alpine.sh
           done

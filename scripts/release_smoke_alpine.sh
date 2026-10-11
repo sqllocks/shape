@@ -2,6 +2,8 @@
 # Alpine has no confluent-kafka wheels. Its current librdkafka package is
 # older than confluent-kafka 2.16 needs, so build the matching native library
 # before the unchanged all-plugins release smoke install.
+# SMOKE_SOURCE (default dist) and SMOKE_ATTEMPTS (default 1) select the archives:
+# the release build smokes dist/, the publish workflow testpypi or pypi.
 set -eu
 
 apk add --no-cache bash libstdc++ build-base unixodbc-dev curl openssl-dev \
@@ -17,4 +19,5 @@ tar -xzf /tmp/librdkafka.tar.gz -C /tmp
   make -j2
   make install
 )
-python scripts/release_smoke.py --version "$VERSION" --source dist --kernel rust --attempts 1
+python scripts/release_smoke.py --version "$VERSION" --source "${SMOKE_SOURCE:-dist}" --kernel rust \
+  --attempts "${SMOKE_ATTEMPTS:-1}"
