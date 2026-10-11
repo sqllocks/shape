@@ -5,7 +5,7 @@
 
 **Sources** (always): every relative link in ``README.md`` and in the site's pages (``docs/``
 without ``plans/`` and ``talks/``) must name a file or folder that exists in the repository, so the
-docs work when browsing the repository too. The two generated pages (``GENERATED``) count as
+docs work when browsing the repository too. The generated pages (``GENERATED``) count as
 existing.
 
 **Built site** (``--site DIR``): every ``href`` and ``src`` in every HTML page must resolve to a
@@ -32,6 +32,7 @@ REPO_URL = "https://github.com/sqllocks/shape"
 SKIP_DOCS = ("plans", "talks")
 # Pages that scripts/mkdocs_hooks.py generates at build time (they have no source file).
 GENERATED = (
+    "docs/reference/capabilities.md",
     "docs/reference/cli.md",
     "docs/reference/performance.md",
     "docs/reference/api.md",

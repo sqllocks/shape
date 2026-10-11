@@ -178,6 +178,7 @@ nav:
   - Healthcare standards: plugins/healthcare-standards.md
   - Integrations: plugins/integrations.md
 - Reference:
+  - Capabilities (generated): reference/capabilities.md
   - Command line: CLI.md
   - CLI reference (generated): reference/cli.md
   - CLI stability: CLI_STABILITY.md

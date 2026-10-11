@@ -1,7 +1,9 @@
 """mkdocs hooks for the documentation site (P8-03, T-24).
 
-Two pages are generated at build time, so they cannot drift from the code:
+Reference pages are generated at build time, so they cannot drift from the code:
 
+* ``reference/capabilities.md``: registered sources, sinks and stream handlers from core and
+  installed release plugins, with status derived from the providing command.
 * ``reference/cli.md``: every core command of ``shape.cli.main``, with its stability level and its
   ``--help`` text, walked from the argparse parser (plugin commands are documented on their
   plugin's page).
@@ -299,7 +301,7 @@ def on_page_markdown(markdown: str, page: Any, config: Any, files: Any) -> str:
 
 
 def on_files(files: Any, config: Any) -> Any:
-    """mkdocs hook: add the two generated pages to the site."""
+    """mkdocs hook: add the generated reference pages to the site."""
     import importlib.util
 
     from mkdocs.structure.files import File
@@ -314,6 +316,12 @@ def on_files(files: Any, config: Any) -> Any:
         raise ValueError("Public API docstrings missing: " + ", ".join(missing))
     files.append(File.generated(config, "reference/api.md", content=module.reference_markdown()))
     results = json.loads(RESULTS.read_text(encoding="utf-8"))
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from gen_capabilities_page import render as capabilities_markdown
+
+    files.append(
+        File.generated(config, "reference/capabilities.md", content=capabilities_markdown())
+    )
     files.append(File.generated(config, CLI_PAGE, content=cli_reference_markdown()))
     files.append(File.generated(config, PERFORMANCE_PAGE, content=performance_markdown(results)))
     for filename in (

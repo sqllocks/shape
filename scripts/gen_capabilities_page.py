@@ -1,0 +1,262 @@
+"""Generate the capability reference from the release's installed registries."""
+
+from __future__ import annotations
+
+import argparse
+import ast
+import inspect
+import re
+import sys
+import tomllib
+from dataclasses import dataclass
+from importlib import metadata
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
+# Display names only: membership, directions and schemes always come from registrations.
+LABELS = {
+    "sql": "SQL scripts",
+    "abfss": "OneLake and ADLS Gen2",
+    "onelake": "OneLake and ADLS Gen2",
+    "mssql": "SQL Server",
+    "sqlserver": "SQL Server",
+    "postgres": "PostgreSQL",
+    "mysql": "MySQL",
+    "duckdb": "DuckDB",
+    "eventhubs": "Event Hubs",
+    "eventhouse": "Eventhouse",
+    "eventstream": "Eventstream",
+    "ipc": "Arrow IPC",
+    "jsonl": "JSONL",
+    "csv": "CSV",
+    "tsv": "TSV",
+    "json": "JSON",
+    "xml": "XML",
+    "hl7v2": "HL7v2",
+    "x12": "X12",
+    "fhir": "FHIR",
+    "omop": "OMOP",
+    "ncpdp": "NCPDP",
+    "dbt-seeds": "dbt seeds",
+    "semantic-model": "Semantic model",
+    "fabric-mirror": "Fabric mirror",
+}
+GROUP_COMMAND = {
+    "shape.sources": "profile",
+    "shape.stream_sources": "stream-profile",
+    "shape.sinks": "generate --to",
+    "shape.emitters": "emit",
+}
+
+
+@dataclass(frozen=True)
+class Capability:
+    """One registered handler and the command that exposes it."""
+
+    system: str
+    name: str
+    direction: str
+    command: str
+    schemes: tuple[str, ...]
+    package: str
+    extras: tuple[str, ...]
+
+    @property
+    def status(self) -> str:
+        from shape.cli.stability import level
+
+        return "experimental" if level(self.command.split()[0]) == "experimental" else "available"
+
+
+def release_metadata() -> dict[str, dict]:
+    """The core and plugin set shipped by this checkout, without a second plugin list."""
+    paths = [ROOT / "pyproject.toml", *sorted((ROOT / "plugins").glob("*/pyproject.toml"))]
+    return {p["name"]: p for path in paths for p in [tomllib.loads(path.read_text())["project"]]}
+
+
+def install_extras(
+    obj: object, project: dict, name: str, schemes: tuple[str, ...]
+) -> tuple[str, ...]:
+    """Extras named by the adapter's install hints or its package's matching extra."""
+    declared = project.get("optional-dependencies", {})
+    found = set(declared).intersection((name, *schemes))
+    # The declaring module includes the adapter's lazy-driver error and INSTALL constants.
+    module = inspect.getmodule(type(obj))
+    text = inspect.getsource(module) if module is not None else ""
+    for package, extras in re.findall(r"(sqllocks-shape(?:-[\w-]+)?)\[([\w,.-]+)\]", text):
+        if package == project["name"]:
+            found.update(e for e in extras.split(",") if e in declared)
+    for extra in re.findall(r"extra\s+`*\[([\w-]+)\]", text):
+        if extra in declared:
+            found.add(extra)
+    for node in ast.walk(ast.parse(text)):
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "require"
+            and len(node.args) >= 2
+            and isinstance(node.args[1], ast.Constant)
+            and node.args[1].value in declared
+        ):
+            found.add(node.args[1].value)
+    return tuple(sorted(found))
+
+
+def capabilities() -> list[Capability]:
+    """Walk the live host, restricted to installed distributions in the release set.
+
+    Loading failures raise: silently omitting an adapter would publish an incomplete table.
+    PluginRecord.status is deliberately not used as maturity metadata.
+    """
+    from shape.plugins.api.v1 import GROUPS
+    from shape.plugins.host import PluginHost
+    from shape.plugins.registry import register_builtins
+    from shape.streaming.file_source import FORMATS, FileStreamSource
+    from shape.testdata.seed import SCRIPT_SCHEME, SINK_FOR_SCHEME
+
+    projects = release_metadata()
+    eps = {
+        (ep.group, ep.name, ep.value): ep
+        for dist in metadata.distributions()
+        if dist.metadata["Name"] in projects
+        for ep in dist.entry_points
+        if ep.group in GROUPS
+    }
+    host = PluginHost(entry_points=lambda: eps.values(), project_config={})
+    register_builtins(host)
+    result = []
+
+    def add(obj: object, name: str, package: str, group: str) -> None:
+        schemes = tuple(obj.schemes)
+        if not schemes or not all(isinstance(s, str) and s for s in schemes):
+            raise ValueError(f"{group}:{name} has no usable schemes")
+        family = name.split("-", 1)[0]
+        system = LABELS.get(family, LABELS.get(name, name.replace("-", " ").capitalize()))
+        direction = "reads" if group in ("shape.sources", "shape.stream_sources") else "writes"
+        extra = install_extras(obj, projects[package], name, schemes)
+        commands = [GROUP_COMMAND[group]]
+        if group == "shape.sinks":
+            commands = [f"generate --format {name}"] if "file" in schemes else []
+            if any(s != "file" for s in schemes):
+                commands.append("generate --to")
+            if any(SINK_FOR_SCHEME.get(s) == name for s in schemes) or name == "sql":
+                commands.append("seed")
+            if any(s != "file" for s in schemes):
+                commands.append("emit")  # open_sink also routes registered table sinks.
+        if group == "shape.stream_sources" and name == "file":
+            schemes = (*schemes, "-")
+        if group == "shape.sinks" and name == "sql":
+            schemes = (*schemes, SCRIPT_SCHEME.removesuffix("://"))
+        for command in commands:
+            result.append(Capability(system, name, direction, command, schemes, package, extra))
+
+    for group in GROUP_COMMAND:
+        for record in host.records(group):
+            if record.source in projects:
+                add(host.get(group, record.name), record.name, record.source, group)
+    add(FileStreamSource(), "file", "sqllocks-shape", "shape.stream_sources")
+    for fmt in FORMATS:
+        add(FileStreamSource(), fmt, "sqllocks-shape", "shape.stream_sources")
+    return sorted(result, key=lambda c: (c.system.casefold(), c.direction, c.command, c.package))
+
+
+def planned_capabilities(path: Path | None = None) -> list[dict]:
+    import yaml
+
+    rows = yaml.safe_load((path or ROOT / "docs/reference/planned_capabilities.yml").read_text())
+    for row in rows:
+        if set(row) != {"system", "direction", "w9", "issue"} or row["direction"] not in (
+            "reads",
+            "writes",
+        ):
+            raise ValueError(f"invalid planned capability: {row}")
+    return rows
+
+
+def render(items: list[Capability] | None = None) -> str:
+    items = capabilities() if items is None else items
+    out = [
+        "# Capabilities",
+        "",
+        "Generated from core and the installed release plugins' registrations at build time.",
+        "Reads means profiling data; writes means generating, seeding or emitting data.",
+        "",
+        "| System | Reads | Writes | URL scheme or command | Package | Install extra |",
+        "|---|---|---|---|---|---|",
+    ]
+    for system in sorted({c.system for c in items}, key=str.casefold):
+        rows = [c for c in items if c.system == system]
+
+        def direction(which: str, rows: list[Capability] = rows) -> str:
+            commands = sorted({f"{c.command} ({c.status})" for c in rows if c.direction == which})
+            return "yes: " + ", ".join(commands) if commands else "no"
+
+        locations = []
+        providers = []
+        extras = []
+        for which in ("reads", "writes"):
+            handlers = [c for c in rows if c.direction == which]
+            if not handlers:
+                continue
+            schemes = sorted({s for c in handlers for s in c.schemes})
+            urls = ", ".join(
+                f"`{s}://`" if s != "-" else "`shape stream-profile -`" for s in schemes
+            )
+            locations.append(f"{which.title()}: {urls}")
+            packages = sorted(
+                {"core" if c.package == "sqllocks-shape" else c.package for c in handlers}
+            )
+            providers.append(f"{which.title()}: {', '.join(packages)}")
+            installs = sorted(
+                {
+                    f"{c.package}[{','.join(c.extras)}]" if c.extras else f"{c.package}: none"
+                    for c in handlers
+                }
+            )
+            extras.append(f"{which.title()}: {'; '.join(installs)}")
+        locations_text = "<br>".join(locations)
+        packages_text = "<br>".join(providers)
+        extras_text = "<br>".join(extras)
+        out.append(
+            f"| {system} | {direction('reads')} | {direction('writes')} | "
+            f"{locations_text} | {packages_text} | {extras_text} |"
+        )
+    out += [
+        "",
+        "Status follows the stability of the command that provides the capability "
+        "(shape --help lists experimental commands).",
+        "",
+        "Install extras are taken from adapter install hints and package metadata; "
+        "optional authentication or format extras may also be needed.",
+        "",
+        "## Planned",
+        "",
+    ]
+    for row in planned_capabilities():
+        if not any(
+            c.system.casefold() == row["system"].casefold() and c.direction == row["direction"]
+            for c in items
+        ):
+            out.append(
+                f"- {row['system']} {row['direction']}: planned ({row['w9']}, [issue #{row['issue']}](https://github.com/sqllocks/shape/issues/{row['issue']}))."
+            )
+    return "\n".join(out) + "\n"
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--out", type=Path, default=ROOT / "docs/reference/capabilities.md")
+    parser.add_argument("--check", action="store_true")
+    args = parser.parse_args()
+    text = render()
+    if args.check:
+        return int(not args.out.is_file() or args.out.read_text() != text)
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.out.write_text(text)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

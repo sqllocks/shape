@@ -1,5 +1,7 @@
 # Snowflake
 
+See [what Shape reads and writes](https://docs.shapedata.ai/reference/capabilities/) for the current list.
+
 Understand the shipped database adapter before you select a target.
 
 Status: available.

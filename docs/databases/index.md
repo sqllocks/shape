@@ -1,5 +1,7 @@
 # Databases
 
+See [what Shape reads and writes](https://docs.shapedata.ai/reference/capabilities/) for the current list.
+
 Choose a local or server writer and distinguish it from a profiling source.
 
 Status: available.

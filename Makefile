@@ -12,6 +12,7 @@ check:
 	lint-imports
 	$(PYTHON) scripts/check_requirements.py
 	$(PYTHON) scripts/check_secrets.py
+	$(PYTHON) scripts/check_capability_claims.py
 	$(PYTHON) scripts/check_user_facing.py
 	$(PYTHON) scripts/gen_exit_codes.py --check
 	$(PYTHON) scripts/gen_failure_modes.py --check

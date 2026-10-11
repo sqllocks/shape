@@ -1,0 +1,14 @@
+# Open W9 work: update when an issue closes; registrations determine shipped support.
+- {system: PostgreSQL, direction: reads, w9: W9-01, issue: 2}
+- {system: MySQL, direction: reads, w9: W9-01, issue: 2}
+- {system: Snowflake, direction: reads, w9: W9-02, issue: 3}
+- {system: Databricks, direction: reads, w9: W9-02, issue: 3}
+- {system: Eventhouse, direction: reads, w9: W9-11, issue: 12}
+- {system: BigQuery, direction: reads, w9: W9-13, issue: 14}
+- {system: BigQuery, direction: writes, w9: W9-13, issue: 14}
+- {system: Redshift, direction: reads, w9: W9-14, issue: 15}
+- {system: Redshift, direction: writes, w9: W9-14, issue: 15}
+- {system: Oracle, direction: reads, w9: W9-15, issue: 16}
+- {system: Oracle, direction: writes, w9: W9-15, issue: 16}
+- {system: Iceberg, direction: reads, w9: W9-16, issue: 17}
+- {system: Iceberg, direction: writes, w9: W9-16, issue: 17}

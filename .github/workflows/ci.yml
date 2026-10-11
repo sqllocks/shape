@@ -195,6 +195,7 @@ jobs:
           sudo env "PATH=$PATH" "HOME=$HOME" "RUSTUP_HOME=${RUSTUP_HOME:-$HOME/.rustup}" "CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}" CARGO_NET_OFFLINE=true PIP_NO_INDEX=1 PIP_ROOT_USER_ACTION=ignore "PIP_FIND_LINKS=$PIP_FIND_LINKS" "SHAPE_DOCS_DBT_PACKAGES=$SHAPE_DOCS_DBT_PACKAGES" "DOCS_CA_BUNDLE=$DOCS_CA_BUNDLE" "DOCS_PROXY_IP=$DOCS_PROXY_IP" PYTHONPATH=ci unshare --net -- sh -c 'ip link set lo up
           python -m pytest -q -p no:cacheprovider -p pytest_annotate -m "zero_network and not heavy" -n 4 -o tmp_path_retention_policy=failed tests/docs'
       - run: mkdocs build --strict
+      - run: python scripts/check_capability_claims.py
   offline-lock:
     # W6-02: pinned, hashed requirements for core and each extra, built here (a network is
     # needed to resolve) and checked against pyproject.toml. See docs/INSTALL.md.
