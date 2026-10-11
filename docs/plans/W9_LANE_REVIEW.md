@@ -150,3 +150,52 @@ assertions as itemised, inputs unchanged, each line listed with its rule in the 
 rerun the corpus tests, then dispatch CI (none exists yet) and run `databases-e2e` and
 `sqlserver-e2e` nightly once for the catalog read-backs.
 
+## W9-07 — Delta table features on write (issue #8), `lane/W9-07` at `07498ab`
+
+**What it builds.** Opt-in Delta features on the built-in Delta sink
+(`src/shape/builtins/sinks/delta.py`, new `delta_features.py`): `table_properties` on create
+and by commit on append; `not_null` and `check` constraints added after the first commit with
+atomic refusal of a violating batch; `column_mapping="name"` (reader 2 / writer 5, physical-name
+metadata); `deletion_vectors=true` as the table feature only (lead decision 2026-10-08: Shape
+never writes deletion-vector actions; no upsert); `generated_columns` with validation and the
+documented date-partition example; `timestamp_ntz=true` (reader 3 / writer 7); default writes
+byte-for-byte unchanged; `--dry-run` reports the protocol and features; `shape doctor` reports
+them; capability refusals name the installed and required deltalake version (verified against
+1.6.6, floor `>=0.17` unchanged); docs (`docs/SINKS.md`, `docs/FABRIC_PLATFORM.md`) and changelog.
+11 files.
+
+**Against the issue's Wanted list.** Items 1–9 each have named tests in
+`tests/generation/test_delta_features.py` (negative and boundary cases listed). The two scope
+amendments are the lead's own (no `upsert`, no `rename_columns`), so the issue's "heavy
+deletion-vector upsert at 10M rows" test-plan item is correctly absent. Item 9's nightly tables
+exist as six `live`-marked parameters in `tests/builtins/test_abfss_sink_live.py` (not run).
+**Nothing on the amended Wanted list is missing.**
+
+**CI on the head** (run 37873268070, 2026-10-09): 14 of 25 jobs pass. **Lane-attributable:**
+all nine `test (os, python)` jobs fail at the `Run lint-imports` step, and `min-versions` fails
+the same contract test (3 failed): import-linter contract "Built-ins load only through the plugin
+registry (plan 4.3)" is broken by `src/shape/cli/generation.py` importing
+`shape.builtins.sinks.delta` (l.302) and `shape.builtins.sinks.delta_features` (l.286) directly.
+The test suites themselves did not get to run on the matrix, so the lane's 53 acceptance tests
+have only the builder's local runs behind them. Also failing: `zero-network` (*base*),
+`bench-quick` (*FRZ-01*).
+
+**Base.** `7f700d3`; 25 behind. Dry merge onto `release/0.9.1`: one conflict, `docs/SINKS.md`;
+`src/shape/builtins/sinks/delta.py` (also edited by REL-091) and `src/shape/cli/generation.py`
+auto-merge.
+
+**Overlap with other lanes** (own files, 11): `src/shape/cli/generation.py` and `docs/SINKS.md`
+with W9-03; `docs/FABRIC_PLATFORM.md` with W9-11 and W9-12; `docs/SINKS.md` with W9-16.
+
+**Risks.** No dependency or floor change; no workflow edit; no pinned golden or corpus change
+(item 7 is tested). One `pytest.skip` (live test naming `SHAPE_LIVE_DELTA_URI`). The builder's
+final focused runs record `2 failed` in both kernels from the DuckDB delta-extension download
+(environment); CI must confirm.
+
+**Verdict: needs a fix round.** (1) Satisfy the §4.3 import contract: the dry-run feature
+report and the doctor check must reach the Delta sink through the plugin registry (`default_host`
+/ the sink's entry point) or through a module outside `shape.builtins`, not by importing
+`shape.builtins.sinks.*` from `shape.cli`; `lint-imports` must pass locally before the push.
+(2) Dispatch CI again; the matrix has never run this lane's tests. (3) Resolve `docs/SINKS.md`
+on the rebase; integrate after or together with W9-03, which edits the same two files.
+
