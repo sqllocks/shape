@@ -297,8 +297,13 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
         "initial_mac = mac_snapshot()\n"
         "profile(sys.argv[1], mode='bounded')\n"
         "peak = peak_rss()\n"
+        # The serial CSV reader uses a separate pool; the default pool omits its buffers.
+        "csv_pool = (pa.mimalloc_memory_pool()\n"
+        "    if 'mimalloc' in pa.supported_memory_backends() else pool)\n"
         "print(json.dumps({'arrow_pool': pool.backend_name, 'initial_peak': initial_peak,\n"
         "    'arrow_peak': pool.max_memory(), 'io_threads': pa.io_thread_count(),\n"
+        "    'csv_arrow_pool': csv_pool.backend_name, 'csv_arrow_peak': csv_pool.max_memory(),\n"
+        "    'csv_arrow_current': csv_pool.bytes_allocated(),\n"
         "    'cpu_threads': pa.cpu_count(), 'initial_mac': initial_mac,\n"
         "    'final_mac': mac_snapshot(), 'arrow_backends': pa.supported_memory_backends()}),\n"
         "    file=sys.stderr)\n"
