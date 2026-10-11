@@ -79,3 +79,12 @@ versioned documentation has already been published.
 | docs/plugins/sqlserver.md:50 | Fabric maintainer — supply the transcript for docs/plugins/sqlserver.md example 1. | B | Service: SQL Server / Azure SQL or Fabric SQL endpoint. Commands from the existing example (run every command, with the real service values replacing displayed placeholders):<br>`shape profile-db --server myserver.database.windows.net --database shop \`<br>`    --schema dbo --sample-rows 1000 -o shop.shape --json shop-summary.json` |
 | docs/plugins/sqlserver.md:113 | SQL adapter maintainer — commit machine-labelled measurements before publishing costs. | D | SQL Server checksum-spread sampling-cost benchmark: real `shape profile-db` with `--sample-rows 1000`, small and large tables, declared-key and heap cases, recording CHECKSUM/TOP/ORDER BY execution plans, elapsed time and reads. Required machine labels: both client CPU/RAM/OS/driver and server version/edition, CPU/vCores, RAM/storage or cloud service tier, dataset sizes and sample size. No dedicated committed cost harness or mandated machine ID is present; mocks cannot supply these measurements. |
 | docs/plugins/streaming.md:58 | Kafka maintainer — supply the transcript for docs/plugins/streaming.md example 1. | B | Service: Kafka and Event Hubs. Commands from the existing example (run every command, with the real service values replacing displayed placeholders):<br>`shape stream-profile kafka://broker:9092/orders -o orders.json`<br>`shape stream-profile eventhubs://contoso.servicebus.windows.net/telemetry \`<br>`    --window tumbling --size 5m --allowed-lateness 30s \`<br>`    --windows telemetry.jsonl --checkpoint telemetry.ckpt --follow` |
+
+## Category A resolution
+
+The release-date note is resolved by the date in `CHANGELOG.md` and the complete
+[annotated-tag transcript](evidence/owner-notes/v0.9.1-release-date.md). The transcript
+was captured from the real Git command, replayed and compared using
+`scripts/docs_transcripts.py` (`comparable`), and also compared byte for byte.
+The release guard now reports **51 unresolved**: B=28, C=20, D=3; A=0 remaining.
+The original 52-row inventory above is retained unchanged for auditability.
