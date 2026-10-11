@@ -51,7 +51,7 @@ packages load; it does not confine their code. Evidence: `src/shape/plugins/host
 `src/shape/plugins/trust.py` and [the plugin trust model](plugins/trust-model.md).
 Install only packages you trust, pin versions and restrict the whole process where required.
 Credentials resolved by adapters remain subject to the adapter and driver's behavior.
-<!-- owner: security reviewer — review deployment-specific endpoints, identities and egress policy. -->
+This page describes the configured outbound paths and process identity as implemented; no deployment-specific endpoints, identities or egress rules are approved. [Owner decision, 2026-10-11](https://github.com/sqllocks/shape/blob/main/docs/plans/OWNER_DECISIONS.md#outbound-paths).
 
 ## Related
 
