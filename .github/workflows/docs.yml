@@ -7,8 +7,6 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
-env:
-  SHAPE_DOCS_DBT_PACKAGES: ${{ runner.temp }}/docs-dbt-packages
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -20,6 +18,8 @@ jobs:
         with:
           python-version: '3.12'
       - uses: dtolnay/rust-toolchain@stable
+      # The runner context is not available in workflow-level env, so the path is set here.
+      - run: echo "SHAPE_DOCS_DBT_PACKAGES=$RUNNER_TEMP/docs-dbt-packages" >> "$GITHUB_ENV"
       - run: pip install -r requirements-docs.txt
       - run: pip install --no-deps -e . $(for plugin in plugins/*/pyproject.toml; do printf ' -e %s' "${plugin%/pyproject.toml}"; done)
       - run: python scripts/docs_dbt_packages.py --directory "$SHAPE_DOCS_DBT_PACKAGES"
