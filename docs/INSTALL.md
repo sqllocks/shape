@@ -55,7 +55,7 @@ They build librdkafka 2.16.0 with the same dependencies and source checksum as
 driver included in `[all]`.
 
 ```sh
-apk add --no-cache libstdc++ build-base unixodbc-dev curl openssl-dev \
+apk add --no-cache bash libstdc++ build-base unixodbc-dev curl openssl-dev \
   cyrus-sasl-dev zstd-dev lz4-dev curl-dev
 curl --fail --silent --show-error --location \
   https://github.com/confluentinc/librdkafka/archive/refs/tags/v2.16.0.tar.gz \

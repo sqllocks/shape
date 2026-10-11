@@ -4,7 +4,7 @@
 # before the unchanged all-plugins release smoke install.
 set -eu
 
-apk add --no-cache libstdc++ build-base unixodbc-dev curl openssl-dev \
+apk add --no-cache bash libstdc++ build-base unixodbc-dev curl openssl-dev \
   cyrus-sasl-dev zstd-dev lz4-dev curl-dev
 curl --fail --silent --show-error --location \
   https://github.com/confluentinc/librdkafka/archive/refs/tags/v2.16.0.tar.gz \
