@@ -1,7 +1,7 @@
 # Kerberos live test: `--auth kerberos` against a Windows-authentication-only SQL Server
 
 Resolves the owner note at `docs/plugins/fabric-auth.md` (example 0, `--auth kerberos`).
-Nothing here was run: it is the exact setup the Owner needs. The note is a test of Active
+**Run on 2026-10-12: passed.** Receipt: [`docs/evidence/kerberos-live.md`](../../evidence/kerberos-live.md). The run used two VMs (SQL Server on the domain controller) instead of three; the corrections from that run are folded into the steps below. The note is a test of Active
 Directory and SQL Server Windows authentication from Linux. It does **not** need a Fabric
 account (the page's "Needs a Fabric account" line is wrong for this example and is corrected
 when the receipt lands).
@@ -40,7 +40,9 @@ Create the three VMs on `shape-kdc` (Generation 2; for LNX01 disable Secure Boot
 
 ## 2. Domain controller `DC01`
 
-In an elevated PowerShell on DC01 (static IP 10.77.0.10/24, DNS 127.0.0.1):
+In an elevated PowerShell on DC01 (static IP 10.77.0.10/24, DNS 127.0.0.1 **before** promotion;
+pointing DC01's own DNS client at a public resolver during `Install-ADDSForest` left the run of
+2026-10-12 without its AD-integrated `corp.example` zone):
 
 ```powershell
 Rename-Computer DC01 -Restart
@@ -64,7 +66,9 @@ Set-ADUser svc_shape -KerberosEncryptionType AES128,AES256
 ## 3. SQL Server `SQL01`
 
 1. Static IP 10.77.0.11/24, DNS 10.77.0.10; `Add-Computer -DomainName CORP.EXAMPLE -Credential CORP\Administrator -Restart`.
-2. Install SQL Server 2022 Developer, database engine only. **Authentication mode: Windows
+2. Install SQL Server 2022 Developer, database engine only. Use the ISO
+   (`SQLServer2022-x64-ENU-Dev.iso`); the web installer's `/QUIET` download hangs in a session
+   without a desktop (PowerShell Direct, WinRM). **Authentication mode: Windows
    authentication mode** (not mixed). **Service account: `CORP\svc_sql`.**
 3. Register the SPN on the service account (on DC01 or any domain admin shell):
 
@@ -113,16 +117,28 @@ found), then `/etc/krb5.conf`:
 
 ```ini
 [libdefaults]
-  default_realm = CORP.EXAMPLE
-  dns_lookup_kdc = true
-  rdns = false
-  default_tkt_enctypes = aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96
+    default_realm = CORP.EXAMPLE
+    dns_lookup_kdc = false
+    dns_lookup_realm = false
+    rdns = false
+    default_tkt_enctypes = aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96
+    default_tgs_enctypes = aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96
+
 [realms]
-  CORP.EXAMPLE = { kdc = dc01.corp.example  admin_server = dc01.corp.example }
+    CORP.EXAMPLE = {
+        kdc = dc01.corp.example
+        admin_server = dc01.corp.example
+    }
+
 [domain_realm]
-  .corp.example = CORP.EXAMPLE
-  corp.example = CORP.EXAMPLE
+    .corp.example = CORP.EXAMPLE
+    corp.example = CORP.EXAMPLE
 ```
+
+The `[realms]` entry must span several lines: MIT Kerberos does not read a one-line
+`CORP.EXAMPLE = { kdc = ... }`, and `kinit` then fails with `Cannot find KDC for realm`.
+If `.example` names do not resolve through `systemd-resolved` (it may reject the reserved
+`.example` domain), add `10.77.0.11  sql01.corp.example sql01` and the DC to `/etc/hosts`.
 
 Keytab and Shape:
 
@@ -130,7 +146,7 @@ Keytab and Shape:
 sudo install -d -m 700 /etc/shape
 sudo install -m 600 ~/svc_shape.keytab /etc/shape/svc.keytab     # Shape refuses anything but mode 600
 python3 -m venv ~/shape-env && . ~/shape-env/bin/activate
-pip install 'sqllocks-shape[azure]' sqllocks-shape-domains sqllocks-shape-mssql pyodbc
+pip install sqllocks-shape sqllocks-shape-domains 'sqllocks-shape-fabric[sqlserver]' sqllocks-shape-sqlserver pyodbc
 ```
 
 (Use the 0.9.1 wheels or the checkout, whichever the Owner is testing. `shape --version` must
@@ -156,8 +172,8 @@ Exactly the page's command (host name is already `sql01.corp.example`), after co
 database is empty:
 
 ```bash
-shape generate retail --to mssql://sql01.corp.example/shop \
-  --auth kerberos --keytab file:///etc/shape/svc.keytab --principal svc_shape@CORP.EXAMPLE \
+shape generate retail --to 'mssql://sql01.corp.example/shop?trust_server_certificate=true' \
+  --auth kerberos --keytab file:///etc/shape/svc.keytab --principal svc_shape@CORP.EXAMPLE --yes \
   2>&1 | tee ~/kerberos-generate.txt
 echo "exit=$?" | tee -a ~/kerberos-generate.txt
 ```

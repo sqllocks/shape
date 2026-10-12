@@ -887,7 +887,7 @@
   {
     "page": "docs/plugins/fabric-auth.md",
     "index": 0,
-    "kind": "cloud:Fabric"
+    "kind": "service:owner-receipt"
   },
   {
     "page": "docs/plugins/fabric-commands.md",
