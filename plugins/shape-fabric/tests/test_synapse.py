@@ -696,3 +696,33 @@ def test_emit_to_synapse_commits_while_the_stream_runs(monkeypatch, capsys):
     assert len(pool.rows("dbo", "customer")) == 250
     assert sum(s.startswith("COPY INTO") for s in pool.statements) >= 1
     assert fs.files == {} and PASSWORD not in out.out + out.err
+
+
+def test_create_and_drop_table_run_outside_a_transaction_and_without_if_exists(
+    monkeypatch, batches
+):
+    # a dedicated pool refuses DDL inside a transaction (111212) and does not parse IF EXISTS
+    from shape_fabric.testing import FakeSynapseConnection
+
+    seen = []
+    real = FakeSynapseConnection.cursor
+
+    def cursor(self):
+        cur = real(self)
+        run = cur.execute
+
+        def execute(sql, *params):
+            if sql.lstrip().upper().startswith(("CREATE TABLE", "DROP TABLE")):
+                seen.append((sql.split()[0], "IF EXISTS" in sql, self.autocommit))
+            return run(sql, *params)
+
+        cur.execute = execute
+        return cur
+
+    monkeypatch.setattr(FakeSynapseConnection, "cursor", cursor)
+    w, pool, _ = make()
+    pool.copy_loads_fewer = 2
+    with pytest.raises(ShapeError, match="loaded 5 of the 7 staged rows"):
+        w.write_table("customer", batches)
+    assert seen == [("CREATE", False, True), ("DROP", False, True)]
+    assert w.db.get().autocommit is False and ("dbo", "customer") not in pool.tables

@@ -87,7 +87,12 @@ def test_synapse_round_trip():
         assert dataset_id({table: got}) == dataset_id({table: written})
     finally:
         try:
-            conn.cursor().execute(_tsql.drop_table_sql("dbo", table, if_exists=True))
-            conn.commit()
+            # a dedicated pool does not parse DROP TABLE IF EXISTS and refuses DDL in a transaction
+            conn.rollback()
+            conn.autocommit = True
+            name = _tsql.qualified("dbo", table)
+            conn.cursor().execute(
+                f"IF OBJECT_ID(N'{name}', N'U') IS NOT NULL {_tsql.drop_table_sql('dbo', table)}"  # nosec B608
+            )
         finally:
             conn.close()
