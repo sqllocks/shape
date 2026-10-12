@@ -18,8 +18,13 @@ jobs:
         with: {python-version: '3.11', allow-prereleases: true}
       - run: python -m pip install -U pip
       - run: pip install -e '.[dev,streaming,advanced,docs]' -e plugins/shape-domains -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric -e plugins/shape-kafka
-      - name: Live-allocation matrix and proportional-memory control
-        run: python scripts/scratch/macos_footprint_control.py --matrix --output "$RUNNER_TEMP/macos-program-allocation-proof"
+      - name: Build the live-heap interposer and smoke test
+        run: |
+          clang -dynamiclib -O2 -o "$RUNNER_TEMP/rss_live_peak.dylib" scripts/scratch/rss_live_peak.c
+          clang -O0 -o "$RUNNER_TEMP/rss_malloc_smoke" scripts/scratch/rss_malloc_smoke.c
+          codesign -dvv "$RUNNER_TEMP/rss_live_peak.dylib" || true
+      - name: Does the interposer load into this Python and see known allocations
+        run: python scripts/scratch/verify_live_peak.py "$RUNNER_TEMP/rss_live_peak.dylib" "$RUNNER_TEMP/rss_malloc_smoke"
       - name: Verify checkout restoration
         if: always()
         run: |
