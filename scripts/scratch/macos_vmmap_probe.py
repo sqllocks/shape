@@ -16,7 +16,7 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.csv as pacsv
 
-SNAP_EVERY = 8
+SNAP_EVERY = 1000
 CHILD = r'''
 import ctypes as c, json, os, subprocess, sys
 import pyarrow as pa
@@ -59,7 +59,22 @@ def traced(pool):
         rec['heap'] = tool(['heap', pid, '-sortBySize'], 3000)
     print(json.dumps(rec), flush=True)
 engine.release_unused = traced
+def snap(label, full=False):
+    rec = {'label': label, 'zones': zones()}
+    if full:
+        pid = str(os.getpid())
+        rec['vmmap'] = tool(['vmmap', '-summary', pid], 6000)
+    print(json.dumps(rec), flush=True)
+original_entry = engine.table_entry
+def entry(*args, **kwargs):
+    snap('pre_table_entry', True)
+    out = original_entry(*args, **kwargs)
+    snap('post_table_entry', True)
+    return out
+engine.table_entry = entry
+snap('start')
 engine.profile(sys.argv[1], mode='bounded')
+snap('post_profile', True)
 '''
 
 
@@ -103,7 +118,11 @@ def main() -> None:
             )
         peak = 0
         for line in log.read_text().splitlines():
-            peak = max(peak, sum(z["max_size_in_use"] for z in json.loads(line)["zones"].values()))
+            rec = json.loads(line)
+            total = sum(z["max_size_in_use"] for z in rec["zones"].values())
+            if "label" in rec:
+                print(f"child {child} {rec['label']}: summed zone max_size_in_use={total}")
+            peak = max(peak, total)
         print(f"child {child}: rc={r.returncode} summed zone max_size_in_use={peak}")
         if r.returncode:
             print(r.stderr[-2000:])
