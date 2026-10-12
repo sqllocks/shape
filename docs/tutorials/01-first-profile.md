@@ -77,7 +77,7 @@ shape profile retail/ --dataset --name retail -o retail.shape --html report.html
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    {"shape_content_id": "42e4dd7f6e98fe34fe46e06fb5ae77b1ba95d2ff50b71551a8f19af214262286", "written": "retail.shape"}
+    {"shape_content_id": "9a9e27a5c5212f5b6045181b8b54ddcf4f30d4d6c1fbb77809af6a032678eb9f", "written": "retail.shape"}
     ```
 
 `--dataset` gives each file its own table in one profile. `--name retail` gives that profile a stable name. The command writes an artifact, an HTML report and a JSON summary; these are three views of the same profiling run. The long content id identifies the captured profile body. It is not a row count or an indication that generation succeeded. The command uses a safe capture by default. A safe capture is data minimisation, not anonymisation. Review what is retained before you share an artifact from your own data, even when the command itself succeeds.

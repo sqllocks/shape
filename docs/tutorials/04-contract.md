@@ -46,7 +46,7 @@ shape profile retail/ --dataset --name retail -o retail.shape --html report.html
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    {"shape_content_id": "42e4dd7f6e98fe34fe46e06fb5ae77b1ba95d2ff50b71551a8f19af214262286", "written": "retail.shape"}
+    {"shape_content_id": "9a9e27a5c5212f5b6045181b8b54ddcf4f30d4d6c1fbb77809af6a032678eb9f", "written": "retail.shape"}
     ```
 
 The folder profile includes several named tables. This matters for the contract shape: table-specific rules belong inside a `tables` object. A one-table contract applied to a dataset is the wrong kind of input, not a way to choose the first table. Keep the report and summary so you can inspect the baseline before writing the rules. The safe capture reduces retained values, so some value-based checks may be unavailable; a successful profile command does not guarantee that every possible rule can be evaluated from the saved artifact.
@@ -123,7 +123,7 @@ shape profile retail/ --dataset --name retail -o changed.shape
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    {"shape_content_id": "a38384fc705fbd5c1732b5f1b83e3bcb4609d16b587af6349b529ff5bf6b7718", "written": "changed.shape"}
+    {"shape_content_id": "0f3e92b49736b91ddcba63abc99bf5ed471d678f590c3af35cae133857b59f73", "written": "changed.shape"}
     ```
 
 The saved changed profile is a new observation. A contract check reads the profile you give it; editing the CSV does not update an earlier artifact automatically. This is an easy mistake in a local workflow and in CI: a check can pass against a stale profile while the new files are broken. Name or place the artifacts so you can tell which batch each command uses. Keep the clean artifact for comparison rather than overwriting every file with the same path.

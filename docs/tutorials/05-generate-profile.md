@@ -46,7 +46,7 @@ shape profile retail/ --dataset --name retail -o retail.shape --html report.html
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    {"shape_content_id": "42e4dd7f6e98fe34fe46e06fb5ae77b1ba95d2ff50b71551a8f19af214262286", "written": "retail.shape"}
+    {"shape_content_id": "9a9e27a5c5212f5b6045181b8b54ddcf4f30d4d6c1fbb77809af6a032678eb9f", "written": "retail.shape"}
     ```
 
 Profile the entire folder under one dataset name. The artifact records table and column summaries plus detected relationships; the report lets you inspect that evidence. Safe capture is the default and can withhold values or extrema. A safe capture is data minimisation, not anonymisation. The choice affects what the fitting step can use. If you need to evaluate a statistic that was withheld, decide how to obtain suitable evidence rather than assuming the fitted rows restore the missing source information.
@@ -105,7 +105,7 @@ shape profile dev/order.csv --name order -o generated-order.shape
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    {"shape_content_id": "3d672882177a48e977810019c45ef9ae93bd1b37baaf855e2b53e179094d5ba5", "written": "generated-order.shape"}
+    {"shape_content_id": "f994fb5896c575722a7c4635f926dde436eedd1dc36a8fb0cdf3bc056bbe2e9f", "written": "generated-order.shape"}
     ```
 
 You now close the loop: profile a generated table instead of stopping after the writer finishes. This gives you evidence about the actual development rows. Compare types, nulls and distributions with the source report, and use a contract for requirements your tests depend on. The single-table artifact makes it easy to inspect one result before expanding the review to the full generated dataset. Avoid interpreting a new content id as a failure; different generated values can produce a different profile body even when the requirements you care about still pass.
