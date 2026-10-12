@@ -257,21 +257,27 @@ def test_no_rows_creates_the_table_and_stages_nothing():
     assert not any(s.startswith("COPY") for s in pool.statements) and fs.opened == []
 
 
-def test_staged_timestamps_are_microseconds(batches):
+def test_staged_timestamps_are_int96_with_their_microseconds(batches):
+    # live run 38294752828: a dedicated pool read the INT64 microsecond timestamps this test once
+    # expected as "Long cannot be cast to Binary"; INT96 loads into datetime2 at full precision
     w, pool, fs = make()
     seen = {}
     orig = fs.rm
 
     def keep(path, recursive=False):
         for key, data in fs.files.items():
-            seen[key] = pq.read_table(io.BytesIO(data)).schema
+            meta = pq.ParquetFile(io.BytesIO(data)).metadata.schema
+            seen[key] = {
+                meta.column(i).name: meta.column(i).physical_type for i in range(len(meta))
+            }
         orig(path, recursive)
 
     fs.rm = keep
     w.write_table("customer", batches)
-    (schema,) = seen.values()
-    assert schema.field("seen").type == pa.timestamp("us")
-    assert schema.field("segment").type == pa.string()
+    (physical,) = seen.values()
+    assert physical["seen"] == physical["seen_tz"] == "INT96"
+    assert physical["segment"] == "BYTE_ARRAY"
+    assert pool.rows("dbo", "customer")[0][7].microsecond == 123456
 
 
 def test_a_staging_path_the_copy_cannot_take_fails_after_cleaning_up(batches):
@@ -726,3 +732,27 @@ def test_create_and_drop_table_run_outside_a_transaction_and_without_if_exists(
         w.write_table("customer", batches)
     assert seen == [("CREATE", False, True), ("DROP", False, True)]
     assert w.db.get().autocommit is False and ("dbo", "customer") not in pool.tables
+
+
+def test_staged_timestamps_are_int96_because_a_pool_reads_no_micro_or_nanosecond_int64():
+    from shape_fabric.lakehouse import write_batches
+    from shape_fabric.warehouse import WarehouseWriter
+
+    batch = sample_batch(0, 3)
+
+    def physical(int96):
+        sink = io.BytesIO()
+        write_batches(sink, "parquet", [batch], batch.schema, int96_timestamps=int96)
+        meta = pq.ParquetFile(io.BytesIO(sink.getvalue())).metadata.schema
+        return {meta.column(i).name: meta.column(i).physical_type for i in range(len(meta))}
+
+    assert physical(True)["seen"] == physical(True)["seen_tz"] == "INT96"
+    assert physical(False)["seen"] == "INT64"
+    assert SynapseWriter.int96_timestamps is True and WarehouseWriter.int96_timestamps is False
+    # the values survive the round trip at full precision
+    sink = io.BytesIO()
+    write_batches(sink, "parquet", [batch], batch.schema, int96_timestamps=True)
+    back = pq.read_table(io.BytesIO(sink.getvalue()))
+    assert (
+        back.column("seen").to_pylist() == pa.Table.from_batches([batch]).column("seen").to_pylist()
+    )

@@ -548,6 +548,7 @@ class FakeSqlConnection:
 
 class FakeSqlCursor:
     fast_executemany = False
+    _int64_timestamps_rejected = False
 
     def __init__(self, server: FakeSqlServer) -> None:
         self.server = server
@@ -947,10 +948,17 @@ class FakeSqlCursor:
     def _load_folder(self, table: SqlTable, folder: str) -> None:
         loaded = 0
         for path in self.server.files.find(folder):
-            parquet = pq.read_table(io.BytesIO(self.server.files.files[path]))
+            raw = self.server.files.files[path]
+            parquet = pq.read_table(io.BytesIO(raw))
+            meta = pq.ParquetFile(io.BytesIO(raw)).metadata.schema
+            physical = {meta.column(i).name: meta.column(i).physical_type for i in range(len(meta))}
             for field in parquet.schema:
-                if pa.types.is_timestamp(field.type) and field.type.unit == "ns":
+                if not pa.types.is_timestamp(field.type) or physical.get(field.name) == "INT96":
+                    continue  # INT96 holds nanoseconds and is accepted by a dedicated pool
+                if field.type.unit == "ns":
                     raise RuntimeError("Unsupported Parquet type TIMESTAMP(NANOS)")
+                if self._int64_timestamps_rejected and field.type.unit == "us":
+                    raise RuntimeError("Unsupported Parquet type TIMESTAMP(MICROS)")
             names = [c[0] for c in table.columns]
             if parquet.schema.names != names:
                 raise RuntimeError(f"Parquet columns {parquet.schema.names} do not match {names}")
@@ -985,6 +993,8 @@ class FakeSynapseCursor(FakeSqlCursor):
         super()._create(sql[: tail.start()] if tail else sql)
         server: FakeSynapsePool = self.server  # type: ignore[assignment]
         server.table_options[tuple(_unbracket(g) for g in head.groups())] = options  # type: ignore[index]
+
+    _int64_timestamps_rejected = True  # a dedicated pool reads no MICROS/NANOS INT64 timestamps
 
     def _copy(self, text: str) -> None:
         match = _SYNAPSE_COPY.match(text)

@@ -162,6 +162,8 @@ def copy_into_sql(schema_name: str, table: str, folder_url: str, copy_identity: 
 class SynapseWriter(WarehouseWriter):
     """Tables into a Synapse dedicated SQL pool by ``COPY INTO``; see the module docstring."""
 
+    int96_timestamps = True  # COPY INTO reads no micro/nanosecond INT64 timestamps
+
     def __init__(
         self,
         connection_string: str | None = None,
