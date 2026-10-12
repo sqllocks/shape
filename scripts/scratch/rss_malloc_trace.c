@@ -1,5 +1,6 @@
 // Scratch-only macOS malloc tracer. Loaded into the bounded-profile child with DYLD_INSERT_LIBRARIES.
-// Records allocations of at least 32 MiB, their frees, and the current live total.
+// Records allocations of at least 4 MiB (including every >=32 MiB allocation),
+// their frees, and the current live total.
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <malloc/malloc.h>
@@ -19,7 +20,7 @@
   } interpose_##original __attribute__((section("__DATA,__interpose"))) = {       \
       (const void *)(uintptr_t)&replacement, (const void *)(uintptr_t)&original};
 
-#define TRACE_MIN (32ULL << 20)
+#define TRACE_MIN (4ULL << 20)
 #define SLOT_COUNT 32768
 
 struct slot {
@@ -47,6 +48,14 @@ static int output_fd(void) {
   return trace_fd;
 }
 
+__attribute__((constructor)) static void tracer_loaded(void) {
+  int fd = output_fd();
+  if (fd >= 0) {
+    static const char marker[] = "L,0,0,0,0,0,0,0,interposer,loaded,0\n";
+    write(fd, marker, sizeof(marker) - 1);
+  }
+}
+
 static size_t slot_index(void *ptr) {
   size_t index = ((uintptr_t)ptr >> 4) % SLOT_COUNT;
   for (size_t n = 0; n < SLOT_COUNT; n++) {
@@ -57,22 +66,22 @@ static size_t slot_index(void *ptr) {
 }
 
 static void trace_event(char kind, void *ptr, size_t requested, size_t actual,
-                        void *caller) {
+                        void *caller, const char *api) {
   int fd = output_fd();
   if (fd < 0) return;
   Dl_info info = {0};
   dladdr(caller, &info);
   char line[2048];
   int count = snprintf(line, sizeof(line),
-                       "%c,%llu,%d,%p,%zu,%zu,%zu,%zu,%s,%s,%p\n", kind,
+                       "%c,%llu,%d,%p,%zu,%zu,%zu,%zu,%s,%s,%p,%s\n", kind,
                        (unsigned long long)timestamp_ns(), getpid(), ptr,
                        requested, actual, live_bytes, peak_bytes,
                        info.dli_fname ? info.dli_fname : "?",
-                       info.dli_sname ? info.dli_sname : "?", caller);
+                       info.dli_sname ? info.dli_sname : "?", caller, api);
   if (count > 0) write(fd, line, (size_t)count < sizeof(line) ? (size_t)count : sizeof(line) - 1);
 }
 
-static void remember(void *ptr, size_t requested, void *caller) {
+static void remember(void *ptr, size_t requested, void *caller, const char *api) {
   if (!ptr || requested < TRACE_MIN || inside) return;
   inside = 1;
   pthread_mutex_lock(&lock);
@@ -83,13 +92,13 @@ static void remember(void *ptr, size_t requested, void *caller) {
     slots[index].size = requested;
     live_bytes += requested;
     if (live_bytes > peak_bytes) peak_bytes = live_bytes;
-    trace_event('A', ptr, requested, malloc_size(ptr), caller);
+    trace_event('A', ptr, requested, malloc_size(ptr), caller, api);
   }
   pthread_mutex_unlock(&lock);
   inside = 0;
 }
 
-static void forget(void *ptr, void *caller) {
+static void forget(void *ptr, void *caller, const char *api) {
   if (!ptr || inside) return;
   inside = 1;
   pthread_mutex_lock(&lock);
@@ -99,7 +108,7 @@ static void forget(void *ptr, void *caller) {
     slots[index].pointer = (void *)1; // tombstone; preserve the probe chain
     slots[index].size = 0;
     live_bytes -= size;
-    trace_event('F', ptr, size, 0, caller);
+    trace_event('F', ptr, size, 0, caller, api);
   }
   pthread_mutex_unlock(&lock);
   inside = 0;
@@ -107,14 +116,15 @@ static void forget(void *ptr, void *caller) {
 
 static void *traced_malloc(size_t size) {
   void *p = malloc(size);
-  remember(p, size, __builtin_return_address(0));
+  remember(p, size, __builtin_return_address(0), "malloc");
   return p;
 }
 INTERPOSE(traced_malloc, malloc)
 
 static void *traced_calloc(size_t count, size_t size) {
   void *p = calloc(count, size);
-  if (size && count <= SIZE_MAX / size) remember(p, count * size, __builtin_return_address(0));
+  if (size && count <= SIZE_MAX / size)
+    remember(p, count * size, __builtin_return_address(0), "calloc");
   return p;
 }
 INTERPOSE(traced_calloc, calloc)
@@ -122,66 +132,73 @@ INTERPOSE(traced_calloc, calloc)
 static void *traced_realloc(void *ptr, size_t size) {
   void *p = realloc(ptr, size);
   if (p) {
-    forget(ptr, __builtin_return_address(0));
-    remember(p, size, __builtin_return_address(0));
+    forget(ptr, __builtin_return_address(0), "realloc");
+    remember(p, size, __builtin_return_address(0), "realloc");
   }
   return p;
 }
 INTERPOSE(traced_realloc, realloc)
 
+#ifndef RSS_NO_REALLOCF
 static void *traced_reallocf(void *ptr, size_t size) {
   void *p = reallocf(ptr, size);
   // reallocf also frees the old block on failure.
-  forget(ptr, __builtin_return_address(0));
-  remember(p, size, __builtin_return_address(0));
+  forget(ptr, __builtin_return_address(0), "reallocf");
+  remember(p, size, __builtin_return_address(0), "reallocf");
   return p;
 }
 INTERPOSE(traced_reallocf, reallocf)
+#endif
 
 static void traced_free(void *ptr) {
-  forget(ptr, __builtin_return_address(0));
+  forget(ptr, __builtin_return_address(0), "free");
   free(ptr);
 }
 INTERPOSE(traced_free, free)
 
 static int traced_posix_memalign(void **ptr, size_t alignment, size_t size) {
   int result = posix_memalign(ptr, alignment, size);
-  if (!result) remember(*ptr, size, __builtin_return_address(0));
+  if (!result) remember(*ptr, size, __builtin_return_address(0), "posix_memalign");
   return result;
 }
 INTERPOSE(traced_posix_memalign, posix_memalign)
 
 static void *traced_aligned_alloc(size_t alignment, size_t size) {
   void *p = aligned_alloc(alignment, size);
-  remember(p, size, __builtin_return_address(0));
+  remember(p, size, __builtin_return_address(0), "aligned_alloc");
   return p;
 }
 INTERPOSE(traced_aligned_alloc, aligned_alloc)
 
+#ifndef RSS_NO_VALLOC
 static void *traced_valloc(size_t size) {
   void *p = valloc(size);
-  remember(p, size, __builtin_return_address(0));
+  remember(p, size, __builtin_return_address(0), "valloc");
   return p;
 }
 INTERPOSE(traced_valloc, valloc)
+#endif
 
 static void *traced_zone_malloc(malloc_zone_t *zone, size_t size) {
   void *p = malloc_zone_malloc(zone, size);
-  remember(p, size, __builtin_return_address(0));
+  remember(p, size, __builtin_return_address(0), "malloc_zone_malloc");
   return p;
 }
 INTERPOSE(traced_zone_malloc, malloc_zone_malloc)
 
+#ifndef RSS_NO_ZONE_CALLOC
 static void *traced_zone_calloc(malloc_zone_t *zone, size_t count, size_t size) {
   void *p = malloc_zone_calloc(zone, count, size);
-  if (size && count <= SIZE_MAX / size) remember(p, count * size, __builtin_return_address(0));
+  if (size && count <= SIZE_MAX / size)
+    remember(p, count * size, __builtin_return_address(0), "malloc_zone_calloc");
   return p;
 }
 INTERPOSE(traced_zone_calloc, malloc_zone_calloc)
+#endif
 
 static void *traced_zone_memalign(malloc_zone_t *zone, size_t alignment, size_t size) {
   void *p = malloc_zone_memalign(zone, alignment, size);
-  remember(p, size, __builtin_return_address(0));
+  remember(p, size, __builtin_return_address(0), "malloc_zone_memalign");
   return p;
 }
 INTERPOSE(traced_zone_memalign, malloc_zone_memalign)
@@ -189,15 +206,15 @@ INTERPOSE(traced_zone_memalign, malloc_zone_memalign)
 static void *traced_zone_realloc(malloc_zone_t *zone, void *ptr, size_t size) {
   void *p = malloc_zone_realloc(zone, ptr, size);
   if (p) {
-    forget(ptr, __builtin_return_address(0));
-    remember(p, size, __builtin_return_address(0));
+    forget(ptr, __builtin_return_address(0), "malloc_zone_realloc");
+    remember(p, size, __builtin_return_address(0), "malloc_zone_realloc");
   }
   return p;
 }
 INTERPOSE(traced_zone_realloc, malloc_zone_realloc)
 
 static void traced_zone_free(malloc_zone_t *zone, void *ptr) {
-  forget(ptr, __builtin_return_address(0));
+  forget(ptr, __builtin_return_address(0), "malloc_zone_free");
   malloc_zone_free(zone, ptr);
 }
 INTERPOSE(traced_zone_free, malloc_zone_free)
