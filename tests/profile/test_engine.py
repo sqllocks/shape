@@ -200,12 +200,13 @@ def test_python_kernel_gives_the_same_document(monkeypatch):
 @pytest.mark.heavy
 def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
     """The 5M vs 50M check is benchmarks/vs_refengine/profile_1to1/rss_check.py; this is its
-    small version: peak RSS of a CSV twice as large, both past the allocator ramp-up (about
-    20M rows), is within 10%. Each scan fixes Arrow's serial-reader executor sizes."""
+    small version: peak process memory of a CSV twice as large, both past the allocator
+    ramp-up (about 20M rows), is within 10%. macOS measures physical footprint, excluding
+    freed reusable pages; Linux and Windows measure RSS. Each scan fixes Arrow's executors."""
     import pyarrow.csv as pacsv
 
     code = (
-        "import json, sys\n"
+        "import json, os, sys\n"
         "from shape.profile.engine import profile\n"
         "import pyarrow as pa\n"
         # Even with use_threads=False, raw read-ahead and pending decode continuations use
@@ -213,15 +214,16 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
         # decoding is already serial, and the profiling kernel keeps default parallelism.
         "pa.set_io_thread_count(1)\n"
         "pa.set_cpu_count(1)\n"
-        "def peak_rss():\n"
+        "def peak_memory():\n"
         # Linux: VmHWM belongs to this process's address space. ru_maxrss survives exec on
         # Linux, so in a child of pytest it reports the parent's (larger) peak for both sizes.
         "    if sys.platform.startswith('linux'):\n"
         "        status = open('/proc/self/status').read().split('VmHWM:')[1]\n"
         "        return int(status.split()[0]) * 1024\n"
-        "    elif sys.platform == 'darwin':  # ru_maxrss is bytes on macOS\n"
-        "        import resource\n"
-        "        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss\n"
+        "    elif sys.platform == 'darwin':\n"
+        # RSS includes freed reusable pages until macOS reclaims them. Physical footprint
+        # excludes those pages and includes compressed memory still owned by the process.
+        "        return mac_usage(os.getpid())['ri_lifetime_max_phys_footprint']\n"
         "    else:  # Windows: the peak working set\n"
         "        import ctypes\n"
         "        from ctypes import wintypes as w\n"
@@ -235,21 +237,18 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
         "        p.GetProcessMemoryInfo.argtypes = [w.HANDLE, ctypes.c_void_p, w.DWORD]\n"
         "        assert p.GetProcessMemoryInfo(k.GetCurrentProcess(), ctypes.byref(c), c.cb)\n"
         "        return c.peak\n"
-        "def mac_snapshot():\n"
-        "    if sys.platform != 'darwin':\n"
-        "        return None\n"
-        "    import ctypes as c, os\n"
-        "    lib = c.CDLL('/usr/lib/libSystem.B.dylib', use_errno=True)\n"
+        "def mac_usage(pid):\n"
+        "    import ctypes as c\n"
         "    proc = c.CDLL('/usr/lib/libproc.dylib', use_errno=True)\n"
+        # RUSAGE_INFO_V4 (version 4): a 16-byte UUID followed by 35 uint64 counters.
         "    class Usage(c.Structure):\n"
         "        _fields_ = [('uuid', c.c_ubyte * 16), ('values', c.c_uint64 * 35)]\n"
         "    proc.proc_pid_rusage.argtypes = [c.c_int, c.c_int, c.c_void_p]\n"
         "    proc.proc_pid_rusage.restype = c.c_int\n"
-        "    def usage(pid):\n"
-        "        u = Usage()\n"
-        "        if proc.proc_pid_rusage(pid, 4, c.byref(u)):\n"
-        "            raise OSError(c.get_errno(), 'proc_pid_rusage')\n"
-        "        return dict(zip(('ri_user_time', 'ri_system_time', "
+        "    u = Usage()\n"
+        "    if proc.proc_pid_rusage(pid, 4, c.byref(u)):\n"
+        "        raise OSError(c.get_errno(), 'proc_pid_rusage')\n"
+        "    return dict(zip(('ri_user_time', 'ri_system_time', "
         "'ri_pkg_idle_wkups', 'ri_interrupt_wkups', 'ri_pageins', "
         "'ri_wired_size', 'ri_resident_size', 'ri_phys_footprint', "
         "'ri_proc_start_abstime', 'ri_proc_exit_abstime', "
@@ -265,6 +264,11 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
         "'ri_lifetime_max_phys_footprint', 'ri_instructions', "
         "'ri_cycles', 'ri_billed_energy', 'ri_serviced_energy', "
         "'ri_interval_max_phys_footprint', 'ri_runnable_time'), u.values))\n"
+        "def mac_snapshot():\n"
+        "    if sys.platform != 'darwin':\n"
+        "        return None\n"
+        "    import ctypes as c, os\n"
+        "    lib = c.CDLL('/usr/lib/libSystem.B.dylib', use_errno=True)\n"
         "    class VM(c.Structure):\n"
         "        _fields_ = [('virtual_size', c.c_uint64), ('region_count', c.c_int),\n"
         "                    ('page_size', c.c_int)] + [(n, "
@@ -289,14 +293,14 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
         "    stats = Malloc()\n"
         "    lib.malloc_zone_statistics.argtypes = [c.c_void_p, c.POINTER(Malloc)]\n"
         "    lib.malloc_zone_statistics(None, c.byref(stats))\n"
-        "    return {'self': usage(os.getpid()), 'parent': usage(os.getppid()),\n"
+        "    return {'self': mac_usage(os.getpid()), 'parent': mac_usage(os.getppid()),\n"
         "            'vm': {n: getattr(vm, n) for n, _ in VM._fields_},\n"
         "            'malloc': {n: getattr(stats, n) for n, _ in Malloc._fields_}}\n"
         "pool = pa.default_memory_pool()\n"
-        "initial_peak = peak_rss()\n"
+        "initial_peak = peak_memory()\n"
         "initial_mac = mac_snapshot()\n"
         "profile(sys.argv[1], mode='bounded')\n"
-        "peak = peak_rss()\n"
+        "peak = peak_memory()\n"
         # The serial CSV reader uses a separate pool; the default pool omits its buffers.
         "csv_pool = (pa.mimalloc_memory_pool()\n"
         "    if 'mimalloc' in pa.supported_memory_backends() else pool)\n"
@@ -316,16 +320,6 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
         # Open the file ourselves: CSVWriter.close() leaves a path it opened held until the
         # writer is freed, and Windows cannot unlink a file that is still open.
         with pa.OSFile(str(p), "wb") as sink:
-            if sys.platform == "darwin":
-                import fcntl
-
-                # The just-written 24M file can remain cached while the 48M file spills
-                # to disk. Different scan rates change allocator reuse
-                # and the residency of freed pages included in ru_maxrss. F_NOCACHE (48)
-                # keeps fixture writes out of macOS's data cache, so both scans start cold.
-                # This controls input preparation; the child still measures whole-process
-                # peak RSS, including any allocations retained in proportion to row count.
-                fcntl.fcntl(sink.fileno(), 48, 1)
             writer = None
             for start in range(0, rows, 1_000_000):
                 m = min(1_000_000, rows - start)
@@ -341,9 +335,6 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
                 writer.write_table(chunk)
             assert writer is not None
             writer.close()
-            if sys.platform == "darwin":
-                # Drain any unaligned writes that took the kernel's buffered fallback.
-                os.fsync(sink.fileno())
         r = subprocess.run(
             [sys.executable, "-c", code, str(p)],
             capture_output=True,
@@ -351,7 +342,8 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
             check=True,
         )
         peaks[rows] = int(r.stdout.split()[-1])
-        print(f"{rows} rows: peak RSS {peaks[rows]} bytes; {r.stderr.strip()}")
+        metric = "physical footprint" if sys.platform == "darwin" else "RSS"
+        print(f"{rows} rows: peak {metric} {peaks[rows]} bytes; {r.stderr.strip()}")
         p.unlink()
     assert peaks[24_000_000] > 50 * 2**20, peaks  # a real measurement of the child
     assert abs(peaks[48_000_000] - peaks[24_000_000]) / peaks[24_000_000] < 0.10, peaks
