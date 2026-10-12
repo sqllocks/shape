@@ -131,3 +131,17 @@ def test_the_fallback_gives_up_with_the_cause_when_it_runs_past_its_limit(monkey
     assert fs.files == {}  # staging removed
     with pytest.raises(KeyError):  # the table this call created is dropped again
         server.rows("dbo", "customer")
+
+
+def test_cleanup_also_takes_the_empty_run_and_staging_folders(monkeypatch):
+    writer, server, fs = make()
+    removed = []
+    real_remove_if_empty = writer.storage.remove_if_empty
+    monkeypatch.setattr(
+        writer.storage,
+        "remove_if_empty",
+        lambda path: (removed.append(path), real_remove_if_empty(path))[1],
+    )
+    writer.write_table("customer", sample_batches())
+    assert len(removed) == 2
+    assert removed[0].endswith(f"/staging/{writer.run_id}") and removed[1].endswith("/staging")

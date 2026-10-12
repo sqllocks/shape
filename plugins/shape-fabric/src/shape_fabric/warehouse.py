@@ -360,6 +360,11 @@ class WarehouseWriter:
     def _cleanup(self, folder: onelake.OneLakePath) -> None:
         try:
             self.storage.remove(folder.abfss(), recursive=True)
+            # OneLake keeps the emptied run folder and the shared ``staging`` folder above it:
+            # take them away too once nothing is in them (another run's files keep them)
+            run_folder = folder.abfss().rsplit("/", 1)[0]
+            self.storage.remove_if_empty(run_folder)
+            self.storage.remove_if_empty(run_folder.rsplit("/", 1)[0])
         except Exception as exc:  # the write's own outcome matters more than the leftovers
             warnings.warn(
                 f"could not remove the staged files at {folder.abfss()}: {exc}",

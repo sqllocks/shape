@@ -342,6 +342,10 @@ class MemoryFS:
         for f in doomed:
             del self.files[f]
 
+    def ls(self, path: str, detail: bool = False) -> list[str]:
+        """The files under ``path`` (this filesystem has no empty folders)."""
+        return self.find(path)
+
     def find(self, path: str) -> list[str]:
         key = self._key(path)
         return sorted(f for f in self.files if f == key or f.startswith(key + "/"))

@@ -19,7 +19,7 @@ from collections.abc import Callable
 from typing import Any
 from urllib.parse import quote, urlsplit
 
-from shape.scale.http import FABRIC_API, Http, HttpError, Transport, on_fabric_api, same_origin
+from shape.scale.http import FABRIC_API, Http, HttpError, Transport, operation_url, same_origin
 from shape.security.redact import redact_text
 
 from ._auth import token_for
@@ -253,11 +253,13 @@ class FabricApi:
     def _await(self, location: str, kind: str, name: str, wait: float = POLL_SECONDS) -> None:
         if not location:
             raise FabricApiError(f"creating the {kind} {name!r}: no operation URL to follow")
-        if not on_fabric_api(location):
+        polled = operation_url(location)
+        if polled is None:
             raise OperationUrlError(  # a FabricApiError (G7-eval, #434) and a ValueError (#434)
                 f"creating the {kind} {name!r}: the operation URL is off the Fabric API: "
                 f"{urlsplit(location).netloc!r}"
             )
+        location = polled
         # The bearer token goes with every poll: never to another origin or outside the API.
         try:
             same_origin(location, FABRIC_API)

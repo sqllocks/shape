@@ -27,7 +27,15 @@ from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlsplit
 
-from shape.scale.http import FABRIC_API, ONELAKE_DFS, Http, Transport, on_fabric_api, same_origin
+from shape.scale.http import (
+    FABRIC_API,
+    ONELAKE_DFS,
+    Http,
+    Transport,
+    on_fabric_api,
+    operation_url,
+    same_origin,
+)
 from shape.scale.jobs import JobRecord
 
 logger = logging.getLogger(__name__)
@@ -295,11 +303,13 @@ class FabricSparkRouter:
             raise NotebookNotFoundError(
                 "the Items API accepted the notebook but gave no operation URL"
             )
-        if not on_fabric_api(location):
+        polled = operation_url(location)
+        if polled is None:
             raise ServiceUrlError(  # a NotebookNotFoundError (G7-eval) and a ValueError
                 "the Items API names an operation URL off the Fabric API: "
                 f"{urlsplit(location).netloc!r}"
             )
+        location = polled
         _fabric_url(location, "operation URL (Location header)")
         for _ in range(60):
             self._sleep(2.0)
