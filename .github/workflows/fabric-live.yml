@@ -22,6 +22,16 @@ on:
         required: false
         default: update
         type: string
+      set_git_credentials:
+        description: Set the CI principal's own Git credentials on the Git workspace to the shared GitHub connection (idempotent one-time setup; default - do nothing)
+        required: false
+        default: false
+        type: boolean
+      delete_leftover_notebooks:
+        description: List, then delete, only the Notebook items named shape_live_nb_<8 hex> in shape-test (the deploy-notebook test's leftovers; default - do nothing)
+        required: false
+        default: false
+        type: boolean
 permissions:
   contents: read
 concurrency:
@@ -144,6 +154,97 @@ jobs:
           for note in notes:
               print(f"::warning::{note}")
           sys.stdout.flush()
+          PY
+      - name: Set the CI principal's Git credentials (opt-in setup, idempotent)
+        # Owner-approved (2026-10-12): link the principal's own Git credentials to the existing
+        # shared connection shape-fabric-sync-gh. Fabric's Git APIs use the calling principal's own
+        # credentials; it sees the connection but has none set (myGitCredentials source None), so
+        # git/status answers GitCredentialsNotConfigured. Does nothing when already set. Prints only
+        # the source and connection id, never a token; creates nothing new.
+        if: inputs.set_git_credentials
+        timeout-minutes: 5
+        run: |
+          python - <<'PY'
+          import json, os, urllib.error, urllib.request
+          from azure.identity import ClientSecretCredential
+
+          env = os.environ
+          ws = env["FABRIC_GIT_WORKSPACE_ID"]
+          name = env.get("FABRIC_GIT_CONNECTION_NAME", "shape-fabric-sync-gh")
+          cred = ClientSecretCredential(env["FABRIC_TENANT_ID"], env["FABRIC_CLIENT_ID"], env["FABRIC_CLIENT_SECRET"])
+          token = cred.get_token("https://api.fabric.microsoft.com/.default").token
+          base = "https://api.fabric.microsoft.com/v1"
+
+          def call(method, url, body=None):
+              data = json.dumps(body).encode() if body is not None else None
+              req = urllib.request.Request(url, data=data, method=method, headers={
+                  "Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+              try:
+                  with urllib.request.urlopen(req, timeout=60) as resp:
+                      raw = resp.read()
+                      return resp.status, (json.loads(raw) if raw else {})
+              except urllib.error.HTTPError as exc:
+                  return exc.code, exc.read().decode()[:1500]
+
+          def show(label, code, doc):
+              if isinstance(doc, dict):
+                  print(label, code, "source=" + str(doc.get("source")), "connectionId=" + str(doc.get("connectionId")))
+              else:
+                  print(label, code, doc)
+
+          code, conns = call("GET", f"{base}/connections")
+          assert code == 200, (code, conns)
+          ids = [c["id"] for c in conns.get("value", []) if c.get("displayName") == name]
+          assert len(ids) == 1, f"expected one connection named {name}, found {len(ids)}"
+          code, mine = call("GET", f"{base}/workspaces/{ws}/git/myGitCredentials")
+          show("before:", code, mine)
+          if code == 200 and mine.get("source") == "ConfiguredConnection" and mine.get("connectionId") == ids[0]:
+              print("already set; nothing to do")
+          else:
+              code, out = call("PATCH", f"{base}/workspaces/{ws}/git/myGitCredentials",
+                               {"source": "ConfiguredConnection", "connectionId": ids[0]})
+              show("PATCH:", code, out)
+              assert code in (200, 204), (code, out)
+          code, mine = call("GET", f"{base}/workspaces/{ws}/git/myGitCredentials")
+          show("after:", code, mine)
+          PY
+      - name: Delete the deploy-notebook test's leftover notebooks (opt-in, exact names only)
+        # Owner-approved (2026-10-12). Lists every Notebook with its id first, then deletes only
+        # items whose name is shape_live_nb_ followed by 8 hex digits (what the deploy-notebook test
+        # names its notebook). Nothing else is touched; shape_spark_worker stays.
+        if: inputs.delete_leftover_notebooks
+        timeout-minutes: 5
+        run: |
+          python - <<'PY'
+          import json, os, re, urllib.request
+          from azure.identity import ClientSecretCredential
+
+          env = os.environ
+          cred = ClientSecretCredential(env["FABRIC_TENANT_ID"], env["FABRIC_CLIENT_ID"], env["FABRIC_CLIENT_SECRET"])
+          token = cred.get_token("https://api.fabric.microsoft.com/.default").token
+          base = f"https://api.fabric.microsoft.com/v1/workspaces/{env['FABRIC_WORKSPACE_ID']}/items"
+
+          def call(method, url):
+              req = urllib.request.Request(url, method=method, headers={"Authorization": f"Bearer {token}"})
+              with urllib.request.urlopen(req, timeout=60) as resp:
+                  raw = resp.read()
+                  return json.loads(raw) if raw else {}
+
+          items, url = [], f"{base}?type=Notebook"
+          while url:
+              doc = call("GET", url)
+              items += doc.get("value", [])
+              more = doc.get("continuationToken")
+              url = f"{base}?type=Notebook&continuationToken={more}" if more else None
+          pattern = re.compile(r"shape_live_nb_[0-9a-f]{8}")
+          print("Notebook items in the workspace (the Items API gives no creation time):")
+          for item in items:
+              print(f"  {item['id']}  {item['displayName']}")
+          doomed = [i for i in items if pattern.fullmatch(i["displayName"])]
+          print(f"deleting {len(doomed)} item(s) named shape_live_nb_<8 hex>")
+          for item in doomed:
+              call("DELETE", f"{base}/{item['id']}")
+              print(f"  deleted {item['id']}  {item['displayName']}")
           PY
       - name: Live tests
         # Bounded below the job limit so the summary and upload steps always run. Every test name is

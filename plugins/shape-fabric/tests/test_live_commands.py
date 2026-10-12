@@ -26,6 +26,7 @@ from shape_fabric import _tsql, commands
 from shape_fabric._storage import Storage
 from shape_fabric.fabric_api import FabricApi, tuple_transport
 from shape_fabric.recording import Tape, TapeTransport, save
+from shape_fabric.testing import remove_item
 
 from shape.cli.main import main
 
@@ -105,9 +106,7 @@ def test_deploy_notebook_creates_a_notebook_item_and_it_can_be_removed(conversat
         item = api.find_item(workspace, "Notebook", name)
         assert item is not None and item["id"] in out
     finally:
-        found = api.find_item(workspace, "Notebook", name)
-        if found:
-            api.delete_item(workspace, found["id"])
+        remove_item(api, workspace, "Notebook", name)
 
 
 def test_setup_creates_an_environment_and_a_second_run_finds_it(conversation, capsys):
@@ -121,9 +120,7 @@ def test_setup_creates_an_environment_and_a_second_run_finds_it(conversation, ca
         assert main(args) == 0
         assert "Found existing Environment" in capsys.readouterr().out
     finally:
-        found = api.find_item(workspace, "Environment", name)
-        if found:
-            api.delete_item(workspace, found["id"])
+        remove_item(api, workspace, "Environment", name)
 
 
 def test_publish_to_a_lakehouse_writes_the_landing_zone_and_the_manifest(capsys):
