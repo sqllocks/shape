@@ -38,3 +38,5 @@ editors/vscode/stage/
 editors/vscode/*.vsix
 editors/vscode/.vscode-test/
 site/
+
+.owner-transcript-work/

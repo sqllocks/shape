@@ -1,0 +1,61 @@
+[
+  {
+    "id": "postgres-sink",
+    "page": "docs/SINKS.md",
+    "note": "PostgreSQL maintainer \u2014 supply the transcript for docs/SINKS.md example 2."
+  },
+  {
+    "id": "postgres-seed",
+    "page": "docs/TESTING_WITH_SHAPE.md",
+    "note": "PostgreSQL maintainer \u2014 supply the transcript for docs/TESTING_WITH_SHAPE.md example 3."
+  },
+  {
+    "id": "kafka-doctor",
+    "page": "docs/CLI.md",
+    "note": "Kafka maintainer \u2014 supply the transcript for docs/CLI.md example 5."
+  },
+  {
+    "id": "kafka-avro",
+    "page": "docs/EMIT.md",
+    "note": "Kafka maintainer \u2014 supply the transcript for docs/EMIT.md example 2."
+  },
+  {
+    "id": "kafka-drift",
+    "page": "docs/EMIT.md",
+    "note": "Kafka maintainer \u2014 supply the transcript for docs/EMIT.md example 3."
+  },
+  {
+    "id": "kafka-profile",
+    "page": "docs/plugins/streaming.md",
+    "note": "Kafka maintainer \u2014 supply the transcript for docs/plugins/streaming.md example 1."
+  },
+  {
+    "id": "emit-overhead",
+    "page": "docs/EMIT.md",
+    "note": "performance maintainer \u2014 publish only committed, machine-labelled overhead measurements.",
+    "raw_measurement": true
+  },
+  {
+    "id": "allocator-measurement",
+    "page": "docs/GENERATION_ENGINE.md",
+    "note": "performance maintainer \u2014 commit a product measurement with the machine and workload before publishing allocator timing numbers.",
+    "raw_measurement": true
+  },
+  {
+    "id": "sql-sampling-measurement",
+    "page": "docs/plugins/sqlserver.md",
+    "note": "SQL adapter maintainer \u2014 commit machine-labelled measurements before publishing costs.",
+    "raw_measurement": true
+  },
+  {
+    "id": "delta-fallback",
+    "page": "docs/TROUBLESHOOTING.md",
+    "note": "Delta maintainer \u2014 execute an extension-install and fallback transcript before publishing an installation command here."
+  },
+  {
+    "id": "vscode-install",
+    "page": "docs/VSCODE.md",
+    "note": "editor maintainer \u2014 run a VS Code install transcript before publishing an install command.",
+    "raw_measurement": true
+  }
+]

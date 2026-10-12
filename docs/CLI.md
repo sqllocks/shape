@@ -357,13 +357,12 @@ failure exits 1. A malformed target is an input error (exit 2).
 
 <!-- example: 5 -->
 
-**Needs a Kafka account. Not run in CI.**
+This connectivity example uses the workflow's disposable Kafka broker. Fabric and Event Hubs checks require their own accounts; the option table below describes those checks.
 
-```
-shape doctor --fabric onelake://WORKSPACE/ITEM [--auth cli|msi|spn|device-code|fabric ...]
-shape doctor --broker kafka://host:9092[,host2:9092]/topic
-shape doctor --broker eventhubs://NAMESPACE/HUB [--auth ...]
-shape doctor --delta-table PATH
+<!-- owner-example: kafka-doctor -->
+
+```bash {.runnable-owner}
+shape doctor --broker kafka://localhost:9092/orders
 ```
 
 <!-- owner: Kafka maintainer — supply the transcript for docs/CLI.md example 5. -->

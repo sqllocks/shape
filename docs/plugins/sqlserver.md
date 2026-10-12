@@ -110,7 +110,15 @@ its start. The choice is deterministic: the same data gives the same rows on eve
 - **Cost.** The sampling query scans the table and uses a top-n sort. The reader constructs
   the query with `CHECKSUM`, `CAST`, `ORDER BY` and `TOP`. If the server rejects it, the reader
   falls back to the first n rows, logs a warning and records the sampling method.
-  <!-- owner: SQL adapter maintainer — commit machine-labelled measurements before publishing costs. -->
+  The container measurement creates a disposable 100,000-row table and records the adapter's first-row and checksum-spread queries for 1,000 rows, including the exact SQL and returned row counts. Three raw timings for each query apply only to the labelled runner and data.
+
+<!-- owner-example: sql-sampling-measurement -->
+
+```bash {.runnable-owner}
+python "$SHAPE_DOCS_REPO/scripts/docs_owner_measurements.py" sqlserver
+```
+
+<!-- owner: SQL adapter maintainer — commit machine-labelled measurements before publishing costs. -->
 - Other ways were rejected: `TABLESAMPLE` samples whole pages, so a table of few pages is
   sampled coarsely and the rows depend on page layout rather than on the data alone;
   `ORDER BY NEWID()` is not repeatable. There is no seed: the rows follow from the data alone.
