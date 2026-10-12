@@ -109,6 +109,8 @@ def dump(files: dict[str, str], folder: str) -> None:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(text, encoding="utf-8")
         print(f"--- {folder}/{path} ({len(text)} bytes)")
+        if len(text) < 8000:  # small definition parts are printed: the record of what was there
+            print(text)
 
 
 def quote(name: str) -> str:
