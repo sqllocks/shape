@@ -18,7 +18,11 @@ jobs:
         with: {python-version: '3.11', allow-prereleases: true}
       - run: python -m pip install -U pip
       - run: pip install -e '.[dev,streaming,advanced,docs]' -e plugins/shape-domains -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric -e plugins/shape-kafka
+      - name: Build child malloc tracer
+        run: clang -dynamiclib -O1 -fno-omit-frame-pointer -o "$RUNNER_TEMP/rss_malloc_trace.dylib" scripts/scratch/rss_malloc_trace.c
       - name: Program-allocation matrix and proportional-memory control
+        env:
+          RSS_TRACE_DYLIB: ${{ runner.temp }}/rss_malloc_trace.dylib
         run: python scripts/scratch/macos_footprint_control.py --matrix --output "$RUNNER_TEMP/macos-program-allocation-proof"
       - name: Verify checkout restoration
         if: always()

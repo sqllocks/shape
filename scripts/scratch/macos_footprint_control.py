@@ -7,6 +7,7 @@ import ast
 import hashlib
 import inspect
 import json
+import os
 import re
 import subprocess
 import sys
@@ -184,8 +185,19 @@ def run_probe(order_name: str, iteration: int, after_heavy: bool, output: Path) 
             run = subprocess.run
 
             def capture(*args, **kwargs):
-                result = run(*args, **kwargs)
                 command = args[0] if args else kwargs.get("args", [])
+                trace_path = None
+                if len(command) >= 4 and command[1] == "-c" and "mode='bounded'" in command[2]:
+                    dylib = os.environ.get("RSS_TRACE_DYLIB")
+                    if dylib:
+                        trace_path = output / f"child-{len(record['samples']) + 1}-malloc.csv"
+                        kwargs["env"] = {
+                            **os.environ,
+                            **kwargs.get("env", {}),
+                            "DYLD_INSERT_LIBRARIES": dylib,
+                            "RSS_TRACE_FILE": str(trace_path),
+                        }
+                result = run(*args, **kwargs)
                 if len(command) >= 4 and command[1] == "-c" and "mode='bounded'" in command[2]:
                     rows = int(Path(command[3]).stem[1:])
                     diagnostics = next(
@@ -204,6 +216,30 @@ def run_probe(order_name: str, iteration: int, after_heavy: bool, output: Path) 
                     record["samples"].append(sample)
                     (output / f"child-{sample['position']}-stderr.txt").write_text(result.stderr)
                     print("MATRIX_SAMPLE " + json.dumps(sample), flush=True)
+                    if trace_path is not None:
+                        assert trace_path.exists(), "malloc interposer did not load"
+                        events = [line.split(",") for line in trace_path.read_text().splitlines()]
+                        peaks = [int(event[7]) for event in events]
+                        largest = sorted(
+                            (event for event in events if event[0] == "A"),
+                            key=lambda event: int(event[4]),
+                            reverse=True,
+                        )[:12]
+                        trace_summary = {
+                            "events": len(events),
+                            "large_live_peak": max(peaks, default=0),
+                            "largest_allocations": [
+                                {
+                                    "bytes": int(event[4]),
+                                    "module": event[8],
+                                    "symbol": event[9],
+                                    "address": event[10],
+                                }
+                                for event in largest
+                            ],
+                        }
+                        sample["malloc_trace"] = trace_summary
+                        print("MALLOC_TRACE " + json.dumps(trace_summary), flush=True)
                 return result
 
             subprocess.run = capture
