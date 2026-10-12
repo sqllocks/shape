@@ -16,6 +16,8 @@ Status: available.
 - A pack run creates its manifest exclusively, so two runs in the same second keep their own.
 - `shape chaos --input` and `shape incremental --input` skip the ground-truth logs of an earlier
   chaos run, and name a file that cannot be read as a table.
+- `shape.yml` `gates.NAME.mode` accepts the four gates only `shape verify` runs
+  (`reconciliation`, `timeseries_quality`, `memorization`, `utility`).
 - `shape fabric setup` names `shape fabric notebook` in its next steps.
 
 ## 0.9.1
