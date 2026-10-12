@@ -61,6 +61,10 @@ The existing Synapse live test now forwards its documented service-principal var
 of creating empty SPN settings. Its old credential expression fails the new contract; the
 fixed helper passes.
 
+The `fabric-live` workflow maps the Synapse test variables and brackets the live tests with a
+step that resumes the dedicated pool (bounded wait for Online) and an `if: always()` step that
+pauses it again, so a failed or cancelled run does not leave the pool running.
+
 The lead corrected add-on C after the first live review: P6-07a and LIVE-FIX #15
 require missing variables to fail by name. All eight changed live modules now use
 `pytest.fail` in `need()`. The absence control reports 31 failures, zero skips;
