@@ -47,3 +47,28 @@ def test_failed_timing_worker_retains_command_exit_and_tail(family, monkeypatch,
     assert "command" in error and "exit 11" in error
     assert "timing-line-239" in error and "timing-line-0\n" not in error
     assert "TypeError: actionable timing worker failure" in error
+
+
+def test_failed_timing_run_names_the_failing_verifier(tmp_path):
+    import json
+
+    mod = _load("failed_verifiers_names", BENCH / "record_baseline.py")
+    path = tmp_path / "t.json"
+    passing = {"status": "pass", "exit_code": 0, "command": "ok"}
+    failing = {"status": "fail", "exit_code": 2, "command": "verify.py --domain capital_markets"}
+    path.write_text(
+        json.dumps(
+            {
+                "baseline": {
+                    "workloads": {
+                        "generate:retail:small": {"verifier": passing},
+                        "generate:capital_markets:medium": {"verifier": failing},
+                    }
+                }
+            }
+        )
+    )
+    text = mod.failed_verifiers(path)
+    assert "generate:capital_markets:medium: fail (exit 2) verify.py" in text
+    assert "retail" not in text
+    assert "no per-workload" in mod.failed_verifiers(tmp_path / "missing.json")

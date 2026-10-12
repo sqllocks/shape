@@ -289,6 +289,7 @@ def test_smoke_starts_each_worker_with_small_inputs_without_publishing(monkeypat
         ("profile", "edge/x_pq_list.parquet"),
         ("profile", "edge/x_pq_nested.parquet"),
         ("generate", "retail:small"),
+        *[("generate", d + ":medium") for d in r.domains()],
         ("stream", "retail:order:small"),
         ("db", "name_only"),
         ("db", "name_only:mssql"),
@@ -370,7 +371,7 @@ def test_smoke_timing_keeps_release_interpreter_and_restores_full_plan(monkeypat
     assert seen[0][1:] == (
         baseline,
         ["edge/e3.csv", "edge/x_pq_list.parquet", "edge/x_pq_nested.parquet"],
-        [("retail", ["small"])],
+        [("retail", ["small"]), *[(d, ["medium"]) for d in r.domains()]],
         ["small"],
     )
     assert fake.QUICK_PROFILE_DATASETS == ["original"]

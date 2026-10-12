@@ -80,7 +80,8 @@ def column_pool(
     while (table, column) in fk_parent and (table, column) not in seen:
         seen.add((table, column))
         table, column = fk_parent[(table, column)]
-    return pools.pool_for(raw["tables"][table]["columns"][column]["generator"], table)
+    declared = raw["tables"][table]["columns"][column]["generator"]
+    return pools.pool_for(pools.effective(table, column, declared), table)
 
 
 def same_values(a: pd.Series, b: pd.Series) -> bool:
@@ -186,11 +187,19 @@ class Pools:
         self.names = SimpleNamespace(**data["names"])
         self.native = SimpleNamespace(**{k: np.array(v) for k, v in data["native"].items()})
         self._datasets = {(None, k): v for k, v in data["datasets"].items()}
+        self.generators = data.get("generators", {})
         self.children = [domain]
         self.composite = False
         self.domain_path = domain
         self.first_l = {v.lower().replace(" ", "") for v in self.names.FIRST_NAMES}
         self.last_l = {v.lower().replace(" ", "") for v in self.names.LAST_NAMES}
+
+    generators: dict[str, dict[str, dict[str, Any]]] = {}
+
+    def effective(self, table: str, column: str, declared: dict[str, Any]) -> dict[str, Any]:
+        """The generator the release applies to a column: its domain overrides can replace the
+        fixture's declared one (a nested reference field is generated as a constant)."""
+        return self.generators.get(table, {}).get(column, declared)
 
     def domain_of(self, table: str | None) -> str | None:
         """The domain a table of a composite belongs to (the longest domain name it starts with)."""

@@ -63,7 +63,10 @@ def sample():
         "business_rules": [],
     }
     pools = SimpleNamespace(
-        pool_for=lambda *args: None, component_fn=lambda *args: None, dataset=lambda *args: []
+        pool_for=lambda *args: None,
+        effective=lambda t, c, g: g,
+        component_fn=lambda *args: None,
+        dataset=lambda *args: [],
     )
     return raw, (frames, types, list(frames)), pools
 
@@ -200,3 +203,23 @@ def test_reference_pool_refuses_records_without_a_baseline_value_field():
     pools._datasets = {(None, "frozen"): [{"other": "not-a-provider-value"}]}
     with pytest.raises(v.RecordingError, match="frozen: no baseline value field"):
         pools.pool_for({"strategy": "reference_data", "dataset": "frozen"})
+
+
+def test_column_pool_uses_the_generator_the_release_applies():
+    """A fixture's nested reference field is generated as a constant by the release."""
+    v = verifier()
+    pools = v.Pools.__new__(v.Pools)
+    pools._datasets = {(None, "gics_sectors"): [{"sector": "Energy"}]}
+    pools.generators = {"industry": {"industry_name": {"strategy": "constant", "value": ""}}}
+    declared = {
+        "strategy": "reference_data",
+        "dataset": "gics_sectors",
+        "field": "industries.industry_name",
+    }
+    raw = {"tables": {"industry": {"columns": {"industry_name": {"generator": declared}}}}}
+    # The release's own output (a constant) has no vocabulary to compare against.
+    assert v.column_pool(pools, raw, {}, "industry", "industry_name") is None
+    # Without a release record the fixture's generator still refuses a field-less dataset.
+    pools.generators = {}
+    with pytest.raises(v.RecordingError, match="gics_sectors: no baseline value field"):
+        v.column_pool(pools, raw, {}, "industry", "industry_name")

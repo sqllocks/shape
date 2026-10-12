@@ -144,7 +144,8 @@ def worker_failure(
         x for x in lines[:-200] if re.search(r"command failed|FAIL|Error|exit [1-9]|mismatch", x)
     ]
     if marks:
-        tail = "earlier failure lines:\n" + "\n".join(marks[:60]) + "\n--- last 200 lines ---\n" + tail
+        earlier = "\n".join(marks[:60])
+        tail = "earlier failure lines:\n" + earlier + "\n--- last 200 lines ---\n" + tail
     print(
         redact(
             f"{kind}:{identifier}: command {redacted_command(command)}; "
@@ -388,6 +389,12 @@ def pools_worker(domain: str) -> dict[str, Any]:
             }.items()
         },
         "datasets": datasets,
+        # What the release actually applies per column (domain overrides included), which can
+        # differ from the fixture's declared generator.
+        "generators": {
+            tn: {cn: dict(c.generator) for cn, c in t.columns.items()}
+            for tn, t in dom.schema.tables.items()
+        },
     }
 
 
@@ -416,6 +423,21 @@ def cli_worker(identifier: str) -> dict[str, Any]:
     return cast(dict[str, Any], v.capture_baseline_scenario(*scenario))
 
 
+def failed_verifiers(path: Path) -> str:
+    """Name the verifier commands and exit codes behind a failed timing run."""
+    try:
+        workloads = json.loads(path.read_text())["baseline"]["workloads"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return "; no per-workload results were written"
+    bad = [
+        f"{wid}: {w['verifier']['status']} (exit {w['verifier']['exit_code']}) "
+        f"{w['verifier']['command']}"
+        for wid, w in sorted(workloads.items())
+        if isinstance(w, dict) and w.get("verifier", {}).get("status") != "pass"
+    ]
+    return ":\n" + "\n".join(bad) if bad else "; no workload verifier failed"
+
+
 def timings_worker(smoke: bool = False) -> dict[str, Any]:
     # paths is already imported by this worker: changing only os.environ is insufficient.
     import paths
@@ -439,13 +461,18 @@ def timings_worker(smoke: bool = False) -> dict[str, Any]:
                         "QUICK_PROFILE_DATASETS",
                         ["edge/e3.csv", "edge/x_pq_list.parquet", "edge/x_pq_nested.parquet"],
                     ),
-                    ("QUICK_DOMAINS", [("retail", ["small"])]),
+                    (
+                        "QUICK_DOMAINS",
+                        [("retail", ["small"]), *[(d, ["medium"]) for d in domains()]],
+                    ),
                     ("QUICK_STREAM_SCALES", ["small"]),
                 ):
                     stack.enter_context(patch.object(run, name, value))
             rc = run.main(["--quick" if smoke else "--full", "--baseline-only", "--out", str(dest)])
         if rc:
-            raise RecordingError("release timings failed verification; no timing snapshot")
+            raise RecordingError(
+                "release timings failed verification; no timing snapshot" + failed_verifiers(dest)
+            )
         return cast(dict[str, Any], json.loads(dest.read_text()))
     finally:
         paths.SHAPE_VENV, paths.SHAPE_PY = saved_paths
@@ -574,6 +601,9 @@ def main(argv: list[str] | None = None) -> int:
                     ("profile", "edge/x_pq_list.parquet"),
                     ("profile", "edge/x_pq_nested.parquet"),
                     ("generate", "retail:small"),
+                    # Every domain at the recording scale: the verifier builds its pools from
+                    # each domain's own overrides, which only the full set exercises.
+                    *[("generate", d + ":medium") for d in domains()],
                     ("stream", "retail:order:small"),
                     ("db", "name_only"),
                     ("db", "name_only:mssql"),

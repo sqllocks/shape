@@ -98,6 +98,7 @@ def pool(v, recipe):
     obj.names = SimpleNamespace()
     obj.native = SimpleNamespace()
     obj.pool_for = lambda *a: None
+    obj.effective = lambda t, c, g: g
     return obj
 
 
