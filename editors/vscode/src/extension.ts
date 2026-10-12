@@ -15,7 +15,8 @@ export function textUri(file: string, rev: Revision): vscode.Uri {
   const name = vscode.Uri.file(file).path.split("/").pop() ?? "file.shape";
   return vscode.Uri.from({
     scheme: SCHEME,
-    path: `/${name}`,
+    // Not `*.shape`: the custom editor selector would claim the virtual text document and no diff would open.
+    path: `/${name}.txt`,
     query: JSON.stringify({ file, rev }),
   });
 }

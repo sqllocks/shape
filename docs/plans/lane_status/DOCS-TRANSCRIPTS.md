@@ -180,3 +180,17 @@ format-check pass (2037 files); Node syntax, diff and identical-notices checks
 pass. The workflow now runs these harness regressions before real capture.
 The new workflow results will be reported from actual receipts, not inferred
 from the previous run or unit doubles.
+
+## Correction after run 38269228192
+
+Real receipts: nine of eleven passed, now including delta-fallback. Two failed.
+
+- vscode-install was a product bug, reproduced locally with VS Code 1.90.2 under xvfb.
+  The compare command opened `shape-text:/demo.shape`; the extension's own `*.shape`
+  custom editor claimed that virtual document, so no text diff opened and the tabs held
+  only a custom editor. The virtual path is now `/<name>.txt`. The extension suite
+  (5 tests) and the installed-VSIX docs command both pass locally after the change.
+- kafka-avro printed a real librdkafka `GETPID ... Coordinator load in progress` warning
+  because the fresh broker had not loaded its transaction coordinator. The earlier run
+  passed by timing. The expected output is unchanged; a new workflow step
+  (scripts/docs_owner_kafka_ready.py) waits for an idempotent producer ID first.

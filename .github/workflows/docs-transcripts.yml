@@ -97,6 +97,8 @@ jobs:
         env:
           SHAPE_DOCS_DOCKER_NETWORK: ${{ job.services.kafka.network }}
         run: python scripts/docs_owner_services.py
+      - name: Wait for the broker's idempotent producer coordinator
+        run: python scripts/docs_owner_kafka_ready.py
       - name: Build VSIX and prepare isolated VS Code
         run: |
           cd editors/vscode
