@@ -197,6 +197,7 @@ nav:
   - Product architecture: PRODUCT_ARCHITECTURE.md
   - Release policy: RELEASE_POLICY.md
   - Release checklist: RELEASE_CHECKLIST.md
+  - Release 0.9.1 tag and digest check: evidence/release-0.9.1-verify.md
   - Definition of done for 1.0: V1_DONE.md
 - Help and trust:
   - Troubleshooting: TROUBLESHOOTING.md
