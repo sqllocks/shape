@@ -12,6 +12,12 @@ Writes bound batched multi-row INSERT statements through PyMySQL. MySQL DDL comm
 
 The `mysql` URI selects the database. Non-loopback hosts default to certificate and hostname verification; explicit TLS options override it. NaN and infinity are written as NULL.
 
+MySQL 8.4 commonly uses `caching_sha2_password`. Without TLS, full authentication can fail in
+PyMySQL's auth-switch handling. Shape reports this cause and recommends verified TLS, for
+example `ssl_ca=/path/ca.pem&ssl-mode=VERIFY_CA`, or a server/user authentication configuration
+supported by the driver. Shape does not download an untrusted RSA public key or install an RSA
+dependency automatically. Prefer verified TLS rather than disabling it.
+
 The databases plugin imports its optional driver only when opening a connection. A missing
 driver fails the command instead of silently selecting another sink. Create mode refuses an
 existing table. Append, truncate and replace have different effects; review the target before

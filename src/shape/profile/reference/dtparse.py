@@ -357,6 +357,10 @@ _UTC_NAMES = {"UTC", "GMT", "Z"}
 def _dateutil_parse(s: str, default: _dt.datetime) -> _dt.datetime:
     """pandas' ``dateutil_parse`` (parsing.pyx): dateutil's tokenizer and field resolution, then
     pandas' own assembly, which insists on at least one date/time field."""
+    # Two clock readings separated by a dash are a bucket/range, not a UTC offset.
+    # A date-bearing timestamp (including its negative offset) is still parsed below.
+    if re.fullmatch(r"\s*\d{1,2}:\d{2}(?::\d{2})?\s*-\s*\d{1,2}:\d{2}(?::\d{2})?\s*", s):
+        raise ValueError(s)
     res, _ = du.DEFAULTPARSER._parse(s, dayfirst=False, yearfirst=False)
     if res is None:
         raise ValueError(s)

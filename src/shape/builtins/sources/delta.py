@@ -91,11 +91,19 @@ class DeltaSource:
             ) from exc
         target = uri[len(PREFIX) :] if _is_cloud(uri) else str(local_path(uri))
         version = options.get("version")
-        return DeltaTable(
-            target,
-            version=None if version is None else int(version),
-            storage_options=_storage_options(target, options) or None,
-        )
+        try:
+            return DeltaTable(
+                target,
+                version=None if version is None else int(version),
+                storage_options=_storage_options(target, options) or None,
+            )
+        except Exception as exc:
+            # Keep unsupported features, permission errors and damaged logs distinct.
+            if type(exc).__name__ != "TableNotFoundError":
+                raise
+            from shape.security.redact import redact_text
+
+            raise FileNotFoundError(f"no Delta table at {redact_text(target)}") from None
 
     def schema(self, uri: str, **options: Any) -> pa.Schema:
         schema: pa.Schema = self._dataset(uri, options).schema

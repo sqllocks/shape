@@ -2,8 +2,8 @@
 (nightly ``fabric-live``, only where the owner's O-02 secrets exist).
 
 Gated like ``test_live_writers.py``: the workflow runs each step only when its secrets are set (a
-job-level check; nothing here is skipped by a decorator) and a missing variable fails its test by
-name. The variables are the ones of ``test_live_writers.py``, plus for ``fabric_spark``:
+job-level check); a missing variable skips its test by name, and service failures still fail.
+The variables are the ones of ``test_live_writers.py``, plus for ``fabric_spark``:
 
     FABRIC_WORKSPACE_ID / FABRIC_LAKEHOUSE_ID   GUIDs of the workspace and the lakehouse
 
@@ -37,16 +37,18 @@ ROWS = {"customer": 30, "order": 200}
 
 def need(name: str) -> str:
     value = os.environ.get(name)
-    assert value, f"{name} is not set (live tests need it)"
+    if not value:
+        pytest.skip(f"live test needs {name}")
     return value
 
 
 def credential():
+    tenant, client, secret = (
+        need(name) for name in ("FABRIC_TENANT_ID", "FABRIC_CLIENT_ID", "FABRIC_CLIENT_SECRET")
+    )
     from azure.identity import ClientSecretCredential
 
-    return ClientSecretCredential(
-        need("FABRIC_TENANT_ID"), need("FABRIC_CLIENT_ID"), need("FABRIC_CLIENT_SECRET")
-    )
+    return ClientSecretCredential(tenant, client, secret)
 
 
 def unique(prefix: str) -> str:
@@ -197,6 +199,11 @@ def test_fabric_spark_runs_the_worker_notebook_to_success(tmp_path):
                 "workspace_id": workspace,
                 "lakehouse_id": lakehouse,
                 "table_prefix": f"{prefix}_",
+                **(
+                    {"lakehouse_schema": os.environ["FABRIC_LAKEHOUSE_SCHEMA"]}
+                    if os.environ.get("FABRIC_LAKEHOUSE_SCHEMA")
+                    else {}
+                ),
             },
         },
         jobs=jobs,

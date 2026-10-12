@@ -10,7 +10,7 @@ skipped by a decorator). Run by hand with the variables you have:
 
     pytest -m live plugins/shape-fabric/tests/test_live_commands.py -k deploy
 
-A missing variable fails the test and names it. ``SHAPE_RECORD_DIR`` also writes the real Fabric
+A missing variable skips the test and names it. ``SHAPE_RECORD_DIR`` also writes the real Fabric
 REST conversation as a scrubbed tape (``source: live``) for review. Every test removes what it
 created.
 """
@@ -35,7 +35,8 @@ RECORD = os.environ.get("SHAPE_RECORD_DIR")
 
 def need(name):
     value = os.environ.get(name)
-    assert value, f"{name} is not set (live tests need it)"
+    if not value:
+        pytest.skip(f"live test needs {name}")
     return value
 
 

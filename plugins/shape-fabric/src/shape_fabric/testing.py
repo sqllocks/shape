@@ -357,6 +357,41 @@ def _unbracket(name: str) -> str:
     return name.replace("]]", "]")
 
 
+class FakeLakehouse:
+    """Delta registration in classic and schema-enabled Lakehouses.
+
+    Files may be written anywhere, but only Tables/<table> (classic) or
+    Tables/<existing-schema>/<table> (schemas enabled) become usable Fabric tables.
+    An invalid layout is recorded as unidentified, as in the Fabric UI.
+    """
+
+    def __init__(
+        self, *, schema_enabled: bool = False, schemas: tuple[str, ...] = ("dbo",)
+    ) -> None:
+        self.schema_enabled = schema_enabled
+        self.schemas = set(schemas)
+        self.tables: dict[tuple[str | None, str], int] = {}
+        self.unidentified: list[str] = []
+
+    def write_deltalake(self, location: str, data: Any, **options: Any) -> None:
+        path = urlsplit(location).path
+        _, marker, tail = path.partition("/Tables/")
+        parts = tail.strip("/").split("/")
+        wanted = 2 if self.schema_enabled else 1
+        if (
+            not marker
+            or len(parts) != wanted
+            or (self.schema_enabled and parts[0] not in self.schemas)
+        ):
+            self.unidentified.append(location)
+            return
+        rows = (
+            data.num_rows if isinstance(data, pa.Table) else sum(batch.num_rows for batch in data)
+        )
+        schema, table = (parts[0], parts[1]) if self.schema_enabled else (None, parts[0])
+        self.tables[(schema, table)] = rows
+
+
 class SqlConstraint:
     """A foreign key or check constraint of a :class:`SqlTable` (``disabled`` after ``NOCHECK``)."""
 
@@ -414,9 +449,11 @@ class FakeSqlServer:
 
     ``fail`` is called with ``(sql, params)`` before each statement and may raise;
     ``copy_reports_rowcount=False`` makes ``COPY INTO`` report ``-1`` as some drivers do.
+    A staging filesystem selects Warehouse semantics; a real connection string selects its
+    dialect. Bare labels used by injected fake connections retain the configured dialect.
     """
 
-    def __init__(self, files: MemoryFS | None = None) -> None:
+    def __init__(self, files: MemoryFS | None = None, *, warehouse: bool | None = None) -> None:
         self.tables: dict[tuple[str, str], SqlTable] = {}
         self.schemas: set[str] = {"dbo"}
         self.files = files or MemoryFS()
@@ -427,11 +464,15 @@ class FakeSqlServer:
         self.copy_loads_fewer = 0
         self.identity_insert: tuple[str, str] | None = None  # session state: not rolled back
         self.enforce_keys = False  # True: a duplicate primary key raises (as a real server does)
+        self._warehouse_override = warehouse
+        self.warehouse = files is not None if warehouse is None else warehouse
         self._committed: tuple[dict[tuple[str, str], SqlTable], set[str]] | None = None
         self.snapshot()
 
     def snapshot(self) -> None:
-        self._committed = (copy.deepcopy(self.tables), set(self.schemas))
+        # Capture the mapping first: concurrent generation can create another table while
+        # deepcopy walks this table's rows. Never iterate the live mapping during that walk.
+        self._committed = (copy.deepcopy(self.tables.copy()), set(self.schemas))
 
     def restore(self) -> None:
         assert self._committed is not None
@@ -441,6 +482,14 @@ class FakeSqlServer:
     def connect(
         self, connection_string: str, credential: Any = None, **_kw: Any
     ) -> FakeSqlConnection:
+        from ._tsql import is_warehouse
+
+        if "warehouse" in _kw:
+            self.warehouse = bool(_kw["warehouse"])
+        elif self._warehouse_override is not None:
+            self.warehouse = self._warehouse_override
+        elif "=" in connection_string or "://" in connection_string:
+            self.warehouse = is_warehouse(connection_string)
         self.connections += 1
         return FakeSqlConnection(self)
 
@@ -601,6 +650,18 @@ class FakeSqlCursor:
         return self.server.tables[key]
 
     def _create(self, sql: str) -> None:
+        create, separator, alter = sql.partition(";\nALTER TABLE ")
+        if separator:
+            self._create(create)
+            self._alter("ALTER TABLE " + alter)
+            return
+        if self.server.warehouse and re.search(
+            r"\b(PRIMARY KEY|UNIQUE)\b", re.sub(_NAME, "identifier", sql)
+        ):
+            raise RuntimeError(
+                "(24584) The PRIMARY KEY or UNIQUE keyword is not supported in the CREATE "
+                "TABLE statement in this edition of SQL Server"
+            )
         text = " ".join(sql.split())
         temporary = re.match(rf"CREATE TABLE {_NAME} \(", text)
         if temporary:
@@ -757,6 +818,19 @@ class FakeSqlCursor:
         self.server.identity_insert = key
 
     def _alter(self, text: str) -> None:
+        if self.server.warehouse and " ADD CONSTRAINT " in text:
+            match = re.fullmatch(
+                rf"ALTER TABLE {_NAME}\.{_NAME} ADD CONSTRAINT {_NAME} "
+                rf"(?:PRIMARY KEY|UNIQUE) NONCLUSTERED \(({_NAME}(?:, {_NAME})*)\) NOT ENFORCED",
+                text,
+            )
+            if match is None:
+                raise RuntimeError("Warehouse keys require NONCLUSTERED NOT ENFORCED")
+            target = self._table(_unbracket(match.group(1)), _unbracket(match.group(2)))
+            names = [_unbracket(n) for n in re.findall(_NAME, match.group(4))]
+            if any(n not in target.names() for n in names):
+                raise RuntimeError("a constraint names an unknown column")
+            return  # informational only: Warehouse does not enforce uniqueness
         match = re.match(
             rf"ALTER TABLE {_NAME}\.{_NAME} (NOCHECK|WITH CHECK CHECK|CHECK) CONSTRAINT "
             rf"(ALL|{_NAME})$",
@@ -944,6 +1018,7 @@ class FakeSynapsePool(FakeSqlServer):
     ) -> FakeSqlConnection:
         self.connections += 1
         self.last_connection = (connection_string, credential)
+        self.warehouse = True
         return FakeSynapseConnection(self)
 
 

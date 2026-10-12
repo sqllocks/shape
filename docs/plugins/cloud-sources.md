@@ -28,14 +28,45 @@ First match wins:
 
 1. **Explicit:** the `credential` option (any object with `get_token`), `token` (a bearer token
    string), or `account_key`, `sas_token`, `connection_string`.
-2. **Inside Fabric:** `notebookutils.credentials.getToken("storage")`. Synapse's `mssparkutils`
+2. **Storage environment:** `AZURE_STORAGE_ACCOUNT_KEY`, then `AZURE_STORAGE_SAS_TOKEN`, then
+   `AZURE_STORAGE_CONNECTION_STRING`. The first non-empty variable wins, as for sinks.
+   An explicit credential, token or storage key takes precedence over all these variables.
+3. **Inside Fabric:** `notebookutils.credentials.getToken("storage")`. Synapse's `mssparkutils`
    is used the same way.
-3. **`DefaultAzureCredential`:** managed identity, a service principal from the environment
+4. **`DefaultAzureCredential`:** managed identity, a service principal from the environment
    (`AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_CLIENT_SECRET`), or the Azure CLI.
 
 Delta tables take a bearer token (delta-rs has no credential object), so a connection string
 cannot open one; a key or SAS token can. `storage_options` overrides what authentication
 derived.
+
+Every CLI command that reads Azure storage accepts `--source-config KEY=REF`, before or after
+the command. `KEY` is `account_key`, `sas_token`, `connection_string` or `token`; `REF` must be
+an `env://`, `file://` or `kv://` reference. Literal secrets are refused. For example, append
+`--source-config account_key=env://AZURE_STORAGE_ACCOUNT_KEY` to `shape profile <uri>`.
+`file://` requires a private secret file; `kv://` needs the Fabric plugin or a registered
+resolver. An explicit `--auth` credential takes precedence over a storage key, as on writes.
+The resolved values last only for the command and are never stored in its profile.
+
+Permanent authentication failures, including a tenant mismatch (`AADSTS50020`), stop without
+repeating the sign-in. Sign in to the target tenant with an account or service principal that
+belongs to it. Network timeouts, throttling and service outages retain the client's retries.
+A missing Delta table reports `no Delta table at <path>`; permission and damaged-log errors
+remain separate failures.
+
+## Lakehouse table layouts
+
+Classic Lakehouses use `onelake://<workspace>/<lakehouse>/Tables/<table>`. Schema-enabled
+Lakehouses use `.../Tables/<schema>/<table>`, normally `dbo`. Both forms resolve to the same
+core Delta reader; include the actual schema in the read URI.
+
+For Delta writes, target `delta+abfss://<workspace>@onelake.dfs.fabric.microsoft.com/<lakehouse>.Lakehouse/Tables`.
+For a schema-enabled Lakehouse, add `--sink-config delta.schema_enabled=true`; the schema
+defaults to `dbo`, or use `--schema-name sales` for an existing schema. For a classic Lakehouse,
+omit that option. `--table-prefix shape_` names the physical tables `shape_<table>` in either
+layout. A target already ending in `Tables/dbo` can also be used directly, without
+`schema_enabled`; the sink appends the table name once. See the
+[0.9.1 limitations and workarounds](../KNOWN_LIMITATIONS.md#fabric-in-091).
 
 ## What is tested
 

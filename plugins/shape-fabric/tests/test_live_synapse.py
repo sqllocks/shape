@@ -33,11 +33,28 @@ def need(*names):
     return [os.environ[n] for n in names]
 
 
+def credential():
+    mode = os.environ.get("SHAPE_TEST_SYNAPSE_AUTH", "cli")
+    settings = AuthSettings(mode=mode)
+    if mode == "spn":
+        tenant, client, _ = need(
+            "SHAPE_TEST_SYNAPSE_TENANT_ID",
+            "SHAPE_TEST_SYNAPSE_CLIENT_ID",
+            "SHAPE_TEST_SYNAPSE_CLIENT_SECRET",
+        )
+        reference = "env://SHAPE_TEST_SYNAPSE_CLIENT_SECRET"
+        settings = AuthSettings(
+            mode=mode,
+            tenant_id=tenant,
+            client_id=client,
+            client_secret=reference,
+        )
+    return build_credential(settings)
+
+
 def test_synapse_round_trip():
     uri, staging = need("SHAPE_TEST_SYNAPSE_URI", "SHAPE_TEST_SYNAPSE_STAGING")
-    credential = build_credential(
-        AuthSettings(mode=os.environ.get("SHAPE_TEST_SYNAPSE_AUTH", "cli"))
-    )
+    identity = credential()
     table = f"shape_live_{uuid.uuid4().hex[:8]}"
     batches = [sample_batch(0, 30), sample_batch(30, 12)]
     written = pa.Table.from_batches(batches)
@@ -45,7 +62,7 @@ def test_synapse_round_trip():
     from shape_sqlserver.sql import build_connection_string
 
     conn_string = str(build_connection_string(host, pool))
-    conn = _tsql.connect(conn_string, credential)
+    conn = _tsql.connect(conn_string, identity)
     try:
         assert (
             SynapseSink().write(
@@ -53,7 +70,7 @@ def test_synapse_round_trip():
                 table,
                 iter(batches),
                 staging_path=staging,
-                credential=credential,
+                credential=identity,
                 distribution="HASH(id)",
                 commit_rows=30,
             )

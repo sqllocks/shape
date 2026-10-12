@@ -6,7 +6,7 @@
 
     pytest -m live plugins/shape-fabric/tests/test_live_semantic_model.py
 
-A missing variable fails the test with the variable's name (nothing is silently skipped).
+A missing variable skips the test with the variable's name; service failures still fail.
 """
 
 from __future__ import annotations
@@ -22,7 +22,8 @@ pytestmark = pytest.mark.live
 
 def need(name):
     value = os.environ.get(name)
-    assert value, f"{name} is not set (live tests need it)"
+    if not value:
+        pytest.skip(f"live test needs {name}")
     return value
 
 

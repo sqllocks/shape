@@ -129,6 +129,7 @@ class FabricSparkRouter:
         notebook_name: str = DEFAULT_NOTEBOOK,
         storage_token: str | None = None,
         table_prefix: str = "",
+        lakehouse_schema: str | None = None,
         transport: Transport | None = None,
         sleep: Callable[[float], None] = time.sleep,
         storage_token_factory: Callable[[], str] | None = None,
@@ -147,6 +148,11 @@ class FabricSparkRouter:
         self._storage_token = storage_token
         self._storage_factory = storage_token_factory
         self._prefix = table_prefix
+        if lakehouse_schema is not None:
+            from shape.security.names import safe_name
+
+            lakehouse_schema = safe_name(lakehouse_schema)
+        self._lakehouse_schema = lakehouse_schema
         self._sleep = sleep
         self._requirements = (
             list(requirements) if requirements is not None else default_requirements()
@@ -332,6 +338,10 @@ class FabricSparkRouter:
                 }
             }
         }
+        if self._lakehouse_schema is not None:
+            body["executionData"]["configuration"]["conf"]["spark.shape.lakehouseSchema"] = (
+                self._lakehouse_schema
+            )
         response = self._http.request("POST", url, body=body)
         location = response.headers.get("location", "")
         if location:
@@ -362,5 +372,10 @@ class FabricSparkRouter:
                 "notebook_name": self._notebook,
                 "spec_path": run.spec_path,
                 "table_prefix": self._prefix,
+                **(
+                    {"lakehouse_schema": self._lakehouse_schema}
+                    if self._lakehouse_schema is not None
+                    else {}
+                ),
             },
         )

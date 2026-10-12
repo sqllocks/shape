@@ -208,6 +208,13 @@ reading twice gives the same data. `datetimeoffset` arrives as UTC timestamps, `
 
 ## For plugin authors
 
+Database profiling uses SQL's declared column types. A time bucket such as `18:00-18:59`
+stays text. If sampled text contains a zoned timestamp that the relationship inference cannot
+model, that column receives a `profiling_note`; its SQL type and sampled statistics are kept,
+and other columns and tables are still profiled. Unrelated catalog, permission and profiling
+errors remain failures. Ordinary file/DataFrame profiling still requires zoned text to be
+converted to a timestamp explicitly.
+
 `shape_sqlserver.sql` and `shape_sqlserver.auth` are meant to be shared (the Fabric plugin
 uses them): `quote_ident` and `qualified_name` (always quote identifiers; `]` is doubled),
 `build_connection_string`, `redact_connection_string` (use it on anything shown to a user),

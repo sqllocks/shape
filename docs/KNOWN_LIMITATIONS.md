@@ -29,6 +29,18 @@ The 1.x compatibility promises describe future policy.
   small local tutorial. Optional analyses and generation may materialize tables.
 - Plugins run in the same process. Allow-lists restrict loading, not plugin behavior.
 
+## Fabric in 0.9.1
+
+- Fabric Warehouse rejects the inline `PRIMARY KEY` emitted by 0.9.1 with error 24584.
+  Workaround: create the destination tables yourself without inline keys, optionally add
+  `ALTER TABLE ... ADD CONSTRAINT ... PRIMARY KEY NONCLUSTERED (...) NOT ENFORCED`, then
+  write with `--write-mode append`. A fix is in progress.
+- Schema-enabled Lakehouses require `Tables/<schema>/<table>` (normally `dbo`), whereas
+  0.9.1's Delta target appends a table directly below the supplied directory. Workaround:
+  target a URI ending in `Tables/dbo` or another existing schema, rather than `Tables`.
+  Read back with `onelake://<workspace>/<lakehouse>/Tables/dbo/<table>`. Files landing zones
+  are unaffected. A fix is in progress.
+
 ## Alpine and musllinux
 
 `confluent-kafka` has no musllinux wheels for ARM64 or x86_64 and builds from source.

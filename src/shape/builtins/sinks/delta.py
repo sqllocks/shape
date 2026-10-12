@@ -45,14 +45,28 @@ def _deltalake() -> Any:
 
 def _location(uri: str, table: str, options: dict[str, Any]) -> tuple[str, dict[str, str] | None]:
     """The table's location and delta-rs storage options."""
+    from shape.security.names import safe_name
+
+    prefix = options.get("table_prefix") or ""
+    if not isinstance(prefix, str):
+        raise ValueError("table_prefix must be a string")
+    table = safe_name(prefix + table)
     if uri.startswith(CLOUD_PREFIX):
         from shape.builtins.sinks.azure import _with_environment_keys
         from shape.builtins.sources.azure import parse
         from shape.builtins.sources.delta import _storage_options
-        from shape.security.names import safe_name
 
         base = uri[len(CLOUD_PREFIX) :]
         parse(base)  # validates the URI
+        enabled = options.get("schema_enabled", False)
+        if isinstance(enabled, str):
+            if enabled.lower() not in ("true", "false", "1", "0"):
+                raise ValueError("schema_enabled must be true or false")
+            enabled = enabled.lower() in ("true", "1")
+        if enabled:
+            if not base.rstrip("/").endswith("/Tables"):
+                raise ValueError("schema_enabled needs a Lakehouse target ending in /Tables")
+            base = base.rstrip("/") + "/" + safe_name(str(options.get("schema_name") or "dbo"))
         # a key in AZURE_STORAGE_* is used when no credential is given, as for abfss://
         return f"{base.rstrip('/')}/{safe_name(table)}", _storage_options(
             base, _with_environment_keys(options)

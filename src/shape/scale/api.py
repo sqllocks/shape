@@ -245,6 +245,7 @@ def submit_spark(
         notebook_name=fabric.get("notebook_name") or "shape_spark_worker",
         storage_token=storage_token,
         table_prefix=fabric.get("table_prefix", ""),
+        lakehouse_schema=fabric.get("lakehouse_schema"),
         transport=transport,
     )
     spec = build_spec(

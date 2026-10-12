@@ -80,6 +80,8 @@ shape generate retail --to delta+abfss://ws@onelake.dfs.fabric.microsoft.com/lh.
   is exact and deterministic. In a stream, every checkpoint also completes the file, so
   `--checkpoint-every` / `--checkpoint-seconds` set how often readers see new rows.
 * **Delta.** One commit at the end, or `--commit-rows N`; in a stream, one commit per checkpoint.
+  `--table-prefix` changes the physical Delta table names. Other supported database/Fabric
+  `--to` sinks receive the same prefix; outputs that cannot honour it refuse the option.
   The first commit applies `--write-mode overwrite|append`, later ones append. `overwrite` replaces
   the table including its schema (a regenerated model may have other columns); `append` keeps the
   table's schema and refuses data that does not fit.

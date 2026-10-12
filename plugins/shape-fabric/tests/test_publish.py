@@ -107,15 +107,22 @@ def world(tmp_path, monkeypatch, capsys):
     w.fs = MemoryFS()
     w.server = FakeSqlServer(w.fs)
     w.connections = []
+    w.warehouse = False
 
     def connect(connection_string, credential=None, **kw):
         w.connections.append((connection_string, credential))
+        kw["warehouse"] = w.warehouse
         return w.server.connect(connection_string, credential, **kw)
 
     monkeypatch.setattr(_tsql, "connect", connect)
     monkeypatch.setattr("shape.builtins.sources.azure._filesystem", lambda loc, options: w.fs)
 
     def run(*argv):
+        # This fixture uses one synthetic connection string for both Fabric dialects.
+        w.warehouse = any(
+            flag in ("-t", "--target") and value == "warehouse"
+            for flag, value in zip(argv, argv[1:], strict=False)
+        )
         code = main(list(argv))
         out = capsys.readouterr()
         return code, out.out, out.err

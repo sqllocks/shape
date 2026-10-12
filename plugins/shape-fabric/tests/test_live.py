@@ -7,7 +7,7 @@ The workflow job runs only when the secrets are set; run by hand with
     FABRIC_EVENTHOUSE_TOKEN='<bearer token for the query URI>' \\
     pytest -m live plugins/shape-fabric/tests/test_live.py
 
-A missing variable fails the test with the variable's name (nothing is silently skipped).
+A missing variable skips the test with the variable's name; service failures still fail.
 """
 
 import json
@@ -27,7 +27,8 @@ pytestmark = pytest.mark.live
 
 def need(name):
     value = os.environ.get(name)
-    assert value, f"{name} is not set (live tests need it)"
+    if not value:
+        pytest.skip(f"live test needs {name}")
     return value
 
 

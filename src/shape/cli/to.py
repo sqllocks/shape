@@ -195,6 +195,26 @@ def target_options(
         if (scheme_of(target) or "") in sink_names_by_scheme():  # an emitter signs in elsewhere
             name = sink_for_target(target)[0]
             extra.setdefault(name, {}).update(sign_in_options(a, name, offline=offline))
+            prefix = getattr(a, "table_prefix", "")
+            if prefix:
+                supported = {
+                    "delta",
+                    "postgres",
+                    "mysql",
+                    "snowflake",
+                    "databricks",
+                    "sqlserver",
+                    "warehouse",
+                    "synapse",
+                    "sql-database",
+                    "lakehouse",
+                    "kql",
+                }
+                if name not in supported:
+                    raise ValueError(f"--table-prefix is not supported by the {name} sink")
+                extra[name]["table_prefix"] = prefix
+            if name == "delta" and getattr(a, "schema_name", None):
+                extra[name]["schema_name"] = a.schema_name
     return TargetOptions(
         fmt=fmt,
         formats=parse_table_formats(getattr(a, "table_format", None)),

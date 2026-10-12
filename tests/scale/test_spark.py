@@ -32,6 +32,35 @@ from refengine_name import names_refengine  # noqa: E402
 
 TOKEN = "fabric-token-abc"
 STORAGE = "storage-token-xyz"
+
+
+def test_owner_schema_enabled_lakehouse_is_passed_to_the_worker():
+    fake = FakeFabric()
+    router(fake, lakehouse_schema="dbo").submit(SPEC)
+    conf = json.loads(fake.calls[-1]["body"])["executionData"]["configuration"]["conf"]
+    assert conf["spark.shape.lakehouseSchema"] == "dbo"
+
+
+def test_owner_spark_worker_writes_under_the_existing_schema():
+    rows = {"customer": 4, "order": 6, "order_line": 8}
+    spec = build_spec(plain_doc(rows), seed=9, row_counts=rows, chunk_rows=500, sinks=["lakehouse"])
+    spark = FakeSpark()
+    result = spark_worker.run_job(
+        spark,
+        spec,
+        workspace_id=WS,
+        lakehouse_id=LH,
+        table_prefix="shape_",
+        lakehouse_schema="dbo",
+        log=lambda _: None,
+    )
+    assert result["tables"] == rows
+    assert set(spark.saved) == {
+        f"abfss://{WS}@onelake.dfs.fabric.microsoft.com/{LH}/Tables/dbo/shape_{table}"
+        for table in rows
+    }
+
+
 SPEC = build_spec(
     plain_doc(), seed=7, row_counts={"customer": 40}, chunk_rows=500, sinks=["lakehouse"]
 )

@@ -181,8 +181,8 @@ def create_table_sql(
     primary_key: Sequence[str] = (),
     options: str | None = None,
 ) -> str:
-    """``CREATE TABLE`` for ``schema``. Key columns are ``NOT NULL``; a Warehouse key is
-    declared ``NONCLUSTERED ... NOT ENFORCED`` (the Warehouse does not enforce keys).
+    """DDL for ``schema``. Key columns are ``NOT NULL``; a Warehouse key is added by a
+    separate ``ALTER TABLE ... NONCLUSTERED ... NOT ENFORCED`` after ``CREATE TABLE``.
     ``options`` is the text of a trailing ``WITH (...)`` clause (a Synapse pool's distribution
     and index); the caller builds it from checked names only."""
     columns = columns or {}
@@ -202,17 +202,23 @@ def create_table_sql(
             sql_type = f"BIGINT IDENTITY({identity[0]}, {identity[1]})"
             nullable = False
         lines.append(f"    {ident(field.name)} {sql_type} {'NULL' if nullable else 'NOT NULL'}")
-    if key:
+    if key and not warehouse:
         cols = ", ".join(ident(c) for c in key)
         name = ident(_key_name(table))
-        if warehouse:
-            lines.append(f"    CONSTRAINT {name} PRIMARY KEY NONCLUSTERED ({cols}) NOT ENFORCED")
-        else:
-            lines.append(f"    CONSTRAINT {name} PRIMARY KEY ({cols})")
+        lines.append(f"    CONSTRAINT {name} PRIMARY KEY ({cols})")
     body = ",\n".join(lines)
     # every name went through ident(); there are no values in this statement
     tail = f"\nWITH ({options})" if options else ""
-    return f"CREATE TABLE {qualified(schema_name, table)} (\n{body}\n){tail}"  # nosec B608
+    sql = f"CREATE TABLE {qualified(schema_name, table)} (\n{body}\n){tail}"  # nosec B608
+    if key and warehouse:
+        # Fabric Warehouse and dedicated Synapse pools require this separate statement.
+        # Return one DDL batch, so create_ddl callers also get the declared constraint.
+        cols = ", ".join(ident(c) for c in key)
+        sql += (
+            f";\nALTER TABLE {qualified(schema_name, table)} ADD CONSTRAINT "
+            f"{ident(_key_name(table))} PRIMARY KEY NONCLUSTERED ({cols}) NOT ENFORCED"
+        )
+    return sql
 
 
 def _key_name(table: str) -> str:

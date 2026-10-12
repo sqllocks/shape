@@ -149,7 +149,18 @@ class MySqlSink(DatabaseSink):
             raise ShapeError(
                 "the mysql sink needs PyMySQL: pip install 'sqllocks-shape[mysql]'"
             ) from None
-        return pymysql.connect(**params)
+        try:
+            return pymysql.connect(**params)
+        except AttributeError as exc:
+            if params.get("ssl_disabled") and "is_auth_switch_request" in str(exc):
+                raise ShapeError(
+                    "MySQL caching_sha2_password full authentication failed without TLS; "
+                    "use verified TLS (ssl_ca=PATH&ssl-mode=VERIFY_CA), or ask the server "
+                    "administrator to configure a supported authentication method for this "
+                    "user. Shape does not fetch an untrusted RSA public key or add an RSA "
+                    "dependency automatically."
+                ) from None
+            raise
 
     def ddl_is_transactional(self) -> bool:
         return False
