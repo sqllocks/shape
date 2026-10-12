@@ -2,7 +2,7 @@
 
 > Not legal advice.
 
-Counsel review is deferred by the Owner; this page does not provide blanket clearance of reference data. [Owner decision, 2026-10-11](https://github.com/sqllocks/shape/blob/main/docs/plans/OWNER_DECISIONS.md#licensing).
+Counsel review is deferred by the Owner; this page does not provide blanket clearance of reference data. [Owner decision, 2026-10-11](DECISIONS.md#licensing).
 
 Understand the code licence and the notices attached to data.
 

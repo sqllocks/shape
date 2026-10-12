@@ -60,7 +60,7 @@ The [demo repository](https://github.com/sqllocks/shape-action-demo) supplies ho
 | [#1, README-only change](https://github.com/sqllocks/shape-action-demo/pull/1) | [38180056187 / shape](https://github.com/sqllocks/shape-action-demo/actions/runs/38180056187/job/114590509077) succeeded | pass: 1 source, 0 findings; Shape 0.9.1 |
 | [#2, changed order totals](https://github.com/sqllocks/shape-action-demo/pull/2) | [38180286381 / shape](https://github.com/sqllocks/shape-action-demo/actions/runs/38180286381/job/114591198353) failed in 19 seconds | fail: 1 source, 1 finding; Shape 0.9.1 |
 
-PR #2 reported a medium-severity `null_rate_change` finding for `order_total`. The [pass receipt](https://github.com/sqllocks/shape/blob/main/docs/plans/evidence/owner-notes/github-action-pass.md) and [drift receipt](https://github.com/sqllocks/shape/blob/main/docs/plans/evidence/owner-notes/github-action-drift.md) preserve the job IDs, timestamps, log excerpts and bot comments.
+PR #2 reported a medium-severity `null_rate_change` finding for `order_total`. The [pass receipt](evidence/github-action-pass.md) and [drift receipt](evidence/github-action-drift.md) preserve the job IDs, timestamps, log excerpts and bot comments.
 
 ## Local action execution
 
@@ -90,7 +90,7 @@ just to turn the check green. See [When drift goes red](DRIFT_RED.md).
 
 The action outputs `verdict`, `findings` and `comment-path`. Comments on fork pull requests can
 be skipped when the token is read-only. Do not run untrusted contributor code with write secrets.
-Require the job name `shape`, as GitHub lists it: the demo repository’s active [ruleset 24896836](https://github.com/sqllocks/shape-action-demo/rules/24896836) requires the context `shape`. These docs do not configure branch protection for your repository. See the [verified ruleset receipt](https://github.com/sqllocks/shape/blob/main/docs/plans/evidence/owner-notes/github-action-ruleset.md) and [Owner decision](https://github.com/sqllocks/shape/blob/main/docs/plans/OWNER_DECISIONS.md#required-status-check-hosted).
+Require the job name `shape`, as GitHub lists it: the demo repository’s active [ruleset 24896836](https://github.com/sqllocks/shape-action-demo/rules/24896836) requires the context `shape`. These docs do not configure branch protection for your repository. See the [verified ruleset receipt](evidence/github-action-ruleset.md) and [Owner decision](DECISIONS.md#required-status-check-hosted).
 
 ## What's next
 

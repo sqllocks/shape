@@ -40,7 +40,7 @@ shape 0.9.1
 Wrote 21,750 rows in 9 tables to databricks://<WORKSPACE_HOST>/sql/1.0/warehouses/<WAREHOUSE_ID>?catalog=<CATALOG>&schema=<SCHEMA> (108.30s)
 ```
 
-The elapsed time records this single run. The [Owner-run receipt](https://github.com/sqllocks/shape/blob/main/docs/plans/evidence/owner-notes/databricks-write.md) records the install command, warehouse configuration and all nine persisted table counts verified with `COUNT(*)` in the SQL Editor.
+The elapsed time records this single run. The [Owner-run receipt](../evidence/databricks-write.md) records the install command, warehouse configuration and all nine persisted table counts verified with `COUNT(*)` in the SQL Editor.
 
 The receipt records one test-account run. Authentication, permissions and server limits
 remain properties of your deployment.

@@ -40,7 +40,7 @@ shape 0.9.1
 Wrote 21,750 rows in 9 tables to snowflake://<USER>@<ACCOUNT>/<DATABASE>/<SCHEMA>?warehouse=<WAREHOUSE>&role=<ROLE> (19.51s)
 ```
 
-The elapsed time records this single run. The [Owner-run receipt](https://github.com/sqllocks/shape/blob/main/docs/plans/evidence/owner-notes/snowflake-write.md) records the install command, test-account configuration and all nine persisted table counts verified in Snowsight.
+The elapsed time records this single run. The [Owner-run receipt](../evidence/snowflake-write.md) records the install command, test-account configuration and all nine persisted table counts verified in Snowsight.
 
 The receipt records one test-account run. Authentication, permissions and server limits
 remain properties of your deployment.

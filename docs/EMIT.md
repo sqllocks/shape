@@ -534,7 +534,7 @@ profiler's bounded profile of each table, JSON). `--json` adds a `live` object t
 ### Overhead
 
 The tee profiles events on the feeding thread. The no-live-profile option disables that work.
-A [committed local measurement](https://github.com/sqllocks/shape/blob/main/docs/plans/evidence/owner-notes/live-fidelity-measurement.md) records the machine label, all samples and the harness output. On the labelled Xeon Platinum 8573C cloud environment (four CPU quota), Shape 0.9.1 / Python 3.12.14 / PyArrow 25.0.1, `retail:medium` at event seed 1007 used three interleaved repetitions per mode/sink. Observed median rates:
+A [committed local measurement](evidence/live-fidelity-measurement.md) records the machine label, all samples and the harness output. On the labelled Xeon Platinum 8573C cloud environment (four CPU quota), Shape 0.9.1 / Python 3.12.14 / PyArrow 25.0.1, `retail:medium` at event seed 1007 used three interleaved repetitions per mode/sink. Observed median rates:
 
 | Sink | No tee events/s | Tee events/s | Tee + profile events/s |
 |---|---:|---:|---:|

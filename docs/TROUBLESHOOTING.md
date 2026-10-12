@@ -27,7 +27,7 @@ shape doctor --broker kafka://HOST:9092/TOPIC
 shape doctor --broker eventhubs://NAMESPACE.servicebus.windows.net/HUB
 ```
 
-The Fabric run passed DNS, TCP, TLS, sign-in and workspace/item checks. Kafka passed DNS, TCP and its metadata authentication request. Event Hubs passed DNS, TCP, TLS and sign-in. Each returned `Result: OK`, exit 0. See the [Owner-run doctor receipts](https://github.com/sqllocks/shape/blob/main/docs/plans/evidence/owner-notes/doctor-additional-environments.md) for the selected checks and environment details.
+The Fabric run passed DNS, TCP, TLS, sign-in and workspace/item checks. Kafka passed DNS, TCP and its metadata authentication request. Event Hubs passed DNS, TCP, TLS and sign-in. Each returned `Result: OK`, exit 0. See the [Owner-run doctor receipts](evidence/doctor-additional-environments.md) for the selected checks and environment details.
 
 ## Generation writes no files
 
@@ -45,7 +45,7 @@ For version or as-of reads, confirm that the historical files remain available.
 
 ### Local fallback receipt
 
-A [fresh local installation and fallback receipt](https://github.com/sqllocks/shape/blob/main/docs/plans/evidence/owner-notes/delta-extension-fallback.md) on 2026-10-12 UTC records `INSTALL delta` and `LOAD delta`, then the real commands:
+A [fresh local installation and fallback receipt](evidence/delta-extension-fallback.md) on 2026-10-12 UTC records `INSTALL delta` and `LOAD delta`, then the real commands:
 
 ```bash
 shape profile tests/fixtures/delta_fallback/dv -o dv.shape

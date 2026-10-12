@@ -58,7 +58,7 @@ On 2026-10-11, the Owner ran the export statement above against disposable MySQL
 {"shape_content_id": "4694f326df223d6bf96334146870d08519d400f2e98057829878b64ba8eca2ed", "written": "orders.shape"}
 ```
 
-The `written` JSON is the success evidence; the receipt's `exit=True` lines came from PowerShell interpolation and are not bash exit statuses. The [Owner-run export receipt](https://github.com/sqllocks/shape/blob/main/docs/plans/evidence/owner-notes/mysql-export-profile.md) links to the earlier MySQL write over TLS with the server CA: 21,750 rows in nine tables, exit 0. These receipts describe those disposable runs only.
+The `written` JSON is the success evidence; the receipt's `exit=True` lines came from PowerShell interpolation and are not bash exit statuses. The [Owner-run export receipt](../evidence/mysql-export-profile.md) links to the earlier MySQL write over TLS with the server CA: 21,750 rows in nine tables, exit 0. These receipts describe those disposable runs only.
 
 ## Next step
 

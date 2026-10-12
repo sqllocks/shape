@@ -49,7 +49,7 @@ On 2026-10-11, the Owner exported 5,000 Shape-generated rows from disposable Pos
 {"shape_content_id": "a71f80cb159b382e149d5bbdc2ea320add3e1f16c34941f91c790c9f7fb7317c", "written": "orders.shape"}
 ```
 
-The [Owner-run export receipt](https://github.com/sqllocks/shape/blob/main/docs/plans/evidence/owner-notes/postgresql-export-profile.md) also links to the earlier PostgreSQL write: 21,750 rows in nine tables, exit 0, with persisted-row checks. These receipts describe those disposable runs only.
+The [Owner-run export receipt](../evidence/postgresql-export-profile.md) also links to the earlier PostgreSQL write: 21,750 rows in nine tables, exit 0, with persisted-row checks. These receipts describe those disposable runs only.
 
 ## Next step
 

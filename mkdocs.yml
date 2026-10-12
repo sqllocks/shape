@@ -204,6 +204,24 @@ nav:
   - Known limitations: KNOWN_LIMITATIONS.md
   - What leaves my machine: WHAT_LEAVES.md
   - Licensing: LICENSING.md
+  - Public owner decisions: DECISIONS.md
+  - Published receipts:
+    - Overview: evidence/index.md
+    - Installed VSIX and real editor receipt: evidence/vscode-install.md
+    - Live fidelity overhead — committed local measurement: evidence/live-fidelity-measurement.md
+    - Allocator policy — committed product A/B measurement: evidence/allocator-measurement.md
+    - Local Delta doctor receipt — CLI example 5: evidence/local-delta-doctor.md
+    - Snowflake write receipt: evidence/snowflake-write.md
+    - Databricks write receipt: evidence/databricks-write.md
+    - PostgreSQL export and profile receipt: evidence/postgresql-export-profile.md
+    - MySQL export and profile receipt: evidence/mysql-export-profile.md
+    - PostgreSQL 17 (local Docker, reached from the VM over the Hyper-V network) — Owner-run receipt: evidence/postgresql-live.md
+    - MySQL 8.4 (local Docker), over TLS with the server's own CA — Owner-run receipt: evidence/mysql-live.md
+    - Hosted GitHub Action pass receipt: evidence/github-action-pass.md
+    - Hosted GitHub Action drift receipt: evidence/github-action-drift.md
+    - Hosted GitHub Action required-check receipt: evidence/github-action-ruleset.md
+    - Doctor additional-environment receipts: evidence/doctor-additional-environments.md
+    - Fresh local Delta extension installation and real fallback: evidence/delta-extension-fallback.md
   - Security: SECURITY.md
 - Platforms:
   - Databases: databases/index.md

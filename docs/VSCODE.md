@@ -24,7 +24,7 @@ Evidence: `editors/vscode/package.json`, `editors/vscode/src/extension.ts`, the 
 and snippets. The repository workflow builds a `.vsix`; this page makes no marketplace claim.
 ## Local installation receipt
 
-The [installed-editor receipt](https://github.com/sqllocks/shape/blob/main/docs/plans/evidence/owner-notes/vscode-install.md) records a clean local Linux installation on 2026-10-12 UTC: VS Code 1.141.0, Shape extension 0.1.0 and Shape CLI 0.9.1. After building the repository's VSIX, the actual install/list commands used empty temporary profile and extension directories:
+The [installed-editor receipt](evidence/vscode-install.md) records a clean local Linux installation on 2026-10-12 UTC: VS Code 1.141.0, Shape extension 0.1.0 and Shape CLI 0.9.1. After building the repository's VSIX, the actual install/list commands used empty temporary profile and extension directories:
 
 ```bash
 code --install-extension editors/vscode/shape.vsix

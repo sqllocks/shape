@@ -3,7 +3,7 @@
 Status: experimental.
 
 
-Review the shipped source and tests for each control. This page describes the controls the code implements and the residual risks; it provides no assurance about any particular deployment. [Owner decision, 2026-10-11](https://github.com/sqllocks/shape/blob/main/docs/plans/OWNER_DECISIONS.md#threat-model).
+Review the shipped source and tests for each control. This page describes the controls the code implements and the residual risks; it provides no assurance about any particular deployment. [Owner decision, 2026-10-11](DECISIONS.md#threat-model).
 
 ## Assets
 
