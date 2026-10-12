@@ -126,10 +126,17 @@ jobs:
           sys.stdout.flush()
           PY
       - name: Live tests
+        # Bounded below the job limit so the summary and upload steps always run. Every test name is
+        # printed as it starts (-v, unbuffered), and a test that sits for 10 minutes dumps the
+        # stack of every thread (faulthandler_timeout) so a hang names the call it is stuck in.
+        timeout-minutes: 50
+        env:
+          PYTHONUNBUFFERED: '1'
         run: |
           mkdir -p "$SHAPE_RECORD_DIR"
           set +e
-          python -m pytest -m live plugins/shape-fabric/tests -q -rs --junitxml=live-junit.xml
+          python -u -m pytest -m live plugins/shape-fabric/tests -v -rs --durations=0 \
+            -o faulthandler_timeout=600 --junitxml=live-junit.xml
           echo "pytest_exit=$?" >> "$GITHUB_ENV"
           exit 0
       - name: Step summary - which live tests ran, passed, failed, skipped

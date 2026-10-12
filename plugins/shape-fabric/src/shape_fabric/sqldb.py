@@ -294,7 +294,9 @@ def write_many(
         per = {**common, **dict((options or {}).get(table, {}))}
         try:
             result.per_table[table] = writer.write_table(table, tables[table], **per)
+            result.notes += list(getattr(writer, "drain_notes", lambda: [])())
         except WriteError as exc:
+            result.notes += list(getattr(writer, "drain_notes", lambda: [])())
             exc.result = result
             result.elapsed_seconds = time.monotonic() - start
             raise

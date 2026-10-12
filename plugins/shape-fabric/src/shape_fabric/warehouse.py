@@ -37,6 +37,7 @@ errors remain errors; the writer never silently changes the server's identity.
 from __future__ import annotations
 
 import re
+import sys
 import uuid
 import warnings
 import zlib
@@ -128,6 +129,13 @@ class WarehouseWriter:
         self.storage = storage or Storage(credential=credential, filesystem=filesystem)
         self.schema_name = schema_name
         self.run_id = run_id or uuid.uuid4().hex[:12]
+        #: one line per table loaded by the INSERT fallback; also in ``WriteResult.notes``
+        self.notes: list[str] = []
+
+    def drain_notes(self) -> list[str]:
+        """The fallback notes since the last call (``write_many`` puts them in the result)."""
+        notes, self.notes = self.notes, []
+        return notes
 
     @property
     def destination(self) -> str:
@@ -191,12 +199,15 @@ class WarehouseWriter:
                     or "access token couldn't be fetched for storage path" not in str(exc).lower()
                 ):
                     raise
-                warnings.warn(
-                    "Warehouse COPY INTO could not obtain a OneLake storage token (13840); "
-                    "loading staged rows with parameterized INSERT instead (slower than COPY)",
-                    RuntimeWarning,
-                    stacklevel=2,
+                note = (
+                    f"{sname}.{table}: COPY INTO failed with SQL error 13840 "
+                    f"({_tsql.redact(str(exc))[:300]}); loaded {staged:,} rows with "
+                    "parameterized INSERT in 5,000-row batches instead, which is much slower "
+                    "than COPY INTO (see docs/KNOWN_LIMITATIONS.md, Fabric Warehouse COPY INTO)"
                 )
+                self.notes.append(note)
+                print(f"WARNING: {note}", file=sys.stderr, flush=True)
+                warnings.warn(note, RuntimeWarning, stacklevel=2)
                 db.rollback()
                 # Reapply an uncommitted truncate/replace after rollback. A table this
                 # call created was committed by prepare_table and is still present.

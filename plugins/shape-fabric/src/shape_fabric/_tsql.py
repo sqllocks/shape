@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import math
+import os
 import re
 import time
 from collections.abc import Mapping, Sequence
@@ -495,6 +496,22 @@ def is_warehouse(connection_string: str | None) -> bool:
     )
 
 
+QUERY_TIMEOUT_SECONDS = 900
+
+
+def _bounded(conn: Any, query_timeout: int | None) -> Any:
+    """Give every statement on ``conn`` a deadline (pyodbc's default is none)."""
+    seconds = query_timeout
+    if seconds is None:
+        raw = os.environ.get("SHAPE_SQL_QUERY_TIMEOUT", "")
+        seconds = int(raw) if raw.strip().isdigit() else QUERY_TIMEOUT_SECONDS
+    try:
+        conn.timeout = seconds
+    except AttributeError:  # not a pyodbc connection (a test double): nothing to bound
+        pass
+    return conn
+
+
 _LOGIN_KEYS = re.compile(r"(^|;)\s*(uid|pwd|user id|password|authentication)\s*=", re.IGNORECASE)
 
 
@@ -503,6 +520,7 @@ def connect(
     credential: Any = None,
     *,
     timeout: int = 120,
+    query_timeout: int | None = None,
     retries: int = 3,
     retry_delay: float = 2.0,
 ) -> Any:
@@ -512,6 +530,10 @@ def connect(
     ``Authentication=`` mode). With a ``credential`` its token for Azure SQL / Fabric is passed
     to the driver, and the connection string must not hold a login. Token sign-in is retried (a
     managed identity endpoint can be slow to answer right after a notebook starts).
+
+    ``timeout`` bounds the login; ``query_timeout`` (default :data:`QUERY_TIMEOUT_SECONDS`, or
+    ``SHAPE_SQL_QUERY_TIMEOUT``) bounds every statement, so a stalled load fails with the driver's
+    timeout message instead of waiting forever.
     """
     # Direct connections (including publish setup/cleanup) need the same portal-string
     # normalization as SqlConnection. Already normalized ODBC strings stay unchanged.
@@ -528,7 +550,7 @@ def connect(
             conn = pyodbc.connect(connection_string, autocommit=False, timeout=timeout)
         except pyodbc.Error as exc:
             raise ShapeError(f"could not connect: {redact(str(exc))}") from None
-        return conn
+        return _bounded(conn, query_timeout)
     if _LOGIN_KEYS.search(connection_string):
         raise ShapeError(
             "a connection string used with a credential must not hold UID, PWD or Authentication"
@@ -538,11 +560,14 @@ def connect(
         try:
             token = token_for(credential, SCOPE_SQL).encode("utf-16-le")
             packed = len(token).to_bytes(4, "little") + token
-            return pyodbc.connect(
-                connection_string,
-                attrs_before={ACCESS_TOKEN_ATTR: packed},
-                autocommit=False,
-                timeout=timeout,
+            return _bounded(
+                pyodbc.connect(
+                    connection_string,
+                    attrs_before={ACCESS_TOKEN_ATTR: packed},
+                    autocommit=False,
+                    timeout=timeout,
+                ),
+                query_timeout,
             )
         except AuthError:
             raise

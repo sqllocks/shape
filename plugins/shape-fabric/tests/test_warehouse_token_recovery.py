@@ -105,3 +105,15 @@ def test_recovery_keeps_sql_batches_bounded(monkeypatch):
         assert writer.write_table("customer", [sample_batch(n=12001)]) == 12001
     assert sizes == [5000, 5000, 2001]
     assert fs.files == {}
+
+
+def test_the_fallback_is_visible_on_stderr_and_in_the_result_summary(capsys):
+    writer, server, _fs = make()
+    server.fail = reject_copy
+    with pytest.warns(RuntimeWarning, match="13840"):
+        result = writer.write_tables({"customer": sample_batches()})
+    note = result.notes[0]
+    assert "dbo.customer" in note and "13840" in note and "7 rows" in note and "slower" in note
+    assert f"WARNING: {note}" in capsys.readouterr().err
+    assert f"WARNING: {note}" in result.summary()
+    assert writer.notes == []  # drained into the result

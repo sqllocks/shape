@@ -436,6 +436,9 @@ def test_a_credential_is_passed_to_the_driver_as_a_token_and_the_login_is_not(mo
     in the connection string (not in ``attrs_before``)."""
     calls = []
 
+    class Conn:
+        timeout = 0  # pyodbc: 0 means no limit
+
     class Pyodbc:
         class Error(Exception):
             pass
@@ -443,10 +446,14 @@ def test_a_credential_is_passed_to_the_driver_as_a_token_and_the_login_is_not(mo
         @staticmethod
         def connect(cs, **kw):
             calls.append((cs, kw))
-            return object()
+            return Conn()
 
     monkeypatch.setitem(sys.modules, "pyodbc", Pyodbc)
-    _tsql.connect(CS, lambda scope: FAKE_ENTRA_TOKEN)
+    bounded = _tsql.connect(CS, lambda scope: FAKE_ENTRA_TOKEN)
+    assert bounded.timeout == _tsql.QUERY_TIMEOUT_SECONDS  # no statement may wait forever
+    monkeypatch.setenv("SHAPE_SQL_QUERY_TIMEOUT", "45")
+    assert _tsql.connect(CS, lambda scope: FAKE_ENTRA_TOKEN).timeout == 45
+    monkeypatch.delenv("SHAPE_SQL_QUERY_TIMEOUT")
     cs, kw = calls[-1]
     assert cs == CS and FAKE_ENTRA_TOKEN.encode("utf-16-le") in kw["attrs_before"][1256]
     monkeypatch.setenv("SHAPE_TEST_PW", SECRET)
