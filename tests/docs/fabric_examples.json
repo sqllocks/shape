@@ -1,0 +1,254 @@
+[
+  {
+    "id": "git-sync-live",
+    "page": "docs/FABRIC_PLATFORM.md",
+    "index": 0,
+    "note": "Fabric maintainer — supply the transcript for docs/FABRIC_PLATFORM.md example 0.",
+    "cwd": "repo",
+    "timeout": 1500,
+    "needs": [
+      "FABRIC_TENANT_ID",
+      "FABRIC_CLIENT_ID",
+      "FABRIC_CLIENT_SECRET",
+      "FABRIC_GIT_WORKSPACE_ID",
+      "FABRIC_GIT_REMOTE",
+      "FABRIC_GIT_TOKEN"
+    ],
+    "rewrite": [
+      [
+        "FABRIC_WORKSPACE_ID=\\.\\.\\.",
+        "FABRIC_WORKSPACE_ID=\"$FABRIC_GIT_WORKSPACE_ID\""
+      ],
+      [
+        "FABRIC_GIT_REMOTE=\\S+",
+        "FABRIC_GIT_REMOTE=\"$FABRIC_GIT_REMOTE\""
+      ],
+      [
+        "(FABRIC_[A-Z_]+)=\\.\\.\\.",
+        "\\1=\"$\\1\""
+      ]
+    ]
+  },
+  {
+    "id": "sinks-onelake",
+    "page": "docs/SINKS.md",
+    "index": 0,
+    "note": "Fabric maintainer — supply the transcript for docs/SINKS.md example 0.",
+    "timeout": 1800,
+    "needs": [
+      "DOCS_WS",
+      "DOCS_LH",
+      "AZURE_CLIENT_SECRET"
+    ],
+    "rewrite": [
+      [
+        "abfss://landing@myacct\\.dfs\\.core\\.windows\\.net/",
+        "abfss://$DOCS_WS@onelake.dfs.fabric.microsoft.com/$DOCS_LH/Files/shape_docs/"
+      ],
+      [
+        "delta\\+abfss://ws@onelake\\.dfs\\.fabric\\.microsoft\\.com/lh\\.Lakehouse/Tables",
+        "delta+abfss://$DOCS_WS@onelake.dfs.fabric.microsoft.com/$DOCS_LH/Tables"
+      ]
+    ]
+  },
+  {
+    "id": "scale-fabric-spark",
+    "page": "docs/SCALE.md",
+    "index": 3,
+    "note": "Fabric maintainer — supply the transcript for docs/SCALE.md example 3.",
+    "timeout": 3000,
+    "needs": [
+      "SHAPE_FABRIC_TOKEN",
+      "FABRIC_WORKSPACE_ID",
+      "FABRIC_LAKEHOUSE_ID"
+    ],
+    "env": {
+      "SHAPE_FABRIC_TOKEN": "DOCS_FABRIC_API_TOKEN"
+    },
+    "rewrite": [
+      [
+        "SHAPE_FABRIC_TOKEN=\\.\\.\\.",
+        "SHAPE_FABRIC_TOKEN=\"$SHAPE_FABRIC_TOKEN\""
+      ],
+      [
+        "WORKSPACE_GUID",
+        "\"$FABRIC_WORKSPACE_ID\""
+      ],
+      [
+        "LAKEHOUSE_GUID",
+        "\"$FABRIC_LAKEHOUSE_ID\""
+      ]
+    ]
+  },
+  {
+    "id": "scale-jobs",
+    "page": "docs/SCALE.md",
+    "index": 2,
+    "note": "Fabric maintainer — supply the transcript for docs/SCALE.md example 2.",
+    "timeout": 1800,
+    "job_from": "scale-fabric-spark",
+    "needs": [
+      "DOCS_JOB_ID",
+      "SHAPE_FABRIC_TOKEN"
+    ],
+    "env": {
+      "SHAPE_FABRIC_TOKEN": "DOCS_FABRIC_API_TOKEN"
+    },
+    "rewrite": [
+      [
+        "(?m)^(shape jobs (?:status|cancel|resume)) JOB",
+        "\\1 \"$DOCS_JOB_ID\""
+      ]
+    ]
+  },
+  {
+    "id": "publish-targets",
+    "page": "docs/plugins/fabric-commands.md",
+    "index": 0,
+    "note": "Fabric maintainer — supply the transcript for docs/plugins/fabric-commands.md example 0.",
+    "timeout": 1800,
+    "needs": [
+      "FABRIC_WORKSPACE_ID",
+      "FABRIC_LAKEHOUSE_ID",
+      "FABRIC_SQL_CONNECTION_STRING",
+      "DOCS_WAREHOUSE_CONNECTION",
+      "DOCS_KQL_HOST",
+      "FABRIC_KQL_DB"
+    ],
+    "env": {
+      "SHAPE_SQL_CONNECTION": "FABRIC_SQL_CONNECTION_STRING",
+      "WH": "DOCS_WAREHOUSE_CONNECTION"
+    },
+    "rewrite": [
+      [
+        "onelake://MyWorkspace/MyLakehouse/Files",
+        "onelake://$FABRIC_WORKSPACE_ID/$FABRIC_LAKEHOUSE_ID/Files"
+      ],
+      [
+        "onelake://W/L/Files",
+        "onelake://$FABRIC_WORKSPACE_ID/$FABRIC_LAKEHOUSE_ID/Files/shape_staging"
+      ],
+      [
+        "https://<query-uri-host> --database mydb",
+        "https://$DOCS_KQL_HOST --database \"$FABRIC_KQL_DB\""
+      ]
+    ]
+  },
+  {
+    "id": "notebook-deploy",
+    "page": "docs/plugins/fabric-commands.md",
+    "index": 1,
+    "note": "Fabric maintainer — supply the transcript for docs/plugins/fabric-commands.md example 1.",
+    "timeout": 900,
+    "rewrite": [
+      [
+        "--workspace \"Demo\"",
+        "--workspace \"shape-test\""
+      ]
+    ],
+    "scrub_names": {
+      "shape-test": "Demo"
+    }
+  },
+  {
+    "id": "setup-fabric",
+    "page": "docs/plugins/fabric-commands.md",
+    "index": 2,
+    "note": "Fabric maintainer — supply the transcript for docs/plugins/fabric-commands.md example 2.",
+    "timeout": 900,
+    "rewrite": [
+      [
+        "--workspace \"Demo\"",
+        "--workspace \"shape-test\""
+      ]
+    ],
+    "scrub_names": {
+      "shape-test": "Demo"
+    }
+  },
+  {
+    "id": "profile-model",
+    "page": "docs/plugins/fabric-commands.md",
+    "index": 4,
+    "note": "Fabric maintainer — supply the transcript for docs/plugins/fabric-commands.md example 4.",
+    "timeout": 1200,
+    "needs": [
+      "FABRIC_WORKSPACE_ID",
+      "FABRIC_SEMANTIC_MODEL"
+    ],
+    "rewrite": [
+      [
+        "\\[--tables [^\\]]*\\] ",
+        ""
+      ],
+      [
+        "\\[--max-rows 100000\\]",
+        "--max-rows 100000"
+      ],
+      [
+        "\\[--json\\]",
+        "--json"
+      ],
+      [
+        "Sales/Retail",
+        "\"$FABRIC_WORKSPACE_ID/$FABRIC_SEMANTIC_MODEL\""
+      ]
+    ]
+  },
+  {
+    "id": "semantic-model-profile",
+    "page": "docs/plugins/cloud-sources.md",
+    "index": 0,
+    "note": "Fabric maintainer — supply the transcript for docs/plugins/cloud-sources.md example 0.",
+    "timeout": 1200,
+    "needs": [
+      "FABRIC_WORKSPACE_ID",
+      "FABRIC_SEMANTIC_MODEL",
+      "DOCS_SEM_TABLE"
+    ],
+    "rewrite": [
+      [
+        "semantic-model://Sales/Retail/Customer",
+        "\"semantic-model://$FABRIC_WORKSPACE_ID/$FABRIC_SEMANTIC_MODEL/$DOCS_SEM_TABLE\""
+      ]
+    ]
+  },
+  {
+    "id": "synapse-write",
+    "page": "docs/plugins/fabric-writers.md",
+    "index": 1,
+    "note": "Fabric maintainer — supply the transcript for docs/plugins/fabric-writers.md example 1.",
+    "timeout": 1800,
+    "needs": [
+      "SHAPE_TEST_SYNAPSE_URI",
+      "SHAPE_TEST_SYNAPSE_STAGING"
+    ],
+    "rewrite": [
+      [
+        "synapse://myws\\.sql\\.azuresynapse\\.net/pool1",
+        "\"$SHAPE_TEST_SYNAPSE_URI\""
+      ],
+      [
+        "abfss://stage@myacct\\.dfs\\.core\\.windows\\.net/shape",
+        "\"$SHAPE_TEST_SYNAPSE_STAGING\""
+      ]
+    ]
+  },
+  {
+    "id": "profile-db-warehouse",
+    "page": "docs/plugins/sqlserver.md",
+    "index": 1,
+    "note": "Fabric maintainer — supply the transcript for docs/plugins/sqlserver.md example 1.",
+    "timeout": 900,
+    "needs": [
+      "DOCS_SAMPLE_SERVER",
+      "DOCS_SAMPLE_DB"
+    ],
+    "rewrite": [
+      [
+        "--server myserver\\.database\\.windows\\.net --database shop",
+        "--server \"$DOCS_SAMPLE_SERVER\" --database \"$DOCS_SAMPLE_DB\""
+      ]
+    ]
+  }
+]
