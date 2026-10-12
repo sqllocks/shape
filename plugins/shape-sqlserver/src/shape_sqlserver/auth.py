@@ -6,11 +6,17 @@ loads (and ``shape plugins doctor`` is clean) on a machine that has neither.
 
 from __future__ import annotations
 
+import re
 import struct
 from dataclasses import dataclass
 from typing import Any
 
-from .sql import SqlServerError, redact_connection_string, register_converters
+from .sql import (
+    SqlServerError,
+    normalize_connection_string,
+    redact_connection_string,
+    register_converters,
+)
 
 AUTH_METHODS = ("sql", "cli", "msi", "spn", "fabric")
 TOKEN_SCOPE = "https://database.windows.net/.default"
@@ -106,6 +112,10 @@ def connect(connection_string: str, creds: Credentials | None = None, *, timeout
     """
     creds = creds or Credentials()
     creds.validate()
+    # The Fabric portal gives the ADO.NET form (Data Source=...;Initial Catalog=...): ODBC needs a
+    # driver. Any other string (an ODBC one, with or without Driver=, or a DSN) passes through.
+    if re.search(r"(^|;)\s*(data source|initial catalog)\s*=", connection_string, re.IGNORECASE):
+        connection_string = normalize_connection_string(connection_string)
     try:
         import pyodbc  # type: ignore[import-not-found,unused-ignore]
     except ImportError as exc:
