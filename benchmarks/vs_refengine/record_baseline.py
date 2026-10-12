@@ -137,7 +137,15 @@ def worker_failure(
     kind: str, identifier: str, command: list[str], result: Any, connection: str | None = None
 ) -> None:
     output = (result.stdout or "") + "\n" + (result.stderr or "")
-    tail = "\n".join(output.splitlines()[-200:])
+    lines = output.splitlines()
+    tail = "\n".join(lines[-200:])
+    # A late-running step can push the first failing command out of the tail: keep those lines.
+    marks = [
+        x for x in lines[:-200] if re.search(r"command failed|FAIL|Error|exit [1-9]|mismatch", x)
+    ]
+    if marks:
+        earlier = "\n".join(marks[:60])
+        tail = "earlier failure lines:\n" + earlier + "\n--- last 200 lines ---\n" + tail
     print(
         redact(
             f"{kind}:{identifier}: command {redacted_command(command)}; "
@@ -381,6 +389,12 @@ def pools_worker(domain: str) -> dict[str, Any]:
             }.items()
         },
         "datasets": datasets,
+        # What the release actually applies per column (domain overrides included), which can
+        # differ from the fixture's declared generator.
+        "generators": {
+            tn: {cn: dict(c.generator) for cn, c in t.columns.items()}
+            for tn, t in dom.schema.tables.items()
+        },
     }
 
 
@@ -399,7 +413,7 @@ def plan_worker() -> dict[str, Any]:
         }
         digest = sha256(path)
         plans[path.stem] = {"schema_sha256": digest, "planned": counts}
-        inputs[str(path.relative_to(HERE))] = digest
+        inputs[path.relative_to(HERE).as_posix()] = digest
     return {"composites": plans, "inputs": inputs}
 
 
@@ -407,6 +421,21 @@ def cli_worker(identifier: str) -> dict[str, Any]:
     v = harness("record_cli_worker", "verify_1to1/verify.py")
     scenario = next(row for row in v.SCENARIOS if row[0] == identifier)
     return cast(dict[str, Any], v.capture_baseline_scenario(*scenario))
+
+
+def failed_verifiers(path: Path) -> str:
+    """Name the verifier commands and exit codes behind a failed timing run."""
+    try:
+        workloads = json.loads(path.read_text())["baseline"]["workloads"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return "; no per-workload results were written"
+    bad = [
+        f"{wid}: {w['verifier']['status']} (exit {w['verifier']['exit_code']}) "
+        f"{w['verifier']['command']}"
+        for wid, w in sorted(workloads.items())
+        if isinstance(w, dict) and w.get("verifier", {}).get("status") != "pass"
+    ]
+    return ":\n" + "\n".join(bad) if bad else "; no workload verifier failed"
 
 
 def timings_worker(smoke: bool = False) -> dict[str, Any]:
@@ -432,13 +461,18 @@ def timings_worker(smoke: bool = False) -> dict[str, Any]:
                         "QUICK_PROFILE_DATASETS",
                         ["edge/e3.csv", "edge/x_pq_list.parquet", "edge/x_pq_nested.parquet"],
                     ),
-                    ("QUICK_DOMAINS", [("retail", ["small"])]),
+                    (
+                        "QUICK_DOMAINS",
+                        [("retail", ["small"]), *[(d, ["medium"]) for d in domains()]],
+                    ),
                     ("QUICK_STREAM_SCALES", ["small"]),
                 ):
                     stack.enter_context(patch.object(run, name, value))
             rc = run.main(["--quick" if smoke else "--full", "--baseline-only", "--out", str(dest)])
         if rc:
-            raise RecordingError("release timings failed verification; no timing snapshot")
+            raise RecordingError(
+                "release timings failed verification; no timing snapshot" + failed_verifiers(dest)
+            )
         return cast(dict[str, Any], json.loads(dest.read_text()))
     finally:
         paths.SHAPE_VENV, paths.SHAPE_PY = saved_paths
@@ -567,6 +601,9 @@ def main(argv: list[str] | None = None) -> int:
                     ("profile", "edge/x_pq_list.parquet"),
                     ("profile", "edge/x_pq_nested.parquet"),
                     ("generate", "retail:small"),
+                    # Every domain at the recording scale: the verifier builds its pools from
+                    # each domain's own overrides, which only the full set exercises.
+                    *[("generate", d + ":medium") for d in domains()],
                     ("stream", "retail:order:small"),
                     ("db", "name_only"),
                     ("db", "name_only:mssql"),
@@ -583,7 +620,7 @@ def main(argv: list[str] | None = None) -> int:
         files: dict[str, Any] = {}
         ids: list[str] = []
         fixtures = {
-            str(p.relative_to(HERE)): {"sha256": sha256(p)}
+            p.relative_to(HERE).as_posix(): {"sha256": sha256(p)}
             for p in (HERE / "fixtures").rglob("*")
             if p.is_file()
         }
