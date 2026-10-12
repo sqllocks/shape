@@ -155,7 +155,11 @@ class Fabric:
         return details["branchName"], (details.get("directoryName") or "").strip("/")
 
     def status(self):
-        response = self.http.request("GET", f"{FABRIC_API}/workspaces/{self.ws}/git/status")
+        # Fabric asks the Git provider before it answers, which took longer than the client's
+        # default 30 s read timeout (run 38315796207); the wait stays bounded.
+        response = self.http.request(
+            "GET", f"{FABRIC_API}/workspaces/{self.ws}/git/status", timeout=180.0
+        )
         if response.status == 202:
             done = self.wait(response, "git status")
             response = self.http.request("GET", done_location(done, response))
