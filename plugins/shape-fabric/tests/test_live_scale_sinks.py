@@ -104,6 +104,20 @@ def schema_doc(prefix: str) -> dict:
     }
 
 
+def remove_spark_tables(storage, workspace, lakehouse, schema_folder, prefix, tables) -> list[str]:
+    """Remove the Delta tables the Spark worker wrote: ``Tables/[<schema>/]<prefix>_<table>``.
+    Returns the folders it removed (a test of this function is in ``test_live_cleanup.py``)."""
+    root = f"onelake://{workspace}/{lakehouse}/Tables" + (
+        f"/{schema_folder}" if schema_folder else ""
+    )
+    removed = []
+    for table in tables:
+        folder = f"{root}/{prefix}_{table}"
+        storage.remove(folder, recursive=True)
+        removed.append(folder)
+    return removed
+
+
 def run(sink, prefix: str) -> None:
     engine = Engine(GenSchema.from_dict(schema_doc(prefix)), seed=3)
     ScaleRouter(engine, [sink], mode="local_mp", chunk_size=100).run()
@@ -225,13 +239,14 @@ def test_fabric_spark_runs_the_worker_notebook_to_success(tmp_path):
             f"status={status}; error={final.get('error')}; progress={final.get('progress')}"
         )
     finally:
-        # The worker's Delta tables are Tables/[<schema>/]<prefix>_<table>; the router records the
-        # schema it resolved from the Lakehouse. Remove them whatever the outcome.
+        # The router records the schema it resolved from the Lakehouse; remove the worker's tables
+        # whatever the outcome.
         fabric = (final or job).get("fabric") or {}
-        schema_folder = fabric.get("lakehouse_schema")
-        root = f"onelake://{workspace}/{lakehouse}/Tables" + (
-            f"/{schema_folder}" if schema_folder else ""
+        remove_spark_tables(
+            Storage(credential=cred),
+            workspace,
+            lakehouse,
+            fabric.get("lakehouse_schema"),
+            prefix,
+            list(schema_doc(prefix)["tables"]),
         )
-        storage = Storage(credential=cred)
-        for table in schema_doc(prefix)["tables"]:
-            storage.remove(f"{root}/{prefix}_{table}", recursive=True)
