@@ -1,0 +1,39 @@
+{
+  "run_id": "38320894194",
+  "commit": "6eb065e8f7349613291e67678b05227ab1e002ff",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "Intel(R) Xeon(R) 6973P-C",
+    "logical_cpus": 4,
+    "ram_bytes": 16765374464,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "26.0.0",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "workspace": "shape-test, service principal shape-ci-fabric",
+  "page": "docs/plugins/fabric-commands.md",
+  "example": "setup-fabric",
+  "command": "shape setup-fabric --workspace \"Demo\" --create-lakehouse\nshape setup-fabric --snippet        # print the cell to paste into a notebook instead",
+  "executed_command": "shape setup-fabric --workspace \"Demo\" --create-lakehouse\nshape setup-fabric --snippet        # print the cell to paste into a notebook instead",
+  "exit_code": 1,
+  "status": "failed",
+  "elapsed_seconds": 2.8420374470000525,
+  "stdout": "shape: error: HTTP 400 from https://api.fabric.microsoft.com/v1/workspaces/<workspace-id>/items: {\"requestId\":\"<guid>\",\"errorCode\":\"InvalidInput\",\"moreDetails\":[{\"errorCode\":\"InvalidParameter\",\"message\":\"Artifact request failed due to invalid input. Error: DisplayName is Invalid for ArtifactType. DisplayName: <pi>shape-lakehouse</pi>\"}],\"message\":\"The request has a\nShape v0.9.1 \u2014 Fabric Environment Setup\n  Workspace:   Demo\n  Environment: shape-env\n  Lakehouse:   yes\n\n  Created Environment: shape-env\n"
+}

@@ -49,7 +49,8 @@
         "delta\\+abfss://ws@onelake\\.dfs\\.fabric\\.microsoft\\.com/lh\\.Lakehouse/Tables",
         "delta+abfss://$DOCS_WS@onelake.dfs.fabric.microsoft.com/$DOCS_LH/Tables"
       ]
-    ]
+    ],
+    "after_text": "A write to a remote target needs `--yes` or `SHAPE_CONFIRM_REMOTE=1`; the recorded run set the variable."
   },
   {
     "id": "scale-fabric-spark",
@@ -78,7 +79,8 @@
         "LAKEHOUSE_GUID",
         "\"$FABRIC_LAKEHOUSE_ID\""
       ]
-    ]
+    ],
+    "after_text": "A write to a remote target needs `--yes` or `SHAPE_CONFIRM_REMOTE=1`; the recorded run set the variable."
   },
   {
     "id": "scale-jobs",
@@ -232,7 +234,8 @@
         "abfss://stage@myacct\\.dfs\\.core\\.windows\\.net/shape",
         "\"$SHAPE_TEST_SYNAPSE_STAGING\""
       ]
-    ]
+    ],
+    "after_text": "A write to a remote target needs `--yes` or `SHAPE_CONFIRM_REMOTE=1`; the recorded run set the variable."
   },
   {
     "id": "profile-db-warehouse",

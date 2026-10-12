@@ -119,13 +119,17 @@ def machine() -> dict[str, Any]:
     return owner_machine()
 
 
-def resolved_text(text: str, match: re.Match[str], shown: str, evidence: str) -> str:
+def resolved_text(
+    text: str, match: re.Match[str], shown: str, evidence: str, after: str = ""
+) -> str:
     """The page with the example's note replaced by its recorded output and evidence link."""
     lang = match["lang"]
     block = (
         f"<!-- example: {match['index']} -->\n\n{match['intro']}\n\n"
         "Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the "
-        "angle-bracket values stand for that tenant's identifiers.\n\n"
+        "angle-bracket values stand for that tenant's identifiers."
+        + (f" {after}" if after else "")
+        + "\n\n"
         f"```{lang}\n{match['command']}\n```\n\n"
         '??? info "Output (exit 0)"\n\n    ```text {.expected}\n'
         + "\n".join("    " + line for line in shown.splitlines())
@@ -169,6 +173,7 @@ def capture(
             "SHAPE_HOME": str(home / ".shape"),
             "SHAPE_JOBS_DIR": str(home / "jobs"),
             "NO_COLOR": "1",
+            "SHAPE_CONFIRM_REMOTE": "1",
             "COLUMNS": "100",
             "PIP_QUIET": "2",
             "PIP_DISABLE_PIP_VERSION_CHECK": "1",
@@ -241,7 +246,15 @@ def capture(
         shutil.copyfile(receipt, public)
         target = Path(os.path.relpath(public, page.parent)).as_posix()
         evidence = f"Evidence: [run {run_id}, {runner}, `{commit[:12]}`]({target})."
-        page.write_text(resolved_text(text, match, shown.rstrip("\n") or "(no output)", evidence))
+        page.write_text(
+            resolved_text(
+                text,
+                match,
+                shown.rstrip("\n") or "(no output)",
+                evidence,
+                item.get("after_text", ""),
+            )
+        )
     return int(failed)
 
 
