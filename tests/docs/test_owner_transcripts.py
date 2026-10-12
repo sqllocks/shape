@@ -120,7 +120,12 @@ def test_workflow_has_services_write_permissions_and_branch_guard():
     assert triggers["push"]["branches"] == ["docs/transcripts-ci"]
     job = workflow["jobs"]["capture"]
     assert workflow["permissions"]["contents"] == "write"
-    assert {"postgres", "kafka", "schema-registry", "mssql"} <= job["services"].keys()
+    assert {"postgres", "kafka", "mssql"} <= job["services"].keys()
+    registry = next(
+        step for step in job["steps"] if step.get("name") == "Require authenticated Schema Registry"
+    )
+    assert registry["run"] == "python scripts/docs_owner_services.py"
+    assert registry["env"]["SHAPE_DOCS_DOCKER_NETWORK"] == "${{ job.services.kafka.network }}"
     assert "github.ref == 'refs/heads/docs/transcripts-ci'" in job["if"]
     assert any(
         step.get("uses", "").startswith("actions/upload-artifact@") and step.get("if") == "always()"
