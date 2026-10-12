@@ -439,7 +439,7 @@ This product workload compares the default and system allocator configurations i
 python "$SHAPE_DOCS_REPO/scripts/docs_owner_measurements.py" allocator
 ```
 
-<!-- owner: performance maintainer — commit a product measurement with the machine and workload before publishing allocator timing numbers. -->
+Evidence: [run 38266883768, ubuntu-latest, `1fa052d08a93`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38266883768-1fa052d08a93-ubuntu-latest-allocator-measurement.json).
 
 `shape.generation.keypos` finds the row of a key (`first_positions`, `first_rows`): for the primary key
 of a parent that is a sequence (`start`, `start + 1`, ...) the row is `key - start`, found by the native

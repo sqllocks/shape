@@ -365,7 +365,36 @@ This connectivity example uses the workflow's disposable Kafka broker. Fabric an
 shape doctor --broker kafka://localhost:9092/orders
 ```
 
-<!-- owner: Kafka maintainer — supply the transcript for docs/CLI.md example 5. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Shape 0.9.1
+      python    3.12.15  (Linux-6.17.0-1022-azure-x86_64-with-glibc2.39)
+      kernel    rust  (compiled)
+    
+    Required
+      OK      numpy         2.5.3
+      OK      pyarrow       25.0.1
+    
+    Optional
+      OK      cryptography  50.0.2
+      OK      yaml          6.0.3
+      OK      pandas        3.0.6
+      OK      scipy         1.18.1
+      OK      deltalake     1.6.6
+      OK      openpyxl      3.1.5
+      OK      sklearn       1.9.1
+      OK      tzdata        2026.3
+    
+    Checks
+      PASS  broker.dns    localhost resolves to ::1, 127.0.0.1
+      PASS  broker.tcp    connected to localhost:9092 (::1)
+      PASS  broker.auth   the broker answered a metadata request
+    
+    Result: OK
+    ```
+
+Evidence: [run 38266883768, ubuntu-latest, `1fa052d08a93`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38266883768-1fa052d08a93-ubuntu-latest-kafka-doctor.json).
 
 
 | Option | Checks |
