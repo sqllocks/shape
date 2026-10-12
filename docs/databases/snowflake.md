@@ -22,12 +22,28 @@ Evidence: `plugins/shape-databases/src/shape_databases/snowflake.py` and shared 
 The integrations source definitions are in `plugins/shape-integrations/src/shape_integrations/`.
 Snowflake and Databricks are write targets; Shape does not profile from them yet.
 
-## Next step
+## Write receipt
 
-<!-- owner: platform maintainer — execute a Snowflake write transcript with a test account before publishing commands. -->
+Owner-run on 2026-10-11 in a clean Windows 11 VM, Python 3.12.10, using Shape 0.9.1 installed from PyPI and snowflake-connector-python 4.8.0. The Owner reports approximately 6:50 PM Eastern; the VM clock was incorrect. The captured run used key-pair sign-in and replace mode.
 
-These pages describe implementation behavior. They make no account or service-validation
-claim. Authentication, permissions and server limits remain properties of your deployment.
+Fill in the target identifiers below. The key is referenced by its local file URI, as used in the receipt. This PowerShell example sets the recorded `SHAPE_CONFIRM_REMOTE=1` environment value. Target identifiers are substituted in both the command and output.
+
+```powershell
+$env:SHAPE_CONFIRM_REMOTE = "1"
+shape generate retail --scale small --seed 42 --to "snowflake://<USER>@<ACCOUNT>/<DATABASE>/<SCHEMA>?warehouse=<WAREHOUSE>&role=<ROLE>" --write-mode replace --yes --sink-config "snowflake.private_key=file://C:/Users/shape/.snowflake/rsa_key.p8"
+```
+
+Owner-reported output, exit 0:
+
+```text
+shape 0.9.1
+Wrote 21,750 rows in 9 tables to snowflake://<USER>@<ACCOUNT>/<DATABASE>/<SCHEMA>?warehouse=<WAREHOUSE>&role=<ROLE> (19.51s)
+```
+
+The elapsed time records this single run. The [Owner-run receipt](../evidence/snowflake-write.md) records the install command, test-account configuration and all nine persisted table counts verified in Snowsight.
+
+The receipt records one test-account run. Authentication, permissions and server limits
+remain properties of your deployment.
 Do not publish credentials in a profile, project file or issue.
 
 ## Related
