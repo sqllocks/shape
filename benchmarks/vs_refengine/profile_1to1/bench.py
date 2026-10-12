@@ -9,17 +9,20 @@ Default threading is compared with single-thread candidate profiling as well.
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import os
 import statistics
 import subprocess
 import sys
 import time
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
+sys.path.insert(0, str(HERE))
 from common import bench_lock, machine_meta, maxrss_kib, wait_for_quiet  # noqa: E402
 from paths import (  # noqa: E402
     BASELINE_PY,
@@ -41,6 +44,36 @@ DATASETS = [
     "d4.parquet",
     "mt",
 ]
+
+
+from baseline_dump import error_category  # noqa: E402
+from recorded_store import RecordingError  # noqa: E402
+
+
+def recorded_error(ds: str) -> str | None:
+    verify = importlib.import_module("verify")
+
+    profile = verify.baseline_profile(ds)  # Same manifest/input-digest checks as T-22.
+    if "__error__" not in profile:
+        return None
+    category = profile["__error__"].get("category")
+    if not isinstance(category, str) or not category:
+        raise RecordingError(f"profile:{ds}: malformed recorded error category")
+    return category
+
+
+def call_profile(run: Callable[[], Any], expected_error: str | None, ds: str) -> tuple[Any, bool]:
+    try:
+        profile = run()
+    except Exception as exc:
+        if error_category(exc) != expected_error:
+            raise
+        return None, True
+    if expected_error is not None:
+        raise RuntimeError(
+            f"profile:{ds}: expected recorded {expected_error}, but profiling succeeded"
+        )
+    return profile, False
 
 
 # ---------------------------------------------------------------------------
@@ -80,15 +113,23 @@ def worker(tool: str, ds: str) -> Any:
             def run() -> Any:
                 return shape.profile(str(path))
 
+    expected_error = recorded_error(ds)
     base = _rss_kb()[0]
     t0 = time.perf_counter()
-    prof = run()
+    prof, refused = call_profile(run, expected_error, ds)
     dt = time.perf_counter() - t0
     self_kb, child_kb = _rss_kb()
     ncols = (
-        sum(len(t["columns"] if isinstance(t, dict) else t.columns) for t in prof.tables.values())
-        if hasattr(prof, "tables")
-        else len(prof.columns)
+        0
+        if refused
+        else (
+            sum(
+                len(t["columns"] if isinstance(t, dict) else t.columns)
+                for t in prof.tables.values()
+            )
+            if hasattr(prof, "tables")
+            else len(prof.columns)
+        )
     )
     print(
         json.dumps(
@@ -147,8 +188,14 @@ def run_once(mode: str, ds: str) -> dict[str, Any]:
         env=env,
         capture_output=True,
         text=True,
-        check=True,
     )
+    if r.returncode:
+        tail = "\n".join((r.stdout + "\n" + r.stderr).splitlines()[-200:])
+        print(
+            f"profile:{ds}: command {' '.join(r.args)}; exit {r.returncode}\n{tail}",
+            file=sys.stderr,
+        )
+        raise subprocess.CalledProcessError(r.returncode, r.args, output=r.stdout, stderr=r.stderr)
     return cast(dict[str, Any], json.loads(r.stdout.strip().splitlines()[-1]))
 
 

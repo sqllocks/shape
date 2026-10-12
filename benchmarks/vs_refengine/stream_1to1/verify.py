@@ -247,6 +247,11 @@ def run_command(cmd: list[str], out: Path) -> str:
         env.pop("PYTHONHOME", None)
     r = subprocess.run(cmd, env=env, capture_output=True, text=True)
     if r.returncode:
+        tail = "\n".join((r.stdout + "\n" + r.stderr).splitlines()[-200:])
+        print(
+            "stream command " + " ".join(cmd) + "; exit " + str(r.returncode) + "\n" + tail,
+            file=sys.stderr,
+        )
         raise MissingInput("stream command failed with exit " + str(r.returncode))
     return r.stdout + r.stderr
 

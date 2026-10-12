@@ -83,6 +83,12 @@ def run_once(tool: str, impl: str, domain: str, scale: str) -> dict[str, Any]:
         env.pop("PYTHONPATH", None)
         env.pop("PYTHONHOME", None)
     r = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    if r.returncode:
+        tail = "\n".join((r.stdout + "\n" + r.stderr).splitlines()[-200:])
+        print(
+            f"generate:{domain}:{scale}: command {' '.join(cmd)}; exit {r.returncode}\n{tail}",
+            file=sys.stderr,
+        )
     if r.returncode == 2:
         raise generate.Unsupported(r.stderr.strip())
     if r.returncode != 0:

@@ -118,6 +118,9 @@ def sh(cmd: list[str], log: Path | None = None) -> tuple[int, str]:
             sys.stdout.write(ln)
     rc = p.wait()
     text = "".join(lines)
+    if rc:
+        print(f"command failed: {display_command(cmd)}; exit {rc}", flush=True)
+        sys.stdout.write("".join(lines[-200:]))
     if log is not None:
         log.parent.mkdir(parents=True, exist_ok=True)
         log.write_text(text)
@@ -325,6 +328,8 @@ def profile_workloads(
             cmd.append("--baseline-only")
         brc, _ = sh(cmd)
         if brc:
+            if BASELINE_ONLY:
+                raise RecordingError(f"profile:{ds}: timing worker failed (exit {brc})")
             ok = False
             continue
         values = json.loads(report.read_text())[ds]
@@ -388,6 +393,8 @@ def domain_workloads(
             cmd.append("--baseline-only")
         brc, _ = sh(cmd)
         if brc:
+            if BASELINE_ONLY:
+                raise RecordingError(f"{wid}: timing worker failed (exit {brc})")
             print(wid + ": a timed run failed; no numbers", file=sys.stderr)
             ok = False
             continue
@@ -443,6 +450,8 @@ def stream_workloads(scales: list[str], runs: int, out: dict[str, Any]) -> bool:
             bcmd.append("--baseline-only")
         brc, _ = sh(bcmd)
         if brc:
+            if BASELINE_ONLY:
+                raise RecordingError(f"{wid}: timing worker failed (exit {brc})")
             ok = False
             continue
         second = [*cmd, "--no-generate"]

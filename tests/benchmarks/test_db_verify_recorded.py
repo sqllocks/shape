@@ -2,6 +2,7 @@
 
 import copy
 import importlib.util
+import sys
 from pathlib import Path
 
 import pytest
@@ -45,11 +46,6 @@ def test_database_recorded_verdict(case, real, damage, monkeypatch, capsys):
     monkeypatch.setattr(v, "load_real", lambda *args: None)
     monkeypatch.setattr(v, "drop_real", lambda *args: None)
     if real:
-        from contextlib import nullcontext
-
-        import pyodbc
-
-        monkeypatch.setattr(pyodbc, "connect", lambda *args, **kw: nullcontext())
         # Cleanup is isolated from the emulator while exercising the real-case selection.
         monkeypatch.setattr(v, "cleanup_real", lambda *args: None, raising=False)
     args = ["--case", case] + (["--mssql", "stub"] if real else [])
@@ -57,3 +53,18 @@ def test_database_recorded_verdict(case, real, damage, monkeypatch, capsys):
     assert calls == [(case, real)]
     output = capsys.readouterr()
     assert case in output.out + output.err
+
+
+@pytest.mark.parametrize("damage", ["equal", "missing", "tamper"])
+@pytest.mark.parametrize("real", [False, True])
+def test_recorded_verdict_needs_no_odbc_driver(monkeypatch, capsys, damage, real):
+    monkeypatch.setitem(sys.modules, "pyodbc", None)
+    test_database_recorded_verdict("retail", real, damage, monkeypatch, capsys)
+    assert sys.modules["pyodbc"] is None
+
+
+def test_driver_is_imported_only_when_connecting(monkeypatch):
+    monkeypatch.setitem(sys.modules, "pyodbc", None)
+    v = verifier()
+    with pytest.raises(ModuleNotFoundError, match="pyodbc"):
+        v.connect_real("stub")

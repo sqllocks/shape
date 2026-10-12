@@ -7,10 +7,13 @@ import datetime as dt
 import importlib.util
 import json
 import os
+import re
+import shlex
 import shutil
 import subprocess
 import sys
 import tempfile
+import traceback
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
@@ -107,28 +110,78 @@ def check_release() -> tuple[str, str]:
     return version, tag.stdout.strip() if tag.returncode == 0 else ""
 
 
+def redact(text: str, connection: str | None = None) -> str:
+    """Remove credentials from worker commands, exceptions and captured output."""
+    for value in (connection, os.environ.get("BASELINE_MSSQL"), os.environ.get("SHAPE_TEST_MSSQL")):
+        if not value:
+            continue
+        passwords = re.findall(r"(?i)(?:PWD|PASSWORD)\s*=\s*(\{(?:[^}]|}})*\}|[^;]*)", value)
+        text = text.replace(value, "<redacted connection>")
+        for password in passwords:
+            if password:
+                text = text.replace(password, "<redacted>")
+                if password.startswith("{") and password.endswith("}"):
+                    text = text.replace(password[1:-1].replace("}}", "}"), "<redacted>")
+    return re.sub(r"(?i)\b(PWD|PASSWORD)\s*=\s*(\{(?:[^}]|}})*\}|[^;\s]*)", r"\1=<redacted>", text)
+
+
+def redacted_command(command: list[str]) -> str:
+    args = list(command)
+    for i, arg in enumerate(args[:-1]):
+        if arg == "--mssql":
+            args[i + 1] = "<redacted connection>"
+    return redact(shlex.join(args))
+
+
+def worker_failure(
+    kind: str, identifier: str, command: list[str], result: Any, connection: str | None = None
+) -> None:
+    output = (result.stdout or "") + "\n" + (result.stderr or "")
+    tail = "\n".join(output.splitlines()[-200:])
+    print(
+        redact(
+            f"{kind}:{identifier}: command {redacted_command(command)}; "
+            f"exit {result.returncode}\n{tail}",
+            connection,
+        ),
+        file=sys.stderr,
+    )
+
+
 def collect(
-    kind: str, identifier: str, *, mssql: str | None = None, store: Path | None = None
+    kind: str,
+    identifier: str,
+    *,
+    mssql: str | None = None,
+    store: Path | None = None,
+    smoke: bool = False,
 ) -> dict[str, Any]:
     env = worker_env()
     if mssql:
         env["BASELINE_MSSQL"] = mssql
     if store:
         env["BASELINE_RECORD_DIR"] = str(store)
-    r = subprocess.run(
-        [
-            str(BASELINE_PY),
-            str(Path(__file__).resolve()),
-            "--worker",
-            kind,
-            "--identifier",
-            identifier,
-        ],
-        env=env,
-        capture_output=True,
-        text=True,
-    )
+    command = [
+        str(BASELINE_PY),
+        str(Path(__file__).resolve()),
+        "--worker",
+        kind,
+        "--identifier",
+        identifier,
+    ]
+    if smoke:
+        command.append("--smoke")
+    try:
+        r = subprocess.run(command, env=env, capture_output=True, text=True)
+    except OSError as exc:
+        worker_failure(
+            kind, identifier, command, subprocess.CompletedProcess(command, 2, "", str(exc)), mssql
+        )
+        raise RecordingError(
+            kind + ":" + identifier + ": baseline worker could not start"
+        ) from None
     if r.returncode:
+        worker_failure(kind, identifier, command, r, mssql)
         raise RecordingError(
             kind + ":" + identifier + ": baseline worker failed (exit " + str(r.returncode) + ")"
         )
@@ -138,6 +191,7 @@ def collect(
             raise ValueError("worker must return an object")
         return payload
     except ValueError:
+        worker_failure(kind, identifier, command, r, mssql)
         raise RecordingError(kind + ":" + identifier + ": malformed worker output") from None
 
 
@@ -214,24 +268,21 @@ def generation_worker(identifier: str) -> dict[str, Any]:
     result = {}
     for seed in SEEDS:
         env = worker_env()
-        r = subprocess.run(
-            [
-                str(BASELINE_PY),
-                str(HERE / "domain_1to1" / "generate.py"),
-                "--impl",
-                "shape",
-                "--domain",
-                domain,
-                "--scale",
-                scale,
-                "--seed",
-                str(seed),
-            ],
-            env=env,
-            capture_output=True,
-            text=True,
-        )
+        command = [
+            str(BASELINE_PY),
+            str(HERE / "domain_1to1" / "generate.py"),
+            "--impl",
+            "shape",
+            "--domain",
+            domain,
+            "--scale",
+            scale,
+            "--seed",
+            str(seed),
+        ]
+        r = subprocess.run(command, env=env, capture_output=True, text=True)
         if r.returncode:
+            worker_failure("generate", identifier + ":seed" + str(seed), command, r)
             raise RecordingError("generation worker failed")
         result[str(seed)] = v.run_digests(v.generate.out_dir("baseline", domain, scale, seed))
     return {
@@ -358,7 +409,7 @@ def cli_worker(identifier: str) -> dict[str, Any]:
     return cast(dict[str, Any], v.capture_baseline_scenario(*scenario))
 
 
-def timings_worker() -> dict[str, Any]:
+def timings_worker(smoke: bool = False) -> dict[str, Any]:
     # paths is already imported by this worker: changing only os.environ is insufficient.
     import paths
 
@@ -372,7 +423,20 @@ def timings_worker() -> dict[str, Any]:
         import run
 
         dest = BENCH_OUT_DIR / "baseline_timings.json"
-        rc = run.main(["--full", "--baseline-only", "--out", str(dest)])
+        import contextlib
+
+        with contextlib.ExitStack() as stack:
+            if smoke:
+                for name, value in (
+                    (
+                        "QUICK_PROFILE_DATASETS",
+                        ["edge/e3.csv", "edge/x_pq_list.parquet", "edge/x_pq_nested.parquet"],
+                    ),
+                    ("QUICK_DOMAINS", [("retail", ["small"])]),
+                    ("QUICK_STREAM_SCALES", ["small"]),
+                ):
+                    stack.enter_context(patch.object(run, name, value))
+            rc = run.main(["--quick" if smoke else "--full", "--baseline-only", "--out", str(dest)])
         if rc:
             raise RecordingError("release timings failed verification; no timing snapshot")
         return cast(dict[str, Any], json.loads(dest.read_text()))
@@ -385,16 +449,17 @@ def timings_worker() -> dict[str, Any]:
                 os.environ[key] = previous
 
 
-def worker(kind: str, identifier: str, domain: str | None) -> int:
+def worker(kind: str, identifier: str, domain: str | None, smoke: bool = False) -> int:
+    import io
+
+    captured = io.StringIO()
     try:
         import shape
 
         if shape.__version__ != BASELINE_VERSION:
             raise RecordingError("wrong release version")
         import contextlib
-        import io
 
-        captured = io.StringIO()
         with contextlib.redirect_stdout(captured):
             if kind == "pools":
                 result = pools_worker(domain or identifier)
@@ -411,12 +476,31 @@ def worker(kind: str, identifier: str, domain: str | None) -> int:
             elif kind == "plan":
                 result = plan_worker()
             else:
-                result = timings_worker()
+                result = timings_worker(smoke) if smoke else timings_worker()
         print(json.dumps(result, sort_keys=True, default=str))
         return 0
     except Exception:
-        print(kind + ":" + identifier + ": baseline worker unavailable", file=sys.stderr)
+        print(
+            redact(
+                kind
+                + ":"
+                + identifier
+                + ": baseline worker unavailable\n"
+                + "\n".join(
+                    (captured.getvalue() + "\n" + traceback.format_exc()).splitlines()[-200:]
+                )
+            ),
+            file=sys.stderr,
+        )
         return 2
+
+
+def prepare_smoke_profile() -> None:
+    command = [str(BASELINE_PY), str(HERE / "profile_1to1" / "datasets.py"), "EDGE", "EDGE2"]
+    result = subprocess.run(command, env=worker_env(), capture_output=True, text=True)
+    if result.returncode:
+        worker_failure("profile", "edge/e3.csv inputs", command, result)
+        raise RecordingError("profile:edge/e3.csv: input preparation failed")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -428,6 +512,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", type=Path, default=RECORDED)
     ap.add_argument("--replace", action="store_true")
     ap.add_argument(
+        "--smoke",
+        action="store_true",
+        help="pre-check selected workers on small inputs without publishing",
+    )
+    ap.add_argument(
         "--worker",
         choices=("profile", "generate", "stream", "db", "verify_cli", "plan", "timings", "pools"),
     )
@@ -435,7 +524,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--domain")
     a = ap.parse_args(argv)
     if a.worker:
-        return worker(a.worker, a.identifier, a.domain)
+        return worker(a.worker, a.identifier, a.domain, a.smoke)
     stage = None
     try:
         version, commit = check_release()
@@ -448,7 +537,7 @@ def main(argv: list[str] | None = None) -> int:
         existing = a.out.exists() and any(
             p.name not in ("check.py", "__pycache__") for p in a.out.iterdir()
         )
-        if existing and not a.replace:
+        if existing and not a.replace and not a.smoke:
             raise RecordingError("existing recording store; use --replace")
         selected = []
         if a.all or a.profile:
@@ -469,6 +558,25 @@ def main(argv: list[str] | None = None) -> int:
             selected += [("plan", "composites")]
         if not selected and not a.timings:
             raise RecordingError("select --all or a recording family")
+        if a.smoke:
+            selected_kinds = {kind for kind, _ in selected}
+            selected = [
+                (kind, identifier)
+                for kind, identifier in (
+                    ("profile", "edge/e3.csv"),
+                    ("profile", "edge/x_pq_list.parquet"),
+                    ("profile", "edge/x_pq_nested.parquet"),
+                    ("generate", "retail:small"),
+                    ("stream", "retail:order:small"),
+                    ("db", "name_only"),
+                    ("db", "name_only:mssql"),
+                    ("verify_cli", cli_cases()[0]),
+                    ("plan", "composites"),
+                )
+                if kind in selected_kinds and (not identifier.endswith(":mssql") or a.mssql)
+            ]
+            if any(kind == "profile" for kind, _ in selected):
+                prepare_smoke_profile()
         now = dt.datetime.now(dt.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
         a.out.parent.mkdir(parents=True, exist_ok=True)
         stage = Path(tempfile.mkdtemp(prefix="shape-baseline-record-", dir=a.out.parent))
@@ -532,15 +640,24 @@ def main(argv: list[str] | None = None) -> int:
 
         for kind, identifier in selected:
             save(kind, identifier, collect(kind, identifier, mssql=a.mssql))
+        if a.smoke and (a.all or a.generate):
+            collect("pools", "retail")
         if a.all or a.timings:
             # Authenticate staged inputs before timing; publish the final manifest last.
             (stage / "MANIFEST.json").write_text(json.dumps(meta, sort_keys=True, indent=2) + "\n")
-            payload = collect("timings", version, store=stage)
+            payload = (
+                collect("timings", version, store=stage, smoke=True)
+                if a.smoke
+                else collect("timings", version, store=stage)
+            )
             save("timings", version, {"results": payload})
         (stage / "MANIFEST.json").write_text(json.dumps(meta, sort_keys=True, indent=2) + "\n")
         problems = check_all(stage)
         if problems:
             raise RecordingError("; ".join(problems))
+        if a.smoke:
+            print("baseline smoke passed; no recording published")
+            return 0
         # Rename a fully checked sibling store into place; preserve the checker code.
         if (a.out / "check.py").is_file():
             shutil.copy2(a.out / "check.py", stage / "check.py")

@@ -161,3 +161,42 @@ def test_negative_control_command_catches_all_seven(monkeypatch, tmp_path, capsy
     }
     monkeypatch.setattr(v, "compare_runs", lambda *a: failed_report)
     assert v.main(args) == 1
+
+
+@pytest.mark.parametrize(
+    "rows, settings, expected",
+    [
+        ([{"value": "a"}, {"value": "b"}], {}, {"a", "b"}),
+        ([{"name": "a", "value": "wrong"}], {}, {"a"}),
+        ([{"name": "wrong", "value": "a"}], {"field": "value"}, {"a"}),
+        ([{"name": "a", "value": "wrong"}], {"field": "missing"}, {"a"}),
+        ([{"": "wrong", "name": "a"}], {"field": ""}, {"a"}),
+    ],
+)
+def test_reference_pool_uses_baseline_provider_field_selection(rows, settings, expected):
+    v = verifier()
+    pools = v.Pools.__new__(v.Pools)
+    pools._datasets = {(None, "frozen"): rows}
+    gen = {"strategy": "reference_data", "dataset": "frozen", **settings}
+    assert pools.pool_for(gen) == expected
+    candidate = pd.Series(list(expected) * 1000)
+    # Every valid frozen value is included; an unrelated value remains invalid.
+    B = {"null": 0.0, "tvd": 0.0, "dratio_dev": 0.0}
+    positive = v.compare_column(candidate, candidate, B, pools.pool_for(gen), None)
+    negative = v.compare_column(
+        candidate,
+        pd.Series(["not-a-baseline-value"] * len(candidate)),
+        B,
+        pools.pool_for(gen),
+        None,
+    )
+    assert positive["checks"]["vocab"] is True
+    assert negative["checks"]["vocab"] is False
+
+
+def test_reference_pool_refuses_records_without_a_baseline_value_field():
+    v = verifier()
+    pools = v.Pools.__new__(v.Pools)
+    pools._datasets = {(None, "frozen"): [{"other": "not-a-provider-value"}]}
+    with pytest.raises(v.RecordingError, match="frozen: no baseline value field"):
+        pools.pool_for({"strategy": "reference_data", "dataset": "frozen"})

@@ -57,8 +57,11 @@ when finished. Never put a real connection string in a job file or report.
 Prepare the environments above, then run:
 
 ```bash
-source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/profile_1to1/datasets.py
 source scripts/env.sh && docker compose -f ci/emulators/docker-compose.yml up -d --wait mssql
+source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/record_baseline.py \
+  --all --smoke --mssql "$SHAPE_TEST_MSSQL;Database=tempdb" \
+  --out benchmarks/vs_refengine/recorded
+source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/profile_1to1/datasets.py
 source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/record_baseline.py \
   --all --mssql "$SHAPE_TEST_MSSQL;Database=tempdb" \
   --out benchmarks/vs_refengine/recorded
@@ -72,7 +75,24 @@ Each family is selectable with `--profile`, `--generate`, `--stream`, `--db`, `-
 of the same release and `--replace`. An existing store is never overwritten without
 `--replace`. A private staging manifest authenticates the records before any timing;
 the completed manifest is written last and the checked store is published by directory
-rename. A worker failure leaves the previous store intact.
+rename. A worker failure leaves the previous store intact. Failures name the family/workload,
+show the worker command and exit code, and retain the last 200 lines of output with
+connection credentials redacted.
+
+Run `--all --smoke` first: it starts every worker family using the smallest frozen profile
+and both nested-Arrow refusal cases,
+retail generation and stream inputs, one fake and one real SQL Server case, one verify-CLI
+scenario, the composite planner and the release reference pools. Its timing worker keeps
+kernel/PyArrow parity and equivalence gates, then times the small profile/generation/stream
+selection. Smoke uses a temporary authenticated store, deletes it afterwards and never
+publishes or replaces recordings. It has the same SQL Server prerequisites as `--all`.
+`--smoke` is a pre-check, not acceptance of the full recording or timing plan.
+
+T-22 defines a recorded refusal as equivalent only when its exception category matches.
+The profiling timing worker authenticates that same recording before the clock starts and
+times the call through the expected refusal. Unexpected success, another exception category
+or an unrecorded error fails. Both refusal workloads remain in the full timing plan; the
+worker's existing column-count field is zero for a refusal. No result/store format changes.
 
 Alternatively dispatch Nightly with `confirm: record-0.9.1`. The `record-baseline` job
 prepares the server and uploads `recorded-baseline`; it never commits. The lead downloads,

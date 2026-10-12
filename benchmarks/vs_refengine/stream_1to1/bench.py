@@ -61,6 +61,12 @@ def run_once(tool: str, scale: str, max_events: int | None) -> dict[str, Any]:
         env.pop("PYTHONHOME", None)
     r = subprocess.run(cmd, capture_output=True, text=True, env=env)
     if r.returncode != 0:
+        tail = "\n".join((r.stdout + "\n" + r.stderr).splitlines()[-200:])
+        print(
+            f"stream:{sc.DOMAIN}:{sc.TABLE}:{scale}: command {' '.join(cmd)}; "
+            f"exit {r.returncode}\n{tail}",
+            file=sys.stderr,
+        )
         raise RuntimeError(f"stream process failed (exit {r.returncode})")
     line = next(ln for ln in reversed(r.stdout.splitlines()) if ln.startswith("STREAM_JSON "))
     rec = json.loads(line[len("STREAM_JSON ") :])
@@ -96,6 +102,12 @@ def run_cli(tool: str, scale: str, max_events: int | None) -> float:
     r = subprocess.run(cmd, capture_output=True, text=True, env=env)
     dt = time.perf_counter() - t0
     if r.returncode != 0:
+        tail = "\n".join((r.stdout + "\n" + r.stderr).splitlines()[-200:])
+        print(
+            f"stream:{sc.DOMAIN}:{sc.TABLE}:{scale}: command {' '.join(cmd)}; "
+            f"exit {r.returncode}\n{tail}",
+            file=sys.stderr,
+        )
         raise RuntimeError(f"stream process failed (exit {r.returncode})")
     return dt
 
