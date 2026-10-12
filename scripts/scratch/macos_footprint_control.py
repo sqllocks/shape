@@ -19,7 +19,7 @@ ORDERS = {
     "24-24": (24_000_000, 24_000_000),
 }
 ALLOCATOR_DIAGNOSTICS = """def allocator_stats(pool):
-    import tempfile
+    import os, tempfile
     with tempfile.TemporaryFile() as stream:
         saved = os.dup(2)
         try:

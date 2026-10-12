@@ -21,9 +21,6 @@ jobs:
       - run: pip install -e '.[dev,streaming,advanced,docs]' -e plugins/shape-domains -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric -e plugins/shape-kafka
       - name: Live-heap matrix (15 pairs) and both growth controls
         run: python scripts/scratch/macos_footprint_control.py --matrix --output "$RUNNER_TEMP/macos-program-allocation-proof"
-      - name: Earlier retained-malloc metric (e049be9) against both controls
-        if: always()
-        run: python scripts/scratch/macos_footprint_control.py --control-only --source-ref e049be9 --output "$RUNNER_TEMP/macos-legacy-controls" || true
       - name: Verify checkout restoration
         if: always()
         run: |
@@ -33,6 +30,4 @@ jobs:
         if: always()
         with:
           name: macos-program-allocation-proof
-          path: |
-            ${{ runner.temp }}/macos-program-allocation-proof/
-            ${{ runner.temp }}/macos-legacy-controls/
+          path: ${{ runner.temp }}/macos-program-allocation-proof/
