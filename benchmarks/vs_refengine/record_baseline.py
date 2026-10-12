@@ -137,7 +137,14 @@ def worker_failure(
     kind: str, identifier: str, command: list[str], result: Any, connection: str | None = None
 ) -> None:
     output = (result.stdout or "") + "\n" + (result.stderr or "")
-    tail = "\n".join(output.splitlines()[-200:])
+    lines = output.splitlines()
+    tail = "\n".join(lines[-200:])
+    # A late-running step can push the first failing command out of the tail: keep those lines.
+    marks = [
+        x for x in lines[:-200] if re.search(r"command failed|FAIL|Error|exit [1-9]|mismatch", x)
+    ]
+    if marks:
+        tail = "earlier failure lines:\n" + "\n".join(marks[:60]) + "\n--- last 200 lines ---\n" + tail
     print(
         redact(
             f"{kind}:{identifier}: command {redacted_command(command)}; "
