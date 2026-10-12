@@ -40,8 +40,19 @@ shows the current writer options.
 
 Shape detects deletion vectors and column mapping and selects the optional DuckDB reader.
 You need the delta-fallback dependencies and its Delta extension. The extension may download
-on first use; that is a network call. <!-- owner: Delta maintainer — execute an extension-install and fallback transcript before publishing an installation command here. -->
+on first use; that is a network call.
 For version or as-of reads, confirm that the historical files remain available.
+
+### Local fallback receipt
+
+A [fresh local installation and fallback receipt](https://github.com/sqllocks/shape/blob/main/docs/plans/evidence/owner-notes/delta-extension-fallback.md) on 2026-10-12 UTC records `INSTALL delta` and `LOAD delta`, then the real commands:
+
+```bash
+shape profile tests/fixtures/delta_fallback/dv -o dv.shape
+shape cat dv.shape
+```
+
+With Shape 0.9.1, the reader reported `DuckDB delta_scan` for `deletionVectors`; the artifact reported `row_count: 90`. Installation, profile and cat each exited 0. The receipt retains the unsigned-origin warning. This uses a committed local fixture and published dependency software, without a live data account.
 
 ## Safe capture is refused
 

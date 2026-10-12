@@ -22,7 +22,16 @@ CLI; the code enforces a minimum of 0.9.0.  Git is needed for comparisons.
 
 Evidence: `editors/vscode/package.json`, `editors/vscode/src/extension.ts`, the bundled schemas
 and snippets. The repository workflow builds a `.vsix`; this page makes no marketplace claim.
-<!-- owner: editor maintainer — run a VS Code install transcript before publishing an install command. -->
+## Local installation receipt
+
+The [installed-editor receipt](https://github.com/sqllocks/shape/blob/main/docs/plans/evidence/owner-notes/vscode-install.md) records a clean local Linux installation on 2026-10-12 UTC: VS Code 1.141.0, Shape extension 0.1.0 and Shape CLI 0.9.1. After building the repository's VSIX, the actual install/list commands used empty temporary profile and extension directories:
+
+```bash
+code --install-extension editors/vscode/shape.vsix
+code --list-extensions --show-versions
+```
+
+The installed list included `sqllocks.shape@0.1.0`. In the installed extension, a real `shape.yml` opened as YAML and a two-row `.shape` artifact opened as read-only text matching the real `shape cat` output. All installation and editor checks exited 0. The receipt used published software and a local virtual display, without a VM or signed-in account.
 
 ## Related
 

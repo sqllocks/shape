@@ -366,7 +366,7 @@ shape doctor --broker eventhubs://NAMESPACE/HUB [--auth ...]
 shape doctor --delta-table PATH
 ```
 
-<!-- owner: Kafka maintainer — supply the transcript for docs/CLI.md example 5. -->
+Receipts: the [Owner-run Fabric, Kafka and Event Hubs checks](https://github.com/sqllocks/shape/blob/main/docs/plans/evidence/owner-notes/doctor-additional-environments.md) and the [replayed local Delta check](https://github.com/sqllocks/shape/blob/main/docs/plans/evidence/owner-notes/local-delta-doctor.md) cover all four command shapes above. The service checks ran on Windows on 2026-10-11; the local Delta check ran on Linux on 2026-10-12 UTC. Each returned exit 0; the Delta check reports `PASS delta.limits` on a readable table.
 
 
 | Option | Checks |
