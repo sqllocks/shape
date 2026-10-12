@@ -10,6 +10,7 @@ env:
 jobs:
   control:
     runs-on: macos-latest
+    timeout-minutes: 120
     env: {PYTHONPATH: ci}
     steps:
       - uses: actions/checkout@v4
@@ -17,8 +18,8 @@ jobs:
         with: {python-version: '3.11', allow-prereleases: true}
       - run: python -m pip install -U pip
       - run: pip install -e '.[dev,streaming,advanced,docs]' -e plugins/shape-domains -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric -e plugins/shape-kafka
-      - name: Real measurement and temporary proportional-memory control
-        run: python scripts/scratch/macos_footprint_control.py --output "$RUNNER_TEMP/macos-footprint-control"
+      - name: Order and repeat matrix, then same-process heavy-suite preconditioning
+        run: python scripts/scratch/macos_footprint_control.py --matrix --output "$RUNNER_TEMP/macos-footprint-control"
       - name: Verify checkout restoration
         if: always()
         run: |
