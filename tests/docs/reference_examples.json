@@ -677,12 +677,12 @@
   {
     "page": "docs/RELEASE_CHECKLIST.md",
     "index": 2,
-    "kind": "cloud:GitHub"
+    "kind": "service:owner-receipt"
   },
   {
     "page": "docs/RELEASE_CHECKLIST.md",
     "index": 3,
-    "kind": "cloud:GitHub"
+    "kind": "service:owner-receipt"
   },
   {
     "page": "docs/REPORT_CARD.md",

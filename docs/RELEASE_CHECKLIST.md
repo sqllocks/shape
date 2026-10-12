@@ -146,19 +146,27 @@ TestPyPI round needs a new version.
 
 ## 5. Tag and publish to PyPI (owner)
 
-1. Tag the release commit on `main` (the same commit the TestPyPI run built) and push the tag:
+1. Tag the release commit on `main` (the same commit the TestPyPI run built) with an annotated
+   tag, `git tag -a v<version> -m "Shape <version>" <release-commit>`, and push it with
+   `git push origin v<version>`. Then check what the remote holds. This is the check for Shape
+   0.9.1: it lists the tag object, and the commit it points to on the second line.
 
 <!-- example: 2 -->
 
 **Needs a GitHub account. Not run in CI.**
 
 ```bash
-   git tag -a v1.0.0 -m "Shape 1.0.0" <release-commit>
-   git push origin v1.0.0
+git ls-remote --tags origin v0.9.1 'v0.9.1^{}'
 ```
 
-<!-- owner: GitHub maintainer — supply the transcript for docs/RELEASE_CHECKLIST.md example 2. -->
+Output, exit 0:
 
+```text
+55c34315d24dd5f06fecd8902fa22391118a3bf9	refs/tags/v0.9.1
+d09731e59b630fac11b7127c812c47ccca8ab64f	refs/tags/v0.9.1^{}
+```
+
+Evidence: [Shape 0.9.1 tag and Publish run](evidence/release-0.9.1-verify.md).
 
    The tag must be `v` plus the version: `check_versions.py --tag` fails the build otherwise.
 2. The tag starts **Publish** (to PyPI) and **Container**. Approve the `pypi` deployment.
@@ -170,19 +178,26 @@ TestPyPI round needs a new version.
    the seven platform wheels, the `py3-none-any` wheel and the sdist; each plugin project shows
    its wheel and sdist at 1.0.0. `index-hashes` already compared every file's SHA-256.
 2. **Provenance:** each file on PyPI shows its provenance (PEP 740) in the file's details. For a
-   downloaded archive:
+   downloaded archive, check its digest against `SHA256SUMS` from the `release-sbom` artifact,
+   then run `gh attestation verify <archive> --repo sqllocks/shape`. `sha256sum -c SHA256SUMS`
+   checks every archive in the set; the example below checks one, Shape 0.9.1's `py3-none-any`
+   wheel downloaded from PyPI, against the `SHA256SUMS` of Publish run 38168312038:
 
 <!-- example: 3 -->
 
 **Needs a GitHub account. Not run in CI.**
 
 ```bash
-   sha256sum -c SHA256SUMS                      # from the release-sbom artifact
-   gh attestation verify sqllocks_shape-1.0.0-py3-none-any.whl --repo sqllocks/shape
+grep ' sqllocks_shape-0.9.1-py3-none-any.whl$' SHA256SUMS | sha256sum -c -
 ```
 
-<!-- owner: GitHub maintainer — supply the transcript for docs/RELEASE_CHECKLIST.md example 3. -->
+Output, exit 0:
 
+```text
+sqllocks_shape-0.9.1-py3-none-any.whl: OK
+```
+
+Evidence: [Shape 0.9.1 digest check](evidence/release-0.9.1-verify.md).
 
    The attestation names `.github/workflows/release.yml` as the signer workflow.
 3. **A clean install:** in a fresh Python 3.11 environment, `pip install "sqllocks-shape[all]==1.0.0"`,
