@@ -399,7 +399,7 @@ def plan_worker() -> dict[str, Any]:
         }
         digest = sha256(path)
         plans[path.stem] = {"schema_sha256": digest, "planned": counts}
-        inputs[str(path.relative_to(HERE))] = digest
+        inputs[path.relative_to(HERE).as_posix()] = digest
     return {"composites": plans, "inputs": inputs}
 
 
@@ -583,7 +583,7 @@ def main(argv: list[str] | None = None) -> int:
         files: dict[str, Any] = {}
         ids: list[str] = []
         fixtures = {
-            str(p.relative_to(HERE)): {"sha256": sha256(p)}
+            p.relative_to(HERE).as_posix(): {"sha256": sha256(p)}
             for p in (HERE / "fixtures").rglob("*")
             if p.is_file()
         }

@@ -175,7 +175,7 @@ def check_all(root: Path = RECORDED, *, fixture_root: Path = HERE) -> list[str]:
             errors.append(f"recorded/{name}: digest mismatch")
     # The manifest cannot digest itself. The checked-in checker is code, not a recording.
     actual = {
-        str(p.relative_to(root))
+        p.relative_to(root).as_posix()
         for p in root.rglob("*")
         if p.is_file()
         and "__pycache__" not in p.parts
