@@ -22,6 +22,16 @@ CLI; the code enforces a minimum of 0.9.0.  Git is needed for comparisons.
 
 Evidence: `editors/vscode/package.json`, `editors/vscode/src/extension.ts`, the bundled schemas
 and snippets. The repository workflow builds a `.vsix`; this page makes no marketplace claim.
+The workflow builds the VSIX from this checkout, installs it into an isolated VS Code instance, then runs **Shape: Compare with Git HEAD** in that installed extension against a real `.shape` artifact and the real Shape CLI. The runner supplies the paths below. The command driver asserts that a diff editor opens and that the two text forms differ.
+
+<!-- owner-example: vscode-install -->
+
+```bash {.runnable-owner}
+code --install-extension "$SHAPE_DOCS_VSIX" --force \
+  --user-data-dir "$SHAPE_DOCS_VSCODE_USER" --extensions-dir "$SHAPE_DOCS_VSCODE_EXTENSIONS"
+xvfb-run -a node "$SHAPE_DOCS_REPO/scripts/docs_vscode_command.cjs"
+```
+
 <!-- owner: editor maintainer — run a VS Code install transcript before publishing an install command. -->
 
 ## Related

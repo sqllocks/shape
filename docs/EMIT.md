@@ -267,15 +267,17 @@ unchanged. Only `kafka://` takes a registry format: any other target refuses it 
 
 <!-- example: 2 -->
 
-**Needs a Kafka account. Not run in CI.**
+Install the Kafka plugin's `[avro]` extra first. This example uses the workflow's disposable broker and a Schema Registry with HTTP Basic authentication. The runner verifies that an unauthenticated request returns 401 before emitting. The loopback HTTP registry is for the isolated container example; use HTTPS outside it. `REGISTRY_PASSWORD` is supplied privately by the runner.
 
-```
-pip install 'sqllocks-shape-kafka[avro]'        # or [protobuf]; json-schema needs no extra
-shape emit retail --table order_line --sink kafka://broker:9092/orders \
-    --event-format avro \
-    --sink-config kafka.schema_registry_url=https://registry.example:8081 \
+<!-- owner-example: kafka-avro -->
+
+```bash {.runnable-owner}
+shape emit retail --table order_line --sink kafka://localhost:9092/avro-orders \
+    --max-events 20 --fresh --event-format avro \
+    --sink-config kafka.schema_registry_url=http://localhost:8081 \
     --sink-config kafka.schema_registry_username=svc \
     --sink-config kafka.schema_registry_password=env://REGISTRY_PASSWORD
+python "$SHAPE_DOCS_REPO/scripts/docs_owner_assertions.py"
 ```
 
 <!-- owner: Kafka maintainer — supply the transcript for docs/EMIT.md example 2. -->
@@ -360,11 +362,15 @@ its drift in the stream, day by day:
 
 <!-- example: 3 -->
 
-**Needs a Kafka account. Not run in CI.**
+The setup writes a three-day plan with an `order_line.quantity` distribution change on day two. Two-second days keep the real-time container example bounded; this demonstrates delivery, not a throughput measurement.
 
-```
+<!-- owner-example: kafka-drift -->
+
+```bash {.runnable-owner}
+python "$SHAPE_DOCS_REPO/scripts/docs_owner_setup.py" drift
 shape emit retail --drift-plan plan.json --rows customer=500 --rows order=2000 \
-    --sink kafka://broker:9092/orders --realtime --day-seconds 60 --answer-key key.jsonl
+    --sink kafka://localhost:9092/drift-orders --realtime --day-seconds 2 \
+    --answer-key key.jsonl --fresh
 ```
 
 <!-- owner: Kafka maintainer — supply the transcript for docs/EMIT.md example 3. -->
@@ -534,6 +540,14 @@ profiler's bounded profile of each table, JSON). `--json` adds a `live` object t
 ### Overhead
 
 The tee profiles events on the feeding thread. The no-live-profile option disables that work.
+The following workload records three paired 5,000-event runs, with and without the live tee, against local files. It verifies identical events before recording timings. Raw timings apply only to the labelled runner and workload; they are not a throughput promise.
+
+<!-- owner-example: emit-overhead -->
+
+```bash {.runnable-owner}
+python "$SHAPE_DOCS_REPO/scripts/docs_owner_measurements.py" emit
+```
+
 <!-- owner: performance maintainer — publish only committed, machine-labelled overhead measurements. -->
 
 ## Limits

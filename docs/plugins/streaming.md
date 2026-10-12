@@ -43,16 +43,14 @@ Use [the tested starters](../TUTORIAL.md) for local commands and complete output
 
 <!-- example: 1 -->
 
-**Needs a Kafka account. Not run in CI.**
+This bounded example first fills a disposable Kafka topic, then profiles everything currently in it. It does not use `--follow`. Event Hubs needs its own namespace and credentials; its window options work as described below.
 
-```bash
-# everything the topic holds now, as one profile
-shape stream-profile kafka://broker:9092/orders -o orders.json
+<!-- owner-example: kafka-profile -->
 
-# 5-minute tumbling windows, written as they close, resumable
-shape stream-profile eventhubs://contoso.servicebus.windows.net/telemetry \
-    --window tumbling --size 5m --allowed-lateness 30s \
-    --windows telemetry.jsonl --checkpoint telemetry.ckpt --follow
+```bash {.runnable-owner}
+shape emit retail --table order --sink kafka://localhost:9092/profile-orders \
+    --max-events 100 --fresh
+shape stream-profile kafka://localhost:9092/profile-orders -o orders.json
 ```
 
 <!-- owner: Kafka maintainer — supply the transcript for docs/plugins/streaming.md example 1. -->

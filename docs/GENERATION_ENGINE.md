@@ -417,8 +417,8 @@ own `array`, `to_numpy` and `scalar` can).
 
 `import shape` sets Arrow's allocator for the whole process, in one place (`shape._process.configure`),
 so the command line and the Python API behave alike. Arrow's default pool (mimalloc) reserves a large
-arena with `MADV_HUGEPAGE` at its first allocation, which on a virtual machine with transparent huge
-pages in `madvise` mode stalls 10 to 13 ms of system time in about half of all processes, and it maps
+arena with `MADV_HUGEPAGE` at its first allocation, which can add first-allocation overhead
+on a virtual machine with transparent huge pages in `madvise` mode, and it maps
 fresh memory for each large array and returns it soon after, which makes the page faults of
 short-lived arrays a large part of a run. Two cases:
 
@@ -431,6 +431,14 @@ short-lived arrays a large part of a run. Two cases:
   (`shape.generation.runtime.generation_memory`).
 
 `SHAPE_MEMORY_POOL=default` turns all of it off. Values are unaffected by pool selection; arrays remain valid with their original pool.
+This product workload compares the default and system allocator configurations in fresh processes, with identical generated-table digests checked before recording three pairs of raw timings. Results describe this runner and workload only.
+
+<!-- owner-example: allocator-measurement -->
+
+```bash {.runnable-owner}
+python "$SHAPE_DOCS_REPO/scripts/docs_owner_measurements.py" allocator
+```
+
 <!-- owner: performance maintainer — commit a product measurement with the machine and workload before publishing allocator timing numbers. -->
 
 `shape.generation.keypos` finds the row of a key (`first_positions`, `first_rows`): for the primary key
