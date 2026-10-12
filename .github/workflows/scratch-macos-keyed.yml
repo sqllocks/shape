@@ -3,7 +3,8 @@ on:
   push:
     branches: [scratch/macos-rss-control]
     paths:
-      - scripts/scratch/macos_keyed_probe.py
+      - scripts/scratch/macos_keyed_controls.py
+      - tests/streaming/test_keyed_state.py
       - .github/workflows/scratch-macos-keyed.yml
 permissions: {contents: read}
 jobs:
@@ -18,10 +19,10 @@ jobs:
         with: {python-version: '3.11', allow-prereleases: true}
       - run: python -m pip install -U pip
       - run: pip install -e '.[dev,streaming,advanced,docs]'
-      - name: Keyed-state workload, plain and under the live-heap interposer
-        run: python scripts/scratch/macos_keyed_probe.py origin/main "$RUNNER_TEMP/keyed" 3 4
+      - name: Keyed-state gate on live heap, with both growth controls
+        run: python scripts/scratch/macos_keyed_controls.py "$RUNNER_TEMP/keyed-controls"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: macos-keyed-probe
-          path: ${{ runner.temp }}/keyed/
+          path: ${{ runner.temp }}/keyed-controls/
