@@ -215,11 +215,14 @@ class PackRunner:
         _record_provenance(generated, table_files, seed, name, scale, manifest.spec_hash)
         manifest_path = contained(output_root, manifest.run_id, "_manifest.json")
         base_id, counter = manifest.run_id, 1
-        while manifest_path.exists():  # two runs in one second must not overwrite each other
-            counter += 1
-            manifest.run_id = f"{base_id}_x{counter}"
-            manifest_path = contained(output_root, manifest.run_id, "_manifest.json")
-        ManifestBuilder.to_file(manifest, manifest_path)
+        while True:  # two runs in one second must not overwrite each other
+            try:
+                ManifestBuilder.create_file(manifest, manifest_path)
+                break
+            except FileExistsError:
+                counter += 1
+                manifest.run_id = f"{base_id}_x{counter}"
+                manifest_path = contained(output_root, manifest.run_id, "_manifest.json")
         files.append(str(manifest_path))
         return RunResult(
             manifest=manifest,
