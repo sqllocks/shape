@@ -50,3 +50,7 @@ Supplied Fabric defect block (#4–#9; the Owner did not supply a per-defect num
 ```
 
 These findings do not resolve any owner note and do not establish supported Fabric Warehouse or Lakehouse write behaviour.
+
+## Follow-up export and doctor receipts
+
+The later Owner-supplied receipts complete the [PostgreSQL export/profile](postgresql-export-profile.md) and [MySQL export/profile](mysql-export-profile.md) requests, together with their earlier writes. Both database owner notes are now resolved. The [doctor receipts](doctor-additional-environments.md) resolve the troubleshooting note's request for additional environments; CLI example 5 remains open because the Delta target was missing and only WARN was recorded. The preceding inventory and exact-match table describe the earlier evidence-only commit, before these new receipts. Current count: **28 unresolved (B=22, C=3, D=3)**.
