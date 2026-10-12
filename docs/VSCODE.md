@@ -32,7 +32,7 @@ code --install-extension "$SHAPE_DOCS_VSIX" --force \
 xvfb-run -a node "$SHAPE_DOCS_REPO/scripts/docs_vscode_command.cjs"
 ```
 
-Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-vscode-install.json).
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-vscode-install.json).
 
 ## Related
 

@@ -288,7 +288,7 @@ python "$SHAPE_DOCS_REPO/scripts/docs_owner_assertions.py"
     Verified 20 Confluent Avro records using the authenticated registry schema
     ```
 
-Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-kafka-avro.json).
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-kafka-avro.json).
 
 
 | `--sink-config` key | meaning |
@@ -388,7 +388,7 @@ shape emit retail --drift-plan plan.json --rows customer=500 --rows order=2000 \
     shape emit: 54,750 events delivered, offset 54,750 of 54,750, complete, 2,127 events/s
     ```
 
-Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-kafka-drift.json).
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-kafka-drift.json).
 
 
 * **Day d is generated from `plan.schema_at(schema, d)` with seed + d**, exactly as `shape
@@ -563,7 +563,7 @@ The following workload records three paired 5,000-event runs, with and without t
 python "$SHAPE_DOCS_REPO/scripts/docs_owner_measurements.py" emit
 ```
 
-Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-emit-overhead.json).
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-emit-overhead.json).
 
 ## Limits
 

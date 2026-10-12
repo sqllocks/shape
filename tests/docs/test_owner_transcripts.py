@@ -208,3 +208,15 @@ def test_delta_owner_example_installs_extras_and_uses_supported_local_path():
     fixture = str(ROOT / "tests/fixtures/delta_fallback/dv")
     assert source.can_open(fixture)
     assert not source.can_open("delta://" + fixture)
+
+
+def test_evidence_link_is_public_and_relative(tmp_path):
+    from docs_owner_transcripts import capture
+
+    path = page(tmp_path, "printf 'real output\\n'")
+    manifest = [{"id": "demo", "page": "docs/demo.md", "note": "maintainer — capture demo."}]
+    assert capture(tmp_path, manifest, run_id="123", commit="a" * 40, runner="ubuntu-latest") == 0
+    link = next(line for line in path.read_text().splitlines() if line.startswith("Evidence:"))
+    assert "plans/" not in link and "https://" not in link
+    assert (tmp_path / "docs/evidence/transcripts").glob("docs-transcripts-123-*-demo.json")
+    assert list((tmp_path / "docs/evidence/transcripts").glob("docs-transcripts-123-*-demo.json"))

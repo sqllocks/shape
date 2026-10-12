@@ -156,7 +156,7 @@ shape stream retail -t order --to postgresql://shape@localhost:5432/shape \
     shape stream: 20 events delivered, offset 20 of 5,000, max-events, 52 events/s
     ```
 
-Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-postgres-sink.json).
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-postgres-sink.json).
 
 
 `--write-mode` is `create` (the default: never touches an existing table), `append`, `truncate`

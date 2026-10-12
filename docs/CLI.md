@@ -394,7 +394,7 @@ shape doctor --broker kafka://localhost:9092/orders
     Result: OK
     ```
 
-Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-kafka-doctor.json).
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-kafka-doctor.json).
 
 
 | Option | Checks |

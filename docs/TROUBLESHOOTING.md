@@ -68,7 +68,7 @@ shape profile "$SHAPE_DOCS_REPO/tests/fixtures/delta_fallback/dv" -o deletion-ve
     {"provenance": {"as_of": null, "fallback_reason": "dv: the Delta table uses reader feature(s) deletionVectors that deltalake cannot read; reading it with DuckDB delta_scan instead", "format": "delta", "reader": "duckdb", "reader_features": ["deletionVectors"], "timestamp": "2026-10-03T03:48:46.451000+00:00", "version": 2}, "shape_content_id": "138321eea84d2b15e1bcdc49b2f67c96b6bf78c93d75b5c59d205274aa58549a", "written": "deletion-vectors.json"}
     ```
 
-Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-delta-fallback.json).
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-delta-fallback.json).
 For version or as-of reads, confirm that the historical files remain available.
 
 ## Safe capture is refused

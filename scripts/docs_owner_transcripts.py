@@ -7,6 +7,7 @@ import json
 import os
 import platform
 import re
+import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -150,7 +151,13 @@ def capture(
                 + "\n    ```"
             )
         text = text[: match.start()] + new_block + text[match.end() :]
-        link = f"Evidence: [run {run_id}, {runner}, `{commit[:12]}`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/{receipt.relative_to(root).as_posix()})."
+        # Public pages may not link into docs/plans/, so the same receipt is published beside
+        # the other public evidence and linked relatively.
+        public = root / "docs/evidence/transcripts" / receipt.name
+        public.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(receipt, public)
+        target = Path(os.path.relpath(public, page.parent)).as_posix()
+        link = f"Evidence: [run {run_id}, {runner}, `{commit[:12]}`]({target})."
         note = f"<!-- owner: {item['note']} -->"
         if note in text:
             text = text.replace(note, link, 1)

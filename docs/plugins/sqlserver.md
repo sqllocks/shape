@@ -118,7 +118,7 @@ its start. The choice is deterministic: the same data gives the same rows on eve
 python "$SHAPE_DOCS_REPO/scripts/docs_owner_measurements.py" sqlserver
 ```
 
-Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-sql-sampling-measurement.json).
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](../evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-sql-sampling-measurement.json).
 - Other ways were rejected: `TABLESAMPLE` samples whole pages, so a table of few pages is
   sampled coarsely and the rows depend on page layout rather than on the data alone;
   `ORDER BY NEWID()` is not repeatable. There is no seed: the rows follow from the data alone.

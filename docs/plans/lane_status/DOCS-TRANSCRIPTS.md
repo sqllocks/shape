@@ -196,3 +196,10 @@ Real receipts: nine of eleven passed, now including delta-fallback. Two failed.
   field. The expected output is unchanged; only that timestamp is now variable, and the
   warning text stays exact (tested). A first attempt to wait the warning away was
   withdrawn because it would have changed the recorded real output.
+
+## Result: run 38273696299 (head 7e0aa725)
+
+All 11 examples passed on the real runner (receipts merged as bdd87a6). Public pages may
+not link into docs/plans/, so the capture now also publishes each receipt under
+docs/evidence/transcripts/ and the page links to it relatively. The 11 existing links were
+rewritten to those copies; the receipt contents are unchanged.
