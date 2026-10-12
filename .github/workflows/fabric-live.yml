@@ -12,6 +12,16 @@ on:
         required: false
         default: ''
         type: string
+      transcripts:
+        description: Run the documentation Fabric examples (docs-fabric-transcripts job) instead of the live tests
+        required: false
+        default: false
+        type: boolean
+      examples:
+        description: With transcripts - comma-separated example ids (default - all of tests/docs/fabric_examples.json)
+        required: false
+        default: ''
+        type: string
 permissions:
   contents: read
 concurrency:
@@ -20,6 +30,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   fabric-live:
+    if: ${{ !inputs.transcripts }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     environment: fabric-live
@@ -181,3 +192,222 @@ jobs:
           code="${pytest_exit:-missing}"
           echo "pytest exit code: $code"
           [ "$code" = "0" ]
+  docs-fabric-transcripts:
+    # Transcripts mode of this workflow (dispatch with transcripts=true): runs the documentation
+    # examples instead of the live tests, in the same concurrency group and environment.
+    if: ${{ inputs.transcripts && github.ref == 'refs/heads/docs/fabric-transcripts' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    environment: fabric-live
+    env:
+      SHAPE_DOCS_RUNNER: ubuntu-latest
+      EXAMPLES: ${{ inputs.examples }}
+      # The environment's variables and secrets, under the names fabric-live.yml uses.
+      FABRIC_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
+      FABRIC_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
+      FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
+      FABRIC_WORKSPACE_ID: ${{ vars.FABRIC_WORKSPACE_ID }}
+      FABRIC_LAKEHOUSE_ID: ${{ vars.FABRIC_LAKEHOUSE_ID }}
+      FABRIC_SQL_ENDPOINT: ${{ vars.FABRIC_SQL_ENDPOINT }}
+      FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH: ${{ vars.FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH }}
+      FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH: ${{ vars.FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH }}
+      FABRIC_WAREHOUSE: ${{ vars.FABRIC_WAREHOUSE }}
+      FABRIC_EVENTHOUSE_URI: ${{ vars.FABRIC_EVENTHOUSE_URI }}
+      FABRIC_KQL_DB: ${{ vars.FABRIC_KQL_DB }}
+      FABRIC_SQL_CONNECTION_STRING: ${{ secrets.FABRIC_SQL_CONNECTION_STRING }}
+      FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING: ${{ vars.FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING }}
+      FABRIC_SEMANTIC_MODEL: ${{ vars.FABRIC_SEMANTIC_MODEL }}
+      FABRIC_GIT_WORKSPACE_ID: ${{ vars.FABRIC_GIT_WORKSPACE_ID }}
+      FABRIC_GIT_REMOTE: ${{ vars.FABRIC_GIT_REMOTE }}
+      FABRIC_GIT_TOKEN: ${{ secrets.FABRIC_GIT_TOKEN }}
+      AZURE_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
+      SHAPE_TEST_SYNAPSE_URI: ${{ vars.SHAPE_TEST_SYNAPSE_URI }}
+      SHAPE_TEST_SYNAPSE_STAGING: ${{ vars.SHAPE_TEST_SYNAPSE_STAGING }}
+      SYNAPSE_SUBSCRIPTION_ID: ${{ vars.SYNAPSE_SUBSCRIPTION_ID }}
+      SYNAPSE_RESOURCE_GROUP: ${{ vars.SYNAPSE_RESOURCE_GROUP }}
+      SYNAPSE_WORKSPACE: ${{ vars.SYNAPSE_WORKSPACE }}
+      SYNAPSE_POOL: ${{ vars.SYNAPSE_POOL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          fetch-depth: 0
+      - name: Mask the secrets and the identifiers the pages show as placeholders
+        run: |
+          for v in FABRIC_CLIENT_SECRET FABRIC_SQL_CONNECTION_STRING FABRIC_GIT_TOKEN FABRIC_TENANT_ID \
+                   FABRIC_CLIENT_ID FABRIC_WORKSPACE_ID FABRIC_LAKEHOUSE_ID FABRIC_GIT_WORKSPACE_ID; do
+            [ -z "${!v}" ] || echo "::add-mask::${!v}"
+          done
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Microsoft ODBC Driver 18 for SQL Server and unixODBC
+        run: |
+          curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/ubuntu/$(lsb_release -rs)/prod $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
+      - name: Install Shape and the plugins from this checkout
+        run: >-
+          pip install -q -e '.[dev,azure]'
+          -e 'plugins/shape-fabric[sqlserver,eventhubs,entra,semantic-link]'
+          -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e plugins/shape-domains
+          -e plugins/shape-databases pyyaml
+      - name: Validate the capture harness
+        run: python -m pytest -q tests/docs/test_fabric_transcripts.py
+      - name: Sign in the Azure CLI as the service principal (the default --auth cli)
+        run: |
+          az login --service-principal --username "$FABRIC_CLIENT_ID" --password "$FABRIC_CLIENT_SECRET" \
+            --tenant "$FABRIC_TENANT_ID" --output none
+      - name: Derive the values the examples substitute (no secret is printed)
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          import sys
+          from urllib.parse import urlsplit
+
+          env = os.environ
+          out, notes = {}, []
+
+          def need(*names):
+              return all(env.get(n) for n in names)
+
+          # The classic Lakehouse: onelake://<workspace>/<lakehouse>/Tables
+          path = env.get("FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH", "")
+          m = re.fullmatch(r"onelake://([^/]+)/([^/]+)/Tables/?", path)
+          if m:
+              out["DOCS_WS"], out["DOCS_LH"] = m.group(1), m.group(2)
+          else:
+              notes.append("DOCS_WS/DOCS_LH not derived: FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH is not onelake://W/L/Tables")
+          if need("FABRIC_SQL_ENDPOINT", "FABRIC_WAREHOUSE"):
+              out["DOCS_WAREHOUSE_CONNECTION"] = (
+                  f"Data Source={env['FABRIC_SQL_ENDPOINT']};Initial Catalog={env['FABRIC_WAREHOUSE']}"
+              )
+          # The sample Warehouse: server and database for `shape profile-db`.
+          sample = env.get("FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING", "")
+          parts = dict(
+              (k.strip().lower(), v.strip())
+              for k, _, v in (p.partition("=") for p in sample.split(";") if "=" in p)
+          )
+          server = parts.get("data source") or parts.get("server")
+          database = parts.get("initial catalog") or parts.get("database")
+          if server and database:
+              out["DOCS_SAMPLE_SERVER"] = server.removeprefix("tcp:").split(",")[0]
+              out["DOCS_SAMPLE_DB"] = database
+          else:
+              notes.append("DOCS_SAMPLE_SERVER/DB not derived from FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING")
+          # Eventhouse query URI host.
+          uri = env.get("FABRIC_EVENTHOUSE_URI", "")
+          if uri:
+              out["DOCS_KQL_HOST"] = urlsplit(uri if "://" in uri else "https://" + uri).netloc
+          # A Fabric API token for the fabric_spark example (the page exports SHAPE_FABRIC_TOKEN).
+          if need("FABRIC_TENANT_ID", "FABRIC_CLIENT_ID", "FABRIC_CLIENT_SECRET"):
+              from azure.identity import ClientSecretCredential
+
+              cred = ClientSecretCredential(env["FABRIC_TENANT_ID"], env["FABRIC_CLIENT_ID"], env["FABRIC_CLIENT_SECRET"])
+              token = cred.get_token("https://api.fabric.microsoft.com/.default").token
+              print(f"::add-mask::{token}")
+              out["DOCS_FABRIC_API_TOKEN"] = token
+          # The first table of the semantic model (the page names a table of its own model).
+          if need("FABRIC_WORKSPACE_ID", "FABRIC_SEMANTIC_MODEL"):
+              try:
+                  from shape_fabric import semantic_source as ss
+
+                  out["DOCS_SEM_TABLE"] = ss.table_names(env["FABRIC_WORKSPACE_ID"], env["FABRIC_SEMANTIC_MODEL"])[0]
+              except Exception as exc:  # the example then fails naming the missing value
+                  notes.append(f"DOCS_SEM_TABLE not derived: {type(exc).__name__}")
+          for value in out.values():
+              print(f"::add-mask::{value}")
+          with open(env["GITHUB_ENV"], "a", encoding="utf-8") as f:
+              for key, value in out.items():
+                  assert "\n" not in value
+                  f.write(f"{key}={value}\n")
+          for key in out:
+              print(f"derived {key}")
+          for note in notes:
+              print(f"::warning::{note}")
+          sys.stdout.flush()
+          PY
+      - name: Resume the Synapse dedicated SQL pool
+        if: env.EXAMPLES == '' || contains(env.EXAMPLES, 'synapse-write')
+        timeout-minutes: 20
+        run: |
+          missing=""
+          for v in SYNAPSE_SUBSCRIPTION_ID SYNAPSE_RESOURCE_GROUP SYNAPSE_WORKSPACE SYNAPSE_POOL; do
+            [ -n "${!v}" ] || missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then
+            echo "::warning::cannot resume the Synapse pool, missing:$missing; synapse-write will record that"
+            exit 0
+          fi
+          az config set extension.use_dynamic_install=yes_without_prompt extension.dynamic_install_allow_preview=true >/dev/null
+          az account set --subscription "$SYNAPSE_SUBSCRIPTION_ID"
+          pool=(--name "$SYNAPSE_POOL" --workspace-name "$SYNAPSE_WORKSPACE" --resource-group "$SYNAPSE_RESOURCE_GROUP")
+          deadline=$((SECONDS + 15 * 60))
+          while true; do
+            status=$(az synapse sql pool show "${pool[@]}" --query status --output tsv)
+            echo "$(date -u +%H:%M:%S) pool status: $status"
+            case "$status" in
+              Online) break ;;
+              Paused) az synapse sql pool resume "${pool[@]}" ;;
+            esac
+            if [ "$SECONDS" -ge "$deadline" ]; then
+              echo "::error::the pool was not Online within 15 minutes (last status: $status)"
+              exit 1
+            fi
+            sleep 20
+          done
+      - name: Run the page commands and capture real receipts
+        timeout-minutes: 130
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          if python scripts/docs_fabric_transcripts.py --only "$EXAMPLES"; then
+            echo 'CAPTURE_EXIT=0' >> "$GITHUB_ENV"
+          else
+            echo 'CAPTURE_EXIT=1' >> "$GITHUB_ENV"
+          fi
+      - name: Upload successful and failed receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-fabric-transcripts-${{ github.run_id }}-${{ github.sha }}
+          path: docs/plans/evidence/owner-notes/docs-transcripts-${{ github.run_id }}-*
+          if-no-files-found: warn
+      - name: Pause the Synapse dedicated SQL pool (also after a failure or a cancel)
+        if: always() && (env.EXAMPLES == '' || contains(env.EXAMPLES, 'synapse-write'))
+        timeout-minutes: 20
+        run: |
+          if [ -z "$SYNAPSE_POOL" ] || [ -z "$SYNAPSE_WORKSPACE" ] || [ -z "$SYNAPSE_RESOURCE_GROUP" ] \
+             || [ -z "$SYNAPSE_SUBSCRIPTION_ID" ]; then
+            echo "Synapse pool variables are not set; nothing was resumed"
+            exit 0
+          fi
+          az login --service-principal --username "$FABRIC_CLIENT_ID" --password "$FABRIC_CLIENT_SECRET" \
+            --tenant "$FABRIC_TENANT_ID" --output none
+          az account set --subscription "$SYNAPSE_SUBSCRIPTION_ID"
+          pool=(--name "$SYNAPSE_POOL" --workspace-name "$SYNAPSE_WORKSPACE" --resource-group "$SYNAPSE_RESOURCE_GROUP")
+          status=$(az synapse sql pool show "${pool[@]}" --query status --output tsv)
+          echo "pool status: $status"
+          [ "$status" != "Online" ] || az synapse sql pool pause "${pool[@]}"
+      - name: Commit receipts and only the successfully resolved notes to this branch
+        if: always() && env.CAPTURE_EXIT != ''
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/plans/evidence/owner-notes/docs-transcripts-${GITHUB_RUN_ID}-* docs/evidence/transcripts \
+            docs/FABRIC_PLATFORM.md docs/SCALE.md docs/SINKS.md docs/plugins/cloud-sources.md \
+            docs/plugins/fabric-commands.md docs/plugins/fabric-writers.md docs/plugins/sqlserver.md
+          if ! git diff --cached --quiet; then
+            git switch -c "docs-fabric-transcripts-evidence-${GITHUB_RUN_ID}"
+            git commit -s -m "docs-fabric-transcripts: record run $GITHUB_RUN_ID [skip ci]"
+            git switch -c docs/fabric-transcripts "$GITHUB_SHA"
+            git merge --no-ff --signoff -m "docs-fabric-transcripts: merge run $GITHUB_RUN_ID receipts [skip ci]" "docs-fabric-transcripts-evidence-${GITHUB_RUN_ID}"
+            git fetch origin docs/fabric-transcripts
+            git merge --no-ff --signoff --no-edit origin/docs/fabric-transcripts
+            git push origin HEAD:docs/fabric-transcripts
+          fi
+      - name: Fail the job if any example failed
+        if: always()
+        run: test "${CAPTURE_EXIT:-1}" = 0

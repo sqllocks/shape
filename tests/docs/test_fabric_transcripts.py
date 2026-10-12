@@ -123,14 +123,20 @@ def test_manifest_matches_the_unresolved_fabric_notes():
                 assert re.search(pattern, found[0]["command"]), (entry["id"], pattern)
 
 
-def test_workflow_shares_the_fabric_live_group_and_is_manual_only():
-    workflow = yaml.safe_load((ROOT / ".github/workflows/docs-fabric-transcripts.yml").read_text())
+def test_transcripts_mode_is_a_gated_job_of_fabric_live_and_changes_nothing_else():
+    workflow = yaml.safe_load((ROOT / ".github/workflows/fabric-live.yml").read_text())
     triggers = workflow.get("on", workflow.get(True))
-    assert set(triggers) == {"workflow_dispatch"}
+    inputs = triggers["workflow_dispatch"]["inputs"]
+    assert inputs["transcripts"]["default"] is False
+    assert inputs["transcripts"]["type"] == "boolean"
+    assert "schedule" in triggers
     assert workflow["concurrency"] == {"group": "fabric-live", "cancel-in-progress": False}
-    job = workflow["jobs"]["capture"]
-    assert job["environment"] == "fabric-live"
-    assert job["timeout-minutes"] <= 150
-    assert job["if"] == "github.ref == 'refs/heads/docs/fabric-transcripts'"
-    assert not any(step.get("continue-on-error") for step in job["steps"])
-    assert any(s.get("uses", "").startswith("actions/upload-artifact@") for s in job["steps"])
+    assert not (ROOT / ".github/workflows/docs-fabric-transcripts.yml").exists()
+    live = workflow["jobs"]["fabric-live"]
+    assert live["if"] == "${{ !inputs.transcripts }}"
+    capture = workflow["jobs"]["docs-fabric-transcripts"]
+    assert capture["environment"] == "fabric-live"
+    assert capture["timeout-minutes"] <= 150
+    assert capture["if"].startswith("${{ inputs.transcripts &&")
+    assert not any(step.get("continue-on-error") for step in capture["steps"])
+    assert any(s.get("uses", "").startswith("actions/upload-artifact@") for s in capture["steps"])
