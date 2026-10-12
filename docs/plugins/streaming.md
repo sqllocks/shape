@@ -60,7 +60,7 @@ shape stream-profile kafka://localhost:9092/profile-orders -o orders.json
     {"uri": "kafka://localhost:9092/profile-orders", "window": "global", "events": 100, "batches": 1, "windows": 1, "late_events": 0, "null_event_time": 0, "duplicate_rows": 0, "reconnects": 0, "checkpoints": 0, "written": ["orders.json"], "undecodable": 0, "rejected": 0}
     ```
 
-Evidence: [run 38266883768, ubuntu-latest, `1fa052d08a93`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38266883768-1fa052d08a93-ubuntu-latest-kafka-profile.json).
+Evidence: [run 38269228192, ubuntu-latest, `44b25f84630c`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38269228192-44b25f84630c-ubuntu-latest-kafka-profile.json).
 
 
 Exit codes: `0` done, `2` the input or the connection is wrong (nothing partial is hidden: the

@@ -388,7 +388,7 @@ shape emit retail --drift-plan plan.json --rows customer=500 --rows order=2000 \
     shape emit: 54,750 events delivered, offset 54,750 of 54,750, complete, 2,127 events/s
     ```
 
-Evidence: [run 38266883768, ubuntu-latest, `1fa052d08a93`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38266883768-1fa052d08a93-ubuntu-latest-kafka-drift.json).
+Evidence: [run 38269228192, ubuntu-latest, `44b25f84630c`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38269228192-44b25f84630c-ubuntu-latest-kafka-drift.json).
 
 
 * **Day d is generated from `plan.schema_at(schema, d)` with seed + d**, exactly as `shape
@@ -563,7 +563,7 @@ The following workload records three paired 5,000-event runs, with and without t
 python "$SHAPE_DOCS_REPO/scripts/docs_owner_measurements.py" emit
 ```
 
-Evidence: [run 38266883768, ubuntu-latest, `1fa052d08a93`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38266883768-1fa052d08a93-ubuntu-latest-emit-overhead.json).
+Evidence: [run 38269228192, ubuntu-latest, `44b25f84630c`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38269228192-44b25f84630c-ubuntu-latest-emit-overhead.json).
 
 ## Limits
 
