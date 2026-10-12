@@ -101,3 +101,17 @@ def windows_text_io(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(_pyio.TextIOWrapper, "_get_locale_encoding", lambda self: "cp1252")
     monkeypatch.setattr(io, "open", _pyio.open)
     monkeypatch.setattr(builtins, "open", _pyio.open)
+
+
+def pytest_runtest_logreport(report: pytest.TestReport) -> None:
+    """A failed live test prints its failure the moment it fails. pytest otherwise prints every
+    failure at the very end, so a run that is stopped (a hang, the job timeout) shows none."""
+    if report.failed and "live" in report.keywords:
+        import sys
+
+        text = report.longreprtext[-6000:]
+        print(
+            f"\n--- live failure: {report.nodeid} ({report.when}) ---\n{text}",
+            file=sys.stderr,
+            flush=True,
+        )

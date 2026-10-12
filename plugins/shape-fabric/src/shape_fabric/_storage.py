@@ -106,6 +106,18 @@ class Storage:
             return bool(fs.exists(fs_path))
         return Path(path).exists()
 
+    def remove_if_empty(self, path: str) -> None:
+        """Delete the folder ``path`` when nothing is in it; a folder with content, or one that is
+        not there, stays as it is. OneLake keeps an empty folder after its files are deleted."""
+        if is_remote(path):
+            fs, fs_path = self._remote(path)
+            if fs.exists(fs_path) and not fs.ls(fs_path, detail=False):
+                fs.rm(fs_path, recursive=False)
+            return
+        target = Path(path)
+        if target.is_dir() and not any(target.iterdir()):
+            target.rmdir()
+
     def remove(self, path: str, *, recursive: bool = False) -> None:
         """Delete a file or folder; a path that is not there is not an error."""
         if is_remote(path):
