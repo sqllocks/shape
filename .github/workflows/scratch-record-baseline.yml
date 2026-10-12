@@ -1,0 +1,70 @@
+name: Scratch record 0.9.1 baseline
+# Lead-only, never merged: FRZ-01's record-baseline job, run on push to this scratch branch, and
+# committing the checked store to the review branch recorded/0.9.1 (based on frz-01) instead of
+# only uploading it. The lead reviews that branch before anything reaches main.
+on:
+  push:
+    branches: [scratch/record-0.9.1]
+permissions: {contents: read}
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions: {contents: write}
+    env:
+      BENCH_OUT_DIR: "${{ github.workspace }}/bench-out"
+      SHAPE_TEST_MSSQL: "Driver={ODBC Driver 18 for SQL Server};Server=localhost,1433;UID=sa;PWD=Shape_Emulator_1;Encrypt=yes;TrustServerCertificate=yes"
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Microsoft ODBC Driver 18
+        run: |
+          curl -sSL -o "$RUNNER_TEMP/packages-microsoft-prod.deb" "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb"
+          sudo dpkg -i "$RUNNER_TEMP/packages-microsoft-prod.deb"
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
+      - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait mssql
+      - name: Baseline release and recording dependencies
+        run: |
+          mkdir -p "$BENCH_OUT_DIR"
+          source scripts/env.sh
+          bash benchmarks/vs_refengine/setup_baseline.sh
+          "$BASELINE_PY" -m pip install 'sqllocks-shape-sqlserver==0.9.1' 'pandas>=2' 'scipy>=1.11'
+          "$BASELINE_PY" -m pip freeze > "$BENCH_OUT_DIR/baseline_freeze.txt"
+          python -m venv "$SHAPE_VENV"
+          "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-sqlserver 'pyarrow==25.0.1'
+      - name: Record every release workload, equivalence before timing
+        run: |
+          source scripts/env.sh
+          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/profile_1to1/datasets.py
+          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/record_baseline.py --all \
+            --mssql "$SHAPE_TEST_MSSQL;Database=tempdb" --out benchmarks/vs_refengine/recorded
+          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/recorded/check.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: recorded-baseline
+          path: |
+            benchmarks/vs_refengine/recorded/
+            bench-out/baseline_freeze.txt
+      - name: Commit the checked store to recorded/0.9.1 for review
+        run: |
+          set -euo pipefail
+          du -sb benchmarks/vs_refengine/recorded
+          cp -r benchmarks/vs_refengine/recorded "$RUNNER_TEMP/recorded"
+          cp "$BENCH_OUT_DIR/baseline_freeze.txt" "$RUNNER_TEMP/baseline_freeze.txt"
+          git fetch origin frz-01
+          git checkout -B recorded/0.9.1 origin/frz-01
+          rm -rf benchmarks/vs_refengine/recorded
+          cp -r "$RUNNER_TEMP/recorded" benchmarks/vs_refengine/recorded
+          find benchmarks/vs_refengine/recorded -name __pycache__ -prune -exec rm -rf {} +
+          mkdir -p docs/plans/lane_status
+          cp "$RUNNER_TEMP/baseline_freeze.txt" docs/plans/lane_status/FRZ-01-baseline_freeze.txt
+          git add benchmarks/vs_refengine/recorded docs/plans/lane_status/FRZ-01-baseline_freeze.txt
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "FRZ-01: Shape 0.9.1 baseline recordings (run ${GITHUB_RUN_ID}, from ${GITHUB_SHA})"
+          git push origin recorded/0.9.1
+      - if: always()
+        run: docker compose -f ci/emulators/docker-compose.yml down -v
