@@ -81,6 +81,8 @@ INJECTION = (
 def allocation_source(original: bytes) -> bytes:
     """Stage the exact proposed fix; no committed test or product files change."""
     source = original.decode()
+    if "program allocation" in source:
+        return original
 
     def embedded(text):
         return "        " + json.dumps(text + "\n") + "\n"
@@ -117,6 +119,36 @@ def allocation_source(original: bytes) -> bytes:
         embedded("final_mac = mac_snapshot()") + embedded("peak = peak_memory(final_mac)"),
     )
     replace("'final_mac': mac_snapshot()", "'final_mac': final_mac")
+    replace(
+        embedded("    lib.malloc_zone_statistics(None, c.byref(stats))"),
+        embedded("    lib.malloc_zone_statistics(None, c.byref(stats))")
+        + "        # malloc_zone_statistics(NULL) reports reserved address"
+        + " space, not live blocks:\n"
+        + "        # its max_size_in_use counts each 128 MiB MALLOC_MEDIUM"
+        + " region macOS reserves (two or\n"
+        + "        # three per process, ~10 MiB resident), so it was bimodal by 128 MiB. Sum the\n"
+        + "        # per-zone high-water marks of live blocks; keep the NULL"
+        + " total as a diagnostic.\n"
+        + embedded("    lib.malloc_get_all_zones.argtypes = [c.c_uint32, c.c_void_p,")
+        + embedded("                                         c.POINTER(c.POINTER(c.c_size_t)),")
+        + embedded("                                         c.POINTER(c.c_uint)]")
+        + embedded("    lib.malloc_get_all_zones.restype = c.c_int")
+        + embedded("    zones, zone_count = c.POINTER(c.c_size_t)(), c.c_uint()")
+        + embedded("    if lib.malloc_get_all_zones(0, None, c.byref(zones), c.byref(zone_count)):")
+        + embedded("        raise RuntimeError('malloc_get_all_zones')")
+        + embedded("    live = {n: 0 for n, _ in Malloc._fields_}")
+        + embedded("    for index in range(zone_count.value):")
+        + embedded("        zone = Malloc()")
+        + embedded("        lib.malloc_zone_statistics(zones[index], c.byref(zone))")
+        + embedded("        for n in live:")
+        + embedded("            live[n] += getattr(zone, n)"),
+    )
+    replace(
+        embedded("            'malloc': {n: getattr(stats, n) for n, _ in Malloc._fields_}}"),
+        embedded("            'malloc': live,")
+        + embedded("            'malloc_all_zones_call': "
+                   "{n: getattr(stats, n) for n, _ in Malloc._fields_}}"),
+    )
     replace('metric = "physical footprint"', 'metric = "program allocation"')
     replace(
         "macOS measures physical footprint, excluding\n    freed reusable pages; "
