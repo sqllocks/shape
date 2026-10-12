@@ -561,8 +561,7 @@ class SqlDatabaseWriter:
                     yield piece
 
     def _send(self, cursor: Any, sql: str, piece: pa.RecordBatch) -> None:
-        if hasattr(cursor, "fast_executemany"):
-            cursor.fast_executemany = _tsql.widest_first(piece)
+        _tsql.use_fast_executemany(cursor, piece)
         cursor.executemany(sql, _tsql.rows_as_params(piece))
 
     def _insert(

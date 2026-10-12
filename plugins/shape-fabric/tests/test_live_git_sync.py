@@ -8,7 +8,7 @@ changes the item in the workspace, runs "commit to Git", fetches the branch and 
 The workflow job (``fabric-git-sync-live``) runs only when the secrets are set; run by hand with
 
     FABRIC_TENANT_ID=... FABRIC_CLIENT_ID=... FABRIC_CLIENT_SECRET=... \\
-    FABRIC_WORKSPACE_ID=... FABRIC_GIT_REMOTE=https://github.com/<owner>/<repo>.git \\
+    FABRIC_GIT_WORKSPACE_ID=... FABRIC_GIT_REMOTE=https://github.com/<owner>/<repo>.git \\
     FABRIC_GIT_TOKEN=... [FABRIC_GIT_USER=x-access-token] [SHAPE_LIVE_RESULT=result.json] \\
     pytest -m live plugins/shape-fabric/tests/test_live_git_sync.py
 
@@ -40,7 +40,7 @@ NEEDED = (
     "FABRIC_TENANT_ID",
     "FABRIC_CLIENT_ID",
     "FABRIC_CLIENT_SECRET",
-    "FABRIC_WORKSPACE_ID",
+    "FABRIC_GIT_WORKSPACE_ID",  # the Git-connected workspace (shape-git-test), not shape-test
     "FABRIC_GIT_REMOTE",
     "FABRIC_GIT_TOKEN",
 )
@@ -285,8 +285,8 @@ def test_shape_files_survive_a_git_sync_in_both_directions(tmp_path):
         need("FABRIC_TENANT_ID"), need("FABRIC_CLIENT_ID"), need("FABRIC_CLIENT_SECRET")
     )
     secrets.append(credential.get_token("https://api.fabric.microsoft.com/.default").token)
-    fabric = Fabric(Http(secrets[-1]), need("FABRIC_WORKSPACE_ID"))
-    workspace_id = need("FABRIC_WORKSPACE_ID")
+    workspace_id = need("FABRIC_GIT_WORKSPACE_ID")
+    fabric = Fabric(Http(secrets[-1]), workspace_id)  # secrets[-1] is the Fabric API token
     check = LiveCheck(
         "fabric-git-sync",
         __version__,

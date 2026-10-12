@@ -31,12 +31,22 @@ jobs:
       FABRIC_WORKSPACE_ID: ${{ vars.FABRIC_WORKSPACE_ID }}
       FABRIC_LAKEHOUSE_ID: ${{ vars.FABRIC_LAKEHOUSE_ID }}
       FABRIC_SQL_ENDPOINT: ${{ vars.FABRIC_SQL_ENDPOINT }}
+      # onelake://<workspace>/<lakehouse>/Tables of a classic and of a schema-enabled Lakehouse.
+      FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH: ${{ vars.FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH }}
+      FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH: ${{ vars.FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH }}
       FABRIC_WAREHOUSE: ${{ vars.FABRIC_WAREHOUSE }}
       FABRIC_EVENTHOUSE_URI: ${{ vars.FABRIC_EVENTHOUSE_URI }}
       FABRIC_KQL_DB: ${{ vars.FABRIC_KQL_DB }}
       FABRIC_EVENTSTREAM_CONNECTION_STRING: ${{ secrets.FABRIC_EVENTSTREAM_CONNECTION_STRING }}
       # The Fabric SQL database item (shape_sqldb). No login in it: the service principal's token is passed.
       FABRIC_SQL_CONNECTION_STRING: ${{ secrets.FABRIC_SQL_CONNECTION_STRING }}
+      # The sample Warehouse (shape_wh_sample) and the semantic model (shape_sm) the profile tests read.
+      FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING: ${{ vars.FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING }}
+      FABRIC_SEMANTIC_MODEL: ${{ vars.FABRIC_SEMANTIC_MODEL }}
+      # The Git-connected workspace (shape-git-test), its remote and the token that writes to it.
+      FABRIC_GIT_WORKSPACE_ID: ${{ vars.FABRIC_GIT_WORKSPACE_ID }}
+      FABRIC_GIT_REMOTE: ${{ vars.FABRIC_GIT_REMOTE }}
+      FABRIC_GIT_TOKEN: ${{ secrets.FABRIC_GIT_TOKEN }}
       # DefaultAzureCredential signs in as the same service principal.
       AZURE_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
       AZURE_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
@@ -69,7 +79,7 @@ jobs:
       - name: Install Shape and the plugins from this checkout
         run: >-
           pip install -e '.[dev,azure]'
-          -e 'plugins/shape-fabric[sqlserver,eventhubs,entra]'
+          -e 'plugins/shape-fabric[sqlserver,eventhubs,entra,semantic-link]'
           -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e plugins/shape-domains
       - name: Derive the values the tests read (no secret is printed)
         run: |
@@ -225,6 +235,35 @@ jobs:
             fi
             sleep 15
           done
+      - name: List what the live tests left in the workspace (read-only)
+        # Lists every item in shape-test (type, name, id) so a stray item can be traced to the test
+        # that made it. It deletes nothing.
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          from azure.identity import ClientSecretCredential
+
+          env = os.environ
+          cred = ClientSecretCredential(env["FABRIC_TENANT_ID"], env["FABRIC_CLIENT_ID"], env["FABRIC_CLIENT_SECRET"])
+          token = cred.get_token("https://api.fabric.microsoft.com/.default").token
+          base = f"https://api.fabric.microsoft.com/v1/workspaces/{env['FABRIC_WORKSPACE_ID']}/items"
+
+          items, url = [], base
+          while url:
+              req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+              with urllib.request.urlopen(req, timeout=60) as resp:
+                  doc = json.loads(resp.read())
+              items += doc.get("value", [])
+              more = doc.get("continuationToken")
+              url = f"{base}?continuationToken={more}" if more else None
+          lines = ["## Workspace items after the live tests", ""]
+          for item in sorted(items, key=lambda i: (i["type"], i["displayName"])):
+              lines.append(f"- {item['type']} `{item['displayName']}` {item['id']}")
+          text = "\n".join(lines)
+          print(text)
+          open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8").write(text + "\n")
+          PY
       - name: Step summary - which live tests ran, passed, failed, skipped
         if: always()
         run: |

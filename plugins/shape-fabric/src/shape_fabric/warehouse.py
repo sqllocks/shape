@@ -337,8 +337,7 @@ class WarehouseWriter:
                             with contextlib.suppress(AttributeError):
                                 cursor.timeout = max(1, int(remaining))
                             sql = _tsql.insert_sql(schema_name, table, batch.schema.names)
-                            if hasattr(cursor, "fast_executemany"):
-                                cursor.fast_executemany = _tsql.widest_first(batch)
+                            _tsql.use_fast_executemany(cursor, batch)
                             cursor.executemany(sql, _tsql.rows_as_params(batch))
                             total += batch.num_rows
                     finally:
