@@ -1,0 +1,1379 @@
+{
+  "format": "shape-generate-record",
+  "identifier_forms": [],
+  "inputs": {
+    "fixtures/schemas/iot_3nf.json": "9793db86b2be965c6806883969b6b4910ec6b3c55d89250ae0aa86c183e4eab0"
+  },
+  "recorded_utc": "2026-10-12T18:59:22Z",
+  "seeds": {
+    "42": {
+      "dataset_id": "sha256:81b8a298990b823833ce89bc0abbee43ff24bd414c5eb6eb3ed56edd25a84377",
+      "tables": {
+        "alert": {
+          "columns": [
+            {
+              "name": "alert_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "alert_type",
+              "type": "string"
+            },
+            {
+              "name": "severity",
+              "type": "string"
+            },
+            {
+              "name": "triggered_at",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "acknowledged",
+              "type": "string"
+            },
+            {
+              "name": "resolved_at",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:a1bfdb46d15eff446d42516a70d36d1be90b79a248d59b538b14e0588c110339",
+          "parquet_bytes": 64042,
+          "parquet_sha256": "9667f421cb6458431c11dd60269ce6a95bbbfe3306e8d608f5786e79d3945b16",
+          "rows": 2500
+        },
+        "command": {
+          "columns": [
+            {
+              "name": "command_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "command_type",
+              "type": "string"
+            },
+            {
+              "name": "issued_at",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "issued_by",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:2639d318d08995afaf0e7c84d7e2d353d48f275c4e5b6db94a2b66ee97d601a6",
+          "parquet_bytes": 473546,
+          "parquet_sha256": "45a74b3812069ff69e74704efee87c3bf2e6c67b4bcbd92674de1e49d65fc7b4",
+          "rows": 15000
+        },
+        "device": {
+          "columns": [
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_type_id",
+              "type": "int64"
+            },
+            {
+              "name": "location_id",
+              "type": "int64"
+            },
+            {
+              "name": "serial_number",
+              "type": "string"
+            },
+            {
+              "name": "firmware_version",
+              "type": "string"
+            },
+            {
+              "name": "install_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "battery_level",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:45b6f79473f720f7f7deb5b7cbbd27c7f8b24da7f13ddd8f74a44a4856850585",
+          "parquet_bytes": 210300,
+          "parquet_sha256": "2a3ccfdfc8e10aa9b7d59a26d286d0bbe1c81df1434244f60783fdb5aaca0460",
+          "rows": 5000
+        },
+        "device_type": {
+          "columns": [
+            {
+              "name": "type_id",
+              "type": "int64"
+            },
+            {
+              "name": "type_name",
+              "type": "string"
+            },
+            {
+              "name": "manufacturer",
+              "type": "string"
+            },
+            {
+              "name": "category",
+              "type": "string"
+            },
+            {
+              "name": "protocol",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:7d8823a50fe9e38a7ebc9a255bb7afcf0f1a8c79811e5f1c2845f600f4b0f660",
+          "parquet_bytes": 2445,
+          "parquet_sha256": "d9fb01ef52e71144f01babd9cbdc66546de06fedd83b2afc3e3dfee26c047412",
+          "rows": 20
+        },
+        "location": {
+          "columns": [
+            {
+              "name": "location_id",
+              "type": "int64"
+            },
+            {
+              "name": "location_name",
+              "type": "string"
+            },
+            {
+              "name": "facility_type",
+              "type": "string"
+            },
+            {
+              "name": "city",
+              "type": "string"
+            },
+            {
+              "name": "state",
+              "type": "string"
+            },
+            {
+              "name": "zip_code",
+              "type": "string"
+            },
+            {
+              "name": "lat",
+              "type": "double"
+            },
+            {
+              "name": "lng",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:9cfb62e0e20eaa4beeac8d81901249304034b05954e21568602a8d639babc11f",
+          "parquet_bytes": 7417,
+          "parquet_sha256": "1dda644b9cde09847c8421df7403b889ae6d5a09d87b1a6a93666922c0c9858a",
+          "rows": 100
+        },
+        "maintenance_log": {
+          "columns": [
+            {
+              "name": "log_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "maintenance_type",
+              "type": "string"
+            },
+            {
+              "name": "performed_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "performed_by",
+              "type": "string"
+            },
+            {
+              "name": "notes",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:3a1fdac901ff3928eb471714715ab1994bbb691287574893059f130be72e561d",
+          "parquet_bytes": 285801,
+          "parquet_sha256": "c7f611d1fadd9537a94f0610f3da1e8d1fd1d8d25ccfb00db43ed6402ce5b817",
+          "rows": 7500
+        },
+        "reading": {
+          "columns": [
+            {
+              "name": "reading_id",
+              "type": "int64"
+            },
+            {
+              "name": "sensor_id",
+              "type": "int64"
+            },
+            {
+              "name": "reading_value",
+              "type": "double"
+            },
+            {
+              "name": "reading_timestamp",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "quality_flag",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:d0d1c79565c8e2addb960f3bfdd9a4a8b3bbecc2045f8fcda63d84bc228b6406",
+          "parquet_bytes": 5606750,
+          "parquet_sha256": "18d3ff23f94af5125a4433a7b457cb19f39a6e0a1f2737e79e4fdfcfcd21273a",
+          "rows": 250000
+        },
+        "sensor": {
+          "columns": [
+            {
+              "name": "sensor_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "sensor_type",
+              "type": "string"
+            },
+            {
+              "name": "unit_of_measure",
+              "type": "string"
+            },
+            {
+              "name": "min_range",
+              "type": "double"
+            },
+            {
+              "name": "max_range",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:e8cc2fcfc8072bdd3b1df3c032960e4792d9673ffe7b58ef16aa62c2c136664a",
+          "parquet_bytes": 366055,
+          "parquet_sha256": "995ddde6311e24e2c1605e4da570f3892c2cdc769b1185bed3cc3c43869227b4",
+          "rows": 12500
+        }
+      }
+    },
+    "43": {
+      "dataset_id": "sha256:f6c32be87f77242cabeb7e7d6232273b00dc8f82f1ead5f54415588425c5e484",
+      "tables": {
+        "alert": {
+          "columns": [
+            {
+              "name": "alert_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "alert_type",
+              "type": "string"
+            },
+            {
+              "name": "severity",
+              "type": "string"
+            },
+            {
+              "name": "triggered_at",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "acknowledged",
+              "type": "string"
+            },
+            {
+              "name": "resolved_at",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:9c261d1e0731084cdb558f7c0a2c2d1944cd90c602e608a7c3a1042e705a0c9c",
+          "parquet_bytes": 64597,
+          "parquet_sha256": "950dd421310d2c08f9171b7b964667242073bcbe6c5703a77df95d819afa1740",
+          "rows": 2500
+        },
+        "command": {
+          "columns": [
+            {
+              "name": "command_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "command_type",
+              "type": "string"
+            },
+            {
+              "name": "issued_at",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "issued_by",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:0eb49fe5c983dd105ab20aaa1a1df966510ffe915b3a754f31c3dc5bedcfeeb6",
+          "parquet_bytes": 473418,
+          "parquet_sha256": "77489668091b838019ba7846dd2c8d7da65fba08141dda9361a8df5b2635b2cf",
+          "rows": 15000
+        },
+        "device": {
+          "columns": [
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_type_id",
+              "type": "int64"
+            },
+            {
+              "name": "location_id",
+              "type": "int64"
+            },
+            {
+              "name": "serial_number",
+              "type": "string"
+            },
+            {
+              "name": "firmware_version",
+              "type": "string"
+            },
+            {
+              "name": "install_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "battery_level",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:f84f630d6a7ef63f2dab053402963e507531dc9aac785abee36ff2a1f2458dbb",
+          "parquet_bytes": 210294,
+          "parquet_sha256": "64a756a359dbd13880127d702838df9c37721716205c699ab38a9c0611b7acb2",
+          "rows": 5000
+        },
+        "device_type": {
+          "columns": [
+            {
+              "name": "type_id",
+              "type": "int64"
+            },
+            {
+              "name": "type_name",
+              "type": "string"
+            },
+            {
+              "name": "manufacturer",
+              "type": "string"
+            },
+            {
+              "name": "category",
+              "type": "string"
+            },
+            {
+              "name": "protocol",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:3ed927589fa53b804df7180f444c5f9b90f5a8cca26a5d72aa367b728c4aeb0d",
+          "parquet_bytes": 2448,
+          "parquet_sha256": "884841e33a0ad18bab05fa7d52106f22b5493244c47fecc87aec760da1d9d86b",
+          "rows": 20
+        },
+        "location": {
+          "columns": [
+            {
+              "name": "location_id",
+              "type": "int64"
+            },
+            {
+              "name": "location_name",
+              "type": "string"
+            },
+            {
+              "name": "facility_type",
+              "type": "string"
+            },
+            {
+              "name": "city",
+              "type": "string"
+            },
+            {
+              "name": "state",
+              "type": "string"
+            },
+            {
+              "name": "zip_code",
+              "type": "string"
+            },
+            {
+              "name": "lat",
+              "type": "double"
+            },
+            {
+              "name": "lng",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:5b3c21910604efb8bf2b303c081ee626b6b2922dea53c8b423a397b55b0a2c7e",
+          "parquet_bytes": 7397,
+          "parquet_sha256": "28ae3f9439426a360a25c46b886cb2afc18b342b8f7c722aa8c98f44f77df65f",
+          "rows": 100
+        },
+        "maintenance_log": {
+          "columns": [
+            {
+              "name": "log_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "maintenance_type",
+              "type": "string"
+            },
+            {
+              "name": "performed_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "performed_by",
+              "type": "string"
+            },
+            {
+              "name": "notes",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:aa735025385b38b56bd0976cad7fe588867943fb12c875180f5795abf03eea22",
+          "parquet_bytes": 286372,
+          "parquet_sha256": "7a1bf2ebf32cf21182004378dd17308e2caf0fd3ac9b267bee816dbb4ef32a3e",
+          "rows": 7500
+        },
+        "reading": {
+          "columns": [
+            {
+              "name": "reading_id",
+              "type": "int64"
+            },
+            {
+              "name": "sensor_id",
+              "type": "int64"
+            },
+            {
+              "name": "reading_value",
+              "type": "double"
+            },
+            {
+              "name": "reading_timestamp",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "quality_flag",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:328a30891e09c0587c887bfbdf313b82d7d5bec7caee0f61b38b1bbc16bdfd95",
+          "parquet_bytes": 5605573,
+          "parquet_sha256": "d2c2bebe6ad4ad36f57393c359ccf88a3db4471bf0ba65f0373bb0722675a37b",
+          "rows": 250000
+        },
+        "sensor": {
+          "columns": [
+            {
+              "name": "sensor_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "sensor_type",
+              "type": "string"
+            },
+            {
+              "name": "unit_of_measure",
+              "type": "string"
+            },
+            {
+              "name": "min_range",
+              "type": "double"
+            },
+            {
+              "name": "max_range",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:5f9ec55e639bdeebaccc1f67cc647b43d12b3eeca0082480b0cfbb7eee40ee2a",
+          "parquet_bytes": 366008,
+          "parquet_sha256": "532b91a3fc6f648015dae293c7a83bdf2e638699ca2dc342c361d57f409c375f",
+          "rows": 12500
+        }
+      }
+    },
+    "44": {
+      "dataset_id": "sha256:e11c1f49fafd294dbbd2fc6e8add73213c20bd10b5c9c6a97a7ff30262ae3a48",
+      "tables": {
+        "alert": {
+          "columns": [
+            {
+              "name": "alert_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "alert_type",
+              "type": "string"
+            },
+            {
+              "name": "severity",
+              "type": "string"
+            },
+            {
+              "name": "triggered_at",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "acknowledged",
+              "type": "string"
+            },
+            {
+              "name": "resolved_at",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:41357aeb75b1760b8a43c57458d636b4c305bf01c886db951cab2d00077ae09a",
+          "parquet_bytes": 64335,
+          "parquet_sha256": "6d1a6e8ba4b67e6d21bda9829295063d93d004df8f62e2b0c7b8b001a6ef03a3",
+          "rows": 2500
+        },
+        "command": {
+          "columns": [
+            {
+              "name": "command_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "command_type",
+              "type": "string"
+            },
+            {
+              "name": "issued_at",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "issued_by",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:c519f0e54ff57408838967d40b5e51a0ae97298f756df34a7e7532072b09b396",
+          "parquet_bytes": 473510,
+          "parquet_sha256": "fdeaa6e067b1abdbbfb864c2fa87eb2df24b72c1ef809f4c25d1799d8650d29c",
+          "rows": 15000
+        },
+        "device": {
+          "columns": [
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_type_id",
+              "type": "int64"
+            },
+            {
+              "name": "location_id",
+              "type": "int64"
+            },
+            {
+              "name": "serial_number",
+              "type": "string"
+            },
+            {
+              "name": "firmware_version",
+              "type": "string"
+            },
+            {
+              "name": "install_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "battery_level",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:b0f8956f9ce69bea77ad38b051bd817150632fcf33fdb26361248f4fff1760fa",
+          "parquet_bytes": 210299,
+          "parquet_sha256": "2f16989c86f91c173ad67af700789b3ed359a71ff99ad613f0aeccd934f04528",
+          "rows": 5000
+        },
+        "device_type": {
+          "columns": [
+            {
+              "name": "type_id",
+              "type": "int64"
+            },
+            {
+              "name": "type_name",
+              "type": "string"
+            },
+            {
+              "name": "manufacturer",
+              "type": "string"
+            },
+            {
+              "name": "category",
+              "type": "string"
+            },
+            {
+              "name": "protocol",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:eb2b8e357f0f895303bd2b6176b0842053f7e58cfd034cbed6c8e3cdfffbe645",
+          "parquet_bytes": 2361,
+          "parquet_sha256": "60bc3c83bf8f67337e4b98509ee01f012fb29960ea9e79e4deaa46a05c181516",
+          "rows": 20
+        },
+        "location": {
+          "columns": [
+            {
+              "name": "location_id",
+              "type": "int64"
+            },
+            {
+              "name": "location_name",
+              "type": "string"
+            },
+            {
+              "name": "facility_type",
+              "type": "string"
+            },
+            {
+              "name": "city",
+              "type": "string"
+            },
+            {
+              "name": "state",
+              "type": "string"
+            },
+            {
+              "name": "zip_code",
+              "type": "string"
+            },
+            {
+              "name": "lat",
+              "type": "double"
+            },
+            {
+              "name": "lng",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:d42070a0637102681186f33cf738d3c644cffc8391d843d4073b26fb603ca487",
+          "parquet_bytes": 7422,
+          "parquet_sha256": "54f6d6d250ef75f957f7d77ec17f07bf5361b25b339ea05037d18c9725326477",
+          "rows": 100
+        },
+        "maintenance_log": {
+          "columns": [
+            {
+              "name": "log_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "maintenance_type",
+              "type": "string"
+            },
+            {
+              "name": "performed_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "performed_by",
+              "type": "string"
+            },
+            {
+              "name": "notes",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:2bfea6655c47b01b46056ea3ca4334bc232f4f11db82e01dbeed8fa5ee375264",
+          "parquet_bytes": 286463,
+          "parquet_sha256": "cb9aa0d0369d223d6414fd05518f836c1f3234f16d40dcd17159a2d3ef8593b4",
+          "rows": 7500
+        },
+        "reading": {
+          "columns": [
+            {
+              "name": "reading_id",
+              "type": "int64"
+            },
+            {
+              "name": "sensor_id",
+              "type": "int64"
+            },
+            {
+              "name": "reading_value",
+              "type": "double"
+            },
+            {
+              "name": "reading_timestamp",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "quality_flag",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:74e5c87e98f521cc78aa7b9d0091627f0c72a849dca17265f640689a310bfc78",
+          "parquet_bytes": 5607545,
+          "parquet_sha256": "324dbf1d0a07fd24022896a5345044c61319dd2286a3e0282795dce5acdff52c",
+          "rows": 250000
+        },
+        "sensor": {
+          "columns": [
+            {
+              "name": "sensor_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "sensor_type",
+              "type": "string"
+            },
+            {
+              "name": "unit_of_measure",
+              "type": "string"
+            },
+            {
+              "name": "min_range",
+              "type": "double"
+            },
+            {
+              "name": "max_range",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:ed62f774aa801ddc2b7ba4d695f4ffeb02bf1b34ca44ffce87a3471cd96d698b",
+          "parquet_bytes": 366069,
+          "parquet_sha256": "ddb5ee7853431d812f70f2dc22cc3cde185dd6d77f6e6c626349d305ce1f0888",
+          "rows": 12500
+        }
+      }
+    },
+    "45": {
+      "dataset_id": "sha256:a5966f1a0ed3e5f89b840031f489459eaaa4dbedcff5b96871c7b95160210db2",
+      "tables": {
+        "alert": {
+          "columns": [
+            {
+              "name": "alert_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "alert_type",
+              "type": "string"
+            },
+            {
+              "name": "severity",
+              "type": "string"
+            },
+            {
+              "name": "triggered_at",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "acknowledged",
+              "type": "string"
+            },
+            {
+              "name": "resolved_at",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:ae5332f63cad3bcca0abdc85a573b79ead6352cbe59082ceb964ccecae14f42a",
+          "parquet_bytes": 64325,
+          "parquet_sha256": "6bf0b1c18e20a8bb901a123dee455bcf3574e5277746c898015b8349c51c43b3",
+          "rows": 2500
+        },
+        "command": {
+          "columns": [
+            {
+              "name": "command_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "command_type",
+              "type": "string"
+            },
+            {
+              "name": "issued_at",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "issued_by",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:5da816e2872e0fa05ab3af328663e0b737590fcb9ed41922229cb0b9c0ee96dd",
+          "parquet_bytes": 473938,
+          "parquet_sha256": "2f0930783dcd19207426acd876b2e2a24d6886671691f1c71a0607ddb31a1433",
+          "rows": 15000
+        },
+        "device": {
+          "columns": [
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_type_id",
+              "type": "int64"
+            },
+            {
+              "name": "location_id",
+              "type": "int64"
+            },
+            {
+              "name": "serial_number",
+              "type": "string"
+            },
+            {
+              "name": "firmware_version",
+              "type": "string"
+            },
+            {
+              "name": "install_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "battery_level",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:0843358a644dce3bdfe2fef3f2564243f4950640e86efd92901cac97fdc12385",
+          "parquet_bytes": 210296,
+          "parquet_sha256": "28751f497e2830ef83918bd033e5fc054c60a9add535d0be7f9be56efc6dd4d2",
+          "rows": 5000
+        },
+        "device_type": {
+          "columns": [
+            {
+              "name": "type_id",
+              "type": "int64"
+            },
+            {
+              "name": "type_name",
+              "type": "string"
+            },
+            {
+              "name": "manufacturer",
+              "type": "string"
+            },
+            {
+              "name": "category",
+              "type": "string"
+            },
+            {
+              "name": "protocol",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:29509ffecf4b6143cac4c00aad71a42a191993c636fa44a4cf693a937e737f72",
+          "parquet_bytes": 2414,
+          "parquet_sha256": "218ea7f48e5984e329489c3d53096aa6523a9f871b458d9403f8b3fdc3dea964",
+          "rows": 20
+        },
+        "location": {
+          "columns": [
+            {
+              "name": "location_id",
+              "type": "int64"
+            },
+            {
+              "name": "location_name",
+              "type": "string"
+            },
+            {
+              "name": "facility_type",
+              "type": "string"
+            },
+            {
+              "name": "city",
+              "type": "string"
+            },
+            {
+              "name": "state",
+              "type": "string"
+            },
+            {
+              "name": "zip_code",
+              "type": "string"
+            },
+            {
+              "name": "lat",
+              "type": "double"
+            },
+            {
+              "name": "lng",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:c076b25458565769b89480df1d8c79cb4b3fd6d58f64692539ffcf1dca0513a9",
+          "parquet_bytes": 7379,
+          "parquet_sha256": "d5a321b217b6ec4b97a6728330dd84d0169a5e64e0a6d8bf1138a2d387afed6f",
+          "rows": 100
+        },
+        "maintenance_log": {
+          "columns": [
+            {
+              "name": "log_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "maintenance_type",
+              "type": "string"
+            },
+            {
+              "name": "performed_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "performed_by",
+              "type": "string"
+            },
+            {
+              "name": "notes",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:e3450ccae79611df5fcd7e9ea90abe515c12fd7db0270633aba2a2c7f024d943",
+          "parquet_bytes": 286482,
+          "parquet_sha256": "e744ed36ed07605907e92f6da396b7a9225b799598908ac4f7e9013e34bde2b7",
+          "rows": 7500
+        },
+        "reading": {
+          "columns": [
+            {
+              "name": "reading_id",
+              "type": "int64"
+            },
+            {
+              "name": "sensor_id",
+              "type": "int64"
+            },
+            {
+              "name": "reading_value",
+              "type": "double"
+            },
+            {
+              "name": "reading_timestamp",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "quality_flag",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:810e0ec521f2ac516c7219e3967e569f9f6840e75ae90d2edc10329835825c47",
+          "parquet_bytes": 5605996,
+          "parquet_sha256": "0ed2a7b23ef1569ebed395ba76effafb741bfb37ce4ae8c49573a4584767c413",
+          "rows": 250000
+        },
+        "sensor": {
+          "columns": [
+            {
+              "name": "sensor_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "sensor_type",
+              "type": "string"
+            },
+            {
+              "name": "unit_of_measure",
+              "type": "string"
+            },
+            {
+              "name": "min_range",
+              "type": "double"
+            },
+            {
+              "name": "max_range",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:44a3fd65584719d809d4f331ed5b383f844765afe022ac69732a8ad4b80ea403",
+          "parquet_bytes": 366015,
+          "parquet_sha256": "fc8b17d6dcf3f8eccdd71ef9f404a64d08869f3e436bad75494c7a4f2ca23736",
+          "rows": 12500
+        }
+      }
+    },
+    "46": {
+      "dataset_id": "sha256:0d4a2e9c0cdc53bfa884e04e4792d1fac333b0ec798742b6591e61c1e236b6be",
+      "tables": {
+        "alert": {
+          "columns": [
+            {
+              "name": "alert_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "alert_type",
+              "type": "string"
+            },
+            {
+              "name": "severity",
+              "type": "string"
+            },
+            {
+              "name": "triggered_at",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "acknowledged",
+              "type": "string"
+            },
+            {
+              "name": "resolved_at",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:bfdc157a9f6b7b482bb898bd277cb6b345d9ef27de0c5022ad0f568335818777",
+          "parquet_bytes": 64031,
+          "parquet_sha256": "2880b7e41edd14ac0fa108610416c5d6c9678864a491c6028c51fa80909bd252",
+          "rows": 2500
+        },
+        "command": {
+          "columns": [
+            {
+              "name": "command_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "command_type",
+              "type": "string"
+            },
+            {
+              "name": "issued_at",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "issued_by",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:2977d45dabca8a50b1aa9cdd5e0496297b914edcc55600953af80cb2da65710e",
+          "parquet_bytes": 473353,
+          "parquet_sha256": "22058f55eb6860243319c3502a3b1b9684d9f36ebf65f4fd42386c94c1de1409",
+          "rows": 15000
+        },
+        "device": {
+          "columns": [
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_type_id",
+              "type": "int64"
+            },
+            {
+              "name": "location_id",
+              "type": "int64"
+            },
+            {
+              "name": "serial_number",
+              "type": "string"
+            },
+            {
+              "name": "firmware_version",
+              "type": "string"
+            },
+            {
+              "name": "install_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "battery_level",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:46aa8b4620a9b39777b44965c296c18f853cd194f70774fedb0d122e3cf2abc8",
+          "parquet_bytes": 210290,
+          "parquet_sha256": "34cb528489d51c21a8bd4a7e862c05efd4336025eaba6dcd3baae36cfd1b86ed",
+          "rows": 5000
+        },
+        "device_type": {
+          "columns": [
+            {
+              "name": "type_id",
+              "type": "int64"
+            },
+            {
+              "name": "type_name",
+              "type": "string"
+            },
+            {
+              "name": "manufacturer",
+              "type": "string"
+            },
+            {
+              "name": "category",
+              "type": "string"
+            },
+            {
+              "name": "protocol",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:fba65792c2afeca1bb165dd5ea68d0f7f19aac643bc230c2aef7b99c9f63c2d1",
+          "parquet_bytes": 2422,
+          "parquet_sha256": "ecedcf99f8e6d313e8ef67607117b9e6a384b5b5d6f2d27d11ee149079645a8f",
+          "rows": 20
+        },
+        "location": {
+          "columns": [
+            {
+              "name": "location_id",
+              "type": "int64"
+            },
+            {
+              "name": "location_name",
+              "type": "string"
+            },
+            {
+              "name": "facility_type",
+              "type": "string"
+            },
+            {
+              "name": "city",
+              "type": "string"
+            },
+            {
+              "name": "state",
+              "type": "string"
+            },
+            {
+              "name": "zip_code",
+              "type": "string"
+            },
+            {
+              "name": "lat",
+              "type": "double"
+            },
+            {
+              "name": "lng",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:2daa41fcf2ab9479700f63d0eab00ee64eccd832bd30d50849b39a75a6c8dee0",
+          "parquet_bytes": 7352,
+          "parquet_sha256": "f5d2924946aa77c176eb9ba5eb4685adb0a946e8c118cbd7c24bb607d0ac2ebb",
+          "rows": 100
+        },
+        "maintenance_log": {
+          "columns": [
+            {
+              "name": "log_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "maintenance_type",
+              "type": "string"
+            },
+            {
+              "name": "performed_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "performed_by",
+              "type": "string"
+            },
+            {
+              "name": "notes",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:fe7f7a2ea7e3e359b5cd6c323082941984875b26ebbe4ada44bb6b30d279b00c",
+          "parquet_bytes": 286243,
+          "parquet_sha256": "c89fcef3996c6afb750c7a0974e36e5e68cb408e36afb015357329a1c5b5d164",
+          "rows": 7500
+        },
+        "reading": {
+          "columns": [
+            {
+              "name": "reading_id",
+              "type": "int64"
+            },
+            {
+              "name": "sensor_id",
+              "type": "int64"
+            },
+            {
+              "name": "reading_value",
+              "type": "double"
+            },
+            {
+              "name": "reading_timestamp",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "quality_flag",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:c8f646141a078037a62382f46936150cc256a51dabdc27f4d623e235432c7f5e",
+          "parquet_bytes": 5606654,
+          "parquet_sha256": "86a9feff73c822fee50602e4764e6b596fbc93adbfbc648146e27031ff24d065",
+          "rows": 250000
+        },
+        "sensor": {
+          "columns": [
+            {
+              "name": "sensor_id",
+              "type": "int64"
+            },
+            {
+              "name": "device_id",
+              "type": "int64"
+            },
+            {
+              "name": "sensor_type",
+              "type": "string"
+            },
+            {
+              "name": "unit_of_measure",
+              "type": "string"
+            },
+            {
+              "name": "min_range",
+              "type": "double"
+            },
+            {
+              "name": "max_range",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:a2923ebb2f74e735c5eddbc388720b1495a1bd02ad0b2c1213c7f4a6d7d65d13",
+          "parquet_bytes": 365994,
+          "parquet_sha256": "f93b9c39b546c3ddd58bee433c2ca02d15d3a4af009c54cf0f5e1be554c04ddf",
+          "rows": 12500
+        }
+      }
+    }
+  },
+  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
+  "shape_version": "0.9.1",
+  "version": 1,
+  "workload": "generate:iot:medium"
+}

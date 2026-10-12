@@ -1,0 +1,1639 @@
+{
+  "format": "shape-generate-record",
+  "identifier_forms": [],
+  "inputs": {
+    "fixtures/schemas/manufacturing_3nf.json": "aec8420436459ecdeeb16497fabc75bac993447f4547e25b1d07899bc961de9c"
+  },
+  "recorded_utc": "2026-10-12T18:59:22Z",
+  "seeds": {
+    "42": {
+      "dataset_id": "sha256:c0b24dba7a149f148d59d31e994ad7b284262b779bb0b9f5af74b4715477847a",
+      "tables": {
+        "bom": {
+          "columns": [
+            {
+              "name": "bom_id",
+              "type": "int64"
+            },
+            {
+              "name": "product_id",
+              "type": "int64"
+            },
+            {
+              "name": "component_name",
+              "type": "string"
+            },
+            {
+              "name": "quantity_required",
+              "type": "double"
+            },
+            {
+              "name": "unit_of_measure",
+              "type": "string"
+            },
+            {
+              "name": "unit_cost",
+              "type": "double"
+            },
+            {
+              "name": "is_critical",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:1e1c66fc2dd03853b0a540b57e0c0964ab8b6d204e542bdc6600dc4dfb9c9f7f",
+          "parquet_bytes": 18199,
+          "parquet_sha256": "bdb2b918f0c04aa47449faea375468c04a56b00e0c756cace7a1337a57427ff2",
+          "rows": 500
+        },
+        "defect": {
+          "columns": [
+            {
+              "name": "defect_id",
+              "type": "int64"
+            },
+            {
+              "name": "check_id",
+              "type": "int64"
+            },
+            {
+              "name": "defect_code",
+              "type": "string"
+            },
+            {
+              "name": "severity",
+              "type": "string"
+            },
+            {
+              "name": "root_cause",
+              "type": "string"
+            },
+            {
+              "name": "disposition",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:c8b94ff501f99c093e97a433809e1fa63a2d190d0f1b70d8ca324603d6d38b9e",
+          "parquet_bytes": 57123,
+          "parquet_sha256": "36b9b1c017070095fcc9087d50b2c85fc7ba878b7867962be1bad1ab80b51fc8",
+          "rows": 4500
+        },
+        "downtime_event": {
+          "columns": [
+            {
+              "name": "event_id",
+              "type": "int64"
+            },
+            {
+              "name": "equipment_id",
+              "type": "int64"
+            },
+            {
+              "name": "start_time",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "duration_minutes",
+              "type": "double"
+            },
+            {
+              "name": "cause",
+              "type": "string"
+            },
+            {
+              "name": "impact_level",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:d24239c25947baa4c9ad7f28efe25f3d8b4bc0f844699703be3a4966858e62f6",
+          "parquet_bytes": 10371,
+          "parquet_sha256": "0e9f9de393f04aca80ac915b01fdb8f631ca11f53ffba5352c19a2cea23c98b5",
+          "rows": 320
+        },
+        "equipment": {
+          "columns": [
+            {
+              "name": "equipment_id",
+              "type": "int64"
+            },
+            {
+              "name": "production_line_id",
+              "type": "int64"
+            },
+            {
+              "name": "equipment_name",
+              "type": "string"
+            },
+            {
+              "name": "equipment_type",
+              "type": "string"
+            },
+            {
+              "name": "purchase_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "last_maintenance_date",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:36165df7361968069d48d4288e95cce360bbbe50656e69bef6e406bbf6e40f65",
+          "parquet_bytes": 4867,
+          "parquet_sha256": "454a4cf77eb15952fc2a8e0fe9e3e0daff6f343b36ecc57c5e5e348cdc60a3af",
+          "rows": 80
+        },
+        "product": {
+          "columns": [
+            {
+              "name": "product_id",
+              "type": "int64"
+            },
+            {
+              "name": "product_name",
+              "type": "string"
+            },
+            {
+              "name": "product_category",
+              "type": "string"
+            },
+            {
+              "name": "unit_cost",
+              "type": "double"
+            },
+            {
+              "name": "weight_kg",
+              "type": "double"
+            },
+            {
+              "name": "sell_price",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:2297d740399c8169aaba1013d531eca2b926f22ebf2950e2eb3a4e54d1049bef",
+          "parquet_bytes": 5859,
+          "parquet_sha256": "ca0363f4ddd4dc7124d338e440daf456833727c0e53a4dbba01977afdf2c2c69",
+          "rows": 100
+        },
+        "production_line": {
+          "columns": [
+            {
+              "name": "line_id",
+              "type": "int64"
+            },
+            {
+              "name": "line_name",
+              "type": "string"
+            },
+            {
+              "name": "facility",
+              "type": "string"
+            },
+            {
+              "name": "line_type",
+              "type": "string"
+            },
+            {
+              "name": "capacity_per_hour",
+              "type": "double"
+            },
+            {
+              "name": "is_active",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:2fcbe7034887ecb976a1757b6e0d183441bea0518e01025f35dbc38a67c9ece9",
+          "parquet_bytes": 2326,
+          "parquet_sha256": "58b805a306555bae2e1207c9a92d8d2a2a85e738597c791510250deb74e02fea",
+          "rows": 20
+        },
+        "production_metric": {
+          "columns": [
+            {
+              "name": "metric_id",
+              "type": "int64"
+            },
+            {
+              "name": "wo_id",
+              "type": "int64"
+            },
+            {
+              "name": "metric_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "oee_score",
+              "type": "double"
+            },
+            {
+              "name": "yield_rate",
+              "type": "double"
+            },
+            {
+              "name": "cycle_time_seconds",
+              "type": "double"
+            },
+            {
+              "name": "scrap_rate",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:fc6ea3d8a25bffb8f41ad8b53ddcdfd2fc2766f0357eb05b0e6c7809b39177d5",
+          "parquet_bytes": 1339768,
+          "parquet_sha256": "a4b0d2a6e8b587665fd922983dfa892d0b5c8248b5cf1fb717c1d7b6bc7b8ac1",
+          "rows": 25000
+        },
+        "quality_check": {
+          "columns": [
+            {
+              "name": "check_id",
+              "type": "int64"
+            },
+            {
+              "name": "wo_id",
+              "type": "int64"
+            },
+            {
+              "name": "check_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "check_type",
+              "type": "string"
+            },
+            {
+              "name": "result",
+              "type": "string"
+            },
+            {
+              "name": "defect_count",
+              "type": "double"
+            },
+            {
+              "name": "inspector_name",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:0d1801cc3e8610b2133beb59c5a6ce4642996b43ed152456be6eda33930a683b",
+          "parquet_bytes": 622139,
+          "parquet_sha256": "a5aca62603a4c6200fb675d16add0729b6372f925c9f4b341b56335a5007f66d",
+          "rows": 15000
+        },
+        "work_order": {
+          "columns": [
+            {
+              "name": "wo_id",
+              "type": "int64"
+            },
+            {
+              "name": "product_id",
+              "type": "int64"
+            },
+            {
+              "name": "production_line_id",
+              "type": "int64"
+            },
+            {
+              "name": "work_order_number",
+              "type": "string"
+            },
+            {
+              "name": "quantity_planned",
+              "type": "double"
+            },
+            {
+              "name": "start_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "priority",
+              "type": "string"
+            },
+            {
+              "name": "quantity_produced",
+              "type": "double"
+            },
+            {
+              "name": "end_date",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:f5d49b0543c507aa2869abb9d37ec2060fb1a06526138c474dbe0d0d8226fa72",
+          "parquet_bytes": 251389,
+          "parquet_sha256": "9612549f96a098052ea708d5e57aa047e9aa2399b0d5aaa7fabe644fe8113183",
+          "rows": 5000
+        }
+      }
+    },
+    "43": {
+      "dataset_id": "sha256:6f1429184f570850568bc4a7b30f733cb812fe2b7054e3beef307033e83c98a1",
+      "tables": {
+        "bom": {
+          "columns": [
+            {
+              "name": "bom_id",
+              "type": "int64"
+            },
+            {
+              "name": "product_id",
+              "type": "int64"
+            },
+            {
+              "name": "component_name",
+              "type": "string"
+            },
+            {
+              "name": "quantity_required",
+              "type": "double"
+            },
+            {
+              "name": "unit_of_measure",
+              "type": "string"
+            },
+            {
+              "name": "unit_cost",
+              "type": "double"
+            },
+            {
+              "name": "is_critical",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:b44a53910d527a5b2e95d54d8d5a856b59d58b4672d34f6f2dca32aa07f072b1",
+          "parquet_bytes": 18203,
+          "parquet_sha256": "91f8f8a4164d04ff7d146775c5fbe9a835a074c915d064838b8d03d5ef313a7c",
+          "rows": 500
+        },
+        "defect": {
+          "columns": [
+            {
+              "name": "defect_id",
+              "type": "int64"
+            },
+            {
+              "name": "check_id",
+              "type": "int64"
+            },
+            {
+              "name": "defect_code",
+              "type": "string"
+            },
+            {
+              "name": "severity",
+              "type": "string"
+            },
+            {
+              "name": "root_cause",
+              "type": "string"
+            },
+            {
+              "name": "disposition",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:5f01734ccac3149f124332ed39a329ab8a21b3dcdc23812bffe8f979c2eab8f2",
+          "parquet_bytes": 57203,
+          "parquet_sha256": "bfb3522ddb6a63cd05a4dd4ad55dcbd74eb1dd363dbecc5680683c3de5665741",
+          "rows": 4500
+        },
+        "downtime_event": {
+          "columns": [
+            {
+              "name": "event_id",
+              "type": "int64"
+            },
+            {
+              "name": "equipment_id",
+              "type": "int64"
+            },
+            {
+              "name": "start_time",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "duration_minutes",
+              "type": "double"
+            },
+            {
+              "name": "cause",
+              "type": "string"
+            },
+            {
+              "name": "impact_level",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:49a3ccc8c87f212c0833b0470b637b3a160bec343bf9561629a5d0f9212ba9be",
+          "parquet_bytes": 10396,
+          "parquet_sha256": "1562c1bc73c755a23be5ef865adc58ab0dfe680ec165e5ac7dfb5351b731fcbe",
+          "rows": 320
+        },
+        "equipment": {
+          "columns": [
+            {
+              "name": "equipment_id",
+              "type": "int64"
+            },
+            {
+              "name": "production_line_id",
+              "type": "int64"
+            },
+            {
+              "name": "equipment_name",
+              "type": "string"
+            },
+            {
+              "name": "equipment_type",
+              "type": "string"
+            },
+            {
+              "name": "purchase_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "last_maintenance_date",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:deede93d58727f7ef068870afea8bbb06241e9c206055c4164bb0f5a74d6373c",
+          "parquet_bytes": 4868,
+          "parquet_sha256": "fc22c9bcc5dc9e3a173789d2e9470330c8a2d7407d1841dc795dcbc0b6c79786",
+          "rows": 80
+        },
+        "product": {
+          "columns": [
+            {
+              "name": "product_id",
+              "type": "int64"
+            },
+            {
+              "name": "product_name",
+              "type": "string"
+            },
+            {
+              "name": "product_category",
+              "type": "string"
+            },
+            {
+              "name": "unit_cost",
+              "type": "double"
+            },
+            {
+              "name": "weight_kg",
+              "type": "double"
+            },
+            {
+              "name": "sell_price",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:e91393d4ea7574194a24544063f4049e8b6baf6aa8b9bcfb804d29b7d1b1f7a6",
+          "parquet_bytes": 5866,
+          "parquet_sha256": "137d526ad2c50b4cb0c3a85680e58f879ec8a1d7c8f9541bd56e0236ff99499c",
+          "rows": 100
+        },
+        "production_line": {
+          "columns": [
+            {
+              "name": "line_id",
+              "type": "int64"
+            },
+            {
+              "name": "line_name",
+              "type": "string"
+            },
+            {
+              "name": "facility",
+              "type": "string"
+            },
+            {
+              "name": "line_type",
+              "type": "string"
+            },
+            {
+              "name": "capacity_per_hour",
+              "type": "double"
+            },
+            {
+              "name": "is_active",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:1215c6f8f151e595a701d70518631f342d7fa6c4f0d98d830ddc573a0d48968d",
+          "parquet_bytes": 2323,
+          "parquet_sha256": "6fbb123affa72a7fab18d42608e33d296df8ca729b5533809a52d8b81c25c5d9",
+          "rows": 20
+        },
+        "production_metric": {
+          "columns": [
+            {
+              "name": "metric_id",
+              "type": "int64"
+            },
+            {
+              "name": "wo_id",
+              "type": "int64"
+            },
+            {
+              "name": "metric_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "oee_score",
+              "type": "double"
+            },
+            {
+              "name": "yield_rate",
+              "type": "double"
+            },
+            {
+              "name": "cycle_time_seconds",
+              "type": "double"
+            },
+            {
+              "name": "scrap_rate",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:1a17708cd9fb31ee9fd75c7034ea7e66301cb231cb28c891ed4acc3fb18f0062",
+          "parquet_bytes": 1339725,
+          "parquet_sha256": "716e8f07412ee8a2825e8462395ba48275fb018aa826c9b4c44c049dadb5b35a",
+          "rows": 25000
+        },
+        "quality_check": {
+          "columns": [
+            {
+              "name": "check_id",
+              "type": "int64"
+            },
+            {
+              "name": "wo_id",
+              "type": "int64"
+            },
+            {
+              "name": "check_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "check_type",
+              "type": "string"
+            },
+            {
+              "name": "result",
+              "type": "string"
+            },
+            {
+              "name": "defect_count",
+              "type": "double"
+            },
+            {
+              "name": "inspector_name",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:e13fc0dd11916faa6e2c8849ced61ad702ebfe1476e5040a2512249eeb38abe4",
+          "parquet_bytes": 622305,
+          "parquet_sha256": "3572411330cb3cfde5d5c915dbee92981a6e3d8b8e192a32a60fe4c789e8ad94",
+          "rows": 15000
+        },
+        "work_order": {
+          "columns": [
+            {
+              "name": "wo_id",
+              "type": "int64"
+            },
+            {
+              "name": "product_id",
+              "type": "int64"
+            },
+            {
+              "name": "production_line_id",
+              "type": "int64"
+            },
+            {
+              "name": "work_order_number",
+              "type": "string"
+            },
+            {
+              "name": "quantity_planned",
+              "type": "double"
+            },
+            {
+              "name": "start_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "priority",
+              "type": "string"
+            },
+            {
+              "name": "quantity_produced",
+              "type": "double"
+            },
+            {
+              "name": "end_date",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:44a26f3cbf602850fc69240448411a37c32b92319fec4b5ad1cae3cbbd534ddf",
+          "parquet_bytes": 251235,
+          "parquet_sha256": "afeb98331bdaeb4e097434818041908df596638c071ce25cf73c30b1feb36049",
+          "rows": 5000
+        }
+      }
+    },
+    "44": {
+      "dataset_id": "sha256:7a8c6e916eb3cf77df8eebc368a04bfd03f71690aaa525ff2e08c6a08e913f53",
+      "tables": {
+        "bom": {
+          "columns": [
+            {
+              "name": "bom_id",
+              "type": "int64"
+            },
+            {
+              "name": "product_id",
+              "type": "int64"
+            },
+            {
+              "name": "component_name",
+              "type": "string"
+            },
+            {
+              "name": "quantity_required",
+              "type": "double"
+            },
+            {
+              "name": "unit_of_measure",
+              "type": "string"
+            },
+            {
+              "name": "unit_cost",
+              "type": "double"
+            },
+            {
+              "name": "is_critical",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:b0fed328576ef2662a0909ef1f1a53773199f746a5c31423e850df3e02cc4e33",
+          "parquet_bytes": 18196,
+          "parquet_sha256": "1d3f0f31707222098285de9779c140ab4aca87c04a6d58643f94be70737d5587",
+          "rows": 500
+        },
+        "defect": {
+          "columns": [
+            {
+              "name": "defect_id",
+              "type": "int64"
+            },
+            {
+              "name": "check_id",
+              "type": "int64"
+            },
+            {
+              "name": "defect_code",
+              "type": "string"
+            },
+            {
+              "name": "severity",
+              "type": "string"
+            },
+            {
+              "name": "root_cause",
+              "type": "string"
+            },
+            {
+              "name": "disposition",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:9ffd9a26869452a748f66b91e2ef42f353872a9cd408fa66258ac4c052c7c9a7",
+          "parquet_bytes": 57258,
+          "parquet_sha256": "089b95085a81a91f79f434a1f0820dd1fae597f56ca4c1943f78c0f6c68e6760",
+          "rows": 4500
+        },
+        "downtime_event": {
+          "columns": [
+            {
+              "name": "event_id",
+              "type": "int64"
+            },
+            {
+              "name": "equipment_id",
+              "type": "int64"
+            },
+            {
+              "name": "start_time",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "duration_minutes",
+              "type": "double"
+            },
+            {
+              "name": "cause",
+              "type": "string"
+            },
+            {
+              "name": "impact_level",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:75edbded614a11b9d0c09f1833b502530516374c93a3ac6f4b3200dc7c7a5756",
+          "parquet_bytes": 10372,
+          "parquet_sha256": "14c4cea267815efabc0e2ee8f9dcff347aacd8c356c1601de471d2dd7a1b2ca8",
+          "rows": 320
+        },
+        "equipment": {
+          "columns": [
+            {
+              "name": "equipment_id",
+              "type": "int64"
+            },
+            {
+              "name": "production_line_id",
+              "type": "int64"
+            },
+            {
+              "name": "equipment_name",
+              "type": "string"
+            },
+            {
+              "name": "equipment_type",
+              "type": "string"
+            },
+            {
+              "name": "purchase_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "last_maintenance_date",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:cd13cf46db2ae01048c0b151d862e8c06d5fa9a3e845b547c1c89226282d8aba",
+          "parquet_bytes": 4872,
+          "parquet_sha256": "73aac3aeb164174bb9fb01cd8605ca1b96e957bcf9ff07a29b7afd5cadff6e76",
+          "rows": 80
+        },
+        "product": {
+          "columns": [
+            {
+              "name": "product_id",
+              "type": "int64"
+            },
+            {
+              "name": "product_name",
+              "type": "string"
+            },
+            {
+              "name": "product_category",
+              "type": "string"
+            },
+            {
+              "name": "unit_cost",
+              "type": "double"
+            },
+            {
+              "name": "weight_kg",
+              "type": "double"
+            },
+            {
+              "name": "sell_price",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:40fa638c17480cada406940613b2b3e6403eef83b8b8fb34244343f15f8c5e31",
+          "parquet_bytes": 5851,
+          "parquet_sha256": "053eb2c8760c2fdefee02ac039900336ec9df63f1a09f88ad45eb946b728b7e4",
+          "rows": 100
+        },
+        "production_line": {
+          "columns": [
+            {
+              "name": "line_id",
+              "type": "int64"
+            },
+            {
+              "name": "line_name",
+              "type": "string"
+            },
+            {
+              "name": "facility",
+              "type": "string"
+            },
+            {
+              "name": "line_type",
+              "type": "string"
+            },
+            {
+              "name": "capacity_per_hour",
+              "type": "double"
+            },
+            {
+              "name": "is_active",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:8882f8507b98fe3ea0b35fe8dc7db22a1742a6de144bb04cda926462548c0273",
+          "parquet_bytes": 2326,
+          "parquet_sha256": "e7281e794eb70453544f2c922bc7d2a9d48cdbf4432d1463d384f5cf8e50e72b",
+          "rows": 20
+        },
+        "production_metric": {
+          "columns": [
+            {
+              "name": "metric_id",
+              "type": "int64"
+            },
+            {
+              "name": "wo_id",
+              "type": "int64"
+            },
+            {
+              "name": "metric_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "oee_score",
+              "type": "double"
+            },
+            {
+              "name": "yield_rate",
+              "type": "double"
+            },
+            {
+              "name": "cycle_time_seconds",
+              "type": "double"
+            },
+            {
+              "name": "scrap_rate",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:201b88aa00afd619f8e6aac9eaebae39a23900ab88b0049f9d8521ff6a4d5534",
+          "parquet_bytes": 1339721,
+          "parquet_sha256": "e300d4d417d86c024c2408f9935d8b77f805ce63d3f3a5508b7f2e107a765d5e",
+          "rows": 25000
+        },
+        "quality_check": {
+          "columns": [
+            {
+              "name": "check_id",
+              "type": "int64"
+            },
+            {
+              "name": "wo_id",
+              "type": "int64"
+            },
+            {
+              "name": "check_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "check_type",
+              "type": "string"
+            },
+            {
+              "name": "result",
+              "type": "string"
+            },
+            {
+              "name": "defect_count",
+              "type": "double"
+            },
+            {
+              "name": "inspector_name",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:49da984ccb117501e759f9f3806b36ba8895713c158d1cd55befa91a140950c7",
+          "parquet_bytes": 622142,
+          "parquet_sha256": "cfc97ffad8e7f277bac3dcbd3ef642037797c72e1edd864b52ec7ad42432f1b4",
+          "rows": 15000
+        },
+        "work_order": {
+          "columns": [
+            {
+              "name": "wo_id",
+              "type": "int64"
+            },
+            {
+              "name": "product_id",
+              "type": "int64"
+            },
+            {
+              "name": "production_line_id",
+              "type": "int64"
+            },
+            {
+              "name": "work_order_number",
+              "type": "string"
+            },
+            {
+              "name": "quantity_planned",
+              "type": "double"
+            },
+            {
+              "name": "start_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "priority",
+              "type": "string"
+            },
+            {
+              "name": "quantity_produced",
+              "type": "double"
+            },
+            {
+              "name": "end_date",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:b0839760e96bab0f3f8fab4df972b0ec87116ff6d55e35b41ce8a28986a72dbe",
+          "parquet_bytes": 251292,
+          "parquet_sha256": "c7d5330696ed67fc61e4cc64047c24ba428b4f4ebec2d2ef239d47ddc926db1d",
+          "rows": 5000
+        }
+      }
+    },
+    "45": {
+      "dataset_id": "sha256:b67c64bddd8f97f2e30d9b22b9b258152498c8c2d2295cd78c939602c4120218",
+      "tables": {
+        "bom": {
+          "columns": [
+            {
+              "name": "bom_id",
+              "type": "int64"
+            },
+            {
+              "name": "product_id",
+              "type": "int64"
+            },
+            {
+              "name": "component_name",
+              "type": "string"
+            },
+            {
+              "name": "quantity_required",
+              "type": "double"
+            },
+            {
+              "name": "unit_of_measure",
+              "type": "string"
+            },
+            {
+              "name": "unit_cost",
+              "type": "double"
+            },
+            {
+              "name": "is_critical",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:ec20b396de63d31e7203c4c03993bad9f422081057c82b37688af3c9a95d224a",
+          "parquet_bytes": 18201,
+          "parquet_sha256": "ba2cbae88f4e8f98742afa5abd1e5233991f6516a13551cf1a4e5160d0aa1f15",
+          "rows": 500
+        },
+        "defect": {
+          "columns": [
+            {
+              "name": "defect_id",
+              "type": "int64"
+            },
+            {
+              "name": "check_id",
+              "type": "int64"
+            },
+            {
+              "name": "defect_code",
+              "type": "string"
+            },
+            {
+              "name": "severity",
+              "type": "string"
+            },
+            {
+              "name": "root_cause",
+              "type": "string"
+            },
+            {
+              "name": "disposition",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:1352da02c05f51b793d3c7d651add9831cf3ea22acf2dc7d7f62793a23524507",
+          "parquet_bytes": 57143,
+          "parquet_sha256": "8a7238d7c7917fbf9a552157eaa9c63c69b07961815d716cb6123a98d51d3c78",
+          "rows": 4500
+        },
+        "downtime_event": {
+          "columns": [
+            {
+              "name": "event_id",
+              "type": "int64"
+            },
+            {
+              "name": "equipment_id",
+              "type": "int64"
+            },
+            {
+              "name": "start_time",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "duration_minutes",
+              "type": "double"
+            },
+            {
+              "name": "cause",
+              "type": "string"
+            },
+            {
+              "name": "impact_level",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:506558c89c7d654ba992c8f34914a1a26bc9901e7049ee31242be14d36f2f80d",
+          "parquet_bytes": 10354,
+          "parquet_sha256": "309d603e9f97a03c3f7395c87cad111738adab31af2ed22dd9ea96a6a6193a66",
+          "rows": 320
+        },
+        "equipment": {
+          "columns": [
+            {
+              "name": "equipment_id",
+              "type": "int64"
+            },
+            {
+              "name": "production_line_id",
+              "type": "int64"
+            },
+            {
+              "name": "equipment_name",
+              "type": "string"
+            },
+            {
+              "name": "equipment_type",
+              "type": "string"
+            },
+            {
+              "name": "purchase_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "last_maintenance_date",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:6e5deeed164db0da9f2e551f189b911b4659bdce819674f90a8e095a7c5ea512",
+          "parquet_bytes": 4870,
+          "parquet_sha256": "c0db270f8b5850bb6865647f134aa0a5826120d81da75e7f3820c116db499c9a",
+          "rows": 80
+        },
+        "product": {
+          "columns": [
+            {
+              "name": "product_id",
+              "type": "int64"
+            },
+            {
+              "name": "product_name",
+              "type": "string"
+            },
+            {
+              "name": "product_category",
+              "type": "string"
+            },
+            {
+              "name": "unit_cost",
+              "type": "double"
+            },
+            {
+              "name": "weight_kg",
+              "type": "double"
+            },
+            {
+              "name": "sell_price",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:ae2d84d1cf79b6e2c4c0893fdc701ed579e24eb61dac99d463a31d7248b86787",
+          "parquet_bytes": 5852,
+          "parquet_sha256": "b39618f9bccc06201db1d5b41e64637b34572d7704e4ebed9c7de5ba48f88962",
+          "rows": 100
+        },
+        "production_line": {
+          "columns": [
+            {
+              "name": "line_id",
+              "type": "int64"
+            },
+            {
+              "name": "line_name",
+              "type": "string"
+            },
+            {
+              "name": "facility",
+              "type": "string"
+            },
+            {
+              "name": "line_type",
+              "type": "string"
+            },
+            {
+              "name": "capacity_per_hour",
+              "type": "double"
+            },
+            {
+              "name": "is_active",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:29dece8c1d1e75be1eb43c0e56af7b3ac5fb342f8dcf212ed2c6745311b33c36",
+          "parquet_bytes": 2329,
+          "parquet_sha256": "2a5f344fe3c77c8399eeaba2a59a200ea63ebd1ed34eb347e41e263f069536cb",
+          "rows": 20
+        },
+        "production_metric": {
+          "columns": [
+            {
+              "name": "metric_id",
+              "type": "int64"
+            },
+            {
+              "name": "wo_id",
+              "type": "int64"
+            },
+            {
+              "name": "metric_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "oee_score",
+              "type": "double"
+            },
+            {
+              "name": "yield_rate",
+              "type": "double"
+            },
+            {
+              "name": "cycle_time_seconds",
+              "type": "double"
+            },
+            {
+              "name": "scrap_rate",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:ff9bb436479b3230107120a1ab3ec0833474e1f51dba5578a9baa718211c0bb7",
+          "parquet_bytes": 1339684,
+          "parquet_sha256": "52c2ee88ac4b5b81f8d5616035f54460a5c4a96934fc02d227d4660fc09dab89",
+          "rows": 25000
+        },
+        "quality_check": {
+          "columns": [
+            {
+              "name": "check_id",
+              "type": "int64"
+            },
+            {
+              "name": "wo_id",
+              "type": "int64"
+            },
+            {
+              "name": "check_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "check_type",
+              "type": "string"
+            },
+            {
+              "name": "result",
+              "type": "string"
+            },
+            {
+              "name": "defect_count",
+              "type": "double"
+            },
+            {
+              "name": "inspector_name",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:19e2c665b7c3eb77099a1ad54e7c0f95cca1311416f8121a35a6c1d3d73dea89",
+          "parquet_bytes": 622061,
+          "parquet_sha256": "e54b71181befaa94daa50a283542a098f6b6ec0124670c1e0e99222c0dacb23b",
+          "rows": 15000
+        },
+        "work_order": {
+          "columns": [
+            {
+              "name": "wo_id",
+              "type": "int64"
+            },
+            {
+              "name": "product_id",
+              "type": "int64"
+            },
+            {
+              "name": "production_line_id",
+              "type": "int64"
+            },
+            {
+              "name": "work_order_number",
+              "type": "string"
+            },
+            {
+              "name": "quantity_planned",
+              "type": "double"
+            },
+            {
+              "name": "start_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "priority",
+              "type": "string"
+            },
+            {
+              "name": "quantity_produced",
+              "type": "double"
+            },
+            {
+              "name": "end_date",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:4cc4c5827d02980f74ea70d28a048101d75ec674a63f804e0f1235d0ff083f4f",
+          "parquet_bytes": 251049,
+          "parquet_sha256": "aa210b63588cc45c7d7ff46a2df363469bb87b0f83879ef70a5f01c4c92385fc",
+          "rows": 5000
+        }
+      }
+    },
+    "46": {
+      "dataset_id": "sha256:5243f3683b93071a3920d99a803235244924b05e9a5fefa98875bc6f91b10caa",
+      "tables": {
+        "bom": {
+          "columns": [
+            {
+              "name": "bom_id",
+              "type": "int64"
+            },
+            {
+              "name": "product_id",
+              "type": "int64"
+            },
+            {
+              "name": "component_name",
+              "type": "string"
+            },
+            {
+              "name": "quantity_required",
+              "type": "double"
+            },
+            {
+              "name": "unit_of_measure",
+              "type": "string"
+            },
+            {
+              "name": "unit_cost",
+              "type": "double"
+            },
+            {
+              "name": "is_critical",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:d07f587e75f81f1eda8b1109246cd7c2279c86eb6936df7490c9f74c3287168a",
+          "parquet_bytes": 18196,
+          "parquet_sha256": "3bf176fddfa380bdbe6404d03cb87c3d51f102992de675373cb8753f760a1c90",
+          "rows": 500
+        },
+        "defect": {
+          "columns": [
+            {
+              "name": "defect_id",
+              "type": "int64"
+            },
+            {
+              "name": "check_id",
+              "type": "int64"
+            },
+            {
+              "name": "defect_code",
+              "type": "string"
+            },
+            {
+              "name": "severity",
+              "type": "string"
+            },
+            {
+              "name": "root_cause",
+              "type": "string"
+            },
+            {
+              "name": "disposition",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:ba6b64884bb7b77276b380619aff6d34ca12759ada997cead11ef2c0b21cc76e",
+          "parquet_bytes": 57086,
+          "parquet_sha256": "cb8632758a70ed861af7df51069990ec346e0fd830622a111521f77fed6649b3",
+          "rows": 4500
+        },
+        "downtime_event": {
+          "columns": [
+            {
+              "name": "event_id",
+              "type": "int64"
+            },
+            {
+              "name": "equipment_id",
+              "type": "int64"
+            },
+            {
+              "name": "start_time",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "duration_minutes",
+              "type": "double"
+            },
+            {
+              "name": "cause",
+              "type": "string"
+            },
+            {
+              "name": "impact_level",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:ea5b3b013d6a89bfeb9f8c88592a275a5ed405ddd6ed1c0cd3c39295d92c8a74",
+          "parquet_bytes": 10361,
+          "parquet_sha256": "04612e00a56b8c5863133203f51562d161b3d1de038ff8c07ae34ecbf8c4370b",
+          "rows": 320
+        },
+        "equipment": {
+          "columns": [
+            {
+              "name": "equipment_id",
+              "type": "int64"
+            },
+            {
+              "name": "production_line_id",
+              "type": "int64"
+            },
+            {
+              "name": "equipment_name",
+              "type": "string"
+            },
+            {
+              "name": "equipment_type",
+              "type": "string"
+            },
+            {
+              "name": "purchase_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "last_maintenance_date",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:9a505d7a9b78f28323d1add628f603cc8db9d513413542bc229142bf4d9b73f6",
+          "parquet_bytes": 4868,
+          "parquet_sha256": "60216c9553663355317fb8619053197c15e41f45f59ba257b5899eac8173ab2c",
+          "rows": 80
+        },
+        "product": {
+          "columns": [
+            {
+              "name": "product_id",
+              "type": "int64"
+            },
+            {
+              "name": "product_name",
+              "type": "string"
+            },
+            {
+              "name": "product_category",
+              "type": "string"
+            },
+            {
+              "name": "unit_cost",
+              "type": "double"
+            },
+            {
+              "name": "weight_kg",
+              "type": "double"
+            },
+            {
+              "name": "sell_price",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:0f6d4eb1407f2acea98fcf3ba9a85775a6a7dce45448bc5d1f8e9452dd9c3679",
+          "parquet_bytes": 5867,
+          "parquet_sha256": "ddef706445135138b7efc234fe1350f6046804a51ad97357d62d10e6c3204942",
+          "rows": 100
+        },
+        "production_line": {
+          "columns": [
+            {
+              "name": "line_id",
+              "type": "int64"
+            },
+            {
+              "name": "line_name",
+              "type": "string"
+            },
+            {
+              "name": "facility",
+              "type": "string"
+            },
+            {
+              "name": "line_type",
+              "type": "string"
+            },
+            {
+              "name": "capacity_per_hour",
+              "type": "double"
+            },
+            {
+              "name": "is_active",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:22cc8925ca236ffeb9d6716ba21cbbb454f4c56c7a36556fdb74658a7f5b450e",
+          "parquet_bytes": 2322,
+          "parquet_sha256": "d1477f9d07e9d1bcfed0b1c7607af23bbf1f3547cb9334760d04b2ac8bdd20ce",
+          "rows": 20
+        },
+        "production_metric": {
+          "columns": [
+            {
+              "name": "metric_id",
+              "type": "int64"
+            },
+            {
+              "name": "wo_id",
+              "type": "int64"
+            },
+            {
+              "name": "metric_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "oee_score",
+              "type": "double"
+            },
+            {
+              "name": "yield_rate",
+              "type": "double"
+            },
+            {
+              "name": "cycle_time_seconds",
+              "type": "double"
+            },
+            {
+              "name": "scrap_rate",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:ce0d3002665a1b4a6bb81a6f5ac4524b72dc3802cd9b761d73067b744ffa9eab",
+          "parquet_bytes": 1339767,
+          "parquet_sha256": "364c9064c1fa9b17c6ba5ef3a7849e1da7d2249813a0b0eac1350ac01affea53",
+          "rows": 25000
+        },
+        "quality_check": {
+          "columns": [
+            {
+              "name": "check_id",
+              "type": "int64"
+            },
+            {
+              "name": "wo_id",
+              "type": "int64"
+            },
+            {
+              "name": "check_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "check_type",
+              "type": "string"
+            },
+            {
+              "name": "result",
+              "type": "string"
+            },
+            {
+              "name": "defect_count",
+              "type": "double"
+            },
+            {
+              "name": "inspector_name",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:a671e8acde7fd5fd4e4b2eccdeb5bc68b01d059d7faf5065e78d204f3885c89b",
+          "parquet_bytes": 622136,
+          "parquet_sha256": "fe54dcbdb2bfdb2d0784fe6207731c3c574a43b5c88cbd6b9cd5f86032f3ab7c",
+          "rows": 15000
+        },
+        "work_order": {
+          "columns": [
+            {
+              "name": "wo_id",
+              "type": "int64"
+            },
+            {
+              "name": "product_id",
+              "type": "int64"
+            },
+            {
+              "name": "production_line_id",
+              "type": "int64"
+            },
+            {
+              "name": "work_order_number",
+              "type": "string"
+            },
+            {
+              "name": "quantity_planned",
+              "type": "double"
+            },
+            {
+              "name": "start_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "priority",
+              "type": "string"
+            },
+            {
+              "name": "quantity_produced",
+              "type": "double"
+            },
+            {
+              "name": "end_date",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:d9f0d0f237a1ef5252fa497bfcd2f7c51cba5a5b715193ac660a09bc30072343",
+          "parquet_bytes": 251296,
+          "parquet_sha256": "1110a416db27f430e4a735ddc62bf6d05e91a32707ca62bab51a01e2744ff756",
+          "rows": 5000
+        }
+      }
+    }
+  },
+  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
+  "shape_version": "0.9.1",
+  "version": 1,
+  "workload": "generate:manufacturing:medium"
+}

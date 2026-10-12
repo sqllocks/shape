@@ -1,0 +1,17 @@
+{
+  "format": "shape-profile-record",
+  "input_digest": "7db8bd20d6ab38a7f198d466c83b0548ba65f6303a91481b5b8821218207089d",
+  "inputs": {
+    "profile/edge/x_pq_list.parquet": "a658ff6c7e33970e0abe991b6787b03db2cca64df56e95191202ae85c0125d7b"
+  },
+  "profile": {
+    "__error__": {
+      "category": "TypeError"
+    }
+  },
+  "recorded_utc": "2026-10-12T18:59:22Z",
+  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
+  "shape_version": "0.9.1",
+  "version": 1,
+  "workload": "profile:edge/x_pq_list.parquet"
+}
