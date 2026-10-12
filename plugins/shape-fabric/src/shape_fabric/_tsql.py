@@ -413,6 +413,44 @@ def widest_first(batch: pa.RecordBatch) -> bool:
     return True
 
 
+def text_input_sizes(batch: pa.RecordBatch) -> list[Any] | None:
+    """``pyodbc`` ``setinputsizes`` entries sized from the whole batch (text and binary columns at
+    their longest value, ``None`` for the rest), or ``None`` where pyodbc is not importable.
+
+    With the sizes set, ``fast_executemany`` is safe whatever row comes first: the driver no
+    longer sizes its buffers from row 0, so a longer value later in the batch is not cut."""
+    try:
+        import pyodbc  # type: ignore[import-not-found,unused-ignore]
+    except ImportError:
+        return None
+    sizes: list[Any] = []
+    for col in batch.columns:
+        t = col.type
+        if pat.is_string(t) or pat.is_large_string(t):
+            top = pc.max(pc.utf8_length(col)).as_py() or 0
+            sizes.append((pyodbc.SQL_WVARCHAR, 0 if top > 4000 else max(top, 1), 0))
+        elif pat.is_binary(t) or pat.is_large_binary(t):
+            top = pc.max(pc.binary_length(col)).as_py() or 0
+            sizes.append((pyodbc.SQL_VARBINARY, 0 if top > 8000 else max(top, 1), 0))
+        else:
+            sizes.append(None)
+    return sizes
+
+
+def use_fast_executemany(cursor: Any, batch: pa.RecordBatch) -> None:
+    """Turn on ``fast_executemany`` for ``batch`` where it is safe: always when the text sizes can
+    be set explicitly, else only when row 0 holds the longest value of every text column. (Before
+    this, a batch whose first row was not the longest fell back to one round trip per row.)"""
+    if not hasattr(cursor, "fast_executemany"):
+        return
+    sizes = text_input_sizes(batch) if hasattr(cursor, "setinputsizes") else None
+    if sizes is not None:
+        cursor.setinputsizes(sizes)
+        cursor.fast_executemany = True
+    else:
+        cursor.fast_executemany = widest_first(batch)
+
+
 def rows_as_params(batch: pa.RecordBatch) -> list[tuple[Any, ...]]:
     """The rows of a normalized ``batch`` as parameter tuples of Python natives."""
     columns = [c.to_pylist() for c in batch.columns]
