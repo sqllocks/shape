@@ -16,6 +16,7 @@ import os
 import uuid
 
 import pyarrow as pa
+import pyarrow.compute as pc
 import pytest
 from shape_fabric import SynapseSink, _tsql
 from shape_fabric.auth import AuthSettings, build_credential
@@ -57,7 +58,20 @@ def test_synapse_round_trip():
     identity = credential()
     table = f"shape_live_{uuid.uuid4().hex[:8]}"
     batches = [sample_batch(0, 30), sample_batch(30, 12)]
-    written = pa.Table.from_batches(batches)
+    sent = pa.Table.from_batches(batches)
+    # a SQL float cannot hold NaN or infinity: the writer stores them as NULL (documented), so
+    # that is what is read back; every other value must come back unchanged
+    written = pa.table(
+        {
+            f.name: (
+                pc.if_else(pc.is_finite(sent[f.name]), sent[f.name], pa.scalar(None, f.type))
+                if pa.types.is_floating(f.type)
+                else sent[f.name]
+            )
+            for f in sent.schema
+        },
+        schema=sent.schema,
+    )
     host, pool = SynapseSink()._parse(uri)
     from shape_sqlserver.sql import build_connection_string
 
@@ -91,7 +105,7 @@ def test_synapse_round_trip():
                     for i, (w, g) in enumerate(
                         zip(written.column(n).to_pylist(), got.column(n).to_pylist(), strict=True)
                     )
-                    if w != g and not (w != w and g != g)  # NaN is not equal to itself
+                    if w != g
                 ),
                 None,
             )
