@@ -132,12 +132,21 @@ def _dump(obj: Any) -> None:
     print(json.dumps(obj, indent=2, sort_keys=True, default=str))
 
 
+#: The ground-truth log ``shape chaos`` writes beside its tables (``_chaos_ground_truth.jsonl``,
+#: or ``_chaos_ground_truth_YYYYMMDD.jsonl`` for a dated batch): a log, not a table (#722).
+_CHAOS_LOG_PREFIX = "_chaos_ground_truth"
+
+
 def read_tables(directory: str | Path) -> dict[str, pa.Table]:
     """Every CSV, Parquet and JSON Lines file of ``directory`` as a table named by its stem (a
-    later format replaces an earlier one of the same name)."""
+    later format replaces an earlier one of the same name). The provenance sidecar, ``_SUCCESS``
+    and the ground-truth logs of ``shape chaos`` are skipped; a file that cannot be read as a
+    table is a ``ValueError`` that names it."""
     path = Path(directory)
     if not path.is_dir():
         raise ValueError(f"input directory not found: {directory}")
+    import pyarrow as pa
+
     tables: dict[str, pa.Table] = {}
     from shape.io.provenance import is_ignored
 
@@ -145,24 +154,32 @@ def read_tables(directory: str | Path) -> dict[str, pa.Table]:
         for file in sorted(path.glob(pattern)):
             if is_ignored(file):  # _shape_provenance.json and _SUCCESS are not tables
                 continue
-            if fmt == "csv":
-                from shape.io.identifiers import read_csv_keeping_identifiers
-
-                tables[file.stem] = read_csv_keeping_identifiers(file)
-            elif fmt == "parquet":
-                import pyarrow.parquet as pq  # type: ignore[import-untyped]
-
-                tables[file.stem] = pq.read_table(file)
-            else:
-                import pyarrow.json as pajson  # type: ignore[import-untyped]
-
-                from shape.security.jsondepth import check_json_file
-
-                check_json_file(file)
-                tables[file.stem] = pajson.read_json(file)
+            if fmt == "jsonl" and file.stem.startswith(_CHAOS_LOG_PREFIX):
+                continue
+            try:
+                tables[file.stem] = _read_table(file, fmt)
+            except pa.ArrowException as exc:
+                raise ValueError(f"{file}: cannot be read as a {fmt} table: {exc}") from exc
     if not tables:
         raise ValueError(f"no CSV, Parquet or JSON Lines files found in {directory}")
     return tables
+
+
+def _read_table(file: Path, fmt: str) -> pa.Table:
+    if fmt == "csv":
+        from shape.io.identifiers import read_csv_keeping_identifiers
+
+        return read_csv_keeping_identifiers(file)
+    if fmt == "parquet":
+        import pyarrow.parquet as pq  # type: ignore[import-untyped]
+
+        return pq.read_table(file)
+    import pyarrow.json as pajson  # type: ignore[import-untyped]
+
+    from shape.security.jsondepth import check_json_file
+
+    check_json_file(file)
+    return pajson.read_json(file)
 
 
 def _record_provenance(

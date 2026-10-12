@@ -76,7 +76,8 @@ corruptions, each with a rate, and the **ground-truth log** they write.
 
 
 writes the corrupted tables to `corrupted/` and the log to `corrupted/_chaos_ground_truth.jsonl`.
-The tables are generated, or read from `--input DIR` (the files `shape generate` writes); the same
+The tables are generated, or read from `--input DIR` (the files `shape generate` writes, or the
+output of an earlier `shape chaos` run: its ground-truth logs are not read as tables); the same
 landing options as `shape generate` (`--path-template`, `--batch-date`, `--table-format`, see
 [LANDING.md](LANDING.md)) write them in a dated layout, and then the log is
 `_chaos_ground_truth_YYYYMMDD.jsonl`. `--start-date D0 --batch-date D` sets the batch number to the
