@@ -16,6 +16,12 @@ Jonathan Stewart is the sole maintainer, with final review and merge authority. 
 
 Only the latest release is supported. Report vulnerabilities privately as the [security policy](../SECURITY.md) describes. Responses are best-effort: no response-time commitment and no backports.
 
+<a id="domain-capital_markets"></a>
+
+## Capital markets reference lists
+
+Owner decision, **2026-10-12**: the reference lists were authored by the Owner, by hand or with AI assistance, and were not copied from a specific external website or dataset. Existing attributions remain, including the recorded MIT notices.
+
 <a id="domain-education"></a>
 
 ## Education reference lists
@@ -27,6 +33,12 @@ The reference lists were authored by the Owner, by hand or with AI assistance, a
 ## Financial reference lists
 
 The reference lists were authored by the Owner, by hand or with AI assistance, and were not copied from a specific external website or dataset. Existing attributions remain, including GeoNames ZIP data under CC-BY-4.0 and the recorded MIT notices.
+
+<a id="domain-healthcare"></a>
+
+## Healthcare reference lists
+
+Owner decision, **2026-10-12**: the reference lists were authored by the Owner, by hand or with AI assistance, and were not copied from a specific external website or dataset. Existing attributions remain, including the recorded MIT notices.
 
 <a id="domain-hr"></a>
 
