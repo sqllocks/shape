@@ -105,7 +105,7 @@ shape seed retail --target postgresql://shape@localhost:5432/shape --scale small
     seeded 21,750 rows into 9 tables
     ```
 
-Evidence: [run 38269228192, ubuntu-latest, `44b25f84630c`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38269228192-44b25f84630c-ubuntu-latest-postgres-seed.json).
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-postgres-seed.json).
 
 Other target forms (supply their connection and credentials):
 
