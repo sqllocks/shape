@@ -117,3 +117,23 @@ def test_stream_cli_verdicts_are_fail_closed(monkeypatch, tmp_path, capsys, dama
             )
             == 1
         )
+
+
+def test_failed_stream_worker_reports_command_exit_and_output_tail(monkeypatch, tmp_path, capsys):
+    import subprocess
+
+    v = verifier()
+    cmd = ["baseline-shape", "stream", "retail"]
+    monkeypatch.setattr(
+        v.subprocess,
+        "run",
+        lambda *a, **kw: subprocess.CompletedProcess(
+            cmd, 23, "\n".join(f"stream-line-{i}" for i in range(240)), "stream diagnostic"
+        ),
+    )
+    with pytest.raises(v.MissingInput, match="exit 23"):
+        v.run_command(cmd, tmp_path / "events.jsonl")
+    output = capsys.readouterr().err
+    assert "baseline-shape stream retail" in output
+    assert "stream-line-239" in output and "stream diagnostic" in output
+    assert "stream-line-0\n" not in output

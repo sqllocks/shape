@@ -8,6 +8,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 BENCH = ROOT / "benchmarks" / "vs_refengine"
 sys.path.insert(0, str(BENCH))
@@ -136,3 +138,46 @@ def test_missing_recording_records_unavailable_and_never_times(monkeypatch, tmp_
         r["verifier"]["status"] == "unavailable" and r["median_s"] is None
         for r in doc["shape"]["workloads"].values()
     )
+
+
+def test_failed_timing_subprocess_retains_last_output_lines(monkeypatch, capsys):
+    from types import SimpleNamespace
+
+    lines = [f"worker-line-{i}\n" for i in range(650)]
+    monkeypatch.setattr(
+        run.subprocess,
+        "Popen",
+        lambda *a, **kw: SimpleNamespace(stdout=iter(lines), wait=lambda: 17),
+    )
+    rc, output = run.sh(["baseline-python", "profile-worker"])
+    assert rc == 17 and output == "".join(lines)
+    shown = capsys.readouterr().out
+    assert "baseline-python profile-worker" in shown
+    assert "exit 17" in shown
+    assert "worker-line-649" in shown
+    assert "worker-line-450" in shown
+
+
+@pytest.mark.parametrize("family", ["profile", "generate", "stream"])
+def test_release_recording_stops_at_first_failed_timing_worker(monkeypatch, family):
+    monkeypatch.setattr(run, "BASELINE_ONLY", True)
+    calls = []
+    directory = {"profile": run.PROFILE, "generate": run.DOMAIN, "stream": run.STREAM}[family]
+
+    def sh(command):
+        calls.append(command)
+        return (17, "actionable failure") if str(directory / "bench.py") in command else (0, "")
+
+    monkeypatch.setattr(run, "sh", sh)
+    out = {"baseline": {"workloads": {}}, "shape": {"workloads": {}}}
+    with pytest.raises(run.RecordingError, match=family + ":.*exit 17"):
+        if family == "profile":
+            run.profile_workloads(["d1.csv", "d2.csv"], 5, out)
+        elif family == "generate":
+            run.domain_workloads("retail", ["small", "medium"], 5, out)
+        else:
+            run.stream_workloads(["small", "medium"], 5, out)
+    assert len(calls) == (3 if family == "profile" else 2)
+    assert calls[-1][-1] == "--baseline-only"
+    if family == "profile":
+        assert calls[-1][-2:] == ["d1.csv", "--baseline-only"]

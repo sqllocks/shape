@@ -43,16 +43,19 @@ CASES: dict[str, tuple[str, int, dict[str, Any], tuple[str, ...]]] = {
 }
 
 
-def load_real(mssql: str, scenario: str, scale: int) -> None:
-    import contextlib
-
+def connect_real(connection: str) -> Any:
+    """Load the optional ODBC driver only for an actual server connection."""
     import pyodbc  # type: ignore[import-not-found]
 
-    pyodbc.pooling = False  # a pooled session would keep its locks after close
+    pyodbc.pooling = False
+    return pyodbc.connect(connection, autocommit=True)
+
+
+def load_real(mssql: str, scenario: str, scale: int) -> None:
     testing = load_testing()
     fake = testing.scenario(scenario, scale)
     schema = f"parity_{scenario}"
-    with contextlib.closing(pyodbc.connect(mssql, autocommit=True)) as conn:
+    with contextlib.closing(connect_real(mssql)) as conn:
         cur = conn.cursor()
         drop_real(cur, fake, schema)
         cur.execute(f"CREATE SCHEMA [{schema}]")
@@ -138,9 +141,7 @@ def baseline_profile(case: str, mssql: bool = False) -> dict[str, Any]:
 
 
 def cleanup_real(connection: str, scenario: str, scale: int) -> None:
-    import pyodbc
-
-    with contextlib.closing(pyodbc.connect(connection, autocommit=True)) as conn:
+    with contextlib.closing(connect_real(connection)) as conn:
         drop_real(conn.cursor(), load_testing().scenario(scenario, scale), "parity_" + scenario)
 
 

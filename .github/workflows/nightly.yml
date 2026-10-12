@@ -614,6 +614,8 @@ jobs:
       - name: Record every release workload, equivalence before timing
         run: |
           source scripts/env.sh
+          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/record_baseline.py --all --smoke \
+            --mssql "$SHAPE_TEST_MSSQL;Database=tempdb" --out benchmarks/vs_refengine/recorded
           "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/profile_1to1/datasets.py
           "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/record_baseline.py --all \
             --mssql "$SHAPE_TEST_MSSQL;Database=tempdb" --out benchmarks/vs_refengine/recorded

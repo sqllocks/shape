@@ -227,7 +227,13 @@ class Pools:
             out: set[str] = set()
             for item in ds:
                 if isinstance(item, dict):
-                    out.add(str(item.get(gen.get("field", "name"))))
+                    # The release provider prefers an explicit existing field, then name/value.
+                    field = gen.get("field")
+                    if not field or field not in item:
+                        field = next((f for f in ("name", "value") if f in item), None)
+                    if field is None:
+                        raise RecordingError(f"{gen['dataset']}: no baseline value field")
+                    out.add(str(item[field]))
                 else:
                     out.add(str(item))
             return out

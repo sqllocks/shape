@@ -185,6 +185,7 @@ nav:
   - Python API: API.md
   - API stability: API_STABILITY.md
   - Performance (generated): reference/performance.md
+  - Release regression benchmarks: PERFORMANCE.md
   - Specifications:
     - Shape model v2: specs/SHAPE_MODEL_V2.md
     - Normative contract v2: specs/SHAPE_2.md
