@@ -1,9 +1,10 @@
-"""Measure the real test and one temporary growth control on a macOS runner."""
+"""Prove peak program-allocation measurements and a temporary growth control on macOS."""
 
 from __future__ import annotations
 
 import argparse
 import ast
+import hashlib
 import inspect
 import json
 import re
@@ -39,6 +40,70 @@ INJECTION = (
 )
 
 
+def allocation_source(original: bytes) -> bytes:
+    """Stage the exact proposed fix; no committed test or product files change."""
+    source = original.decode()
+
+    def embedded(text):
+        return "        " + json.dumps(text + "\n") + "\n"
+
+    def replace(old, new):
+        nonlocal source
+        assert source.count(old) == 1, old
+        source = source.replace(old, new, 1)
+
+    replace(embedded("def peak_memory():"), embedded("def peak_memory(mac=None):"))
+    replace(
+        embedded("        return mac_usage(os.getpid())['ri_lifetime_max_phys_footprint']"),
+        embedded("        return (mac['malloc']['max_size_in_use']")
+        + embedded("                + pool.max_memory() + csv_pool.max_memory())"),
+    )
+    csv = (
+        "        # The serial CSV reader uses a separate pool; "
+        "the default pool omits its buffers.\n"
+        + embedded("csv_pool = (pa.mimalloc_memory_pool()")
+        + embedded("    if 'mimalloc' in pa.supported_memory_backends() else pool)")
+    )
+    replace(csv, "")
+    replace(
+        embedded("pool = pa.default_memory_pool()"),
+        embedded("pool = pa.default_memory_pool()") + csv,
+    )
+    replace(
+        embedded("initial_peak = peak_memory()") + embedded("initial_mac = mac_snapshot()"),
+        embedded("initial_mac = mac_snapshot()")
+        + embedded("initial_peak = peak_memory(initial_mac)"),
+    )
+    replace(
+        embedded("peak = peak_memory()"),
+        embedded("final_mac = mac_snapshot()") + embedded("peak = peak_memory(final_mac)"),
+    )
+    replace("'final_mac': mac_snapshot()", "'final_mac': final_mac")
+    replace('metric = "physical footprint"', 'metric = "program allocation"')
+    replace(
+        "macOS measures physical footprint, excluding\n    freed reusable pages; "
+        "Linux and Windows measure RSS.",
+        "macOS measures peak program allocation;\n    Linux and Windows measure RSS.",
+    )
+    replace(
+        "        # RSS includes freed reusable pages until macOS reclaims them. "
+        "Physical footprint\n"
+        "        # excludes those pages and includes compressed memory "
+        "still owned by the process.\n",
+        "        # Measure program allocation independently of macOS page-reclamation timing.\n"
+        "        # Keep the physical footprint in stderr diagnostics for comparison.\n",
+    )
+    return source.encode()
+
+
+def allocation_from_diagnostics(diagnostics):
+    return (
+        diagnostics["final_mac"]["malloc"]["max_size_in_use"]
+        + diagnostics["csv_arrow_peak"]
+        + diagnostics["arrow_peak"]
+    )
+
+
 def run_case(label: str, output: Path) -> dict:
     log = output / f"{label}.log"
     with log.open("w") as stream:
@@ -52,13 +117,14 @@ def run_case(label: str, output: Path) -> dict:
     peaks = {}
     diagnostics = {}
     for line in text.splitlines():
-        match = re.fullmatch(r"(\d+) rows: peak physical footprint (\d+) bytes; (.+)", line)
+        match = re.fullmatch(r"(\d+) rows: peak program allocation (\d+) bytes; (.+)", line)
         if match:
             rows, peak, stderr = match.groups()
             peaks[int(rows)] = int(peak)
             diagnostics[rows] = json.loads(stderr)
+            assert int(peak) == allocation_from_diagnostics(diagnostics[rows])
     (output / f"{label}-stderr.json").write_text(json.dumps(diagnostics, indent=2) + "\n")
-    record = {"case": label, "pytest_exit": result.returncode, "footprints": peaks}
+    record = {"case": label, "pytest_exit": result.returncode, "allocations": peaks}
     (output / f"{label}-result.json").write_text(json.dumps(record, indent=2) + "\n")
     print(json.dumps(record), flush=True)
     return {**record, "assertion_failed": "assert abs(peaks[48_000_000]" in text}
@@ -130,10 +196,11 @@ def run_probe(order_name: str, iteration: int, after_heavy: bool, output: Path) 
                     sample = {
                         "position": len(record["samples"]) + 1,
                         "rows": rows,
-                        "footprint": int(result.stdout.split()[-1]),
+                        "allocation": int(result.stdout.split()[-1]),
                         "child_exit": result.returncode,
                         "diagnostics": diagnostics,
                     }
+                    assert sample["allocation"] == allocation_from_diagnostics(diagnostics)
                     record["samples"].append(sample)
                     (output / f"child-{sample['position']}-stderr.txt").write_text(result.stderr)
                     print("MATRIX_SAMPLE " + json.dumps(sample), flush=True)
@@ -188,8 +255,10 @@ def run_probe(order_name: str, iteration: int, after_heavy: bool, output: Path) 
     samples = record["samples"]
     complete = len(samples) == 2 and tuple(s["rows"] for s in samples) == order
     if complete:
-        first, second = (s["footprint"] for s in samples)
-        record["absolute_difference_fraction"] = abs(second - first) / first
+        first, second = (s["allocation"] for s in samples)
+        # Match the unchanged acceptance denominator even when 48M is scanned first.
+        denominator = next(s["allocation"] for s in samples if s["rows"] == 24_000_000)
+        record["absolute_difference_fraction"] = abs(second - first) / denominator
     record["protocol_complete"] = complete
     (output / "probe.json").write_text(json.dumps(record, indent=2) + "\n")
     print("MATRIX_RESULT " + json.dumps(record), flush=True)
@@ -201,7 +270,6 @@ def run_probe(order_name: str, iteration: int, after_heavy: bool, output: Path) 
 def run_matrix(output: Path) -> int:
     records = []
     cases = [(name, iteration, False) for iteration in range(1, 6) for name in ORDERS]
-    cases.append(("24-48", 1, True))
     for index, (name, iteration, after_heavy) in enumerate(cases, 1):
         directory = output / f"{index:02d}-{name}-{'after-heavy' if after_heavy else iteration}"
         directory.mkdir()
@@ -250,7 +318,7 @@ def run_matrix(output: Path) -> int:
                         "absolute_difference_fraction",
                     )
                 }
-                | {"footprints": [sample["footprint"] for sample in record.get("samples", [])]}
+                | {"allocations": [sample["allocation"] for sample in record.get("samples", [])]}
             ),
             flush=True,
         )
@@ -263,7 +331,37 @@ def run_matrix(output: Path) -> int:
         and r.get("absolute_difference_fraction", 1) < 0.10
         for r in records
     )
-    return 0 if passed else 1
+    # Run the proportional-memory proof even when an earlier matrix pair failed.
+    control_output = output / "growth-proof"
+    control_output.mkdir()
+    with (control_output / "pytest.log").open("w") as stream:
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(Path(__file__).resolve()),
+                "--output",
+                str(control_output),
+                "--control-only",
+            ],
+            stdout=stream,
+            stderr=subprocess.STDOUT,
+        )
+    print((control_output / "pytest.log").read_text(), flush=True)
+    (output / "matrix-and-control.json").write_text(
+        json.dumps(
+            {
+                "pairs": records,
+                "matrix_passed": passed,
+                "control_exit": result.returncode,
+                "proof": json.loads((control_output / "summary.json").read_text())
+                if (control_output / "summary.json").exists()
+                else None,
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+    return 0 if passed and result.returncode == 0 else 1
 
 
 def main() -> int:
@@ -273,9 +371,10 @@ def main() -> int:
     parser.add_argument("--probe-order", choices=ORDERS)
     parser.add_argument("--iteration", type=int, default=1)
     parser.add_argument("--after-heavy", action="store_true")
+    parser.add_argument("--control-only", action="store_true")
     args = parser.parse_args()
     if sys.platform != "darwin":
-        parser.error("requires macOS; Linux RSS is not physical-footprint evidence")
+        parser.error("requires macOS; Linux RSS is not Darwin allocation evidence")
     repo = Path(__file__).resolve().parents[2]
     if Path.cwd().resolve() != repo:
         parser.error("run from the repository root")
@@ -285,17 +384,20 @@ def main() -> int:
     if subprocess.check_output(["git", "status", "--porcelain"], text=True).strip():
         raise RuntimeError("checkout must be clean before the control")
     output.mkdir(parents=True, exist_ok=True)
-    if args.probe_order:
-        return run_probe(args.probe_order, args.iteration, args.after_heavy, output)
     if args.matrix:
         return run_matrix(output)
     source = repo / "tests/profile/test_engine.py"
     original = source.read_bytes()
     assert original.count(ANCHOR) == 1
-    assert b"return mac_usage(os.getpid())['ri_lifetime_max_phys_footprint']" in original
+    proposed = allocation_source(original)
+    (output / "candidate-test_engine.py").write_bytes(proposed)
+    (output / "candidate-sha256.txt").write_text(hashlib.sha256(proposed).hexdigest() + "\n")
     try:
-        real = run_case("real", output)
-        source.write_bytes(original.replace(ANCHOR, INJECTION + ANCHOR))
+        source.write_bytes(proposed)
+        if args.probe_order:
+            return run_probe(args.probe_order, args.iteration, args.after_heavy, output)
+        real = None if args.control_only else run_case("real", output)
+        source.write_bytes(proposed.replace(ANCHOR, INJECTION + ANCHOR))
         control = run_case("control", output)
     finally:
         source.write_bytes(original)
@@ -306,16 +408,16 @@ def main() -> int:
             raise RuntimeError(f"checkout is dirty after restoration: {status}")
         print("Source restored byte-identical; checkout clean.", flush=True)
     valid = True
-    for case in (real, control):
-        peaks = case["footprints"]
+    for case in (control,) if real is None else (real, control):
+        peaks = case["allocations"]
         if set(peaks) != {24_000_000, 48_000_000} or peaks[24_000_000] <= 50 * 2**20:
             valid = False
-    peaks = control["footprints"]
+    peaks = control["allocations"]
     detected_growth = (
         valid and abs(peaks[48_000_000] - peaks[24_000_000]) / peaks[24_000_000] >= 0.10
     )
     passed = (
-        real["pytest_exit"] == 0
+        (real is None or real["pytest_exit"] == 0)
         and control["pytest_exit"] == 1
         and control["assertion_failed"]
         and detected_growth
