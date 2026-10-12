@@ -178,6 +178,36 @@ jobs:
           print(text)
           open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8").write(text + "\n")
           PY
+      - name: Git integration status of the Git workspace (read-only GETs, exact responses)
+        # What Fabric answers to the CI service principal for the Git-connected workspace. Two GET
+        # requests, nothing is connected or initialised.
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, os, urllib.error, urllib.request
+          from azure.identity import ClientSecretCredential
+
+          env = os.environ
+          ws = env.get("FABRIC_GIT_WORKSPACE_ID", "")
+          if not ws:
+              print("FABRIC_GIT_WORKSPACE_ID is not set")
+              raise SystemExit(0)
+          cred = ClientSecretCredential(env["FABRIC_TENANT_ID"], env["FABRIC_CLIENT_ID"], env["FABRIC_CLIENT_SECRET"])
+          token = cred.get_token("https://api.fabric.microsoft.com/.default").token
+          out = ["## Git integration of the Git workspace", ""]
+          for path in ("git/connection", "git/status"):
+              url = f"https://api.fabric.microsoft.com/v1/workspaces/{ws}/{path}"
+              req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+              try:
+                  with urllib.request.urlopen(req, timeout=60) as resp:
+                      code, body = resp.status, resp.read().decode()
+              except urllib.error.HTTPError as exc:
+                  code, body = exc.code, exc.read().decode()
+              out += [f"### GET /v1/workspaces/{ws}/{path} -> HTTP {code}", "```json", body[:4000], "```"]
+          text = "\n".join(out)
+          print(text)
+          open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8").write(text + "\n")
+          PY
       - name: Step summary - which live tests ran, passed, failed, skipped
         if: always()
         run: |
