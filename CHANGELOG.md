@@ -6,7 +6,17 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+### Fixed
+
+- `shape registry ROOT commit` runs its leak scan on any JSON document with `tables` unless it
+  declares another format and keeps no safe-profile key, so deleting `redaction_manifest` no
+  longer gets a leaking profile committed.
+- A scenario pack's stream topic emits only its `payload_fields` columns, and `pack validate`
+  refuses a payload field that is not a column of the topic's table.
+- A pack run creates its manifest exclusively, so two runs in the same second keep their own.
+- `shape chaos --input` and `shape incremental --input` skip the ground-truth logs of an earlier
+  chaos run, and name a file that cannot be read as a table.
+- `shape fabric setup` names `shape fabric notebook` in its next steps.
 
 ## 0.9.1
 
