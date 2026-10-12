@@ -1,5 +1,5 @@
 // Scratch-only macOS malloc tracer. Loaded into the bounded-profile child with DYLD_INSERT_LIBRARIES.
-// Records allocations of at least 4 MiB, their frees, and the current live total.
+// Records allocations of at least 32 MiB, their frees, and the current live total.
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <malloc/malloc.h>
@@ -19,7 +19,7 @@
   } interpose_##original __attribute__((section("__DATA,__interpose"))) = {       \
       (const void *)(uintptr_t)&replacement, (const void *)(uintptr_t)&original};
 
-#define TRACE_MIN (4ULL << 20)
+#define TRACE_MIN (32ULL << 20)
 #define SLOT_COUNT 32768
 
 struct slot {
@@ -62,7 +62,7 @@ static void trace_event(char kind, void *ptr, size_t requested, size_t actual,
   if (fd < 0) return;
   Dl_info info = {0};
   dladdr(caller, &info);
-  char line[512];
+  char line[2048];
   int count = snprintf(line, sizeof(line),
                        "%c,%llu,%d,%p,%zu,%zu,%zu,%zu,%s,%s,%p\n", kind,
                        (unsigned long long)timestamp_ns(), getpid(), ptr,
@@ -129,6 +129,15 @@ static void *traced_realloc(void *ptr, size_t size) {
 }
 INTERPOSE(traced_realloc, realloc)
 
+static void *traced_reallocf(void *ptr, size_t size) {
+  void *p = reallocf(ptr, size);
+  // reallocf also frees the old block on failure.
+  forget(ptr, __builtin_return_address(0));
+  remember(p, size, __builtin_return_address(0));
+  return p;
+}
+INTERPOSE(traced_reallocf, reallocf)
+
 static void traced_free(void *ptr) {
   forget(ptr, __builtin_return_address(0));
   free(ptr);
@@ -149,12 +158,26 @@ static void *traced_aligned_alloc(size_t alignment, size_t size) {
 }
 INTERPOSE(traced_aligned_alloc, aligned_alloc)
 
+static void *traced_valloc(size_t size) {
+  void *p = valloc(size);
+  remember(p, size, __builtin_return_address(0));
+  return p;
+}
+INTERPOSE(traced_valloc, valloc)
+
 static void *traced_zone_malloc(malloc_zone_t *zone, size_t size) {
   void *p = malloc_zone_malloc(zone, size);
   remember(p, size, __builtin_return_address(0));
   return p;
 }
 INTERPOSE(traced_zone_malloc, malloc_zone_malloc)
+
+static void *traced_zone_calloc(malloc_zone_t *zone, size_t count, size_t size) {
+  void *p = malloc_zone_calloc(zone, count, size);
+  if (size && count <= SIZE_MAX / size) remember(p, count * size, __builtin_return_address(0));
+  return p;
+}
+INTERPOSE(traced_zone_calloc, malloc_zone_calloc)
 
 static void *traced_zone_memalign(malloc_zone_t *zone, size_t alignment, size_t size) {
   void *p = malloc_zone_memalign(zone, alignment, size);

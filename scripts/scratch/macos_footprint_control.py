@@ -31,6 +31,43 @@ ALLOCATOR_DIAGNOSTICS = """def allocator_stats(pool):
         stream.seek(0)
         return stream.read().decode('utf-8', errors='replace')
 """
+POOL_TRACE = """import shape.io.readers as csv_readers
+import shape.io.identifiers as csv_identifiers
+import numpy as np
+import traceback
+csv_logging_pool = pa.logging_memory_pool(pa.mimalloc_memory_pool())
+csv_original_pool = csv_readers.streaming_csv_pool
+def traced_csv_pool(use_threads):
+    return csv_logging_pool if not use_threads else csv_original_pool(use_threads)
+csv_readers.streaming_csv_pool = traced_csv_pool
+csv_identifiers.streaming_csv_pool = traced_csv_pool
+for numpy_name in ('empty', 'zeros', 'ones', 'full', 'array', 'asarray',
+                   'arange', 'frombuffer', 'fromiter', 'concatenate', 'repeat', 'tile'):
+    numpy_original = getattr(np, numpy_name)
+    def traced_numpy(*args, _original=numpy_original, _name=numpy_name, **kwargs):
+        result = _original(*args, **kwargs)
+        if getattr(result, 'nbytes', 0) >= 32 * 2**20:
+            with open(os.environ['RSS_NUMPY_LOG_FILE'], 'a') as numpy_log:
+                numpy_log.write(json.dumps({
+                    'operation': _name, 'bytes': result.nbytes,
+                    'stack': [str(x) for x in traceback.extract_stack(limit=12)]
+                }) + '\\n')
+        return result
+    setattr(np, numpy_name, traced_numpy)
+csv_log_fd = os.open(os.environ['RSS_ARROW_LOG_FILE'],
+                     os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+saved_stdout_fd = os.dup(1)
+sys.stdout.flush()
+os.dup2(csv_log_fd, 1)
+try:
+    profile(sys.argv[1], mode='bounded')
+finally:
+    sys.stdout.flush()
+    __import__('ctypes').CDLL(None).fflush(None)
+    os.dup2(saved_stdout_fd, 1)
+    os.close(saved_stdout_fd)
+    os.close(csv_log_fd)
+"""
 
 TEST = "tests/profile/test_engine.py::test_bounded_mode_memory_does_not_grow_with_rows"
 ANCHOR = b"        \"profile(sys.argv[1], mode='bounded')\\n\"\n"
@@ -131,7 +168,7 @@ def run_case(label: str, output: Path) -> dict:
     return {**record, "assertion_failed": "assert abs(peaks[48_000_000]" in text}
 
 
-def diagnostic_variant(original, order):
+def diagnostic_variant(original, order, pool_trace=False):
     """Change scan order in memory, preserving all assertions and fixture generation."""
     tree = ast.parse(inspect.getsource(original))
     function = tree.body[0]
@@ -158,6 +195,9 @@ def diagnostic_variant(original, order):
         "print(json.dumps({'csv_allocator_stats': stats, 'arrow_pool':",
         1,
     )
+    if pool_trace:
+        assert code.count("profile(sys.argv[1], mode='bounded')\n") == 1
+        code = code.replace("profile(sys.argv[1], mode='bounded')\n", POOL_TRACE, 1)
     compile(code, "<matrix child with allocator diagnostics>", "exec")
     code_node.value = ast.Constant(code)
     assert guards == [ast.dump(node) for node in ast.walk(function) if isinstance(node, ast.Assert)]
@@ -166,7 +206,9 @@ def diagnostic_variant(original, order):
     return namespace[function.name]
 
 
-def run_probe(order_name: str, iteration: int, after_heavy: bool, output: Path) -> int:
+def run_probe(
+    order_name: str, iteration: int, after_heavy: bool, output: Path, pool_trace=False
+) -> int:
     import pytest
 
     order = ORDERS[order_name]
@@ -179,7 +221,7 @@ def run_probe(order_name: str, iteration: int, after_heavy: bool, output: Path) 
     }
 
     def wrapper(original):
-        variant = diagnostic_variant(original, order)
+        variant = diagnostic_variant(original, order, pool_trace)
 
         def probe(tmp_path):
             run = subprocess.run
@@ -188,6 +230,14 @@ def run_probe(order_name: str, iteration: int, after_heavy: bool, output: Path) 
                 command = args[0] if args else kwargs.get("args", [])
                 trace_path = None
                 if len(command) >= 4 and command[1] == "-c" and "mode='bounded'" in command[2]:
+                    if pool_trace:
+                        position = len(record["samples"]) + 1
+                        kwargs["env"] = {
+                            **os.environ,
+                            **kwargs.get("env", {}),
+                            "RSS_ARROW_LOG_FILE": str(output / f"child-{position}-arrow.txt"),
+                            "RSS_NUMPY_LOG_FILE": str(output / f"child-{position}-numpy.jsonl"),
+                        }
                     dylib = os.environ.get("RSS_TRACE_DYLIB")
                     if dylib:
                         trace_path = output / f"child-{len(record['samples']) + 1}-malloc.csv"
@@ -240,6 +290,27 @@ def run_probe(order_name: str, iteration: int, after_heavy: bool, output: Path) 
                         }
                         sample["malloc_trace"] = trace_summary
                         print("MALLOC_TRACE " + json.dumps(trace_summary), flush=True)
+                    if pool_trace:
+                        arrow_log = output / f"child-{sample['position']}-arrow.txt"
+                        assert arrow_log.exists(), "Arrow logging pool did not record"
+                        large_arrow = [
+                            line
+                            for line in arrow_log.read_text().splitlines()
+                            if (m := re.match(r"(?:Allocate|Reallocate): size = (\d+)", line))
+                            and int(m[1]) >= 32 * 2**20
+                        ]
+                        numpy_log = output / f"child-{sample['position']}-numpy.jsonl"
+                        numpy_events = (
+                            [json.loads(line) for line in numpy_log.read_text().splitlines()]
+                            if numpy_log.exists()
+                            else []
+                        )
+                        sample["pool_trace"] = {
+                            "arrow_lines": sum(1 for _ in arrow_log.open()),
+                            "arrow_allocations_ge_32mib": large_arrow,
+                            "numpy_allocations_ge_32mib": numpy_events,
+                        }
+                        print("POOL_TRACE " + json.dumps(sample["pool_trace"]), flush=True)
                 return result
 
             subprocess.run = capture
@@ -408,6 +479,7 @@ def main() -> int:
     parser.add_argument("--iteration", type=int, default=1)
     parser.add_argument("--after-heavy", action="store_true")
     parser.add_argument("--control-only", action="store_true")
+    parser.add_argument("--pool-trace", action="store_true")
     args = parser.parse_args()
     if sys.platform != "darwin":
         parser.error("requires macOS; Linux RSS is not Darwin allocation evidence")
@@ -431,7 +503,9 @@ def main() -> int:
     try:
         source.write_bytes(proposed)
         if args.probe_order:
-            return run_probe(args.probe_order, args.iteration, args.after_heavy, output)
+            return run_probe(
+                args.probe_order, args.iteration, args.after_heavy, output, args.pool_trace
+            )
         real = None if args.control_only else run_case("real", output)
         source.write_bytes(proposed.replace(ANCHOR, INJECTION + ANCHOR))
         control = run_case("control", output)

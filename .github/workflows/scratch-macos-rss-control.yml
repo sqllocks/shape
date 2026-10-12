@@ -24,6 +24,11 @@ jobs:
         env:
           RSS_TRACE_DYLIB: ${{ runner.temp }}/rss_malloc_trace.dylib
         run: python scripts/scratch/macos_footprint_control.py --matrix --output "$RUNNER_TEMP/macos-program-allocation-proof"
+      - name: Arrow and NumPy allocation trace
+        if: always()
+        env:
+          RSS_TRACE_DYLIB: ${{ runner.temp }}/rss_malloc_trace.dylib
+        run: python scripts/scratch/macos_footprint_control.py --probe-order 24-48 --pool-trace --output "$RUNNER_TEMP/macos-arrow-numpy-trace"
       - name: Verify checkout restoration
         if: always()
         run: |
@@ -34,3 +39,8 @@ jobs:
         with:
           name: macos-program-allocation-proof
           path: ${{ runner.temp }}/macos-program-allocation-proof/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: macos-arrow-numpy-trace
+          path: ${{ runner.temp }}/macos-arrow-numpy-trace/
