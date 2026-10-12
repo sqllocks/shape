@@ -14,6 +14,7 @@ table with a unique name, reads it back, compares the row count and the dataset 
 
 import os
 import uuid
+import warnings
 
 import pyarrow as pa
 import pyarrow.compute as pc
@@ -98,22 +99,31 @@ def test_synapse_round_trip():
         got = pa.Table.from_pydict(
             {n: [r[i] for r in rows] for i, n in enumerate(names)}, schema=written.schema
         )
-        differing = {
-            n: next(
-                (
-                    (i, w, g)
-                    for i, (w, g) in enumerate(
-                        zip(written.column(n).to_pylist(), got.column(n).to_pylist(), strict=True)
-                    )
-                    if w != g
-                ),
-                None,
-            )
+        # Every cell that differs from what was sent, under the plain comparison (no NaN rule):
+        # (column, row, written, read back). Printed in the run summary and as a warning, so the
+        # differences are observed, and required to be nothing but a NaN that came back NULL.
+        observed = [
+            (n, i, w, g)
             for n in names
-        }
-        differing = {n: v for n, v in differing.items() if v is not None}
-        # first differing (row, written, read back) per column, so a mismatch names its column
-        assert dataset_id({table: got}) == dataset_id({table: written}), differing
+            for i, (w, g) in enumerate(
+                zip(sent.column(n).to_pylist(), got.column(n).to_pylist(), strict=True)
+            )
+            if not (w == g)
+        ]
+        report = f"{len(observed)} cell(s) differ from what was sent: " + "; ".join(
+            f"{n}[{i}] written {w!r} read {g!r}" for n, i, w, g in observed
+        )
+        warnings.warn(report, stacklevel=1)
+        summary = os.environ.get("GITHUB_STEP_SUMMARY")
+        if summary:
+            with open(summary, "a", encoding="utf-8") as handle:
+                handle.write(f"\n## Synapse round trip: plain comparison\n\n{report}\n")
+        float_columns = {f.name for f in sent.schema if pa.types.is_floating(f.type)}
+        other = [
+            o for o in observed if not (o[0] in float_columns and o[2] != o[2] and o[3] is None)
+        ]  # o[2] != o[2] is a NaN
+        assert not other, f"differences that are not a NaN read back as NULL: {other}"
+        assert dataset_id({table: got}) == dataset_id({table: written}), report
     finally:
         try:
             # a dedicated pool does not parse DROP TABLE IF EXISTS and refuses DDL in a transaction
