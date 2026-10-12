@@ -26,3 +26,13 @@ def test_elided_run_metadata(tmp_path: Path) -> None:
     actual = "Session: 1234abcd\nStarted: 2026-01-01T12:00:00.123\n[1.2s] Done in 1.2s"
     shown = "Session: …\nStarted: …\n[…] Done in …s"
     assert comparable(actual, tmp_path, ROOT) == comparable(shown, tmp_path, ROOT)
+
+
+def test_pytest_elapsed_clock_presence_is_variable(tmp_path: Path) -> None:
+    """pytest adds "(H:MM:SS)" only after a minute; the pass/fail counts stay exact."""
+    shown = "404 passed, 46 deselected in 61.20s (0:01:01)"
+    fast = "404 passed, 46 deselected in 41.87s"
+    assert comparable(fast, tmp_path, ROOT) == comparable(shown, tmp_path, ROOT)
+    assert comparable(fast.replace("404 passed", "403 passed, 1 failed"), tmp_path, ROOT) != (
+        comparable(shown, tmp_path, ROOT)
+    )
