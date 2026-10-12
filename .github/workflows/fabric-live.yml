@@ -35,6 +35,8 @@ jobs:
       FABRIC_EVENTHOUSE_URI: ${{ vars.FABRIC_EVENTHOUSE_URI }}
       FABRIC_KQL_DB: ${{ vars.FABRIC_KQL_DB }}
       FABRIC_EVENTSTREAM_CONNECTION_STRING: ${{ secrets.FABRIC_EVENTSTREAM_CONNECTION_STRING }}
+      # The Fabric SQL database item (shape_sqldb). No login in it: the service principal's token is passed.
+      FABRIC_SQL_CONNECTION_STRING: ${{ secrets.FABRIC_SQL_CONNECTION_STRING }}
       # DefaultAzureCredential signs in as the same service principal.
       AZURE_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
       AZURE_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
