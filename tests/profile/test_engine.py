@@ -316,6 +316,16 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
         # Open the file ourselves: CSVWriter.close() leaves a path it opened held until the
         # writer is freed, and Windows cannot unlink a file that is still open.
         with pa.OSFile(str(p), "wb") as sink:
+            if sys.platform == "darwin":
+                import fcntl
+
+                # The just-written 24M file can remain cached while the 48M file spills
+                # to disk. Different scan rates change allocator reuse
+                # and the residency of freed pages included in ru_maxrss. F_NOCACHE (48)
+                # keeps fixture writes out of macOS's data cache, so both scans start cold.
+                # This controls input preparation; the child still measures whole-process
+                # peak RSS, including any allocations retained in proportion to row count.
+                fcntl.fcntl(sink.fileno(), 48, 1)
             writer = None
             for start in range(0, rows, 1_000_000):
                 m = min(1_000_000, rows - start)
@@ -331,6 +341,9 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
                 writer.write_table(chunk)
             assert writer is not None
             writer.close()
+            if sys.platform == "darwin":
+                # Drain any unaligned writes that took the kernel's buffered fallback.
+                os.fsync(sink.fileno())
         r = subprocess.run(
             [sys.executable, "-c", code, str(p)],
             capture_output=True,
