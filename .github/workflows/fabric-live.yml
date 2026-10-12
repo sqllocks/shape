@@ -161,7 +161,7 @@ jobs:
             echo "$(date -u +%H:%M:%S) pool $SYNAPSE_POOL status: $status"
             case "$status" in
               Online) break ;;
-              Paused) az synapse sql pool resume "${pool[@]}" --no-wait ;;
+              Paused) az synapse sql pool resume "${pool[@]}" ;;
             esac
             if [ "$SECONDS" -ge "$deadline" ]; then
               echo "::error::pool $SYNAPSE_POOL was not Online within 15 minutes (last status: $status)"
@@ -215,7 +215,7 @@ jobs:
                 exit 0 ;;
               Online)
                 if [ "$requested" = "0" ]; then
-                  az synapse sql pool pause "${pool[@]}" --no-wait
+                  az synapse sql pool pause "${pool[@]}"
                   requested=1
                 fi ;;
             esac
