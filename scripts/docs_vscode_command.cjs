@@ -16,11 +16,16 @@ make(3);
 git('add', 'demo.shape');
 git('commit', '-qm', 'Synthetic editor fixture');
 make(4);
+git('cat-file', '-e', 'HEAD:demo.shape');
+const shape = execFileSync(python, ['-c', 'import shutil; print(shutil.which("shape") or "")'],
+  {encoding: 'utf8'}).trim();
+if (!shape) throw new Error('The fixture requires the real installed Shape CLI');
 runTests({
   vscodeExecutablePath: process.env.SHAPE_DOCS_VSCODE_EXECUTABLE,
   extensionTestsPath: path.join(root, 'scripts/docs_vscode_suite.cjs'),
   launchArgs: [workspace, '--user-data-dir', process.env.SHAPE_DOCS_VSCODE_USER,
     '--extensions-dir', process.env.SHAPE_DOCS_VSCODE_EXTENSIONS, '--disable-workspace-trust',
     '--skip-welcome', '--disable-updates', '--no-sandbox'],
-  extensionTestsEnv: {SHAPE_DOCS_EDITOR_FILE: path.join(workspace, 'demo.shape')},
+  extensionTestsEnv: {SHAPE_DOCS_EDITOR_FILE: path.join(workspace, 'demo.shape'),
+    SHAPE_DOCS_EDITOR_WORKSPACE: workspace, SHAPE_DOCS_EDITOR_SHAPE: shape},
 }).catch(error => { console.error(error); process.exitCode = 1; });
