@@ -50,17 +50,6 @@ jobs:
         options: >-
           --health-cmd "kafka-topics --bootstrap-server localhost:9092 --list"
           --health-interval 5s --health-timeout 10s --health-retries 30
-      schema-registry:
-        image: confluentinc/cp-schema-registry:7.7.1
-        ports: ['8081:8081']
-        env:
-          SCHEMA_REGISTRY_HOST_NAME: schema-registry
-          SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
-          SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:29092
-          SCHEMA_REGISTRY_AUTHENTICATION_METHOD: BASIC
-          SCHEMA_REGISTRY_AUTHENTICATION_REALM: ShapeDocs
-          SCHEMA_REGISTRY_AUTHENTICATION_ROLES: docs
-          SCHEMA_REGISTRY_OPTS: -Djava.security.auth.login.config=/tmp/docs-jaas.conf
       mssql:
         image: mcr.microsoft.com/mssql/server:2022-latest
         ports: ['1433:1433']
@@ -102,7 +91,7 @@ jobs:
           sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev xvfb libasound2t64 libgbm1
       - name: Require authenticated Schema Registry
         env:
-          SCHEMA_REGISTRY_CONTAINER: ${{ job.services.schema-registry.id }}
+          SHAPE_DOCS_DOCKER_NETWORK: ${{ job.services.kafka.network }}
         run: python scripts/docs_owner_services.py
       - name: Build VSIX and prepare isolated VS Code
         run: |
@@ -150,6 +139,9 @@ jobs:
             git merge --no-ff --signoff -m "docs-transcripts: merge run $GITHUB_RUN_ID receipts [skip ci]" "docs-transcripts-evidence-${GITHUB_RUN_ID}"
             git push origin HEAD:docs/transcripts-ci
           fi
+      - name: Remove the registry started by this job
+        if: always() && env.SCHEMA_REGISTRY_CONTAINER != ''
+        run: docker rm --force "$SCHEMA_REGISTRY_CONTAINER"
       - name: Fail the job if any example failed
         if: always()
         run: test "${CAPTURE_EXIT:-1}" = 0

@@ -103,3 +103,33 @@ the same retail target in both arms; non-measurement examples leave live profili
 off by default instead of passing that invalid option. No expected output changed.
 Final focused tests: exit 0, 14 passed in 0.52s; Ruff/format and diff checks remain
 exit 0.
+
+## Registry startup correction after run 38254010090
+
+The lead reported that this run failed before any capture: ConnectionResetError
+was not retried immediately after docker restart. Inspection of job 114827261453
+confirms Docker returned container ID da9a263795cced88c53f9e6a0b7e1321b4aadbb677ee140b5b601470a54b6d6c
+when creating the service named
+57a1e64b0db64fe98d2a5922e112ba71_confluentinccpschemaregistry771_268593.
+The supplied ID and service name identify the same container, not two services.
+The old restart path nevertheless races startup and is removed entirely.
+
+Registry is now started in a step with docker run -d, after creating the users
+and JAAS files in a private RUNNER_TEMP parent. Its readable auth subdirectory is
+mounted read-only on Kafka's actual job service network. BASIC, realm ShapeDocs,
+role docs and port 8081 remain configured. The password is masked and lives only
+in runner-temp files and GITHUB_ENV; it is never a Docker argument or repo file.
+Files remain mounted after readiness returns for Jetty's later logins. Cleanup
+removes only the actual container ID returned by docker run.
+
+Readiness uses a roughly 120-second monotonic deadline and retries URLError,
+TimeoutError, ConnectionError (including reset) and RemoteDisconnected. It needs
+both authenticated HTTP 200 and anonymous HTTP 401. Timeout prints the last 200
+log lines of that exact container, redacting password and encoded Basic value.
+
+Tests were added before the fix: all 8 initial startup regressions failed. With
+the fix and additional file-lifetime/HTTP-status regressions, focused docs tests
+exit 0: 24 passed in this session. Ruff check and format-check exit 0; 2037 files
+already formatted. Notices remain byte-for-byte identical and diff checks pass.
+No owner note was resolved by the failed run; all 11 captures still need the next
+real workflow execution. No expected output or unrelated gate was changed.
