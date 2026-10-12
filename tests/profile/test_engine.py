@@ -201,8 +201,8 @@ def test_python_kernel_gives_the_same_document(monkeypatch):
 def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
     """The 5M vs 50M check is benchmarks/vs_refengine/profile_1to1/rss_check.py; this is its
     small version: peak process memory of a CSV twice as large, both past the allocator
-    ramp-up (about 20M rows), is within 10%. macOS measures physical footprint, excluding
-    freed reusable pages; Linux and Windows measure RSS. Each scan fixes Arrow's executors."""
+    ramp-up (about 20M rows), is within 10%. macOS measures peak program allocation;
+    Linux and Windows measure RSS. Each scan fixes Arrow's executors."""
     import pyarrow.csv as pacsv
 
     code = (
@@ -214,16 +214,17 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
         # decoding is already serial, and the profiling kernel keeps default parallelism.
         "pa.set_io_thread_count(1)\n"
         "pa.set_cpu_count(1)\n"
-        "def peak_memory():\n"
+        "def peak_memory(mac=None):\n"
         # Linux: VmHWM belongs to this process's address space. ru_maxrss survives exec on
         # Linux, so in a child of pytest it reports the parent's (larger) peak for both sizes.
         "    if sys.platform.startswith('linux'):\n"
         "        status = open('/proc/self/status').read().split('VmHWM:')[1]\n"
         "        return int(status.split()[0]) * 1024\n"
         "    elif sys.platform == 'darwin':\n"
-        # RSS includes freed reusable pages until macOS reclaims them. Physical footprint
-        # excludes those pages and includes compressed memory still owned by the process.
-        "        return mac_usage(os.getpid())['ri_lifetime_max_phys_footprint']\n"
+        # Measure program allocation independently of macOS page-reclamation timing.
+        # Keep the physical footprint in stderr diagnostics for comparison.
+        "        return (mac['malloc']['max_size_in_use']\n"
+        "                + pool.max_memory() + csv_pool.max_memory())\n"
         "    else:  # Windows: the peak working set\n"
         "        import ctypes\n"
         "        from ctypes import wintypes as w\n"
@@ -293,23 +294,42 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
         "    stats = Malloc()\n"
         "    lib.malloc_zone_statistics.argtypes = [c.c_void_p, c.POINTER(Malloc)]\n"
         "    lib.malloc_zone_statistics(None, c.byref(stats))\n"
+        # malloc_zone_statistics(NULL) reports reserved address space, not live blocks:
+        # its max_size_in_use counts each 128 MiB MALLOC_MEDIUM region macOS reserves (two or
+        # three per process, ~10 MiB resident), so it was bimodal by 128 MiB. Sum the
+        # per-zone high-water marks of live blocks; keep the NULL total as a diagnostic.
+        "    lib.malloc_get_all_zones.argtypes = [c.c_uint32, c.c_void_p,\n"
+        "                                         c.POINTER(c.POINTER(c.c_size_t)),\n"
+        "                                         c.POINTER(c.c_uint)]\n"
+        "    lib.malloc_get_all_zones.restype = c.c_int\n"
+        "    zones, zone_count = c.POINTER(c.c_size_t)(), c.c_uint()\n"
+        "    if lib.malloc_get_all_zones(0, None, c.byref(zones), c.byref(zone_count)):\n"
+        "        raise RuntimeError('malloc_get_all_zones')\n"
+        "    live = {n: 0 for n, _ in Malloc._fields_}\n"
+        "    for index in range(zone_count.value):\n"
+        "        zone = Malloc()\n"
+        "        lib.malloc_zone_statistics(zones[index], c.byref(zone))\n"
+        "        for n in live:\n"
+        "            live[n] += getattr(zone, n)\n"
         "    return {'self': mac_usage(os.getpid()), 'parent': mac_usage(os.getppid()),\n"
         "            'vm': {n: getattr(vm, n) for n, _ in VM._fields_},\n"
-        "            'malloc': {n: getattr(stats, n) for n, _ in Malloc._fields_}}\n"
+        "            'malloc': live,\n"
+        "            'malloc_all_zones_call': {n: getattr(stats, n) for n, _ in Malloc._fields_}}\n"
         "pool = pa.default_memory_pool()\n"
-        "initial_peak = peak_memory()\n"
-        "initial_mac = mac_snapshot()\n"
-        "profile(sys.argv[1], mode='bounded')\n"
-        "peak = peak_memory()\n"
         # The serial CSV reader uses a separate pool; the default pool omits its buffers.
         "csv_pool = (pa.mimalloc_memory_pool()\n"
         "    if 'mimalloc' in pa.supported_memory_backends() else pool)\n"
+        "initial_mac = mac_snapshot()\n"
+        "initial_peak = peak_memory(initial_mac)\n"
+        "profile(sys.argv[1], mode='bounded')\n"
+        "final_mac = mac_snapshot()\n"
+        "peak = peak_memory(final_mac)\n"
         "print(json.dumps({'arrow_pool': pool.backend_name, 'initial_peak': initial_peak,\n"
         "    'arrow_peak': pool.max_memory(), 'io_threads': pa.io_thread_count(),\n"
         "    'csv_arrow_pool': csv_pool.backend_name, 'csv_arrow_peak': csv_pool.max_memory(),\n"
         "    'csv_arrow_current': csv_pool.bytes_allocated(),\n"
         "    'cpu_threads': pa.cpu_count(), 'initial_mac': initial_mac,\n"
-        "    'final_mac': mac_snapshot(), 'arrow_backends': pa.supported_memory_backends()}),\n"
+        "    'final_mac': final_mac, 'arrow_backends': pa.supported_memory_backends()}),\n"
         "    file=sys.stderr)\n"
         "print(peak, flush=True)\n"
     )
@@ -342,7 +362,7 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
             check=True,
         )
         peaks[rows] = int(r.stdout.split()[-1])
-        metric = "physical footprint" if sys.platform == "darwin" else "RSS"
+        metric = "program allocation" if sys.platform == "darwin" else "RSS"
         print(f"{rows} rows: peak {metric} {peaks[rows]} bytes; {r.stderr.strip()}")
         p.unlink()
     assert peaks[24_000_000] > 50 * 2**20, peaks  # a real measurement of the child
