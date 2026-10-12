@@ -6,6 +6,8 @@ Status: available.
 
 ## Unreleased
 
+- The parity suite and `bench-quick` compare against Shape 0.9.1's recorded output; the reference engine is no longer installed. T-21 (g) and (h) are retired.
+
 No unreleased changes.
 
 ## 0.9.1

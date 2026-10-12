@@ -26,22 +26,23 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Any, cast
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
-import _refpkg  # noqa: E402
 import stream_common as sc  # noqa: E402
 from common import bench_lock, machine_meta, wait_for_quiet  # noqa: E402
-from paths import BENCH_OUT_DIR, REFENGINE_PY, REFENGINE_VENV, SHAPE_PY, SHAPE_VENV  # noqa: E402
+from paths import BASELINE_PY, BASELINE_VENV, BENCH_OUT_DIR, SHAPE_PY, SHAPE_VENV  # noqa: E402
 
+BASELINE_ONLY = False
 SUMMARY_KEYS = ("total_s", "emit_s", "cpu_s", "import_s", "peak_rss_mb", "bytes")
 
 
 def _worker(tool: str, scale: str, max_events: int | None) -> list[str]:
     py, script, seed = (
-        (REFENGINE_PY, "baseline_worker.py", sc.REF_SEED)
-        if tool == "refengine"
+        (BASELINE_PY, "baseline_worker.py", sc.REF_SEED)
+        if tool == "baseline"
         else (SHAPE_PY, "shape_worker.py", sc.SHAPE_SEED)
     )
     out = sc.out_file(tool, scale, seed, max_events)
@@ -51,22 +52,26 @@ def _worker(tool: str, scale: str, max_events: int | None) -> list[str]:
     return cmd
 
 
-def run_once(tool: str, scale: str, max_events: int | None) -> dict:
+def run_once(tool: str, scale: str, max_events: int | None) -> dict[str, Any]:
     load = wait_for_quiet()
     cmd = _worker(tool, scale, max_events)
-    r = subprocess.run(cmd, capture_output=True, text=True)
+    env = dict(os.environ)
+    if tool == "baseline":
+        env.pop("PYTHONPATH", None)
+        env.pop("PYTHONHOME", None)
+    r = subprocess.run(cmd, capture_output=True, text=True, env=env)
     if r.returncode != 0:
-        raise RuntimeError(f"{' '.join(cmd)} failed:\n{r.stderr[-2000:]}")
+        raise RuntimeError(f"stream process failed (exit {r.returncode})")
     line = next(ln for ln in reversed(r.stdout.splitlines()) if ln.startswith("STREAM_JSON "))
     rec = json.loads(line[len("STREAM_JSON ") :])
     rec["loadavg_before"] = load
-    return rec
+    return cast(dict[str, Any], rec)
 
 
 def cli_command(tool: str, scale: str, max_events: int | None) -> list[str]:
     """The workload's command line (plan 3.4), with the section 1 variables expanded."""
-    if tool == "refengine":
-        exe, seed = REFENGINE_VENV / "bin" / _refpkg.CONSOLE, sc.REF_SEED
+    if tool == "baseline":
+        exe, seed = BASELINE_VENV / "bin" / "shape", sc.REF_SEED
     else:
         exe, seed = SHAPE_VENV / "bin" / "shape", sc.SHAPE_SEED
     out = sc.out_file(tool, scale, seed, max_events)
@@ -84,14 +89,18 @@ def run_cli(tool: str, scale: str, max_events: int | None) -> float:
     out.unlink(missing_ok=True)
     Path(f"{out}.checkpoint").unlink(missing_ok=True)
     t0 = time.perf_counter()
-    r = subprocess.run(cmd, capture_output=True, text=True)
+    env = dict(os.environ)
+    if tool == "baseline":
+        env.pop("PYTHONPATH", None)
+        env.pop("PYTHONHOME", None)
+    r = subprocess.run(cmd, capture_output=True, text=True, env=env)
     dt = time.perf_counter() - t0
     if r.returncode != 0:
-        raise RuntimeError(f"{' '.join(cmd)} failed:\n{r.stderr[-2000:]}")
+        raise RuntimeError(f"stream process failed (exit {r.returncode})")
     return dt
 
 
-def summarize(runs: list[dict]) -> dict:
+def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
     s = {k: statistics.median(r[k] for r in runs) for k in SUMMARY_KEYS}
     s["events"] = runs[0]["events"]
     s["events_per_s"] = s["events"] / s["total_s"]
@@ -100,9 +109,9 @@ def summarize(runs: list[dict]) -> dict:
     return s
 
 
-def bench(scale: str, runs: int, warmup: int, cli_runs: int, report: Path) -> dict:
-    tools = ["refengine", "shape"]
-    results: dict = {
+def bench(scale: str, runs: int, warmup: int, cli_runs: int, report: Path) -> dict[str, Any]:
+    tools = ["baseline"] if BASELINE_ONLY else ["baseline", "shape"]
+    results: dict[str, Any] = {
         "meta": {
             **machine_meta(),
             "workload": f"stream:{sc.DOMAIN}:{sc.TABLE}:{scale}",
@@ -119,7 +128,7 @@ def bench(scale: str, runs: int, warmup: int, cli_runs: int, report: Path) -> di
             for t in tools:
                 r = run_once(t, scale, None)
                 print(f"[{scale}] {t:8s} warm-up {i + 1}: total {r['total_s']:.2f}s", flush=True)
-        raw: dict[str, list] = {t: [] for t in tools}
+        raw: dict[str, list[Any]] = {t: [] for t in tools}
         for i in range(runs):
             for t in tools:
                 r = run_once(t, scale, None)
@@ -144,18 +153,19 @@ def bench(scale: str, runs: int, warmup: int, cli_runs: int, report: Path) -> di
             if v
         }
         # the timed output is what verify.py --no-generate checks next
-    sp, sh = results["summary"]["refengine"], results["summary"]["shape"]
-    results["speedup"] = sp["total_s"] / sh["total_s"]
-    if cli_runs:
-        c = results["cli_end_to_end_s"]
-        results["cli_speedup"] = c["refengine"]["median"] / c["shape"]["median"]
+    if not BASELINE_ONLY:
+        sp, sh = results["summary"]["baseline"], results["summary"]["shape"]
+        results["ratio_vs_baseline"] = sp["total_s"] / sh["total_s"]
+        if cli_runs:
+            c = results["cli_end_to_end_s"]
+            results["cli_ratio_vs_baseline"] = c["baseline"]["median"] / c["shape"]["median"]
     report.parent.mkdir(parents=True, exist_ok=True)
     report.write_text(json.dumps(results, indent=1))
     print_table(results)
     return results
 
 
-def print_table(results: dict) -> None:
+def print_table(results: dict[str, Any]) -> None:
     m = results["meta"]
     print(
         f"\n== {m['workload']}: median of {m['runs']} fresh-process runs ({m['warmup']} warm-up), "
@@ -168,19 +178,22 @@ def print_table(results: dict) -> None:
             f"{t:8s} {s['events']:>9,} {s['total_s']:>8.2f} {s['emit_s']:>7.2f} "
             f"{s['events_per_s']:>10,.0f} {s['peak_rss_mb']:>7.0f}"
         )
-    print(f"speedup (shape vs baseline, in-process): {results['speedup']:.2f}x")
-    if "cli_speedup" in results:
-        print(f"speedup (command lines, start-up included): {results['cli_speedup']:.2f}x")
+    print(f"speedup (shape vs baseline, in-process): {results.get('ratio_vs_baseline', 1):.2f}x")
+    if "cli_ratio_vs_baseline" in results:
+        print(f"ratio (command lines, start-up included): {results['cli_ratio_vs_baseline']:.2f}x")
 
 
 def main(argv: list[str] | None = None) -> int:
+    global BASELINE_ONLY
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--scale", default=sc.SCALE)
     ap.add_argument("--runs", type=int, default=5)
     ap.add_argument("--warmup", type=int, default=1)
     ap.add_argument("--cli-runs", type=int, default=3, help="end-to-end command-line runs per tool")
     ap.add_argument("--report", default=None)
+    ap.add_argument("--baseline-only", action="store_true")
     a = ap.parse_args(argv)
+    BASELINE_ONLY = a.baseline_only
     report = Path(a.report) if a.report else BENCH_OUT_DIR / "bench" / f"stream_{a.scale}.json"
     bench(a.scale, a.runs, a.warmup, a.cli_runs, report)
     return 0

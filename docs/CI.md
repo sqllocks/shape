@@ -418,3 +418,11 @@ shape emit retail --sink kafka://user:secret@broker:9092/topic --dry-run --json
       }
     }
     ```
+
+## Release regression baseline
+
+FRZ-01 makes the last published Shape release the regression baseline, initially 0.9.1.
+CI and Nightly authenticate the recorded store before verification and timing. The lead-only
+Nightly `record-baseline` dispatch uploads a complete capture; it never commits. The lead
+re-records every workload after each release with unchanged checks and tolerances.
+See [the harness instructions](../benchmarks/vs_refengine/README.md) for prerequisites and commands.

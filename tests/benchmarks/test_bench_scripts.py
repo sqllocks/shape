@@ -13,6 +13,8 @@ from pathlib import Path
 import pyarrow as pa
 import pytest
 
+from .historical_imports import historical_imports
+
 ROOT = Path(__file__).resolve().parents[2]
 BENCH = ROOT / "benchmarks" / "vs_refengine"
 sys.path.insert(0, str(BENCH))
@@ -23,7 +25,8 @@ def _load(name: str, path: Path):
     assert spec and spec.loader
     mod = importlib.util.module_from_spec(spec)
     sys.modules[name] = mod
-    spec.loader.exec_module(mod)
+    with historical_imports():
+        spec.loader.exec_module(mod)
     return mod
 
 

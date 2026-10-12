@@ -18,12 +18,15 @@ from pathlib import Path
 
 import pytest
 
+from .historical_imports import historical_imports
+
 ROOT = Path(__file__).resolve().parents[2]
 BENCH = ROOT / "benchmarks" / "vs_refengine"
 sys.path.insert(0, str(BENCH))
 sys.path.insert(0, str(BENCH / "ddl_1to1"))
 
-import verify  # noqa: E402
+with historical_imports():
+    import verify  # noqa: E402
 
 INPUTS = verify.inputs()
 CASES = [(name, mode) for name in INPUTS for mode in ("smart", "plain")]

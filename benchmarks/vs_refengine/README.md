@@ -1,70 +1,180 @@
-# Shape vs the pinned RefEngine
+# Release regression harness
 
-The comparison harness behind the performance and equivalence gates of
-`docs/plans/COMPLETION_PLAN.md` (section 3.4). RefEngine is pinned at git `422e78df2267e73bb2fa976267e48cb437861e2f`
-(3.0.1); the checkout is only ever read.
+The baseline is the last published Shape release, initially **Shape 0.9.1**, at the commit
+named by `v0.9.1`. The candidate is the checkout under test. The reference engine is archived
+and is never installed or run. T-20 is historical; T-21 clauses (g) and (h) are retired.
+T-21 (a)–(f), T-22, fixed seeds and all comparator tolerances remain unchanged.
 
-Every path comes from the section 1 environment variables in `scripts/env.sh`
-(`REFENGINE_ROOT`, `REFENGINE_VENV`, `SHAPE_VENV`, `BENCH_DATA_DIR`, `BENCH_OUT_DIR`); nothing in
-this directory hard-codes a machine path.
+The builder delivers tools and offline tests only. There are **no real recordings or manifest
+on this branch**. Missing recordings return exit 2, never a pass. The lead captures, reviews
+and commits the release recordings before running the real acceptance commands.
 
-| file | purpose |
+## Environment and baseline installation
+
+Run from the repository root with Python 3.11. Shell state does not persist between commands:
+start every command that uses the plan variables with `source scripts/env.sh &&`.
+
+```bash
+source scripts/env.sh && bash benchmarks/vs_refengine/setup_baseline.sh
+```
+
+`BASELINE_VERSION` defaults to `0.9.1`; `BASELINE_VENV` defaults to
+`$HOME/.venvs/shape-$BASELINE_VERSION`. The installer installs
+`sqllocks-shape==$BASELINE_VERSION`, `sqllocks-shape-domains==$BASELINE_VERSION` and
+`pyarrow==25.0.1`. An optional `BASELINE_INDEX` is a local wheel directory or an HTTP(S)
+package-index URL without credentials, query or fragment. It tries that index, then PyPI;
+if the release wheels are unavailable, it builds from a detached worktree of
+`v$BASELINE_VERSION`. Fetch release tags first (`git fetch origin --tags`). The fallback
+needs a Rust toolchain and maturin's build prerequisites.
+
+The installed version must match the declared release. The kernel must be Rust unless
+`BASELINE_PURE=1` explicitly permits correctness-only work. Candidate and baseline timings
+require the same kernel and PyArrow version. Baseline subprocesses clear `PYTHONPATH` and
+`PYTHONHOME` so the candidate cannot shadow the release installation.
+
+The candidate environment needs `.[dev]`, the local domains and SQL Server plugins, and
+PyArrow 25.0.1. Recording also needs pandas and scipy **in the baseline environment**, plus
+the published SQL Server plugin at the same release version (which supplies pyodbc):
+
+```bash
+source scripts/env.sh && python -m venv "$SHAPE_VENV" && \
+  "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains \
+  -e plugins/shape-sqlserver 'pyarrow==25.0.1'
+source scripts/env.sh && "$BASELINE_PY" -m pip install \
+  "sqllocks-shape-sqlserver==$BASELINE_VERSION" 'pandas>=2' 'scipy>=1.11' && \
+  "$BASELINE_PY" -m pip freeze > "$BENCH_OUT_DIR/baseline_freeze.txt"
+```
+
+## Lead-only recording command
+
+Use a quiet 4-vCPU Linux runner for the full timing snapshot. The real database recordings
+require **SQL Server 2022**, not a fake: install Microsoft's **ODBC Driver 18 for SQL Server**
+and unixODBC development libraries on the runner. Configure `SHAPE_TEST_MSSQL` in shell or CI
+with a connection to the disposable server. It must permit creating and dropping schemas
+and tables in `tempdb`. The recorder creates `parity_<scenario>` schemas and removes them
+when finished. Never put a real connection string in a job file or report.
+
+Prepare the environments above, then run:
+
+```bash
+source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/profile_1to1/datasets.py
+source scripts/env.sh && docker compose -f ci/emulators/docker-compose.yml up -d --wait mssql
+source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/record_baseline.py \
+  --all --mssql "$SHAPE_TEST_MSSQL;Database=tempdb" \
+  --out benchmarks/vs_refengine/recorded
+source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/recorded/check.py
+```
+
+`--all` includes profile, generate, stream, database, verify-CLI, composite-plan and timing
+recordings. Real SQL Server cases are mandatory for `--all`; without `--mssql` it refuses.
+Each family is selectable with `--profile`, `--generate`, `--stream`, `--db`, `--verify-cli`,
+`--plan` or `--timings`. Selecting only timings requires a previously authenticated store
+of the same release and `--replace`. An existing store is never overwritten without
+`--replace`. A private staging manifest authenticates the records before any timing;
+the completed manifest is written last and the checked store is published by directory
+rename. A worker failure leaves the previous store intact.
+
+Alternatively dispatch Nightly with `confirm: record-0.9.1`. The `record-baseline` job
+prepares the server and uploads `recorded-baseline`; it never commits. The lead downloads,
+reviews and commits the artifact, including `baseline_freeze.txt` as evidence, then runs
+FRZ-01's real acceptance. Ordinary CI and Nightly fail closed until that handoff is complete.
+
+**Owner decision, 2026-10-11:** after every release the lead sets `BASELINE_VERSION` to that
+published release, fetches its tag, installs it and re-records **every workload** with the
+same command plus `--replace`. The manifest records `source_release.version` and
+`source_release.commit`, alongside `shape_version` and `shape_commit`. A deliberate change
+such as synthetic healthcare or capital-markets reference data is reviewed in that
+release's complete re-record; no workload is exempted and no check or tolerance is loosened.
+Version changes belong to the release work packages, never this harness package.
+
+## Record format and workloads
+
+Every recording is UTF-8 JSON, sorted keys and two-space indentation, with `format`,
+`version: 1`, `workload`, `shape_version`, `shape_commit`, `recorded_utc` and `inputs`.
+`MANIFEST.json` authenticates file SHA-256s and sizes, frozen fixture hashes, source release,
+machine metadata and the baseline freeze digest. The store must remain under 50 MB (50,000,000 bytes).
+Raw generated rows and events are not committed.
+
+| Family | Recordings | Compared values |
+|---|---:|---|
+| Profile | 49 | D1–D4 CSV/Parquet, MT CSV/Parquet, 20 EDGE variants and 19 deviation cases; normalized T-22 fields |
+| Generate | 16 | Retail small/medium/large, 13 other domains medium; per-table Arrow shapes and content IDs at seeds 42–46 |
+| Stream | 2 | Retail order small/medium, each whole and prefix; field order, event count, content ID and JSONL digest at seeds 42–46 |
+| Database | 24 | All 12 SQL Server testing cases, both fake and actual SQL Server 2022; normalized profiles and scenario content IDs |
+| Verify CLI | 10 | Every unchanged gate scenario, release CLI reports on both seed-42 and seed-1042 inputs |
+| Composite plan | 1 | Nine composites, each schema SHA-256 and planned per-table counts at every scale |
+| Timing | 1 | Release-only full run, after equivalence, on a 4-vCPU runner |
+
+This totals 103 recording files, plus the manifest. Profile column and table order are
+stored explicitly because sorted JSON keys alone cannot preserve those orders. Generated
+Parquet file hashes are informational: Arrow content IDs and shapes must agree even if a
+platform produces different Parquet bytes. Stream JSONL digests are authenticated.
+
+The 28 frozen domain/mode plans stay in `fixtures/plan.json`. The nine composite plans are
+computed **only during recording**, using the release interpreter and frozen composite
+schemas, and stored in `recorded/plan/composites.json`. Verification never runs the release
+planner for planned counts. Missing composite entries or changed schema digests return
+exit 2 naming the composite. Generated row-count checks remain for all 37 cases.
+
+## Verification and timing
+
+```bash
+source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/profile_1to1/verify.py --impl shape
+source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain retail --scale small
+source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain retail --scale small --negative-control
+source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/stream_1to1/verify.py --scale medium --negative-control
+source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/db_1to1/verify.py
+source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/db_1to1/verify.py --mssql "$SHAPE_TEST_MSSQL;Database=tempdb"
+source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/verify_1to1/verify.py
+source scripts/env.sh && python benchmarks/vs_refengine/run.py --quick --dry-run
+source scripts/env.sh && python benchmarks/vs_refengine/run.py --quick --out "$BENCH_OUT_DIR/results.json"
+```
+
+Baseline generation/stream seeds are exactly 42–46, candidate seed 1042. Every regenerated
+baseline output must authenticate against its recording before comparison. Verify-CLI
+checks fresh release reports against the recorded reports before comparing candidate
+gates. Exit 0 means all checks pass, exit 1 means a regression, exit 2 means an unavailable
+or untrustworthy input. Negative-control commands fail if any perturbation is missed.
+
+Schema-v2 results contain `baseline` (kind `shape`, release version, commit and workloads)
+and `shape`. `ratio_vs_baseline` is baseline median divided by candidate median, timed in
+the same job. Each run uses fresh processes, excludes imports for API measurements,
+holds the benchmark lock and interleaves implementations. Quick uses three repetitions;
+full uses five. Equivalence precedes timing; generation and stream timed outputs are
+verified again before numbers count. The startup gate remains 300 ms. T-19's candidate
+regression rule and Nightly's green, subset and seven-night streak rules remain unchanged.
+
+Missing or damaged recordings produce unavailable records with null medians. The committed
+builder results reflect that actual unavailable run and publish no numbers. The lead
+replaces them with acceptance measurements. Historical timing evidence remains in
+`docs/plans/evidence/G1*`, `G3` and `G4`; those ratios are no longer gated.
+
+## Active files and historical harnesses
+
+| Files | Purpose |
 |---|---|
-| `setup_refengine.sh` | Clone the pinned RefEngine, build its venv, write `$BENCH_OUT_DIR/refengine_freeze.txt` |
-| `run.py` | `--quick` (D1, D2, retail small + medium; 3 runs) or `--full` (D1-D4, MT; retail medium + large for both implementations, Shape on every other baseline domain at medium; stream; 5 runs): verifiers, then benchmarks, then `results.json`; `--only profile\|generate\|stream` re-measures one family and keeps the other families' records already in the file; `--shard K/N`, `--domain`, `--dataset` select a part (recorded under `selection`) |
-| `nightly.py` | The nightly parity suite (P8-02): `run --shard S` runs one shard of `run.py --full` (`shards` lists them; a hosted job runs at most 6 hours), `merge` combines the shards, judges the night (green only when every workload of the full suite is recorded with a verifier that exited 0) and appends it to a JSON-lines history, `streak --need 7` checks the acceptance (consecutive scheduled green nights, no day missing) |
-| `../../scripts/gen_performance_page.py` | Builds `docs/PERFORMANCE.md` from a `results.json`: publishes a workload's numbers only when its verifier exited 0, never names the baseline (D-13); `--check` fails when the committed page is stale |
-| `results.json`, `results.schema.json` | The committed reference (section 6.2(4)) and its schema. `shape` is `null` until the product path exists |
-| `domain_1to1/` | Domain generation: `generate.py`, `verify.py` (T-21), `bench.py`, and the retail reference port |
-| `profile_1to1/` | Profiling: `datasets.py`, `verify.py` (T-22), `bench.py`, the reference port, `refengine_dump.py`, `refengine_cli_profile.py` |
-| `verify_1to1/` | `shape verify` (P6-09): `verify.py` runs both `verify` CLIs on mutated retail output and compares exit codes and, gate by gate, pass/fail, errors, warnings and details |
-| `chaos_1to1/` | `shape.chaos` (P6-02): `verify.py` runs each chaos mutator, each sub-mutation and the engine schedule in both tools on the same input, config and seeds; mutation types exactly, rates within a derived statistical tolerance (documented in its docstring); `--negative-control` proves it fails on a deliberately wrong rate |
-| `pack_1to1/` | `shape.scenario` and `shape pack` (P6-14): `verify.py` loads, validates and runs the five reference inputs (`tests/fixtures/packs/`) in both tools at `fabric_demo`; parsed structure, verdicts, run results and manifest keys equal; T-21 (a)-(f) for inputs without chaos (the written tables, baseline seeds 42-46 against Shape 1042); a named allow-list (`pack_common.py`) of the baseline defects Shape fixes, each shown by a probe; `--negative-control` proves it fails on tampered output |
-| `stream_1to1/` | `shape stream` (P5-04, STREAM-EMIT): `verify.py` runs both stream commands (retail `order`, whole table and first N events; baseline seeds 42-46, Shape 1042), maps the baseline's event field names to Shape's (`stream_common.FIELD_MAP`) and checks names and order, event count and order, and T-21 (b)-(e) per field; the allow-list (`stream_common.ALLOWED`, one probe each) names the baseline defects Shape fixes; `--negative-control` perturbs Shape's events and requires each to be caught. `bench.py` times both tools (fresh processes, imports excluded) and the two command lines end to end; `run.py --only stream` runs verify, bench, verify |
-| `bridge_1to1/` | `shape bridge` (P6-11): `verify.py` drives the baseline's persistent JSON bridge and `shape bridge` as a client does, for the 17 commands, on retail. Metadata is compared exactly (`compare.py`: list, describe in both modes, dry_run for every preset, validate on the baseline's schema file and its Shape form, profile_info ratios and distributions, the shapes of preview, generate, stream and the job commands); generated data is compared under T-21 with the domain verifier on the bridges' own Parquet (`generate`, `scale_generate` local_single and local_mp, baseline seeds 42-46, Shape 1042); each baseline defect Shape fixes is an `ALLOW` entry (BR-1 .. BR-7) that the harness shows in the baseline and shows fixed; `demo_*` are compared with the baseline's (catalog, a run's result and manifest, an unknown session, a dry-run cleanup); `--negative-control` mutates Shape results and requires each comparison to flag them |
-| `scale_1to1/` | `shape generate --scale-mode` (P6-13): `verify.py` runs `local_single` and `local_mp` for retail at medium (Shape 1042; baseline seeds 42-46) through the product command, reads the part files back into the layout `domain_1to1/verify.py` reads and runs that verifier unchanged (T-21 (a)-(h)); it also checks every table's rows against the preset and the part size; `--negative-control` tampers with the output (numeric, categorical, foreign keys, dropped rows) and runs the baseline's own `local_mp` output through the same comparison, and requires each to be flagged |
-| `fabric_commands_1to1/` | `shape fabric publish\|notebook\|deploy-notebook\|setup\|export-model` and their aliases (P6-07c): `verify.py` (Shape venv) runs both tools' commands and compares the `.bim` (every option; the library on synthetic schemas with every type), the notebook cells, the requests each sends to a fake Fabric service (`baseline_rest.py`, in the baseline venv) and the landing zone, run manifest and reports for each file format; the allow-list `differences.py` names every difference, each shown by a probe; `--negative-control` tampers with each comparison's input and requires a flag |
-| `simulation_1to1/` | `shape-simulation` (P6-04): `verify_files.py` runs the cases of lane P6-04a, `files_case_<simulator>.py` (one module per simulator): mechanism parity (the same input tables, configuration and seed give the same files, rows, manifests and events once the baseline's names are mapped to Shape's, `sim_common.NAME_MAP`), the allow-list probes (`ALLOWED` per case, each shown by a probe that fails when the baseline no longer has the defect), T-21 (a)-(e) on each tool's own retail output (baseline seeds 42-46, Shape 1042), and `--negative-control` (tampered output must be caught). Cases: `file_drop`, `scd2_file_drops`, `stream_emit`, `hybrid`, `state_machine` |
-| `demo_1to1/` | `shape demo` (P6-12): `verify.py` (baseline venv) drives both `demo` commands and compares, exactly after the baseline's name is mapped to Shape's (`differences.brand_patterns()`), the scenario catalog, the options of every command, a record's `status` and Markdown and HTML report, the cost estimate and dry-run line, the `cleanup --dry-run` lines, the stored profile and the notebooks (Markdown, cell kinds, scenario, mode, rows); the fidelity report row by row and its score on two dataset pairs (one damaged on purpose, so the check cannot pass vacuously); generated data by T-21: an inference run from a file (same learned schema but for P4-08's `truncated_enum`, then T-21 (a)-(d) per column, baseline seeds 42-46 against Shape 1042) and a seeding run through `domain_1to1/verify.py --impl shape` unchanged; the allow-list `differences.py` names every difference, each shown by a probe of the baseline; `--negative-control` tampers with each comparison's input and requires a flag |
-| `dump_schema.py` | Serialize every RefEngine domain schema (3nf, star) to `$BENCH_OUT_DIR/schemas/` |
-| `check_coverage.py` | Every RefEngine file must be mapped to a work package in `docs/plans/refengine_coverage.tsv` |
+| `setup_baseline.sh`, `paths.py` | Isolated release installation and shared environment paths |
+| `record_baseline.py`, `recorded_store.py`, `recorded/check.py` | Lead capture, authenticated reads and store validation |
+| `profile_1to1/baseline_dump.py`, `verify.py`, `bench.py`, `bench_cli.py` | Common profile normalization, T-22 and API/CLI timing |
+| `domain_1to1/generate.py`, `verify.py`, `rowcounts.py`, `bench.py`, `bench_cli.py` | T-21 a–f, fixed seeds, row counts and timings |
+| `stream_1to1/verify.py`, `stream_common.py`, `baseline_worker.py`, `bench.py` | Stream structure/statistics, authenticated events and timings |
+| `db_1to1/verify.py`, `verify_1to1/verify.py` | Recorded database profiles and unchanged gate scenarios |
+| `run.py`, `nightly.py`, `results.schema.json` | Equivalence-first orchestration, schema v2, shard verdicts and history |
 
-## Rules
+Other harnesses and their committed goldens remain historical, unchanged. Importing
+`_refpkg.py` raises `RuntimeError("the reference engine is archived (FRZ-01, 2026-10-11); this harness is historical")`.
+Their offline unit tests retain every assertion and use test-only import stand-ins which
+raise if an archived runtime is accessed; no archived engine is needed by those assertions.
 
-* **Equivalence before timing.** A workload's numbers are recorded only after its verifier
-  exits 0 on the timed output; otherwise `median_s` is `null` and the verifier status says why.
-* **Fixed seeds** (T-21): RefEngine 42 as the reference, 43-46 as its self-baseline, the
-  implementation at 1042. The verifiers have no option to change them.
-* `--impl reference_port` is the numpy + pyarrow 1:1 port kept in this directory (retail
-  domain, and the profiler). `--impl shape` is the product code in `src/shape`.
-* Timed runs use fresh processes, the exclusive lock `$BENCH_OUT_DIR/bench.lock`, and wait for a
-  1-minute load average of at most 1.5 (section 1.4).
+Until the lead records the release timing snapshot, the performance-page generator shows
+`release timing snapshot pending: recorded/timings_0.9.1.json` and a hidden owner marker.
+The unchanged release-mode documentation owner check refuses that pending state. Once the
+snapshot exists, regeneration automatically renders its source link and removes the marker.
 
-## From scratch
-
-```bash
-source scripts/env.sh
-bash benchmarks/vs_refengine/setup_refengine.sh                     # RefEngine checkout + venv
-python3 -m venv "$SHAPE_VENV" && "$SHAPE_VENV/bin/pip" install -e '.[dev]' 'pyarrow==25.0.1'
-python benchmarks/vs_refengine/check_coverage.py
-python benchmarks/vs_refengine/run.py --quick                     # writes benchmarks/vs_refengine/results.json
-python scripts/gen_performance_page.py                           # regenerate docs/PERFORMANCE.md from it
-```
-
-## Nightly parity suite (P8-02)
-
-```bash
-source scripts/env.sh
-for s in $(python benchmarks/vs_refengine/nightly.py shards | python -c 'import json,sys; print(*json.load(sys.stdin))'); do
-    python benchmarks/vs_refengine/nightly.py run --shard "$s"     # $BENCH_OUT_DIR/nightly/<shard>/
-done
-python benchmarks/vs_refengine/nightly.py merge --in-dir "$BENCH_OUT_DIR/nightly" \
-    --out "$BENCH_OUT_DIR/parity/results.json" --history "$BENCH_OUT_DIR/nightly.jsonl"
-python scripts/gen_performance_page.py --results "$BENCH_OUT_DIR/parity/results.json" \
-    --history "$BENCH_OUT_DIR/nightly.jsonl" --out "$BENCH_OUT_DIR/parity/PERFORMANCE.md"
-python benchmarks/vs_refengine/nightly.py streak --history "$BENCH_OUT_DIR/nightly.jsonl" --need 7
-```
-
-Options after `--` in `nightly.py run` select a subset (`--dataset`, `--domain`); a subset is
-recorded but never counts as a nightly run. Only scheduled runs of the whole suite count toward
-the streak.
+Approved FRZ-01 correction: identifier component forms (email, company email, phone and URI)
+are captured in each generation recording from the release provider's own template, full
+component pools, integer bounds, run defaults and frozen column settings. Only random
+selectors are replaced during this capture; formatting and provider selection stay with
+the release implementation. Verification uses exact recorded literals and component sets,
+never broader hand-written patterns. A changed frozen setting needs its matching re-record;
+a missing form fails closed. The component-overlap threshold remains `>= 0.999`.

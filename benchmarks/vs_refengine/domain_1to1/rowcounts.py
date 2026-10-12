@@ -2,7 +2,7 @@
 
     source scripts/env.sh
     "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/domain_1to1/rowcounts.py  # both sides
-    "$REFENGINE_PY" benchmarks/vs_refengine/domain_1to1/rowcounts.py baseline --out A.json
+    "$BASELINE_PY" benchmarks/vs_refengine/domain_1to1/rowcounts.py baseline --out A.json
     "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/domain_1to1/rowcounts.py shape --out B.json
     "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/domain_1to1/rowcounts.py compare A.json B.json
 
@@ -42,9 +42,8 @@ from typing import Any
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
-import _refpkg  # noqa: E402
-import composites  # noqa: E402
-from paths import BENCH_OUT_DIR, REFENGINE_PY, REFENGINE_ROOT, SHAPE_PY  # noqa: E402
+from paths import BASELINE_PY, BENCH_OUT_DIR, SHAPE_PY  # noqa: E402 (harness path bootstrap)
+from recorded_store import RecordingError, load, sha256  # noqa: E402
 
 MODES = ("3nf", "star")
 SEED = 42
@@ -58,40 +57,75 @@ def keys(domains: list[str]) -> list[tuple[str, str, str | None]]:
     the composites. Each side lists its own domains, so a domain missing on one side is a
     difference."""
     out: list[tuple[str, str, str | None]] = [(f"{d}_{m}", d, m) for d in domains for m in MODES]
-    out += [(composites.harness_id(s), s, None) for s in composites.specs()]
+    out += [
+        (key, key.removeprefix("composite_").replace("-", "+"), None) for key in composite_ids()
+    ]
     return out
 
 
 # ---- the baseline side (RefEngine venv) -------------------------------------------------------
 
 
+def composite_ids() -> list[str]:
+    return sorted(p.stem for p in (HERE.parent / "fixtures/composites").glob("*.json"))
+
+
+def composite_path(key: str) -> Path:
+    return HERE.parent / "fixtures/composites" / (key + ".json")
+
+
+def recorded_composite_plans() -> dict[str, dict[str, dict[str, int]]]:
+    ids = composite_ids()
+    try:
+        record = load("plan", "composites")
+    except RecordingError as exc:
+        raise RecordingError("plan:" + ids[0] + ": " + str(exc)) from None
+    result = {}
+    for key in ids:
+        entry = record.get("composites", {}).get(key)
+        if not isinstance(entry, dict):
+            raise RecordingError("plan:" + key + ": missing entry")
+        if entry.get("schema_sha256") != sha256(composite_path(key)):
+            raise RecordingError("plan:" + key + ": schema digest mismatch")
+        planned = entry.get("planned")
+        if (
+            not isinstance(planned, dict)
+            or not planned
+            or any(
+                not isinstance(tables, dict)
+                or not tables
+                or any(type(n) is not int or n < 0 for n in tables.values())
+                for tables in planned.values()
+            )
+        ):
+            raise RecordingError("plan:" + key + ": malformed planned counts")
+        result[key] = planned
+    return result
+
+
 def baseline_counts(generate_scales: list[str]) -> Counts:
-    sys.path.insert(0, str(REFENGINE_ROOT))
-    import dump_schema
+    from shape.generation.composite import resolve
+    from shape.generation.domains import load_domain
+    from shape.generation.engine import Engine
 
-    _resolve_domain = _refpkg.mod("cli")._resolve_domain
-    RefEngine = getattr(_refpkg.mod("engine.generator"), _refpkg.ENGINE_CLASS)
-    calculate_row_counts = _refpkg.mod("engine.generator").calculate_row_counts
-
-    out: Counts = {}
-    for key, name, mode in keys(dump_schema.domain_names()):
-        domain = composites.baseline_domain(name) if mode is None else _resolve_domain(name, mode)
-        schema = domain.get_schema()
-        planned: dict[str, dict[str, int]] = {}
-        for scale in schema.generation.scales:
-            schema.generation.scale = scale
-            counts = calculate_row_counts(schema)
-            # ``calculate_row_counts`` also returns a working value that is not a table
-            # (``daily_price_years``, the years a ``per_year`` count multiplies): only tables count.
-            planned[scale] = {k: int(v) for k, v in counts.items() if k in schema.tables}
-        generated: dict[str, dict[str, int]] = {}
+    plan = json.loads((HERE.parent / "fixtures/plan.json").read_text())
+    planned = {key: entry["row_counts"] for key, entry in plan.items()}
+    planned.update(recorded_composite_plans())
+    out = {}
+    for key, counts in planned.items():
+        generated = {}
         for scale in generate_scales:
-            if scale in planned:
-                res = RefEngine().generate(domain=domain, scale=scale, seed=SEED)
-                generated[scale] = {t: len(df) for t, df in res.tables.items()}
-        out[key] = {"planned": planned, "generated": generated}
+            if scale in counts:
+                if key.startswith("composite_"):
+                    schema = resolve(key.removeprefix("composite_").replace("-", "+")).schema
+                else:
+                    name, mode = key.rsplit("_", 1)
+                    schema = load_domain(name, mode=mode).schema
+                tables = Engine(schema, scale=scale, seed=SEED).generate().tables
+                generated[scale] = {t: int(tbl.num_rows) for t, tbl in tables.items()}
+        out[key] = {"planned": counts, "generated": generated}
         print(
-            f"baseline {key}: {len(planned)} scales planned, {len(generated)} generated", flush=True
+            f"baseline {key}: {len(counts)} scales planned, {len(generated)} generated", flush=True
         )
     return out
 
@@ -227,7 +261,11 @@ def _read(path: Path) -> Counts:
 
 def _side(python: Path, side: str, out: Path, scales: str) -> bool:
     cmd = [str(python), str(Path(__file__)), side, "--out", str(out), "--generate-scales", scales]
-    return subprocess.run(cmd).returncode == 0
+    env = dict(__import__("os").environ)
+    if side == "baseline":
+        env.pop("PYTHONPATH", None)
+        env.pop("PYTHONHOME", None)
+    return subprocess.run(cmd, env=env).returncode == 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -243,7 +281,14 @@ def main(argv: list[str] | None = None) -> int:
     scales = [s for s in a.generate_scales.split(",") if s]
     started = time.time()
     if a.what in ("baseline", "shape"):
-        counts = baseline_counts(scales) if a.what == "baseline" else shape_counts(scales)
+        try:
+            counts = baseline_counts(scales) if a.what == "baseline" else shape_counts(scales)
+        except (RecordingError, OSError, KeyError) as exc:
+            print(
+                str(exc) if isinstance(exc, RecordingError) else "rowcounts: missing frozen input",
+                file=sys.stderr,
+            )
+            return 2
         out = Path(a.out or BENCH_OUT_DIR / "rowcounts" / f"{a.what}.json")
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(counts, indent=1, sort_keys=True) + "\n")
@@ -257,7 +302,7 @@ def main(argv: list[str] | None = None) -> int:
         folder = BENCH_OUT_DIR / "rowcounts"
         paths = [folder / "baseline.json", folder / "shape.json"]
         for side, python, path in (
-            ("baseline", REFENGINE_PY, paths[0]),
+            ("baseline", BASELINE_PY, paths[0]),
             ("shape", SHAPE_PY, paths[1]),
         ):
             if not _side(python, side, path, a.generate_scales):

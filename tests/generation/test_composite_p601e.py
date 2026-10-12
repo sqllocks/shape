@@ -37,16 +37,20 @@ from shape.generation.rules import validate_rules
 from shape.plugins import kit
 from shape.plugins.host import default_host
 
+from ..benchmarks.historical_imports import historical_imports
+
 ROOT = Path(__file__).resolve().parents[2]
 BENCH = ROOT / "benchmarks" / "vs_refengine"
 sys.path.insert(0, str(BENCH))
 sys.path.insert(0, str(BENCH / "domain_1to1"))
 
-import allowlist  # noqa: E402
-import composites  # noqa: E402
-import export_domains  # noqa: E402
-import rowcounts  # noqa: E402
-import schema_import  # noqa: E402
+with historical_imports():
+    import allowlist  # noqa: E402
+    import composites  # noqa: E402
+    import export_domains  # noqa: E402
+    import rowcounts  # noqa: E402
+    import schema_import  # noqa: E402
+
 
 FIXTURES = {
     p.stem: json.loads(p.read_text("utf-8"))

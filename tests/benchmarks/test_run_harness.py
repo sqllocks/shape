@@ -32,23 +32,27 @@ def _record(kind: str, **extra) -> dict:
 
 def _offline(monkeypatch, tmp_path: Path) -> None:
     """Point the driver at existing stand-in paths and stub every subprocess step."""
-    monkeypatch.setenv("REFENGINE_NAME", "fixture")
     fake = tmp_path / "fake"
-    (fake / run._refpkg.PACKAGE).mkdir(parents=True)
+    fake.mkdir()
     (fake / "python").write_text("")
-    monkeypatch.setattr(run, "REFENGINE_PY", fake / "python")
+    monkeypatch.setattr(run, "BASELINE_PY", fake / "python")
     monkeypatch.setattr(run, "SHAPE_PY", fake / "python")
-    monkeypatch.setattr(run, "REFENGINE_ROOT", fake)
-    monkeypatch.setattr(run, "py_version", lambda py, pkg: "0")
+    monkeypatch.setattr(
+        run, "py_version", lambda py, pkg: "0.9.1" if pkg == "sqllocks-shape" else "0"
+    )
+    monkeypatch.setattr(run, "py_kernel", lambda py: "rust")
+    monkeypatch.setattr(
+        run, "recording_manifest", lambda: {"shape_version": "0.9.1", "shape_commit": "a" * 40}
+    )
     monkeypatch.setattr(run, "git_rev", lambda path: "abc")
     monkeypatch.setattr(run, "git_dirty", lambda path: False)
     monkeypatch.setenv("BENCH_LOCK_HELD", "1")
 
     def stream(scales, runs, out):
         for s in scales:
-            out["refengine"]["workloads"][f"stream:retail:order:{s}"] = _record("stream")
+            out["baseline"]["workloads"][f"stream:retail:order:{s}"] = _record("stream")
             out["shape"]["workloads"][f"stream:retail:order:{s}"] = _record(
-                "stream", speedup_vs_refengine=2.0
+                "stream", ratio_vs_baseline=2.0
             )
         return True
 
@@ -61,38 +65,33 @@ def test_only_one_family_keeps_the_other_families_already_recorded(monkeypatch, 
     _offline(monkeypatch, tmp_path)
     out = tmp_path / "results.json"
     previous = {
-        "schema_version": 1,
+        "schema_version": 2,
         "mode": "quick",
         "runs": 3,
         "generated_utc": "2026-01-01T00:00:00Z",
         "machine": {"cores": 4},
-        "refengine_commit": "x",
         "shape_commit": "y",
         "shape_tree_dirty": False,
-        "refengine": {
+        "baseline": {
+            "kind": "shape",
+            "version": "0.9.1",
+            "commit": "a" * 40,
             "workloads": {
                 "profile:d1.csv": _record("profile"),
                 "generate:retail:small": _record("generate"),
-            }
+            },
         },
-        "reference_port": {
-            "workloads": {
-                "profile:d1.csv": _record("profile", speedup_vs_refengine=5.0),
-                "generate:retail:small": _record("generate", speedup_vs_refengine=2.0),
-            }
-        },
-        "shape": {"workloads": {"profile:d1.csv": _record("profile", speedup_vs_refengine=6.0)}},
+        "shape": {"workloads": {"profile:d1.csv": _record("profile", ratio_vs_baseline=6.0)}},
     }
     out.write_text(json.dumps(previous))
     assert run.main(["--quick", "--only", "stream", "--out", str(out)]) == 0
     doc = json.loads(out.read_text())
-    assert set(doc["refengine"]["workloads"]) == {
+    assert set(doc["baseline"]["workloads"]) == {
         "profile:d1.csv",
         "generate:retail:small",
         "stream:retail:order:small",
         "stream:retail:order:medium",
     }
-    assert set(doc["reference_port"]["workloads"]) == {"profile:d1.csv", "generate:retail:small"}
     assert set(doc["shape"]["workloads"]) == {
         "profile:d1.csv",
         "stream:retail:order:small",
@@ -109,11 +108,31 @@ def test_a_failing_timed_baseline_run_leaves_the_record_empty(monkeypatch, tmp_p
     monkeypatch.setattr(run, "BENCH_OUT_DIR", tmp_path / "out")
     calls = iter([(0, "verifier passed\n"), (1, "Traceback: boom\n")])
     monkeypatch.setattr(run, "sh", lambda cmd, log=None: next(calls))
-    out: dict = {"refengine": {"workloads": {}}, "shape": {"workloads": {}}}
+    out: dict = {"baseline": {"workloads": {}}, "shape": {"workloads": {}}}
     assert run.domain_workloads("hr", ["medium"], 3, out, "shape") is False
-    rec = out["refengine"]["workloads"]["generate:hr:medium"]
+    rec = out["baseline"]["workloads"]["generate:hr:medium"]
     assert rec["median_s"] is None and rec["runs_s"] == []
     shape = out["shape"]["workloads"]["generate:hr:medium"]
     assert shape["median_s"] is None and shape["runs_s"] == []
-    assert shape["speedup_vs_refengine"] is None
+    assert shape["ratio_vs_baseline"] is None
     assert "generate:hr:medium" in capsys.readouterr().err
+
+
+def test_missing_recording_records_unavailable_and_never_times(monkeypatch, tmp_path):
+    _offline(monkeypatch, tmp_path)
+    from recorded_store import RecordingError
+
+    monkeypatch.setattr(
+        run, "recording_manifest", lambda: (_ for _ in ()).throw(RecordingError("no recording"))
+    )
+    monkeypatch.setattr(
+        run, "profile_workloads", lambda *args: __import__("pytest").fail("must not time")
+    )
+    out = tmp_path / "missing.json"
+    assert run.main(["--quick", "--out", str(out)]) == 2
+    doc = json.loads(out.read_text())
+    assert len(doc["shape"]["workloads"]) == 8
+    assert all(
+        r["verifier"]["status"] == "unavailable" and r["median_s"] is None
+        for r in doc["shape"]["workloads"].values()
+    )

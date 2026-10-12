@@ -6,6 +6,8 @@ from __future__ import annotations
 import copy
 import importlib.util
 import json
+import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -28,7 +30,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from refengine_name import names_refengine  # noqa: E402
 
 page = _load("gen_performance_page_p802", ROOT / "scripts" / "gen_performance_page.py")
-BASE = page.BASELINE_KEY  # the renamed results key, "refengine"
+BASE = page.BASELINE_KEY  # the published release tool block
 PASS = {"status": "pass", "exit_code": 0, "command": "verify.py"}
 
 
@@ -39,19 +41,19 @@ def _results() -> dict[str, Any]:
             "median_s": median,
             "runs_s": [median],
             "verifier": dict(PASS),
-            "speedup_vs_refengine": speedup,
-            "refengine_median_s": median * speedup,
+            "ratio_vs_baseline": speedup,
+            "baseline_median_s": median * speedup,
             **kw,
         }
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "mode": "full",
         "runs": 5,
         "generated_utc": "2026-10-04T05:00:00Z",
         "machine": {"cores": 4, "cpu": "Test CPU", "python": "3.11.15"},
         BASE: {"workloads": {}},
-        "refengine_commit": "422e78d",
+        "baseline": {"kind": "shape", "version": "0.9.1", "commit": "422e78d", "workloads": {}},
         "shape_commit": "abc1234def5678",
         "shape_tree_dirty": False,
         "reference_port": {
@@ -133,7 +135,7 @@ def test_a_modified_tree_publishes_nothing() -> None:
 def test_the_baseline_median_falls_back_to_its_own_record() -> None:
     r = _results()
     rec = r["shape"]["workloads"]["profile:d1.csv"]
-    del rec["refengine_median_s"]
+    del rec["baseline_median_s"]
     r[BASE]["workloads"]["profile:d1.csv"] = {"kind": "profile", "median_s": 2.0}
     assert "| pass | 2.000 | 0.123 | 12.3x |" in page.render(r)
     r[BASE]["workloads"]["profile:d1.csv"]["median_s"] = None
@@ -142,11 +144,13 @@ def test_the_baseline_median_falls_back_to_its_own_record() -> None:
 
 def test_the_page_never_names_the_baseline() -> None:
     text = page.render(_results())
-    assert BASE not in text.lower() and not names_refengine(text)
+    assert "refengine" not in re.sub(r"\]\([^)]*\)", "]", text).lower() and not names_refengine(
+        text
+    )
     r = _results()
     r["shape"]["workloads"]["generate:x:medium"] = {
         **copy.deepcopy(r["shape"]["workloads"]["generate:hr:medium"]),
-        "domain": BASE.capitalize() + "_demo",
+        "domain": "Refengine_demo",
     }
     with pytest.raises(page.PageError):
         page.render(r)
@@ -182,3 +186,25 @@ def test_main_writes_the_page(tmp_path: Path) -> None:
     assert page.main(["--results", str(res), "--out", str(out), "--check"]) == 0
     out.write_text("stale")
     assert page.main(["--results", str(res), "--out", str(out), "--check"]) == 1
+
+
+@pytest.mark.parametrize("present", [False, True])
+def test_release_snapshot_pending_blocks_release_only(monkeypatch, tmp_path, present):
+    monkeypatch.setattr(page, "ROOT", tmp_path)
+    snapshot = tmp_path / "benchmarks/vs_refengine/recorded/timings_0.9.1.json"
+    if present:
+        snapshot.parent.mkdir(parents=True)
+        snapshot.write_text("{}")
+    text = page.render(_results())
+    assert ("release timing snapshot pending: recorded/timings_0.9.1.json" in text) is not present
+    assert ("[the release timing snapshot]" in text) is present
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    (docs / "PERFORMANCE.md").write_text(text)
+    scripts = tmp_path / "scripts"
+    scripts.mkdir()
+    checker = scripts / "check_docs_owners.py"
+    checker.write_bytes((ROOT / "scripts/check_docs_owners.py").read_bytes())
+    assert subprocess.run([sys.executable, str(checker)], capture_output=True).returncode == 0
+    release = subprocess.run([sys.executable, str(checker), "--release"], capture_output=True)
+    assert release.returncode == (0 if present else 1)
