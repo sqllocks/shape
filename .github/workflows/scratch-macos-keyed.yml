@@ -1,0 +1,27 @@
+name: Scratch macOS keyed-state memory probe
+on:
+  push:
+    branches: [scratch/macos-rss-control]
+    paths:
+      - scripts/scratch/macos_keyed_probe.py
+      - .github/workflows/scratch-macos-keyed.yml
+permissions: {contents: read}
+jobs:
+  keyed:
+    runs-on: macos-latest
+    timeout-minutes: 120
+    env: {PYTHONPATH: ci}
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11', allow-prereleases: true}
+      - run: python -m pip install -U pip
+      - run: pip install -e '.[dev,streaming,advanced,docs]'
+      - name: Keyed-state workload, plain and under the live-heap interposer
+        run: python scripts/scratch/macos_keyed_probe.py origin/main "$RUNNER_TEMP/keyed" 3 4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: macos-keyed-probe
+          path: ${{ runner.temp }}/keyed/

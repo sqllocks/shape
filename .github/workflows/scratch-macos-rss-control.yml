@@ -4,6 +4,11 @@ on:
   # A dispatch needs the file on main; this scratch branch is never merged, so a push runs it.
   push:
     branches: [scratch/macos-rss-control]
+    paths:
+      - scripts/scratch/macos_footprint_control.py
+      - scripts/scratch/rss_live_peak.c
+      - tests/profile/**
+      - .github/workflows/scratch-macos-rss-control.yml
 permissions: {contents: read}
 env:
   REFENGINE_NAME: ${{ secrets.REFENGINE_NAME }}
