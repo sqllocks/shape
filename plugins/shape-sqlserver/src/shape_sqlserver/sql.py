@@ -318,3 +318,69 @@ def sql_type_to_arrow(type_name: str, precision: int = 0, scale: int = 0) -> Any
     if t in ("decimal", "numeric"):
         return pa.decimal128(max(int(precision), 1), int(scale))
     return pa.string()
+
+
+_ADO_PAIR = re.compile(r"""\s*([^=;]+?)\s*=\s*("(?:[^"]|"")*"|'(?:[^']|'')*'|[^;]*)""")
+_TRUE = ("true", "yes", "1")
+_FALSE = ("false", "no", "0")
+
+
+def _unquote(value: str) -> str:
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+        return value[1:-1].replace(value[0] * 2, value[0])
+    return value
+
+
+def normalize_connection_string(cs: str, driver: str | None = None) -> str:
+    """``cs`` as an ODBC connection string. The Fabric portal gives the ADO.NET form
+    (``Data Source=...;Initial Catalog=...``); an ODBC string (it has ``Driver=``) is returned
+    unchanged. ``Encrypt=Strict`` is kept, ``Application Name`` and ``MultipleActiveResultSets``
+    become ODBC's ``APP`` and ``MARS_Connection``; other ADO.NET-only settings (``Persist Security
+    Info``, pooling) have no ODBC meaning and are left out. ``driver`` defaults to the SQL Server
+    plugin's (ODBC Driver 18)."""
+    if re.search(r"(^|;)\s*driver\s*=", cs, re.IGNORECASE):
+        return cs
+    driver = driver or DEFAULT_DRIVER
+    parts = {m.group(1).strip().lower(): _unquote(m.group(2)) for m in _ADO_PAIR.finditer(cs)}
+    server = parts.get("data source") or parts.get("server")
+    if not server:
+        raise SqlServerError("the connection string has no server (Data Source= or Server=)")
+    if server.lower().startswith("tcp:"):
+        server = server[4:]
+
+    def flag(*keys: str) -> bool | None:
+        for key in keys:
+            if key in parts:
+                low = parts[key].lower()
+                return True if low in _TRUE else False if low in _FALSE else None
+        return None
+
+    encrypt = flag("encrypt")
+    trust = flag("trust server certificate", "trustservercertificate")
+    timeout = parts.get("connect timeout") or parts.get("connection timeout")
+    if timeout and not timeout.strip().isdigit():
+        raise SqlServerError(f"the connection timeout must be whole seconds, not {timeout!r}")
+    extra: dict[str, str] = {}
+    if "authentication" in parts:
+        extra["Authentication"] = parts["authentication"].replace(" ", "")
+    if parts.get("encrypt", "").strip().lower() == "strict":
+        extra["Encrypt"] = "strict"  # TDS 8 with strict certificate checks: never weakened
+    if parts.get("application name"):
+        extra["APP"] = parts["application name"]
+    mars = flag("multipleactiveresultsets", "multiple active result sets")
+    if mars is not None:
+        extra["MARS_Connection"] = "yes" if mars else "no"
+    return str(
+        build_connection_string(
+            server,
+            parts.get("initial catalog") or parts.get("database"),
+            user=parts.get("user id") or parts.get("uid") or parts.get("user"),
+            password=parts.get("password") or parts.get("pwd"),
+            driver=driver,
+            encrypt=True if encrypt is None else encrypt,
+            trust_server_certificate=bool(trust),
+            timeout=int(timeout) if timeout else 30,
+            extra=extra,
+        )
+    )
