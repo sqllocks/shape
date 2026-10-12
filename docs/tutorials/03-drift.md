@@ -49,7 +49,7 @@ shape profile retail/ --dataset --name retail -o baseline.shape
     {"shape_content_id": "42e4dd7f6e98fe34fe46e06fb5ae77b1ba95d2ff50b71551a8f19af214262286", "written": "baseline.shape"}
     ```
 
-The baseline captures the current types, nulls, counts and relationships. Treat it as a reviewed expectation rather than the newest file you happen to have. The content id lets you identify its body even if the artifact is copied or renamed. A safe capture reduces retained values; it does not remove the need to review the artifact. For this local exercise you keep the dataset profile on your machine, because the current multi-table safe validator has a documented limitation. Profiling success and approval to share are separate decisions.
+The baseline captures the current types, nulls, counts and relationships. Treat it as a reviewed expectation rather than the newest file you happen to have. The content id lets you identify its body even if the artifact is copied or renamed. A safe capture reduces retained values; it does not remove the need to review the artifact. For this local exercise you keep the dataset profile on your machine. Profiling success and approval to share are separate decisions.
 
 ## 3. Commit the baseline
 

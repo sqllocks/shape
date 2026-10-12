@@ -116,15 +116,14 @@ You now close the loop: profile a generated table instead of stopping after the 
 shape profile validate --safe generated-order.shape
 ```
 
-??? info "Output (exit 1)"
+??? info "Output (exit 0)"
 
     ```text {.expected}
     shape: note: generated-order.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
-    LEAK: 1 finding(s) in generated-order.shape:
-      [raw-string-list] $.sampling.internal[1].columns: list under 'columns' carries 5 raw strings (more than 2): a value dump. Sample: ['customer_id', 'order_id', 'order_total']
+    CLEAN: no leaks found in generated-order.shape
     ```
 
-The validator's real result is shown below, including its finding. Do not suppress a failing check just because the rows were generated. Generation status, profile fidelity and safe-capture validation answer separate questions. Keep this artifact local while you investigate the reported path. The fitting path is available and is being hardened, so use its plan and a check suited to your fixture before putting it in a shared test workflow. A useful next exercise is to state a small contract for the generated orders, then test both the source and generated observations against it.
+The validator's real result is shown above. Do not skip the check just because the rows were generated. Generation status, profile fidelity and safe-capture validation answer separate questions. Keep this artifact local until you have reviewed it. The fitting path is available and is being hardened, so use its plan and a check suited to your fixture before putting it in a shared test workflow. A useful next exercise is to state a small contract for the generated orders, then test both the source and generated observations against it.
 
 ## What's next
 

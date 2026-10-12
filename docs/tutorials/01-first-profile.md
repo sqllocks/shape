@@ -116,17 +116,14 @@ The folder profile finds customer references from addresses and orders, order re
 shape profile validate --safe retail.shape
 ```
 
-??? info "Output (exit 1)"
+??? info "Output (exit 0)"
 
     ```text {.expected}
     shape: note: retail.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
-    LEAK: 3 finding(s) in retail.shape:
-      [raw-string-list] $.tables.address.sampling.internal[0].columns: list under 'columns' carries 5 raw strings (more than 2): a value dump. Sample: ['address_type', 'city', 'state']
-      [raw-string-list] $.tables.order.sampling.internal[1].columns: list under 'columns' carries 5 raw strings (more than 2): a value dump. Sample: ['customer_id', 'order_id', 'order_total']
-      [raw-string-list] $.tables.order_line.sampling.internal[0].columns: list under 'columns' carries 8 raw strings (more than 2): a value dump. Sample: ['discount_percent', 'line_total', 'order_id']
+    CLEAN: no leaks found in retail.shape
     ```
 
-This final command intentionally demonstrates a current limitation. The multi-table dataset validator reports findings and exits 1, even though the capture was written in safe mode. Do not read that failure as proof that the data is ready to share, and do not silently bypass it in CI. The single-table path is shown in the DuckDB tutorial. Keep this dataset local while you inspect its report. You now have a repeatable generation input, a saved profile and an explicit validation result; each answers a different question about the same workflow.
+The validator scans every table and column of the dataset profile and finds no retained values, so it exits 0. The unsigned-artifact note concerns origin verification and is separate from that verdict. A clean scan is data minimisation, not anonymisation: small groups and aggregate statistics still need review before you share the profile. Keep this dataset local while you inspect its report. You now have a repeatable generation input, a saved profile and an explicit validation result; each answers a different question about the same workflow.
 
 ## What's next
 

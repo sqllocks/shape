@@ -569,8 +569,16 @@ def test_a_hundred_thousand_of_a_million_rows_is_adequate_with_the_closed_form_e
 
 
 def _internal(prof: Any) -> dict[str, dict[str, Any]]:
+    """The table's internal samples, each with ``columns`` resolved to names for the asserts."""
     t = next(iter(prof.tables.values()))
-    return {e["analysis"]: e for e in t["sampling"]["internal"]}
+    names = list(t["columns"])
+    out: dict[str, dict[str, Any]] = {}
+    for e in t["sampling"]["internal"]:
+        assert "columns" not in e  # positions only: a list of names is a list of raw strings
+        out[e["analysis"]] = dict(e)
+        if "column_indexes" in e:
+            out[e["analysis"]]["columns"] = [names[i] for i in e["column_indexes"]]
+    return out
 
 
 def test_a_small_table_has_no_internal_samples() -> None:
@@ -875,7 +883,7 @@ def test_univariate_and_multivariate_samples_are_recorded() -> None:
         }
     )
     prof = shape.profile(table, name="t", univariate=True, multivariate=True)
-    internal = {e["analysis"]: e for e in prof.to_dict()["sampling"]["internal"]}
+    internal = _internal(prof)
     assert internal["univariate"]["columns"] == ["a", "b", "c"]
     assert internal["univariate"]["method"] == "stratified"
     assert {"multivariate_outliers", "cohorts"} <= set(prof.to_dict()["joint"])

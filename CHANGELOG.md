@@ -6,7 +6,14 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+### Fixed
+
+- `shape profile validate --safe` no longer fails multi-table `--dataset` profiles of wide
+  tables. The profiler recorded the columns an analysis sampled as a list of names under
+  `sampling.internal[].columns`, which the leak scanner reads as a list of raw strings. It now
+  records them as positions in the table's `columns` (`column_indexes`). The scanner is
+  unchanged; profiles written by 0.9.1 still load and still report those findings until they
+  are re-profiled.
 
 ## 0.9.1
 
