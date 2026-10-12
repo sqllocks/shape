@@ -84,7 +84,22 @@ def test_synapse_round_trip():
         got = pa.Table.from_pydict(
             {n: [r[i] for r in rows] for i, n in enumerate(names)}, schema=written.schema
         )
-        assert dataset_id({table: got}) == dataset_id({table: written})
+        differing = {
+            n: next(
+                (
+                    (i, w, g)
+                    for i, (w, g) in enumerate(
+                        zip(written.column(n).to_pylist(), got.column(n).to_pylist(), strict=True)
+                    )
+                    if w != g and not (w != w and g != g)  # NaN is not equal to itself
+                ),
+                None,
+            )
+            for n in names
+        }
+        differing = {n: v for n, v in differing.items() if v is not None}
+        # first differing (row, written, read back) per column, so a mismatch names its column
+        assert dataset_id({table: got}) == dataset_id({table: written}), differing
     finally:
         try:
             # a dedicated pool does not parse DROP TABLE IF EXISTS and refuses DDL in a transaction
