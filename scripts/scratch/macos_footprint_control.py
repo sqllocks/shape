@@ -76,97 +76,20 @@ INJECTION = (
     # Touch every page: lazy zero pages must not make this a virtual-only allocation.
     b"        \"held[::4096] = b'x' * ((len(held) + 4095) // 4096)\\n\"\n"
 )
+INJECTION_TRANSIENT = INJECTION + b'        "del held\\n"\n'
 
 
-def allocation_source(original: bytes) -> bytes:
-    """Stage the exact proposed fix; no committed test or product files change."""
-    source = original.decode()
-    if "program allocation" in source:
-        return original
-
-    def embedded(text):
-        return "        " + json.dumps(text + "\n") + "\n"
-
-    def replace(old, new):
-        nonlocal source
-        assert source.count(old) == 1, old
-        source = source.replace(old, new, 1)
-
-    replace(embedded("def peak_memory():"), embedded("def peak_memory(mac=None):"))
-    replace(
-        embedded("        return mac_usage(os.getpid())['ri_lifetime_max_phys_footprint']"),
-        embedded("        return (mac['malloc']['max_size_in_use']")
-        + embedded("                + pool.max_memory() + csv_pool.max_memory())"),
-    )
-    csv = (
-        "        # The serial CSV reader uses a separate pool; "
-        "the default pool omits its buffers.\n"
-        + embedded("csv_pool = (pa.mimalloc_memory_pool()")
-        + embedded("    if 'mimalloc' in pa.supported_memory_backends() else pool)")
-    )
-    replace(csv, "")
-    replace(
-        embedded("pool = pa.default_memory_pool()"),
-        embedded("pool = pa.default_memory_pool()") + csv,
-    )
-    replace(
-        embedded("initial_peak = peak_memory()") + embedded("initial_mac = mac_snapshot()"),
-        embedded("initial_mac = mac_snapshot()")
-        + embedded("initial_peak = peak_memory(initial_mac)"),
-    )
-    replace(
-        embedded("peak = peak_memory()"),
-        embedded("final_mac = mac_snapshot()") + embedded("peak = peak_memory(final_mac)"),
-    )
-    replace("'final_mac': mac_snapshot()", "'final_mac': final_mac")
-    replace(
-        embedded("    lib.malloc_zone_statistics(None, c.byref(stats))"),
-        embedded("    lib.malloc_zone_statistics(None, c.byref(stats))")
-        + "        # malloc_zone_statistics(NULL) reports reserved address"
-        + " space, not live blocks:\n"
-        + "        # its max_size_in_use counts each 128 MiB MALLOC_MEDIUM"
-        + " region macOS reserves (two or\n"
-        + "        # three per process, ~10 MiB resident), so it was bimodal by 128 MiB. Sum the\n"
-        + "        # per-zone high-water marks of live blocks; keep the NULL"
-        + " total as a diagnostic.\n"
-        + embedded("    lib.malloc_get_all_zones.argtypes = [c.c_uint32, c.c_void_p,")
-        + embedded("                                         c.POINTER(c.POINTER(c.c_size_t)),")
-        + embedded("                                         c.POINTER(c.c_uint)]")
-        + embedded("    lib.malloc_get_all_zones.restype = c.c_int")
-        + embedded("    zones, zone_count = c.POINTER(c.c_size_t)(), c.c_uint()")
-        + embedded("    if lib.malloc_get_all_zones(0, None, c.byref(zones), c.byref(zone_count)):")
-        + embedded("        raise RuntimeError('malloc_get_all_zones')")
-        + embedded("    live = {n: 0 for n, _ in Malloc._fields_}")
-        + embedded("    for index in range(zone_count.value):")
-        + embedded("        zone = Malloc()")
-        + embedded("        lib.malloc_zone_statistics(zones[index], c.byref(zone))")
-        + embedded("        for n in live:")
-        + embedded("            live[n] += getattr(zone, n)"),
-    )
-    replace(
-        embedded("            'malloc': {n: getattr(stats, n) for n, _ in Malloc._fields_}}"),
-        embedded("            'malloc': live,")
-        + embedded("            'malloc_all_zones_call': "
-                   "{n: getattr(stats, n) for n, _ in Malloc._fields_}}"),
-    )
-    replace('metric = "physical footprint"', 'metric = "program allocation"')
-    replace(
-        "macOS measures physical footprint, excluding\n    freed reusable pages; "
-        "Linux and Windows measure RSS.",
-        "macOS measures peak program allocation;\n    Linux and Windows measure RSS.",
-    )
-    replace(
-        "        # RSS includes freed reusable pages until macOS reclaims them. "
-        "Physical footprint\n"
-        "        # excludes those pages and includes compressed memory "
-        "still owned by the process.\n",
-        "        # Measure program allocation independently of macOS page-reclamation timing.\n"
-        "        # Keep the physical footprint in stderr diagnostics for comparison.\n",
-    )
-    return source.encode()
+def allocation_source(original: bytes, legacy: bool = False) -> bytes:
+    """The committed test is the proposed fix; only controls are injected into a copy."""
+    if not legacy:
+        assert b"peak live heap" in original, "the committed test lacks the live-heap metric"
+    return original
 
 
 def allocation_from_diagnostics(diagnostics):
+    if "heap" in diagnostics:
+        return diagnostics["heap"]["live_heap"] + diagnostics["heap"]["outside_malloc"]
+    # --source-ref on the earlier retained-malloc test (e049be9)
     return (
         diagnostics["malloc_after_scan"]["size_in_use"]
         + diagnostics["csv_arrow_peak"]
@@ -187,7 +110,9 @@ def run_case(label: str, output: Path) -> dict:
     peaks = {}
     diagnostics = {}
     for line in text.splitlines():
-        match = re.fullmatch(r"(\d+) rows: peak program allocation (\d+) bytes; (.+)", line)
+        match = re.fullmatch(
+            r"(\d+) rows: peak (?:live heap|program allocation) (\d+) bytes; (.+)", line
+        )
         if match:
             rows, peak, stderr = match.groups()
             peaks[int(rows)] = int(peak)
@@ -512,6 +437,7 @@ def main() -> int:
     parser.add_argument("--after-heavy", action="store_true")
     parser.add_argument("--control-only", action="store_true")
     parser.add_argument("--pool-trace", action="store_true")
+    parser.add_argument("--source-ref", help="run the controls against that commit's test file")
     args = parser.parse_args()
     if sys.platform != "darwin":
         parser.error("requires macOS; Linux RSS is not Darwin allocation evidence")
@@ -528,8 +454,13 @@ def main() -> int:
         return run_matrix(output)
     source = repo / "tests/profile/test_engine.py"
     original = source.read_bytes()
-    assert original.count(ANCHOR) == 1
-    proposed = allocation_source(original)
+    base = (
+        subprocess.check_output(["git", "show", f"{args.source_ref}:tests/profile/test_engine.py"])
+        if args.source_ref
+        else original
+    )
+    assert base.count(ANCHOR) == 1
+    proposed = allocation_source(base, legacy=bool(args.source_ref))
     (output / "candidate-test_engine.py").write_bytes(proposed)
     (output / "candidate-sha256.txt").write_text(hashlib.sha256(proposed).hexdigest() + "\n")
     try:
@@ -539,8 +470,13 @@ def main() -> int:
                 args.probe_order, args.iteration, args.after_heavy, output, args.pool_trace
             )
         real = None if args.control_only else run_case("real", output)
-        source.write_bytes(proposed.replace(ANCHOR, INJECTION + ANCHOR))
-        control = run_case("control", output)
+        controls = {}
+        for label, injection in (
+            ("control", INJECTION),
+            ("control-transient", INJECTION_TRANSIENT),
+        ):
+            source.write_bytes(proposed.replace(ANCHOR, injection + ANCHOR))
+            controls[label] = run_case(label, output)
     finally:
         source.write_bytes(original)
         assert source.read_bytes() == original
@@ -549,22 +485,18 @@ def main() -> int:
         if status.strip():
             raise RuntimeError(f"checkout is dirty after restoration: {status}")
         print("Source restored byte-identical; checkout clean.", flush=True)
-    valid = True
-    for case in (control,) if real is None else (real, control):
+    detected = {}
+    for label, case in controls.items():
         peaks = case["allocations"]
-        if set(peaks) != {24_000_000, 48_000_000} or peaks[24_000_000] <= 50 * 2**20:
-            valid = False
-    peaks = control["allocations"]
-    detected_growth = (
-        valid and abs(peaks[48_000_000] - peaks[24_000_000]) / peaks[24_000_000] >= 0.10
-    )
-    passed = (
-        (real is None or real["pytest_exit"] == 0)
-        and control["pytest_exit"] == 1
-        and control["assertion_failed"]
-        and detected_growth
-    )
-    summary = {"real": real, "control": control, "proof_passed": passed}
+        valid = set(peaks) == {24_000_000, 48_000_000} and peaks[24_000_000] > 50 * 2**20
+        detected[label] = bool(
+            valid
+            and case["pytest_exit"] == 1
+            and case["assertion_failed"]
+            and abs(peaks[48_000_000] - peaks[24_000_000]) / peaks[24_000_000] >= 0.10
+        )
+    passed = (real is None or real["pytest_exit"] == 0) and all(detected.values())
+    summary = {"real": real, "controls": controls, "detected": detected, "proof_passed": passed}
     (output / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     print(json.dumps(summary), flush=True)
     return 0 if passed else 1
