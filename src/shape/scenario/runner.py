@@ -464,8 +464,19 @@ def _json_default(value: Any) -> Any:
     return str(value)
 
 
-def _write_jsonl(table: pa.Table, path: Path) -> None:
+def _payload(table: pa.Table, fields: list[str]) -> pa.Table:
+    """The columns an event carries: the topic's payload_fields that the table has, in the
+    order listed (every column when none are listed)."""
+    if not fields:
+        return table
+    return table.select([f for f in dict.fromkeys(fields) if f in table.column_names])
+
+
+def _write_jsonl(table: pa.Table, path: Path, rows: int | None = None) -> None:
     with path.open("w", encoding="utf-8", newline="\n") as fh:
+        if table.num_columns == 0:  # no field left: one empty event per row
+            fh.write("{}\n" * (table.num_rows if rows is None else rows))
+            return
         for batch in table.to_batches(max_chunksize=JSONL_BATCH_ROWS):
             for row in batch.to_pylist():
                 fh.write(json.dumps(row, default=_json_default, ensure_ascii=False))
@@ -491,7 +502,7 @@ def _write_topics(
         table = generated.tables[table_name]
         events += table.num_rows
         target = output_root / f"{prefix}{topic.name}_{topic.event_type}.jsonl"
-        _write_jsonl(table, target)
+        _write_jsonl(_payload(table, topic.payload_fields), target, table.num_rows)
         files.append(str(target))
         table_files[table_name].append(str(target))
     return events

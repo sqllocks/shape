@@ -67,7 +67,7 @@ validation:
 | Kind | What a run writes |
 |---|---|
 | `file_drop` | the `entities` (every table when none are listed), one file each, under `fabric_targets.lakehouse_files_root` |
-| `stream` | one `<topic>_<event_type>.jsonl` per topic, holding the rows of the table the topic names (the same name, else the first table whose name contains the topic's or is contained in it) |
+| `stream` | one `<topic>_<event_type>.jsonl` per topic, holding the rows of the table the topic names (the same name, else the first table whose name contains the topic's or is contained in it), with only the columns in the topic's `payload_fields` (every column when none are listed; a field that is not a column is a validation error) |
 | `hybrid` | `micro_batch/<entity>.<format>` files plus `stream_<topic>_<event_type>.jsonl` events |
 
 The timing fields (cadence, partitioning, rates, jitter, replay, done flags, `lateness`,
