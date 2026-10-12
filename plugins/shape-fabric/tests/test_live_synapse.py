@@ -59,12 +59,12 @@ def test_synapse_round_trip():
     table = f"shape_live_{uuid.uuid4().hex[:8]}"
     batches = [sample_batch(0, 30), sample_batch(30, 12)]
     sent = pa.Table.from_batches(batches)
-    # a SQL float cannot hold NaN or infinity: the writer stores them as NULL (documented), so
-    # that is what is read back; every other value must come back unchanged
+    # The writers store a NaN as NULL (a SQL float has no NaN; docs/SINKS.md), so a NaN written is a
+    # NULL read back. That is the only difference allowed: ±Infinity is not replaced here.
     written = pa.table(
         {
             f.name: (
-                pc.if_else(pc.is_finite(sent[f.name]), sent[f.name], pa.scalar(None, f.type))
+                pc.if_else(pc.is_nan(sent[f.name]), pa.scalar(None, f.type), sent[f.name])
                 if pa.types.is_floating(f.type)
                 else sent[f.name]
             )

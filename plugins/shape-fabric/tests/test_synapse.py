@@ -756,3 +756,13 @@ def test_staged_timestamps_are_int96_because_a_pool_reads_no_micro_or_nanosecond
     assert (
         back.column("seen").to_pylist() == pa.Table.from_batches([batch]).column("seen").to_pylist()
     )
+
+
+def test_nan_and_infinity_are_staged_as_null():
+    # docs/SINKS.md: a T-SQL float holds only finite values, so the writer sends NULL
+    w, pool, _ = make()
+    batch = pa.RecordBatch.from_pydict(
+        {"id": [1, 2, 3, 4], "x": [1.5, float("nan"), float("inf"), float("-inf")]}
+    )
+    assert w.write_table("t", [batch]) == 4
+    assert [r[1] for r in pool.rows("dbo", "t")] == [1.5, None, None, None]
