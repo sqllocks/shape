@@ -36,3 +36,13 @@ def test_pytest_elapsed_clock_presence_is_variable(tmp_path: Path) -> None:
     assert comparable(fast.replace("404 passed", "403 passed, 1 failed"), tmp_path, ROOT) != (
         comparable(shown, tmp_path, ROOT)
     )
+
+
+def test_librdkafka_log_epoch_is_variable_but_its_message_is_exact(tmp_path: Path) -> None:
+    """The log line's epoch time varies; the warning it carries must not."""
+    line = "%4|{}|GETPID|rdkafka#producer-1| [thrd:main]: Coordinator load in progress: retrying"
+    one, two = line.format("1791817460.684"), line.format("1791819084.049")
+    assert comparable(one, tmp_path, ROOT) == comparable(two, tmp_path, ROOT)
+    assert comparable(one, tmp_path, ROOT) != comparable(
+        one.replace("retrying", "failed"), tmp_path, ROOT
+    )

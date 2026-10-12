@@ -1,0 +1,151 @@
+name: Documentation owner transcripts
+on:
+  workflow_dispatch:
+  push:
+    branches: [docs/transcripts-ci]
+permissions:
+  contents: write
+concurrency:
+  group: docs-transcripts-ci
+  cancel-in-progress: false
+jobs:
+  capture:
+    if: github.ref == 'refs/heads/docs/transcripts-ci'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      SHAPE_DOCS_RUNNER: ubuntu-latest
+      SHAPE_KERNEL: rust
+      SHAPE_THREADS: '4'
+      MSSQL_SA_PASSWORD: Shape_${{ github.run_id }}_Docs!
+      SHAPE_POSTGRES_PASSWORD: Docs_${{ github.run_id }}_Postgres
+    services:
+      postgres:
+        image: postgres:16
+        ports: ['5432:5432']
+        env:
+          POSTGRES_USER: shape
+          POSTGRES_DB: shape
+          POSTGRES_PASSWORD: Docs_${{ github.run_id }}_Postgres
+        options: >-
+          --health-cmd "pg_isready -U shape -d shape"
+          --health-interval 5s --health-timeout 5s --health-retries 30
+      kafka:
+        image: confluentinc/cp-kafka:7.7.1
+        ports: ['9092:9092']
+        env:
+          KAFKA_NODE_ID: '1'
+          KAFKA_PROCESS_ROLES: broker,controller
+          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+          KAFKA_LISTENERS: INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+          KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+          KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: '1'
+          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: '1'
+          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: '1'
+          KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: '0'
+          CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+        options: >-
+          --health-cmd "kafka-topics --bootstrap-server localhost:9092 --list"
+          --health-interval 5s --health-timeout 10s --health-retries 30
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        ports: ['1433:1433']
+        env:
+          ACCEPT_EULA: 'Y'
+          MSSQL_PID: Developer
+          MSSQL_SA_PASSWORD: Shape_${{ github.run_id }}_Docs!
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$MSSQL_SA_PASSWORD\" -Q 'SELECT 1'"
+          --health-interval 5s --health-timeout 10s --health-retries 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Mask disposable service passwords
+        run: |
+          echo "::add-mask::$MSSQL_SA_PASSWORD"
+          echo "::add-mask::$SHAPE_POSTGRES_PASSWORD"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install the checkout and documentation environment
+        run: |
+          python -m venv .venv
+          echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
+          .venv/bin/pip install -r requirements-docs.txt
+          .venv/bin/pip install --no-deps -e . $(for plugin in plugins/*/pyproject.toml; do printf ' -e %s' "${plugin%/pyproject.toml}"; done)
+          .venv/bin/pip install 'psycopg[binary]>=3.1,<4' 'confluent-kafka>=2.3' 'fastavro>=1.9' 'pyodbc>=5'
+      - name: Validate transcript harness
+        run: |
+          python -m pytest -q tests/docs/test_owner_services.py tests/docs/test_owner_transcripts.py tests/docs/test_transcripts.py
+          node tests/docs/vscode_wait.test.cjs
+      - name: Microsoft ODBC driver and editor libraries
+        run: |
+          curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/ubuntu/$(lsb_release -rs)/prod $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev xvfb libasound2t64 libgbm1
+      - name: Require authenticated Schema Registry
+        env:
+          SHAPE_DOCS_DOCKER_NETWORK: ${{ job.services.kafka.network }}
+        run: python scripts/docs_owner_services.py
+      - name: Build VSIX and prepare isolated VS Code
+        run: |
+          cd editors/vscode
+          npm ci
+          npm run package
+          node - <<'JS'
+          const path = require('node:path');
+          const fs = require('node:fs');
+          const {downloadAndUnzipVSCode, resolveCliArgsFromVSCodeExecutablePath} = require('@vscode/test-electron');
+          (async () => {
+            const executable = await downloadAndUnzipVSCode('1.90.2');
+            const [cli] = resolveCliArgsFromVSCodeExecutablePath(executable);
+            const bin = path.join(process.env.RUNNER_TEMP, 'docs-code-bin');
+            fs.mkdirSync(bin, {recursive: true});
+            fs.symlinkSync(cli, path.join(bin, 'code'));
+            fs.appendFileSync(process.env.GITHUB_PATH, bin + '\n');
+            fs.appendFileSync(process.env.GITHUB_ENV, `SHAPE_DOCS_VSCODE_EXECUTABLE=${executable}\nSHAPE_DOCS_VSIX=${process.cwd()}/shape.vsix\nSHAPE_DOCS_VSCODE_USER=${process.env.RUNNER_TEMP}/docs-code-user\nSHAPE_DOCS_VSCODE_EXTENSIONS=${process.env.RUNNER_TEMP}/docs-code-extensions\n`);
+          })().catch(error => { console.error(error); process.exitCode = 1; });
+          JS
+      - name: Run page commands verbatim and capture real receipts
+        run: |
+          if python scripts/docs_owner_transcripts.py; then
+            echo 'CAPTURE_EXIT=0' >> "$GITHUB_ENV"
+          else
+            echo 'CAPTURE_EXIT=1' >> "$GITHUB_ENV"
+          fi
+      - name: Upload successful and failed receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-transcripts-${{ github.run_id }}-${{ github.sha }}-ubuntu-latest
+          path: docs/plans/evidence/owner-notes/docs-transcripts-${{ github.run_id }}-*
+          if-no-files-found: warn
+      - name: Commit receipts and only successfully resolved notes to this branch
+        if: always() && env.CAPTURE_EXIT != ''
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/plans/evidence/owner-notes/docs-transcripts-${GITHUB_RUN_ID}-* docs/evidence/transcripts docs/SINKS.md docs/TESTING_WITH_SHAPE.md docs/CLI.md docs/EMIT.md docs/GENERATION_ENGINE.md docs/plugins/sqlserver.md docs/TROUBLESHOOTING.md docs/VSCODE.md docs/plugins/streaming.md
+          if ! git diff --cached --quiet; then
+            git switch -c "docs-transcripts-evidence-${GITHUB_RUN_ID}"
+            git commit -s -m "docs-transcripts: record run $GITHUB_RUN_ID [skip ci]"
+            git switch -c docs/transcripts-ci "$GITHUB_SHA"
+            git merge --no-ff --signoff -m "docs-transcripts: merge run $GITHUB_RUN_ID receipts [skip ci]" "docs-transcripts-evidence-${GITHUB_RUN_ID}"
+            git push origin HEAD:docs/transcripts-ci
+          fi
+      - name: Remove the registry started by this job
+        if: always() && env.SCHEMA_REGISTRY_CONTAINER != ''
+        run: docker rm --force "$SCHEMA_REGISTRY_CONTAINER"
+      - name: Fail the job if any example failed
+        if: always()
+        run: test "${CAPTURE_EXIT:-1}" = 0

@@ -43,19 +43,24 @@ Use [the tested starters](../TUTORIAL.md) for local commands and complete output
 
 <!-- example: 1 -->
 
-**Needs a Kafka account. Not run in CI.**
+This bounded example first fills a disposable Kafka topic, then profiles everything currently in it. It does not use `--follow`. Event Hubs needs its own namespace and credentials; its window options work as described below.
 
-```bash
-# everything the topic holds now, as one profile
-shape stream-profile kafka://broker:9092/orders -o orders.json
+<!-- owner-example: kafka-profile -->
 
-# 5-minute tumbling windows, written as they close, resumable
-shape stream-profile eventhubs://contoso.servicebus.windows.net/telemetry \
-    --window tumbling --size 5m --allowed-lateness 30s \
-    --windows telemetry.jsonl --checkpoint telemetry.ckpt --follow
+```bash {.runnable-owner}
+shape emit retail --table order --sink kafka://localhost:9092/profile-orders \
+    --max-events 100 --fresh
+shape stream-profile kafka://localhost:9092/profile-orders -o orders.json
 ```
 
-<!-- owner: Kafka maintainer — supply the transcript for docs/plugins/streaming.md example 1. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape emit: 100 events delivered, offset 100 of 5,000, max-events, 768 events/s
+    {"uri": "kafka://localhost:9092/profile-orders", "window": "global", "events": 100, "batches": 1, "windows": 1, "late_events": 0, "null_event_time": 0, "duplicate_rows": 0, "reconnects": 0, "checkpoints": 0, "written": ["orders.json"], "undecodable": 0, "rejected": 0}
+    ```
+
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](../evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-kafka-profile.json).
 
 
 Exit codes: `0` done, `2` the input or the connection is wrong (nothing partial is hidden: the

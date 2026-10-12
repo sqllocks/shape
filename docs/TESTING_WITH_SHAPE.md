@@ -82,16 +82,38 @@ passes none) and of every scenario marker. Use it to rerun a suite on other data
 
 <!-- example: 3 -->
 
-**Needs a PostgreSQL account. Not run in CI.**
+The workflow runs this command against a disposable PostgreSQL service, with `SHAPE_POSTGRES_PASSWORD` supplied by the runner.
+
+<!-- owner-example: postgres-seed -->
+
+```bash {.runnable-owner}
+shape seed retail --target postgresql://shape@localhost:5432/shape --scale small --seed 7
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+      customer: 1,000 rows
+      address: 1,500 rows
+      product_category: 50 rows
+      product: 500 rows
+      promotion: 200 rows
+      store: 150 rows
+      order: 5,000 rows
+      order_line: 12,500 rows
+      return: 850 rows
+    seeded 21,750 rows into 9 tables
+    ```
+
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-postgres-seed.json).
+
+Other target forms (supply their connection and credentials):
 
 ```bash
-shape seed retail --target postgresql://shape@localhost:5432/shape --scale small --seed 7
 shape seed schema.json --target mssql://localhost:1433/test --mode truncate
 shape seed retail --target mysql://shape@localhost/shape --dry-run
 shape seed retail --target sql://./seed-scripts --scale tiny
 ```
-
-<!-- owner: PostgreSQL maintainer — supply the transcript for docs/TESTING_WITH_SHAPE.md example 3. -->
 
 
 `SPEC|DOMAIN` is an installed domain or a generation schema file (`shape from-ddl` writes one).

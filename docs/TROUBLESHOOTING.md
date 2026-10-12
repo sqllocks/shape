@@ -39,8 +39,36 @@ shows the current writer options.
 ## Delta reports a reader feature error
 
 Shape detects deletion vectors and column mapping and selects the optional DuckDB reader.
-You need the delta-fallback dependencies and its Delta extension. The extension may download
-on first use; that is a network call.
+Install the `[azure,delta-fallback]` extras before running this example: `[azure]`
+provides the cloud-source dependencies and `[delta-fallback]` provides the optional
+DuckDB reader. A local Delta table is passed as its directory path; `delta://` is
+not a supported local source URI. The DuckDB extension may download
+on first use; that is a network call. The workflow installs the real DuckDB extension and profiles the committed deletion-vector fixture. A blocked download fails this example; it is not evidence of a working fallback.
+
+<!-- owner-example: delta-fallback -->
+
+```bash {.runnable-owner}
+python -m pip --disable-pip-version-check install --quiet 'sqllocks-shape[azure,delta-fallback]'
+python - <<'PYTHON'
+import duckdb
+con = duckdb.connect()
+con.execute("INSTALL delta")
+con.execute("LOAD delta")
+print("DuckDB delta extension installed and loaded")
+con.close()
+PYTHON
+shape profile "$SHAPE_DOCS_REPO/tests/fixtures/delta_fallback/dv" -o deletion-vectors.json
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    DuckDB delta extension installed and loaded
+    shape: note: dv: the Delta table uses reader feature(s) deletionVectors that deltalake cannot read; reading it with DuckDB delta_scan instead
+    {"provenance": {"as_of": null, "fallback_reason": "dv: the Delta table uses reader feature(s) deletionVectors that deltalake cannot read; reading it with DuckDB delta_scan instead", "format": "delta", "reader": "duckdb", "reader_features": ["deletionVectors"], "timestamp": "2026-10-03T03:48:46.451000+00:00", "version": 2}, "shape_content_id": "138321eea84d2b15e1bcdc49b2f67c96b6bf78c93d75b5c59d205274aa58549a", "written": "deletion-vectors.json"}
+    ```
+
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-delta-fallback.json).
 For version or as-of reads, confirm that the historical files remain available.
 
 ### Local fallback receipt

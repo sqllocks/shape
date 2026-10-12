@@ -429,6 +429,16 @@ the committed generation measurement below records observed wall time and peak R
   (`shape.generation.runtime.generation_memory`).
 
 `SHAPE_MEMORY_POOL=default` turns all of it off. Values are unaffected by pool selection; arrays remain valid with their original pool.
+This product workload compares the default and system allocator configurations in fresh processes, with identical generated-table digests checked before recording three pairs of raw timings. Results describe this runner and workload only.
+
+<!-- owner-example: allocator-measurement -->
+
+```bash {.runnable-owner}
+python "$SHAPE_DOCS_REPO/scripts/docs_owner_measurements.py" allocator
+```
+
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-allocator-measurement.json).
+
 The [committed allocator A/B measurement](evidence/allocator-measurement.md) records the machine label, reproduction script, all samples and hashes. On the labelled Xeon Platinum 8573C cloud environment (four CPU quota), Shape 0.9.1 / Python 3.12.14 / PyArrow 25.0.1, the committed `retail:medium` schema at seed 42 generated 1,965,400 rows. Each cell used three fresh-process repetitions after one warm-up:
 
 | Import order | Setting | Median generation seconds | Median peak process RSS MiB |
