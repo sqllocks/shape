@@ -22,6 +22,14 @@ No unreleased changes.
 - **Pending (lane `fix/live-findings`):** reference-only CLI source credentials and a documented
   storage environment precedence.
 
+### Verified
+
+- **Pending (receipt on the lead's branch `claude/fervent-noether-92tgm2`, ca94435; not yet on
+  `main`):** Shape 0.9.1 `--auth kerberos` was verified live on 2026-10-12 against a lab Active
+  Directory domain with SQL Server 2022 (Windows authentication only), from an Ubuntu 24.04
+  client: 21,750 rows in 9 tables, exit 0, and the server recorded `auth_scheme = KERBEROS`.
+  Both negative controls (keytab mode 644, wrong principal) exit 2. No code changed for this.
+
 ### Fixed
 
 - **Pending (lane `fix/live-findings`):** the nine defects from the 0.9.1 live findings:
