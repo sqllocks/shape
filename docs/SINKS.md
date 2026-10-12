@@ -150,7 +150,13 @@ shape stream retail -t order --to postgresql://shape@localhost:5432/shape \
   --sink-config postgres.table_prefix=stream_ --fresh
 ```
 
-<!-- owner: PostgreSQL maintainer — supply the transcript for docs/SINKS.md example 2. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape stream: 20 events delivered, offset 20 of 5,000, max-events, 52 events/s
+    ```
+
+Evidence: [run 38266883768, ubuntu-latest, `1fa052d08a93`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38266883768-1fa052d08a93-ubuntu-latest-postgres-sink.json).
 
 
 `--write-mode` is `create` (the default: never touches an existing table), `append`, `truncate`

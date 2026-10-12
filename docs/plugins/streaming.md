@@ -53,7 +53,14 @@ shape emit retail --table order --sink kafka://localhost:9092/profile-orders \
 shape stream-profile kafka://localhost:9092/profile-orders -o orders.json
 ```
 
-<!-- owner: Kafka maintainer — supply the transcript for docs/plugins/streaming.md example 1. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape emit: 100 events delivered, offset 100 of 5,000, max-events, 768 events/s
+    {"uri": "kafka://localhost:9092/profile-orders", "window": "global", "events": 100, "batches": 1, "windows": 1, "late_events": 0, "null_event_time": 0, "duplicate_rows": 0, "reconnects": 0, "checkpoints": 0, "written": ["orders.json"], "undecodable": 0, "rejected": 0}
+    ```
+
+Evidence: [run 38266883768, ubuntu-latest, `1fa052d08a93`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38266883768-1fa052d08a93-ubuntu-latest-kafka-profile.json).
 
 
 Exit codes: `0` done, `2` the input or the connection is wrong (nothing partial is hidden: the

@@ -90,7 +90,22 @@ The workflow runs this command against a disposable PostgreSQL service, with `SH
 shape seed retail --target postgresql://shape@localhost:5432/shape --scale small --seed 7
 ```
 
-<!-- owner: PostgreSQL maintainer — supply the transcript for docs/TESTING_WITH_SHAPE.md example 3. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+      customer: 1,000 rows
+      address: 1,500 rows
+      product_category: 50 rows
+      product: 500 rows
+      promotion: 200 rows
+      store: 150 rows
+      order: 5,000 rows
+      order_line: 12,500 rows
+      return: 850 rows
+    seeded 21,750 rows into 9 tables
+    ```
+
+Evidence: [run 38266883768, ubuntu-latest, `1fa052d08a93`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38266883768-1fa052d08a93-ubuntu-latest-postgres-seed.json).
 
 Other target forms (supply their connection and credentials):
 
