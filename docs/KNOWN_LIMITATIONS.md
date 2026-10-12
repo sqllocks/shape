@@ -4,16 +4,16 @@ Check these constraints before you design a workflow.
 
 Status: available (profiles, contracts and drift); experimental (other surfaces).
 
-Shape is early access 0.9.1. Generation from a profile is available and is being hardened.
+Shape is early access 0.9.2. Generation from a profile is available and is being hardened.
 The 1.x compatibility promises describe future policy.
 
 - `shape generate --from X.shape` writes nothing without `--format`. An output directory alone
   does not select a writer. The Python tutorial explicitly writes its Arrow result to CSV.
 - DuckDB write URIs use `duckdb:///rel.duckdb`. Read URIs use `duckdb://rel.duckdb?table=T`.
   They come from different adapters: databases writes; integrations reads.
-- `shape profile validate --safe` fails on multi-table `--dataset` profiles in 0.9.1.
-  Single-table profiles pass in the tutorials. Do not treat that failure as proof of a leak
-  or bypass it as proof that a dataset is safe. <!-- owner: privacy maintainer — dataset validator fix. -->
+- Since 0.9.2, `shape profile validate --safe` recognises verified schema-column references in
+  multi-table sampling metadata. It still scans those strings for personal-data patterns and
+  rejects full captures, leaking table payloads and malformed datasets.
 - Snowflake and Databricks are write targets. Shape does not profile from them yet.
 - Model queries read model payloads, not saved profile payloads. A profile passed to a query
   is rejected. See [Models](MODELS.md).

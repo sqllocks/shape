@@ -135,8 +135,8 @@
       "productOrService": {
        "coding": [
         {
-         "system": "http://www.ama-assn.org/go/cpt",
-         "code": "99213"
+         "system": "urn:shape:healthcare:synthetic-procedure",
+         "code": "SP-01"
         }
        ]
       },
@@ -169,8 +169,8 @@
       "productOrService": {
        "coding": [
         {
-         "system": "http://www.ama-assn.org/go/cpt",
-         "code": "83036"
+         "system": "urn:shape:healthcare:synthetic-procedure",
+         "code": "SP-25"
         }
        ]
       },
@@ -344,8 +344,8 @@
       "productOrService": {
        "coding": [
         {
-         "system": "http://www.ama-assn.org/go/cpt",
-         "code": "99213"
+         "system": "urn:shape:healthcare:synthetic-procedure",
+         "code": "SP-01"
         }
        ]
       },
@@ -460,8 +460,8 @@
       "productOrService": {
        "coding": [
         {
-         "system": "http://www.ama-assn.org/go/cpt",
-         "code": "83036"
+         "system": "urn:shape:healthcare:synthetic-procedure",
+         "code": "SP-25"
         }
        ]
       },
@@ -798,8 +798,8 @@
       "productOrService": {
        "coding": [
         {
-         "system": "http://www.ama-assn.org/go/cpt",
-         "code": "99214"
+         "system": "urn:shape:healthcare:synthetic-procedure",
+         "code": "SP-02"
         }
        ]
       },
@@ -807,8 +807,8 @@
        {
         "coding": [
          {
-          "system": "http://www.ama-assn.org/go/cpt",
-          "code": "25"
+          "system": "urn:shape:healthcare:synthetic-modifier",
+          "code": "S0"
          }
         ]
        }
@@ -841,8 +841,8 @@
       "productOrService": {
        "coding": [
         {
-         "system": "http://www.ama-assn.org/go/cpt",
-         "code": "97110"
+         "system": "urn:shape:healthcare:synthetic-procedure",
+         "code": "SP-50"
         }
        ]
       },
@@ -997,8 +997,8 @@
       "productOrService": {
        "coding": [
         {
-         "system": "http://www.ama-assn.org/go/cpt",
-         "code": "99214"
+         "system": "urn:shape:healthcare:synthetic-procedure",
+         "code": "SP-02"
         }
        ]
       },
@@ -1006,8 +1006,8 @@
        {
         "coding": [
          {
-          "system": "http://www.ama-assn.org/go/cpt",
-          "code": "25"
+          "system": "urn:shape:healthcare:synthetic-modifier",
+          "code": "S0"
          }
         ]
        }
@@ -1122,8 +1122,8 @@
       "productOrService": {
        "coding": [
         {
-         "system": "http://www.ama-assn.org/go/cpt",
-         "code": "97110"
+         "system": "urn:shape:healthcare:synthetic-procedure",
+         "code": "SP-50"
         }
        ]
       },
@@ -1516,8 +1516,8 @@
       "productOrService": {
        "coding": [
         {
-         "system": "http://www.ama-assn.org/go/cpt",
-         "code": "99223"
+         "system": "urn:shape:healthcare:synthetic-procedure",
+         "code": "SP-14"
         }
        ]
       },
@@ -1693,8 +1693,8 @@
       "productOrService": {
        "coding": [
         {
-         "system": "http://www.ama-assn.org/go/cpt",
-         "code": "99223"
+         "system": "urn:shape:healthcare:synthetic-procedure",
+         "code": "SP-14"
         }
        ]
       },
@@ -2244,8 +2244,8 @@
       "productOrService": {
        "coding": [
         {
-         "system": "http://www.ama-assn.org/go/cpt",
-         "code": "99285"
+         "system": "urn:shape:healthcare:synthetic-procedure",
+         "code": "SP-11"
         }
        ]
       },
@@ -2732,8 +2732,8 @@
       "productOrService": {
        "coding": [
         {
-         "system": "http://www.ama-assn.org/go/cpt",
-         "code": "99285"
+         "system": "urn:shape:healthcare:synthetic-procedure",
+         "code": "SP-11"
         }
        ]
       },

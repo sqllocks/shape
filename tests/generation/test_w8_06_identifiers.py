@@ -50,10 +50,12 @@ BEFORE_NATIVE_ID = "sha256:af2a9714dfeab9d0fc4f2a22561779e2a1998403c2cfd641c0c04
 # The installed domains at scale small, seed 42, recorded the same way. W8-04b (#768) re-recorded
 # hr and healthcare once: their distribution columns are drawn with shape.kernel.pmath now (the
 # old ids, 68c1d3ec... and df46193f..., held on this tree before that change and nothing else).
+# REL-092: healthcare was regenerated after the synthetic procedure-reference replacement;
+# every other identifier expectation and exact comparison remains unchanged.
 BEFORE_DOMAIN_IDS = {
     "retail": "sha256:64abbb26bc7b33d5cf8b0f5af993553077e33311759aab908d4e5d647e67a2f5",
     "hr": "sha256:e6a09f701cb4d3d6d329c71217fdc464343cc03b36a9bcab4a88a050b5aca6ca",
-    "healthcare": "sha256:09bef3ac56e22f236eec89b97fe1955b12930e47bbb61fa75e3d6111e6847cb0",
+    "healthcare": "sha256:a86db40ee2f12f6b62f5a06869b5b71780c32e86b643cd8bd1484365f7118429",
 }
 
 

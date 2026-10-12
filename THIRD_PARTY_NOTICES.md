@@ -185,6 +185,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 The S&P 500 constituent list names public companies and their public attributes (ticker, sector,
 headquarters state, website); it is sample data and is not a current or complete index membership.
 
+## Synthetic healthcare and capital-markets reference replacements (0.9.2)
+
+The healthcare procedure catalog uses `SP-01` through `SP-49`, with descriptions
+`Synthetic procedure 01` through `Synthetic procedure 49`. The letters and hyphen
+make these five-character identifiers distinct from CPT code formats. They have
+no clinical meaning and are not an AMA code set. Charges and selection weights
+retain the original numeric distributions.
+
+The capital-markets taxonomy uses `SA` through `SK`, `Synthetic sector A` through
+`Synthetic sector K`, and synthetic industry labels. Company classification labels
+use that same synthetic naming. These classifications are not GICS and make no
+claim of MSCI or S&P endorsement. Schemas, identifiers and category counts remain
+compatible. The legacy dataset aliases `cpt_codes` and `gics_sectors` identify these
+synthetic tables for existing specifications; their names do not denote licensed content.
+
+These replacements were authored for Shape and are distributed under the SQLLocks
+MIT notice above. The CPT-shaped detector and user-supplied code-system adapters
+ship no CPT code list; their recognition of input supplied by a user is unchanged.
+
 ## Public dataset library
 
 `src/shape/library/datasets/` holds safe profiles (statistics and formats, never rows) of the public
@@ -242,10 +261,10 @@ reference providers from other domains; those providers keep their own attributi
 
 | Domain | Source recorded here | Licence | Attribution / missing evidence |
 |---|---|---|---|
-| `capital_markets` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). <!-- owner: domain maintainer — confirm upstream sources beyond the repository licence notice. --> |
+| `capital_markets` | SQLLocks reference lists; synthetic sector/industry taxonomy and company classification labels | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). No GICS codes or taxonomy names are bundled. |
 | `education` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). <!-- owner: domain maintainer — confirm upstream sources beyond the repository licence notice. --> |
 | `financial` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). <!-- owner: domain maintainer — confirm upstream sources beyond the repository licence notice. --> |
-| `healthcare` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). <!-- owner: domain maintainer — confirm upstream sources beyond the repository licence notice. --> |
+| `healthcare` | SQLLocks reference lists; synthetic procedure codes and descriptions | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). No AMA CPT code list or descriptors are bundled. |
 | `hr` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). <!-- owner: domain maintainer — confirm upstream sources beyond the repository licence notice. --> |
 | `insurance` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). <!-- owner: domain maintainer — confirm upstream sources beyond the repository licence notice. --> |
 | `iot` | SQLLocks reference lists | MIT | Copyright (c) 2025-2026 SQLLocks (Jonathan Stewart). <!-- owner: domain maintainer — confirm upstream sources beyond the repository licence notice. --> |

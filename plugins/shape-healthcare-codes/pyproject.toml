@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sqllocks-shape-healthcare-codes"
 # Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
-version = "0.9.1"
+version = "0.9.2"
 description = "Shape plugin: Healthcare reference code sets, validators and detectors"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -21,7 +21,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "Topic :: Database",
 ]
-dependencies = ["sqllocks-shape==0.9.1"]
+dependencies = ["sqllocks-shape==0.9.2"]
 
 # Entry points (shape.* groups, plugin API v1); see docs/plugins/authoring.md.
 [project.urls]

@@ -272,10 +272,10 @@ shape profile validate --safe cust.safe.json                     # exit 0: no le
 
     ```text {.expected}
     shape: note: cust.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
-    {"content_id": "642e7bf1414aae1e1b69020e7fd3643ee0070086510b33c3d99882808fd9944c"}
+    {"content_id": "a5ea1f3ae229deeccf6b5466868225523d79f880417b5ce733bd49b409d23c59"}
     shape: note: cust.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
     {"unsafe": false, "written": "cust.safe.json"}
-    {"content_id": "642e7bf1414aae1e1b69020e7fd3643ee0070086510b33c3d99882808fd9944c"}
+    {"content_id": "a5ea1f3ae229deeccf6b5466868225523d79f880417b5ce733bd49b409d23c59"}
     CLEAN: no leaks found in cust.safe.json
     ```
 

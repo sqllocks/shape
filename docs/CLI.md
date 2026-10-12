@@ -699,7 +699,7 @@ shape doctor
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    Shape 0.9.1
+    Shape 0.9.2
       python    3.12.14  (Linux-6.18.44-x86_64-with-glibc2.41)
       kernel    python  (pure Python; set SHAPE_KERNEL=rust)
 

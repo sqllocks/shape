@@ -39,15 +39,15 @@ def test_nucc_style_csv_maps_to_the_common_model():
 
 def test_explicit_column_mapping_dates_leaf_and_delimiters():
     text = (
-        "CPT|Descriptor|Billable|Effective\n10021|Invented procedure one|Y|2020-01-01\n10022|X|N|\n"
+        "CPT|Descriptor|Billable|Effective\nSY001|Invented procedure one|Y|2020-01-01\nSY002|X|N|\n"
     )
     t = read_delimited(text, {"code": "CPT", "long_desc": "Descriptor"})
     rows = {r["code"]: r for r in t.to_pylist()}
-    assert rows["10021"]["leaf"] is True and rows["10022"]["leaf"] is False
+    assert rows["SY001"]["leaf"] is True and rows["SY002"]["leaf"] is False
     assert (
-        rows["10021"]["valid_from"] == dt.date(2020, 1, 1) and rows["10022"]["valid_from"] is None
+        rows["SY001"]["valid_from"] == dt.date(2020, 1, 1) and rows["SY002"]["valid_from"] is None
     )
-    assert rows["10021"]["long_desc"] == "Invented procedure one"
+    assert rows["SY001"]["long_desc"] == "Invented procedure one"
 
 
 def test_duplicate_codes_blank_codes_and_bom():

@@ -22,14 +22,14 @@ the implementation tests, F-6).
 
 ## Private libraries (the Shape wheel: upload the file, never resolve it by name)
 
-Add `sqllocks_shape-0.9.1-py3-none-any.whl` (build it with `python scripts/build_pure_wheel.py`,
+Add `sqllocks_shape-0.9.2-py3-none-any.whl` (build it with `python scripts/build_pure_wheel.py`,
 or take it from the release) under **Add from local** (upload the `.whl` file). Constraints
 (Microsoft Learn, retrieved 2026-09-30, COMPLETION_PLAN section 12.1):
 
 * private libraries must be **platform-independent `.whl` files** (`py3-none-any`);
 * each must be **under 28.6 MB**. Shape's pure wheel is checked against this by DM-03.
 
-**Never list `sqllocks-shape` (or `sqllocks-shape==0.9.1`) as a public library.** PyPI has an
+**Never list `sqllocks-shape` (or `sqllocks-shape==0.9.2`) as a public library.** PyPI has an
 older `sqllocks-shape` 0.9.0 without `shape.integrations`; the functions import
 `shape.integrations.fabric.udf`, so with that package every call fails with
 `ModuleNotFoundError: No module named 'shape.integrations'`. The uploaded private wheel is the
@@ -39,8 +39,8 @@ is downloaded from PyPI.
 ### `generateSample` needs a domain
 
 `generateSample` generates from an installed domain, and a domain is a plugin. Also upload the
-`sqllocks-shape-domains` wheel `sqllocks_shape_domains-0.9.1-py3-none-any.whl` (`pip wheel --no-deps plugins/shape-domains`) under
-**Add from local**; it is `py3-none-any` and about 2 MB. It requires `sqllocks-shape==0.9.1`,
+`sqllocks-shape-domains` wheel `sqllocks_shape_domains-0.9.2-py3-none-any.whl` (`pip wheel --no-deps plugins/shape-domains`) under
+**Add from local**; it is `py3-none-any` and about 2 MB. It requires `sqllocks-shape==0.9.2`,
 which the uploaded Shape wheel satisfies. **[VERIFY LIVE]** that the library resolver takes the
 private Shape wheel for that requirement rather than PyPI's package of the same name and version
 (the publish log shows no `sqllocks-shape` download, and `generateSample` returns rows). Without the

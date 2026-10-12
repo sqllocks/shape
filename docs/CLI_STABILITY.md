@@ -2,7 +2,7 @@
 
 Status: available (early-access surface); coming (1.x policy).
 
-**Early access 0.9.1.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
+**Early access 0.9.2.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 
 The compatibility promises below apply to the future 1.x line, not the current early-access release.
 

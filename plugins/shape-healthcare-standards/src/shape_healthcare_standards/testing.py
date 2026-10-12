@@ -398,7 +398,7 @@ def sample_tables() -> dict[str, pa.Table]:
         dict(
             claim_id="CLM-P-0001",
             line_number=1,
-            procedure_code="99213",
+            procedure_code="SP-01",
             service_date=D(2024, 2, 5),
             billed_amount=200.0,
             units=1.0,
@@ -414,7 +414,7 @@ def sample_tables() -> dict[str, pa.Table]:
         dict(
             claim_id="CLM-P-0001",
             line_number=2,
-            procedure_code="83036",
+            procedure_code="SP-25",
             modifier_1="QW",
             service_date=D(2024, 2, 5),
             billed_amount=100.0,
@@ -431,8 +431,8 @@ def sample_tables() -> dict[str, pa.Table]:
         dict(
             claim_id="CLM-P-0002",
             line_number=1,
-            procedure_code="99214",
-            modifier_1="25",
+            procedure_code="SP-02",
+            modifier_1="S0",
             service_date=D(2024, 3, 14),
             billed_amount=250.5,
             units=1.0,
@@ -448,7 +448,7 @@ def sample_tables() -> dict[str, pa.Table]:
         dict(
             claim_id="CLM-P-0002",
             line_number=2,
-            procedure_code="97110",
+            procedure_code="SP-50",
             modifier_1="GP",
             service_date=D(2024, 3, 14),
             billed_amount=200.0,
@@ -467,7 +467,7 @@ def sample_tables() -> dict[str, pa.Table]:
         dict(
             claim_id="CLM-P-0003",
             line_number=1,
-            procedure_code="99223",
+            procedure_code="SP-14",
             service_date=D(2024, 5, 2),
             billed_amount=1200.0,
             units=1.0,
@@ -508,7 +508,7 @@ def sample_tables() -> dict[str, pa.Table]:
             claim_id="CLM-I-0001",
             line_number=3,
             revenue_code="0450",
-            procedure_code="99285",
+            procedure_code="SP-11",
             service_date=D(2024, 6, 10),
             billed_amount=22000.0,
             units=1.0,

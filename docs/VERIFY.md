@@ -403,7 +403,7 @@ shape verify out/ --source real/ --config verify.json        # add the memorizat
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    Shape 0.9.1 - Verify
+    Shape 0.9.2 - Verify
 
     Data path:   out/
     Schema:      gates.json
@@ -429,7 +429,7 @@ shape verify out/ --source real/ --config verify.json        # add the memorizat
       WARN  [schema_conformance]: Table 'orders' column 'salary': expected type compatible with 'string', got 'int64'
 
     Result: PASS
-    Shape 0.9.1 - Verify
+    Shape 0.9.2 - Verify
 
     Data path:   orders.csv
     Schema:      gates.json
@@ -454,7 +454,7 @@ shape verify out/ --source real/ --config verify.json        # add the memorizat
       WARN  [schema_conformance]: Table 'orders' column 'salary': expected type compatible with 'string', got 'int64'
 
     Result: PASS
-    Shape 0.9.1 - Verify
+    Shape 0.9.2 - Verify
 
     Data path:   out/
     Schema:      gates.json
@@ -482,7 +482,7 @@ shape verify out/ --source real/ --config verify.json        # add the memorizat
 
     Result: PASS
     Report written to report.md
-    Shape 0.9.1 - Verify
+    Shape 0.9.2 - Verify
 
     Data path:   out/
     Schema:      gates.json
@@ -509,7 +509,7 @@ shape verify out/ --source real/ --config verify.json        # add the memorizat
 
     Result: PASS
     Report written to report.json
-    Shape 0.9.1 - Verify
+    Shape 0.9.2 - Verify
 
     Data path:   out/
     Schema:      gates.json
@@ -536,7 +536,7 @@ shape verify out/ --source real/ --config verify.json        # add the memorizat
       WARN  [schema_conformance]: Table 'orders' column 'salary': expected type compatible with 'string', got 'int64'
 
     Result: PASS
-    Shape 0.9.1 - Verify
+    Shape 0.9.2 - Verify
 
     Data path:   out/
     Config:      verify.json

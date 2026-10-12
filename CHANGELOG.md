@@ -2,11 +2,45 @@
 
 Status: available.
 
-**Early access 0.9.1.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
+**Early access 0.9.2.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 
 ## Unreleased
 
 No unreleased changes.
+
+## 0.9.2
+
+### Fixed
+
+- Dataset safe validation recognises only schema-column references at the documented
+  per-table sampling-metadata path. The strings remain subject to PII scanning;
+  full captures, raw sensitive values, leaking table payloads and malformed datasets
+  are still rejected. This resolves the privacy-maintainer dataset-validator owner note.
+
+### Changed
+
+- Replaced the 49 bundled AMA CPT procedure values and descriptions with synthetic
+  `SP-01` through `SP-49` and `Synthetic procedure NN`. The letters and hyphen distinguish
+  these five-character codes from CPT formats. Arrow schema, row count, charges and
+  selection weights are unchanged. Healthcare examples and exact writer fixtures now
+  use synthetic procedures and a two-character synthetic sample modifier (`S0`), with
+  local FHIR code systems. The extra sample procedure outside the catalog is `SP-50`.
+- Replaced bundled GICS sector codes/names and industry names with a generic synthetic
+  taxonomy (`SA` through `SK`, `Synthetic sector A` through `Synthetic sector K`, and
+  synthetic industry labels), including company classifications. Schemas, identifiers
+  and cardinalities are preserved. Legacy reference aliases remain readable.
+- **Seeded output changes:** healthcare and capital-markets generation produces new
+  procedure/classification labels and dataset ids with the same seed. Regenerate fixtures
+  for those domains. `GENERATION_STABILITY.md`, `API_STABILITY.md` and `RELEASE_POLICY.md`
+  reserve cross-release compatibility promises for future 1.x releases and exclude domain
+  reference data from the generator content promise; this early-access patch changes no
+  generator algorithm or format version. Exact affected writer fixtures were regenerated.
+- **Owner decision REL-092:** synthetic replacements resolve the healthcare and
+  capital-markets upstream-source owner notes in `THIRD_PARTY_NOTICES.md`. No
+  `docs/plans/OWNER_DECISIONS.md` existed on the specified main commit, so this entry
+  records the decision. Other domain owner notes remain unresolved.
+- Core and all twelve first-party plugins advance together to 0.9.2. Exact SQL headers
+  and documented artifact/registry digests were regenerated for the new writer version.
 
 ## 0.9.1
 

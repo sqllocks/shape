@@ -45,7 +45,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: sqllocks/shape@main
         with:
-          shape-version: '0.9.1'
+          shape-version: '0.9.2'
           project: tests/fixtures/action/pass
           fail-on: drift
           comment: 'false'
@@ -62,7 +62,7 @@ and comments disabled. This is their complete output; it is not a hosted workflo
 
     ```text
     Install Shape
-    shape 0.9.1
+    shape 0.9.2
 
     Check the project
     shape: note: /tmp/tmp7ajhd59t/shape-action/current/orders.shape is not signed: its origin is not verified (check it with --verify PUBKEY)

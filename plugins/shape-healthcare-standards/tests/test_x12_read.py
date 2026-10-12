@@ -48,13 +48,13 @@ BODY = [
     "CLP*C1*1*100*80**12*PCN1*11*1~",
     "NM1*QC*1*DOE*JANE****MI*M1~",
     "CAS*PR*1*20~",
-    "SVC*HC:99213*100*80**1~",
+    "SVC*HC:SP-01*100*80**1~",
     "DTM*472*20240101~",
     "CAS*CO*45*15~",
     "CAS*PR*2*5~",
     "CLP*C2*1*50*50**12*PCN2*11*1~",
-    "SVC*HC:99214:25*50*50**1~",
-    "SVC*HC:99215*10*10**1~",
+    "SVC*HC:SP-02:S0*50*50**1~",
+    "SVC*HC:SP-03*10*10**1~",
     "PLB*1999999999*20240101*FB:0000000001*0~",
 ]
 
@@ -92,7 +92,7 @@ def test_every_segment_is_a_row_with_its_control_numbers(tmp_path):
     assert r[2]["transaction_control"] == "0001"
     assert r[-1]["segment_id"] == "IEA" and r[-1]["group_control"] is None
     svc = next(x for x in r if x["segment_id"] == "SVC")
-    assert svc["elements"] == ["HC:99213", "100", "80", "", "1"]  # component separators kept
+    assert svc["elements"] == ["HC:SP-01", "100", "80", "", "1"]  # component separators kept
     assert r[0]["elements"][-1] == ":" and len(r[0]["elements"]) == 16
 
 
@@ -119,7 +119,7 @@ def test_delimiters_come_from_the_isa_segment(tmp_path):
     # ISA16 is now '>' and the segment terminator is a newline
     got = read(tmp_path, text.replace("|:\n", "|>\n"))["x12_segment"]
     svc = next(x for x in rows(got) if x["segment_id"] == "SVC")
-    assert svc["elements"][0] == "HC>99213"
+    assert svc["elements"][0] == "HC>SP-01"
     assert got.num_rows == len(BODY) + 6
 
 
@@ -153,7 +153,7 @@ def test_each_interchange_uses_its_own_delimiters(tmp_path):
     other = envelope(BODY, ic="000000002").replace("*", "|").replace("~", "!").replace(":", ">")
     t = read(tmp_path, envelope(BODY) + other)["x12_segment"]
     svc = [x for x in rows(t) if x["segment_id"] == "SVC"]
-    assert svc[0]["elements"][0] == "HC:99213" and svc[3]["elements"][0] == "HC>99213"
+    assert svc[0]["elements"][0] == "HC:SP-01" and svc[3]["elements"][0] == "HC>SP-01"
     assert t.num_rows == 2 * (len(BODY) + 6)
 
 
@@ -202,8 +202,8 @@ def test_loop_tables_columns_and_keys(tmp_path):
     assert clp.column("_parent_id").to_pylist() == [1, 1]
     svc = tables["loop_2110"]
     assert svc.column("SVC01_1").to_pylist() == ["HC", "HC", "HC"]
-    assert svc.column("SVC01_2").to_pylist() == ["99213", "99214", "99215"]
-    assert svc.column("SVC01_3").to_pylist() == [None, "25", None]
+    assert svc.column("SVC01_2").to_pylist() == ["SP-01", "SP-02", "SP-03"]
+    assert svc.column("SVC01_3").to_pylist() == [None, "S0", None]
     assert "SVC01" not in svc.column_names
     assert svc.column("CAS02").to_pylist() == ["45", None, None]
     assert svc.column("CAS02__2").to_pylist() == ["2", None, None]  # the second CAS of the line
