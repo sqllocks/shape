@@ -200,13 +200,18 @@ def test_python_kernel_gives_the_same_document(monkeypatch):
 @pytest.mark.heavy
 def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
     """The 5M vs 50M check is benchmarks/vs_refengine/profile_1to1/rss_check.py; this is its
-    small version: peak process memory of a CSV twice as large, both past the allocator
-    ramp-up (about 20M rows), is within 10%. macOS measures peak program allocation;
-    Linux and Windows measure RSS. Each scan fixes Arrow's executors."""
+    small version: peak memory of a CSV twice as large, both past the allocator ramp-up (about
+    20M rows), is within 10%. Each scan fixes Arrow's serial-reader executor sizes. Linux and
+    Windows measure RSS. macOS measures the exact peak of live heap bytes: RSS and physical
+    footprint vary by more than the tolerance there on identical input, and the malloc zones'
+    own statistics count reserved 128 MiB regions. ``live_heap_peak_darwin.c`` is built with
+    clang and loaded into the scan with DYLD_INSERT_LIBRARIES; it adds each block's size on
+    allocation and removes it on free. Pools that bypass malloc (Arrow's mimalloc) are added
+    from their own exact peak."""
     import pyarrow.csv as pacsv
 
     code = (
-        "import json, os, sys\n"
+        "import json, sys\n"
         "from shape.profile.engine import profile\n"
         "import pyarrow as pa\n"
         # Even with use_threads=False, raw read-ahead and pending decode continuations use
@@ -214,20 +219,22 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
         # decoding is already serial, and the profiling kernel keeps default parallelism.
         "pa.set_io_thread_count(1)\n"
         "pa.set_cpu_count(1)\n"
-        "def peak_memory(malloc):\n"
+        "def peak_memory():\n"
         # Linux: VmHWM belongs to this process's address space. ru_maxrss survives exec on
         # Linux, so in a child of pytest it reports the parent's (larger) peak for both sizes.
         "    if sys.platform.startswith('linux'):\n"
         "        status = open('/proc/self/status').read().split('VmHWM:')[1]\n"
         "        return int(status.split()[0]) * 1024\n"
         "    elif sys.platform == 'darwin':\n"
-        # Program allocation: bytes still allocated from the malloc zones after the scan,
-        # plus the Arrow pools' exact peaks (the decode buffers are where a scan could grow
-        # with its input). Physical footprint swings by more than the tolerance on identical
-        # input, and the zones' max_size_in_use is unusable: it counts each reserved 128 MiB
-        # MALLOC_MEDIUM region (about 10 MiB resident), so it alternates by 128 MiB per run.
-        "        return (malloc['size_in_use']\n"
-        "                + pool.max_memory() + csv_pool.max_memory())\n"
+        "        import ctypes\n"
+        # An AttributeError here means the interposer did not load: fail, never fall back.
+        "        live = ctypes.CDLL(None).rss_live_peak\n"
+        "        live.restype = ctypes.c_int64\n"
+        "        outside = {p.backend_name: p.max_memory() for p in (pool, csv_pool)\n"
+        "                   if p.backend_name != 'system'}\n"
+        "        parts.update(live_heap=live(), outside_malloc=sum(outside.values()),\n"
+        "                     outside_pools=outside)\n"
+        "        return parts['live_heap'] + parts['outside_malloc']\n"
         "    else:  # Windows: the peak working set\n"
         "        import ctypes\n"
         "        from ctypes import wintypes as w\n"
@@ -241,101 +248,31 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
         "        p.GetProcessMemoryInfo.argtypes = [w.HANDLE, ctypes.c_void_p, w.DWORD]\n"
         "        assert p.GetProcessMemoryInfo(k.GetCurrentProcess(), ctypes.byref(c), c.cb)\n"
         "        return c.peak\n"
-        "def mac_usage(pid):\n"
-        "    import ctypes as c\n"
-        "    proc = c.CDLL('/usr/lib/libproc.dylib', use_errno=True)\n"
-        # RUSAGE_INFO_V4 (version 4): a 16-byte UUID followed by 35 uint64 counters.
-        "    class Usage(c.Structure):\n"
-        "        _fields_ = [('uuid', c.c_ubyte * 16), ('values', c.c_uint64 * 35)]\n"
-        "    proc.proc_pid_rusage.argtypes = [c.c_int, c.c_int, c.c_void_p]\n"
-        "    proc.proc_pid_rusage.restype = c.c_int\n"
-        "    u = Usage()\n"
-        "    if proc.proc_pid_rusage(pid, 4, c.byref(u)):\n"
-        "        raise OSError(c.get_errno(), 'proc_pid_rusage')\n"
-        "    return dict(zip(('ri_user_time', 'ri_system_time', "
-        "'ri_pkg_idle_wkups', 'ri_interrupt_wkups', 'ri_pageins', "
-        "'ri_wired_size', 'ri_resident_size', 'ri_phys_footprint', "
-        "'ri_proc_start_abstime', 'ri_proc_exit_abstime', "
-        "'ri_child_user_time', 'ri_child_system_time', "
-        "'ri_child_pkg_idle_wkups', 'ri_child_interrupt_wkups', "
-        "'ri_child_pageins', 'ri_child_elapsed_abstime', "
-        "'ri_diskio_bytesread', 'ri_diskio_byteswritten', "
-        "'ri_cpu_time_qos_default', 'ri_cpu_time_qos_maintenance', "
-        "'ri_cpu_time_qos_background', 'ri_cpu_time_qos_utility', "
-        "'ri_cpu_time_qos_legacy', 'ri_cpu_time_qos_user_initiated', "
-        "'ri_cpu_time_qos_user_interactive', 'ri_billed_system_time', "
-        "'ri_serviced_system_time', 'ri_logical_writes', "
-        "'ri_lifetime_max_phys_footprint', 'ri_instructions', "
-        "'ri_cycles', 'ri_billed_energy', 'ri_serviced_energy', "
-        "'ri_interval_max_phys_footprint', 'ri_runnable_time'), u.values))\n"
-        "def mac_snapshot():\n"
-        "    if sys.platform != 'darwin':\n"
-        "        return None\n"
-        "    import ctypes as c, os\n"
-        "    lib = c.CDLL('/usr/lib/libSystem.B.dylib', use_errno=True)\n"
-        "    class VM(c.Structure):\n"
-        "        _fields_ = [('virtual_size', c.c_uint64), ('region_count', c.c_int),\n"
-        "                    ('page_size', c.c_int)] + [(n, "
-        "c.c_uint64) for n in ('resident_size', 'resident_size_peak', "
-        "'device', 'device_peak', 'internal', 'internal_peak', "
-        "'external', 'external_peak', 'reusable', 'reusable_peak', "
-        "'purgeable_volatile_pmap', 'purgeable_volatile_resident', "
-        "'purgeable_volatile_virtual', 'compressed', 'compressed_peak', "
-        "'compressed_lifetime', 'phys_footprint')]\n"
-        "    buffer = (c.c_uint32 * 256)()\n"
-        "    count = c.c_uint32(256)\n"
-        "    lib.task_info.argtypes = [c.c_uint32, c.c_int, c.c_void_p, c.POINTER(c.c_uint32)]\n"
-        "    lib.task_info.restype = c.c_int\n"
-        "    task = c.c_uint32.in_dll(lib, 'mach_task_self_').value\n"
-        "    result = lib.task_info(task, 22, buffer, c.byref(count))\n"
-        "    if result or count.value * 4 < c.sizeof(VM):\n"
-        "        raise RuntimeError(('task_info', result, count.value))\n"
-        "    vm = VM.from_buffer(buffer)\n"
-        "    return {'self': mac_usage(os.getpid()), 'parent': mac_usage(os.getppid()),\n"
-        "            'vm': {n: getattr(vm, n) for n, _ in VM._fields_}}\n"
-        "def malloc_totals():\n"
-        "    if sys.platform != 'darwin':\n"
-        "        return None\n"
-        "    import ctypes as c\n"
-        "    lib = c.CDLL('/usr/lib/libSystem.B.dylib', use_errno=True)\n"
-        "    class Malloc(c.Structure):\n"
-        "        _fields_ = [('blocks_in_use', c.c_uint)] + [(n, c.c_size_t) for n in\n"
-        "                    ('size_in_use', 'max_size_in_use', 'size_allocated')]\n"
-        "    lib.malloc_zone_statistics.argtypes = [c.c_void_p, c.POINTER(Malloc)]\n"
-        "    lib.malloc_get_all_zones.argtypes = [c.c_uint32, c.c_void_p,\n"
-        "                                         c.POINTER(c.POINTER(c.c_size_t)),\n"
-        "                                         c.POINTER(c.c_uint)]\n"
-        "    lib.malloc_get_all_zones.restype = c.c_int\n"
-        "    zones, count = c.POINTER(c.c_size_t)(), c.c_uint()\n"
-        "    if lib.malloc_get_all_zones(0, None, c.byref(zones), c.byref(count)):\n"
-        "        raise RuntimeError('malloc_get_all_zones')\n"
-        "    total = {'size_in_use': 0, 'max_size_in_use': 0, 'size_allocated': 0}\n"
-        "    for index in range(count.value):\n"
-        "        zone = Malloc()\n"
-        "        lib.malloc_zone_statistics(zones[index], c.byref(zone))\n"
-        "        for n in total:\n"
-        "            total[n] += getattr(zone, n)\n"
-        "    return total\n"
         "pool = pa.default_memory_pool()\n"
         # The serial CSV reader uses a separate pool; the default pool omits its buffers.
         "csv_pool = (pa.mimalloc_memory_pool()\n"
         "    if 'mimalloc' in pa.supported_memory_backends() else pool)\n"
-        "initial_mac = mac_snapshot()\n"
-        "initial_peak = peak_memory(malloc_totals())\n"
+        "parts = {}\n"
+        "initial_peak = peak_memory()\n"
         "profile(sys.argv[1], mode='bounded')\n"
-        "final_malloc = malloc_totals()\n"
-        "peak = peak_memory(final_malloc)\n"
-        "final_mac = mac_snapshot()\n"
+        "peak = peak_memory()\n"
         "print(json.dumps({'arrow_pool': pool.backend_name, 'initial_peak': initial_peak,\n"
         "    'arrow_peak': pool.max_memory(), 'io_threads': pa.io_thread_count(),\n"
         "    'csv_arrow_pool': csv_pool.backend_name, 'csv_arrow_peak': csv_pool.max_memory(),\n"
-        "    'csv_arrow_current': csv_pool.bytes_allocated(),\n"
-        "    'cpu_threads': pa.cpu_count(), 'initial_mac': initial_mac,\n"
-        "    'final_mac': final_mac, 'malloc_after_scan': final_malloc,\n"
-        "    'arrow_backends': pa.supported_memory_backends()}),\n"
+        "    'cpu_threads': pa.cpu_count(), 'heap': parts}),\n"
         "    file=sys.stderr)\n"
         "print(peak, flush=True)\n"
     )
+    env = None
+    if sys.platform == "darwin":
+        dylib = tmp_path / "live_heap_peak.dylib"
+        subprocess.run(
+            ["clang", "-dynamiclib", "-O2", "-o", str(dylib)]
+            + [str(Path(__file__).with_name("live_heap_peak_darwin.c"))],
+            check=True,
+        )
+        # PYTHONMALLOC=malloc sends the interpreter's own objects through the counted heap.
+        env = {**os.environ, "DYLD_INSERT_LIBRARIES": str(dylib), "PYTHONMALLOC": "malloc"}
     peaks = {}
     for rows in (24_000_000, 48_000_000):
         rng = np.random.default_rng(1)
@@ -363,10 +300,11 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
             capture_output=True,
             text=True,
             check=True,
+            env=env,
         )
         peaks[rows] = int(r.stdout.split()[-1])
-        metric = "program allocation" if sys.platform == "darwin" else "RSS"
-        print(f"{rows} rows: peak {metric} {peaks[rows]} bytes; {r.stderr.strip()}")
+        metric = "peak live heap" if sys.platform == "darwin" else "peak RSS"
+        print(f"{rows} rows: {metric} {peaks[rows]} bytes; {r.stderr.strip()}")
         p.unlink()
     assert peaks[24_000_000] > 50 * 2**20, peaks  # a real measurement of the child
     assert abs(peaks[48_000_000] - peaks[24_000_000]) / peaks[24_000_000] < 0.10, peaks
