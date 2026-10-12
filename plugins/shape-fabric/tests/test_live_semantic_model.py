@@ -21,7 +21,7 @@ pytestmark = pytest.mark.live
 
 
 def need(name):
-    value = os.environ.get(name)
+    value = (os.environ.get(name) or "").strip()  # the variable has held a trailing space
     if not value:
         pytest.fail(f"live test needs {name}")
     return value
