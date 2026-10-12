@@ -210,15 +210,28 @@ def test_fabric_spark_runs_the_worker_notebook_to_success(tmp_path):
         token=fabric_token,
         storage_token=storage_token,
     )
-    deadline = time.monotonic() + 25 * 60
-    status = job["status"]
-    while status not in ("succeeded", "failed", "cancelled") and time.monotonic() < deadline:
-        time.sleep(20)
-        status = jobs.status(job["job_id"], fabric_token)["status"]
-    if status not in ("succeeded", "failed", "cancelled"):
-        jobs.cancel(job["job_id"], fabric_token)
-    final = jobs.status(job["job_id"], fabric_token)
-    assert status == "succeeded", (
-        f"Fabric worker {final['fabric'].get('fabric_run_id')}: "
-        f"status={status}; error={final.get('error')}; progress={final.get('progress')}"
-    )
+    final = None
+    try:
+        deadline = time.monotonic() + 25 * 60
+        status = job["status"]
+        while status not in ("succeeded", "failed", "cancelled") and time.monotonic() < deadline:
+            time.sleep(20)
+            status = jobs.status(job["job_id"], fabric_token)["status"]
+        if status not in ("succeeded", "failed", "cancelled"):
+            jobs.cancel(job["job_id"], fabric_token)
+        final = jobs.status(job["job_id"], fabric_token)
+        assert status == "succeeded", (
+            f"Fabric worker {final['fabric'].get('fabric_run_id')}: "
+            f"status={status}; error={final.get('error')}; progress={final.get('progress')}"
+        )
+    finally:
+        # The worker's Delta tables are Tables/[<schema>/]<prefix>_<table>; the router records the
+        # schema it resolved from the Lakehouse. Remove them whatever the outcome.
+        fabric = (final or job).get("fabric") or {}
+        schema_folder = fabric.get("lakehouse_schema")
+        root = f"onelake://{workspace}/{lakehouse}/Tables" + (
+            f"/{schema_folder}" if schema_folder else ""
+        )
+        storage = Storage(credential=cred)
+        for table in schema_doc(prefix)["tables"]:
+            storage.remove(f"{root}/{prefix}_{table}", recursive=True)

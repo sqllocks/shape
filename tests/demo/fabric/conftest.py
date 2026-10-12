@@ -83,4 +83,25 @@ def fabric_onelake(monkeypatch):
         calls.append({"location": location, "table": table, **kwargs})
 
     monkeypatch.setattr(deltalake, "write_deltalake", record)
+    # Kind detection is a Fabric REST call; the stand-in answers it (no network). The default
+    # lakehouse is classic; the `schema_enabled_lakehouse` fixture makes it schema-enabled.
+    from shape.integrations.fabric import lakehouse_kind
+
+    kind = {"schema_enabled": False}
+    monkeypatch.setattr(
+        lakehouse_kind,
+        "fetch_lakehouse",
+        lambda workspace, lakehouse, token: {
+            "id": lakehouse,
+            "properties": {"defaultSchema": "dbo"} if kind["schema_enabled"] else {},
+        },
+    )
+    monkeypatch.setattr(sys.modules[__name__], "LAKEHOUSE_KIND", kind, raising=False)
     yield calls
+
+
+@pytest.fixture()
+def schema_enabled_lakehouse(fabric_onelake):
+    """``fabric_onelake`` with the default lakehouse reporting ``defaultSchema`` (schemas on)."""
+    LAKEHOUSE_KIND["schema_enabled"] = True  # noqa: F821 - set by fabric_onelake
+    return fabric_onelake

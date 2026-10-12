@@ -43,6 +43,22 @@ def _deltalake() -> Any:
     return deltalake
 
 
+def _fabric_token(credential: Any) -> Callable[[], str] | None:
+    """A callable giving a Fabric-API bearer token for ``credential`` (or, in a Fabric notebook
+    with none given, the notebook identity); ``None`` when there is nothing to ask with."""
+    from shape.builtins.sources._azure_auth import NotebookUtilsCredential, _import_notebookutils
+    from shape.integrations.fabric.lakehouse_kind import FABRIC_SCOPE
+
+    if credential is None:
+        utils = _import_notebookutils()
+        credential = NotebookUtilsCredential(utils) if utils is not None else None
+    if isinstance(credential, NotebookUtilsCredential):  # its storage token is the wrong audience
+        return lambda: str(credential._utils.credentials.getToken("pbi"))
+    if credential is None or not hasattr(credential, "get_token"):
+        return None
+    return lambda: str(credential.get_token(FABRIC_SCOPE).token)
+
+
 def _lakehouse_tables(base: str, options: dict[str, Any]) -> str:
     """``base``, with the schema folder added for a schema-enabled OneLake Lakehouse.
 
@@ -52,7 +68,6 @@ def _lakehouse_tables(base: str, options: dict[str, Any]) -> str:
     guess. ``schema_name`` (default ``dbo``) picks the schema folder.
     """
     from shape.builtins.sinks.azure import is_onelake
-    from shape.builtins.sources._azure_auth import NotebookUtilsCredential, _import_notebookutils
     from shape.builtins.sources.azure import parse
     from shape.integrations.fabric.lakehouse_kind import resolve_layout
 
@@ -72,16 +87,12 @@ def _lakehouse_tables(base: str, options: dict[str, Any]) -> str:
     lakehouse = root.removesuffix("Tables").rstrip("/")
     if not lakehouse or "/" in lakehouse:
         raise ValueError("a Lakehouse target is abfss://<workspace>@<host>/<lakehouse>/Tables")
-    credential = options.get("credential")
-    if credential is None and (utils := _import_notebookutils()) is not None:
-        credential = NotebookUtilsCredential(utils)  # a Fabric notebook asks as itself
     layout = resolve_layout(
         loc.container,
         lakehouse,
         schema_enabled=explicit,
         schema_name=name,
-        credential=credential,
-        fetch=options.get("fabric_fetch"),
+        token=_fabric_token(options.get("credential")),
     )
     if layout.schema_enabled:
         return base.rstrip("/") + "/" + str(layout.schema)

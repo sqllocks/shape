@@ -368,8 +368,8 @@ class FabricSparkRouter:
         schema, or ``dbo``; a schema given for a classic one is an error."""
         from shape.integrations.fabric.lakehouse_kind import resolve_layout
 
-        def fetch(_path: str, _body: Any = None) -> Mapping[str, Any]:
-            url = f"{FABRIC_API}/workspaces/{self._workspace}/lakehouses/{self._lakehouse}"
+        def fetch(workspace: str, lakehouse: str, _token: str) -> Mapping[str, Any]:
+            url = f"{FABRIC_API}/workspaces/{workspace}/lakehouses/{lakehouse}"
             return self._http.request("GET", url).json_object()
 
         layout = resolve_layout(

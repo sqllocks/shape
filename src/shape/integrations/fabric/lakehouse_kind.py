@@ -16,10 +16,7 @@ that one GET, to ``api.fabric.microsoft.com``.
 
 from __future__ import annotations
 
-import json
 import re
-import urllib.error
-import urllib.request
 from collections.abc import Callable, Mapping
 from typing import Any, NamedTuple
 
@@ -27,18 +24,18 @@ __all__ = [
     "FABRIC_API",
     "Layout",
     "LakehouseKindError",
+    "fetch_lakehouse",
     "layout_from_properties",
     "resolve_layout",
-    "schema_folder",
 ]
 
 FABRIC_API = "https://api.fabric.microsoft.com"
 FABRIC_SCOPE = f"{FABRIC_API}/.default"
 DEFAULT_SCHEMA = "dbo"
 _GUID = re.compile(r"[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}")
-_KNOWN: dict[tuple[str, str], bool] = {}
 
-Fetch = Callable[[str, str | None], Mapping[str, Any]]
+Token = Callable[[], str]
+Fetch = Callable[[str, str, str], Mapping[str, Any]]
 
 
 class LakehouseKindError(ValueError):
@@ -59,7 +56,7 @@ def layout_from_properties(properties: Mapping[str, Any]) -> bool:
     return bool(inner.get("defaultSchema"))
 
 
-def schema_folder(name: str | None) -> str:
+def _schema_folder(name: str | None) -> str:
     from shape.security.names import safe_name
 
     return safe_name(str(name or DEFAULT_SCHEMA), "schema name")
@@ -75,27 +72,19 @@ def _truth(value: Any) -> bool | None:
     raise ValueError("schema_enabled must be true or false")
 
 
-def _token(credential: Any) -> str:
-    from shape.builtins.sources._azure_auth import NotebookUtilsCredential
+def fetch_lakehouse(workspace: str, lakehouse: str, token: str) -> Mapping[str, Any]:
+    """``GET /v1/workspaces/<workspace>/lakehouses/<lakehouse>`` with a Fabric bearer ``token``.
 
-    if isinstance(credential, NotebookUtilsCredential):  # its storage token is the wrong audience
-        return str(credential._utils.credentials.getToken("pbi"))
-    return str(credential.get_token(FABRIC_SCOPE).token)
+    The one network call this module makes, through the product's HTTP seam
+    (:func:`shape.scale.http.urllib_transport`); tests replace this function.
+    """
+    from shape.scale.http import HttpError, urllib_transport
 
-
-def _fetch_with(credential: Any) -> Fetch:
-    def fetch(path: str, _unused: str | None = None) -> Mapping[str, Any]:
-        request = urllib.request.Request(  # noqa: S310 - fixed https host
-            FABRIC_API + path,
-            headers={"Authorization": f"Bearer {_token(credential)}", "Accept": "application/json"},
-        )
-        with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310
-            body = json.loads(response.read().decode("utf-8"))
-        if not isinstance(body, Mapping):
-            raise ValueError("unexpected Fabric response")
-        return body
-
-    return fetch
+    url = f"{FABRIC_API}/v1/workspaces/{workspace}/lakehouses/{lakehouse}"
+    response = urllib_transport("GET", url, {"Authorization": f"Bearer {token}"}, None, 30.0)
+    if response.status != 200:
+        raise HttpError(response.status, url, response.text)
+    return response.json_object()
 
 
 def _explain(workspace: str, lakehouse: str, why: str) -> LakehouseKindError:
@@ -114,41 +103,36 @@ def resolve_layout(
     *,
     schema_enabled: Any = None,
     schema_name: str | None = None,
-    credential: Any = None,
+    token: Token | None = None,
     fetch: Fetch | None = None,
 ) -> Layout:
     """The layout for a OneLake Lakehouse.
 
     ``workspace`` and ``lakehouse`` are the ids (a name cannot be looked up here). An explicit
-    ``schema_enabled`` wins and needs no call. A ``schema_name`` on a classic Lakehouse is an
-    error, not ignored.
+    ``schema_enabled`` wins and makes no call. Otherwise Fabric is asked with ``token()``, a
+    Fabric-audience bearer token; without one, or when the call fails, this raises
+    :class:`LakehouseKindError`. ``fetch(workspace, lakehouse, token)`` replaces the call (a
+    caller with its own authenticated transport passes it, and then needs no ``token``). A
+    ``schema_name`` on a classic Lakehouse is an error, not ignored.
     """
     lakehouse = lakehouse.removesuffix(".Lakehouse")
     enabled = _truth(schema_enabled)
-    injected = fetch is not None
     if enabled is None:
-        if not injected and (workspace, lakehouse) in _KNOWN:
-            enabled = _KNOWN[(workspace, lakehouse)]
-        else:
-            if not (_GUID.fullmatch(workspace) and _GUID.fullmatch(lakehouse)):
-                raise _explain(workspace, lakehouse, "the target names it, not its ids")
-            if fetch is None:
-                if credential is None:
-                    raise _explain(workspace, lakehouse, "no credential to ask Fabric with")
-                fetch = _fetch_with(credential)
-            try:
-                found = fetch(f"/v1/workspaces/{workspace}/lakehouses/{lakehouse}", None)
-            except Exception as exc:
-                from shape.security.redact import redact_text
+        if not (_GUID.fullmatch(workspace) and _GUID.fullmatch(lakehouse)):
+            raise _explain(workspace, lakehouse, "the target names it, not its ids")
+        if fetch is None and token is None:
+            raise _explain(workspace, lakehouse, "no credential to ask Fabric with")
+        try:
+            found = (fetch or fetch_lakehouse)(workspace, lakehouse, token() if token else "")
+        except Exception as exc:
+            from shape.security.redact import redact_text
 
-                raise _explain(
-                    workspace, lakehouse, f"Fabric did not say ({redact_text(str(exc))})"
-                ) from None
-            enabled = layout_from_properties(found)
-            if not injected:
-                _KNOWN[(workspace, lakehouse)] = enabled
+            raise _explain(
+                workspace, lakehouse, f"Fabric did not say ({redact_text(str(exc))})"
+            ) from None
+        enabled = layout_from_properties(found)
     if enabled:
-        return Layout(True, schema_folder(schema_name))
+        return Layout(True, _schema_folder(schema_name))
     if schema_name:
         raise LakehouseKindError(
             f"schema {schema_name!r} was given, but Lakehouse {lakehouse} is not schema-enabled "
