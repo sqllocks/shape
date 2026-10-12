@@ -426,3 +426,34 @@ def test_a_batch_with_other_columns_is_refused_not_mapped_by_position():
     with pytest.raises(ShapeError, match="a batch has columns"):
         writer(server).write_table("t", [a, reordered])
     assert ("dbo", "t") not in server.tables  # rolled back and dropped: nothing half written
+
+
+def test_fast_executemany_is_always_used_when_the_driver_can_be_given_the_text_sizes(monkeypatch):
+    """With setinputsizes the buffers are sized from the longest value, so a batch whose first
+    row is not the longest no longer drops to one round trip per row."""
+    import sys
+    import types
+
+    from shape_fabric import _tsql
+
+    fake_pyodbc = types.SimpleNamespace(SQL_WVARCHAR=-9, SQL_VARBINARY=-3)
+    monkeypatch.setitem(sys.modules, "pyodbc", fake_pyodbc)
+    batch = pa.RecordBatch.from_arrays(
+        [pa.array(["a", "abcdef", "bb"]), pa.array([1, 2, 3]), pa.array([b"x", b"yyy", b"z"])],
+        names=["s", "n", "b"],
+    )
+
+    class Cursor:
+        fast_executemany = False
+        sizes: list = []
+
+        def setinputsizes(self, sizes):
+            self.sizes = sizes
+
+    cursor = Cursor()
+    _tsql.use_fast_executemany(cursor, batch)
+    assert cursor.fast_executemany is True
+    assert cursor.sizes == [(-9, 6, 0), None, (-3, 3, 0)]
+    long_text = pa.RecordBatch.from_arrays([pa.array(["a", "x" * 5000])], names=["s"])
+    _tsql.use_fast_executemany(cursor, long_text)
+    assert cursor.sizes == [(-9, 0, 0)]  # beyond 4000 characters: varchar(max)

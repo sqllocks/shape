@@ -219,23 +219,22 @@ def test_sql_database_write_and_profile_db(tmp_path, monkeypatch):
             credential.close()
 
 
-def test_profile_db_sample_warehouse(tmp_path, monkeypatch):
+def test_profile_db_sample_warehouse(tmp_path, monkeypatch, capsys):
     connection = need("FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING")
-    assert (
-        main(
-            [
-                "profile-db",
-                "--schema",
-                os.environ.get("FABRIC_SAMPLE_WAREHOUSE_SCHEMA", "dbo"),
-                "--sample-rows",
-                "1000",
-                "-o",
-                str(tmp_path / "warehouse.shape"),
-                *db_sign_in(monkeypatch, connection),
-            ]
-        )
-        == 0
+    code = main(
+        [
+            "profile-db",
+            "--schema",
+            os.environ.get("FABRIC_SAMPLE_WAREHOUSE_SCHEMA", "dbo"),
+            "--sample-rows",
+            "1000",
+            "-o",
+            str(tmp_path / "warehouse.shape"),
+            *db_sign_in(monkeypatch, connection),
+        ]
     )
+    captured = capsys.readouterr()
+    assert code == 0, captured.out + captured.err
     import shape
 
     assert shape.load(tmp_path / "warehouse.shape").to_dict()["tables"]
