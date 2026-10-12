@@ -1208,3 +1208,21 @@ class FakeIdentity:
         monkeypatch.setattr(package, "identity", module, raising=False)
         monkeypatch.setitem(sys.modules, "azure.identity", module)
         return self
+
+
+def remove_item(api, workspace, kind, name, *, wait=60.0, pause=2.0, clock=None, sleep=None):
+    """Delete the item ``name`` of ``kind``, waiting up to ``wait`` seconds for it to show in the
+    listing. A creation Fabric accepted can be absent from the listing for a moment (or longer
+    when the test stopped early); looking once and giving up left six notebooks behind."""
+    import time
+
+    clock, sleep = clock or time.monotonic, sleep or time.sleep
+    deadline = clock() + wait
+    while True:
+        found = api.find_item(workspace, kind, name)
+        if found:
+            api.delete_item(workspace, found["id"])
+            return True
+        if clock() >= deadline:
+            return False
+        sleep(pause)
