@@ -181,7 +181,8 @@ Evidence: [Shape 0.9.1 tag and Publish run](evidence/release-0.9.1-verify.md).
    downloaded archive, check its digest against `SHA256SUMS` from the `release-sbom` artifact,
    then run `gh attestation verify <archive> --repo sqllocks/shape`. `sha256sum -c SHA256SUMS`
    checks every archive in the set; the example below checks one, Shape 0.9.1's `py3-none-any`
-   wheel downloaded from PyPI, against the `SHA256SUMS` of Publish run 38168312038:
+   wheel downloaded from PyPI, against the `SHA256SUMS` of Publish run 38168312038, and then
+   verifies its attestation:
 
 <!-- example: 3 -->
 
@@ -189,12 +190,24 @@ Evidence: [Shape 0.9.1 tag and Publish run](evidence/release-0.9.1-verify.md).
 
 ```bash
 grep ' sqllocks_shape-0.9.1-py3-none-any.whl$' SHA256SUMS | sha256sum -c -
+gh attestation verify sqllocks_shape-0.9.1-py3-none-any.whl --repo sqllocks/shape
 ```
 
-Output, exit 0:
+Output, exit 0 for both. The attestation list is shortened to the lines that do not change
+between runs; the evidence page has the full output, including how many attestations matched:
 
 ```text
 sqllocks_shape-0.9.1-py3-none-any.whl: OK
+Loaded digest sha256:dc2b1866ee1f7f0de9b1c59dc549eb6295b874dde42f10a012f1c794e85d4a77 for file://sqllocks_shape-0.9.1-py3-none-any.whl
+
+The following policy criteria will be enforced:
+- Predicate type must match:................ https://slsa.dev/provenance/v1
+- Source Repository Owner URI must match:... https://github.com/sqllocks
+- Source Repository URI must match:......... https://github.com/sqllocks/shape
+- Subject Alternative Name must match regex: (?i)^https://github.com/sqllocks/shape/
+- OIDC Issuer must match:................... https://token.actions.githubusercontent.com
+
+✓ Verification succeeded!
 ```
 
 Evidence: [Shape 0.9.1 digest check](evidence/release-0.9.1-verify.md).
