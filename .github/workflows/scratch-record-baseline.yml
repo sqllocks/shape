@@ -35,6 +35,11 @@ jobs:
           "$BASELINE_PY" -m pip freeze > "$BENCH_OUT_DIR/baseline_freeze.txt"
           python -m venv "$SHAPE_VENV"
           "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-sqlserver 'pyarrow==25.0.1'
+      - name: Smoke pre-check against the real 0.9.1 baseline (fail fast)
+        run: |
+          source scripts/env.sh
+          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/record_baseline.py --all --smoke \
+            --mssql "$SHAPE_TEST_MSSQL;Database=tempdb" --out "$RUNNER_TEMP/smoke-store"
       - name: Record every release workload, equivalence before timing
         run: |
           source scripts/env.sh
