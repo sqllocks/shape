@@ -280,7 +280,15 @@ shape emit retail --table order_line --sink kafka://localhost:9092/avro-orders \
 python "$SHAPE_DOCS_REPO/scripts/docs_owner_assertions.py"
 ```
 
-<!-- owner: Kafka maintainer — supply the transcript for docs/EMIT.md example 2. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    %4|1791817460.684|GETPID|rdkafka#producer-1| [thrd:main]: Failed to acquire idempotence PID from broker localhost:9092/1: Broker: Coordinator load in progress: retrying
+    shape emit: 20 events delivered, offset 20 of 12,500, max-events, 83 events/s
+    Verified 20 Confluent Avro records using the authenticated registry schema
+    ```
+
+Evidence: [run 38266883768, ubuntu-latest, `1fa052d08a93`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38266883768-1fa052d08a93-ubuntu-latest-kafka-avro.json).
 
 
 | `--sink-config` key | meaning |
@@ -373,7 +381,14 @@ shape emit retail --drift-plan plan.json --rows customer=500 --rows order=2000 \
     --answer-key key.jsonl --fresh
 ```
 
-<!-- owner: Kafka maintainer — supply the transcript for docs/EMIT.md example 3. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared three-day order_line.quantity drift plan
+    shape emit: 54,750 events delivered, offset 54,750 of 54,750, complete, 2,127 events/s
+    ```
+
+Evidence: [run 38266883768, ubuntu-latest, `1fa052d08a93`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38266883768-1fa052d08a93-ubuntu-latest-kafka-drift.json).
 
 
 * **Day d is generated from `plan.schema_at(schema, d)` with seed + d**, exactly as `shape
@@ -548,7 +563,7 @@ The following workload records three paired 5,000-event runs, with and without t
 python "$SHAPE_DOCS_REPO/scripts/docs_owner_measurements.py" emit
 ```
 
-<!-- owner: performance maintainer — publish only committed, machine-labelled overhead measurements. -->
+Evidence: [run 38266883768, ubuntu-latest, `1fa052d08a93`](https://github.com/sqllocks/shape/blob/docs/transcripts-ci/docs/plans/evidence/owner-notes/docs-transcripts-38266883768-1fa052d08a93-ubuntu-latest-emit-overhead.json).
 
 ## Limits
 
