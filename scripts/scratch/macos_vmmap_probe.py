@@ -17,7 +17,7 @@ import pyarrow as pa
 import pyarrow.csv as pacsv
 
 SNAP_EVERY = 1000
-CHILD = r'''
+CHILD = r"""
 import ctypes as c, json, os, subprocess, sys
 import pyarrow as pa
 import shape.profile.engine as engine
@@ -75,7 +75,7 @@ engine.table_entry = entry
 snap('start')
 engine.profile(sys.argv[1], mode='bounded')
 snap('post_profile', True)
-'''
+"""
 
 
 def write_csv(path: Path, rows: int) -> None:
@@ -98,8 +98,49 @@ def write_csv(path: Path, rows: int) -> None:
         writer.close()
 
 
+def test_child_code() -> str:
+    """The committed test's child program, with per-zone statistics added to its stderr JSON."""
+    import ast
+
+    tree = ast.parse(Path("tests/profile/test_engine.py").read_text())
+    function = next(
+        n
+        for n in ast.walk(tree)
+        if isinstance(n, ast.FunctionDef)
+        and n.name == "test_bounded_mode_memory_does_not_grow_with_rows"
+    )
+    node = next(
+        n
+        for n in function.body
+        if isinstance(n, ast.Assign) and getattr(n.targets[0], "id", "") == "code"
+    )
+    code = ast.literal_eval(node.value)
+    for old, new in (
+        (
+            "    live = {n: 0 for n, _ in Malloc._fields_}\n",
+            "    live = {n: 0 for n, _ in Malloc._fields_}\n"
+            "    per_zone = []\n"
+            "    lib.malloc_get_zone_name.argtypes = [c.c_void_p]\n"
+            "    lib.malloc_get_zone_name.restype = c.c_char_p\n",
+        ),
+        (
+            "        for n in live:\n            live[n] += getattr(zone, n)\n",
+            "        name = (lib.malloc_get_zone_name(zones[index]) or b'?').decode()\n"
+            "        per_zone.append({'name': name,"
+            " **{n: getattr(zone, n) for n, _ in Malloc._fields_}})\n"
+            "        for n in live:\n            live[n] += getattr(zone, n)\n",
+        ),
+        ("'malloc': live,", "'malloc': live, 'per_zone': per_zone,"),
+        ("'final_mac': final_mac,", "'final_mac': final_mac, 'final_mac2': mac_snapshot(),"),
+    ):
+        assert code.count(old) == 1, old
+        code = code.replace(old, new)
+    return code
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--test-child", action="store_true")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--children", type=int, default=6)
     parser.add_argument("--rows", type=int, default=24_000_000)
@@ -107,6 +148,29 @@ def main() -> None:
     args.output.mkdir(parents=True, exist_ok=True)
     csv_path = args.output / "input.csv"
     write_csv(csv_path, args.rows)
+    if args.test_child:
+        code = test_child_code()
+        for child in range(args.children):
+            r = subprocess.run(
+                [sys.executable, "-c", code, str(csv_path)], capture_output=True, text=True
+            )
+            (args.output / f"testchild{child}.stderr.json").write_text(r.stderr)
+            (args.output / f"testchild{child}.stdout").write_text(r.stdout)
+            print(f"testchild {child}: rc={r.returncode} stdout={r.stdout.strip()}", flush=True)
+            line = next((x for x in r.stderr.splitlines() if x.startswith("{")), "{}")
+            info = json.loads(line)
+            for key in ("initial_mac", "final_mac", "final_mac2"):
+                mac = info.get(key) or {}
+                print(
+                    f"  {key}: live={mac.get('malloc')} null_call={mac.get('malloc_all_zones_call')}"
+                    f" per_zone={mac.get('per_zone')}",
+                    flush=True,
+                )
+            print(
+                f"  csv_arrow_peak={info.get('csv_arrow_peak')} arrow_peak={info.get('arrow_peak')}"
+            )
+        csv_path.unlink()
+        return
     for child in range(args.children):
         log = args.output / f"child{child}.jsonl"
         with log.open("w") as stream:
