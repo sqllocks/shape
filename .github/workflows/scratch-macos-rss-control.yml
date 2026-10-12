@@ -18,8 +18,8 @@ jobs:
         with: {python-version: '3.11', allow-prereleases: true}
       - run: python -m pip install -U pip
       - run: pip install -e '.[dev,streaming,advanced,docs]' -e plugins/shape-domains -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric -e plugins/shape-kafka
-      - name: vmmap probe around finalize
-        run: python scripts/scratch/macos_vmmap_probe.py --test-child --output "$RUNNER_TEMP/macos-program-allocation-proof" --children 6
+      - name: Live-allocation matrix and proportional-memory control
+        run: python scripts/scratch/macos_footprint_control.py --matrix --output "$RUNNER_TEMP/macos-program-allocation-proof"
       - name: Verify checkout restoration
         if: always()
         run: |

@@ -168,7 +168,7 @@ def allocation_source(original: bytes) -> bytes:
 
 def allocation_from_diagnostics(diagnostics):
     return (
-        diagnostics["final_mac"]["malloc"]["max_size_in_use"]
+        diagnostics["malloc_watch"]["peak"]["max_size_in_use"]
         + diagnostics["csv_arrow_peak"]
         + diagnostics["arrow_peak"]
     )
