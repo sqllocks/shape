@@ -51,12 +51,21 @@ def _fabric_token(credential: Any) -> Callable[[], str] | None:
 
     if credential is None:
         utils = _import_notebookutils()
-        credential = NotebookUtilsCredential(utils) if utils is not None else None
+        has_identity = getattr(utils, "credentials", None) is not None  # a real notebook has it
+        credential = NotebookUtilsCredential(utils) if has_identity else None
     if isinstance(credential, NotebookUtilsCredential):  # its storage token is the wrong audience
         return lambda: str(credential._utils.credentials.getToken("pbi"))
     if credential is None or not hasattr(credential, "get_token"):
         return None
     return lambda: str(credential.get_token(FABRIC_SCOPE).token)
+
+
+def _raw_storage_token(options: dict[str, Any]) -> bool:
+    """True when the caller gave a storage token (``token`` or one in ``storage_options``)."""
+    from shape.builtins.sources.delta import _TOKEN_KEYS
+
+    given = {str(k).lower() for k in dict(options.get("storage_options") or {})}
+    return bool(options.get("token")) or bool(_TOKEN_KEYS & given)
 
 
 def _lakehouse_tables(base: str, options: dict[str, Any]) -> str:
@@ -87,12 +96,18 @@ def _lakehouse_tables(base: str, options: dict[str, Any]) -> str:
     lakehouse = root.removesuffix("Tables").rstrip("/")
     if not lakehouse or "/" in lakehouse:
         raise ValueError("a Lakehouse target is abfss://<workspace>@<host>/<lakehouse>/Tables")
+    token = _fabric_token(options.get("credential"))
+    if explicit in (None, "") and not name and token is None and _raw_storage_token(options):
+        # The caller handed delta-rs its own storage token and there is no identity to ask Fabric
+        # with: the location is used as written (a schema-enabled Lakehouse then needs the schema
+        # in it, ``.../Tables/dbo``, or ``schema_enabled=true``). Nothing is guessed or looked up.
+        return base
     layout = resolve_layout(
         loc.container,
         lakehouse,
         schema_enabled=explicit,
         schema_name=name,
-        token=_fabric_token(options.get("credential")),
+        token=token,
     )
     if layout.schema_enabled:
         return base.rstrip("/") + "/" + str(layout.schema)

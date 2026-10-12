@@ -125,6 +125,10 @@ def resolve_layout(
         try:
             found = (fetch or fetch_lakehouse)(workspace, lakehouse, token() if token else "")
         except Exception as exc:
+            from shape.scale.http import HttpError
+
+            if isinstance(exc, HttpError) and exc.status in (401, 403):
+                raise  # Fabric refused the identity: that is an authentication error, not a kind
             from shape.security.redact import redact_text
 
             raise _explain(

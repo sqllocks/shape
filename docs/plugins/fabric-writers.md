@@ -18,8 +18,14 @@ For a schema-enabled Lakehouse, read `.../Tables/<schema>/<table>` instead. The 
 writer and `shape publish -t lakehouse` write a Files landing zone; they do not register managed
 Lakehouse tables. Use the Delta sink with the [appropriate table layout](cloud-sources.md#lakehouse-table-layouts)
 or load the landing files in Fabric. Notebook deployment also generates Parquet under Files.
-For Spark generation, use `--lakehouse-schema dbo`; for Demo Spark, store that option with
-`shape demo init`. Both omit the schema component for classic Lakehouses.
+The Delta sink and the Spark mode ask Fabric which kind of Lakehouse the target is (a
+schema-enabled one reports `defaultSchema`) and write `Tables/<schema>/<table>` (schema `dbo`
+unless `--schema-name` / `--lakehouse-schema` says otherwise) or `Tables/<table>`. Tables outside a
+schema folder of a schema-enabled Lakehouse are invisible to its SQL endpoint and semantic models,
+so the kind is never guessed: `--sink-config delta.schema_enabled=true|false` states it, and a
+target that cannot be asked (names instead of ids, no identity) fails with that setting named. A
+location given together with raw `storage_options` tokens and no identity to ask with is used as
+written: put the schema in it (`.../Tables/dbo`).
 
 Warehouse and Synapse primary keys are informational: table creation is followed by
 `ALTER TABLE ... ADD CONSTRAINT ... PRIMARY KEY NONCLUSTERED (...) NOT ENFORCED` in the same
