@@ -1,7 +1,7 @@
 """Unattended Owner checks; see docs/plugins/fabric-writers.md for required variables.
 
-No interactive sign-in. Missing variables skip with their names, as authorized for LIVE-FIX
-add-on C. Service failures and assertion failures never skip or xfail.
+No interactive sign-in. Missing variables fail with their names, as required by P6-07a
+and LIVE-FIX #15. Service failures and assertion failures also fail.
 """
 
 import os
@@ -26,7 +26,7 @@ LAKEHOUSES = [
 def need(name):
     value = os.environ.get(name)
     if not value:
-        pytest.skip(f"live test needs {name}")
+        pytest.fail(f"live test needs {name}")
     return value
 
 

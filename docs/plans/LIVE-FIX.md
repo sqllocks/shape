@@ -61,15 +61,16 @@ The existing Synapse live test now forwards its documented service-principal var
 of creating empty SPN settings. Its old credential expression fails the new contract; the
 fixed helper passes.
 
-Missing-variable skips in live tests are explicitly authorized by add-on C and name the absent
-variable. Service failures never skip or xfail. The final all-module absence exercise reports
-31 skips and 22 non-live cases deselected;
-that is not live-service acceptance. Existing non-live assertions have not been weakened.
+The lead corrected add-on C after the first live review: P6-07a and LIVE-FIX #15
+require missing variables to fail by name. All eight changed live modules now use
+`pytest.fail` in `need()`. The absence control reports 31 failures, zero skips;
+eight helper regressions also enforce the failure type and variable name. This
+absence control is not live-service acceptance. Existing gates are unchanged.
 
 The 0.9.1 limitations include both Warehouse inline-key and schema-enabled-layout workarounds.
 Both say **a fix is in progress** until the lead merges the fix.
 
-## Verification
+## Verification of the initial fix (`5dcbb1b5`)
 
 The complete `make check` passes: 18,082 normal tests, 52 heavy tests (including the
 unchanged ten-minute rate soak), 450 Python-kernel tests and 36 Rust tests. Coverage is
@@ -82,3 +83,76 @@ links and user-facing checks pass. All 36 new regression cases pass. The touched
 the touched plugin suites pass **1,835 tests** with 96 live/emulator cases deselected.
 The additional Fabric notebook/demo suite passes **266 tests** against the real Shape API,
 using its declared UDF dependency in an isolated test overlay and one Spark session. No workflow is dispatched by this work package.
+
+## Live review follow-up (`38245654398`)
+
+The Owner's run on `5dcbb1b5` reported 14 passed, seven failed and ten skipped.
+The lead withdrew the missing-variable skip instruction; the fail-by-name
+correction above applies to every changed live module.
+
+| Finding | Change and evidence |
+|---|---|
+| OneLake COPY SQL 13840 | The server could not fetch a OneLake source token; this is distinct from Shape successfully uploading with its client credential. Only that exact error activates bounded parameterized SQL INSERT from the existing Parquet staging. The old-product recovery control had nine failures and one unaffected pass; 15 new controls now cover keys, all write modes, rollback, unrelated errors, cleanup and 5,000-row batches. |
+| Driver-less Warehouse connection | The live failure occurred during the direct setup connection before publish. Writers already normalized portal strings. `_tsql.connect` now uses the same normalizer, covering setup, cleanup and all direct calls as well. Both direct-connection controls failed before and pass after; a publish CLI regression also passes. |
+| Missing Spark failure reason | `FabricJobTracker` discarded the Fabric error code and nested details. It now retains and redacts them, and explicitly reports a missing service reason with the run identifiers. The live assertion prints those fields instead of a truncated dictionary. Both diagnostic controls failed before and pass after. |
+| Deploy prints only banner in failure assertion | The command already printed its error to stderr, but the live assertion discarded stderr; later setup overwrote its tape. The assertion now includes both streams and each test keeps its own recording. HTTP and asynchronous-operation errors retain status, code and message, including when a long request ID previously displaced the explanation. Both diagnostic controls failed before and pass after; two affected fake-service tapes were regenerated with the repository recorder. |
+
+Microsoft documents ID-based OneLake COPY paths, Entra or Workspace Identity
+source authorization, and same-tenant cross-workspace loads. Workspace Identity
+requires explicit provisioning and source-workspace Contributor access; Shape
+never silently changes to it. Service principals also require the Fabric tenant
+setting and appropriate workspace/SQL permissions. See [COPY INTO](https://learn.microsoft.com/en-us/sql/t-sql/statements/copy-into-transact-sql?preserve-view=true&view=fabric),
+[Warehouse ingestion](https://learn.microsoft.com/en-us/fabric/data-warehouse/ingest-data)
+and [Warehouse service principals](https://learn.microsoft.com/en-us/fabric/data-warehouse/service-principals).
+
+### Still requires the Owner's live rerun
+
+The actual deploy and Spark worker failures cannot be established from the
+available evidence. The recorded deploy response was overwritten, and the
+artifact has no Spark Jobs response. The notebook definition matches the
+published API format. Existing worker notebooks are reused, and their install
+cell loads published 0.9.1 packages rather than this branch's source changes;
+these are possible contributors, not proven causes. The next live run must
+supply the retained deploy response and complete Spark error before either
+underlying service failure can be called fixed. No live acceptance is claimed.
+
+The exact forms and required items for the two Lakehouse Tables-root variables
+and the sample Warehouse connection are documented in
+[the unattended test matrix](../plugins/fabric-writers.md#unattended-live-tests).
+
+### Follow-up local verification
+
+The touched core suites (`tests/scale`, `tests/cli`) pass 1,097 tests. Fabric,
+databases and SQL Server plugin suites pass 1,863 tests with live/emulator cases
+excluded by the usual marker expression. Strict MkDocs, documentation wording,
+source/site links and user-facing checks pass. Ruff and strict mypy pass.
+The intentional no-credentials live control fails all 31 selected cases by name,
+with zero skips; it does not claim that any live service passed.
+
+The follow-up `make check` main stage passes **18,084 tests**, with 18 existing
+optional Great Expectations/Pandera absence skips. Coverage is **94.18%**, above
+the unchanged 86% floor. The first attempt stopped in the container reference
+example when this environment's Docker VFS cache filled the disk; clearing
+unused build cache and dangling images restored space, and the unchanged
+container example passed before the full rerun.
+
+The full rerun's only failure was the realtime soak: 6,000,000 events in 600
+seconds at 10,000/s, with max lag **1.847610299 s**, exceeding its unchanged 1.0 s
+limit. The 50 heavy tests preceding it passed. Following the lead's earlier
+soak-failure instruction, the same test ran alone three times without edits:
+
+| Run | Result | Events | Overall rate/s | Ten-second windows min/max | Max lag |
+|---|---|---:|---:|---:|---:|
+| 1 | pass | 6,000,000 | 10,000.0 | 9,840 / 10,160 | 575.8 ms |
+| 2 | fail | 5,999,900 | 9,999.3 | 4,790 / 18,740 | 10,484.2 ms |
+| 3 | pass | 6,000,000 | 10,000.2 | 9,980 / 10,020 | 397.9 ms |
+
+**The realtime gate is not fully green.** No streaming implementation, test,
+duration, assertion or tolerance was changed. This remains an explicit
+acceptance item for the lead alongside the two unknown live service failures.
+
+After the soak reruns, the remaining keyed-state heavy memory test passes
+(176.89 seconds), completing all **51 non-realtime heavy tests**. The
+pure-Python kernel suite passes **450 tests**; Rust formatting and clippy pass,
+and all **36 Rust tests** pass. The completed checks and the explicit realtime
+failure are reported separately rather than claiming a fully green `make check`.

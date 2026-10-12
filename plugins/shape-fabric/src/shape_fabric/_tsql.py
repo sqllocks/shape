@@ -513,6 +513,9 @@ def connect(
     to the driver, and the connection string must not hold a login. Token sign-in is retried (a
     managed identity endpoint can be slow to answer right after a notebook starts).
     """
+    # Direct connections (including publish setup/cleanup) need the same portal-string
+    # normalization as SqlConnection. Already normalized ODBC strings stay unchanged.
+    connection_string = normalize_connection_string(connection_string)
     try:
         import pyodbc  # type: ignore[import-not-found,unused-ignore]
     except ImportError as exc:

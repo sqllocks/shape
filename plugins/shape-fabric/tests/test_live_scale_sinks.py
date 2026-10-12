@@ -2,7 +2,7 @@
 (nightly ``fabric-live``, only where the owner's O-02 secrets exist).
 
 Gated like ``test_live_writers.py``: the workflow runs each step only when its secrets are set (a
-job-level check); a missing variable skips its test by name, and service failures still fail.
+job-level check); a missing variable fails its test by name, and service failures also fail.
 The variables are the ones of ``test_live_writers.py``, plus for ``fabric_spark``:
 
     FABRIC_WORKSPACE_ID / FABRIC_LAKEHOUSE_ID   GUIDs of the workspace and the lakehouse
@@ -38,7 +38,7 @@ ROWS = {"customer": 30, "order": 200}
 def need(name: str) -> str:
     value = os.environ.get(name)
     if not value:
-        pytest.skip(f"live test needs {name}")
+        pytest.fail(f"live test needs {name}")
     return value
 
 
@@ -217,4 +217,8 @@ def test_fabric_spark_runs_the_worker_notebook_to_success(tmp_path):
         status = jobs.status(job["job_id"], fabric_token)["status"]
     if status not in ("succeeded", "failed", "cancelled"):
         jobs.cancel(job["job_id"], fabric_token)
-    assert status == "succeeded", jobs.status(job["job_id"], fabric_token)
+    final = jobs.status(job["job_id"], fabric_token)
+    assert status == "succeeded", (
+        f"Fabric worker {final['fabric'].get('fabric_run_id')}: "
+        f"status={status}; error={final.get('error')}; progress={final.get('progress')}"
+    )

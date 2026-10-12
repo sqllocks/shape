@@ -1,7 +1,9 @@
 """Warehouse bulk writer: stage Parquet in OneLake, then ``COPY INTO``.
 
     writer = WarehouseWriter(
-        connection_string, staging_path="onelake://MyWorkspace/MyLakehouse/Files", credential=cred
+        connection_string,
+        staging_path="onelake://<workspace-guid>/<lakehouse-guid>/Files",
+        credential=cred,
     )
     writer.write_table("customer", batches, write_mode="create")
 
@@ -20,9 +22,16 @@ The number of rows ``COPY INTO`` loaded must equal the number staged; if it diff
 fails (and a table this call created is dropped). The count is the statement's own; where the
 driver does not report one, rows are counted before and after.
 
-``staging_path`` is the ``Files`` folder of a lakehouse in the same workspace as the Warehouse,
-or a folder in it (``abfss://`` or ``onelake://``). ``credential`` signs in both to the Warehouse
-and to OneLake.
+``staging_path`` is the ``Files`` folder of a lakehouse, or a folder in it
+(``abfss://`` or ``onelake://``). COPY uses workspace and item GUIDs; cross-workspace
+OneLake sources must be in the same tenant. ``credential`` signs in both to the Warehouse
+and to OneLake. That client credential does not control the Warehouse's server-side
+OneLake token exchange. If the server rejects that exchange with SQL error 13840,
+the writer rolls back the failed statement, reapplies any uncommitted truncate or
+replace, and loads the staged Parquet through parameterized SQL inserts in batches
+of 5,000 rows. It warns about this slower path, verifies the resulting row count,
+and retains the same transaction, key and staging-cleanup behavior. Other COPY
+errors remain errors; the writer never silently changes the server's identity.
 """
 
 from __future__ import annotations
@@ -35,6 +44,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from typing import Any, BinaryIO
 
 import pyarrow as pa  # type: ignore[import-untyped]
+import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from shape.errors import ShapeError
 
@@ -169,7 +179,31 @@ class WarehouseWriter:
             if first is None:
                 return 0
             staged = self._stage(table, folder, first, stream, chunk_rows)
-            loaded = self._copy(sname, table, folder, mode, created, staged)
+            try:
+                loaded = self._copy(sname, table, folder, mode, created, staged)
+            except Exception as exc:
+                # 13840 is a server-side OneLake token exchange failure, not a bad row.
+                # The client's storage token cannot be supplied to COPY INTO. Do not
+                # switch identities or replay any other COPY error automatically.
+                if (
+                    not isinstance(folder, onelake.OneLakePath)
+                    or not re.search(r"\b13840\b", str(exc))
+                    or "access token couldn't be fetched for storage path" not in str(exc).lower()
+                ):
+                    raise
+                warnings.warn(
+                    "Warehouse COPY INTO could not obtain a OneLake storage token (13840); "
+                    "loading staged rows with parameterized INSERT instead (slower than COPY)",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+                db.rollback()
+                # Reapply an uncommitted truncate/replace after rollback. A table this
+                # call created was committed by prepare_table and is still present.
+                self._prepare(
+                    sname, table, "append" if created else mode, use_schema, columns, primary_key
+                )
+                loaded = self._insert_staged(sname, table, folder)
             if loaded != staged:
                 raise ShapeError(
                     f"COPY INTO loaded {loaded:,} of the {staged:,} staged rows of {sname}.{table}"
@@ -247,6 +281,49 @@ class WarehouseWriter:
             return reported
         count = int(db.execute(_tsql.count_sql(schema_name, table)).fetchone()[0])
         return count - (before or 0)
+
+    def _insert_staged(self, schema_name: str, table: str, folder: onelake.OneLakePath) -> int:
+        """Recover server token failure through the existing authenticated SQL connection.
+
+        Read staged Parquet a batch at a time. Neither the whole table nor a whole
+        staging chunk is materialized, and every file/Parquet/SQL handle is closed.
+        The caller verifies the row count and commits or undoes the entire write.
+        """
+        count_sql = _tsql.count_sql(schema_name, table)
+        cursor = self.db.get().cursor()
+        total = 0
+        try:
+            before = int(cursor.execute(count_sql).fetchone()[0])
+            index = 0
+            while True:
+                path = folder.join(f"chunk_{index:06d}.parquet").abfss()
+                if not self.storage.exists(path):
+                    break
+                fs, fs_path = self.storage._remote(path)  # noqa: SLF001
+                with fs.open(fs_path, "rb") as handle:
+                    parquet = pq.ParquetFile(handle)
+                    try:
+                        for batch in parquet.iter_batches(batch_size=5000):
+                            sql = _tsql.insert_sql(schema_name, table, batch.schema.names)
+                            if hasattr(cursor, "fast_executemany"):
+                                cursor.fast_executemany = _tsql.widest_first(batch)
+                            cursor.executemany(sql, _tsql.rows_as_params(batch))
+                            total += batch.num_rows
+                    finally:
+                        parquet.close()
+                index += 1
+            after = int(cursor.execute(count_sql).fetchone()[0])
+            loaded = after - before
+            if loaded != total:
+                raise ShapeError(
+                    f"parameterized INSERT loaded {loaded:,} of the {total:,} sent rows "
+                    f"of {schema_name}.{table}"
+                )
+            return loaded
+        finally:
+            close = getattr(cursor, "close", None)
+            if close is not None:
+                close()
 
     def _cleanup(self, folder: onelake.OneLakePath) -> None:
         try:

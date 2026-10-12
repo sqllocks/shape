@@ -12,7 +12,7 @@ The workflow job (``fabric-git-sync-live``) runs only when the secrets are set; 
     FABRIC_GIT_TOKEN=... [FABRIC_GIT_USER=x-access-token] [SHAPE_LIVE_RESULT=result.json] \\
     pytest -m live plugins/shape-fabric/tests/test_live_git_sync.py
 
-``FABRIC_GIT_TOKEN`` needs write access to the repository. A missing variable skips the test with
+``FABRIC_GIT_TOKEN`` needs write access to the repository. A missing variable fails the test with
 the variable's name; a service failure remains a failure. When ``SHAPE_LIVE_RESULT`` names a file, a
 ``shape-live-check`` JSON result is written there, also when the test fails.
 """
@@ -50,7 +50,7 @@ OPERATION_SECONDS = 900
 def need(name):
     value = os.environ.get(name)
     if not value:
-        pytest.skip(f"live test needs {name}")
+        pytest.fail(f"live test needs {name}")
     return value
 
 

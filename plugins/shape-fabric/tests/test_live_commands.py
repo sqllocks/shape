@@ -10,7 +10,7 @@ skipped by a decorator). Run by hand with the variables you have:
 
     pytest -m live plugins/shape-fabric/tests/test_live_commands.py -k deploy
 
-A missing variable skips the test and names it. ``SHAPE_RECORD_DIR`` also writes the real Fabric
+A missing variable fails the test and names it. ``SHAPE_RECORD_DIR`` also writes the real Fabric
 REST conversation as a scrubbed tape (``source: live``) for review. Every test removes what it
 created.
 """
@@ -36,7 +36,7 @@ RECORD = os.environ.get("SHAPE_RECORD_DIR")
 def need(name):
     value = os.environ.get(name)
     if not value:
-        pytest.skip(f"live test needs {name}")
+        pytest.fail(f"live test needs {name}")
     return value
 
 
@@ -73,7 +73,7 @@ def real_api():
 
 
 @pytest.fixture
-def conversation(monkeypatch):
+def conversation(monkeypatch, request):
     """The real Fabric REST API, recorded when SHAPE_RECORD_DIR is set."""
     if not RECORD:
         yield None
@@ -87,7 +87,7 @@ def conversation(monkeypatch):
     tape = Tape(channel="http", scenario="live_commands")
     monkeypatch.setattr(commands, "API_TRANSPORT", tuple_transport(TapeTransport(tape, inner)))
     yield tape
-    save(Path(RECORD) / "live_commands.json", tape.document("live", None))
+    save(Path(RECORD) / f"live_commands_{request.node.name}.json", tape.document("live", None))
 
 
 def test_deploy_notebook_creates_a_notebook_item_and_it_can_be_removed(conversation, capsys):
@@ -99,8 +99,9 @@ def test_deploy_notebook_creates_a_notebook_item_and_it_can_be_removed(conversat
             ["deploy-notebook", "retail", "--workspace", workspace, "--notebook-name", name]
             + sign_in()
         )
-        out = capsys.readouterr().out
-        assert code == 0, out
+        captured = capsys.readouterr()
+        out = captured.out
+        assert code == 0, out + captured.err
         item = api.find_item(workspace, "Notebook", name)
         assert item is not None and item["id"] in out
     finally:

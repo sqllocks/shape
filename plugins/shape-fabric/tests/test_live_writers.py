@@ -12,7 +12,7 @@ skipped by a decorator). Run by hand with the variables you have:
 
     pytest -m live plugins/shape-fabric/tests/test_live_writers.py -k lakehouse
 
-A missing variable skips the test and names it. Set ``SHAPE_RECORD_DIR`` to also write the real
+A missing variable fails the test and names it. Set ``SHAPE_RECORD_DIR`` to also write the real
 interactions as scrubbed tapes (``source: live``) for review; the nightly job uploads them as an
 artifact. Every test removes what it created.
 """
@@ -45,7 +45,7 @@ RECORD = os.environ.get("SHAPE_RECORD_DIR")
 def need(name):
     value = os.environ.get(name)
     if not value:
-        pytest.skip(f"live test needs {name}")
+        pytest.fail(f"live test needs {name}")
     return value
 
 

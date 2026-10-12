@@ -97,6 +97,27 @@ should go on a command line (use an environment variable and pass it as an optio
 modes and `env://`, `kv://` and `file://` credential references are added to these writers by the
 sign-in work package and will apply here without a change to the sink.
 
+## Warehouse OneLake storage-token failures
+
+Warehouse `COPY INTO` reads OneLake under the SQL connection's Microsoft Entra
+identity by default. Shape's client-side credential uploads the staging files;
+it cannot supply a storage token to the Warehouse's server-side reader.
+Microsoft documents GUID-based OneLake source URLs and the permissions needed
+for Microsoft Entra or an explicitly configured Workspace Identity. A Workspace
+Identity is a separate Fabric configuration, so Shape does not switch to it
+automatically. See [the Fabric COPY authentication requirements](https://learn.microsoft.com/en-us/sql/t-sql/statements/copy-into-transact-sql?view=fabric).
+
+When the Warehouse reports SQL error **13840** while obtaining the OneLake
+storage token, Shape warns and loads the already staged Parquet through
+parameterized SQL `INSERT` on the existing connection. This path consumes at most
+5,000 rows per batch and has lower throughput than `COPY INTO`. Shape rolls back
+the failed COPY transaction, reapplies an uncommitted truncate or replace,
+verifies the number of rows loaded, and removes staging files on success or
+failure. Primary keys retain their informational Warehouse behavior. Other COPY
+errors fail the write; they do not activate this recovery path. A service
+principal still needs permission to write the Warehouse and read and write the
+staging Lakehouse.
+
 ## `synapse://`: a Synapse dedicated SQL pool
 
 `synapse` (`shape.sinks`, `shape_fabric.SynapseSink`; the writer is `shape_fabric.SynapseWriter`)
@@ -158,7 +179,7 @@ Out of scope: serverless SQL pools, Synapse Spark pools and Synapse pipelines (t
 
 Run `pytest -m live plugins/shape-fabric/tests/test_live_owner_matrix.py` for the Owner matrix,
 and the other `test_live*.py` modules for emitters, deployed notebooks and scale routing.
-Missing credentials skip with the variable name. Service errors and failed assertions fail;
+Missing credentials fail with the variable name (P6-07a and LIVE-FIX #15). Service errors and failed assertions fail;
 these tests never use interactive sign-in or xfail. Local contract tests do not replace this
 live validation.
 
@@ -180,6 +201,25 @@ Use dedicated test items: the tests create unique names and remove what they cre
 | Notebook deploy and setup | `FABRIC_WORKSPACE_ID`, plus the common SPN variables, in `test_live_commands.py` |
 | Spark worker | `FABRIC_WORKSPACE_ID`, `FABRIC_LAKEHOUSE_ID`, plus common SPN variables; set `FABRIC_LAKEHOUSE_SCHEMA` when the test Lakehouse has schemas enabled |
 | Synapse dedicated-pool round trip | `SHAPE_TEST_SYNAPSE_URI`, `SHAPE_TEST_SYNAPSE_STAGING`, `SHAPE_TEST_SYNAPSE_AUTH=spn`, `SHAPE_TEST_SYNAPSE_TENANT_ID`, `SHAPE_TEST_SYNAPSE_CLIENT_ID`, `SHAPE_TEST_SYNAPSE_CLIENT_SECRET` |
+
+The Owner matrix needs two distinct Lakehouse items and a sample Warehouse:
+
+- `FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH` is the root Tables URI of a **classic,
+  schema-less Lakehouse**, for example
+  `onelake://<workspace-guid>/<classic-lakehouse-guid>/Tables`.
+- `FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH` is the root Tables URI of a **schema-enabled
+  Lakehouse**, for example `onelake://<workspace-guid>/<schema-lakehouse-guid>/Tables`.
+  Do not append `/dbo` or a table name. The matrix selects `dbo`, or the existing
+  schema named by `FABRIC_LAKEHOUSE_SCHEMA`, when writing and reading its tables.
+- `FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING` names a **Fabric Warehouse containing
+  sample tables**, for example
+  `Data Source=<sql-endpoint>.datawarehouse.fabric.microsoft.com;Initial Catalog=<sample-warehouse-name>`.
+  Copy the SQL endpoint host from that Warehouse's settings. Do not include a
+  password, `UID` or `Authentication`: the common service-principal variables
+  provide the token. The Microsoft ODBC Driver 18 must be installed; Shape adds
+  the driver when it is absent from the string. The matrix profiles `dbo`, or
+  `FABRIC_SAMPLE_WAREHOUSE_SCHEMA` if set. Grant the principal permission to read
+  its tables and catalog metadata.
 
 `profile-db` receives its connection and secret through `SHAPE_SQLSERVER_CONNECTION_STRING`
 and `SHAPE_SQLSERVER_CLIENT_SECRET`; the matrix sets these from the Fabric variables for each

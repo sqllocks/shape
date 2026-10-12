@@ -317,10 +317,26 @@ class FabricJobTracker:
         }
         reason = data.get("failureReason")
         if reason:
-            out["error"] = str(
-                reason.get("message", reason) if isinstance(reason, dict) else reason
+            out["error"] = _safe(self._failure_message(reason))
+        elif out["status"] == "failed":
+            out["error"] = (
+                "Fabric returned Failed without a failure reason; inspect notebook run "
+                f"{run_id} in workspace {workspace_id} (item {item_id})"
             )
         return out
+
+    @staticmethod
+    def _failure_message(reason: Any) -> str:
+        """Keep the Fabric code and nested Spark/Livy diagnostics, rather than only the title."""
+        if not isinstance(reason, dict):
+            return str(reason)
+        code, message = reason.get("errorCode"), reason.get("message")
+        text = ": ".join(str(value) for value in (code, message) if value)
+        details = reason.get("moreDetails") or []
+        if isinstance(details, list):
+            extra = [FabricJobTracker._failure_message(detail) for detail in details]
+            text = "; ".join([text, *(value for value in extra if value)]).strip("; ")
+        return text or json.dumps(reason, default=str, sort_keys=True)
 
     def cancel(self, workspace_id: str, item_id: str, run_id: str) -> dict[str, Any]:
         self._http.request("POST", self._url(workspace_id, item_id, run_id) + "/cancel")

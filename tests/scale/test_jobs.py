@@ -511,3 +511,33 @@ def test_a_malformed_job_file_does_not_break_the_list(tmp_path, content):
     assert [r.job_id for r in JobStore(tmp_path).list()] == [good.job_id]
     with pytest.raises(ValueError, match="local-bad"):
         JobStore(tmp_path).get("local-bad")
+
+
+def test_fabric_failure_keeps_code_and_nested_spark_reason_without_secrets(store, capsys):
+    from shape.cli.jobs import _show
+
+    fake = FakeFabric()
+    fake.job_status = "Failed"
+    fake.failure = {
+        "errorCode": "NotebookExecutionFailed",
+        "message": "Spark session failed",
+        "moreDetails": [
+            {"errorCode": "LivySessionError", "message": "missing library; password=private-value;"}
+        ],
+    }
+    spark_job(store)
+    status = Jobs(store, transport=fake).status("spark-t1", TOKEN)
+    assert "NotebookExecutionFailed: Spark session failed" in status["error"]
+    assert "LivySessionError: missing library" in status["error"]
+    assert "private-value" not in status["error"]
+    _show(status)
+    assert "LivySessionError: missing library" in capsys.readouterr().out
+
+
+def test_fabric_failed_without_reason_is_an_explicit_diagnostic(store):
+    fake = FakeFabric()
+    fake.job_status = "Failed"
+    spark_job(store)
+    status = Jobs(store, transport=fake).status("spark-t1", TOKEN)
+    assert "Fabric returned Failed without a failure reason" in status["error"]
+    assert RUN in status["error"]

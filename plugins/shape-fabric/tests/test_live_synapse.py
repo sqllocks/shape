@@ -7,7 +7,7 @@
 Signs in with the Azure CLI session (``az login``); ``SHAPE_TEST_SYNAPSE_AUTH`` names another
 ``--auth`` mode (``msi``, ``spn``, ...), with ``SHAPE_TEST_SYNAPSE_TENANT_ID``,
 ``SHAPE_TEST_SYNAPSE_CLIENT_ID`` and ``SHAPE_TEST_SYNAPSE_CLIENT_SECRET`` for a service principal.
-The test skips, naming the missing setting, when the connection settings are absent. It writes a
+The test fails, naming the missing setting, when the connection settings are absent. It writes a
 table with a unique name, reads it back, compares the row count and the dataset id
 (``shape.repro.dataset_id``) of what was written with what was read, and drops the table.
 """
@@ -29,7 +29,7 @@ pytestmark = pytest.mark.live
 def need(*names):
     missing = [n for n in names if not os.environ.get(n)]
     if missing:
-        pytest.skip(f"live test needs {', '.join(missing)}")
+        pytest.fail(f"live test needs {', '.join(missing)}")
     return [os.environ[n] for n in names]
 
 
