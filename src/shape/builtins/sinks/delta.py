@@ -60,7 +60,9 @@ def _lakehouse_tables(base: str, options: dict[str, Any]) -> str:
     root = loc.path.rstrip("/")
     explicit = options.get("schema_enabled")
     name = options.get("schema_name") or None
-    onelake_tables = bool(loc.host) and is_onelake(loc.host) and (root == "Tables" or root.endswith("/Tables"))
+    onelake_tables = (
+        bool(loc.host) and is_onelake(loc.host) and (root == "Tables" or root.endswith("/Tables"))
+    )
     if not onelake_tables:
         if explicit not in (None, "", False, "false", "False", "0", 0) or name:
             raise ValueError(

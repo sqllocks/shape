@@ -95,5 +95,8 @@ def test_resolve_layout_asks_fabric_with_the_credential_once():
 
 def test_a_schema_outside_a_lakehouse_tables_root_is_refused():
     with pytest.raises(ValueError, match="OneLake Lakehouse"):
-        _location("delta+abfss://acct.dfs.core.windows.net".replace("acct", "c@acct")
-                  + "/data", "t", {"account_key": "k", "schema_name": "dbo"})
+        _location(
+            "delta+abfss://acct.dfs.core.windows.net".replace("acct", "c@acct") + "/data",
+            "t",
+            {"account_key": "k", "schema_name": "dbo"},
+        )
