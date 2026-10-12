@@ -41,6 +41,9 @@ RUNTIME_FIELDS = (
     (r"/tmp/pytest-[^/]+/pytest-\d+/[^/]+/", "<pytest-work>/"),
     (r'File "[^"\n]*/([^/"\n]+)", line \d+', r'File "<python>/\1", line <line>'),
     (r"\b\d{2}:\d{2}:\d{2}\b(?=  )", "<clock>"),
+    # pytest appends "(H:MM:SS)" to its summary only when the session ran for a minute or
+    # more, so whether the clock appears at all is itself a runtime value.
+    (r"\b(in <seconds>s) \(<elapsed-clock>\)", r"\1"),
 )
 CRYPTO_FIELDS = (
     (r'("(?:key_id|signed_by)":\s*")[0-9a-f]{16}', r"\1<key-id>"),

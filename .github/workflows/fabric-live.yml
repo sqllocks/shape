@@ -1,0 +1,183 @@
+name: Fabric live
+# The Fabric live tests (plugins/shape-fabric/tests, marker `live`) against the shape-test
+# workspace, as the service principal shape-ci-fabric. Nightly, and on demand against any ref.
+# Nothing is skipped by this workflow: a test that lacks a value fails (or skips) by name, and the
+# step summary lists every live test with its outcome and reason.
+on:
+  schedule: [{cron: '17 7 * * *'}]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag or SHA to test (default - the ref that triggered the run)
+        required: false
+        default: ''
+        type: string
+permissions:
+  contents: read
+concurrency:
+  # One run at a time: two runs must never write the same workspace together.
+  group: fabric-live
+  cancel-in-progress: false
+jobs:
+  fabric-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: fabric-live
+    env:
+      # Environment variables and secrets, under the names the environment holds them.
+      FABRIC_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
+      FABRIC_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
+      FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
+      FABRIC_WORKSPACE_ID: ${{ vars.FABRIC_WORKSPACE_ID }}
+      FABRIC_LAKEHOUSE_ID: ${{ vars.FABRIC_LAKEHOUSE_ID }}
+      FABRIC_SQL_ENDPOINT: ${{ vars.FABRIC_SQL_ENDPOINT }}
+      FABRIC_WAREHOUSE: ${{ vars.FABRIC_WAREHOUSE }}
+      FABRIC_EVENTHOUSE_URI: ${{ vars.FABRIC_EVENTHOUSE_URI }}
+      FABRIC_KQL_DB: ${{ vars.FABRIC_KQL_DB }}
+      FABRIC_EVENTSTREAM_CONNECTION_STRING: ${{ secrets.FABRIC_EVENTSTREAM_CONNECTION_STRING }}
+      # The Fabric SQL database item (shape_sqldb). No login in it: the service principal's token is passed.
+      FABRIC_SQL_CONNECTION_STRING: ${{ secrets.FABRIC_SQL_CONNECTION_STRING }}
+      # DefaultAzureCredential signs in as the same service principal.
+      AZURE_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
+      SHAPE_RECORD_DIR: ${{ github.workspace }}/live-tapes
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Microsoft ODBC Driver 18 for SQL Server and unixODBC
+        run: |
+          curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/ubuntu/$(lsb_release -rs)/prod $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
+      - name: Install Shape and the plugins from this checkout
+        run: >-
+          pip install -e '.[dev,azure]'
+          -e 'plugins/shape-fabric[sqlserver,eventhubs,entra]'
+          -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e plugins/shape-domains
+      - name: Derive the values the tests read (no secret is printed)
+        run: |
+          python - <<'PY'
+          import os
+          import sys
+          from urllib.parse import urlsplit
+
+          env = os.environ
+          out = {}
+          notes = []
+
+          def have(*names):
+              return all(env.get(n) for n in names)
+
+          # Lakehouse Files folder, the onelake:// form the tests document.
+          if have("FABRIC_WORKSPACE_ID", "FABRIC_LAKEHOUSE_ID"):
+              out["FABRIC_STAGING_PATH"] = (
+                  f"onelake://{env['FABRIC_WORKSPACE_ID']}/{env['FABRIC_LAKEHOUSE_ID']}"
+                  "/Files/shape_staging"
+              )
+          else:
+              notes.append("FABRIC_STAGING_PATH not derived: needs FABRIC_WORKSPACE_ID and FABRIC_LAKEHOUSE_ID")
+
+          # Warehouse connection string (no login in it: the principal signs in with a token).
+          if have("FABRIC_SQL_ENDPOINT", "FABRIC_WAREHOUSE"):
+              out["FABRIC_WAREHOUSE_CONNECTION_STRING"] = (
+                  f"Data Source={env['FABRIC_SQL_ENDPOINT']};Initial Catalog={env['FABRIC_WAREHOUSE']}"
+              )
+          else:
+              notes.append("FABRIC_WAREHOUSE_CONNECTION_STRING not derived: needs FABRIC_SQL_ENDPOINT and FABRIC_WAREHOUSE")
+
+          # Eventhouse: eventhouse://<query-uri host>/<database>, and a bearer token for it.
+          uri = env.get("FABRIC_EVENTHOUSE_URI", "")
+          db = env.get("FABRIC_KQL_DB", "")
+          if uri:
+              parts = urlsplit(uri if "://" in uri else "https://" + uri)
+              host = parts.netloc
+              database = parts.path.strip("/").split("/")[0] or db
+              if host and database:
+                  out["FABRIC_EVENTHOUSE_URI"] = f"eventhouse://{host}/{database}"
+                  if have("FABRIC_TENANT_ID", "FABRIC_CLIENT_ID", "FABRIC_CLIENT_SECRET"):
+                      from azure.identity import ClientSecretCredential
+
+                      cred = ClientSecretCredential(
+                          env["FABRIC_TENANT_ID"], env["FABRIC_CLIENT_ID"], env["FABRIC_CLIENT_SECRET"]
+                      )
+                      token = cred.get_token(f"https://{host}/.default").token
+                      print(f"::add-mask::{token}")
+                      out["FABRIC_EVENTHOUSE_TOKEN"] = token
+                  else:
+                      notes.append("FABRIC_EVENTHOUSE_TOKEN not derived: needs the service principal values")
+              else:
+                  notes.append("FABRIC_EVENTHOUSE_URI not normalised: needs a host and FABRIC_KQL_DB")
+          else:
+              notes.append("FABRIC_EVENTHOUSE_URI is not set")
+
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as f:
+              for key, value in out.items():
+                  assert "\n" not in value
+                  f.write(f"{key}={value}\n")
+          for key in out:
+              print(f"derived {key}")
+          for note in notes:
+              print(f"::warning::{note}")
+          sys.stdout.flush()
+          PY
+      - name: Live tests
+        run: |
+          mkdir -p "$SHAPE_RECORD_DIR"
+          set +e
+          python -m pytest -m live plugins/shape-fabric/tests -q -rs --junitxml=live-junit.xml
+          echo "pytest_exit=$?" >> "$GITHUB_ENV"
+          exit 0
+      - name: Step summary - which live tests ran, passed, failed, skipped
+        if: always()
+        run: |
+          python - <<'PY'
+          import os
+          import xml.etree.ElementTree as ET
+
+          path = "live-junit.xml"
+          lines = ["## Fabric live tests", ""]
+          if not os.path.exists(path):
+              lines.append("pytest produced no result file (it did not start; see the log).")
+          else:
+              rows = {"passed": [], "failed": [], "skipped": []}
+              for case in ET.parse(path).getroot().iter("testcase"):
+                  name = f"{case.get('classname', '').split('.')[-1]}::{case.get('name')}"
+                  bad = case.find("failure") if case.find("failure") is not None else case.find("error")
+                  skip = case.find("skipped")
+                  if bad is not None:
+                      rows["failed"].append((name, (bad.get("message") or "").splitlines()[:1]))
+                  elif skip is not None:
+                      rows["skipped"].append((name, [skip.get("message") or ""]))
+                  else:
+                      rows["passed"].append((name, []))
+              lines.append(
+                  f"passed {len(rows['passed'])} / failed {len(rows['failed'])} / skipped {len(rows['skipped'])}"
+              )
+              for kind in ("failed", "skipped", "passed"):
+                  if rows[kind]:
+                      lines += ["", f"### {kind}", ""]
+                      for name, why in rows[kind]:
+                          reason = f" - {why[0][:300]}" if why and why[0] else ""
+                          lines.append(f"- `{name}`{reason}")
+          open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8").write("\n".join(lines) + "\n")
+          PY
+      - name: Upload the scrubbed tapes and the result file
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fabric-live-results
+          path: |
+            live-tapes
+            live-junit.xml
+          if-no-files-found: ignore
+      - name: Fail the run when a live test failed
+        if: always()
+        run: |
+          code="${pytest_exit:-missing}"
+          echo "pytest exit code: $code"
+          [ "$code" = "0" ]
