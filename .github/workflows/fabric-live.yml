@@ -265,7 +265,7 @@ jobs:
           open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8").write(text + "\n")
           PY
       - name: Git integration status of the Git workspace (read-only GETs, exact responses)
-        # What Fabric answers to the CI service principal for the Git-connected workspace. Two GET
+        # What Fabric answers to the CI service principal for the Git-connected workspace. Read-only GET
         # requests, nothing is connected or initialised.
         if: always()
         run: |
@@ -281,7 +281,23 @@ jobs:
           cred = ClientSecretCredential(env["FABRIC_TENANT_ID"], env["FABRIC_CLIENT_ID"], env["FABRIC_CLIENT_SECRET"])
           token = cred.get_token("https://api.fabric.microsoft.com/.default").token
           out = ["## Git integration of the Git workspace", ""]
-          for path in ("git/connection", "git/status"):
+          # The connections this principal can use (Microsoft: a principal other than the one that
+          # connected the workspace needs access to the cloud connection and its own Git credentials).
+          conn_req = urllib.request.Request(
+              "https://api.fabric.microsoft.com/v1/connections", headers={"Authorization": f"Bearer {token}"}
+          )
+          try:
+              with urllib.request.urlopen(conn_req, timeout=60) as resp:
+                  items = json.loads(resp.read()).get("value", [])
+              rows = [
+                  {k: c.get(k) for k in ("id", "displayName", "connectivityType", "connectionDetails")}
+                  for c in items
+                  if "git" in json.dumps(c).lower()
+              ]
+              out += ["### GET /v1/connections (Git-related, as the CI principal)", "```json", json.dumps(rows)[:3000], "```"]
+          except urllib.error.HTTPError as exc:
+              out += [f"### GET /v1/connections -> HTTP {exc.code}", "```json", exc.read().decode()[:1500], "```"]
+          for path in ("git/connection", "git/status", "git/myGitCredentials"):
               url = f"https://api.fabric.microsoft.com/v1/workspaces/{ws}/{path}"
               req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
               try:
