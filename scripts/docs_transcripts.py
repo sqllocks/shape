@@ -34,6 +34,8 @@ RUNTIME_FIELDS = (
     ),
     (r"\(\d+(?:\.\d+)?s\)", "(<seconds>s)"),
     (r"\b[\d,]+(?:\.\d+)? events/s\b", "<rate> events/s"),
+    # librdkafka stamps each log line with the epoch time; the warning text stays exact.
+    (r"(?m)^(%\d\|)\d{10}\.\d{3}(\|)", r"\1<epoch>\2"),
     (r"\b(?:Elapsed|elapsed|duration|Duration):\s*\d+(?:\.\d+)?s", "elapsed: <seconds>s"),
     (r"\b\d+(?:\.\d+)? seconds\b", "<seconds> seconds"),
     (r"\b(in|after) (?:\d+(?:\.\d+)?|…)s\b", r"\1 <seconds>s"),

@@ -148,38 +148,3 @@ def test_main_writes_files_before_start_and_keeps_them_for_later_logins(tmp_path
     ready.assert_called_once_with("a" * 64, "private-password")
     assert (prepared[0] / "docs-users.properties").exists()
     assert "SCHEMA_REGISTRY_CONTAINER=" + "a" * 64 in (tmp_path / "job-env").read_text()
-
-
-def test_kafka_readiness_waits_for_an_idempotent_producer_id(monkeypatch):
-    import docs_owner_kafka_ready as ready
-
-    outcomes = iter([(1, []), (0, [None])])
-    configs = []
-
-    class FakeProducer:
-        def __init__(self, config):
-            configs.append(config)
-            self.remaining, self.result = next(outcomes)
-
-        def produce(self, topic, value, on_delivery):
-            self.callback = on_delivery
-
-        def flush(self, timeout):
-            for outcome in self.result:
-                self.callback(outcome, None)
-            return self.remaining
-
-    monkeypatch.setattr(ready, "Producer", FakeProducer)
-    monkeypatch.setattr(ready.time, "sleep", lambda _s: None)
-    ready.wait()
-    assert len(configs) == 2 and all(c["enable.idempotence"] for c in configs)
-
-
-def test_workflow_waits_for_kafka_before_running_examples():
-    steps = yaml.safe_load((ROOT / ".github/workflows/docs-transcripts.yml").read_text())["jobs"][
-        "capture"
-    ]["steps"]
-    runs = [step.get("run", "") for step in steps]
-    ready = next(i for i, r in enumerate(runs) if "docs_owner_kafka_ready.py" in r)
-    capture = next(i for i, r in enumerate(runs) if "docs_owner_transcripts.py" in r)
-    assert ready < capture

@@ -190,7 +190,9 @@ Real receipts: nine of eleven passed, now including delta-fallback. Two failed.
   custom editor claimed that virtual document, so no text diff opened and the tabs held
   only a custom editor. The virtual path is now `/<name>.txt`. The extension suite
   (5 tests) and the installed-VSIX docs command both pass locally after the change.
-- kafka-avro printed a real librdkafka `GETPID ... Coordinator load in progress` warning
-  because the fresh broker had not loaded its transaction coordinator. The earlier run
-  passed by timing. The expected output is unchanged; a new workflow step
-  (scripts/docs_owner_kafka_ready.py) waits for an idempotent producer ID first.
+- kafka-avro was not a Kafka fault. Both runs printed the same real librdkafka
+  `GETPID ... Coordinator load in progress` warning; the only difference was its
+  epoch timestamp (`%4|<epoch>|GETPID`), which the comparison did not treat as a runtime
+  field. The expected output is unchanged; only that timestamp is now variable, and the
+  warning text stays exact (tested). A first attempt to wait the warning away was
+  withdrawn because it would have changed the recorded real output.
