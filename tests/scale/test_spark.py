@@ -36,9 +36,27 @@ STORAGE = "storage-token-xyz"
 
 def test_owner_schema_enabled_lakehouse_is_passed_to_the_worker():
     fake = FakeFabric()
+    fake.schema_enabled = True
     router(fake, lakehouse_schema="dbo").submit(SPEC)
     conf = json.loads(fake.calls[-1]["body"])["executionData"]["configuration"]["conf"]
     assert conf["spark.shape.lakehouseSchema"] == "dbo"
+
+
+def test_a_schema_enabled_lakehouse_defaults_to_dbo_when_no_schema_is_given():
+    fake = FakeFabric()
+    fake.schema_enabled = True
+    router(fake).submit(SPEC)
+    conf = json.loads(fake.calls[-1]["body"])["executionData"]["configuration"]["conf"]
+    assert conf["spark.shape.lakehouseSchema"] == "dbo"
+
+
+def test_a_schema_on_a_classic_lakehouse_is_refused_before_anything_is_uploaded():
+    from shape.integrations.fabric.lakehouse_kind import LakehouseKindError
+
+    fake = FakeFabric()
+    with pytest.raises(LakehouseKindError, match="not schema-enabled"):
+        router(fake, lakehouse_schema="dbo").submit(SPEC)
+    assert [m for m, _ in fake.methods()] == ["GET"]
 
 
 def test_owner_spark_worker_writes_under_the_existing_schema():
@@ -82,13 +100,14 @@ def test_submit_uploads_the_spec_finds_the_notebook_and_starts_the_run():
     steps = [
         (m, u.replace(WS, "WS").replace(LH, "LH").replace(NB, "NB")) for m, u in fake.methods()
     ]
-    assert steps[0] == (
+    assert steps[0][1].endswith("/workspaces/WS/lakehouses/LH")  # the kind is asked, not guessed
+    assert steps[1] == (
         "PUT",
         f"https://onelake.dfs.fabric.microsoft.com/WS/LH/Files/shape_jobs/{run.run_id}.json",
     )
-    assert [m for m, _ in steps] == ["PUT", "PATCH", "PATCH", "GET", "POST"]
-    assert steps[3][1].endswith("/workspaces/WS/notebooks")
-    assert steps[4][1].endswith("/workspaces/WS/items/NB/jobs/instances")
+    assert [m for m, _ in steps] == ["GET", "PUT", "PATCH", "PATCH", "GET", "POST"]
+    assert steps[4][1].endswith("/workspaces/WS/notebooks")
+    assert steps[5][1].endswith("/workspaces/WS/items/NB/jobs/instances")
     assert run.notebook_item_id == NB and run.fabric_run_id.startswith(RUN[:-1])
     assert run.spec_path == f"shape_jobs/{run.run_id}.json"
     (uploaded,) = fake.uploaded_specs()

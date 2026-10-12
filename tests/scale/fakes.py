@@ -30,6 +30,7 @@ class FakeFabric:
         self.queued_errors: list[int] = []
         self.runs = 0
         self.created: dict[str, Any] | None = None
+        self.schema_enabled = False
 
     def __call__(
         self, method: str, url: str, headers: Any, body: bytes | None, timeout: float
@@ -51,6 +52,10 @@ class FakeFabric:
         if not url.startswith(FABRIC_API):
             return HttpResponse(404, b"")
         rest = path[len(FABRIC_API) :]
+        if method == "GET" and rest == f"/workspaces/{WS}/lakehouses/{LH}":
+            return self._json(
+                {"id": LH, "properties": {"defaultSchema": "dbo"} if self.schema_enabled else {}}
+            )
         if method == "GET" and rest == f"/workspaces/{WS}/notebooks":
             return self._json({"value": self.notebooks})
         if method == "POST" and rest == f"/workspaces/{WS}/items":

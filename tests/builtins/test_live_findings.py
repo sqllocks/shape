@@ -45,9 +45,9 @@ def test_a_time_range_stays_text():
 )
 def test_delta_prefix_and_explicit_lakehouse_schema(schema_name, folder):
     options = {"account_key": "contract-value", "table_prefix": "shape_"}
+    options["schema_enabled"] = bool(schema_name)
     if schema_name:
         options["schema_name"] = schema_name
-        options["schema_enabled"] = True
     base = "delta+abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Tables"
     target, _ = _location(base, "orders", options)
     assert (

@@ -352,7 +352,24 @@ class FabricSparkRouter:
             raise RuntimeError("Fabric accepted the job but returned no run id")
         return run_id
 
+    def resolve_lakehouse_schema(self) -> str | None:
+        """The schema folder the worker writes under: ``None`` for a classic Lakehouse. Asks
+        Fabric which kind the Lakehouse is (never guessed): a schema-enabled one gets the given
+        schema, or ``dbo``; a schema given for a classic one is an error."""
+        from shape.integrations.fabric.lakehouse_kind import resolve_layout
+
+        def fetch(_path: str, _body: Any = None) -> Mapping[str, Any]:
+            url = f"{FABRIC_API}/workspaces/{self._workspace}/lakehouses/{self._lakehouse}"
+            return self._http.request("GET", url).json_object()
+
+        layout = resolve_layout(
+            self._workspace, self._lakehouse, schema_name=self._lakehouse_schema, fetch=fetch
+        )
+        self._lakehouse_schema = layout.schema
+        return layout.schema
+
     def submit(self, spec: Mapping[str, Any]) -> SparkRun:
+        self.resolve_lakehouse_schema()
         run_id = uuid.uuid4().hex
         spec_path = self.upload_spec(spec, run_id)
         notebook = self.get_or_create_notebook()

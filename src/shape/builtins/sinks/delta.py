@@ -43,6 +43,49 @@ def _deltalake() -> Any:
     return deltalake
 
 
+def _lakehouse_tables(base: str, options: dict[str, Any]) -> str:
+    """``base``, with the schema folder added for a schema-enabled OneLake Lakehouse.
+
+    A OneLake ``.../Tables`` root is a classic Lakehouse's table folder, or a schema-enabled one's
+    parent of its schema folders. ``schema_enabled`` says which; unset, Fabric is asked (see
+    :mod:`shape.integrations.fabric.lakehouse_kind`) and an unknown kind is an error rather than a
+    guess. ``schema_name`` (default ``dbo``) picks the schema folder.
+    """
+    from shape.builtins.sinks.azure import is_onelake
+    from shape.builtins.sources._azure_auth import NotebookUtilsCredential, _import_notebookutils
+    from shape.builtins.sources.azure import parse
+    from shape.integrations.fabric.lakehouse_kind import resolve_layout
+
+    loc = parse(base)
+    root = loc.path.rstrip("/")
+    explicit = options.get("schema_enabled")
+    name = options.get("schema_name") or None
+    onelake_tables = bool(loc.host) and is_onelake(loc.host) and (root == "Tables" or root.endswith("/Tables"))
+    if not onelake_tables:
+        if explicit not in (None, "", False, "false", "False", "0", 0) or name:
+            raise ValueError(
+                "schema_enabled and schema_name need a OneLake Lakehouse target ending in /Tables"
+            )
+        return base
+    lakehouse = root.removesuffix("Tables").rstrip("/")
+    if not lakehouse or "/" in lakehouse:
+        raise ValueError("a Lakehouse target is abfss://<workspace>@<host>/<lakehouse>/Tables")
+    credential = options.get("credential")
+    if credential is None and (utils := _import_notebookutils()) is not None:
+        credential = NotebookUtilsCredential(utils)  # a Fabric notebook asks as itself
+    layout = resolve_layout(
+        loc.container,
+        lakehouse,
+        schema_enabled=explicit,
+        schema_name=name,
+        credential=credential,
+        fetch=options.get("fabric_fetch"),
+    )
+    if layout.schema_enabled:
+        return base.rstrip("/") + "/" + str(layout.schema)
+    return base
+
+
 def _location(uri: str, table: str, options: dict[str, Any]) -> tuple[str, dict[str, str] | None]:
     """The table's location and delta-rs storage options."""
     from shape.security.names import safe_name
@@ -58,15 +101,7 @@ def _location(uri: str, table: str, options: dict[str, Any]) -> tuple[str, dict[
 
         base = uri[len(CLOUD_PREFIX) :]
         parse(base)  # validates the URI
-        enabled = options.get("schema_enabled", False)
-        if isinstance(enabled, str):
-            if enabled.lower() not in ("true", "false", "1", "0"):
-                raise ValueError("schema_enabled must be true or false")
-            enabled = enabled.lower() in ("true", "1")
-        if enabled:
-            if not base.rstrip("/").endswith("/Tables"):
-                raise ValueError("schema_enabled needs a Lakehouse target ending in /Tables")
-            base = base.rstrip("/") + "/" + safe_name(str(options.get("schema_name") or "dbo"))
+        base = _lakehouse_tables(base, options)
         # a key in AZURE_STORAGE_* is used when no credential is given, as for abfss://
         return f"{base.rstrip('/')}/{safe_name(table)}", _storage_options(
             base, _with_environment_keys(options)
