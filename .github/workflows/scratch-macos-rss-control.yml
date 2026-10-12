@@ -1,6 +1,9 @@
 name: Scratch macOS footprint control
 on:
   workflow_dispatch:
+  # A dispatch needs the file on main; this scratch branch is never merged, so a push runs it.
+  push:
+    branches: [scratch/macos-rss-control]
 permissions: {contents: read}
 env:
   REFENGINE_NAME: ${{ secrets.REFENGINE_NAME }}
