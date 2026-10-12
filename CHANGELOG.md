@@ -10,8 +10,48 @@ No unreleased changes.
 
 ## 0.9.2
 
+### Added
+
+- **Pending (lane `live/synapse`, not yet on `main`):** a Synapse dedicated SQL pool live test
+  (`plugins/shape-fabric/tests/test_live_synapse.py`) and the Synapse variables in the
+  `fabric-live` workflow, which resumes the pool before the tests and pauses it after.
+- **Pending (lane `fix/live-findings`):** `SHAPE_SQL_QUERY_TIMEOUT` (default 900 s) bounds every
+  SQL statement of the shared SQL connection helper, so a stalled load fails instead of waiting
+  forever. `SHAPE_WAREHOUSE_INSERT_SECONDS` (default 600 s) bounds the Warehouse INSERT fallback
+  per table.
+- **Pending (lane `fix/live-findings`):** reference-only CLI source credentials and a documented
+  storage environment precedence.
+
 ### Fixed
 
+- **Pending (lane `fix/live-findings`):** the nine defects from the 0.9.1 live findings:
+  the MySQL no-TLS `caching_sha2_password` crash now explains verified TLS; permanent Azure
+  sign-in errors fail once while transient errors still retry; OneLake upload and cleanup no
+  longer pick up an ambient storage account key beside the selected identity; Warehouse and
+  Synapse tables are created before `NONCLUSTERED NOT ENFORCED` keys are declared;
+  dateless hour buckets profile as text; table prefixes are applied or refused; and missing
+  Delta tables are reported with a redacted location. Fabric error codes, messages and nested
+  Spark/Livy details are kept and secrets redacted.
+- **Pending (lane `fix/live-findings`):** the Warehouse INSERT fallback is visible. When COPY INTO
+  fails with the OneLake storage-token error (SQL 13840), the load falls back to parameterized
+  INSERT from the staging files in batches of 5,000, prints a warning on stderr (cause, row
+  count, slower path), records it in `WriteResult.notes` and `summary()`, and fails naming the
+  13840 cause, with rollback, past `SHAPE_WAREHOUSE_INSERT_SECONDS`. Keys, write modes and
+  loaded-row verification are preserved. Documented in `docs/KNOWN_LIMITATIONS.md`.
+- **Pending (lane `fix/live-findings`):** Fabric long-running operations follow the regional
+  operation URL (`*.analysis.windows.net`) without sending the token to that host; empty
+  Warehouse staging folders are removed; `fast_executemany` text parameters are sized from the
+  whole batch, not the first row.
+- **Pending (lane `fix/lakehouse-schemas`):** schema-enabled Lakehouse tables are written under
+  `Tables/<schema>/<table>`, where the SQL endpoint and semantic models see them. The Delta sink
+  and the `fabric_spark` router ask Fabric (`properties.defaultSchema`) which kind of Lakehouse
+  the target is, use `dbo` unless a schema is given, refuse a schema for a classic Lakehouse, and
+  fail with the setting to pass when the kind cannot be determined.
+- **Pending (lane `fix/macos-bounded-rss`):** the macOS bounded-scan memory regression test
+  measures bytes still allocated after the scan plus the Arrow pools' exact peaks, because the
+  allocator's reserved-region counters alternate by 128 MiB between identical runs. Inputs, the
+  floor and the two-sided 10% tolerance are unchanged. This is a test-measurement change; Linux
+  and Windows keep RSS.
 - Dataset safe validation recognises only schema-column references at the documented
   per-table sampling-metadata path. The strings remain subject to PII scanning;
   full captures, raw sensitive values, leaking table payloads and malformed datasets
