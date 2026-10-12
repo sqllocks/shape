@@ -36,8 +36,11 @@ errors remain errors; the writer never silently changes the server's identity.
 
 from __future__ import annotations
 
+import contextlib
+import os
 import re
 import sys
+import time
 import uuid
 import warnings
 import zlib
@@ -56,6 +59,10 @@ from .lakehouse import write_batches
 from .sqldb import SqlConnection, check_mode, prepare_table, undo, write_many
 
 DEFAULT_CHUNK_ROWS = 1_000_000
+#: the most seconds one table may spend in the INSERT fallback (``SHAPE_WAREHOUSE_INSERT_SECONDS``
+#: overrides it): row-by-row loading into a Warehouse is far slower than COPY INTO, so a large
+#: table fails here with the cause instead of running for hours
+INSERT_FALLBACK_SECONDS = 600
 _SAFE_URL = re.compile(r"https://[A-Za-z0-9.\-]+/[A-Za-z0-9._~%@:/ \-]+")
 
 
@@ -201,7 +208,7 @@ class WarehouseWriter:
                     raise
                 note = (
                     f"{sname}.{table}: COPY INTO failed with SQL error 13840 "
-                    f"({_tsql.redact(str(exc))[:300]}); loaded {staged:,} rows with "
+                    f"({_tsql.redact(str(exc))[:300]}); loading {staged:,} rows with "
                     "parameterized INSERT in 5,000-row batches instead, which is much slower "
                     "than COPY INTO (see docs/KNOWN_LIMITATIONS.md, Fabric Warehouse COPY INTO)"
                 )
@@ -301,6 +308,9 @@ class WarehouseWriter:
         The caller verifies the row count and commits or undoes the entire write.
         """
         count_sql = _tsql.count_sql(schema_name, table)
+        raw = os.environ.get("SHAPE_WAREHOUSE_INSERT_SECONDS", "")
+        limit = int(raw) if raw.strip().isdigit() else INSERT_FALLBACK_SECONDS
+        deadline = time.monotonic() + limit
         cursor = self.db.get().cursor()
         total = 0
         try:
@@ -315,6 +325,17 @@ class WarehouseWriter:
                     parquet = pq.ParquetFile(handle)
                     try:
                         for batch in parquet.iter_batches(batch_size=5000):
+                            remaining = deadline - time.monotonic()
+                            if remaining <= 0:
+                                raise ShapeError(
+                                    f"the parameterized INSERT fallback for {schema_name}.{table} "
+                                    f"stopped after {limit} s with {total:,} rows sent: COPY INTO "
+                                    "failed with SQL error 13840 and row-by-row loading is too "
+                                    "slow for this table. Fix the OneLake credential COPY INTO "
+                                    "uses (docs/KNOWN_LIMITATIONS.md); the write was rolled back"
+                                )
+                            with contextlib.suppress(AttributeError):
+                                cursor.timeout = max(1, int(remaining))
                             sql = _tsql.insert_sql(schema_name, table, batch.schema.names)
                             if hasattr(cursor, "fast_executemany"):
                                 cursor.fast_executemany = _tsql.widest_first(batch)
