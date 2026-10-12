@@ -133,3 +133,50 @@ exit 0: 24 passed in this session. Ruff check and format-check exit 0; 2037 file
 already formatted. Notices remain byte-for-byte identical and diff checks pass.
 No owner note was resolved by the failed run; all 11 captures still need the next
 real workflow execution. No expected output or unrelated gate was changed.
+
+## Delta and VS Code correction after run 38266883768
+
+Merged the bot's committed receipts from origin/docs/transcripts-ci with a merge
+commit, preserving all captured output. Nine examples passed in that real run:
+postgres-sink, postgres-seed, kafka-doctor, kafka-avro, kafka-drift, kafka-profile,
+emit-overhead, allocator-measurement and sql-sampling-measurement. The owner scan
+is now 19. Delta and VS Code failed; their original failure receipts are retained.
+
+Delta is a documentation error, not just a missed environment install: the page
+had no extras install command, and DeltaSource.can_open explicitly rejects a
+local delta:// URI. The example now installs [azure,delta-fallback] quietly and
+uses the supported local directory path. Azure dependencies are provided for
+cloud sources; the delta-fallback extra provides DuckDB. Each capture workflow
+starts a fresh .venv on its fresh runner, and executes that page command verbatim.
+No expected output was changed. A regression checks the install ordering and
+verifies that the actual source accepts the local fixture path and rejects the
+unsupported URI.
+
+The VS Code fixture was already committed and supplied as a launch workspace.
+The harness now verifies the open workspace, its git root and HEAD:demo.shape,
+sets the real installed Shape executable in the isolated user settings, awaits
+the command, and polls all tab groups for the matching Shape diff for up to 10s.
+The original TabInputTextDiff assertion is unchanged. Delayed presentation,
+inactive-group presentation, timeout, unrelated tabs and malformed URIs are
+covered by five Node tests. The real installed VSIX remains the acceptance;
+unit test doubles are never uploaded as transcript evidence.
+
+Kerberos was NOT built or captured. The supported AD authentication prerequisites
+are an Active Directory domain controller, a SQL Server service account with an
+MSSQLSvc SPN and service keytab, AD-backed SQL logins, and a client principal's
+keytab. The SQL Server Linux container can use such an external domain, but a
+standalone MIT KDC does not supply the required AD identities. A Linux GitHub
+service-container job cannot run the supported Windows Server AD domain
+controller. No external AD realm/keytabs are provided to this job. For the Owner's
+live alternative, use the existing AD-backed SQL Server, domain DNS/KDC and SQL
+network access, a synced client clock, MIT kinit, ODBC Driver 18 and the private
+client keytab (mode 600). This is an AD/SQL Server test; it does not need a Fabric
+account. The existing Kerberos example and owner note remain unchanged.
+
+Validation in this session: the Delta regression failed before the doc fix;
+the Node regression could not run before the waiter existed. After the fix,
+25 focused Python docs tests passed, as did all five Node cases. Ruff check and
+format-check pass (2037 files); Node syntax, diff and identical-notices checks
+pass. The workflow now runs these harness regressions before real capture.
+The new workflow results will be reported from actual receipts, not inferred
+from the previous run or unit doubles.

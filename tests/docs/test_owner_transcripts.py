@@ -191,3 +191,20 @@ def test_drift_fixture_applies_to_the_actual_retail_schema(tmp_path):
     after = plan.schema_at(schema, 1)
     assert before.tables["order_line"].columns["quantity"].generator["params"]["p"] == 0.6
     assert after.tables["order_line"].columns["quantity"].generator["params"]["p"] == 0.48
+
+
+def test_delta_owner_example_installs_extras_and_uses_supported_local_path():
+    from docs_owner_transcripts import BLOCK
+
+    from shape.builtins.sources.delta import DeltaSource
+
+    text = (ROOT / "docs/TROUBLESHOOTING.md").read_text()
+    command = next(block[2] for block in BLOCK.finditer(text) if block[1] == "delta-fallback")
+    assert "python -m pip --disable-pip-version-check install --quiet" in command
+    assert "'sqllocks-shape[azure,delta-fallback]'" in command
+    assert command.index("pip ") < command.index('con.execute("INSTALL delta")')
+    assert 'shape profile "$SHAPE_DOCS_REPO/tests/fixtures/delta_fallback/dv"' in command
+    source = DeltaSource()
+    fixture = str(ROOT / "tests/fixtures/delta_fallback/dv")
+    assert source.can_open(fixture)
+    assert not source.can_open("delta://" + fixture)

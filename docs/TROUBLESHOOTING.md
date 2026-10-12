@@ -39,12 +39,16 @@ shows the current writer options.
 ## Delta reports a reader feature error
 
 Shape detects deletion vectors and column mapping and selects the optional DuckDB reader.
-You need the delta-fallback dependencies and its Delta extension. The extension may download
+Install the `[azure,delta-fallback]` extras before running this example: `[azure]`
+provides the cloud-source dependencies and `[delta-fallback]` provides the optional
+DuckDB reader. A local Delta table is passed as its directory path; `delta://` is
+not a supported local source URI. The DuckDB extension may download
 on first use; that is a network call. The workflow installs the real DuckDB extension and profiles the committed deletion-vector fixture. A blocked download fails this example; it is not evidence of a working fallback.
 
 <!-- owner-example: delta-fallback -->
 
 ```bash {.runnable-owner}
+python -m pip --disable-pip-version-check install --quiet 'sqllocks-shape[azure,delta-fallback]'
 python - <<'PYTHON'
 import duckdb
 con = duckdb.connect()
@@ -53,7 +57,7 @@ con.execute("LOAD delta")
 print("DuckDB delta extension installed and loaded")
 con.close()
 PYTHON
-shape profile "delta://$SHAPE_DOCS_REPO/tests/fixtures/delta_fallback/dv" -o deletion-vectors.json
+shape profile "$SHAPE_DOCS_REPO/tests/fixtures/delta_fallback/dv" -o deletion-vectors.json
 ```
 
 <!-- owner: Delta maintainer — execute an extension-install and fallback transcript before publishing an installation command here. -->

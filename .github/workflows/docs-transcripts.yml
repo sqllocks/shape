@@ -83,6 +83,10 @@ jobs:
           .venv/bin/pip install -r requirements-docs.txt
           .venv/bin/pip install --no-deps -e . $(for plugin in plugins/*/pyproject.toml; do printf ' -e %s' "${plugin%/pyproject.toml}"; done)
           .venv/bin/pip install 'psycopg[binary]>=3.1,<4' 'confluent-kafka>=2.3' 'fastavro>=1.9' 'pyodbc>=5'
+      - name: Validate transcript harness
+        run: |
+          python -m pytest -q tests/docs/test_owner_services.py tests/docs/test_owner_transcripts.py tests/docs/test_transcripts.py
+          node tests/docs/vscode_wait.test.cjs
       - name: Microsoft ODBC driver and editor libraries
         run: |
           curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
