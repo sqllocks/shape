@@ -37,6 +37,15 @@ The 1.x compatibility promises describe future policy.
   `ALTER TABLE ... ADD CONSTRAINT ... PRIMARY KEY NONCLUSTERED (...) NOT ENFORCED` after the table is
   created. On 0.9.1, create the destination tables yourself without inline keys, optionally add that
   `ALTER TABLE`, and write with `--write-mode append`.
+- **NaN and ±Infinity are written as NULL** by the Fabric Warehouse, SQL database and Synapse
+  dedicated pool writers, because a T-SQL `float` holds only finite values. A table read back has
+  `NULL` where the generated data had `NaN`, so a row-for-row comparison of a float column must
+  treat `NaN` and `NULL` as the same cell. Other columns come back unchanged.
+- **Synapse dedicated pool: Parquet timestamps are staged as INT96.** A dedicated pool cannot read
+  Parquet `INT64` timestamps with microsecond or nanosecond precision (its `COPY INTO` fails with
+  `ClassCastException: Long cannot be cast to Binary`); INT96 loads into `datetime2` with the
+  microseconds intact
+  ([data loading strategies](https://learn.microsoft.com/azure/synapse-analytics/sql-data-warehouse/design-elt-data-loading#3-prepare-the-data-for-loading)).
 - Schema-enabled Lakehouses require `Tables/<schema>/<table>` (normally `dbo`), whereas
   0.9.1's Delta target appended a table directly below the supplied directory, so the tables did
   not appear in the SQL analytics endpoint or in semantic models. Fixed in 0.9.2: the Delta sink

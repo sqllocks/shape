@@ -41,7 +41,7 @@ concurrency:
 jobs:
   fabric-live:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     environment: fabric-live
     env:
       # Environment variables and secrets, under the names the environment holds them.
@@ -72,6 +72,18 @@ jobs:
       AZURE_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
       AZURE_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
       SHAPE_RECORD_DIR: ${{ github.workspace }}/live-tapes
+      # Synapse dedicated SQL pool round trip (test_live_synapse.py): the same service principal.
+      SHAPE_TEST_SYNAPSE_URI: ${{ vars.SHAPE_TEST_SYNAPSE_URI }}
+      SHAPE_TEST_SYNAPSE_STAGING: ${{ vars.SHAPE_TEST_SYNAPSE_STAGING }}
+      SHAPE_TEST_SYNAPSE_AUTH: spn
+      SHAPE_TEST_SYNAPSE_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
+      SHAPE_TEST_SYNAPSE_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
+      SHAPE_TEST_SYNAPSE_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
+      # Used only to resume and pause the pool around the tests.
+      SYNAPSE_SUBSCRIPTION_ID: ${{ vars.SYNAPSE_SUBSCRIPTION_ID }}
+      SYNAPSE_RESOURCE_GROUP: ${{ vars.SYNAPSE_RESOURCE_GROUP }}
+      SYNAPSE_WORKSPACE: ${{ vars.SYNAPSE_WORKSPACE }}
+      SYNAPSE_POOL: ${{ vars.SYNAPSE_POOL }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -155,6 +167,39 @@ jobs:
               print(f"::warning::{note}")
           sys.stdout.flush()
           PY
+      - name: Resume the Synapse dedicated SQL pool and wait until it is Online
+        # The pool is kept Paused between runs to save cost. The pause step below always runs.
+        timeout-minutes: 20
+        run: |
+          missing=""
+          for v in SYNAPSE_SUBSCRIPTION_ID SYNAPSE_RESOURCE_GROUP SYNAPSE_WORKSPACE SYNAPSE_POOL \
+                   FABRIC_TENANT_ID FABRIC_CLIENT_ID FABRIC_CLIENT_SECRET; do
+            [ -n "${!v}" ] || missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::cannot resume the Synapse pool, missing:$missing"
+            exit 1
+          fi
+          az config set extension.use_dynamic_install=yes_without_prompt extension.dynamic_install_allow_preview=true >/dev/null
+          az login --service-principal --username "$FABRIC_CLIENT_ID" --password "$FABRIC_CLIENT_SECRET" \
+            --tenant "$FABRIC_TENANT_ID" --output none
+          az account set --subscription "$SYNAPSE_SUBSCRIPTION_ID"
+          pool=(--name "$SYNAPSE_POOL" --workspace-name "$SYNAPSE_WORKSPACE" --resource-group "$SYNAPSE_RESOURCE_GROUP")
+          deadline=$((SECONDS + 15 * 60))
+          while true; do
+            status=$(az synapse sql pool show "${pool[@]}" --query status --output tsv)
+            echo "$(date -u +%H:%M:%S) pool $SYNAPSE_POOL status: $status"
+            case "$status" in
+              Online) break ;;
+              Paused) az synapse sql pool resume "${pool[@]}" ;;
+            esac
+            if [ "$SECONDS" -ge "$deadline" ]; then
+              echo "::error::pool $SYNAPSE_POOL was not Online within 15 minutes (last status: $status)"
+              exit 1
+            fi
+            sleep 20
+          done
+          echo "pool $SYNAPSE_POOL is Online"
       - name: Set the CI principal's Git credentials (opt-in setup, idempotent)
         # Owner-approved (2026-10-12): link the principal's own Git credentials to the existing
         # shared connection shape-fabric-sync-gh. Fabric's Git APIs use the calling principal's own
@@ -260,6 +305,47 @@ jobs:
             -o faulthandler_timeout=600 --junitxml=live-junit.xml
           echo "pytest_exit=$?" >> "$GITHUB_ENV"
           exit 0
+      - name: Pause the Synapse dedicated SQL pool (runs on success, failure and cancellation)
+        # always() also runs after a cancel. It signs in again, so it works even when the resume
+        # step failed before or after it asked Azure to resume the pool.
+        if: always()
+        timeout-minutes: 20
+        run: |
+          if [ -z "$SYNAPSE_POOL" ] || [ -z "$SYNAPSE_WORKSPACE" ] || [ -z "$SYNAPSE_RESOURCE_GROUP" ] \
+             || [ -z "$SYNAPSE_SUBSCRIPTION_ID" ]; then
+            echo "::warning::Synapse pool variables are not set; nothing was resumed, nothing to pause"
+            exit 0
+          fi
+          az config set extension.use_dynamic_install=yes_without_prompt extension.dynamic_install_allow_preview=true >/dev/null
+          az login --service-principal --username "$FABRIC_CLIENT_ID" --password "$FABRIC_CLIENT_SECRET" \
+            --tenant "$FABRIC_TENANT_ID" --output none
+          az account set --subscription "$SYNAPSE_SUBSCRIPTION_ID"
+          pool=(--name "$SYNAPSE_POOL" --workspace-name "$SYNAPSE_WORKSPACE" --resource-group "$SYNAPSE_RESOURCE_GROUP")
+          deadline=$((SECONDS + 15 * 60))
+          requested=0
+          while true; do
+            status=$(az synapse sql pool show "${pool[@]}" --query status --output tsv)
+            echo "$(date -u +%H:%M:%S) pool $SYNAPSE_POOL status: $status"
+            case "$status" in
+              Paused)
+                if [ "$requested" = "0" ]; then
+                  echo "pool $SYNAPSE_POOL was already Paused; nothing to do"
+                else
+                  echo "pool $SYNAPSE_POOL is Paused"
+                fi
+                exit 0 ;;
+              Online)
+                if [ "$requested" = "0" ]; then
+                  az synapse sql pool pause "${pool[@]}"
+                  requested=1
+                fi ;;
+            esac
+            if [ "$SECONDS" -ge "$deadline" ]; then
+              echo "::error::pool $SYNAPSE_POOL is not Paused after 15 minutes (last status: $status); pause it manually"
+              exit 1
+            fi
+            sleep 15
+          done
       - name: List what the live tests left in the workspace (read-only)
         # Lists every item in shape-test (type, name, id) so a stray item can be traced to the test
         # that made it. It deletes nothing.

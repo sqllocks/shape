@@ -173,6 +173,13 @@ Synapse dedicated SQL pool loads Parquet staged in ADLS Gen2 (`--sink-config syn
 each checks the loaded row count against the rows sent. See `docs/plugins/fabric-writers.md` and the
 README of `sqllocks-shape-databases`.
 
+**NaN and infinity become NULL.** The `warehouse://`, SQL database and `synapse://` writers store a
+floating-point `NaN` or `±Infinity` as `NULL`: a T-SQL `float` holds only finite values
+([float and real](https://learn.microsoft.com/sql/t-sql/data-types/float-and-real-transact-sql)),
+and the writer makes the value `NULL` before staging or inserting it, so a pool, Warehouse or
+database never receives one. Reading the table back gives `NULL` where `NaN` was written, and the
+dataset id of the read-back differs from the NaN-bearing input for that reason alone.
+
 ## Confirming a non-local target
 
 Writing to a database, OneLake, Event Hubs or Kafka is harmless on synthetic data and harmful on
