@@ -320,8 +320,11 @@ jobs:
           for v in FABRIC_TENANT_ID FABRIC_CLIENT_ID FABRIC_CLIENT_SECRET FABRIC_WORKSPACE_ID; do
             [ -n "${!v}" ] || missing="$missing $v"
           done
+          # The step is non-fatal on the nightly schedule, so a problem there is a warning.
+          level=error
+          [ "$GITHUB_EVENT_NAME" = "schedule" ] && level=warning
           if [ -n "$missing" ]; then
-            echo "::error::cannot refresh the semantic model, missing:$missing"
+            echo "::$level::cannot refresh the semantic model, missing:$missing"
             exit 1
           fi
           python - <<'PY'
@@ -346,7 +349,8 @@ jobs:
                   return exc.code, dict(exc.headers), exc.read().decode()[:800]
 
           def fail(message):
-              print(f"::warning::semantic model refresh: {message}")
+              level = "warning" if env.get("GITHUB_EVENT_NAME") == "schedule" else "error"
+              print(f"::{level}::semantic model refresh: {message}")
               raise SystemExit(message)
 
           code, _, items = call("GET", f"https://api.fabric.microsoft.com/v1/workspaces/{ws}/items?type=SemanticModel", fabric)
@@ -359,18 +363,21 @@ jobs:
 
           def history():
               code, _, hist = call("GET", base + "?$top=10", pbi)
-              return (hist.get("value") or []) if code == 200 and isinstance(hist, dict) else []
+              return (hist.get("value") or []) if code == 200 and isinstance(hist, dict) else None
 
-          before = {r.get("requestId") for r in history()}
+          earlier = history()
+          before = None if earlier is None else {r.get("requestId") for r in earlier}
           code, headers, out = call("POST", base, pbi, {"type": "full"})
           print("refresh requested:", code, out if isinstance(out, str) else "")
           if code not in (200, 202):
               fail(f"requesting the refresh answered HTTP {code}")
           location = {k.lower(): v for k, v in headers.items()}.get("location", "")
           request_id = location.rstrip("/").rsplit("/", 1)[-1] if "/refreshes/" in location else None
+          if request_id is None and before is None:
+              fail("cannot identify this refresh: no Location header and the refresh history was unreadable")
           for _ in range(80):
               time.sleep(10)
-              mine = [r for r in history() if (r.get("requestId") == request_id if request_id else r.get("requestId") not in before)]
+              mine = [r for r in history() or [] if (r.get("requestId") == request_id if request_id else r.get("requestId") not in before)]
               latest = mine[0] if mine else {}
               status = latest.get("status")
               print("refresh status:", status)
@@ -383,6 +390,7 @@ jobs:
               fail("the refresh did not end in 800 s")
           PY
       - name: Live tests
+        # Runs after any earlier step failure (not after a cancel): nothing is skipped.
         if: ${{ !cancelled() }}
         # Bounded below the job limit so the summary and upload steps always run. Every test name is
         # printed as it starts (-v, unbuffered), and a test that sits for 10 minutes dumps the
@@ -439,8 +447,8 @@ jobs:
             sleep 15
           done
       - name: List what the live tests left in the workspace (read-only)
-        # Lists every item in shape-test (type, name, id) so a stray item can be traced to the test
-        # that made it. It deletes nothing.
+        # Lists every item in shape-test (type and name, never the id: this log and summary are public)
+        # so a stray item can be traced to the test that made it. It deletes nothing.
         if: always()
         run: |
           python - <<'PY'
@@ -460,9 +468,11 @@ jobs:
               items += doc.get("value", [])
               more = doc.get("continuationToken")
               url = f"{base}?continuationToken={more}" if more else None
-          lines = ["## Workspace items after the live tests", ""]
+          for value in [env["FABRIC_WORKSPACE_ID"], *(i["id"] for i in items)]:
+              print(f"::add-mask::{value}")
+          lines = ["## Workspace items after the live tests", "", f"{len(items)} item(s):", ""]
           for item in sorted(items, key=lambda i: (i["type"], i["displayName"])):
-              lines.append(f"- {item['type']} `{item['displayName']}` {item['id']}")
+              lines.append(f"- {item['type']} `{item['displayName']}`")
           text = "\n".join(lines)
           print(text)
           open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8").write(text + "\n")
@@ -473,7 +483,7 @@ jobs:
         if: always()
         run: |
           python - <<'PY'
-          import json, os, urllib.error, urllib.request
+          import json, os, re, urllib.error, urllib.request
           from azure.identity import ClientSecretCredential
 
           env = os.environ
@@ -508,8 +518,13 @@ jobs:
                       code, body = resp.status, resp.read().decode()
               except urllib.error.HTTPError as exc:
                   code, body = exc.code, exc.read().decode()
-              out += [f"### GET /v1/workspaces/{ws}/{path} -> HTTP {code}", "```json", body[:4000], "```"]
+              out += [f"### GET /v1/workspaces/<git workspace>/{path} -> HTTP {code}", "```json", body[:4000], "```"]
+          # This log and summary are public: mask every GUID the responses carry and replace it in the text.
           text = "\n".join(out)
+          guids = set(re.findall(r"[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}", text)) | {ws}
+          for value in sorted(guids):
+              print(f"::add-mask::{value}")
+          text = re.sub(r"[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}", "<guid>", text)
           print(text)
           open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8").write(text + "\n")
           PY
