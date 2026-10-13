@@ -486,15 +486,24 @@ def _claim_type(claim: Mapping[str, Any]) -> str:
 
 
 def _procedure_coding(code: str) -> dict[str, str]:
-    """CPT for five digits (and Category II/III), HCPCS Level II otherwise."""
+    """Synthetic sample codes are local; recognise user-supplied standard code shapes."""
+    if re.fullmatch(r"SP-[0-9]{2}", code):
+        return _coding(f"{SYSTEM_BASE}:synthetic-procedure", code)
     cpt = re.fullmatch(r"[0-9]{4}[0-9FTU]", code) is not None
     return _coding(SYS_CPT if cpt else SYS_HCPCS, code)
 
 
 def _modifiers(line: Mapping[str, Any]) -> list[dict[str, Any]]:
-    """Numeric modifiers are CPT; lettered ones (GP, QW, ...) are HCPCS Level II."""
+    """The synthetic sample uses S0; user-supplied standard modifier shapes still work."""
     return [
-        _cc(SYS_CPT if line[f"modifier_{i}"].isdigit() else SYS_HCPCS, line[f"modifier_{i}"])
+        _cc(
+            f"{SYSTEM_BASE}:synthetic-modifier"
+            if re.fullmatch(r"S[0-9]", line[f"modifier_{i}"])
+            else SYS_CPT
+            if line[f"modifier_{i}"].isdigit()
+            else SYS_HCPCS,
+            line[f"modifier_{i}"],
+        )
         for i in range(1, 5)
         if line.get(f"modifier_{i}")
     ]

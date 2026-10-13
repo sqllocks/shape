@@ -42,7 +42,7 @@ def test_ambiguous_shapes_need_the_column_name():
     five = pa.array([f"{10000 + i * 37:05d}" for i in range(50)])
     assert d.CptDetector().detect(five, "zip") is None
     assert d.CptDetector().detect(five, "cpt_code") is not None
-    assert d.CptDetector().detect(pa.array(["0001F", "0002F", "0100T"] * 10), "x") is not None
+    assert d.CptDetector().detect(pa.array(["0000F", "0000T"] * 15), "x") is not None
     bare = pa.array([f"0002{i:07d}"[:11] for i in range(30)])
     assert d.NdcDetector().detect(bare, "phone") is None
     assert d.NdcDetector().detect(bare, "ndc_code") is not None
@@ -71,7 +71,7 @@ def test_the_installed_distribution_passes_the_plugin_kit_with_samples():
         "shape.detectors:ndc": {"positives": [NDC], "negatives": neg},
         "shape.detectors:npi": {"positives": [generate_synthetic_npis(40)], "negatives": neg},
         "shape.detectors:hcpcs": {"positives": [HCPCS], "negatives": neg},
-        "shape.detectors:cpt": {"positives": [["0001F", "0002F", "0100T"] * 10], "negatives": neg},
+        "shape.detectors:cpt": {"positives": [["0000F", "0000T"] * 15], "negatives": neg},
         "shape.detectors:mbi": {"positives": [MBI], "negatives": neg},
         "shape.detectors:member_id": {"positives": [MEMBER], "negatives": neg},
         "shape.commands:healthcare-codes": {"argv": ["list"]},

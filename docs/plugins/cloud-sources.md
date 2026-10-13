@@ -60,13 +60,22 @@ Classic Lakehouses use `onelake://<workspace>/<lakehouse>/Tables/<table>`. Schem
 Lakehouses use `.../Tables/<schema>/<table>`, normally `dbo`. Both forms resolve to the same
 core Delta reader; include the actual schema in the read URI.
 
-For Delta writes, target `delta+abfss://<workspace>@onelake.dfs.fabric.microsoft.com/<lakehouse>.Lakehouse/Tables`.
-For a schema-enabled Lakehouse, add `--sink-config delta.schema_enabled=true`; the schema
-defaults to `dbo`, or use `--schema-name sales` for an existing schema. For a classic Lakehouse,
-omit that option. `--table-prefix shape_` names the physical tables `shape_<table>` in either
-layout. A target already ending in `Tables/dbo` can also be used directly, without
-`schema_enabled`; the sink appends the table name once. See the
-[0.9.1 limitations and workarounds](../KNOWN_LIMITATIONS.md#fabric-in-091).
+For Delta writes, target `delta+abfss://<workspace>@onelake.dfs.fabric.microsoft.com/<lakehouse>.Lakehouse/Tables`
+(use the workspace and Lakehouse ids). Shape asks Fabric which kind of Lakehouse it is
+(`GET /v1/workspaces/<workspace>/lakehouses/<lakehouse>`; a schema-enabled Lakehouse reports a
+`defaultSchema`) and writes `Tables/<schema>/<table>` to a schema-enabled one, with schema `dbo`
+unless you give `--schema-name sales` (an existing schema), or `Tables/<table>` to a classic one.
+A schema given for a classic Lakehouse is an error. `--table-prefix shape_` names the physical
+tables `shape_<table>` in either layout. Tables outside a schema folder of a schema-enabled
+Lakehouse are invisible to its SQL analytics endpoint and to semantic models, so the kind is never
+guessed.
+
+The lookup needs the Lakehouse ids and a sign-in that can read the item (`--auth`, or the notebook
+identity inside Fabric). When it cannot run, the write stops with `cannot tell whether Lakehouse
+... is schema-enabled`; state the kind instead with `--sink-config delta.schema_enabled=true` or
+`=false`. A target that already ends in `Tables/dbo` is used as written, and so is a location given
+together with a raw storage token and no identity to ask with. See
+[Troubleshooting](../TROUBLESHOOTING.md#cannot-tell-whether-the-lakehouse-is-schema-enabled).
 
 ## What is tested
 
@@ -90,14 +99,22 @@ Use [the tested starters](../TUTORIAL.md) for local commands and complete output
 
 <!-- example: 0 -->
 
-**Needs a Fabric account. Not run in CI.**
+**Needs a Fabric notebook (sempy signs in as the notebook's user). Not run in CI.**
 
 ```
 pip install 'sqllocks-shape-fabric[semantic-link]'
 shape profile semantic-model://Sales/Retail/Customer -o customer.shape
 ```
 
-<!-- owner: Fabric maintainer — supply the transcript for docs/plugins/cloud-sources.md example 0. -->
+Owner-run in a Fabric notebook on 2026-10-12 (the `shape` script is not on the notebook's `PATH`, so it ran as `python -m shape`; workspace `shape-test`, model `shape_sm`, whose only table is `publicholidays`), exit 0:
+
+```text
+!{sys.executable} -m shape profile "semantic-model://shape-test/shape_sm/publicholidays" -o customer.shape; echo exit=$?
+{"shape_content_id": "d79f97dbd9ef2c41b2340cf04e10742b2da15b14c11007b18356655b998c557a", "written": "customer.shape"}
+exit=0
+```
+
+Evidence: [Owner-run notebook receipt, 2026-10-12, Shape 0.9.1](../evidence/semantic-model-notebook.md).
 
 
 `semantic-model://<workspace>/<model>/<table>`: workspace and model are names or GUIDs, and a `/`

@@ -171,7 +171,7 @@ One row per segment of every interchange, group and transaction set, envelope se
 | `position` | int64 | 1-based position of the segment in its interchange (ISA is 1) |
 | `segment_id` | string | `CLP`, `NM1`, ... |
 | `loop_id` | string, null | the 835 loop (below); null for envelope segments and other sets |
-| `elements` | list of string | every element after the segment id, as written; a composite keeps its component separators (`["HC:99213", "100"]`) |
+| `elements` | list of string | every element after the segment id, as written; a composite keeps its component separators (`["HC:SP-01", "100"]`) |
 
 Joined with the segment terminator and the element separator, the rows give back the file's
 segments exactly: a file written by the `x12-835` sink and read back has the same segments.

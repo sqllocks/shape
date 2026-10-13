@@ -162,6 +162,8 @@ def copy_into_sql(schema_name: str, table: str, folder_url: str, copy_identity: 
 class SynapseWriter(WarehouseWriter):
     """Tables into a Synapse dedicated SQL pool by ``COPY INTO``; see the module docstring."""
 
+    int96_timestamps = True  # COPY INTO reads no micro/nanosecond INT64 timestamps
+
     def __init__(
         self,
         connection_string: str | None = None,
@@ -197,6 +199,7 @@ class SynapseWriter(WarehouseWriter):
         # a dedicated pool is not a Fabric Warehouse, but takes its types (varchar(8000), no
         # (n)varchar(max)), which is what a clustered columnstore index needs
         self.db = SqlConnection(connection_string, credential, connection, connect, True)
+        self.db.ddl_autocommit = True
         self.storage = storage or Storage(credential=credential, filesystem=filesystem)
         self.schema_name = schema_name
         self.run_id = run_id or uuid.uuid4().hex[:12]

@@ -419,6 +419,7 @@ def test_delta_cloud_uri_builds_storage_options(monkeypatch: pytest.MonkeyPatch)
         "orders",
         [batch(0, 2)],
         account_key="K",
+        schema_enabled=False,  # a classic Lakehouse, stated: the kind is never guessed
     )
     location, kw = calls[0]
     assert location == "abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Tables/orders"

@@ -200,8 +200,14 @@ def test_python_kernel_gives_the_same_document(monkeypatch):
 @pytest.mark.heavy
 def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
     """The 5M vs 50M check is benchmarks/vs_refengine/profile_1to1/rss_check.py; this is its
-    small version: peak RSS of a CSV twice as large, both past the allocator ramp-up (about
-    20M rows), is within 10%. Each scan fixes Arrow's serial-reader executor sizes."""
+    small version: peak memory of a CSV twice as large, both past the allocator ramp-up (about
+    20M rows), is within 10%. Each scan fixes Arrow's serial-reader executor sizes. Linux and
+    Windows measure RSS. macOS measures the exact peak of live heap bytes: RSS and physical
+    footprint vary by more than the tolerance there on identical input, and the malloc zones'
+    own statistics count reserved 128 MiB regions. ``live_heap_peak_darwin.c`` is built with
+    clang and loaded into the scan with DYLD_INSERT_LIBRARIES; it adds each block's size on
+    allocation and removes it on free. Pools that bypass malloc (Arrow's mimalloc) are added
+    from their own exact peak."""
     import pyarrow.csv as pacsv
 
     code = (
@@ -213,15 +219,22 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
         # decoding is already serial, and the profiling kernel keeps default parallelism.
         "pa.set_io_thread_count(1)\n"
         "pa.set_cpu_count(1)\n"
-        "def peak_rss():\n"
+        "def peak_memory():\n"
         # Linux: VmHWM belongs to this process's address space. ru_maxrss survives exec on
         # Linux, so in a child of pytest it reports the parent's (larger) peak for both sizes.
         "    if sys.platform.startswith('linux'):\n"
         "        status = open('/proc/self/status').read().split('VmHWM:')[1]\n"
         "        return int(status.split()[0]) * 1024\n"
-        "    elif sys.platform == 'darwin':  # ru_maxrss is bytes on macOS\n"
-        "        import resource\n"
-        "        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss\n"
+        "    elif sys.platform == 'darwin':\n"
+        "        import ctypes\n"
+        # An AttributeError here means the interposer did not load: fail, never fall back.
+        "        live = ctypes.CDLL(None).rss_live_peak\n"
+        "        live.restype = ctypes.c_int64\n"
+        "        outside = {p.backend_name: p.max_memory() for p in (pool, csv_pool)\n"
+        "                   if p.backend_name != 'system'}\n"
+        "        parts.update(live_heap=live(), outside_malloc=sum(outside.values()),\n"
+        "                     outside_pools=outside)\n"
+        "        return parts['live_heap'] + parts['outside_malloc']\n"
         "    else:  # Windows: the peak working set\n"
         "        import ctypes\n"
         "        from ctypes import wintypes as w\n"
@@ -236,15 +249,30 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
         "        assert p.GetProcessMemoryInfo(k.GetCurrentProcess(), ctypes.byref(c), c.cb)\n"
         "        return c.peak\n"
         "pool = pa.default_memory_pool()\n"
-        "initial_peak = peak_rss()\n"
+        # The serial CSV reader uses a separate pool; the default pool omits its buffers.
+        "csv_pool = (pa.mimalloc_memory_pool()\n"
+        "    if 'mimalloc' in pa.supported_memory_backends() else pool)\n"
+        "parts = {}\n"
+        "initial_peak = peak_memory()\n"
         "profile(sys.argv[1], mode='bounded')\n"
-        "peak = peak_rss()\n"
+        "peak = peak_memory()\n"
         "print(json.dumps({'arrow_pool': pool.backend_name, 'initial_peak': initial_peak,\n"
         "    'arrow_peak': pool.max_memory(), 'io_threads': pa.io_thread_count(),\n"
-        "    'cpu_threads': pa.cpu_count()}),\n"
+        "    'csv_arrow_pool': csv_pool.backend_name, 'csv_arrow_peak': csv_pool.max_memory(),\n"
+        "    'cpu_threads': pa.cpu_count(), 'heap': parts}),\n"
         "    file=sys.stderr)\n"
         "print(peak, flush=True)\n"
     )
+    env = None
+    if sys.platform == "darwin":
+        dylib = tmp_path / "live_heap_peak.dylib"
+        subprocess.run(
+            ["clang", "-dynamiclib", "-O2", "-o", str(dylib)]
+            + [str(Path(__file__).with_name("live_heap_peak_darwin.c"))],
+            check=True,
+        )
+        # PYTHONMALLOC=malloc sends the interpreter's own objects through the counted heap.
+        env = {**os.environ, "DYLD_INSERT_LIBRARIES": str(dylib), "PYTHONMALLOC": "malloc"}
     peaks = {}
     for rows in (24_000_000, 48_000_000):
         rng = np.random.default_rng(1)
@@ -272,9 +300,11 @@ def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
             capture_output=True,
             text=True,
             check=True,
+            env=env,
         )
         peaks[rows] = int(r.stdout.split()[-1])
-        print(f"{rows} rows: peak RSS {peaks[rows]} bytes; {r.stderr.strip()}")
+        metric = "peak live heap" if sys.platform == "darwin" else "peak RSS"
+        print(f"{rows} rows: {metric} {peaks[rows]} bytes; {r.stderr.strip()}")
         p.unlink()
     assert peaks[24_000_000] > 50 * 2**20, peaks  # a real measurement of the child
     assert abs(peaks[48_000_000] - peaks[24_000_000]) / peaks[24_000_000] < 0.10, peaks

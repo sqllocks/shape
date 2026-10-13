@@ -42,12 +42,20 @@ Use [the tested starters](../TUTORIAL.md) for local commands and complete output
 
 **Needs a Fabric account. Not run in CI.**
 
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers.
+
 ```bash
 shape profile-db --server myserver.database.windows.net --database shop \
     --schema dbo --sample-rows 1000 -o shop.shape --json shop-summary.json
 ```
 
-<!-- owner: Fabric maintainer — supply the transcript for docs/plugins/sqlserver.md example 1. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    {"written": "shop.shape", "shape_content_id": "5226585e9359764bb7571869ddf5b34e3e2fcd3b7ef620505f513fe7487262fa", "tables": 7, "relationships": 5}
+    ```
+
+Evidence: [run 38337418136, ubuntu-latest, `de4c1fb12885`](../evidence/transcripts/docs-transcripts-38337418136-de4c1fb12885-ubuntu-latest-profile-db-warehouse.json).
 
 
 | Option | Meaning |
@@ -110,7 +118,15 @@ its start. The choice is deterministic: the same data gives the same rows on eve
 - **Cost.** The sampling query scans the table and uses a top-n sort. The reader constructs
   the query with `CHECKSUM`, `CAST`, `ORDER BY` and `TOP`. If the server rejects it, the reader
   falls back to the first n rows, logs a warning and records the sampling method.
-  <!-- owner: SQL adapter maintainer — commit machine-labelled measurements before publishing costs. -->
+  The container measurement creates a disposable 100,000-row table and records the adapter's first-row and checksum-spread queries for 1,000 rows, including the exact SQL and returned row counts. Three raw timings for each query apply only to the labelled runner and data.
+
+<!-- owner-example: sql-sampling-measurement -->
+
+```bash {.runnable-owner}
+python "$SHAPE_DOCS_REPO/scripts/docs_owner_measurements.py" sqlserver
+```
+
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](../evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-sql-sampling-measurement.json).
 - Other ways were rejected: `TABLESAMPLE` samples whole pages, so a table of few pages is
   sampled coarsely and the rows depend on page layout rather than on the data alone;
   `ORDER BY NEWID()` is not repeatable. There is no seed: the rows follow from the data alone.

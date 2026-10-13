@@ -46,7 +46,7 @@ shape profile retail/ --dataset --name retail -o retail.shape --html report.html
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    {"shape_content_id": "42e4dd7f6e98fe34fe46e06fb5ae77b1ba95d2ff50b71551a8f19af214262286", "written": "retail.shape"}
+    {"shape_content_id": "9a9e27a5c5212f5b6045181b8b54ddcf4f30d4d6c1fbb77809af6a032678eb9f", "written": "retail.shape"}
     ```
 
 The profile command scans the folder and writes `report.html` together with the saved artifact and the JSON summary. Open the HTML file in your browser. It is a local report, so opening it does not require a hosted documentation service or a database account. Begin with the table overview and check the row counts before jumping to a distribution chart. If the count is not the population you intended, statistics for that population will not answer your original question. Next, choose the order table. You will use its identity and optional promotion reference to practice reading the columns.

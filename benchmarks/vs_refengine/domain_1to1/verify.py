@@ -1,96 +1,54 @@
-"""Generation equivalence verifier (T-21): an implementation vs RefEngine, for any domain.
-
-Runs in the *RefEngine* venv (needs pandas, scipy and RefEngine importable):
-
-    source scripts/env.sh && "$REFENGINE_PY" benchmarks/vs_refengine/domain_1to1/verify.py \\
-        --domain retail --scale small --impl reference_port|shape
-
-* It reads Parquet only, from ``$BENCH_OUT_DIR/<impl>/<domain>/<scale>/seed<N>/``.
-  Any missing run directory is generated first with ``generate.py`` (each impl in its own
-  venv): ``refengine`` seeds 42, 43, 44, 45, 46 and ``<impl>`` seed 1042. The seed set is
-  fixed (T-21) and has no option; a verdict from another set counts for nothing.
-* Tables, FKs and business rules come from the ``dump_schema.py`` output
-  (``$BENCH_OUT_DIR/schemas/<domain>_3nf.json``). No domain logic is hard-coded: pools and
-  component rules are derived from each column's generator, and the cross-table semantic
-  checks from the schema's strategies (``computed``, ``lookup``, ``derived``).
-* It asserts every T-21 clause (a)-(h) and exits 1 unless all of them hold. It exits 2 when
-  the seed-42 or seed-43..46 outputs (or the impl's) are missing or incomplete after
-  generation, or the impl cannot generate the domain.
-
-Every per-column statistic is also computed for RefEngine(42) vs RefEngine(43..46), i.e. how
-much RefEngine differs from *itself* under a different seed. A column is flagged NOT
-EQUIVALENT when its distance to RefEngine is clearly larger than both the sampling-noise
-critical value and that self-baseline.
-"""
+"""T-21 a-f against the release's fixed seed set, with unchanged statistical bounds."""
 
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import math
+import os
 import re
 import subprocess
 import sys
-import time
 from collections.abc import Callable
+from functools import partial
 from pathlib import Path
-from typing import Any
+from types import SimpleNamespace
+from typing import Any, cast
 
 import numpy as np
-import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
+import pandas as pd  # type: ignore[import-untyped]
+import pyarrow as pa  # type: ignore[import-untyped]
+import pyarrow.parquet as pq  # type: ignore[import-untyped]
 from scipy import stats
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
-import _refpkg  # noqa: E402
-import allowlist  # noqa: E402
-import composites  # noqa: E402
-import dump_schema  # noqa: E402
-import generate  # noqa: E402
-from domain_differences import DELIBERATE  # noqa: E402
-from paths import BENCH_OUT_DIR, REFENGINE_PY, REFENGINE_ROOT, SHAPE_PY  # noqa: E402
+import generate  # noqa: E402 (harness path bootstrap)
+from paths import (  # noqa: E402 (harness path bootstrap)
+    BASELINE_PY,
+    BASELINE_VERSION,
+    BENCH_OUT_DIR,
+    SHAPE_PY,
+)
+from paths import HERE as BENCH  # noqa: E402 (harness path bootstrap)
+from recorded_store import (  # noqa: E402 (harness path bootstrap)
+    RecordingError,
+    load,
+    manifest,
+    sha256,
+)
 
 REF_SEED = 42
 BASELINE_SEEDS = (43, 44, 45, 46)
 IMPL_SEED = 1042
 MODE = "3nf"
 FANOUT_TOL_ABS = 0.002
+validate_seed = generate.validate_seed
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# run directories
-# ─────────────────────────────────────────────────────────────────────────────
-
-
-def ensure_run(impl: str, domain: str, scale: str, seed: int, tables: list[str]) -> bool:
-    """Generate the run directory if it is missing or incomplete. True when it is complete."""
-    d = generate.out_dir(impl, domain, scale, seed)
-    if generate.is_complete(d, tables):
-        return True
-    py = REFENGINE_PY if impl == "refengine" else SHAPE_PY
-    cmd = [
-        str(py),
-        str(HERE / "generate.py"),
-        "--impl",
-        impl,
-        "--domain",
-        domain,
-        "--scale",
-        scale,
-        "--seed",
-        str(seed),
-    ]
-    print(f"generating {impl} {domain}/{scale}/seed{seed}", file=sys.stderr, flush=True)
-    r = subprocess.run(cmd, capture_output=True, text=True)
-    if r.returncode != 0:
-        sys.stderr.write(r.stderr[-2000:])
-    return generate.is_complete(d, tables)
-
-
-def load_run(impl: str, domain: str, scale: str, seed: int, tables: list[str]):
+def load_run(impl: str, domain: str, scale: str, seed: int, tables: list[str]) -> Any:
     """-> (frames, arrow types per table/column, generation order)"""
     d = generate.out_dir(impl, domain, scale, seed)
     frames, types, order = {}, {}, list(json.loads((d / generate.SUCCESS).read_text())["rows"])
@@ -108,73 +66,9 @@ def _norm_type(ty: pa.DataType) -> str:
     return str(ty)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# schema (from dump_schema.py output)
-# ─────────────────────────────────────────────────────────────────────────────
-
-
-def load_schema_json(domain: str) -> dict:
-    p = dump_schema.schema_path(domain, MODE)
-    if not p.exists():
-        dump_schema.dump(domain, MODE)
-    return json.loads(p.read_text())
-
-
-def rebuild_schema(raw: dict):
-    """Rebuild RefEngine's ``RefEngineSchema`` from the dumped JSON (for BusinessRulesEngine)."""
-    sys.path.insert(0, str(REFENGINE_ROOT))
-    P = _refpkg.mod("schema.parser")
-
-    tables = {
-        tn: P.TableDef(
-            name=t["name"],
-            primary_key=t["primary_key"],
-            description=t.get("description", ""),
-            cdm_mapping=t.get("cdm_mapping"),
-            columns={cn: P.ColumnDef(**c) for cn, c in t["columns"].items()},
-        )
-        for tn, t in raw["tables"].items()
-    }
-    return getattr(P, _refpkg.ENGINE_CLASS + "Schema")(
-        model=P.ModelDef(**raw["model"]),
-        tables=tables,
-        relationships=[P.RelationshipDef(**r) for r in raw["relationships"]],
-        business_rules=[P.BusinessRuleDef(**r) for r in raw["business_rules"]],
-        generation=P.GenerationConfig(**raw["generation"]),
-        correlated_columns=raw.get("correlated_columns", {}),
-    )
-
-
-def foreign_keys(raw: dict) -> list[tuple[str, str, str, str]]:
-    """(child, child_col, parent, parent_col): schema relationships, self-referencing
-    columns, and lookups whose source column is itself a foreign key."""
-    fks: list[tuple[str, str, str, str]] = []
-    for r in raw["relationships"]:
-        for cc, pc_ in zip(r["child_columns"], r["parent_columns"], strict=False):
-            fks.append((r["child"], cc, r["parent"], pc_))
-    for tn, t in raw["tables"].items():
-        for cn, c in t["columns"].items():
-            g = c["generator"]
-            if g.get("strategy") == "self_referencing":
-                fks.append((tn, cn, tn, g["pk_column"]))
-    known = {(c, cc): (p, pc_) for c, cc, p, pc_ in fks}
-    for tn, t in raw["tables"].items():
-        for cn, c in t["columns"].items():
-            g = c["generator"]
-            if g.get("strategy") == "lookup" and (g["source_table"], g["source_column"]) in known:
-                p, pc_ = known[(g["source_table"], g["source_column"])]
-                fks.append((tn, cn, p, pc_))
-    return list(dict.fromkeys(fks))
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# helpers
-# ─────────────────────────────────────────────────────────────────────────────
-
-
 def column_pool(
     pools: Pools,
-    raw: dict,
+    raw: dict[str, Any],
     fk_parent: dict[tuple[str, str], tuple[str, str]],
     table: str,
     column: str,
@@ -186,7 +80,8 @@ def column_pool(
     while (table, column) in fk_parent and (table, column) not in seen:
         seen.add((table, column))
         table, column = fk_parent[(table, column)]
-    return pools.pool_for(raw["tables"][table]["columns"][column]["generator"], table)
+    declared = raw["tables"][table]["columns"][column]["generator"]
+    return pools.pool_for(pools.effective(table, column, declared), table)
 
 
 def same_values(a: pd.Series, b: pd.Series) -> bool:
@@ -219,15 +114,18 @@ def kind(s: pd.Series) -> str:
     return "categorical"
 
 
-def as_num(s: pd.Series) -> np.ndarray:
+def as_num(s: pd.Series) -> np.ndarray[Any, Any]:
     s = s.dropna()
     if pd.api.types.is_datetime64_any_dtype(s.dtype):
         # compare in ns so ns/us columns are commensurable
-        return s.astype("datetime64[ns]").to_numpy().astype("int64").astype(np.float64)
-    return pd.to_numeric(s).to_numpy(dtype=np.float64)
+        return cast(
+            np.ndarray[Any, Any],
+            s.astype("datetime64[ns]").to_numpy().astype("int64").astype(np.float64),
+        )
+    return cast(np.ndarray[Any, Any], pd.to_numeric(s).to_numpy(dtype=np.float64))
 
 
-def ks(a: np.ndarray, b: np.ndarray) -> float:
+def ks(a: np.ndarray[Any, Any], b: np.ndarray[Any, Any]) -> float:
     if len(a) == 0 or len(b) == 0:
         return float("nan")
     return float(stats.ks_2samp(a, b, method="asymp").statistic)
@@ -247,7 +145,7 @@ def tvd(fa: pd.Series, fb: pd.Series) -> float:
     return float(0.5 * np.abs(fa.reindex(idx, fill_value=0) - fb.reindex(idx, fill_value=0)).sum())
 
 
-def fmt_num(x, is_dt):
+def fmt_num(x: Any, is_dt: Any) -> Any:
     if x is None or (isinstance(x, float) and math.isnan(x)):
         return None
     if is_dt:
@@ -255,41 +153,53 @@ def fmt_num(x, is_dt):
     return float(x)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# pools and component rules, derived from each column's generator
-# ─────────────────────────────────────────────────────────────────────────────
-
 EMAIL_RE = re.compile(r"^([^.@]+)\.([^@]*?)(\d{1,3})@(.+)$")
+
 STREET_RE = re.compile(r"^(\d+) (.+) (\S+)$")
+
 PATTERN_TOKEN = re.compile(r"\{(\w+)(?::(\d+))?\}")
 
 
 class Pools:
-    """RefEngine's own reference data, loaded lazily (read only)."""
+    """the baseline's own reference data, loaded lazily (read only)."""
 
-    def __init__(self, domain: str):
-        sys.path.insert(0, str(REFENGINE_ROOT))
-        names = _refpkg.mod("engine.data.names")
-        native = _refpkg.mod("engine.strategies.native")
-        _load_dataset = _refpkg.mod("engine.strategies.reference_data")._load_dataset
+    def __init__(self, domain: str, identifier_forms: list[dict[str, Any]]) -> None:
+        self.identifier_forms = identifier_forms
+        env = dict(os.environ)
+        env.pop("PYTHONPATH", None)
+        env.pop("PYTHONHOME", None)
+        r = subprocess.run(
+            [
+                str(BASELINE_PY),
+                str(BENCH / "record_baseline.py"),
+                "--worker",
+                "pools",
+                "--domain",
+                domain,
+            ],
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+        if r.returncode:
+            raise RecordingError("baseline reference pools are unavailable")
+        data = json.loads(r.stdout)
+        self.names = SimpleNamespace(**data["names"])
+        self.native = SimpleNamespace(**{k: np.array(v) for k, v in data["native"].items()})
+        self._datasets = {(None, k): v for k, v in data["datasets"].items()}
+        self.generators = data.get("generators", {})
+        self.children = [domain]
+        self.composite = False
+        self.domain_path = domain
+        self.first_l = {v.lower().replace(" ", "") for v in self.names.FIRST_NAMES}
+        self.last_l = {v.lower().replace(" ", "") for v in self.names.LAST_NAMES}
 
-        self.names, self.native, self._load = names, native, _load_dataset
-        root = REFENGINE_ROOT / _refpkg.PACKAGE / "domains"
-        # A composite reads the reference data of each of its domains: the baseline finds a
-        # dataset by its name alone, so a table's own domain is looked at first (``dataset``).
-        self.children = (
-            composites.children(composites.spec_of(domain))
-            if composites.is_composite(domain)
-            else [domain]
-        )
-        self.composite = composites.is_composite(domain)
-        self.domain_path: Path | list[Path] = (
-            [root / c for c in self.children] if self.composite else root / domain
-        )
-        self._root = root
-        self._datasets: dict[tuple[str | None, str], Any] = {}
-        self.first_l = {s.lower().replace(" ", "") for s in names.FIRST_NAMES}
-        self.last_l = {s.lower().replace(" ", "") for s in names.LAST_NAMES}
+    generators: dict[str, dict[str, dict[str, Any]]] = {}
+
+    def effective(self, table: str, column: str, declared: dict[str, Any]) -> dict[str, Any]:
+        """The generator the release applies to a column: its domain overrides can replace the
+        fixture's declared one (a nested reference field is generated as a constant)."""
+        return self.generators.get(table, {}).get(column, declared)
 
     def domain_of(self, table: str | None) -> str | None:
         """The domain a table of a composite belongs to (the longest domain name it starts with)."""
@@ -298,18 +208,8 @@ class Pools:
         owners = [c for c in self.children if table.startswith(c + "_")]
         return max(owners, key=len) if owners else None
 
-    def dataset(self, name: str, table: str | None = None):
-        domain = self.domain_of(table)
-        key = (domain, name)
-        if key not in self._datasets:
-            own = self._root / domain / "reference_data" / f"{name}.json" if domain else None
-            if (
-                own is not None and own.exists()
-            ):  # the table's own domain's file, not the cached one
-                self._datasets[key] = json.loads(own.read_text(encoding="utf-8"))
-            else:
-                self._datasets[key] = self._load(name, self.domain_path)
-        return self._datasets[key]
+    def dataset(self, name: str, table: str | None = None) -> Any:
+        return self._datasets[(None, name)]
 
     def faker(self, provider: str) -> set[str] | None:
         n, nat = self.names, self.native
@@ -324,8 +224,8 @@ class Pools:
         fn = table.get(provider)
         return {str(x) for x in fn()} if fn else None
 
-    def pool_for(self, gen: dict, table: str | None = None) -> set[str] | None:
-        """Values the strategy can draw from, or None when RefEngine's output is the pool."""
+    def pool_for(self, gen: dict[str, Any], table: str | None = None) -> set[str] | None:
+        """Values the strategy can draw from, or None when the baseline's output is the pool."""
         st = gen.get("strategy")
         if st == "faker":
             return self.faker(gen.get("provider", ""))
@@ -336,7 +236,13 @@ class Pools:
             out: set[str] = set()
             for item in ds:
                 if isinstance(item, dict):
-                    out.add(str(item.get(gen.get("field", "name"))))
+                    # The release provider prefers an explicit existing field, then name/value.
+                    field = gen.get("field")
+                    if not field or field not in item:
+                        field = next((f for f in ("name", "value") if f in item), None)
+                    if field is None:
+                        raise RecordingError(f"{gen['dataset']}: no baseline value field")
+                    out.add(str(item[field]))
                 else:
                     out.add(str(item))
             return out
@@ -344,34 +250,47 @@ class Pools:
             return {str(r[gen["field"]]) for r in self.dataset(gen["dataset"], table)}
         return None
 
-    def component_fn(self, gen: dict) -> tuple[Callable[[pd.Series], float], str] | None:
+    def component_fn(self, gen: dict[str, Any]) -> tuple[Callable[[pd.Series], float], str] | None:
         """Row-weighted component-level check for generators that compose their value."""
         st = gen.get("strategy")
-        if st == "faker" and gen.get("provider") == "email":
-
-            def email(s: pd.Series) -> float:
-                ex = s.dropna().astype(str).str.extract(EMAIL_RE)
-                ok = (
-                    ex[0].isin(self.first_l)
-                    & ex[1].isin(self.last_l)
-                    & ex[2].astype(float).between(1, 998)
-                    & ex[3].isin(set(self.names.EMAIL_DOMAINS))
+        if st in ("faker", "native") and gen.get("provider") in (
+            "email",
+            "company_email",
+            "phone_number",
+            "uri",
+        ):
+            # Approved FRZ-01 correction: exact forms come from the recorded release provider.
+            if not isinstance(self.identifier_forms, list) or any(
+                not isinstance(f, dict) for f in self.identifier_forms
+            ):
+                raise RecordingError(f"{self.domain_path}: invalid identifier forms")
+            forms = [f for f in self.identifier_forms if f.get("generator") == gen]
+            if len(forms) != 1:
+                raise RecordingError(
+                    f"{self.domain_path}: identifier {gen.get('provider')} form missing"
                 )
-                return float(ok.mean())
+            form = forms[0]
+            try:
+                literals, slots, components = form["literals"], form["slots"], form["components"]
+                if len(literals) != len(slots) + 1 or not slots:
+                    raise ValueError("invalid template")
+                pieces = []
+                for i, (slot, width) in enumerate(slots):
+                    values = {str(value).zfill(width) for value in components[slot]}
+                    if not values:
+                        raise ValueError("empty component")
+                    choices = "|".join(
+                        re.escape(v) for v in sorted(values, key=lambda v: (-len(v), v))
+                    )
+                    pieces.append(re.escape(literals[i]) + "(?:" + choices + ")")
+                pattern = re.compile("".join(pieces) + re.escape(literals[-1]))
+            except (KeyError, TypeError, ValueError, IndexError, re.error) as exc:
+                raise RecordingError(f"{self.domain_path}: invalid identifier form") from exc
 
-            return email, "first.lower+'.'+last.lower+suffix(1..998)+'@'+EMAIL_DOMAINS"
-        if st == "faker" and gen.get("provider") == "company_email":
-            stems = {
-                str(c).lower().replace(" ", "").replace(",", "").replace(".", "")[:20]
-                for c in self.names.COMPANY_NAMES
-            }
+            def identifier(s: pd.Series) -> float:
+                return float(s.dropna().astype(str).str.fullmatch(pattern).mean())
 
-            def company_email(s: pd.Series) -> float:
-                ex = s.dropna().astype(str).str.extract(r"^([^.@]+)\.([^@]+)@([^@]+)\.com$")
-                ok = ex[0].isin(self.first_l) & ex[1].isin(self.last_l) & ex[2].isin(stems)
-                return float(ok.mean())
-
-            return company_email, "first.last@company(lower, no space/comma/dot, 20)+'.com'"
+            return identifier, "exact recorded baseline identifier components and template"
         if st == "faker" and gen.get("provider") == "street_address":
             suffixes = set(self.native._STREET_SUFFIXES.tolist())
 
@@ -400,26 +319,6 @@ class Pools:
                 return float(np.mean([ok(v) for v in nn])) if len(nn) else 1.0
 
             return full_name, "FIRST_NAMES+' '+LAST_NAMES"
-        if st == "faker" and gen.get("provider") == "phone_number":
-
-            def phone(s: pd.Series) -> float:
-                ex = s.dropna().astype(str).str.extract(r"^\((\d{3})\) (\d{3})-(\d{4})$")
-                ok = (
-                    ex[0].astype(float).between(200, 998)
-                    & ex[1].astype(float).between(200, 998)
-                    & ex[2].astype(float).between(1000, 9998)
-                )
-                return float(ok.mean())
-
-            return phone, "(AAA) EEE-SSSS, AAA/EEE 200..998, SSSS 1000..9998"
-        if st == "faker" and gen.get("provider") == "uri":
-            domains, paths = set(self.names.URI_DOMAINS), set(self.names.URI_PATHS)
-
-            def uri(s: pd.Series) -> float:
-                ex = s.dropna().astype(str).str.extract(r"^https://([^/]+)/(.*)$")
-                return float((ex[0].isin(domains) & ex[1].isin(paths)).mean())
-
-            return uri, "'https://'+URI_DOMAINS+'/'+URI_PATHS"
         if st == "pattern":
             rx = pattern_regex(gen.get("format", ""))
             if rx is not None:
@@ -446,13 +345,8 @@ def pattern_regex(fmt: str) -> str | None:
     return "".join(out)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# column comparison
-# ─────────────────────────────────────────────────────────────────────────────
-
-
-def baseline_distances(sp: pd.Series, bl: pd.Series) -> dict:
-    """Distance of another RefEngine seed's column to the reference RefEngine column."""
+def baseline_distances(sp: pd.Series, bl: pd.Series) -> dict[str, Any]:
+    """Distance of another the baseline seed's column to the reference the baseline column."""
     k = kind(sp)
     out = {"null": abs(float(bl.isna().mean()) - float(sp.isna().mean()))}
     if k in ("numeric", "datetime"):
@@ -464,7 +358,7 @@ def baseline_distances(sp: pd.Series, bl: pd.Series) -> dict:
     return out
 
 
-def merge_baselines(bs: list[dict]) -> dict:
+def merge_baselines(bs: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         k: max(b[k] for b in bs if not math.isnan(b[k]))
         if any(not math.isnan(b[k]) for b in bs)
@@ -473,46 +367,22 @@ def merge_baselines(bs: list[dict]) -> dict:
     }
 
 
-def allowed_pool_column(
-    sp: pd.Series, im: pd.Series, pools: Pools, source: tuple[str, str], gen: dict
-) -> dict:
-    """CMP-2: the baseline draws the column from the wrong domain's dataset, so its values are not
-    the reference. Shape's values must all come from the right dataset (the domain's own file)."""
-    domain, name = source
-    path = REFENGINE_ROOT / _refpkg.PACKAGE / "domains" / domain / "reference_data" / f"{name}.json"
-    field = gen.get("field", "name")
-    rows = json.loads(path.read_text(encoding="utf-8"))
-    pool = {str(r[field]) if isinstance(r, dict) else str(r) for r in rows}
-    shape_in = float(im.dropna().astype(str).isin(pool).mean())
-    base_in = float(sp.dropna().astype(str).isin(pool).mean())
-    return {
-        "kind": "allowed",
-        "allowed": "CMP-2",
-        "intended_pool": f"{domain}/{name}",
-        "shape_values_in_intended_pool": shape_in,
-        "baseline_values_in_intended_pool": base_in,
-        "null_rate": {"refengine": float(sp.isna().mean()), "impl": float(im.isna().mean())},
-        "checks": {"shape_values_in_intended_pool": shape_in >= 0.999},
-        "equivalent": shape_in >= 0.999,
-    }
-
-
 def compare_column(
     sp: pd.Series,
     im: pd.Series,
-    B: dict,
+    B: dict[str, Any],
     pool: set[str] | None,
     comp: tuple[Callable[[pd.Series], float], str] | None,
-) -> dict:
-    """B = max over baseline seeds of RefEngine-vs-RefEngine distances for this column."""
+) -> dict[str, Any]:
+    """B = max over baseline seeds of the baseline-vs-the baseline distances for this column."""
     k = kind(sp)
-    r: dict = {"kind": k}
+    r: dict[str, Any] = {"kind": k}
     n, m = len(sp), len(im)
     ns_, ni_ = float(sp.isna().mean()), float(im.isna().mean())
     p = max(ns_, 1.0 / max(n, 1))
     null_tol = max(5 * math.sqrt(p * (1 - p) * (1 / n + 1 / m)), 1.5 * B["null"], 1e-12)
     r["null_rate"] = {
-        "refengine": ns_,
+        "baseline": ns_,
         "impl": ni_,
         "baseline_max_abs_diff": B["null"],
         "tol": null_tol,
@@ -527,41 +397,41 @@ def compare_column(
         r["ks"], r["ks_baseline"], r["ks_tol"] = d, db, tol
         r["stats"] = {
             name: {
-                "refengine": fmt_num(f(a), is_dt) if len(a) else None,
+                "baseline": fmt_num(f(a), is_dt) if len(a) else None,
                 "impl": fmt_num(f(b), is_dt) if len(b) else None,
             }
             for name, f in (("mean", np.mean), ("min", np.min), ("max", np.max))
         }
         r["stats"]["std"] = {
-            "refengine": float(np.std(a)) / (1e9 * 86400 if is_dt else 1),
+            "baseline": float(np.std(a)) / (1e9 * 86400 if is_dt else 1),
             "impl": float(np.std(b)) / (1e9 * 86400 if is_dt else 1),
             "unit": "days" if is_dt else "",
         }
         checks["ks"] = bool(d <= tol) if not math.isnan(d) else True
-        r["distinct"] = {"refengine": int(sp.nunique()), "impl": int(im.nunique())}
+        r["distinct"] = {"baseline": int(sp.nunique()), "impl": int(im.nunique())}
     else:
         fs, fp = freq(sp), freq(im)
         ds, di = len(fs), len(fp)
         r["distinct"] = {
-            "refengine": ds,
+            "baseline": ds,
             "impl": di,
             "ratio": di / max(ds, 1),
             "baseline_max_ratio_dev": B["dratio_dev"],
         }
         top = list(dict.fromkeys(list(fs.index[:10]) + list(fp.index[:10])))[:15]
         r["top10"] = [
-            {"value": v, "refengine": float(fs.get(v, 0.0)), "impl": float(fp.get(v, 0.0))}
+            {"value": v, "baseline": float(fs.get(v, 0.0)), "impl": float(fp.get(v, 0.0))}
             for v in top
         ]
-        # vocabulary overlap: fraction of impl rows whose value occurs in RefEngine's output or pool
+        # Vocabulary overlap: fraction of impl rows occurring in baseline output or pool.
         vocab = set(fs.index) | (pool or set())
         pv = im.dropna().astype(str)
         r["vocab_overlap"] = float(pv.isin(vocab).mean()) if len(pv) else 1.0
-        r["vocab_source"] = "refengine_output" + ("+pool" if pool else "")
+        r["vocab_source"] = "baseline_output" + ("+pool" if pool else "")
         if comp:
             fn, rule = comp
             r["component_overlap"] = fn(im)
-            r["component_overlap_refengine"] = fn(sp)
+            r["component_overlap_baseline"] = fn(sp)
             r["component_rule"] = rule
         high_card = ds > 1000 or comp is not None
         if high_card:
@@ -585,11 +455,6 @@ def compare_column(
     return r
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# FK / fan-out / record coherence / strategy semantics
-# ─────────────────────────────────────────────────────────────────────────────
-
-
 def _fk_values(column: pd.Series) -> pd.Series:
     """The non-null values of a key column: numbers for a numeric key, text for a text key
     (``capital_markets`` keys its tables by ticker)."""
@@ -599,7 +464,7 @@ def _fk_values(column: pd.Series) -> pd.Series:
     return values
 
 
-def fk_checks(T: dict[str, pd.DataFrame], fks) -> dict:
+def fk_checks(T: dict[str, pd.DataFrame], fks: Any) -> dict[str, Any]:
     out = {}
     for c, cc, p, pc_ in fks:
         vals = _fk_values(T[c][cc])
@@ -611,7 +476,7 @@ def fk_checks(T: dict[str, pd.DataFrame], fks) -> dict:
     return out
 
 
-def fanout(T: dict[str, pd.DataFrame], fks) -> dict:
+def fanout(T: dict[str, pd.DataFrame], fks: Any) -> dict[str, Any]:
     out = {}
     for c, cc, p, pc_ in fks:
         if c == p:
@@ -633,11 +498,13 @@ def fanout(T: dict[str, pd.DataFrame], fks) -> dict:
     return out
 
 
-def _norm_val(v):
+def _norm_val(v: Any) -> Any:
     return float(v) if isinstance(v, (int, float, np.integer, np.floating)) else str(v)
 
 
-def record_coherence(T: dict[str, pd.DataFrame], raw: dict, pools: Pools) -> dict[str, float]:
+def record_coherence(
+    T: dict[str, pd.DataFrame], raw: dict[str, Any], pools: Pools
+) -> dict[str, float]:
     """Columns filled from one record of a reference dataset (record_sample / record_field)
     must form a real record: the fraction of rows whose tuple exists in the dataset."""
     out: dict[str, float] = {}
@@ -658,7 +525,7 @@ def record_coherence(T: dict[str, pd.DataFrame], raw: dict, pools: Pools) -> dic
     return out
 
 
-def semantic_rates(T: dict[str, pd.DataFrame], raw: dict) -> dict[str, float]:
+def semantic_rates(T: dict[str, pd.DataFrame], raw: dict[str, Any]) -> dict[str, float]:
     """Cross-table semantics implied by the schema's strategies: ``computed`` sums,
     ``lookup`` values and ``derived`` date offsets. Each value is the fraction of rows that
     satisfy the strategy's contract."""
@@ -717,384 +584,393 @@ def semantic_rates(T: dict[str, pd.DataFrame], raw: dict) -> dict[str, float]:
     return out
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# main
-# ─────────────────────────────────────────────────────────────────────────────
+def load_schema_json(domain: str) -> dict[str, Any]:
+    return cast(
+        dict[str, Any],
+        json.loads((BENCH / "fixtures" / "schemas" / (domain + "_3nf.json")).read_text()),
+    )
 
 
-def _fail_missing(msg: str) -> int:
-    print(f"ERROR: {msg}", file=sys.stderr)
-    return 2
+def ensure_run(impl: str, domain: str, scale: str, seed: int, tables: list[str]) -> bool:
+    validate_seed(impl, seed)
+    dest = generate.out_dir(impl, domain, scale, seed)
+    if impl == "baseline" and generate.is_complete(dest, tables):
+        return True
+    py = BASELINE_PY if impl == "baseline" else SHAPE_PY
+    env = dict(os.environ)
+    if impl == "baseline":
+        env.pop("PYTHONPATH", None)
+        env.pop("PYTHONHOME", None)
+    r = subprocess.run(
+        [
+            str(py),
+            str(HERE / "generate.py"),
+            "--impl",
+            "shape",
+            "--domain",
+            domain,
+            "--scale",
+            scale,
+            "--seed",
+            str(seed),
+        ],
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    return r.returncode == 0 and bool(generate.is_complete(dest, tables))
+
+
+def ensure_cli_run(impl: str, domain: str, scale: str, seed: int, tables: list[str]) -> bool:
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "domain_recorded_cli_commands", HERE / "bench_cli.py"
+    )
+    assert spec and spec.loader
+    cli = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cli)
+    dest = generate.out_dir(impl + "-cli", domain, scale, seed)
+    if impl == "baseline" and generate.is_complete(dest, tables):
+        return True
+    import shutil
+
+    shutil.rmtree(dest, ignore_errors=True)
+    dest.mkdir(parents=True)
+    env = dict(os.environ)
+    if impl == "baseline":
+        env.pop("PYTHONPATH", None)
+        env.pop("PYTHONHOME", None)
+    proc = subprocess.run(
+        cli.command(impl, domain, scale, dest), env=env, capture_output=True, text=True
+    )
+    if proc.returncode:
+        return False
+    rows = {p.stem: pq.read_metadata(p).num_rows for p in sorted(dest.glob("*.parquet"))}
+    (dest / generate.SUCCESS).write_text(json.dumps({"rows": rows, "via": "cli"}))
+    return bool(generate.is_complete(dest, tables))
+
+
+def run_digests(directory: Path) -> dict[str, Any]:
+    from shape.repro import dataset_id
+
+    tables = {p.stem: pq.read_table(p) for p in sorted(directory.glob("*.parquet"))}
+    return {
+        "tables": {
+            name: {
+                "rows": t.num_rows,
+                "columns": [{"name": f.name, "type": str(f.type)} for f in t.schema],
+                "dataset_id": dataset_id({name: t}),
+                "parquet_sha256": sha256(directory / (name + ".parquet")),
+                "parquet_bytes": (directory / (name + ".parquet")).stat().st_size,
+            }
+            for name, t in tables.items()
+        },
+        "dataset_id": dataset_id(tables),
+    }
+
+
+def authenticate_run(
+    domain: str, scale: str, seed: int, record: dict[str, Any], impl: str = "baseline"
+) -> None:
+    actual = run_digests(generate.out_dir(impl, domain, scale, seed))
+    expected = record["seeds"][str(seed)]
+    if set(actual["tables"]) != set(expected["tables"]):
+        raise RecordingError(f"generate:{domain}:{scale}: seed{seed}: table set differs")
+    for table, data in actual["tables"].items():
+        old = expected["tables"][table]
+        if any(data[k] != old[k] for k in ("rows", "columns", "dataset_id")):
+            raise RecordingError(
+                f"generate:{domain}:{scale}: seed{seed} table {table}: dataset_id or shape differs"
+            )
+    if actual["dataset_id"] != expected["dataset_id"]:
+        raise RecordingError(f"generate:{domain}:{scale}: seed{seed}: dataset_id differs")
+
+
+def compare_runs(
+    raw: dict[str, Any],
+    ref: tuple[Any, ...],
+    candidate: tuple[Any, ...],
+    others: list[tuple[Any, ...]],
+    pools: Any,
+) -> dict[str, Any]:
+    SP, ts, order_sp = ref
+    IM, ti, order_im = candidate
+    fks = foreign_keys(raw)
+    fp = fk_parent_map(fks)
+    report: dict[str, Any] = {
+        "clauses": list("abcdef"),
+        "baseline": {"shape_version": BASELINE_VERSION},
+        "tables": {},
+        "flagged": [],
+    }
+    flagged = report["flagged"]
+    if list(SP) != list(IM) or order_sp != order_im:
+        flagged.append("(a) table names/order differ")
+    for tn, frame in SP.items():
+        if tn not in IM:
+            continue
+        current = IM[tn]
+        columns = {}
+        if len(frame) != len(current):
+            flagged.append(f"(a) {tn}: row count differs")
+        if list(frame) != list(current):
+            flagged.append(f"(a) {tn}: column names/order differ")
+        for col in frame:
+            if col not in current:
+                continue
+            B = merge_baselines([baseline_distances(frame[col], o[0][tn][col]) for o in others])
+            gen = raw["tables"][tn]["columns"][col]["generator"]
+            result = compare_column(
+                frame[col],
+                current[col],
+                B,
+                column_pool(pools, raw, fp, tn, col),
+                pools.component_fn(gen),
+            )
+            if ts[tn][col] != ti[tn].get(col):
+                flagged.append(f"(a) {tn}.{col}: type differs")
+            for key, ok in result["checks"].items():
+                clause = {"null_rate": "b", "ks": "c"}.get(key, "d")
+                if result["kind"] == "categorical" and len(freq(frame[col])) > 1000:
+                    clause = "e"
+                if not ok:
+                    flagged.append(f"({clause}) {tn}.{col}: {key}")
+            columns[col] = result
+        report["tables"][tn] = {
+            "columns": columns,
+            "row_counts_identical": len(frame) == len(current),
+            "columns_identical_and_ordered": list(frame) == list(current),
+            "types_identical": ts[tn] == ti[tn],
+        }
+    integrity = fk_checks(IM, fks)
+    for key, value in integrity.items():
+        if value["integrity"] < 1.0:
+            flagged.append("(f) FK integrity " + key)
+    report["fk_integrity"] = integrity
+    fan_sp = fanout(SP, fks)
+    fan_im = fanout(IM, fks)
+    fan_others = [fanout(o[0], fks) for o in others]
+    report["fanout"] = {}
+    for key in fan_sp:
+        a = fan_sp[key]["_counts"]
+        b = fan_im[key]["_counts"]
+        db = max(ks(a.astype(float), f[key]["_counts"].astype(float)) for f in fan_others)
+        distance = ks(a.astype(float), b.astype(float))
+        tol = max(ks_crit(len(a), len(b)), 1.5 * db + FANOUT_TOL_ABS)
+        report["fanout"][key] = {
+            "ks_counts": distance,
+            "ks_tol": tol,
+            "equivalent": distance <= tol,
+        }
+        if distance > tol:
+            flagged.append("(f) fan-out " + key)
+    semantic_functions: dict[str, Callable[[dict[str, pd.DataFrame]], dict[str, float]]] = {
+        "strategy_semantics": lambda frames: semantic_rates(frames, raw),
+        "record_coherence": lambda frames: record_coherence(frames, raw, pools),
+    }
+    for label, fn in semantic_functions.items():
+        current = fn(IM)
+        baseline = [fn(o[0]) for o in others]
+        report[label] = {}
+        for key, value in current.items():
+            floor = min(x[key] for x in baseline) - 0.005
+            report[label][key] = {"impl": value, "floor": floor}
+            if value < floor:
+                flagged.append("(f) " + label + " " + key)
+    return report
+
+
+def fk_parent_map(fks: list[Any]) -> dict[tuple[str, str], tuple[str, str]]:
+    return {(child, cc): (parent, pc) for child, cc, parent, pc in fks}
+
+
+def negative_controls(
+    raw: dict[str, Any],
+    ref: tuple[Any, ...],
+    candidate: tuple[Any, ...],
+    others: list[tuple[Any, ...]],
+    pools: Any,
+) -> dict[str, bool]:
+    frames, types, _ = candidate
+    numeric = [
+        (t, c)
+        for t, f in frames.items()
+        for c in f
+        if kind(f[c]) == "numeric" and f[c].notna().any()
+    ]
+    category = [
+        (t, c)
+        for t, f in frames.items()
+        for c in f
+        if kind(f[c]) == "categorical" and f[c].notna().any()
+    ]
+    controls = {}
+
+    def check(name: str, mutate: Callable[[Any], Any], clause: str) -> bool:
+        bad = copy.deepcopy(candidate)
+        mutate(bad)
+        result = compare_runs(raw, ref, bad, others, pools)
+        return any("(" + clause + ")" in message for message in result["flagged"])
+
+    def scaled(b: Any, t: str, c: str) -> None:
+        b[0][t][c] = b[0][t][c] * 1.05
+
+    def renamed(b: Any, t: str, c: str) -> None:
+        col = b[0][t][c]
+        b[0][t][c] = col.replace({col.dropna().value_counts().index[0]: "__changed_category__"})
+
+    def nulls(b: Any, t: str, c: str) -> None:
+        f = b[0][t]
+        idx = f[c].dropna().index[: max(1, math.ceil(len(f) * 0.1))]
+        f.loc[idx, c] = np.nan
+
+    controls["numeric scaled by 1.05"] = any(
+        check("numeric", partial(scaled, t=t, c=c), "c") for t, c in numeric
+    )
+    controls["category renamed"] = any(
+        check("category", partial(renamed, t=t, c=c), "d") for t, c in category
+    )
+    controls["null rate raised by 10 points"] = any(
+        check("null", partial(nulls, t=t, c=c), "b") for t, c in numeric
+    )
+    fks = foreign_keys(raw)
+    child, cc, parent, pc = fks[0]
+    controls["child rows dropped by 2%"] = check(
+        "rows",
+        lambda b: b[0].__setitem__(
+            child, b[0][child].iloc[: max(0, len(b[0][child]) - math.ceil(len(b[0][child]) * 0.02))]
+        ),
+        "a",
+    )
+
+    def corrupt_fk(b: tuple[Any, ...]) -> None:
+        f = b[0][child]
+        idx = f.index[: max(1, math.ceil(len(f) * 0.01))]
+        if pd.api.types.is_numeric_dtype(f[cc]):
+            value = max(b[0][parent][pc].max(), f[cc].max()) + 1
+        else:
+            value = "__missing_parent__"
+        f.loc[idx, cc] = value
+
+    controls["foreign keys corrupted by 1%"] = check("fk", corrupt_fk, "f")
+    table = next(t for t, f in frames.items() if len(f.columns) > 1)
+    controls["columns reordered"] = check(
+        "order",
+        lambda b: b[0].__setitem__(
+            table,
+            b[0][table][[b[0][table].columns[1], b[0][table].columns[0], *b[0][table].columns[2:]]],
+        ),
+        "a",
+    )
+    t, c = next((t, c) for t, cols in types.items() for c, ty in cols.items() if ty == "int64")
+    controls["int64 changed to float64"] = check(
+        "type", lambda b: b[1][t].__setitem__(c, "double"), "a"
+    )
+    return controls
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--impl", choices=("shape",), default="shape")
     ap.add_argument("--domain", default="retail")
     ap.add_argument("--scale", default="small")
-    ap.add_argument("--impl", choices=["reference_port", "shape"], required=True)
-    ap.add_argument(
-        "--out",
-        default=None,
-        help="report JSON (default: $BENCH_OUT_DIR/verify/<impl>_<domain>_<scale>.json)",
-    )
-    ap.add_argument(
-        "--cli",
-        action="store_true",
-        help="compare the CLI runs bench_cli.py wrote (refengine-cli seed 42 against <impl>-cli); "
-        "the baseline seeds stay the API runs",
-    )
-    ap.add_argument(
-        "--no-generate",
-        action="store_true",
-        help="do not generate missing run directories (exit 2 instead)",
-    )
+    ap.add_argument("--no-generate", action="store_true")
+    ap.add_argument("--cli", action="store_true")
+    ap.add_argument("--negative-control", action="store_true")
+    ap.add_argument("--report")
     a = ap.parse_args(argv)
-    domain, scale, impl = a.domain, a.scale, a.impl
-    ref = "refengine-cli" if a.cli else "refengine"
-    if a.cli:
-        impl = f"{impl}-cli"
-    out = Path(a.out) if a.out else BENCH_OUT_DIR / "verify" / f"{impl}_{domain}_{scale}.json"
-    t0 = time.time()
-
-    raw = load_schema_json(domain)
-    tables = list(raw["tables"])
-    fks = foreign_keys(raw)
-    fk_parent = {(c, cc): (p, pc_) for c, cc, p, pc_ in fks if (c, cc) != (p, pc_)}
-
-    runs = [(ref, REF_SEED)] + [("refengine", s) for s in BASELINE_SEEDS] + [(impl, IMPL_SEED)]
-    for who, seed in runs:
-        d = generate.out_dir(who, domain, scale, seed)
-        if who.endswith("-cli") and not generate.is_complete(d, tables):
-            return _fail_missing(f"{d} is missing: run bench_cli.py first ({who}, seed {seed})")
-        if not generate.is_complete(d, tables) and not a.no_generate:
-            ensure_run(who, domain, scale, seed, tables)
-        if not generate.is_complete(d, tables):
-            return _fail_missing(f"{d} is missing or incomplete (impl {who}, seed {seed})")
-
-    SP, sp_types, sp_order = load_run(ref, domain, scale, REF_SEED, tables)
-    IM, im_types, im_order = load_run(impl, domain, scale, IMPL_SEED, tables)
-    pools = Pools(domain)
-
-    # The named, narrow differences of composites (allowlist.py): columns Shape adds, foreign keys
-    # it moves to those columns, and columns drawn from the right domain's dataset.
-    extras = allowlist.extra_columns(domain)
-    redirected = allowlist.redirected(domain)
-    pool_cols = allowlist.pool_columns(domain)
-    IM_full = IM
-    allowed_report: dict = {}
-    if extras:
-        IM = {t: (df.drop(columns=[extras[t]]) if t in extras else df) for t, df in IM_full.items()}
-        im_types = {
-            t: {c: v for c, v in ty.items() if c != extras.get(t)} for t, ty in im_types.items()
-        }
-        allowed_report["CMP-1"] = {"extra_columns": extras, "redirected_keys": redirected}
-        for t, c in extras.items():  # the bridge column is a foreign key: the engine places it
-            if c not in IM_full[t].columns:
-                allowed_report.setdefault("problems", []).append(
-                    f"(a) {t}: the bridge column {c} is missing"
+    try:
+        raw = load_schema_json(a.domain)
+        tables = list(raw["tables"])
+        record = load(
+            "generate",
+            a.domain + ":" + a.scale,
+            inputs={
+                "fixtures/schemas/" + a.domain + "_3nf.json": sha256(
+                    BENCH / "fixtures" / "schemas" / (a.domain + "_3nf.json")
                 )
-    fks_cmp = [fk for fk in fks if redirected.get(fk[0]) != fk[1]]
-    fks_bridge = [
-        (c, extras[c], p, pc_) for c, cc, p, pc_ in fks if c in redirected and redirected[c] == cc
-    ]
-    schema = rebuild_schema(raw)
-    BusinessRulesEngine = _refpkg.mod("engine.rules.business_rules").BusinessRulesEngine
-    FidelityComparator = _refpkg.mod("inference.comparator").FidelityComparator
-
-    fc = FidelityComparator()
-    per_seed: dict = {}
-    fc_base = []
-    sem_sp = [semantic_rates(SP, raw)]
-    coh_sp = [record_coherence(SP, raw, pools)]
-    fan_sp = fanout(SP, fks_cmp)
-    for bs in BASELINE_SEEDS:  # one baseline in memory at a time
-        BL, _, _ = load_run("refengine", domain, scale, bs, tables)
-        for tn in tables:
-            for c in SP[tn].columns:
-                if c in BL[tn].columns:
-                    per_seed.setdefault((tn, c), []).append(
-                        baseline_distances(SP[tn][c], BL[tn][c])
-                    )
-        fc_base.append(fc.compare(SP, BL))
-        fan_bl = fanout(BL, fks_cmp)
-        for k, v in fan_sp.items():
-            per_seed.setdefault(("fanout", k), []).append(
-                ks(v["_counts"].astype(float), fan_bl[k]["_counts"].astype(float))
-            )
-        sem_sp.append(semantic_rates(BL, raw))
-        coh_sp.append(record_coherence(BL, raw, pools))
-        del BL
-    B = {k: (merge_baselines(v) if k[0] != "fanout" else max(v)) for k, v in per_seed.items()}
-    print(f"loaded and baselined in {time.time() - t0:.1f}s", file=sys.stderr)
-
-    report: dict = {
-        "domain": domain,
-        "scale": scale,
-        "impl": impl,
-        "seed": REF_SEED,
-        "impl_seed": IMPL_SEED,
-        "baseline_seeds": list(BASELINE_SEEDS),
-        "tables": {},
-    }
-    flagged: list[str] = list(allowed_report.get("problems", []))
-    n_cols = n_pass = 0
-
-    # (a) structure: tables, column names and order, Arrow types, row counts
-    report["table_order"] = {"refengine": sp_order, "impl": im_order}
-    if extras:
-        # CMP-1: a bridge column is a new dependency edge, so the order may differ; it must still
-        # hold the same tables and put every parent before its children.
-        position = {t: i for i, t in enumerate(im_order)}
-        struct_ok = set(sp_order) == set(im_order) and all(
-            position[p] < position[c] for c, _, p, _ in fks_cmp + fks_bridge if c != p
+            },
         )
-        allowed_report["CMP-1"]["table_order"] = {"refengine": sp_order, "impl": im_order}
-    else:
-        struct_ok = set(sp_order) == set(im_order) and sp_order == im_order
-    if not struct_ok:
-        flagged.append(f"(a) table order differs: refengine={sp_order} impl={im_order}")
-    for tn in tables:
-        sp, im = SP[tn], IM[tn]
-        ts, ti = sp_types[tn], im_types[tn]
-        tr = {
-            "rows": {"refengine": len(sp), "impl": len(im)},
-            "columns_refengine": list(sp.columns),
-            "columns_impl": list(im.columns),
-            "columns_identical_and_ordered": list(sp.columns) == list(im.columns),
-            "arrow_types": {c: {"refengine": ts.get(c), "impl": ti.get(c)} for c in sp.columns},
-            "columns": {},
-        }
-        tr["types_identical"] = all(ts.get(c) == ti.get(c) for c in sp.columns)
-        tr["row_counts_identical"] = len(sp) == len(im)
-        if not tr["columns_identical_and_ordered"]:
-            flagged.append(f"(a) {tn}: column names/order differ")
-        if not tr["row_counts_identical"]:
-            flagged.append(f"(a) {tn}: rows {len(sp)} vs {len(im)}")
-        for c in sp.columns:
-            if c not in im.columns:
-                flagged.append(f"(b) {tn}.{c}: missing in impl")
-                n_cols += 1
-                continue
-            gen = raw["tables"][tn]["columns"][c]["generator"]
-            if (tn, c) in pool_cols:
-                cr = allowed_pool_column(sp[c], im[c], pools, pool_cols[(tn, c)], gen)
-                allowed_report.setdefault("CMP-2", {})[f"{tn}.{c}"] = cr
-            else:
-                cr = compare_column(
-                    sp[c],
-                    im[c],
-                    B[(tn, c)],
-                    column_pool(pools, raw, fk_parent, tn, c),
-                    pools.component_fn(gen),
+        for seed in (REF_SEED, *BASELINE_SEEDS):
+            if not a.no_generate and not ensure_run("baseline", a.domain, a.scale, seed, tables):
+                raise RecordingError(
+                    f"generate:{a.domain}:{a.scale}: baseline seed{seed} unavailable"
                 )
-            cr["arrow_type_match"] = ts.get(c) == ti.get(c)
-            allowed = DELIBERATE.get((domain, tn, c)) if impl == "shape" else None
-            if allowed is not None:
-                failing = tuple(k for k, v in cr["checks"].items() if not v)
-                if not failing:
-                    flagged.append(f"(b-e) {tn}.{c}: stale entry in domain_differences.py")
-                elif failing == allowed.fails and allowed.accepts(im[c]):
-                    cr["equivalent"] = True
-                    cr["deliberate"] = allowed.reason
-            cr["equivalent"] = cr["equivalent"] and cr["arrow_type_match"]
-            tr["columns"][c] = cr
-            n_cols += 1
-            n_pass += cr["equivalent"]
-            if not cr["equivalent"]:
-                flagged.append(
-                    f"(b-e) {tn}.{c}: failed {[k for k, v in cr['checks'].items() if not v]}"
-                    + ("" if cr["arrow_type_match"] else " type")
-                )
-        report["tables"][tn] = tr
-
-    # (f) FK integrity + fan-out
-    report["fk_integrity"] = {
-        "refengine": fk_checks(SP, fks),
-        "impl": fk_checks(IM_full, fks_cmp + fks_bridge),
-    }
-    for k, v in report["fk_integrity"]["impl"].items():
-        if v["integrity"] < 1.0:
-            flagged.append(f"(f) FK integrity {k}: {v['integrity']:.6f}")
-    fi = fanout(IM, fks_cmp)
-    fo = {}
-    for k in fan_sp:
-        cs, ci = fan_sp[k].pop("_counts"), fi[k].pop("_counts")
-        d = ks(cs.astype(float), ci.astype(float))
-        tol = max(ks_crit(len(cs), len(ci)), 1.5 * B[("fanout", k)] + FANOUT_TOL_ABS)
-        fo[k] = {
-            "refengine": fan_sp[k],
-            "impl": fi[k],
-            "ks_counts": d,
-            "ks_baseline_max": B[("fanout", k)],
-            "ks_tol": tol,
-            "equivalent": bool(d <= tol),
-        }
-        if not d <= tol:
-            flagged.append(f"(f) fan-out {k}: KS {d:.4f} > tol {tol:.4f}")
-    report["fanout"] = fo
-
-    # record coherence and strategy semantics: impl must not be worse than RefEngine's own worst
-    # seed
-    sem_im, coh_im = semantic_rates(IM, raw), record_coherence(IM, raw, pools)
-    for label, im_r, sp_rs in (
-        ("record_coherence", coh_im, coh_sp),
-        ("strategy_semantics", sem_im, sem_sp),
-    ):
-        report[label] = {}
-        for k, v in im_r.items():
-            floor = min(r[k] for r in sp_rs) - 0.005
-            report[label][k] = {"impl": v, "refengine": [r[k] for r in sp_rs], "floor": floor}
-            if v < floor:
-                flagged.append(
-                    f"({'e' if label == 'record_coherence' else 'f'}) {label}: {k} "
-                    f"impl {v:.4f} < floor {floor:.4f}"
-                )
-
-    # (g) RefEngine's BusinessRulesEngine on the impl output
-    viol = BusinessRulesEngine().validate(IM, schema)
-    report["business_rules"] = {
-        "refengine_BusinessRulesEngine_violations": {v.rule_name: v.violation_count for v in viol},
-        "refengine_on_refengine": {
-            v.rule_name: v.violation_count for v in BusinessRulesEngine().validate(SP, schema)
-        },
-    }
-    for v in viol:
-        flagged.append(f"(g) business rule {v.rule_name}: {v.violation_count} violations")
-
-    # (h) RefEngine's FidelityComparator, asserted per table:
-    #     impl >= min over seeds 43-46 of (RefEngine vs RefEngine) - 0.5
-    rep = fc.compare(SP, IM)
-    fidelity_tables = {}
-    for t in rep.tables:
-        base = [b.tables[t].score for b in fc_base]
-        floor = min(base) - 0.5
-        fidelity_tables[t] = {
-            "impl": rep.tables[t].score,
-            "baseline": base,
-            "floor": floor,
-            "ok": bool(rep.tables[t].score >= floor),
-        }
-        if rep.tables[t].score < floor:
-            flagged.append(f"(h) fidelity {t}: {rep.tables[t].score:.2f} < floor {floor:.2f}")
-    report["refengine_fidelity_comparator"] = {
-        "overall_impl": rep.overall_score,
-        "overall_baseline_refengine_vs_refengine": [b.overall_score for b in fc_base],
-        "tables": fidelity_tables,
-    }
-    if allowed_report:
-        report["allowed_differences"] = {k: v for k, v in allowed_report.items() if k != "problems"}
-    report["summary"] = {
-        "columns_total": n_cols,
-        "columns_equivalent": n_pass,
-        "flagged": flagged,
-        "passed": not flagged,
-        "seconds": time.time() - t0,
-    }
-
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(report, indent=1, default=str))
-    txt = summary_text(report)
-    out.with_suffix(".txt").write_text(txt)
-    print(txt)
-    return 0 if not flagged else 1
-
-
-def summary_text(R) -> str:
-    L = [
-        f"RefEngine {R['domain']} (seed {R['seed']}) vs {R['impl']} (seed {R['impl_seed']}) "
-        f"- scale={R['scale']}  (baseline = max distance of RefEngine seeds {R['baseline_seeds']} "
-        f"to RefEngine seed {R['seed']})",
-        f"table order identical: {R['table_order']['refengine'] == R['table_order']['impl']}",
-        "",
-    ]
-    L.append(
-        f"{'table.column':34s} {'kind':11s} {'type':5s} {'null s/i':>15s} {'dist':>10s} "
-        f"{'baseline':>9s} {'tol':>7s} {'vocab':>6s}  verdict"
-    )
-    for tn, tr in R["tables"].items():
-        L.append(
-            f"-- {tn}: rows {tr['rows']['refengine']:,} / {tr['rows']['impl']:,}  "
-            f"cols identical+ordered={tr['columns_identical_and_ordered']}  "
-            f"types identical={tr['types_identical']}"
+            authenticate_run(a.domain, a.scale, seed, record)
+        if not a.no_generate and not ensure_run("shape", a.domain, a.scale, IMPL_SEED, tables):
+            raise RecordingError(f"generate:{a.domain}:{a.scale}: candidate unavailable")
+        reference_impl = "baseline-cli" if a.cli else "baseline"
+        candidate_impl = "shape-cli" if a.cli else "shape"
+        if a.cli:
+            if not a.no_generate:
+                for impl, seed in (("baseline", 42), ("shape", 1042)):
+                    if not ensure_cli_run(impl, a.domain, a.scale, seed, tables):
+                        raise RecordingError(
+                            "generate:" + a.domain + ":" + a.scale + ": CLI output unavailable"
+                        )
+            authenticate_run(a.domain, a.scale, 42, record, "baseline-cli")
+        ref = load_run(reference_impl, a.domain, a.scale, 42, tables)
+        others = [load_run("baseline", a.domain, a.scale, s, tables) for s in BASELINE_SEEDS]
+        candidate = load_run(candidate_impl, a.domain, a.scale, 1042, tables)
+        pools = Pools(a.domain, record.get("identifier_forms", []))
+        report = compare_runs(raw, ref, candidate, others, pools)
+        report["baseline"]["commit"] = manifest()["shape_commit"]
+        if a.negative_control:
+            controls = negative_controls(raw, ref, candidate, others, pools)
+            report["negative_control"] = controls
+            for name, caught in controls.items():
+                print(name + ": " + ("caught" if caught else "MISSED"))
+            ok = not report["flagged"] and all(controls.values())
+        else:
+            ok = not report["flagged"]
+        dest = (
+            Path(a.report)
+            if a.report
+            else BENCH_OUT_DIR / "verify" / (a.domain + "_" + a.scale + ".json")
         )
-        for c, cr in tr["columns"].items():
-            if cr["kind"] == "allowed":
-                L.append(
-                    f"{tn + '.' + c:34s} ALLOWED {cr['allowed']}: Shape values in "
-                    f"{cr['intended_pool']} {cr['shape_values_in_intended_pool']:.4f}, baseline's "
-                    f"{cr['baseline_values_in_intended_pool']:.4f}  "
-                    f"{'EQUIVALENT' if cr['equivalent'] else 'NOT EQUIVALENT'}"
-                )
-                continue
-            if "ks" in cr:
-                d, b, t = cr["ks"], cr["ks_baseline"], cr["ks_tol"]
-                tag = "KS"
-            elif "tvd" in cr:
-                d, b, t = cr["tvd"], cr["tvd_baseline"], cr["tvd_tol"]
-                tag = "TVD"
-            else:
-                d = abs(cr["distinct"]["ratio"] - 1)
-                b, t = cr["distinct"]["baseline_max_ratio_dev"], cr["distinct_ratio_tol"]
-                tag = "|dR-1|"
-            vo = cr.get("component_overlap", cr.get("vocab_overlap"))
-            L.append(
-                f"{tn + '.' + c:34s} {cr['kind']:11s} "
-                f"{'ok' if cr['arrow_type_match'] else 'DIFF':5s} "
-                f"{cr['null_rate']['refengine']:.4f}/{cr['null_rate']['impl']:.4f} "
-                f"{tag:>3s} {d:7.4f} {b:9.4f} {t:7.4f} {'' if vo is None else f'{vo:6.4f}':>6s}  "
-                f"{'EQUIVALENT' if cr['equivalent'] else 'NOT EQUIVALENT'}"
-                f"{' (deliberate, domain_differences.py)' if cr.get('deliberate') else ''}"
-            )
-    L += ["", "FK integrity (refengine / impl):"]
-    for k in R["fk_integrity"]["refengine"]:
-        impl = R["fk_integrity"]["impl"].get(k)  # absent: a key CMP-1 moves to a bridge column
-        L.append(
-            f"  {k:55s} {R['fk_integrity']['refengine'][k]['integrity']:.4f} / "
-            f"{'moved (CMP-1)' if impl is None else format(impl['integrity'], '.4f')}"
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(json.dumps(report, sort_keys=True, indent=2, default=str) + "\n")
+        n = sum(len(t["columns"]) for t in report["tables"].values())
+        passed = sum(
+            c["equivalent"] for t in report["tables"].values() for c in t["columns"].values()
         )
-    for k in R["fk_integrity"]["impl"]:
-        if k not in R["fk_integrity"]["refengine"]:
-            L.append(f"  {k:55s} (bridge, CMP-1) / {R['fk_integrity']['impl'][k]['integrity']:.4f}")
-    L.append(
-        "FK fan-out (children per parent)  "
-        "refengine p50/p90/p99/max/zero% | impl | KS (baseline max, tol)"
-    )
-    for k, v in R["fanout"].items():
-        s, p = v["refengine"], v["impl"]
-        L.append(
-            f"  {k:40s} {s['p50']:.0f}/{s['p90']:.0f}/{s['p99']:.0f}/{s['max']}/"
-            f"{s['zero_frac']:.3f} | "
-            f"{p['p50']:.0f}/{p['p90']:.0f}/{p['p99']:.0f}/{p['max']}/{p['zero_frac']:.3f} | "
-            f"{v['ks_counts']:.4f} ({v['ks_baseline_max']:.4f}, {v['ks_tol']:.4f})"
+        print(
+            f"{passed}/{n} columns EQUIVALENT; clauses a-f; Shape {BASELINE_VERSION} seeds 42 to 46"
         )
-    for label in ("record_coherence", "strategy_semantics"):
-        L.append(f"{label} (impl / min over RefEngine seeds, floor):")
-        for k, v in R[label].items():
-            L.append(
-                f"  {k:60s} {v['impl']:.4f} / {min(v['refengine']):.4f}  floor {v['floor']:.4f}"
-            )
-    L.append(
-        "RefEngine BusinessRulesEngine violations on impl output: "
-        f"{json.dumps(R['business_rules']['refengine_BusinessRulesEngine_violations'])}"
-    )
-    fc = R["refengine_fidelity_comparator"]
-    L.append(
-        f"RefEngine FidelityComparator (real=RefEngine seed {R['seed']}, synthetic=impl): "
-        f"overall impl={fc['overall_impl']:.2f}  "
-        "RefEngine-vs-RefEngine baselines="
-        f"{[round(x, 2) for x in fc['overall_baseline_refengine_vs_refengine']]}"
-    )
-    for t, v in fc["tables"].items():
-        L.append(
-            f"  {t:18s} impl {v['impl']:6.2f}  floor {v['floor']:6.2f}  "
-            f"baselines {[round(x, 2) for x in v['baseline']]}  {'ok' if v['ok'] else 'FAIL'}"
+        for flag in report["flagged"]:
+            print(flag)
+        return 0 if ok else 1
+    except (RecordingError, OSError, KeyError) as exc:
+        print(
+            str(exc)
+            if isinstance(exc, RecordingError)
+            else f"generate:{a.domain}:{a.scale}: unavailable input",
+            file=sys.stderr,
         )
-    s = R["summary"]
-    L += ["", f"COLUMNS EQUIVALENT: {s['columns_equivalent']}/{s['columns_total']}"]
-    for f in s["flagged"]:
-        L.append(f"  NOT EQUIVALENT: {f}")
-    L.append(f"VERDICT: {'PASS' if s['passed'] else 'FAIL'}")
-    return "\n".join(L) + "\n"
+        return 2
+
+
+def foreign_keys(raw: dict[str, Any]) -> list[tuple[str, str, str, str]]:
+    """(child, child_col, parent, parent_col): schema relationships, self-referencing
+    columns, and lookups whose source column is itself a foreign key."""
+    fks: list[tuple[str, str, str, str]] = []
+    for r in raw["relationships"]:
+        for cc, pc_ in zip(r["child_columns"], r["parent_columns"], strict=False):
+            fks.append((r["child"], cc, r["parent"], pc_))
+    for tn, t in raw["tables"].items():
+        for cn, c in t["columns"].items():
+            g = c["generator"]
+            if g.get("strategy") == "self_referencing":
+                fks.append((tn, cn, tn, g["pk_column"]))
+    known = {(c, cc): (p, pc_) for c, cc, p, pc_ in fks}
+    for tn, t in raw["tables"].items():
+        for cn, c in t["columns"].items():
+            g = c["generator"]
+            if g.get("strategy") == "lookup" and (g["source_table"], g["source_column"]) in known:
+                p, pc_ = known[(g["source_table"], g["source_column"])]
+                fks.append((tn, cn, p, pc_))
+    return list(dict.fromkeys(fks))
 
 
 if __name__ == "__main__":

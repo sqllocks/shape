@@ -185,6 +185,7 @@ nav:
   - Python API: API.md
   - API stability: API_STABILITY.md
   - Performance (generated): reference/performance.md
+  - Release regression benchmarks: PERFORMANCE.md
   - Specifications:
     - Shape model v2: specs/SHAPE_MODEL_V2.md
     - Normative contract v2: specs/SHAPE_2.md
@@ -197,6 +198,7 @@ nav:
   - Product architecture: PRODUCT_ARCHITECTURE.md
   - Release policy: RELEASE_POLICY.md
   - Release checklist: RELEASE_CHECKLIST.md
+  - Release 0.9.1 tag and digest check: evidence/release-0.9.1-verify.md
   - Definition of done for 1.0: V1_DONE.md
 - Help and trust:
   - Troubleshooting: TROUBLESHOOTING.md
@@ -204,6 +206,26 @@ nav:
   - Known limitations: KNOWN_LIMITATIONS.md
   - What leaves my machine: WHAT_LEAVES.md
   - Licensing: LICENSING.md
+  - Public owner decisions: DECISIONS.md
+  - Published receipts:
+    - Overview: evidence/index.md
+    - Installed VSIX and real editor receipt: evidence/vscode-install.md
+    - Live fidelity overhead — committed local measurement: evidence/live-fidelity-measurement.md
+    - Allocator policy — committed product A/B measurement: evidence/allocator-measurement.md
+    - Local Delta doctor receipt — CLI example 5: evidence/local-delta-doctor.md
+    - Snowflake write receipt: evidence/snowflake-write.md
+    - Databricks write receipt: evidence/databricks-write.md
+    - Kerberos keytab sign-in — Owner-run receipt: evidence/kerberos-live.md
+    - Semantic model profiling in a Fabric notebook — Owner-run receipt: evidence/semantic-model-notebook.md
+    - PostgreSQL export and profile receipt: evidence/postgresql-export-profile.md
+    - MySQL export and profile receipt: evidence/mysql-export-profile.md
+    - PostgreSQL 17 (local Docker, reached from the VM over the Hyper-V network) — Owner-run receipt: evidence/postgresql-live.md
+    - MySQL 8.4 (local Docker), over TLS with the server's own CA — Owner-run receipt: evidence/mysql-live.md
+    - Hosted GitHub Action pass receipt: evidence/github-action-pass.md
+    - Hosted GitHub Action drift receipt: evidence/github-action-drift.md
+    - Hosted GitHub Action required-check receipt: evidence/github-action-ruleset.md
+    - Doctor additional-environment receipts: evidence/doctor-additional-environments.md
+    - Fresh local Delta extension installation and real fallback: evidence/delta-extension-fallback.md
   - Security: SECURITY.md
 - Platforms:
   - Databases: databases/index.md

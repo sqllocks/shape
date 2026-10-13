@@ -110,6 +110,7 @@ class PackValidator:
 
         self._entities(pack, domain_tables, result)
         self._topics(pack, domain_tables, result)
+        self._payload_fields(pack, schema, result)
         if pack.kind == "file_drop":
             self._file_drop(pack, result)
         if pack.kind == "stream":
@@ -155,6 +156,22 @@ class PackValidator:
                 result.warnings.append(
                     f"Topic '{topic.name}' matches no table of the domain and emits no events"
                 )
+
+    @staticmethod
+    def _payload_fields(pack: ScenarioPack, schema: Any, result: PackValidationResult) -> None:
+        """A topic's payload_fields are columns of the table it stands for."""
+        tables = list(schema.table_names)
+        for topic in pack.topics:
+            table = match_table(topic.name, tables) if topic.name else None
+            if table is None:
+                continue
+            columns = schema.tables[table].columns
+            for name in topic.payload_fields:
+                if name not in columns:
+                    result.errors.append(
+                        f"Topic '{topic.name}' payload field '{name}' is not a column of "
+                        f"table '{table}'. Columns: {', '.join(columns)}"
+                    )
 
     @staticmethod
     def _file_drop(pack: ScenarioPack, result: PackValidationResult) -> None:

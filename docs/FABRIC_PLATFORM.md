@@ -32,6 +32,7 @@ and today's date. If the page says preview, the call does not go in; open an iss
 | rest | POST /v1/workspaces/{workspace_id}/items | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/items/create-item | 2026-10-03 | plugins/shape-fabric/src/shape_fabric/fabric_api.py, src/shape/scale/spark.py, plugins/shape-fabric/tests/test_live_git_sync.py |
 | rest | DELETE /v1/workspaces/{workspace_id}/items/{item_id} | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/items/delete-item | 2026-10-03 | plugins/shape-fabric/src/shape_fabric/fabric_api.py, plugins/shape-fabric/tests/test_live_git_sync.py |
 | rest | POST /v1/workspaces/{workspace_id}/items/{item_id}/updateDefinition | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/items/update-item-definition | 2026-10-03 | plugins/shape-fabric/tests/test_live_git_sync.py |
+| rest | GET /v1/workspaces/{workspace_id}/lakehouses/{lakehouse_id} | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/lakehouse/items/get-lakehouse | 2026-10-12 | src/shape/integrations/fabric/lakehouse_kind.py, src/shape/scale/spark.py |
 | rest | GET /v1/workspaces/{workspace_id}/notebooks | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/notebook/items/list-notebooks | 2026-10-03 | src/shape/scale/spark.py |
 | rest | POST /v1/workspaces/{workspace_id}/items/{item_id}/jobs/instances | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/run-on-demand-item-job | 2026-10-03 | src/shape/scale/spark.py |
 | rest | GET /v1/workspaces/{workspace_id}/items/{item_id}/jobs/instances/{run_id} | GA | n/a | https://learn.microsoft.com/en-us/rest/api/fabric/core/job-scheduler/get-item-job-instance | 2026-10-03 | src/shape/scale/jobs.py |
@@ -148,6 +149,8 @@ Run by hand:
 
 **Needs a Fabric account. Not run in CI.**
 
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers.
+
 ```
 pip install -e '.[dev]' -e 'plugins/shape-fabric[entra]'
 FABRIC_TENANT_ID=... FABRIC_CLIENT_ID=... FABRIC_CLIENT_SECRET=... FABRIC_GIT_WORKSPACE_ID=... \
@@ -156,7 +159,24 @@ SHAPE_LIVE_RESULT=git-sync-result.json \
 pytest -m live plugins/shape-fabric/tests/test_live_git_sync.py
 ```
 
-<!-- owner: Fabric maintainer — supply the transcript for docs/FABRIC_PLATFORM.md example 0. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    ======================================= test session starts ========================================
+    platform linux -- Python 3.12.15, pytest-9.1.1, pluggy-1.6.0
+    rootdir: <checkout>
+    configfile: pyproject.toml
+    plugins: Faker-40.43.0, hypothesis-6.169.0, platformdirs-4.13.0, sqllocks-shape-0.9.1, cov-7.1.0
+    collected 1 item
+    
+    plugins/shape-fabric/tests/test_live_git_sync.py .                                           [100%]
+    
+    ================================== 1 passed in 143.59s (0:02:23) ===================================
+    ```
+
+Evidence: [run 38320894194, ubuntu-latest, `6eb065e8f734`](evidence/transcripts/docs-transcripts-38320894194-6eb065e8f734-ubuntu-latest-git-sync-live.json).
+
+A second run of the same test against the same Git workspace (run 38327274076) failed with `CommitFailedDueToIncomingChanges`: the test leaves the workspace with changes to update from Git, so it passes on a clean workspace and fails when repeated until Git is updated.
 
 
 The nightly job `fabric-git-sync-live` runs it only where the secrets are set and uploads the

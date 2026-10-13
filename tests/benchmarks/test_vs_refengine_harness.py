@@ -29,21 +29,23 @@ def _load(name: str, path: Path):
 
 
 run = _load("vs_refengine_run", BENCH / "run.py")
-coverage = _load("vs_refengine_check_coverage", BENCH / "check_coverage.py")
+from . import historical_coverage as coverage  # noqa: E402 (harness path bootstrap)
 
 
 def _sample_results() -> dict:
-    ver = {"status": "pass", "exit_code": 0, "command": "verify.py --impl reference_port"}
+    ver = {"status": "pass", "exit_code": 0, "command": "verify.py --impl shape"}
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "mode": "quick",
         "runs": 3,
         "generated_utc": "2026-01-01T00:00:00Z",
         "machine": {"cores": 4},
-        "refengine_commit": "422e78d",
         "shape_commit": "abc",
         "shape_tree_dirty": False,
-        "refengine": {
+        "baseline": {
+            "kind": "shape",
+            "version": "0.9.1",
+            "commit": "422e78d",
             "workloads": {
                 "profile:d1.csv": {
                     "kind": "profile",
@@ -52,9 +54,9 @@ def _sample_results() -> dict:
                     "runs_s": [1.5],
                     "verifier": None,
                 }
-            }
+            },
         },
-        "reference_port": {
+        "shape": {
             "workloads": {
                 "profile:d1.csv": {
                     "kind": "profile",
@@ -62,12 +64,11 @@ def _sample_results() -> dict:
                     "median_s": 0.2,
                     "median_s_1t": 0.3,
                     "runs_s": [0.2],
-                    "speedup_vs_refengine": 7.5,
+                    "ratio_vs_baseline": 7.5,
                     "verifier": ver,
                 }
             }
         },
-        "shape": None,
     }
 
 
@@ -88,10 +89,20 @@ def test_results_schema_requires_shape_key(schema):
 
 def test_results_schema_rejects_bad_verifier_status_and_types(schema):
     doc = _sample_results()
-    doc["reference_port"]["workloads"]["profile:d1.csv"]["verifier"]["status"] = "maybe"
+    doc["shape"]["workloads"]["profile:d1.csv"]["verifier"]["status"] = "maybe"
     doc["runs"] = "3"
     errs = run.validate(doc, schema)
     assert any("verifier" in e for e in errs) and any("$.runs" in e for e in errs)
+
+
+@pytest.mark.parametrize("retired", ["v1", "refengine", "reference_port"])
+def test_results_schema_rejects_retired_documents_and_tool_keys(schema, retired):
+    doc = _sample_results()
+    if retired == "v1":
+        doc["schema_version"] = 1
+    else:
+        doc[retired] = {"workloads": {}}
+    assert run.validate(doc, schema)
 
 
 def test_coverage_globs_need_equal_segment_counts():
@@ -125,9 +136,8 @@ def test_env_file_is_the_section_1_block():
     text = (ROOT / "scripts" / "env.sh").read_text(encoding="utf-8")
     for var in (
         "SHAPE_ROOT",
-        "REFENGINE_ROOT",
-        "REFENGINE_VENV",
-        "REFENGINE_PY",
+        "BASELINE_VENV",
+        "BASELINE_PY",
         "SHAPE_VENV",
         "BENCH_DATA_DIR",
         "BENCH_OUT_DIR",
@@ -136,11 +146,11 @@ def test_env_file_is_the_section_1_block():
 
 
 def test_paths_module_defaults_follow_env(monkeypatch):
-    monkeypatch.setenv("REFENGINE_ROOT", "/nonexistent/refengine")
+    monkeypatch.setenv("BASELINE_VENV", "/nonexistent/baseline")
     monkeypatch.setenv("BENCH_OUT_DIR", "/nonexistent/out")
     sys.modules.pop("paths", None)
     import paths
 
-    assert paths.REFENGINE_ROOT == Path("/nonexistent/refengine")
+    assert paths.BASELINE_VENV == Path("/nonexistent/baseline")
     assert paths.BENCH_OUT_DIR == Path("/nonexistent/out")
     sys.modules.pop("paths", None)

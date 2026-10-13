@@ -487,7 +487,7 @@ Some statistics sample inside themselves, whatever you asked for. The record lis
 | `multivariate_outliers` | the joint analysis's multivariate outliers over more than 600 rows | 600 rows for FAST-MCD's starts, `random`, seed 20260327 (the fit and the rate read every analysed row) |
 | `cohorts` | cohorts over more than 2,000 analysed rows | 2,000, `random`, seed 20260328 |
 
-Each entry has `analysis`, `rows`, `method`, `seed` and, for the column analyses, the `columns` it applied to. The
+Each entry has `analysis`, `rows`, `method`, `seed` and, for the column analyses, `column_indexes`: the positions, in the table's `columns` object, of the columns it applied to. Profiles written by 0.9.1 keep the column names in a `columns` list instead; Shape reads both forms. The
 statistics of a sampled table sample inside the rows that were kept. A test fails when a code path draws a sample that is not
 registered here (`shape.profile.sampling.INTERNAL`).
 

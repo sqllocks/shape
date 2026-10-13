@@ -1,0 +1,39 @@
+{
+  "run_id": "38320894194",
+  "commit": "6eb065e8f7349613291e67678b05227ab1e002ff",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "Intel(R) Xeon(R) 6973P-C",
+    "logical_cpus": 4,
+    "ram_bytes": 16765374464,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "26.0.0",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "workspace": "shape-test, service principal shape-ci-fabric",
+  "page": "docs/plugins/fabric-writers.md",
+  "example": "synapse-write",
+  "command": "shape generate retail --to synapse://myws.sql.azuresynapse.net/pool1 \\\n  --auth cli --sink-config synapse.staging_path=abfss://stage@myacct.dfs.core.windows.net/shape",
+  "executed_command": "shape generate retail --to \"$SHAPE_TEST_SYNAPSE_URI\" \\\n  --auth cli --sink-config synapse.staging_path=\"$SHAPE_TEST_SYNAPSE_STAGING\"",
+  "exit_code": 2,
+  "status": "failed",
+  "elapsed_seconds": 0.26249363800002357,
+  "stdout": "shape: error: refusing to write to non-local target synapse://<workspace>.sql.azuresynapse.net/<pool> without confirmation; pass --yes or set SHAPE_CONFIRM_REMOTE=1\n"
+}

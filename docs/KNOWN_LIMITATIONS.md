@@ -4,16 +4,17 @@ Check these constraints before you design a workflow.
 
 Status: available (profiles, contracts and drift); experimental (other surfaces).
 
-Shape is early access 0.9.1. Generation from a profile is available and is being hardened.
+Shape is early access 0.9.2. Generation from a profile is available and is being hardened.
 The 1.x compatibility promises describe future policy.
 
 - `shape generate --from X.shape` writes nothing without `--format`. An output directory alone
   does not select a writer. The Python tutorial explicitly writes its Arrow result to CSV.
 - DuckDB write URIs use `duckdb:///rel.duckdb`. Read URIs use `duckdb://rel.duckdb?table=T`.
   They come from different adapters: databases writes; integrations reads.
-- `shape profile validate --safe` fails on multi-table `--dataset` profiles in 0.9.1.
-  Single-table profiles pass in the tutorials. Do not treat that failure as proof of a leak
-  or bypass it as proof that a dataset is safe. <!-- owner: privacy maintainer — dataset validator fix. -->
+- Profiles written by 0.9.1 report `raw-string-list` findings under
+  `sampling.internal[].columns` on tables wide enough to sample, so `shape profile validate --safe`
+  fails them. Those lists hold column names, not values. Re-profile with 0.9.2, which records the
+  columns by position (`column_indexes`). 0.9.2 still reads the old profiles.
 - Snowflake and Databricks are write targets. Shape does not profile from them yet.
 - Model queries read model payloads, not saved profile payloads. A profile passed to a query
   is rejected. See [Models](MODELS.md).
@@ -32,16 +33,26 @@ The 1.x compatibility promises describe future policy.
 ## Fabric in 0.9.1
 
 - 0.9.1 emitted the Warehouse primary key inside `CREATE TABLE`, which a Fabric Warehouse rejects
-  with error 24584. Fixed after 0.9.1: the key is added by a separate
+  with error 24584. Fixed in 0.9.2: the key is added by a separate
   `ALTER TABLE ... ADD CONSTRAINT ... PRIMARY KEY NONCLUSTERED (...) NOT ENFORCED` after the table is
   created. On 0.9.1, create the destination tables yourself without inline keys, optionally add that
   `ALTER TABLE`, and write with `--write-mode append`.
-- 0.9.1's Delta target appended a table directly below the supplied directory, but a schema-enabled
-  Lakehouse requires `Tables/<schema>/<table>` (normally `dbo`). Fixed after 0.9.1: the Delta
-  target takes `schema_enabled=true` and writes `Tables/<schema>/<table>`, with `dbo` as the default
-  schema, and the Spark worker and demo take `--lakehouse-schema`. On 0.9.1, target a URI ending in
-  `Tables/dbo` or another existing schema. Read back with
-  `onelake://<workspace>/<lakehouse>/Tables/dbo/<table>`. Files landing zones are unaffected.
+- **NaN and ±Infinity are written as NULL** by the Fabric Warehouse, SQL database and Synapse
+  dedicated pool writers, because a T-SQL `float` holds only finite values. A table read back has
+  `NULL` where the generated data had `NaN`, so a row-for-row comparison of a float column must
+  treat `NaN` and `NULL` as the same cell. Other columns come back unchanged.
+- **Synapse dedicated pool: Parquet timestamps are staged as INT96.** A dedicated pool cannot read
+  Parquet `INT64` timestamps with microsecond or nanosecond precision (its `COPY INTO` fails with
+  `ClassCastException: Long cannot be cast to Binary`); INT96 loads into `datetime2` with the
+  microseconds intact
+  ([data loading strategies](https://learn.microsoft.com/azure/synapse-analytics/sql-data-warehouse/design-elt-data-loading#3-prepare-the-data-for-loading)).
+- Schema-enabled Lakehouses require `Tables/<schema>/<table>` (normally `dbo`), whereas
+  0.9.1's Delta target appended a table directly below the supplied directory, so the tables did
+  not appear in the SQL analytics endpoint or in semantic models. Fixed in 0.9.2: the Delta sink
+  and `fabric_spark` ask Fabric which kind of Lakehouse the target is and write the schema folder
+  (`dbo` by default); they stop with a clear error rather than guess. On 0.9.1, target a URI ending
+  in `Tables/dbo` (or another existing schema). Files landing zones were never affected. See
+  [Lakehouse table layouts](plugins/cloud-sources.md#lakehouse-table-layouts).
 - **Fabric Warehouse `COPY INTO` can fall back to row-by-row `INSERT`.** Shape stages Parquet in
   OneLake and loads it with `COPY INTO`. When the Warehouse answers SQL error 13840 ("Access token
   couldn't be fetched for storage path"), it rolls back the statement, reapplies an uncommitted

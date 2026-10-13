@@ -1,0 +1,39 @@
+{
+  "run_id": "38327274076",
+  "commit": "c80398dbe8f8fe5cb735e6e4a8e62bbe50e5b3a4",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "AMD EPYC 9V45 96-Core Processor",
+    "logical_cpus": 4,
+    "ram_bytes": 16766414848,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "26.0.0",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "workspace": "shape-test, service principal shape-ci-fabric",
+  "page": "docs/FABRIC_PLATFORM.md",
+  "example": "git-sync-live",
+  "command": "pip install -e '.[dev]' -e 'plugins/shape-fabric[entra]'\nFABRIC_TENANT_ID=... FABRIC_CLIENT_ID=... FABRIC_CLIENT_SECRET=... FABRIC_WORKSPACE_ID=... \\\nFABRIC_GIT_REMOTE=https://github.com/<owner>/<repo>.git FABRIC_GIT_TOKEN=... \\\nSHAPE_LIVE_RESULT=git-sync-result.json \\\npytest -m live plugins/shape-fabric/tests/test_live_git_sync.py",
+  "executed_command": "pip install -e '.[dev]' -e 'plugins/shape-fabric[entra]'\nFABRIC_TENANT_ID=\"$FABRIC_TENANT_ID\" FABRIC_CLIENT_ID=\"$FABRIC_CLIENT_ID\" FABRIC_CLIENT_SECRET=\"$FABRIC_CLIENT_SECRET\" FABRIC_WORKSPACE_ID=\"$FABRIC_GIT_WORKSPACE_ID\" \\\nFABRIC_GIT_REMOTE=\"$FABRIC_GIT_REMOTE\" FABRIC_GIT_TOKEN=\"$FABRIC_GIT_TOKEN\" \\\nSHAPE_LIVE_RESULT=git-sync-result.json \\\npytest -m live plugins/shape-fabric/tests/test_live_git_sync.py",
+  "exit_code": 1,
+  "status": "failed",
+  "elapsed_seconds": 37.951426335000065,
+  "stdout": "======================================= test session starts ========================================\nplatform linux -- Python 3.12.15, pytest-9.1.1, pluggy-1.6.0\nrootdir: <checkout>\nconfigfile: pyproject.toml\nplugins: Faker-40.43.0, hypothesis-6.169.0, platformdirs-4.13.0, sqllocks-shape-0.9.1, cov-7.1.0\ncollected 1 item\n\nplugins/shape-fabric/tests/test_live_git_sync.py F                                           [100%]\n\n============================================= FAILURES =============================================\n______________________ test_shape_files_survive_a_git_sync_in_both_directions ______________________\n\ntmp_path = PosixPath('/tmp/pytest-of-runner/pytest-1/test_shape_files_survive_a_git0')\n\n    def test_shape_files_survive_a_git_sync_in_both_directions(tmp_path):\n        for name in NEEDED:  # the first missing one is the one named\n            need(name)\n        from azure.identity import ClientSecretCredential\n    \n        secrets = [need(\"FABRIC_CLIENT_SECRET\"), need(\"FABRIC_GIT_TOKEN\")]\n        credential = ClientSecretCredential(\n            need(\"FABRIC_TENANT_ID\"), need(\"FABRIC_CLIENT_ID\"), need(\"FABRIC_CLIENT_SECRET\")\n        )\n        secrets.append(credential.get_token(\"https://api.fabric.microsoft.com/.default\").token)\n        fabric = Fabric(Http(secrets[-1]), need(\"FABRIC_WORKSPACE_ID\"))\n        workspace_id = need(\"FABRIC_WORKSPACE_ID\")\n        check = LiveCheck(\n            \"fabric-git-sync\",\n            __version__,\n            secrets=[*secrets, workspace_id, need(\"FABRIC_TENANT_ID\"), need(\"FABRIC_CLIENT_ID\")],\n        )\n        repo = tmp_path / \"repo\"\n        repo.mkdir()\n        git = Git(\n            need(\"FABRIC_GIT_REMOTE\"),\n            need(\"FABRIC_GIT_TOKEN\"),\n            os.environ.get(\"FABRIC_GIT_USER\", \"x-access-token\"),\n            repo,\n        )\n        tag = uuid.uuid4().hex[:8]\n        name = f\"shape_git_sync_{tag}\"\n        item_id = None\n        branch, directory = \"\", \"\"\n        try:\n            with check.step(\"connection\"):\n                branch, directory = fabric.connection()\n                git.clone(branch)\n            with check.step(\"setup-item\"):\n                item_id = fabric.create_notebook(name, \"initial\")\n                status = fabric.status()\n>               fabric.commit_to_git(status[\"workspaceHead\"])\n\nplugins/shape-fabric/tests/test_live_git_sync.py:313: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \nplugins/shape-fabric/tests/test_live_git_sync.py:213: in commit_to_git\n    self.http.request(\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nself = <shape.scale.http.Http object at 0x7f372a087d10>, method = 'POST'\nurl = 'https://api.fabric.microsoft.com/v1/workspaces/<git-workspace-id>/git/commitToGit'\nbody = {'mode': 'All', 'workspaceHead': '9ff6599f3d0463cb184066a1f720de2afb4a508b', 'comment': 'shape live check'}\nraw = None, token = None, extra = None, timeout = 60.0, ok = (200, 201, 202, 204)\n\n    def request(\n        self,\n        method: str,\n        url: str,\n        *,\n        body: Any = None,\n        raw: bytes | None = None,\n        token: str | None = None,\n        extra: Mapping[str, str] | None = None,\n        timeout: float = 30.0,\n        ok: tuple[int, ...] = (200, 201, 202, 204),\n    ) -> HttpResponse:\n        headers = {\"Authorization\": f\"Bearer {token or self._token}\", **(extra or {})}\n        data = raw\n        if body is not None:\n            data = json.dumps(body).encode(\"utf-8\")\n            headers[\"Content-Type\"] = \"application/json\"\n        for attempt in range(self._retries + 1):\n            response = self._transport(method, url, headers, data, timeout)\n            if response.status in ok:\n                return response\n            retryable = response.status in (429, 500, 502, 503, 504)\n            if retryable and attempt < self._retries:\n                wait = response.headers.get(\"retry-after\", \"\")\n                backoff = min(2.0**attempt, 30.0)\n                self._sleep(min(float(wait), MAX_RETRY_WAIT) if wait.isdigit() else backoff)\n                continue\n>           raise HttpError(response.status, url, response.text)\nE           shape.scale.http.HttpError: HTTP 400 from https://api.fabric.microsoft.com/v1/workspaces/<git-workspace-id>/git/commitToGit: {\"requestId\":\"<guid>\",\"errorCode\":\"CommitFailedDueToIncomingChanges\",\"message\":\"Commit failed due to incoming changes. Please update from Git before committing again.\",\"isRetriable\":false}\n\nsrc/shape/scale/http.py:225: HttpError\n===================================== short test summary info ======================================\nFAILED plugins/shape-fabric/tests/test_live_git_sync.py::test_shape_files_survive_a_git_sync_in_both_directions - shape.scale.http.HttpError: HTTP 400 from https://api.fabric.microsoft.com/v1/workspaces/<git-workspace-id>/git/commitToGit: {\"requestId\":\"<guid>\",\"errorCode\":\"CommitFailedDueToIncomingChanges\",\"message\":\"Commit failed due to incoming changes. Please update from Git before committing again.\",\"isRetriable\":false}\n======================================== 1 failed in 34.45s ========================================\n"
+}

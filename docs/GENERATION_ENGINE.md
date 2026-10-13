@@ -416,22 +416,39 @@ arrays and reads them back through `shape.generation.arrowkit`, which never impo
 own `array`, `to_numpy` and `scalar` can).
 
 `import shape` sets Arrow's allocator for the whole process, in one place (`shape._process.configure`),
-so the command line and the Python API behave alike. Arrow's default pool (mimalloc) reserves a large
-arena with `MADV_HUGEPAGE` at its first allocation, which on a virtual machine with transparent huge
-pages in `madvise` mode stalls 10 to 13 ms of system time in about half of all processes, and it maps
-fresh memory for each large array and returns it soon after, which makes the page faults of
-short-lived arrays a large part of a run. Two cases:
+so the command line and the Python API behave alike. The code selects Arrow's system pool or
+disables transparent huge pages as described below. The cost depends on the workload and host;
+the committed generation measurement below records observed wall time and peak RSS. Two cases:
 
 * `shape` is imported before `pyarrow` (the command line always is): `ARROW_DEFAULT_MEMORY_POOL=system`
   is set for the process, so every Arrow user in it, the Parquet encoder included, takes the system
   pool. A value the environment already has is kept.
 * `pyarrow` was imported first: its C++ default pool can no longer change, so transparent huge pages
-  are switched off for the process (`prctl(PR_SET_THP_DISABLE)`, Linux), which removes the stall.
+  are switched off for the process (`prctl(PR_SET_THP_DISABLE)`, Linux), and
   `generate()` additionally runs with Arrow's system pool for the Python-level allocations
   (`shape.generation.runtime.generation_memory`).
 
 `SHAPE_MEMORY_POOL=default` turns all of it off. Values are unaffected by pool selection; arrays remain valid with their original pool.
-<!-- owner: performance maintainer — commit a product measurement with the machine and workload before publishing allocator timing numbers. -->
+This product workload compares the default and system allocator configurations in fresh processes, with identical generated-table digests checked before recording three pairs of raw timings. Results describe this runner and workload only.
+
+<!-- owner-example: allocator-measurement -->
+
+```bash {.runnable-owner}
+python "$SHAPE_DOCS_REPO/scripts/docs_owner_measurements.py" allocator
+```
+
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-allocator-measurement.json).
+
+The [committed allocator A/B measurement](evidence/allocator-measurement.md) records the machine label, reproduction script, all samples and hashes. On the labelled Xeon Platinum 8573C cloud environment (four CPU quota), Shape 0.9.1 / Python 3.12.14 / PyArrow 25.0.1, the committed `retail:medium` schema at seed 42 generated 1,965,400 rows. Each cell used three fresh-process repetitions after one warm-up:
+
+| Import order | Setting | Median generation seconds | Median peak process RSS MiB |
+|---|---|---:|---:|
+| shape-first | Shape policy | 0.369247 | 293.53 |
+| shape-first | SHAPE_MEMORY_POOL=default | 0.323949 | 322.20 |
+| pyarrow-first | Shape policy | 0.337122 | 294.55 |
+| pyarrow-first | SHAPE_MEMORY_POOL=default | 0.357260 | 327.27 |
+
+All measured runs produced identical generated Arrow IPC bytes and row counts. These medians are observations on this machine, not a general speed or memory guarantee; generation time excludes imports and hashing, and process peak RSS includes imports. The measurement does not establish a first-allocation startup-stall duration.
 
 `shape.generation.keypos` finds the row of a key (`first_positions`, `first_rows`): for the primary key
 of a parent that is a sequence (`start`, `start + 1`, ...) the row is `key - start`, found by the native

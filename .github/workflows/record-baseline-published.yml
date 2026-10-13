@@ -1,0 +1,108 @@
+name: Re-record baseline from a published build
+# REL-092: after Publish to TestPyPI, record the regression baseline from the build the index
+# serves (not from a tree), then diff it against the committed store for review. Nothing is
+# committed, tagged or published here: the Owner downloads the artifacts and reviews them.
+# Needs FRZ-01 on main (benchmarks/vs_refengine/record_baseline.py, setup_baseline.sh).
+# No secrets. The release tag does not exist yet, so a local, unpushed tag in this runner's
+# checkout names the release commit for the recorder (it requires tag v<version>).
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version published to TestPyPI
+        required: true
+        default: '0.9.2'
+        type: string
+      index:
+        description: Index to install the baseline from (testpypi before PyPI, pypi after)
+        required: true
+        default: testpypi
+        type: choice
+        options: [testpypi, pypi]
+      release_commit:
+        description: The 40-character commit the TestPyPI Publish run built
+        required: true
+        type: string
+permissions: {contents: read}
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      BASELINE_VERSION: ${{ inputs.version }}
+      BENCH_OUT_DIR: ${{ github.workspace }}/bench-out
+      BASELINE_RECORD_DIR: ${{ github.workspace }}/recorded-new
+      SHAPE_TEST_MSSQL: "Driver={ODBC Driver 18 for SQL Server};Server=localhost,1433;UID=sa;PWD=Shape_Emulator_1;Encrypt=yes;TrustServerCertificate=yes"
+    steps:
+      - name: Inputs are well formed
+        env: {VERSION: '${{ inputs.version }}', COMMIT: '${{ inputs.release_commit }}'}
+        run: |
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::bad version"; exit 1; }
+          [[ "$COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::release_commit must be 40 hex characters"; exit 1; }
+      - uses: actions/checkout@v4
+        with: {ref: '${{ inputs.release_commit }}', fetch-depth: 0}
+      - name: FRZ-01 recorder is present
+        run: test -f benchmarks/vs_refengine/record_baseline.py || { echo "::error::FRZ-01 is not on this commit"; exit 1; }
+      - name: Local tag for the recorder (never pushed)
+        run: |
+          if git rev-parse -q --verify "refs/tags/v${BASELINE_VERSION}" >/dev/null; then
+            test "$(git rev-parse "v${BASELINE_VERSION}^{commit}")" = "${{ inputs.release_commit }}"
+          else
+            git tag "v${BASELINE_VERSION}" "${{ inputs.release_commit }}"
+          fi
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Microsoft ODBC Driver 18
+        run: |
+          curl -sSL -o "$RUNNER_TEMP/packages-microsoft-prod.deb" "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb"
+          sudo dpkg -i "$RUNNER_TEMP/packages-microsoft-prod.deb"
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
+      - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait mssql
+      - name: Install the published build as the baseline (first-party from the chosen index only)
+        env: {INDEX: '${{ inputs.index }}'}
+        run: |
+          mkdir -p "$BENCH_OUT_DIR"
+          source scripts/env.sh
+          if [ "$INDEX" = testpypi ]; then URL=https://test.pypi.org/simple/; else URL=https://pypi.org/simple/; fi
+          python -m venv "$BASELINE_VENV"
+          # first-party archives only from the chosen index, without dependencies; everything else from PyPI
+          "$BASELINE_PY" -m pip install --no-deps --index-url "$URL" \
+            "sqllocks-shape==$BASELINE_VERSION" "sqllocks-shape-domains==$BASELINE_VERSION" \
+            "sqllocks-shape-sqlserver==$BASELINE_VERSION"
+          "$BASELINE_PY" -m pip install "sqllocks-shape==$BASELINE_VERSION" \
+            "sqllocks-shape-domains==$BASELINE_VERSION" "sqllocks-shape-sqlserver==$BASELINE_VERSION" \
+            'pyarrow==25.0.1' 'pandas>=2' 'scipy>=1.11'
+          # setup_baseline.sh finds the pins already satisfied, checks version and Rust kernel, freezes
+          bash benchmarks/vs_refengine/setup_baseline.sh
+          "$BASELINE_PY" -m pip freeze > "$BENCH_OUT_DIR/baseline_freeze.txt"
+          python -m venv "$SHAPE_VENV"
+          "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-sqlserver 'pyarrow==25.0.1'
+      - name: Smoke pre-check, then record every workload (equivalence before timing)
+        run: |
+          source scripts/env.sh
+          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/record_baseline.py --all --smoke \
+            --mssql "$SHAPE_TEST_MSSQL;Database=tempdb" --out "$RUNNER_TEMP/smoke-store"
+          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/profile_1to1/datasets.py
+          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/record_baseline.py --all \
+            --mssql "$SHAPE_TEST_MSSQL;Database=tempdb" --out "$BASELINE_RECORD_DIR"
+      - name: Diff against the committed store for healthcare and capital markets
+        run: |
+          if [ -f benchmarks/vs_refengine/recorded/MANIFEST.json ]; then
+            python scripts/baseline_diff_report.py benchmarks/vs_refengine/recorded "$BASELINE_RECORD_DIR" \
+              --domains healthcare capital_markets --out baseline-diff.md
+          else
+            echo "# Baseline diff" > baseline-diff.md
+            echo "No committed store at benchmarks/vs_refengine/recorded; nothing to diff against." >> baseline-diff.md
+          fi
+          cat baseline-diff.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rerecorded-baseline
+          path: |
+            recorded-new/
+            baseline-diff.md
+            bench-out/baseline_freeze.txt
+      - if: always()
+        run: docker compose -f ci/emulators/docker-compose.yml down -v

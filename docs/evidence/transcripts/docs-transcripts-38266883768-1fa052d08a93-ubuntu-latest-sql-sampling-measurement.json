@@ -1,0 +1,37 @@
+{
+  "run_id": "38266883768",
+  "commit": "1fa052d08a93cecd303f4db1a9682539b59471b1",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "Intel(R) Xeon(R) 6973P-C",
+    "logical_cpus": 4,
+    "ram_bytes": 16765378560,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "25.0.1",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "page": "docs/plugins/sqlserver.md",
+  "example": "sql-sampling-measurement",
+  "command": "python \"$SHAPE_DOCS_REPO/scripts/docs_owner_measurements.py\" sqlserver",
+  "exit_code": 0,
+  "status": "passed",
+  "elapsed_seconds": 0.69318217,
+  "stdout": "{\n  \"workload\": \"SQL Server container; 100000 rows, int primary key + amount=id*3; 1000-row samples; warmed connection\",\n  \"queries\": {\n    \"first_rows\": \"SELECT TOP 1000 * FROM [docs_measure].[sample]\",\n    \"checksum_spread\": \"SELECT TOP 1000 * FROM [docs_measure].[sample] ORDER BY (CAST(CHECKSUM([id]) AS bigint) * 1327217885) % 2147483647, [id]\"\n  },\n  \"verification\": \"Both queries return 1000 unique valid rows and repeat the same sample; timed samples equal their verified samples\",\n  \"trials\": [\n    {\n      \"first_rows\": {\n        \"seconds\": 0.0008151010000005954,\n        \"rows\": 1000,\n        \"id_min\": 1,\n        \"id_max\": 1000\n      },\n      \"checksum_spread\": {\n        \"seconds\": 0.017373302999999396,\n        \"rows\": 1000,\n        \"id_min\": 89,\n        \"id_max\": 99967\n      }\n    },\n    {\n      \"first_rows\": {\n        \"seconds\": 0.0008339280000200233,\n        \"rows\": 1000,\n        \"id_min\": 1,\n        \"id_max\": 1000\n      },\n      \"checksum_spread\": {\n        \"seconds\": 0.01647320399996488,\n        \"rows\": 1000,\n        \"id_min\": 89,\n        \"id_max\": 99967\n      }\n    },\n    {\n      \"first_rows\": {\n        \"seconds\": 0.0009317000000237385,\n        \"rows\": 1000,\n        \"id_min\": 1,\n        \"id_max\": 1000\n      },\n      \"checksum_spread\": {\n        \"seconds\": 0.01656215999997812,\n        \"rows\": 1000,\n        \"id_min\": 89,\n        \"id_max\": 99967\n      }\n    }\n  ]\n}\n"
+}

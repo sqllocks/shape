@@ -1,0 +1,37 @@
+{
+  "run_id": "38269228192",
+  "commit": "44b25f84630c8f8effba512357d75c6753712f26",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "AMD EPYC 7763 64-Core Processor",
+    "logical_cpus": 4,
+    "ram_bytes": 16770748416,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "25.0.1",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "page": "docs/GENERATION_ENGINE.md",
+  "example": "allocator-measurement",
+  "command": "python \"$SHAPE_DOCS_REPO/scripts/docs_owner_measurements.py\" allocator",
+  "exit_code": 0,
+  "status": "passed",
+  "elapsed_seconds": 3.57199713600005,
+  "stdout": "{\n  \"workload\": \"retail small, seed=7, import shape before pyarrow, full generation plus IPC digest, fresh process per run\",\n  \"verification\": \"Warm-up pair and every timed pair have identical table rows and value digests\",\n  \"trials\": [\n    [\n      {\n        \"pool\": \"default\",\n        \"seconds\": 0.4065709189999893,\n        \"sha256\": \"82cab855e14f7dbc6db11d669f3e36249aa10070ae604aee51311f6fdbfab9ef\",\n        \"rows\": {\n          \"address\": 1500,\n          \"customer\": 1000,\n          \"order\": 5000,\n          \"order_line\": 12500,\n          \"product\": 500,\n          \"product_category\": 50,\n          \"promotion\": 200,\n          \"return\": 850,\n          \"store\": 150\n        },\n        \"shape\": \"0.9.1\"\n      },\n      {\n        \"pool\": \"system\",\n        \"seconds\": 0.38762036299999636,\n        \"sha256\": \"82cab855e14f7dbc6db11d669f3e36249aa10070ae604aee51311f6fdbfab9ef\",\n        \"rows\": {\n          \"address\": 1500,\n          \"customer\": 1000,\n          \"order\": 5000,\n          \"order_line\": 12500,\n          \"product\": 500,\n          \"product_category\": 50,\n          \"promotion\": 200,\n          \"return\": 850,\n          \"store\": 150\n        },\n        \"shape\": \"0.9.1\"\n      }\n    ],\n    [\n      {\n        \"pool\": \"default\",\n        \"seconds\": 0.40432152900001483,\n        \"sha256\": \"82cab855e14f7dbc6db11d669f3e36249aa10070ae604aee51311f6fdbfab9ef\",\n        \"rows\": {\n          \"address\": 1500,\n          \"customer\": 1000,\n          \"order\": 5000,\n          \"order_line\": 12500,\n          \"product\": 500,\n          \"product_category\": 50,\n          \"promotion\": 200,\n          \"return\": 850,\n          \"store\": 150\n        },\n        \"shape\": \"0.9.1\"\n      },\n      {\n        \"pool\": \"system\",\n        \"seconds\": 0.39056088300003466,\n        \"sha256\": \"82cab855e14f7dbc6db11d669f3e36249aa10070ae604aee51311f6fdbfab9ef\",\n        \"rows\": {\n          \"address\": 1500,\n          \"customer\": 1000,\n          \"order\": 5000,\n          \"order_line\": 12500,\n          \"product\": 500,\n          \"product_category\": 50,\n          \"promotion\": 200,\n          \"return\": 850,\n          \"store\": 150\n        },\n        \"shape\": \"0.9.1\"\n      }\n    ],\n    [\n      {\n        \"pool\": \"default\",\n        \"seconds\": 0.5875388690000136,\n        \"sha256\": \"82cab855e14f7dbc6db11d669f3e36249aa10070ae604aee51311f6fdbfab9ef\",\n        \"rows\": {\n          \"address\": 1500,\n          \"customer\": 1000,\n          \"order\": 5000,\n          \"order_line\": 12500,\n          \"product\": 500,\n          \"product_category\": 50,\n          \"promotion\": 200,\n          \"return\": 850,\n          \"store\": 150\n        },\n        \"shape\": \"0.9.1\"\n      },\n      {\n        \"pool\": \"system\",\n        \"seconds\": 0.5422828130000426,\n        \"sha256\": \"82cab855e14f7dbc6db11d669f3e36249aa10070ae604aee51311f6fdbfab9ef\",\n        \"rows\": {\n          \"address\": 1500,\n          \"customer\": 1000,\n          \"order\": 5000,\n          \"order_line\": 12500,\n          \"product\": 500,\n          \"product_category\": 50,\n          \"promotion\": 200,\n          \"return\": 850,\n          \"store\": 150\n        },\n        \"shape\": \"0.9.1\"\n      }\n    ]\n  ]\n}\n"
+}

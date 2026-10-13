@@ -2,10 +2,10 @@
 
 Status: available.
 
-**Early access 0.9.1.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
+**Early access 0.9.2.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 
 SQLLocks maintains Shape. The repository owner reviews and merges contributions.
-<!-- owner: repository owner — confirm the named maintainer roster and review delegation. -->
+Jonathan Stewart is the sole maintainer, with final review and merge authority. No review or merge authority is delegated. [Owner decision, 2026-10-11](https://github.com/sqllocks/shape/blob/main/docs/plans/OWNER_DECISIONS.md#governance).
 
 ## Decisions
 

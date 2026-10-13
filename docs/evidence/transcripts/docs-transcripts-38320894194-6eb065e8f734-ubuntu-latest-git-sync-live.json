@@ -1,0 +1,39 @@
+{
+  "run_id": "38320894194",
+  "commit": "6eb065e8f7349613291e67678b05227ab1e002ff",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "Intel(R) Xeon(R) 6973P-C",
+    "logical_cpus": 4,
+    "ram_bytes": 16765374464,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "26.0.0",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "workspace": "shape-test, service principal shape-ci-fabric",
+  "page": "docs/FABRIC_PLATFORM.md",
+  "example": "git-sync-live",
+  "command": "pip install -e '.[dev]' -e 'plugins/shape-fabric[entra]'\nFABRIC_TENANT_ID=... FABRIC_CLIENT_ID=... FABRIC_CLIENT_SECRET=... FABRIC_WORKSPACE_ID=... \\\nFABRIC_GIT_REMOTE=https://github.com/<owner>/<repo>.git FABRIC_GIT_TOKEN=... \\\nSHAPE_LIVE_RESULT=git-sync-result.json \\\npytest -m live plugins/shape-fabric/tests/test_live_git_sync.py",
+  "executed_command": "pip install -e '.[dev]' -e 'plugins/shape-fabric[entra]'\nFABRIC_TENANT_ID=\"$FABRIC_TENANT_ID\" FABRIC_CLIENT_ID=\"$FABRIC_CLIENT_ID\" FABRIC_CLIENT_SECRET=\"$FABRIC_CLIENT_SECRET\" FABRIC_WORKSPACE_ID=\"$FABRIC_GIT_WORKSPACE_ID\" \\\nFABRIC_GIT_REMOTE=\"$FABRIC_GIT_REMOTE\" FABRIC_GIT_TOKEN=\"$FABRIC_GIT_TOKEN\" \\\nSHAPE_LIVE_RESULT=git-sync-result.json \\\npytest -m live plugins/shape-fabric/tests/test_live_git_sync.py",
+  "exit_code": 0,
+  "status": "passed",
+  "elapsed_seconds": 147.39455048700006,
+  "stdout": "======================================= test session starts ========================================\nplatform linux -- Python 3.12.15, pytest-9.1.1, pluggy-1.6.0\nrootdir: <checkout>\nconfigfile: pyproject.toml\nplugins: Faker-40.43.0, hypothesis-6.169.0, platformdirs-4.13.0, sqllocks-shape-0.9.1, cov-7.1.0\ncollected 1 item\n\nplugins/shape-fabric/tests/test_live_git_sync.py .                                           [100%]\n\n================================== 1 passed in 143.59s (0:02:23) ===================================\n"
+}

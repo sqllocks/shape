@@ -71,7 +71,7 @@ def test_fetch_refuses_a_byo_asset_and_needs_a_name():
 
 def test_byo_command(tmp_path: Path, capsys: pytest.CaptureFixture[str]):
     f = tmp_path / "cpt.csv"
-    f.write_text("CPT,Descriptor\n10021,Invented\n", encoding="utf-8")
+    f.write_text("CPT,Descriptor\nSY001,Invented\n", encoding="utf-8")
     d = tmp_path / "d"
     assert (
         _run(
@@ -89,7 +89,7 @@ def test_byo_command(tmp_path: Path, capsys: pytest.CaptureFixture[str]):
         )
         == 0
     )
-    assert "10021" in store.load("cpt", d)
+    assert "SY001" in store.load("cpt", d)
     assert _run(["byo", "icd10cm", str(f), "--dir", str(d)]) == 2
     assert "not a bring-your-own system" in capsys.readouterr().out
     assert _run(["byo", "cpt", str(tmp_path / "missing.csv")]) == 2

@@ -1,0 +1,37 @@
+{
+  "run_id": "38273696299",
+  "commit": "7e0aa725e228e99b432b6f6bc568ae2a0cfe7e56",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "logical_cpus": 4,
+    "ram_bytes": 16766410752,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "25.0.1",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "page": "docs/plugins/streaming.md",
+  "example": "kafka-profile",
+  "command": "shape emit retail --table order --sink kafka://localhost:9092/profile-orders \\\n    --max-events 100 --fresh\nshape stream-profile kafka://localhost:9092/profile-orders -o orders.json",
+  "exit_code": 0,
+  "status": "passed",
+  "elapsed_seconds": 2.404284236999956,
+  "stdout": "shape emit: 100 events delivered, offset 100 of 5,000, max-events, 835 events/s\n{\"uri\": \"kafka://localhost:9092/profile-orders\", \"window\": \"global\", \"events\": 100, \"batches\": 1, \"windows\": 1, \"late_events\": 0, \"null_event_time\": 0, \"duplicate_rows\": 0, \"reconnects\": 0, \"checkpoints\": 0, \"written\": [\"orders.json\"], \"undecodable\": 0, \"rejected\": 0}\n"
+}

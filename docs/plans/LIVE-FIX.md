@@ -18,6 +18,7 @@ the Owner must repeat live acceptance against the pushed branch.
 | 6b: database profile interruption | Optional relationship inference profiled all sampled columns together and propagated `ZonedTextError`. `shape_sqlserver/profiler.py` excludes only the offending text column from that inference and adds its column note, keeping catalog types, other columns and declared relationships. | Two `test_owner_profile_findings.py` cases fail before, pass after. |
 | 7: ignored prefix | CLI/local Delta and Fabric sink adapters dropped `table_prefix`. Supported writers now receive/apply it; unsupported output modes refuse it before writing. | Prefix and refusal cases fail before, pass after. |
 | 8: schema-enabled Lakehouse | Delta and Spark used the classic `Tables/<table>` layout; Demo manifests also assumed it. Explicit Delta `schema_enabled`, schema selection, Spark/Demo `--lakehouse-schema`, and the folder helper support `Tables/<schema>/<table>` with `dbo` as the Delta schema default. Classic layout remains available. | Improved Lakehouse fake rejects unrecognized layouts; old writes fail, new classic/dbo/custom-schema writes pass. Spark and Demo regressions fail before, pass after. |
+| 8 (follow-up, Owner 2026-10-12): tables invisible in the SQL endpoint | Live runs still wrote `Tables/<table>` to the schema-enabled `shape_lh` unless `schema_enabled` was passed, so only `dbo.publicholidays` showed in its SQL endpoint and semantic-model dialog. The Delta sink and `fabric_spark` now ask Fabric (`GET lakehouses/{id}`, `properties.defaultSchema`) which kind the Lakehouse is, write `Tables/<schema>/<table>` (default `dbo`) or `Tables/<table>`, refuse a schema on a classic Lakehouse, keep 401/403 as authentication errors, and fail naming `schema_enabled` when the kind cannot be determined. A raw storage token with no identity keeps its literal location. | `tests/builtins/test_lakehouse_layout.py`, Spark and notebook cases; live `test_a_written_table_is_visible_in_the_sql_endpoint` (both kinds) and the retail seed, visible in the endpoint with matching row counts. |
 | 9: absent Delta table | The reader exposed Delta's kernel log-segment error. It now reports `no Delta table at <path>` with URI credentials redacted. | Missing-table regression fails before, passes after. |
 
 The combined old-product control retained the improved fakes: **28 failed, five unaffected
@@ -60,6 +61,16 @@ permissions, noninteractive authentication and cleanup requirements.
 The existing Synapse live test now forwards its documented service-principal variables instead
 of creating empty SPN settings. Its old credential expression fails the new contract; the
 fixed helper passes.
+
+The `fabric-live` workflow maps the Synapse test variables and brackets the live tests with a
+step that resumes the dedicated pool (bounded wait for Online) and an `if: always()` step that
+pauses it again, so a failed or cancelled run does not leave the pool running.
+
+A dedicated SQL pool refuses `CREATE TABLE` and `DROP TABLE` inside a transaction (error 111212)
+and does not parse `DROP TABLE IF EXISTS` (103010). `SynapseWriter` therefore sends its DDL in
+autocommit and, after a failed load, drops a table it created only after finding it in the catalog;
+a contract test rejects both forms. The other statements on the Synapse path (the catalog lookup,
+`COPY INTO`, the row count) use no syntax a pool rejects.
 
 The lead corrected add-on C after the first live review: P6-07a and LIVE-FIX #15
 require missing variables to fail by name. All eight changed live modules now use

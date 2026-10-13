@@ -19,7 +19,7 @@ python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" CONTRIBUTING
     ```
 
 
-**Early access 0.9.1.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
+**Early access 0.9.2.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 
 You contribute code and documentation under MIT. Sign off every commit with a
 `Signed-off-by: Your Name <your email>` trailer. The sign-off certifies the
@@ -222,7 +222,6 @@ python scripts/check_user_facing.py --site site
       - EXTERNAL_REFERENCE_ASSETS.md
       - LOCATION_AS_CODE.md
       - NOT_BUILDING.md
-      - PERFORMANCE.md
       - SHAPE_MANIFESTO.md
       - specs/LOCATION_SPEC.md
       - specs/ONE_ZERO_CONTRACT.md

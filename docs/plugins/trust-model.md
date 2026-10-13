@@ -69,7 +69,7 @@ message to upgrade). The JSON Schema is `src/shape/schemas/plugin-allowlist-v1.s
   "plugins": [
     {
       "distribution": "sqllocks-shape-kafka",
-      "version": "==0.9.1",
+      "version": "==0.9.2",
       "record_sha256": "<sha256 of the installed RECORD file>",
       "names": ["stream_sources:kafka", "emitters:kafka"]
     }

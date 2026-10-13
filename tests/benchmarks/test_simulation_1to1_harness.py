@@ -18,6 +18,8 @@ import numpy as np
 import pyarrow as pa
 import pytest
 
+from .historical_imports import historical_imports
+
 BENCH = Path(__file__).resolve().parents[2] / "benchmarks" / "vs_refengine" / "simulation_1to1"
 
 
@@ -30,7 +32,8 @@ def _load(*modules: str) -> list[ModuleType]:
     stale = {m: sys.modules.pop(m) for m in taken if m in sys.modules}
     sys.path[:0] = [str(BENCH.parent), str(BENCH)]
     try:
-        loaded = [importlib.import_module(m) for m in modules]
+        with historical_imports():
+            loaded = [importlib.import_module(m) for m in modules]
         for m in taken:
             if m in sys.modules:
                 sys.modules[f"sim1to1_{m}"] = sys.modules.pop(m)

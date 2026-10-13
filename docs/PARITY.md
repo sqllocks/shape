@@ -165,7 +165,7 @@ shape parity prod.safe.json dev-data/ --dataset --scaled --source orders -o pari
     {"unsafe": false, "written": "prod.safe.json"}
     <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
       kind, table = _read_files([path], threads, csv)
-    A: prod.safe.json (safe-profile, ee1af6cf4f7e)
+    A: prod.safe.json (safe-profile, db6774395b73)
     B: dev-data (data, 8c68726c18f9)
 
     NOT MEASURED (7)

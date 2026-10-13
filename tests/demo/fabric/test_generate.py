@@ -218,6 +218,16 @@ def test_in_fabric_the_tables_go_to_onelake_by_abfss_with_the_token(lh, fabric_o
     assert (lh / "Files" / "shape" / "retail" / "contract.json").exists()
 
 
+def test_in_a_schema_enabled_lakehouse_the_tables_go_under_dbo(lh, schema_enabled_lakehouse):
+    """The default lakehouse reports ``defaultSchema``: Delta tables go to ``Tables/dbo/<table>``
+    (a table outside a schema folder is invisible to the SQL endpoint and semantic models)."""
+    _generate(lh)
+    order = list(generation.generate_domain("retail").generation_order)
+    assert [c["location"] for c in schema_enabled_lakehouse] == [
+        f"{ONELAKE_TABLES}/dbo/{t}" for t in order
+    ]
+
+
 def test_delta_tables_have_no_nanosecond_timestamps(lh):
     _generate(lh)
     for table in ("customer", "order", "order_line"):

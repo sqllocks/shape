@@ -198,7 +198,7 @@ HCPCS_TEXT = "\n".join(
     ]
 )
 HCPCS_CPT_LINE = hcpcs_line(
-    "99213", "3", "Invented CPT-looking record", "Invented", added="20000101"
+    "00000", "3", "Invented CPT-looking record", "Invented", added="20000101"
 )
 
 NDC_PRODUCT = (

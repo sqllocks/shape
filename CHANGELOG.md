@@ -2,23 +2,166 @@
 
 Status: available.
 
-**Early access 0.9.1.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
+**Early access 0.9.2.** Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 
 ## Unreleased
 
+No unreleased changes.
+
+## 0.9.2
+
+### Added
+
+- **Synapse dedicated SQL pool live test.** The Fabric plugin ships a live test that writes
+  to a real Synapse dedicated SQL pool, driven by `SHAPE_TEST_SYNAPSE_URI`,
+  `SHAPE_TEST_SYNAPSE_STAGING` and the service-principal settings
+  `SHAPE_TEST_SYNAPSE_TENANT_ID`, `SHAPE_TEST_SYNAPSE_CLIENT_ID` and
+  `SHAPE_TEST_SYNAPSE_CLIENT_SECRET`. The `fabric-live` workflow resumes the pool before the
+  tests and pauses it afterwards.
+- **`--source-config KEY=REF`** (global option). Passes an Azure read credential to a command
+  by reference. `KEY` is `token`, `account_key`, `sas_token` or `connection_string`; `REF` is an
+  `env://`, `file://` or `kv://` reference. A literal secret is refused, and the value lives only
+  for that command.
+- **`--lakehouse-schema NAME`** on `shape generate --scale-mode fabric_spark` and
+  `shape demo init`. Writes the tables into a schema of a schema-enabled Lakehouse.
+- **`--table-prefix`** now works with the Delta sink and with the database and Fabric
+  destinations (PostgreSQL, MySQL, Snowflake, Databricks, SQL Server, Warehouse, Synapse, SQL
+  database, Lakehouse, Eventhouse). Where a destination cannot honour a prefix, the command stops
+  before writing and says so, instead of ignoring the option.
+- **Two timeout settings for Fabric SQL writes.** `SHAPE_SQL_QUERY_TIMEOUT` (whole seconds,
+  default 900) limits each SQL statement of the Warehouse, SQL database and Synapse writers, so
+  a stalled load fails instead of waiting forever. `SHAPE_WAREHOUSE_INSERT_SECONDS` (whole
+  seconds, default 600) limits how long the slower row-by-row Warehouse fallback may take per
+  table. A value that is not a whole number is ignored and the default applies.
+
+### Verified
+
+- **Kerberos sign-in.** Shape 0.9.1 `--auth kerberos` was verified on 2026-10-12 against a
+  lab Active Directory domain with SQL Server 2022 (Windows authentication only), from an
+  Ubuntu 24.04 client: 21,750 rows in 9 tables, exit 0, and the server recorded
+  `auth_scheme = KERBEROS`. A keytab with mode 644 and a wrong principal both exit 2. No code
+  changed for this.
+
 ### Fixed
 
-- LIVE-FIX: actionable MySQL no-TLS authentication errors; reference-only CLI Azure read
-  credentials and storage environment precedence; prompt permanent Azure authentication failures.
-- LIVE-FIX: Warehouse and Synapse keys declared after table creation, identity-preserving staging
-  cleanup, text time buckets and per-column database profiling notes, Delta table prefixes,
-  explicit Lakehouse schemas and clear missing-Delta-table errors.
-- LIVE-FIX: Fabric fakes enforce Warehouse DDL and both Lakehouse layouts; unattended live
-  coverage and documented 0.9.1 workarounds.
+- **Warehouse and Synapse primary keys.** Fabric Warehouse rejected a primary key written
+  inside `CREATE TABLE` (error 24584). Shape now creates the table first and then adds the key
+  with `ALTER TABLE ... PRIMARY KEY NONCLUSTERED ... NOT ENFORCED`. SQL Server and Azure SQL keep
+  their enforced keys.
+- **Time ranges stay text.** A column of values such as `18:00-18:59` is no longer read as a
+  UTC offset when profiling; it stays text.
+- **Profiling a database with zoned text dates.** `shape profile-db` no longer stops at a
+  sampled text column that holds dates with a time zone. The column keeps its SQL type and
+  statistics, is left out of relationship inference, and carries a `profiling_note` saying so.
+- **Schema-enabled Lakehouses.** Tables are written under `Tables/<schema>/<table>`, where
+  the SQL endpoint and semantic models can see them. Shape asks Fabric which kind of Lakehouse
+  the target is, uses `dbo` unless you give a schema, refuses a schema for a classic Lakehouse,
+  and, when it cannot tell, stops and tells you to set `schema_enabled=true|false`. Before, the
+  Delta sink assumed a classic Lakehouse and wrote the tables where schema-enabled Lakehouses
+  could not see them. Writing uses one extra read call to Fabric. This needs a credential; with
+  only a raw storage token, give the schema in the path (`.../Tables/dbo`).
+- **Missing Delta tables** are reported as `no Delta table at <path>`, with credentials
+  removed from the path.
+- **The `abfss://` sink writes into a Fabric Lakehouse.** It used to fail with
+  `OperationNotAllowedOnThePath`, because it checked for the Lakehouse with a request OneLake
+  refuses on an item folder. It now finds the Lakehouse in the workspace listing. A Lakehouse
+  given by GUID is no longer checked up front; a missing one is reported by the first write.
+- **MySQL without TLS.** The `caching_sha2_password` sign-in crash is replaced by a message
+  that says to use verified TLS (`ssl_ca=PATH&ssl-mode=VERIFY_CA`) or ask the administrator for
+  a supported authentication method. Shape does not fetch an untrusted key.
+- **Azure storage credentials.** Storage environment keys are now used in a fixed order:
+  explicit options, then `AZURE_STORAGE_ACCOUNT_KEY`, `AZURE_STORAGE_SAS_TOKEN`,
+  `AZURE_STORAGE_CONNECTION_STRING`, then the Fabric or Synapse notebook identity, then
+  `DefaultAzureCredential`. An ambient account key no longer overrides the identity you selected
+  for OneLake. A sign-in error that cannot succeed on retry (a tenant mismatch or a disabled
+  account, for example) now fails once with one clear message; timeouts and throttling still
+  retry.
+- **Warehouse loads when `COPY INTO` fails.** When OneLake cannot supply the storage token
+  (SQL error 13840), the load falls back to parameterized `INSERT` in batches of 5,000 rows,
+  keeping keys, write modes, rollback and the loaded-row check. The fallback is slower and is no
+  longer silent: it prints a `WARNING` on stderr, records the note in `WriteResult.notes` and
+  `summary()`, and fails with a rollback past `SHAPE_WAREHOUSE_INSERT_SECONDS`. Batched
+  inserts now size text columns from the whole batch, not the first row, so they no longer
+  fall back to one round trip per row.
+  Emptied OneLake staging folders are removed after a load.
+- **Fabric notebook deploy.** Fabric sometimes answers with a long-running operation address
+  on a regional `*.analysis.windows.net` host. Shape now polls the Fabric API for that
+  operation instead of refusing it, and never sends your token to the other host.
+- **Fabric errors say what happened.** Errors show the HTTP status and Fabric's code and
+  message, with secrets removed. A failed Spark job keeps Fabric's error code and details, or
+  says Fabric gave no reason.
+- **Fabric portal connection strings.** The ADO.NET-style string from the Fabric portal
+  (`Data Source=...;Initial Catalog=...`) is accepted by the SQL writers and `shape profile-db`.
+- **Semantic models for service principals.** If Fabric's direct lookup fails for a service
+  principal, Shape lists models over REST and warns that it did.
+- **Synapse.** The dedicated-pool writer sends its DDL in autocommit, stages timestamps in
+  Parquet as INT96, and writes NaN and infinite values as NULL.
+- **Fabric Git sync test.** The nightly job and `fabric-live` use `FABRIC_GIT_WORKSPACE_ID`
+  (the Git-connected workspace) in place of `FABRIC_WORKSPACE_ID`; tenant, client and remote
+  are variables, the client secret and Git token stay secrets. This affects people who run the
+  live tests, not users of the package.
+- **`shape profile validate --safe` and wide or multi-table profiles.** Multi-table
+  `--dataset` profiles and single wide tables now validate clean. A profile records which
+  columns an internal sample covered as positions, `sampling.internal[].column_indexes`, in
+  place of names (`columns`). The profile format version is unchanged, and profiles written by
+  0.9.1 still load and report the same findings until you profile again. Profile content ids
+  change for the same data.
+- **Privacy.** A scenario pack's stream topic emits only its `payload_fields` columns, and
+  `pack validate` rejects a field that is not a column. A pack run creates its manifest
+  exclusively, so two runs in the same second keep their own manifests. `shape chaos --input`
+  and `shape incremental --input` skip the ground-truth logs of an earlier chaos run and name a
+  file that cannot be read as a table. `shape registry ROOT commit` runs its leak scan on any
+  JSON document with `tables`, so removing `redaction_manifest` no longer lets a leaking
+  profile through. `shape.yml` `gates.NAME.mode` also accepts the four gates only
+  `shape verify` runs (`reconciliation`, `timeseries_quality`, `memorization`, `utility`).
+  `shape fabric setup` names `shape fabric notebook` in its next steps.
+- **VS Code "Compare with Git HEAD".** The comparison document now opens; the custom
+  editor had claimed it and no diff appeared.
+### Changed
+
+- **Default Lakehouse name for `shape fabric setup` is `shape_lakehouse`** (was
+  `shape-lakehouse`). Fabric rejects the hyphen with HTTP 400. Names must begin with a letter and
+  use only letters, digits and underscores (at most 123 characters); Shape now checks this before
+  any request.
+- Replaced the 49 bundled AMA CPT procedure values and descriptions with synthetic
+  `SP-01` through `SP-49` and `Synthetic procedure NN`. The letters and hyphen distinguish
+  these five-character codes from CPT formats. Arrow schema, row count, charges and
+  selection weights are unchanged. Healthcare examples and exact writer fixtures now
+  use synthetic procedures and a two-character synthetic sample modifier (`S0`), with
+  local FHIR code systems. The extra sample procedure outside the catalog is `SP-50`.
+- Replaced bundled GICS sector codes/names and industry names with a generic synthetic
+  taxonomy (`SA` through `SK`, `Synthetic sector A` through `Synthetic sector K`, and
+  synthetic industry labels), including company classifications. Schemas, identifiers
+  and cardinalities are preserved. Legacy reference aliases remain readable.
+- **Seeded output changes:** healthcare and capital-markets generation produces new
+  procedure/classification labels and dataset ids with the same seed. Regenerate fixtures
+  for those domains. `GENERATION_STABILITY.md`, `API_STABILITY.md` and `RELEASE_POLICY.md`
+  reserve cross-release compatibility promises for future 1.x releases and exclude domain
+  reference data from the generator content promise; this early-access patch changes no
+  generator algorithm or format version. Exact affected writer fixtures were regenerated.
+- **Owner decisions:** the synthetic replacements follow the Owner's decisions recorded in
+  `docs/plans/OWNER_DECISIONS.md` (GICS taxonomy and the 49 CPT codes replaced by synthetic
+  values in 0.9.2), and resolve the healthcare and capital-markets upstream-source owner notes in
+  `THIRD_PARTY_NOTICES.md`. Other domain owner notes remain unresolved.
+- Core and all twelve first-party plugins advance together to 0.9.2. Exact SQL headers
+  and documented artifact/registry digests were regenerated for the new writer version.
+
+### Internal and CI (no change to the package or CLI)
+
+- The regression comparison that the benchmark and nightly parity jobs run now uses the
+  recorded output of the published Shape 0.9.1 release as its baseline; the old comparison
+  engine is no longer installed. `docs/PERFORMANCE.md` joins the documentation site. Nothing
+  you install or run changes.
+- The macOS bounded-memory tests measure the live heap peak instead of resident size, with
+  the same inputs, floor and 10% tolerance. Test change only.
+- The documentation site gains the "Published receipts" pages (Owner-run evidence for the
+  documented examples) and the decisions page.
+- The Fabric test fakes now enforce Warehouse DDL rules and both Lakehouse table layouts, and the live
+  tests run unattended in the `fabric-live` workflow. Test and workflow change only.
 
 ## 0.9.1
 
-<!-- owner: release date -->
+**Release date: 2026-10-11**
 
 ### Fixed
 

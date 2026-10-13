@@ -42,6 +42,7 @@ def spark_run(schema_file, runtime, **extra):
 
 def test_owner_schema_enabled_demo_records_and_submits_the_schema(spark, schema_file):
     fabric, runtime = spark
+    fabric.schema_enabled = True
     demo_init("lake", workspace_id=WS, lakehouse_id=LH, lakehouse_schema="dbo")
     result = spark_run(schema_file, runtime)
     start = json.loads(fabric.calls[-1]["body"])

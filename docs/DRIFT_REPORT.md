@@ -173,7 +173,7 @@ shape fabric publish-report orders-2026-03-01.shape orders-2026-03-06.shape orde
     shape: note: orders-2026-03-01.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
     shape: note: orders-2026-03-06.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
     shape: note: orders-2026-03-11.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
-    Shape v0.9.1 — Drift report
+    Shape v0.9.2 — Drift report
 
       Profiles:  3 (2 runs)
       Changes:   0
@@ -188,7 +188,7 @@ shape fabric publish-report orders-2026-03-01.shape orders-2026-03-06.shape orde
     shape: note: /tmp/tmpo1pv7srb/profile is not signed: its origin is not verified (check it with --verify PUBKEY)
     shape: note: /tmp/tmp4fnu3opi/profile is not signed: its origin is not verified (check it with --verify PUBKEY)
     shape: note: /tmp/tmpjhkyk9lo/profile is not signed: its origin is not verified (check it with --verify PUBKEY)
-    Shape v0.9.1 — Drift report
+    Shape v0.9.2 — Drift report
 
       Profiles:  3 (2 runs)
       Changes:   0
@@ -203,7 +203,7 @@ shape fabric publish-report orders-2026-03-01.shape orders-2026-03-06.shape orde
     shape: note: orders-2026-03-01.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
     shape: note: orders-2026-03-06.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
     shape: note: orders-2026-03-11.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
-    Shape v0.9.1 — Drift report
+    Shape v0.9.2 — Drift report
 
       Profiles:  3 (2 runs)
       Changes:   0

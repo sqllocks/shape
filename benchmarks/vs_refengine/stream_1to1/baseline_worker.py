@@ -1,29 +1,30 @@
-"""One timed run of the baseline's stream command, in this process (run it in the baseline venv).
+"""One timed run of ``shape stream``, in this process (run it in the baseline release venv).
 
-    "$REFENGINE_PY" benchmarks/vs_refengine/stream_1to1/baseline_worker.py --scale medium \\
+    " $BASELINE_PY" benchmarks/vs_refengine/stream_1to1/baseline_worker.py --scale medium \\
         --seed 42 -o FILE [--max-events N]
 
-It does what the command does after its options are parsed (resolve the domain, build the
-stream configuration and the file sink, generate, convert to events, emit), with the library
-imports done before the timed region (T-19). The last stdout line is ``STREAM_JSON {...}``.
+The timed region is the product's command entry point (``shape.cli.main.main``), with everything
+it loads on first use imported before it (T-19: imports are excluded for both tools; the
+baseline's import loads every strategy and writer): the command's modules, the strategy and sink
+plugins and pyarrow's lazy pandas import. The last stdout line is ``STREAM_JSON {...}``.
 """
 
 from __future__ import annotations
 
 import argparse
+import contextlib
+import io
 import json
 import os
 import sys
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-import _refpkg  # noqa: E402
-from common import peak_rss_mb, rusage  # noqa: E402
-from paths import REFENGINE_ROOT  # noqa: E402
-
 sys.path.insert(0, str(HERE))
+from common import peak_rss_mb, rusage  # noqa: E402
 from stream_common import DOMAIN, TABLE  # noqa: E402
 
 
@@ -36,41 +37,62 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
 
     t_imp = time.perf_counter()
-    sys.path.insert(0, str(REFENGINE_ROOT))
     import numpy  # noqa: F401
-    import pandas  # noqa: F401
-    import pyarrow  # noqa: F401
+    import pyarrow  # type: ignore[import-untyped]
 
-    _resolve_domain = _refpkg.mod("cli")._resolve_domain
-    AnomalyRegistry = _refpkg.mod("streaming").AnomalyRegistry
-    FileSink = _refpkg.mod("streaming").FileSink
-    RefEngineStreamer = getattr(_refpkg.mod("streaming"), _refpkg.ENGINE_CLASS + "Streamer")
-    StreamConfig = _refpkg.mod("streaming").StreamConfig
+    import shape.cli.emit  # noqa: F401
+    import shape.cli.stream  # noqa: F401
+    import shape.generation.engine  # noqa: F401
+    import shape.streaming.emit  # noqa: F401
+    from shape.cli.main import main as untyped_shape_main
 
+    shape_main: Callable[[list[str]], int] = untyped_shape_main
+    from shape.plugins.host import default_host
+
+    pyarrow.array(["warm"])
+    host = default_host()
+    host.load_all("shape.strategies")
+    host.load_all("shape.sinks")
     import_s = time.perf_counter() - t_imp
 
-    Path(a.output).parent.mkdir(parents=True, exist_ok=True)
+    out = Path(a.output)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.unlink(missing_ok=True)  # no output or checkpoint survives between timed runs (1.4)
+    Path(f"{out}.checkpoint").unlink(missing_ok=True)
+    cmd = [
+        "stream",
+        DOMAIN,
+        "--table",
+        TABLE,
+        "--scale",
+        a.scale,
+        "--no-realtime",
+        "--sink",
+        "file",
+        "-o",
+        a.output,
+        "--seed",
+        str(a.seed),
+        "--json",
+    ]
+    if a.max_events is not None:
+        cmd += ["--max-events", str(a.max_events)]
     ru0 = rusage()
     t0 = time.perf_counter()
-    domain = _resolve_domain(DOMAIN, "3nf")
-    config = StreamConfig(max_events=a.max_events, realtime=False)
-    sink = FileSink(a.output, mode="w")
-    result = RefEngineStreamer(
-        domain=domain,
-        sink=sink,
-        config=config,
-        anomaly_registry=AnomalyRegistry(),
-        scale=a.scale,
-        seed=a.seed,
-    ).stream(TABLE)
-    sink.close()
+    report = io.StringIO()
+    with contextlib.redirect_stdout(report):
+        rc = shape_main(cmd)
     total = time.perf_counter() - t0
     ru1 = rusage()
+    if rc != 0:
+        print(f"shape stream exited {rc}", file=sys.stderr)
+        return 1
+    run = json.loads(report.getvalue().strip().splitlines()[-1])
     rec = {
         "total_s": total,
         "import_s": import_s,
-        "events": result.events_sent,
-        "emit_s": result.elapsed_seconds,
+        "events": run["events"],
+        "emit_s": run["elapsed"],
         "cpu_s": (ru1.utime + ru1.stime) - (ru0.utime + ru0.stime),
         "peak_rss_mb": peak_rss_mb(),
         "bytes": os.path.getsize(a.output),

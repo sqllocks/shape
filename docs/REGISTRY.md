@@ -54,7 +54,10 @@ Commit the safe form instead:
 
 
 A safe-profile JSON is scanned with the leak scanner before it is stored; one that fails (for
-example `shape profile safe --unsafe-full-fidelity` output) is not committed (exit 1). The safe
+example `shape profile safe --unsafe-full-fidelity` output) is not committed (exit 1). Any JSON
+document with `tables` counts as a safe profile here unless it declares another `format` and keeps
+no safe-profile key (`schema_version`, `redaction_manifest`, `unsafe`), so removing a key does not
+skip the scan. The safe
 form is deterministic, so committing the same data twice gives the same content id. `--k N` and
 `--sensitive` set the minimum cohort, as in `shape profile safe`.
 
@@ -272,10 +275,10 @@ shape profile validate --safe cust.safe.json                     # exit 0: no le
 
     ```text {.expected}
     shape: note: cust.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
-    {"content_id": "642e7bf1414aae1e1b69020e7fd3643ee0070086510b33c3d99882808fd9944c"}
+    {"content_id": "a5ea1f3ae229deeccf6b5466868225523d79f880417b5ce733bd49b409d23c59"}
     shape: note: cust.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
     {"unsafe": false, "written": "cust.safe.json"}
-    {"content_id": "642e7bf1414aae1e1b69020e7fd3643ee0070086510b33c3d99882808fd9944c"}
+    {"content_id": "a5ea1f3ae229deeccf6b5466868225523d79f880417b5ce733bd49b409d23c59"}
     CLEAN: no leaks found in cust.safe.json
     ```
 

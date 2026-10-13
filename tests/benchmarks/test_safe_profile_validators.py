@@ -13,6 +13,8 @@ import importlib.util
 import sys
 from pathlib import Path
 
+from .historical_imports import historical_imports
+
 ROOT = Path(__file__).resolve().parents[2]
 HARNESS = ROOT / "benchmarks" / "vs_refengine" / "safe_profile_1to1"
 sys.path.insert(0, str(HARNESS.parent))
@@ -20,7 +22,8 @@ sys.path.insert(0, str(HARNESS))
 _spec = importlib.util.spec_from_file_location("safe_profile_1to1_verify_v", HARNESS / "verify.py")
 assert _spec is not None and _spec.loader is not None
 verify = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(verify)
+with historical_imports():
+    _spec.loader.exec_module(verify)
 
 VALIDATORS = {"email": {"checked": 10, "invalid": 1, "invalid_rate": 0.1}}
 

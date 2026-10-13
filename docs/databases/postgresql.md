@@ -20,7 +20,7 @@ idempotency decision.
 
 Evidence: `plugins/shape-databases/src/shape_databases/postgres.py` and shared adapter helpers.
 Shape writes to PostgreSQL through `shape-databases`; it does not read PostgreSQL
-tables directly in 0.9.1.
+tables directly in 0.9.2.
 
 ## Profile an export
 
@@ -41,9 +41,17 @@ Then profile the exported file:
 shape profile orders.csv -o orders.shape
 ```
 
-## Next step
+## Owner-run receipt
 
-<!-- owner: database maintainer — execute a PostgreSQL export/write transcript against a disposable server before publishing commands. -->
+On 2026-10-11, the Owner exported 5,000 Shape-generated rows from disposable PostgreSQL 17 in Docker using the command above (`COPY 5000`), then profiled the CSV with Shape 0.9.1 from PyPI in a clean `python:3.12-slim` container:
+
+```json
+{"shape_content_id": "a71f80cb159b382e149d5bbdc2ea320add3e1f16c34941f91c790c9f7fb7317c", "written": "orders.shape"}
+```
+
+The [Owner-run export receipt](../evidence/postgresql-export-profile.md) also links to the earlier PostgreSQL write: 21,750 rows in nine tables, exit 0, with persisted-row checks. These receipts describe those disposable runs only.
+
+## Next step
 
 These pages describe implementation behavior. They make no account or service-validation
 claim. Authentication, permissions and server limits remain properties of your deployment.

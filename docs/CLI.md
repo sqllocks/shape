@@ -371,16 +371,46 @@ failure exits 1. A malformed target is an input error (exit 2).
 
 <!-- example: 5 -->
 
-**Needs a Kafka account. Not run in CI.**
+This connectivity example uses the workflow's disposable Kafka broker. Fabric and Event Hubs checks require their own accounts; the option table below describes those checks.
 
-```
-shape doctor --fabric onelake://WORKSPACE/ITEM [--auth cli|msi|spn|device-code|fabric ...]
-shape doctor --broker kafka://host:9092[,host2:9092]/topic
-shape doctor --broker eventhubs://NAMESPACE/HUB [--auth ...]
-shape doctor --delta-table PATH
+<!-- owner-example: kafka-doctor -->
+
+```bash {.runnable-owner}
+shape doctor --broker kafka://localhost:9092/orders
 ```
 
-<!-- owner: Kafka maintainer — supply the transcript for docs/CLI.md example 5. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Shape 0.9.1
+      python    3.12.15  (Linux-6.17.0-1022-azure-x86_64-with-glibc2.39)
+      kernel    rust  (compiled)
+    
+    Required
+      OK      numpy         2.5.3
+      OK      pyarrow       25.0.1
+    
+    Optional
+      OK      cryptography  50.0.2
+      OK      yaml          6.0.3
+      OK      pandas        3.0.6
+      OK      scipy         1.18.1
+      OK      deltalake     1.6.6
+      OK      openpyxl      3.1.5
+      OK      sklearn       1.9.1
+      OK      tzdata        2026.3
+    
+    Checks
+      PASS  broker.dns    localhost resolves to ::1, 127.0.0.1
+      PASS  broker.tcp    connected to localhost:9092 (::1)
+      PASS  broker.auth   the broker answered a metadata request
+    
+    Result: OK
+    ```
+
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-kafka-doctor.json).
+
+Receipts: the [Owner-run Fabric, Kafka and Event Hubs checks](evidence/doctor-additional-environments.md) and the [replayed local Delta check](evidence/local-delta-doctor.md) cover all four command shapes above. The service checks ran on Windows on 2026-10-11; the local Delta check ran on Linux on 2026-10-12 UTC. Each returned exit 0; the Delta check reports `PASS delta.limits` on a readable table.
 
 
 | Option | Checks |
@@ -713,7 +743,7 @@ shape doctor
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    Shape 0.9.1
+    Shape 0.9.2
       python    3.12.14  (Linux-6.18.44-x86_64-with-glibc2.41)
       kernel    python  (pure Python; set SHAPE_KERNEL=rust)
 

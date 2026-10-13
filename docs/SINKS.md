@@ -148,15 +148,23 @@ query.
 
 <!-- example: 2 -->
 
-**Needs a PostgreSQL account. Not run in CI.**
+This bounded example uses the workflow's disposable PostgreSQL service. The `stream_` prefix keeps its tables separate from the seed example. Passwords come from `SHAPE_POSTGRES_PASSWORD`; none belong in a URI. It stops after 20 events.
 
-```bash
-shape generate retail --scale small --to mssql://myserver.database.windows.net/mydb \
-  --write-mode create
-shape stream retail -t order --to postgresql://me@dbhost/shape --commit-rows 500 --realtime --rate 100
+<!-- owner-example: postgres-sink -->
+
+```bash {.runnable-owner}
+shape stream retail -t order --to postgresql://shape@localhost:5432/shape \
+  --commit-rows 500 --realtime --rate 100 --max-events 20 \
+  --sink-config postgres.table_prefix=stream_ --fresh
 ```
 
-<!-- owner: PostgreSQL maintainer — supply the transcript for docs/SINKS.md example 2. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    shape stream: 20 events delivered, offset 20 of 5,000, max-events, 52 events/s
+    ```
+
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-postgres-sink.json).
 
 
 `--write-mode` is `create` (the default: never touches an existing table), `append`, `truncate`
@@ -170,6 +178,13 @@ table's stage with one `COPY INTO`; Databricks writes Delta tables with bound mu
 Synapse dedicated SQL pool loads Parquet staged in ADLS Gen2 (`--sink-config synapse.staging_path=`);
 each checks the loaded row count against the rows sent. See `docs/plugins/fabric-writers.md` and the
 README of `sqllocks-shape-databases`.
+
+**NaN and infinity become NULL.** The `warehouse://`, SQL database and `synapse://` writers store a
+floating-point `NaN` or `±Infinity` as `NULL`: a T-SQL `float` holds only finite values
+([float and real](https://learn.microsoft.com/sql/t-sql/data-types/float-and-real-transact-sql)),
+and the writer makes the value `NULL` before staging or inserting it, so a pool, Warehouse or
+database never receives one. Reading the table back gives `NULL` where `NaN` was written, and the
+dataset id of the read-back differs from the NaN-bearing input for that reason alone.
 
 ## Confirming a non-local target
 
