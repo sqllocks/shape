@@ -1,0 +1,39 @@
+{
+  "run_id": "38332340250",
+  "commit": "00dd1429675b768741cbd6b1c9a9bbc5d36819e5",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "logical_cpus": 4,
+    "ram_bytes": 16766414848,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "26.0.0",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "workspace": "shape-test, service principal shape-ci-fabric",
+  "page": "docs/SCALE.md",
+  "example": "scale-fabric-spark",
+  "command": "export SHAPE_FABRIC_TOKEN=...   # an Entra token for the Fabric API\nshape generate retail --scale large --scale-mode fabric_spark \\\n    --fabric-workspace WORKSPACE_GUID --fabric-lakehouse LAKEHOUSE_GUID --table-prefix demo_",
+  "executed_command": "export SHAPE_FABRIC_TOKEN=\"$SHAPE_FABRIC_TOKEN\"   # an Entra token for the Fabric API\nshape generate retail --scale large --scale-mode fabric_spark \\\n    --fabric-workspace \"$FABRIC_WORKSPACE_ID\" --fabric-lakehouse \"$FABRIC_LAKEHOUSE_ID\" --table-prefix demo_",
+  "exit_code": 0,
+  "status": "passed",
+  "elapsed_seconds": 4.011005732000001,
+  "stdout": "submitted spark-def26b56 (Fabric run <guid>); 19,625,400 rows queued\n  status: shape jobs status spark-def26b56   cancel: shape jobs cancel spark-def26b56\n"
+}
