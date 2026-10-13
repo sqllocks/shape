@@ -1,17 +1,41 @@
 # Promotion plan for 0.9.3
 
-Status: plan. Not a user-facing page. Written for the lead (session `PROMO-093`); the Owner decides the items in section 5.
+Status: plan. Not a user-facing page. Written for the lead (session `PROMO-093`). Revised 2026-10-13 for the Owner's decisions.
 
-Base: `int/0.9.2` at `c10923be9278bc63f2713ac0ed32a548b59a7afb`. This plan builds no code and changes no label.
+Base: `int/0.9.2` at `c10923be9278bc63f2713ac0ed32a548b59a7afb`. Fabric evidence read from `origin/docs/fabric-transcripts` at `10c4cd633f282d7e5c3a0a5cf44f205c9d926b80`. This plan builds no code and changes no label.
+
+## Decisions (Owner, 2026-10-13)
+
+The Owner's words, relayed by the lead: "Recommendations except #2. We want to get those in .9.3".
+
+| # | Decision | Owner answer | Effect on this plan |
+|---|---|---|---|
+| 1 | Legacy available pages | Accepted | Shrink-only ratchet list (`tests/docs/available_legacy.txt`). No silent relabels in 0.9.3. |
+| 2 | Plugin commands | **Reversed.** Plugin commands get in 0.9.3. | New work package W-plug (section 6). The 22 plugin commands are re-run against P-BAR (section 7). Nine are promoted. |
+| 3 | Evidence freshness | Accepted | A receipt counts if it is from the same release line, or the source of that path is unchanged since. Fabric is re-recorded on the release head. See 1.2 for how "same release line" is read. |
+| 4 | What is a real run | Accepted | Self-hosted containers count. Cloud emulators do not. |
+| 5 | Mixed pages | Accepted | In-page experimental fences; one real split (`CLI.md`). |
+| 6 to 12 | Python API stance, surface edits before the freeze, `rules` mutant kinds, `### Promoted` heading, remove `privacy-k` and `quality`, live-run batch, claim-table cost | Accepted (read from "Recommendations except #2"; the lead relayed only 1 to 5 by number, so the lead should confirm 6 to 12) | Section 5 marks each. |
+
+Correction to the Fabric evidence (relayed by the lead). The three Fabric owner notes are resolved by real runs on `docs/fabric-transcripts` at `10c4cd633f282d7e5c3a0a5cf44f205c9d926b80`. That branch lands on `int/0.9.2` shortly. I checked each file with `git cat-file -e` on that commit:
+
+| Note | Example | Run | Result | File on that branch |
+|---|---|---|---|---|
+| `docs/SINKS.md:66` | `sinks-onelake` | 38398883944 (commit `5fb3694b`, has the abfss fix `4f819a01`) | passed, exit 0 | `docs/evidence/transcripts/docs-transcripts-38398883944-5fb3694b5da5-ubuntu-latest-sinks-onelake.json` |
+| `docs/plugins/fabric-commands.md:59` | `publish-targets` | 38400931371 (commit `c37ff1b1`, after the pre-clean) | passed, exit 0; all four targets ran (lakehouse, sql-database, warehouse, eventhouse) | `docs/evidence/transcripts/docs-transcripts-38400931371-c37ff1b1dadb-ubuntu-latest-publish-targets.json` |
+| `docs/plugins/fabric-commands.md:95` | `notebook-deploy` | 38400931371 | passed, exit 0 | `docs/evidence/transcripts/docs-transcripts-38400931371-c37ff1b1dadb-ubuntu-latest-notebook-deploy.json` |
+
+The pre-clean record is `docs/plans/evidence/owner-notes/preclean-38400931371.txt`. On that branch `check_docs_owners.py` finds none of the three notes; the other notes it lists are older text on a stale base, not open on `int/0.9.2`. These files are not on this plan's branch yet, so in the table they carry the prefix `B/` (on `docs/fabric-transcripts`). The two runs' commits contain the Warehouse key fix, the Synapse fix and the abfss fix. They do **not** contain the Lakehouse-kind lookup (`3dd1d47`, `76800ef`, in `int/0.9.2`), so Lakehouse schema-enabled claims still have no run. The transcripts print `Shape v0.9.1` in their banners.
 
 ## 0. Summary
 
 - Today 24 commands are stable (`src/shape/cli/stability.py`). 60 core commands and 22 plugin-added commands are not. 93 docs pages say `Status: experimental`; 71 start with `Status: available`.
 - Nothing checks a docs label. Of the 71 available pages, 15 mention an experimental command. Two are clear mislabels: `docs/DICTIONARY.md` (`shape dictionary`) and `docs/PROJECT.md` (`shape project`, `shape init`).
-- No plugin command can be stable today. `cli_surface.py` snapshots the core parser only (section 5, decision 2).
-- Every recorded Fabric run predates the Lakehouse-kind lookup and the abfss fix. The three open owner notes (`docs/SINKS.md:66`, `docs/plugins/fabric-commands.md:59` and `:95`) all failed in run 38337418136.
-- Recommendation: promote 9 items in 0.9.3, keep 45 for later, keep 14 experimental, and mark 2 commands as candidates to remove. The 9 are: REPRODUCIBILITY, DETERMINISM, QUICKSTART, `canary`, `gameday`, SIGNING, VERIFY, `mask`, and the Synapse write through `generate --to synapse://`. Build the P-BAR check first (work package W0, size M); without it "available" stays a hand-written word.
-- Promote nothing that needs a new live run on a branch other than the release head. Re-record Fabric runs on the release head.
+- No plugin command can be stable today. `cli_surface.py` snapshots the core parser only. The Owner reversed my advice: plugin commands go into 0.9.3. Section 6 designs the mechanism (size M).
+- With the three Fabric notes resolved, Fabric has passing runs for `setup-fabric`, `deploy-notebook`, `publish` (four targets), `profile-db` on a Fabric Warehouse, and Synapse write. Nothing recorded covers the Lakehouse-kind lookup.
+- Recommendation: promote **11 rows** in 0.9.3 (12 commands, 11 pages), keep 44 for later, keep 14 experimental, mark 2 commands as candidates to remove. Total work about 45 person-days (range 35 to 60), about 4 weeks elapsed with three people (section 8).
+- Build the P-BAR check (W0, M) and the plugin mechanism (W-plug, M) first, in parallel. Everything else waits on one or both.
+- Re-record Fabric runs on the release head. Do not promote what has no run on a commit whose source matches the release.
 
 Size scale: **S** up to 1 day, **M** 2 to 4 days, **L** more than 1 week. Sizes are for one person who knows the code.
 
@@ -34,7 +58,7 @@ A feature is "available" only when:
 - **CI job.** `ci:<workflow>/<job>`, as in V1_DONE.md.
 - **Outside service.** A claim that needs a service Shape does not ship. A service started from a container by the test itself (PostgreSQL, MySQL, SQL Server, Kafka) is real. An emulator of a cloud service (Azurite, the Event Hubs emulator) is not.
 - **Real recorded run.** A file under `docs/evidence/` or `docs/plans/evidence/` that records the command, the exit code, the Shape version and the date. For a CI transcript: the JSON fields `run_id`, `commit`, `exit_code`, `status` (`passed`). For an Owner receipt: a machine line `<!-- receipt: shape=0.9.2 service=synapse exit=0 date=2026-10-20 -->`.
-- **Fresh.** The run names a Shape version of the same minor line as the release, or the source files of that path are unchanged since the run (`git diff --quiet <commit> HEAD -- <paths>`). Proposed in decision 3.
+- **Fresh.** Decision 3. The receipt names the release's own version, or the source files of that path are unchanged since the run (`git diff --quiet <commit> HEAD -- <paths>`). For a 0.x release I read "same minor version" as "same release", because a 0.9.x patch release changes code (0.9.2 changed the Warehouse, Synapse and Lakehouse writers). The check records `shape=<version>` and `paths=<list>` in the receipt line. If the lead means 0.9.x as one line, the `paths=` test still catches changed code, so only the first clause changes.
 - **Release note.** A line under `### Promoted` in the CHANGELOG section of the release that names the page file and the command.
 
 ### 1.3 Proposed check (design only)
@@ -47,7 +71,7 @@ Name: `scripts/check_available.py`. Same style as `scripts/check_v1_done.py`: st
 |---|---|
 | `docs/AVAILABLE.md` | The claim-to-proof tables (below). |
 | Every `docs/**/*.md` outside `plans` and `talks` | The `Status:` line, `<!-- claim: ... -->` anchors, `<!-- owner: ... -->` notes, `Covers:` line. |
-| `src/shape/cli/stability.py` | `STABLE` (imported). |
+| `src/shape/cli/stability.py` | `STABLE` and, after W-plug, `STABLE_PLUGIN_COMMANDS` (imported). |
 | `pytest --collect-only -q` over the files named | Node ids. |
 | `.github/workflows/*.yml` | CI job keys. |
 | `docs/evidence/**`, `docs/plans/evidence/**` | Evidence files. |
@@ -68,7 +92,7 @@ A page declares what it covers with a line under `Status:`:
 
 **Rules and failure messages.** Each failure prints `AVAILABLE: <page>: P-BAR <n>: <message>` and the run exits 1.
 
-1. P-BAR 1. For a page with `Status: available` and a row set in AVAILABLE.md: every `shape <cmd>` in the page text outside experimental blocks, and every name in `Covers:`, must be in `STABLE`. Undeclared mentions fail ("page mentions `shape mask`; add it to Covers or fence it").
+1. P-BAR 1. For a page with `Status: available` and a row set in AVAILABLE.md: every `shape <cmd>` in the page text outside experimental blocks, and every name in `Covers:`, must be in `STABLE` or `STABLE_PLUGIN_COMMANDS`. Undeclared mentions fail ("page mentions `shape mask`; add it to Covers or fence it").
 2. P-BAR 2. Each anchor has a row; each row has an anchor; each row is `done` with at least one existing node id or CI job. An `open` row fails for an available page.
 3. P-BAR 3. A row that touches a service (a `service:` tag in the claim cell) needs an evidence path that exists, whose record shows exit 0 and a fresh version. A proof test marked `emulator` alone does not satisfy it.
 4. P-BAR 4. `inventory()` returns no owner note for the page.
@@ -88,7 +112,7 @@ Generated pages need a change too: `scripts/gen_failure_modes.py` and `scripts/g
 
 ### 2.1 How it was generated
 
-1. Commands: `shape --help` lists 85 commands. `tests/cli/cli_surface_v1.json` holds 84 core commands; the 22 commands absent from it are plugin-added (`(plugin <name>)` in `--help`). `STABLE` has 24. So 60 core and 22 plugin commands are experimental (60 + 24 = 84). `compare` is an alias of `fidelity`.
+1. Commands: `shape --help` lists 85 commands (with the plugins in this environment installed). `tests/cli/cli_surface_v1.json` holds 84 core commands; the 22 commands absent from it are plugin-added (`(plugin <name>)` in `--help`). `STABLE` has 24. So 60 core and 22 plugin commands are experimental (60 + 24 = 84). `compare` is an alias of `fidelity`.
 2. Pages: `grep -rlE '^Status: experimental' docs --include=*.md` outside `docs/plans` and `docs/talks`: 93 pages. `QUICKSTART.md` is counted because line 48 says `Status: experimental` for one section; its page line says available.
 3. Tests: `pytest --collect-only -q -p no:cacheprovider --continue-on-collection-errors tests plugins` after `pip install -e ".[dev]"`, the plugins, and `confluent-kafka azure-eventhub azure-identity fhir.resources pyx12 ms-fabric-cli nbformat`: 21,995 node ids. Six modules did not collect here: `tests/demo/fabric/test_udf.py` and five in `plugins/shape-healthcare-codes/tests/`. No id is cited from them. Every id in this plan was matched exactly against that list. A node id shown without `[...]` names a parametrized family.
 4. Docs examples: `tests/docs/reference_examples.json` gives the example kinds per page; `tests/docs/test_reference_examples.py::test_reference_page[<PAGE>]` runs the `local` and `bootstrap` ones. It is listed as proof for the page, not for a claim.
@@ -100,7 +124,7 @@ Not exhaustive by design: "existing proof" lists up to three representative ids 
 
 ### 2.2 Legend
 
-- Evidence paths: `E/` = `docs/evidence/`; `O/` = `docs/plans/evidence/owner-notes/`; `T/<example>` = `docs/evidence/transcripts/docs-transcripts-<run>-<sha>-ubuntu-latest-<example>.json`, with the run id and status in brackets. `O/…<run>…-<example>.json` is a failed attempt kept in `owner-notes`.
+- Evidence paths: `B/` = on `docs/fabric-transcripts` at `10c4cd63`, not yet on `int/0.9.2`; `E/` = `docs/evidence/`; `O/` = `docs/plans/evidence/owner-notes/`; `T/<example>` = `docs/evidence/transcripts/docs-transcripts-<run>-<sha>-ubuntu-latest-<example>.json`, with the run id and status in brackets. `O/…<run>…-<example>.json` is a failed attempt kept in `owner-notes`.
 - Most Owner receipts ran Shape 0.9.1 from PyPI on 2026-10-11 or 12.
 - "Missing" always includes: add the command to STABLE (if it has one and it is core), write the claim-to-proof table, add the CHANGELOG line. The cell lists what is more than that.
 - Recommendation: *promote in 0.9.3*, *later*, *keep experimental*, *candidate to remove*.
@@ -133,7 +157,7 @@ Not exhaustive by design: "existing proof" lists up to three representative ids 
 | Public dataset library | `library` | `DATASET_LIBRARY.md` | `tests/library/test_dataset_library.py::test_the_library_adds_under_two_megabytes_to_the_wheel`<br>`tests/docs/test_reference_examples.py::test_reference_page[DATASET_LIBRARY]`<br>(70 tests in the named paths) | none | none | STABLE; claim table; licence of each shipped dataset to confirm. | M | keep experimental |
 | Schema design and dependencies | `design`, `fd` | `DESIGN.md`, `JOINT.md` | `tests/design/test_design_cli.py::test_design_writes_ddl_to_a_file`<br>`tests/joint/test_diff_contract_joint.py::test_the_example_is_drift_that_names_the_dependency_and_the_value`<br>`tests/docs/test_reference_examples.py::test_reference_page[DESIGN]`<br>(35 tests in the named paths) | none | none | STABLE; JOINT.md is mostly Python API and profile content, not the command. | L | later |
 | Schema importers | `import-schema`, `from-ddl` | `IMPORTERS.md` | `tests/importers/test_w5_06_cli.py::test_every_format_is_inferred_and_gives_a_valid_spec`<br>`tests/generation/test_ddl.py::TestScales::test_the_engine_plans_the_import`<br>`tests/docs/test_reference_examples.py::test_reference_page[IMPORTERS]`<br>(77 tests in the named paths) | none | none | STABLE x2; claim table (tests exist per format in `tests/importers`). | L | later |
-| Data dictionary | `dictionary` | none (page is available) | `tests/dictionary/test_dictionary.py::test_json_document_declares_format_and_version`<br>(27 tests in the named paths) | none | none | STABLE; docs/DICTIONARY.md already says available while the command is experimental. | S | later |
+| Data dictionary | `dictionary` | none (no experimental page) | `tests/dictionary/test_dictionary.py::test_json_document_declares_format_and_version`<br>(27 tests in the named paths) | none | none | STABLE; docs/DICTIONARY.md already says available while the command is experimental. | S | later |
 | Reference packs | `reference` | `REFERENCE_PACKS.md` | `tests/reference/test_packs.py::test_pack_datasets_work_unchanged_with_reference_pairs`<br>`tests/docs/test_reference_examples.py::test_reference_page[REFERENCE_PACKS]`<br>(39 tests in the named paths) | none | none | STABLE; claim table; licence of shipped packs to confirm. | M | later |
 | Transforms (star schema, CDM) | `transform` | `TRANSFORMS.md` | `tests/cli/test_transform_cli.py::test_builtin_transforms_through_the_plugin_host`<br>`tests/docs/test_reference_examples.py::test_reference_page[TRANSFORMS]`<br>(9 tests in the named paths) | none | none | STABLE; claim table. | M | later |
 | Learn and composite generation | `learn`, `composite` | `GENERATION_ENGINE.md` | `tests/generation/test_learn.py::test_learned_schema_validates_and_generates`<br>`tests/generation/test_composite_p601e.py::test_the_fixtures_cover_the_six_presets_and_three_ad_hoc_composites`<br>`tests/docs/test_reference_examples.py::test_reference_page[GENERATION_ENGINE]`<br>(86 tests in the named paths) | none | none | 1,031-line page mixes stable `generate` with experimental commands; STABLE x2; claim table. | L | later |
@@ -148,12 +172,12 @@ Not exhaustive by design: "existing proof" lists up to three representative ids 
 | Entity resolution | `resolve` | `RESOLVE.md` | `tests/resolve/test_cli.py::test_synth_then_run_scores_against_the_written_truth`<br>`tests/docs/test_reference_examples.py::test_reference_page[RESOLVE]`<br>(4 tests in the named paths) | none | none | STABLE; claim table; only 4 tests found. | M | later |
 | Parquet and Delta fingerprint | `fingerprint` | `FINGERPRINT.md` | `tests/w5_10/test_fingerprint_preservation.py::test_a_fingerprint_written_by_shape_is_what_every_scenario_starts_from`<br>(4 tests in the named paths) | none | none | STABLE; Delta read path relies on the delta extension (see delta-fallback receipt); claim table. | M | later |
 | Explain a report | `explain` | `EXPLAIN.md` | `tests/report/test_explain_display.py::test_explain_is_deterministic_and_structured`<br>(18 tests in the named paths) | none | none | Wording is generated prose; freezing it is not useful; keep experimental. | S | keep experimental |
-| Query a capture | `query` | none (page is available) | `tests/cli/test_five_cli.py::test_query_check_compatibility_plan_registry`<br>(1 tests in the named paths) | none | none | STABLE; expression language has no spec page; only 1 test found; used by QUICKSTART example 2. | M | later |
-| Equivalence-group size | `privacy-k` | none (page is available) | `tests/regressions/test_hunt2_cli.py::test_init_writes_a_valid_file_for_a_number_like_name`<br>(53 tests in the named paths) | none | none | No page; overlaps `profile` k-anonymity; no dedicated tests found. | S | candidate to remove |
-| Rule check from a capture | `quality` | none (page is available) | `tests/quality/test_bugs_cli_type_mismatch.py::test_wrong_type_is_a_violation_not_a_crash`<br>(17 tests in the named paths) | none | none | No page; overlaps `check` and `verify`. | S | candidate to remove |
-| Built-in conformance suite | `conformance` | none (page is available) | `tests/conformance/test_repository_constitution.py::test_requirements_registry`<br>`tests/cli/test_cli_e2e.py::test_conformance_cli`<br>(4 tests in the named paths) | none | none | STABLE; conformance catalog is its own versioned list; tied to the SHAPE_2 draft. | M | later |
-| Generate drift | `generate-drift` | none (page is available) | `tests/generation/test_drift_plan.py::test_a_boolean_rate_can_drift_too`<br>(29 tests in the named paths) | none | none | No experimental page (DRIFT.md is available); STABLE; claim table. | M | later |
-| Sinks: where generated data goes | none | `SINKS.md` | `tests/generation/test_sink_formats_and_schemes.py::test_every_registered_sink_is_an_accepted_format`<br>`plugins/shape-fabric/tests/test_live_onelake_sink.py::test_the_abfss_sink_publishes_files_into_a_lakehouse_files_folder`<br>`tests/docs/test_reference_examples.py::test_reference_page[SINKS]`<br>(27 tests in the named paths) | `E/postgresql-export-profile.md`<br>`E/mysql-export-profile.md`<br>`E/snowflake-write.md`<br>`E/databricks-write.md`<br>`O/adls-gen2-write.md`<br>`T/postgres-sink` (38266883768 passed; 38269228192 passed; 38273696299 passed)<br>`O/…38337418136…-sinks-onelake.json` (failed, exit 2) | `SINKS.md`: Fabric maintainer — supply the transcript for docs/SINKS.md example 0. | Owner note open (example 0, abfss): last run failed (run 38337418136, exit 2) on a probe removed by a later fix; never re-run. Example 0's third command fails at HEAD (name form needs `schema_enabled`). Postgres, MySQL, Snowflake, Databricks, ADLS receipts are 0.9.1 and predate `--table-prefix`. | M | later |
+| Query a capture | `query` | none (no experimental page) | `tests/cli/test_five_cli.py::test_query_check_compatibility_plan_registry`<br>(1 tests in the named paths) | none | none | STABLE; expression language has no spec page; only 1 test found; used by QUICKSTART example 2. | M | later |
+| Equivalence-group size | `privacy-k` | none (no experimental page) | `tests/regressions/test_hunt2_cli.py::test_init_writes_a_valid_file_for_a_number_like_name`<br>(53 tests in the named paths) | none | none | No page; overlaps `profile` k-anonymity; no dedicated tests found. | S | candidate to remove |
+| Rule check from a capture | `quality` | none (no experimental page) | `tests/quality/test_bugs_cli_type_mismatch.py::test_wrong_type_is_a_violation_not_a_crash`<br>(17 tests in the named paths) | none | none | No page; overlaps `check` and `verify`. | S | candidate to remove |
+| Built-in conformance suite | `conformance` | none (no experimental page) | `tests/conformance/test_repository_constitution.py::test_requirements_registry`<br>`tests/cli/test_cli_e2e.py::test_conformance_cli`<br>(4 tests in the named paths) | none | none | STABLE; conformance catalog is its own versioned list; tied to the SHAPE_2 draft. | M | later |
+| Generate drift | `generate-drift` | none (no experimental page) | `tests/generation/test_drift_plan.py::test_a_boolean_rate_can_drift_too`<br>(29 tests in the named paths) | none | none | No experimental page (DRIFT.md is available); STABLE; claim table. | M | later |
+| Sinks: where generated data goes | none | `SINKS.md` | `tests/generation/test_sink_formats_and_schemes.py::test_every_registered_sink_is_an_accepted_format`<br>`plugins/shape-fabric/tests/test_live_onelake_sink.py::test_the_abfss_sink_publishes_files_into_a_lakehouse_files_folder`<br>`tests/docs/test_reference_examples.py::test_reference_page[SINKS]`<br>(27 tests in the named paths) | `E/postgresql-export-profile.md`<br>`E/mysql-export-profile.md`<br>`E/snowflake-write.md`<br>`E/databricks-write.md`<br>`O/adls-gen2-write.md`<br>`T/postgres-sink` (38266883768 passed; 38269228192 passed; 38273696299 passed)<br>`B/T/sinks-onelake` (38398883944 passed, exit 0) | `SINKS.md`: Fabric maintainer — supply the transcript for docs/SINKS.md … (resolved on `docs/fabric-transcripts` @ `10c4cd63`) | Owner note resolved on `docs/fabric-transcripts` (run 38398883944 passed, with the abfss fix; it lacks the Lakehouse-kind lookup now on int/0.9.2). Re-run on the release head; Postgres, MySQL, Snowflake, Databricks, ADLS receipts are 0.9.1 and predate `--table-prefix`. First page to add if the release-head run passes. | M | later |
 | Container image | none | `CONTAINER.md` | `tests/release/test_baseline_diff_report.py::test_reports_changed_and_unchanged_domains`<br>`tests/docs/test_reference_examples.py::test_reference_page[CONTAINER]`<br>(389 tests in the named paths) | none | none | Image build is a release job; docs example runs in a container. | M | later |
 | dbt integration | `dbt-seeds`, `dbt-report`, `from-dbt`, `to-dbt-tests` | `DBT.md` | `plugins/shape-dbt/tests/test_dbt_build.py::test_the_manifest_dbt_wrote_gives_the_same_schema_as_the_yaml`<br>`tests/docs/test_reference_examples.py::test_reference_page[DBT]`<br>(115 tests in the named paths) | none | none | Plugin commands; need the plugin-command stability mechanism; DuckDB adapter only. | L | later |
 | Drift report publishing | `publish-report` | `DRIFT_REPORT.md` | `tests/docs/test_reference_examples.py::test_reference_page[DRIFT_REPORT]` | none | none | Plugin command in the Fabric plugin; no live run recorded. | M | later |
@@ -167,52 +191,65 @@ Not exhaustive by design: "existing proof" lists up to three representative ids 
 | Specs (drafts) | none | `specs/SHAPE_1_0.md`, `specs/ONE_ZERO_CONTRACT.md`, `specs/SHAPE_2.md`, `specs/SHAPE_MODEL_V2.md`, `specs/SHAPE_ARTIFACT_SPEC.md`, `specs/PACK_SPEC.md`, `specs/LOCATION_SPEC.md`, `specs/STREAMING_SEMANTICS.md` | `tests/spec/test_capabilities.py::test_caps`<br>(43 tests in the named paths) | none | none | Drafts by design; a spec is 'available' only when frozen. | S | keep experimental |
 | Architecture and policy pages | none | `PRODUCT_ARCHITECTURE.md`, `SHAPE_MANIFESTO.md`, `EXTERNAL_REFERENCE_ASSETS.md`, `LOCATION_AS_CODE.md`, `THREAT_MODEL.md` | none found | none | none | Not features. A label means nothing here; consider a different label word. | S | keep experimental |
 | Python API stability and plugin framework | none | `plugins/api-v1.md`, `plugins/authoring.md`, `plugins/host.md`, `plugins/trust-model.md`, `plugins/builtins.md` | `tests/plugins/test_api_v1.py::test_api_version`<br>`tests/docs/test_reference_examples.py::test_reference_page[authoring]`<br>(488 tests in the named paths) | none | none | `plugins/api-v1.md` is generated (`scripts/gen_plugin_api_docs.py` writes 'experimental'); plugin promise is in `plugins/stability.md`. | M | later |
-| SQL Server, Azure SQL, Fabric SQL | `profile-db` | `plugins/sqlserver.md` | `plugins/shape-sqlserver/tests/test_auth.py::test_missing_pyodbc_is_a_clear_error`<br>`tests/docs/test_reference_examples.py::test_reference_page[sqlserver]`<br>(185 tests in the named paths) | `O/sqlserver-live.md`<br>`E/kerberos-live.md`<br>`T/profile-db-warehouse` (38337418136 passed)<br>`T/sql-sampling-measurement` (38266883768 passed; 38269228192 passed; 38273696299 passed) | none | Plugin command `profile-db` cannot be STABLE today; printed `shape_content_id` is stale; no Azure SQL run; SQL Server and Fabric Warehouse runs exist. | M | later |
+| SQL Server, Azure SQL, Fabric SQL | `profile-db` | `plugins/sqlserver.md` | `plugins/shape-sqlserver/tests/test_profiler.py::test_a_connection_or_a_string_is_required`<br>`plugins/shape-sqlserver/tests/test_profiler.py::test_a_table_filter_keeps_only_those_tables`<br>`tests/docs/test_reference_examples.py::test_reference_page[sqlserver]`<br>(185 tests in the named paths) | `O/sqlserver-live.md`<br>`E/kerberos-live.md`<br>`T/profile-db-warehouse` (38337418136 passed)<br>`T/sql-sampling-measurement` (38266883768 passed; 38269228192 passed; 38273696299 passed) | none | Needs W-plug. `profile-db` has `--json`; its `--client-secret` is a plain value (take a reference before the freeze); printed `shape_content_id` is stale (re-record); no Azure SQL run: fence that claim. SQL Server (0.9.1) and Fabric Warehouse runs exist. | M | promote in 0.9.3 |
 | Cloud sources (OneLake, ADLS Gen2, Delta) | none | `plugins/cloud-sources.md` | `tests/connectors/test_adapters.py::test_adapter_contracts`<br>(13 tests in the named paths) | `E/semantic-model-notebook.md`<br>`O/adls-gen2-write.md` | none | `semantic-model://` has a notebook receipt (0.9.1); OneLake/ADLS reads use contract tests and Azurite only; ADLS read failed on 0.9.1, fixed, not re-run. | M | later |
 | Fabric sign-in (--auth) | none | `plugins/fabric-auth.md` | `plugins/shape-fabric/tests/security/test_exact_checks.py::test_a_copy_location_with_a_trailing_newline_is_refused`<br>(1303 tests in the named paths) | `E/kerberos-live.md` | none | `--auth` values on stable `generate`; kerberos has a receipt; spn, msi, device-code have no recorded run; page text 'owner action' is stale. | M | later |
-| Fabric writers (Warehouse, Synapse, SQL database, Lakehouse) | none | `plugins/fabric-writers.md` | `plugins/shape-fabric/tests/security/test_exact_checks.py::test_a_copy_location_with_a_trailing_newline_is_refused`<br>(1303 tests in the named paths) | `T/synapse-write` (38338859503 passed) | none | Narrow to Synapse via `generate --to synapse://`: run 38338859503 passed, Synapse source unchanged since; re-record on release head. Warehouse, SQL database and Lakehouse sections need new runs: mark them experimental in-page. Cite run 38312820840 or drop the NaN claim. | M | promote in 0.9.3 |
-| Fabric commands | `setup-fabric`, `publish`, `notebook`, `deploy-notebook`, `fabric`, `export-model`, `profile-model`, `known-answer`, `check-answers` | `plugins/fabric-commands.md` | `plugins/shape-fabric/tests/test_auth.py::test_unknown_mode_is_an_error`<br>`tests/docs/test_reference_examples.py::test_reference_page[fabric-commands]`<br>(1303 tests in the named paths) | `T/setup-fabric` (38337418136 passed)<br>`O/…38337418136…-publish-targets.json` (failed, exit 1)<br>`O/…38337418136…-notebook-deploy.json` (failed, exit 1)<br>`E/semantic-model-notebook.md` | `plugins/fabric-commands.md`: Fabric maintainer — supply the transcript for docs/plugins/fabric-commands.md example 0.<br>`plugins/fabric-commands.md`: Fabric maintainer — supply the transcript for docs/plugins/fabric-commands.md example 1. | Plugin commands cannot be STABLE today. Owner notes open at lines 59 and 95: `publish-targets` (stopped at sql-database: table exists) and `notebook-deploy` (409 name in use) both failed in run 38337418136. `setup-fabric` passed; page text is stale. | L | later |
-| Fabric platform inventory | none | `FABRIC_PLATFORM.md` | `tests/docs/test_fabric_platform.py::test_the_inventory_parses_and_every_row_is_complete`<br>(42 tests in the named paths) | `T/git-sync-live` (38320894194 passed) | none | Git sync passed once (38320894194) and failed once (38327274076); both predate a git-sync fix; re-run. Page says 'not run yet'. | S | later |
+| Fabric writers (Warehouse, Synapse, SQL database, Lakehouse) | none | `plugins/fabric-writers.md` | `plugins/shape-fabric/tests/test_live_synapse.py::test_synapse_round_trip`<br>`plugins/shape-fabric/tests/test_live_owner_matrix.py::test_publish_warehouse_keys_copy_and_cleanup`<br>(1303 tests in the named paths) | `T/synapse-write` (38338859503 passed) | none | Narrow to Synapse via `generate --to synapse://`: run 38338859503 passed, Synapse source unchanged since; re-record on release head. Warehouse, SQL database and Lakehouse sections need new runs: mark them experimental in-page. Cite run 38312820840 or drop the NaN claim. | M | promote in 0.9.3 |
+| Fabric commands | `setup-fabric`, `publish`, `notebook`, `deploy-notebook`, `fabric`, `export-model`, `known-answer`, `check-answers` | `plugins/fabric-commands.md` | `plugins/shape-fabric/tests/test_live_commands.py::test_setup_creates_an_environment_and_a_second_run_finds_it`<br>`plugins/shape-fabric/tests/test_live_commands.py::test_deploy_notebook_creates_a_notebook_item_and_it_can_be_removed`<br>`plugins/shape-fabric/tests/test_live_commands.py::test_publish_to_a_lakehouse_writes_the_landing_zone_and_the_manifest`<br>`tests/docs/test_reference_examples.py::test_reference_page[fabric-commands]`<br>(1303 tests in the named paths) | `T/setup-fabric` (38337418136 passed)<br>`B/T/publish-targets` (38400931371 passed, exit 0)<br>`B/T/notebook-deploy` (38400931371 passed, exit 0)<br>`B/O/preclean-38400931371.txt` (Owner-approved pre-clean) | `plugins/fabric-commands.md`: Fabric maintainer — supply the transcript for docs/plugins/f… (resolved on `docs/fabric-transcripts` @ `10c4cd63`)<br>`plugins/fabric-commands.md`: Fabric maintainer — supply the transcript for docs/plugins/f… (resolved on `docs/fabric-transcripts` @ `10c4cd63`) | Needs the plugin mechanism (W-plug). All four `publish` targets, `deploy-notebook` and `setup-fabric` have passing runs (setup-fabric on an older head: re-record). Owner notes resolved on `docs/fabric-transcripts`. Review surface first (aliases `shape setup-fabric`/`shape fabric setup`, `-t sql-database` vs `--source-type sql_database`); fence the XMLA-deploy claim; refresh stale page text (`Shape v0.9.1` banners, example 2). | L | promote in 0.9.3 |
+| Semantic model profiling | `profile-model` | none (no experimental page) | `plugins/shape-fabric/tests/test_live_semantic_model.py::test_a_real_model_profiles_with_its_relationships_and_every_table_reads`<br>(1 tests in the named paths) | `E/semantic-model-notebook.md` | none | Runs only in a Fabric notebook; receipt (0.9.1) shows one table and no relationships. Needs a relationship run (`test_live_semantic_model.py`) and a plugin-mechanism entry; no page of its own (a section of `fabric-commands.md`, fenced). | M | later |
+| Fabric platform inventory | none | `FABRIC_PLATFORM.md` | `tests/docs/test_fabric_platform.py::test_the_inventory_parses_and_every_row_is_complete`<br>`plugins/shape-fabric/tests/test_live_git_sync.py::test_shape_files_survive_a_git_sync_in_both_directions`<br>(42 tests in the named paths) | `T/git-sync-live` (38320894194 passed) | none | Git sync passed once (38320894194) and failed once (38327274076); both predate a git-sync fix; re-run. Page says 'not run yet'. | S | later |
 | Behavior models | `behave` | `plugins/behavior.md` | `plugins/shape-behavior/tests/test_behaviors_group.py::test_builtin_is_registered_loads_and_conforms`<br>`tests/docs/test_reference_examples.py::test_reference_page[behavior]`<br>(187 tests in the named paths) | none | none | Plugin command; needs the plugin-command mechanism; claim table. | L | keep experimental |
 | Healthcare code sets | `healthcare-codes` | `plugins/healthcare-codes.md` | `plugins/shape-healthcare-codes/tests/test_assets.py::test_codes_on_a_date_are_all_valid_and_billable_that_day`<br>`tests/docs/test_reference_examples.py::test_reference_page[healthcare-codes]`<br>(58 tests in the named paths) | none | none | Plugin command; licence of code sets to confirm; 5 test modules did not collect in this environment. | L | keep experimental |
 | Healthcare standards (FHIR, X12) | none | `plugins/healthcare-standards.md` | `plugins/shape-healthcare-standards/tests/fhir/test_fhir_resources.py::test_every_sample_resource_validates_as_r4b`<br>(400 tests in the named paths) | none | none | No command; claim table; conformance claims. | L | keep experimental |
 | Integrations (MLflow, lineage, evaluate) | `evaluate`, `lineage`, `mlflow` | `plugins/integrations.md` | `plugins/shape-integrations/tests/test_evaluate_unit.py::test_every_real_table_is_evaluated_by_default`<br>`tests/docs/test_reference_examples.py::test_reference_page[integrations]`<br>(168 tests in the named paths) | none | none | Plugin commands; no MLflow or OpenLineage run recorded. | L | keep experimental |
 | Simulation patterns | `simulate` | `plugins/simulation.md` | `plugins/shape-simulation/tests/test_financial.py::test_a_far_future_time_or_huge_window_is_refused_not_simulated`<br>`tests/docs/test_reference_examples.py::test_reference_page[simulation]`<br>(218 tests in the named paths) | none | none | Plugin command; no outside service. | M | keep experimental |
-| CTGAN model | `ctgan` | none (page is available) | `tests/fidelity/test_ctgan.py::test_fit_and_sample_through_sdv`<br>(7 tests in the named paths) | none | none | Plugin command from the core distribution; no page of its own. | M | keep experimental |
+| CTGAN model | `ctgan` | none (no experimental page) | `tests/fidelity/test_ctgan.py::test_fit_and_sample_through_sdv`<br>(7 tests in the named paths) | none | none | Plugin command from the core distribution; no page of its own. | M | keep experimental |
 
 ### 2.4 Counts
 
-| Recommendation | Rows | Core commands | Plugin commands | Pages |
-|---|---|---|---|---|
-| promote in 0.9.3 | 9 | 3 (`canary`, `gameday`, `mask`) | 0 | 9 |
-| later | 45 | see table | see table | 60 |
-| keep experimental | 14 | see table | see table | 24 |
-| candidate to remove | 2 | 2 (`privacy-k`, `quality`) | 0 | 0 |
-| **Total** | **70** | **60** | **22** | **93** |
+| Recommendation | Rows | Commands | Pages |
+|---|---|---|---|
+| promote in 0.9.3 | 11 | 12 (3 core: `canary`, `gameday`, `mask`; 9 plugin) | 11 |
+| later | 44 | 57 | 58 |
+| keep experimental | 14 | 11 | 24 |
+| candidate to remove | 2 | 2 (`privacy-k`, `quality`) | 0 |
+| **Total** | **71** | **82** (60 core + 22 plugin) | **93** |
 
-Commands per bucket, from the table: promote 3, later 66, keep experimental 11, remove 2 (sum 82). The `Signing`, `Quickstart`, `Verify`, `Determinism`, `Reproducibility` and `Fabric writers` rows promote pages whose commands are already stable (or, for Fabric, reached through stable `generate`).
+The `Signing`, `Quickstart`, `Verify`, `Determinism` and `Reproducibility` rows promote pages whose commands are already stable. The `Fabric writers` row is reached through stable `generate`. The nine plugin commands are `setup-fabric`, `deploy-notebook`, `publish`, `notebook`, `export-model`, `known-answer`, `check-answers`, the `fabric` group (an alias form of the first seven plus `publish-report`, see 7.2) and `profile-db`.
 
 ## 3. Recommended 0.9.3 promotion set
 
-Rule used: promote only what already has a test for every claim, touches no service or has a fresh passing run, and has a surface that is small enough to freeze. A narrower promise is safer: promotion adds, demotion breaks.
+Rule used: promote only what has a test for every claim, touches no service or has a fresh passing run, and has a surface small enough to freeze. A narrower promise is safer: promotion adds, demotion breaks.
 
-Do first (W0, M): the P-BAR check and `docs/AVAILABLE.md`. Without them the labels below are by hand. W0 also holds the ratchet list for the 71 existing available pages.
+Long poles first. W0 (the P-BAR check) and W-plug (the plugin mechanism) take about a week each and block everything else; start both on day 1, in parallel. The Fabric live batch (4.9) needs the Owner's workspace; ask for it on day 1 so it is ready when the code lands.
 
 ### Priority order
 
-| # | Item | Kind | Why now | Size |
-|---|---|---|---|---|
-| 1 | `docs/REPRODUCIBILITY.md` | page | Uses only stable `shape pack`. Every claim maps to a test (V1-02, V1-18 to V1-22 in `V1_DONE.md`). No service. Needs a claim table and a CHANGELOG line. | S |
-| 2 | `docs/DETERMINISM.md` | page | 12 lines. Backed by random-access and kernel-parity tests. Two sentences have no test (scan cost, idempotent sinks): cut or test them. | S |
-| 3 | `docs/QUICKSTART.md` | page | Already labelled available. One line uses experimental `shape query`. Remove that line, keep the label, make it earned. | S |
-| 4 | `shape canary` + `docs/CANARIES.md` | command | Small surface (`make`, `check`). Every claim has a named test. Local only. No owner note. | S |
-| 5 | `shape gameday` + `docs/GAMEDAY.md` | command | Small surface (`run`). Tests cover source immutability, allowed commands, local-only data, exit codes. One open design point (dry-run JSON). | S |
-| 6 | `docs/SIGNING.md` | page | `keygen`, `sign`, `verify` are stable and well tested. Move the vault and `migrate` text out, drop `query` and the Key Vault sentence (only a fake resolver is tested). | M |
-| 7 | `docs/VERIFY.md` | page | `verify` and `check` are stable (V1-11 to V1-15). Move the scorecard, skew and report-card section out. | M |
-| 8 | `shape mask` + `docs/MASK.md` | command | Best-tested of the audit five. No service. Needs three small fixes before the freeze (section 4). | M |
-| 9 | Synapse write: `shape generate --to synapse://` on `docs/plugins/fabric-writers.md` | page section | `generate` is stable, so P-BAR 1 holds by flag. One passing live run (38338859503, exit 0) on a commit whose Synapse source is unchanged since. Re-record on the release head. Other sections of the page are fenced as experimental. | M |
+Order follows the Owner's "Fabric first" for plugin commands, then the cheap pages and the audit commands, which can run in parallel with the Fabric work.
 
-Why the audit five are split. `canary`, `gameday` and `mask` go. `rules` and `share-bundle` wait:
+| # | Item | Kind | Why now | Needs | Size |
+|---|---|---|---|---|---|
+| 1 | `shape setup-fabric` (and `shape fabric setup`) | plugin command | Passing run 38337418136 (`docs/evidence/transcripts`). Small surface. Page text stale. | W-plug; re-record on release head | S |
+| 2 | `shape deploy-notebook` | plugin command | Passing run 38400931371 (`B/`). Small surface. | W-plug; unique notebook name or the pre-clean step; re-record | S |
+| 3 | `shape notebook`, `shape known-answer`, `shape check-answers`, `shape export-model` | plugin commands | Local output only; no service. Claims are about generated files. Fence the "deploy through XMLA" claim: no live run. | W-plug; add the hyphen alias on `export-model --source-type`; claim table | S each (M for `export-model`) |
+| 4 | `shape publish` (and `shape fabric publish`) | plugin command | Passing run 38400931371 ran all four targets. Largest surface (about 25 flags); the one most worth reviewing before the freeze. | W-plug; surface review (4.11); split example 0; re-record | M |
+| 5 | `docs/plugins/fabric-commands.md` | page | Becomes available when 1 to 4 are proven. `profile-model` and `publish-report` sections are fenced. | claim table; stale text | M |
+| 6 | Synapse write: `shape generate --to synapse://` on `docs/plugins/fabric-writers.md` | page section | `generate` is stable. Run 38338859503 passed; Synapse source unchanged since. | re-record; fence the other sections | M |
+| 7 | `shape profile-db` + `docs/plugins/sqlserver.md` | plugin command | Passing run 38337418136 on a Fabric Warehouse; SQL Server receipt (0.9.1) and Kerberos receipt. Has `--json`. | W-plug; secret flags take references (4.11); re-record; fence the Azure SQL claim | M |
+| 8 | `docs/REPRODUCIBILITY.md` | page | Only stable `shape pack`. Every claim maps to a test. | claim table | S |
+| 9 | `docs/DETERMINISM.md` | page | 12 lines; backed by random-access and kernel-parity tests. | claim table; cut two sentences | S |
+| 10 | `docs/QUICKSTART.md` | page | Already labelled available; one line uses `shape query`. | remove the line; claim table | S |
+| 11 | `shape canary` + `docs/CANARIES.md` | command | Small surface; every claim tested; local only. | tests pin `--json` keys | S |
+| 12 | `shape gameday` + `docs/GAMEDAY.md` | command | Small surface; tests cover immutability, allowed commands, local-only data. | dry-run document | S |
+| 13 | `docs/SIGNING.md` | page | `keygen`, `sign`, `verify` stable and well tested. | move vault and `migrate` text out | M |
+| 14 | `docs/VERIFY.md` | page | `verify`, `check` stable (V1-11 to V1-15). | move the scorecard section out | M |
+| 15 | `shape mask` + `docs/MASK.md` | command | Best-tested of the audit five; no service. | three small fixes (4.3) | M |
+
+Stretch, only if the release-head Fabric run passes: add `docs/SINKS.md` (abfss Files and Delta Tables, Postgres via CI container) with the Warehouse and schema-enabled Lakehouse sections fenced. It stays in "later" until then.
+
+### Why the audit five are split
+
+`canary`, `gameday` and `mask` go. `rules` and `share-bundle` wait:
 
 - `rules`: the engine is well tested, but the page's worked example contradicts its fixtures, `backtest` has no transcript, and mutant kinds come from experimental `chaos`. Freezing `rules mutate` would freeze those names.
 - `share-bundle`: `exitcodes.py` omits create exit 1, the `--json` output has only a text `output` key, `verify --public-key` differs from stable `--key`, and the page has no runnable example. Each of those is a frozen mistake if promoted now.
@@ -220,11 +257,13 @@ Why the audit five are split. `canary`, `gameday` and `mask` go. `rules` and `sh
 ### Not in 0.9.3, and why
 
 - `docs/CLI.md`: split it (W-cli, M) so that the stable half can be promoted in 0.9.4. 44 experimental commands are documented on it. The page also says `--json` and `--dry-run` work on every command while V1-17 is open.
-- `docs/SINKS.md` and the Fabric Lakehouse/Warehouse/SQL database/Delta/abfss claims: no recorded run contains the Lakehouse-kind lookup or the abfss fix. If the live runs listed in section 4.9 pass on the release head, `abfss://` into a Lakehouse Files folder can be added to item 9 as a stretch. `SINKS.md` itself stays experimental: it also covers Postgres, MySQL, Snowflake, Databricks and ADLS, whose receipts are 0.9.1 and predate `--table-prefix`.
-- Plugin commands (`setup-fabric`, `profile-db`, `publish`, ...): none can be stable until a mechanism exists (decision 2).
-- `emit`, `stream`, `stream-profile`: large pages, Kafka and Event Hubs receipts are 0.9.1 or CI containers, no Event Hubs windows/`--follow` run.
+- `profile-model`: runs only in a Fabric notebook; the receipt shows no relationships.
+- `publish-report`: no live run recorded.
+- `dbt-seeds`, `dbt-report`, `from-dbt`, `to-dbt-tests`: DuckDB-adapter examples run in CI, but `DBT.md` is 720 lines with six examples; a claim table is L work (7.1).
+- `behave`, `simulate`, `ctgan`, `evaluate`, `lineage`, `mlflow`, `healthcare-codes`: see 7.1.
+- `emit`, `stream`, `stream-profile`: large pages; Kafka and Event Hubs receipts are 0.9.1 or CI containers; no Event Hubs windows or `--follow` run.
 - `fidelity`, `report-card`, `scorecard`, `skew`, `proposals`, `bridge`, `demo`, `vault`, `chaos`: large flag surfaces, none reviewed for a freeze.
-- Candidates for 0.9.4: `rules`, `share-bundle`, `vault`, `dictionary`, `report-card`, `contracts`, `project`/`changes`, `CLI.md` (stable half).
+- Candidates for 0.9.4: `rules`, `share-bundle`, `vault`, `dictionary`, `report-card`, `contracts`, `project`/`changes`, `CLI.md` (stable half), the dbt commands, `profile-model`, `publish-report`.
 
 ## 4. Per item: surface, pre-freeze changes, work packages
 
@@ -271,7 +310,7 @@ Surfaces were read from `tests/cli/cli_surface_v1.json` and `shape <cmd> --help`
 **Changes before freezing**
 1. Output folder: canary and gameday refuse a non-empty `-o`; mask creates it and silently overwrites same-named files. Pick one rule and test it. Recommend: refuse a non-empty folder, as the other two do.
 2. `--seed` with a key is accepted and ignored. Reject it (exit 2) or document it. Recommend reject.
-3. Reading a CSV can print a warning that advises `--string-columns`, a flag `mask` does not have. Suppress or reword the hint, and fix the page transcript.
+3. Reading a CSV can print a pandas warning that advises `--string-columns`, a flag `mask` does not have. Suppress or reword the hint, and fix the page transcript.
 4. Optional, permanent once frozen: one `--key` taking `env://` and `file://` as `sign --key` does, with `--key-file`/`--key-env` kept as aliases. Recommend not doing it now.
 
 **Work packages:** W-mask-1 (S) items 1 to 3 with tests; W-mask-2 (S) page: add `--dry-run`, the scope of `--exclude`/`--pii`, THREAT_MODEL rows for key handling; W-mask-3 (S) CLI golden test for unkeyed output, and a test that pins the free-text limit; W-mask-4 (S) claim table, STABLE, snapshot, CHANGELOG (no separate note for the e-mail-domain change was found).
@@ -309,39 +348,161 @@ No new command surface: they use stable commands already in the snapshot. What t
 
 ### 4.9 Fabric live runs, one list
 
-Record these on the release head, in this order, then decide what joins the 0.9.3 set. All need the Owner's workspace and secrets; `fabric-live.yml` runs them by dispatch.
+The three runs below passed on `docs/fabric-transcripts` and close the owner notes. Decision 3 still asks for a re-record on the release head, because the release head also holds the Lakehouse-kind lookup. All need the Owner's workspace and secrets; `fabric-live.yml` runs them by dispatch, after the pre-clean step.
 
-| Run | Closes | Size |
+| Run (on the release head) | Last passing run | Size |
 |---|---|---|
-| `examples=synapse-write` | item 9 | S |
-| `abfss://` into a Lakehouse Files folder: split `SINKS.md` example 0 into one example per command, fix its Delta command (name form fails at HEAD with "cannot tell whether Lakehouse ... is schema-enabled"), run `test_live_onelake_sink.py` | `SINKS.md:66` | S (Files only), M (all) |
-| Delta to Lakehouse Tables, classic and schema-enabled, prefix, `--lakehouse-schema` (`test_live_lakehouse_visibility.py`, `test_live_owner_matrix.py`) | Lakehouse claims | M |
-| `publish`: split example 0 into four re-runnable examples (use `--write-mode replace` or a unique `--schema-name`) | `fabric-commands.md:59` | S |
-| `deploy-notebook`: unique `--notebook-name` or delete the old item (409 in run 38337418136) | `fabric-commands.md:95` | S |
-| Warehouse COPY INTO, Fabric SQL database, `fabric_spark` to completion, git sync, ADLS/OneLake read-back | later pages | M |
+| `examples=setup-fabric,deploy-notebook,publish-targets` | `setup-fabric` 38337418136; the other two 38400931371 (`B/`) | S |
+| `examples=synapse-write` | 38338859503 | S |
+| `examples=profile-db-warehouse` | 38337418136 | S |
+| `examples=sinks-onelake` (abfss Files, stream, Delta Tables) | 38398883944 (`B/`) | S |
+| Delta to Lakehouse Tables, classic and schema-enabled, prefix, `--lakehouse-schema` (`test_live_lakehouse_visibility.py`, `test_live_owner_matrix.py`) | none contains the Lakehouse-kind lookup | M |
+| Warehouse COPY INTO and the 13840 fallback, Fabric SQL database, `fabric_spark` to completion, git sync, ADLS/OneLake read-back | partial or none | M |
 
 Stale text to fix at the same time: `FABRIC_PLATFORM.md` says "not run yet"; `fabric-auth.md` says a Kerberos run is "an owner action" (a receipt exists: `docs/evidence/kerberos-live.md`); `fabric-commands.md` example 2 still prints `shape notebook` and `Shape v0.9.1`; `sqlserver.md` example 1 prints a `shape_content_id` that changed when `profile/sampling.py` changed.
 
 ### 4.10 Order of work and dependencies
 
-W0 first. Pages 1 to 3 need only W0 and text. Items 4 to 8 can run in parallel. Item 9 needs the Owner to run or approve the live job. Every promoted command needs `python scripts/cli_surface.py --write` in the same commit as its `STABLE` entry, and `docs/CLI_STABILITY.md` updated (the table of stable commands).
+W0 and W-plug first. Pages 8 to 10 need only W0 and text. Items 11 to 15 can run in parallel. Fabric items 1 to 7 need W-plug (to be listed) and the Owner's batch. Every promoted core command needs `python scripts/cli_surface.py --write` in the same commit as its `STABLE` entry, and every promoted plugin command needs `--plugins --write` (section 6). `docs/CLI_STABILITY.md` is updated in the same commit (the table of stable commands).
+
+### 4.11 Plugin commands promoted in 0.9.3: surface, pre-freeze changes, work packages
+
+Surfaces are from `shape <cmd> --help` with the first-party plugins installed. A freeze covers flag names, value kinds, choices, positionals and exit classes. It does not cover banner text (`Shape v0.9.1 — ...`) or output layout, as in `CLI_STABILITY.md`. Among the plugin commands that take flags directly, only `profile-db`, `profile-model` and `dbt-report` have `--json`, and only `publish` has `--dry-run` (the commands with subcommands were not checked). The promise therefore covers only what exists. Exit classes: 0 ok, 1 a check failed, 2 bad input.
+
+**Both spellings are documented.** The commands exist at top level (`shape publish`) and under `shape fabric` (`shape fabric publish`, `... setup`, `... notebook`, `... deploy-notebook`, `... export-model`, `... known-answer`, `... check-answers`, `... publish-report`). `setup-fabric` is `fabric setup`. Recommend freezing both, because both are documented and removing either later would be a break (decision 14).
+
+| Command | Frozen surface | Change before the freeze | Work packages | Size |
+|---|---|---|---|---|
+| `setup-fabric` | `--workspace --create-lakehouse --env-name --lakehouse-name --snippet` and the auth block | none beyond the alias decision | W-sf-1 re-record on the release head, refresh the next-step text (S); claim table rows | S |
+| `deploy-notebook` | `DOMAIN`, `--workspace -s --seed --notebook-name` and the auth block | none | W-dn-1 re-record; use a unique `--notebook-name` in the example or keep the pre-clean (S) | S |
+| `notebook` | `DOMAIN`, `-s --seed -o --target {lakehouse,display,csv}` | none | claim table (local output only) | S |
+| `known-answer` | `-s --seed --measures --plant -o` (required); files `shape-dax-answers` v1 and `shape-dax-measures` v1 | none | claim table; confirm the two file formats are versioned and pinned by a test | S |
+| `check-answers` | `ANSWERS RESULTS`, `--places` | none | claim table | S |
+| `export-model` | `DOMAIN`, `-s --source-type {lakehouse,warehouse,sql_database} --source-name -o --include-measures --no-measures --schema-name -m {3nf,star}` | `--source-type sql_database` uses an underscore; `publish -t` uses `sql-database`. Accept the hyphen as an alias now; both then freeze | W-em-1 alias and test (S); claim table; fence the XMLA-deploy claim (no live run) | M |
+| `publish` | `DOMAIN\|SCHEMA.json`, `-s --seed -m {3nf,star} -t {lakehouse,eventhouse,sql-database,warehouse} --workspace-id --lakehouse-id --base-path --staging-path --database --format {parquet,csv,jsonl,delta} --credential --write-mode {create,append,truncate,replace} --batch-size --schema-name --dry-run --connection-string` and the auth block. Run manifest keys. | (a) `--base-path` and `--staging-path` overlap for a warehouse ("instead of"): keep both, document precedence. (b) `--format delta` works for local folders only: say so in the choices help or refuse early. (c) `--write-mode create` default makes example 0 not re-runnable: put re-runnable flags in the examples. (d) auth values `--client-secret --sql-password --keytab` take references (good). | W-pub-1 split example 0 into four examples (S); W-pub-2 claim table for four targets, about 30 rows (M); W-pub-3 surface edits (S); re-record | M |
+| `profile-db` | `--connection-string --server --database --auth {sql,cli,msi,spn,fabric} --tenant-id --client-id --client-secret --schema --tables --sample-rows -o --json`; `--json` keys | (a) `--client-secret` takes a plain value; make it take a reference like `publish` before the freeze (decision 13). (b) `--auth` choices differ from `publish` (no `device-code`, no `kerberos`): decide whether to add them (additive) or document the difference. (c) list the `--json` keys in a test (the transcript shows `written` and `shape_content_id`; I did not list the rest). | W-pdb-1 reference-form secret (S); W-pdb-2 pin the `--json` keys (S); re-record (S); fence the Azure SQL claim | M |
+
+Exit classes of each plugin command must be one of 0, 1, 2 or a documented verdict. W-plug adds a test that runs each promoted command on a bad input and checks for exit 2 and a one-line `shape: error:` message, as `tests/regressions/test_iss_cli_errors.py` does for core commands.
 
 ## 5. Risks and open questions for the Owner
 
-1. **Legacy labels (ratchet or relabel).** 71 pages say available with no proof; 15 mention experimental commands, and `DICTIONARY.md` and `PROJECT.md` are plain mislabels. *Recommend:* freeze the list in `tests/docs/available_legacy.txt`, let it only shrink, and relabel nothing silently in 0.9.3. Move `DICTIONARY.md` and `PROJECT.md` to the front of the 0.9.4 queue.
-2. **Plugin commands cannot be stable.** `STABLE` holds core names; `cli_surface.py` snapshots the core parser; adding a plugin name fails `test_every_stable_command_exists_in_the_parser`. P-BAR 1 therefore blocks all 22 plugin commands for ever. *Recommend:* promote no plugin command in 0.9.3; reach Fabric through stable `generate`. Decide whether to build the mechanism (`STABLE_PLUGIN_COMMANDS`, a second snapshot `cli_surface_plugins_v1.json`, plugin version pinned to the core minor; size M, 2 to 3 days) for 0.9.4. Mixing the plugin's release cycle into a core promise is the risk.
-3. **Evidence freshness.** Most receipts ran 0.9.1 and predate `--table-prefix`, the Lakehouse-kind lookup and the abfss fix. *Recommend:* a receipt counts when it names a Shape version of the same minor as the release, or the source of that path is unchanged since. Re-record Fabric runs on the release head. Receipts on 0.9.1 for unchanged code (Synapse) may stand.
-4. **What is a "real" run.** *Recommend:* a service started from a container (PostgreSQL, MySQL, SQL Server, Kafka) counts; an emulator of a cloud service does not. Cloud services (Fabric, Synapse, Event Hubs, ADLS) need a cloud run.
-5. **Mixed pages: fence or split.** *Recommend:* in-page experimental fences for most pages (VERIFY, SIGNING, fabric-writers); one real split, `CLI.md`. The fence markers must render as a visible warning box.
-6. **Python API stance.** The pages show `shape.quality`, `shape.repro`, `shape.artifact`, `shape.check`; `API_STABILITY.md` lists only two stable modules. P-BAR speaks of commands. *Recommend:* "available" on a page covers its CLI and documented behaviour; Python parts stay fenced as experimental until the API list names them.
-7. **Surface edits before the freeze.** `gameday` dry-run document; `mask` output folder rule and `--seed` with a key; `share-bundle` key flag and `--json`. *Recommend:* make them now; each is cheaper before the freeze than after, and they are additive or tighten error cases.
-8. **`rules` mutant kinds.** They come from experimental `chaos`. *Recommend:* declare the kind list extensible in the page and the schema, so `rules` can freeze without freezing `chaos`; keep `rules` in 0.9.4.
-9. **Release note convention.** *Recommend:* a `### Promoted` heading in each release section of `CHANGELOG.md`; one line per page or command; the check reads it.
-10. **Remove or keep `privacy-k` and `quality`.** No page; they overlap `profile` and `check`/`verify`; few tests. *Recommend:* remove in 0.10, with a note in 0.9.3 `### Changed`, since experimental commands may go at any minor release. The Owner decides.
-11. **Cost and access of live runs.** Fabric runs need the Owner's capacity (the Synapse dedicated pool is resumed and paused by the workflow) and secrets. *Recommend:* the lead dispatches one batch on the release head, after the Owner confirms the workspace is clean of leftovers (`delete_leftover_notebooks`).
-12. **Size of the claim tables.** About 25 to 40 rows per page, all by hand. *Recommend:* accept; the rows are what makes "available" mean something. Count it in the sizes above.
+Status after the Owner's answer of 2026-10-13: **Accepted** means as recommended. **Reversed** means the Owner chose the other way. **Open** is new.
 
-Top five for the Owner: decisions 1, 2, 3, 4 and 5.
+1. **Legacy labels (ratchet or relabel).** *Accepted.* 71 pages say available with no proof; 15 mention experimental commands; `DICTIONARY.md` and `PROJECT.md` are plain mislabels. Freeze the list in `tests/docs/available_legacy.txt`, let it only shrink, relabel nothing silently in 0.9.3. Move `DICTIONARY.md` and `PROJECT.md` to the front of the 0.9.4 queue.
+2. **Plugin commands cannot be stable.** *Reversed: they get in 0.9.3.* My advice was to promote none and to reach Fabric through `generate`. The risk I named stays: the plugin's release cycle is now inside a core promise. Section 6 limits it: only first-party plugins can be listed, and the promise holds when the plugin is installed at the same release as the core. Nine plugin commands are promoted (section 7).
+3. **Evidence freshness.** *Accepted.* A receipt counts when it is from the same release line or the source is unchanged. Re-record Fabric on the release head (4.9). See 1.2 for how I read "same minor" for a 0.x release.
+4. **What is a "real" run.** *Accepted.* Self-hosted containers (PostgreSQL, MySQL, SQL Server, Kafka) count; cloud emulators do not.
+5. **Mixed pages: fence or split.** *Accepted.* In-page fences for VERIFY, SIGNING, fabric-writers, fabric-commands and sqlserver; one real split, `CLI.md`. The fence markers must render as a visible warning box.
+6. **Python API stance.** *Accepted.* "Available" on a page covers its CLI and documented behaviour. Python parts stay fenced as experimental until `API_STABILITY.md` names them.
+7. **Surface edits before the freeze.** *Accepted.* `gameday` dry-run document; `mask` output-folder rule and `--seed` with a key; `share-bundle` key flag and `--json` (0.9.4); and now the plugin edits in 4.11.
+8. **`rules` mutant kinds.** *Accepted.* Declare the list extensible in the page and the schema; `rules` stays in 0.9.4.
+9. **Release note convention.** *Accepted.* A `### Promoted` heading in each release section of `CHANGELOG.md`; one line per page or command.
+10. **Remove or keep `privacy-k` and `quality`.** *Accepted.* Remove in 0.10, with a note in 0.9.3 `### Changed` (work package W-rm, S).
+11. **Cost and access of live runs.** *Accepted.* The lead dispatches one batch on the release head, after the Owner confirms the workspace is clean (the pre-clean step records what it deleted).
+12. **Size of the claim tables.** *Accepted.* About 25 to 40 rows per page, by hand.
+13. **Secrets on the command line.** *Open.* `profile-db --client-secret` takes a plain value. Once frozen, a plain-value flag stays for all of 1.x. Recommend: before the freeze accept `env://`, `file://` and `kv://` references and refuse a literal, as `--source-config` does. `generate`, `publish`, `deploy-notebook` and `setup-fabric` already take `--client-secret REF`, so only `profile-db` differs.
+14. **Two spellings of each Fabric command.** *Open.* `shape publish` and `shape fabric publish` both work. Recommend freezing both; list them as one row each in `CLI_STABILITY.md`.
+15. **Reading of "same minor version".** *Open.* See 1.2. Recommend "same release, or unchanged source", because 0.9.2 changed the writers.
+16. **Plugin version coupling.** *Open, mostly settled by existing checks.* `scripts/check_versions.py` already enforces lockstep: every first-party plugin has the core's version and pins first-party requirements with `==`. Recommend stating in `CLI_STABILITY.md` that a stable plugin command is promised with a plugin of the same release as the core. A user who forces a mismatch with `pip --no-deps` is outside the promise.
+
+## 6. Plugin command stability (W-plug)
+
+Goal: let a first-party plugin command be listed as stable, freeze its surface the way a core command is frozen, and mark every other plugin command experimental in `--help`. Size **M** (3 to 4 days), plus the per-command review in 4.11.
+
+### 6.1 What exists now
+
+- `src/shape/cli/stability.py`: `STABLE` holds core names; `level()` reads it; `annotate()` prefixes `(experimental)` on core commands only.
+- `src/shape/cli/main.py`: a plugin command shows as a stub, `(plugin <distribution>)`, in `shape --help`. Its flags exist only after the plugin loads, in `shape.plugins.cli.run_command`.
+- `scripts/cli_surface.py`: `snapshot()` builds the core parser only, so plugin commands are outside `tests/cli/cli_surface_v1.json` (stated in its docstring). Adding a plugin name to `STABLE` fails `tests/cli/test_cli_surface.py::test_every_stable_command_exists_in_the_parser`.
+- `docs/plugins/stability.md` freezes the `Command` Protocol (`name`, `help`, `configure`, `run`), the entry-point group `shape.commands` and the loader. It does not freeze the flags `configure` adds, exit codes or output. `docs/CLI_STABILITY.md` sends plugin commands to that page.
+
+### 6.2 Design
+
+1. **The list.** In `stability.py` add `STABLE_PLUGIN_COMMANDS: dict[str, str]`, command name to owning distribution (`"publish": "sqllocks-shape-fabric"`). `level(name)` returns `stable` for a name in either set. The list lives in core, so a plugin cannot promote itself, and a third-party plugin cannot be listed (the loader refuses a listed name from another distribution).
+2. **The snapshot, per distribution.** In `cli_surface.py` add `snapshot_plugins()`. For each listed command it loads the entry point through `PluginHost` (group `shape.commands`), builds a throw-away `argparse` sub-parser, calls `configure(parser)` and runs the existing `_node()`. The result goes to a second baseline, `tests/cli/cli_surface_plugins_v1.json`, with the same shape as the core baseline plus a top-level key per distribution. `--check` and `--write` get a `--plugins` option, and `make check` runs both. `compare()` is reused, so removing or renaming a flag, a choice or a positional of a listed command fails. In CI the first-party plugins are installed from source; a missing plugin is a failure, not a skip.
+3. **The help marker.** `annotate()` is extended: a plugin stub in `shape --help` reads `(plugin <distribution>, experimental)` unless listed. Inside `run_command`, the plugin parser's description gets the `(experimental)` prefix unless the name is listed. A listed command shows no marker, as a stable core command shows none. A test mirrors `test_every_experimental_command_says_so_in_its_help`.
+4. **Exit codes.** A listed command returns 0, 1, 2 or a documented verdict class. W-plug adds a test per listed command (a bad input gives exit 2 and one `shape: error:` line). `scripts/gen_exit_codes.py` gets rows for listed plugin commands, so `docs/EXIT_CODES.md` covers them.
+5. **`--json` keys.** For listed commands that have `--json` (`profile-db` only, in 0.9.3), a test pins the key set, and `CLI_STABILITY.md` states that other output is not covered.
+6. **Version coupling.** Decision 16: the promise holds when the plugin is the same release as the core. `scripts/check_versions.py` already enforces lockstep and `==` pins; W-plug adds only a test that each listed distribution is covered by it. If the plugin is missing, `shape publish` prints a one-line error naming the distribution to install (exit 2); a test covers it.
+7. **P-BAR check.** Rule 1 reads `STABLE | set(STABLE_PLUGIN_COMMANDS)`; `Covers:` accepts plugin names.
+
+### 6.3 How the documents cover it
+
+- `docs/CLI_STABILITY.md`: add a table "Stable plugin commands" (name, distribution) next to the core table; state that the promise holds when the plugin and core are the same release; state that banners and output layout are not covered; add `STABLE_PLUGIN_COMMANDS` to the "promoted by" sentence; keep "a stable command is never demoted in 1.x" for both tables.
+- `docs/plugins/stability.md`: add a section "Stable plugin commands". The plugin-API promise (the Protocol members) does not change, so no API version bump and no change to `tests/plugins/api_v1_baseline.json`. The flags of a **listed first-party** command are frozen by the CLI snapshot, not by the Protocol. A third-party plugin's commands stay under the plugin promise only. The `check_command` kit check is **not** tightened for all plugins (tightening the kit so a passing 1.0 plugin fails is breaking, per that page); the exit-class test applies to listed commands only.
+- `docs/plugins/api-v1.md` is generated and needs no change; `gen_plugin_api_docs.py` writes `Status: experimental` there and stays so.
+- `tests/plugins/test_stability_promise.py`: add a test that the promise page names `STABLE_PLUGIN_COMMANDS`.
+
+### 6.4 Work packages
+
+| WP | Content | Size |
+|---|---|---|
+| W-plug-1 | `STABLE_PLUGIN_COMMANDS`, `level()`, loader refusal for unlisted distributions | S |
+| W-plug-2 | `snapshot_plugins()`, second baseline, `--plugins`, `make check` and CI wiring | M |
+| W-plug-3 | Help markers (stubs and `run_command`), tests | S |
+| W-plug-4 | Exit-class test per listed command, `gen_exit_codes.py` rows | S |
+| W-plug-5 | Test that listed distributions are inside the lockstep check; missing-plugin error | S |
+| W-plug-6 | Docs: `CLI_STABILITY.md`, `plugins/stability.md`, test of the promise page | S |
+| Total | | M to L (about 5 days if done as listed; the S items overlap) |
+
+I count W-plug at 5 days in the totals, above the 3 to 4 I first gave, because the exit-class tests (W-plug-4) and the help-marker tests are real work.
+
+## 7. The 22 plugin commands against P-BAR
+
+Each row applies the five parts of the bar after W-plug: (1) command listed; (2) claims map to tests; (3) outside-service runs; (4) owner notes; (5) release note. Rows (4) and (5) are the same for all: no open notes after the Fabric branch lands; the `### Promoted` line is a task for every promoted command.
+
+### 7.1 Verdicts
+
+| Command | Distribution | Page | Outside service | Recorded run | Verdict | Work to promote (size) |
+|---|---|---|---|---|---|---|
+| `setup-fabric` | fabric | `plugins/fabric-commands.md` | Fabric | 38337418136 passed | **promote** | re-record, claim rows (S) |
+| `deploy-notebook` | fabric | same | Fabric | 38400931371 passed (`B/`) | **promote** | re-record (S) |
+| `publish` | fabric | same | Fabric (4 targets) | 38400931371 passed (`B/`) | **promote** | surface review, claim table, re-record (M) |
+| `notebook` | fabric | same | none | n/a | **promote** | claim table (S) |
+| `export-model` | fabric | same | none (XMLA claim fenced) | n/a | **promote** | alias, claim table (M) |
+| `known-answer` | fabric | same | none | n/a | **promote** | claim table, format pin (S) |
+| `check-answers` | fabric | same | none | n/a | **promote** | claim table (S) |
+| `fabric` (group) | fabric | same | none by itself | n/a | **promote** (alias form of the seven above and `publish-report`) | included |
+| `profile-db` | sqlserver | `plugins/sqlserver.md` | SQL Server, Fabric Warehouse | 38337418136 passed; `O/sqlserver-live.md` (0.9.1); `E/kerberos-live.md` | **promote** | secret reference, `--json` pin, re-record (M) |
+| `profile-model` | fabric | section of `fabric-commands.md` | Fabric notebook | `E/semantic-model-notebook.md` (0.9.1; one table, no relationships) | later | relationship run (M) |
+| `publish-report` | fabric | `DRIFT_REPORT.md` | none stated | none | later | claim table, example, decide the alias form (M) |
+| `dbt-seeds` | dbt | `DBT.md` | dbt adapter | CI examples (DuckDB) | later | claim table for a 720-line page (L for the four) |
+| `dbt-report` | dbt | `DBT.md` | none | CI examples | later | has `--json`; pin keys (with the four) |
+| `from-dbt` | dbt | `DBT.md` | dbt | CI examples | later | with the four |
+| `to-dbt-tests` | dbt | `DBT.md` | none | CI examples | later | with the four |
+| `behave` | behavior | `plugins/behavior.md` | none | n/a | keep experimental | 631-line page; subcommands `run check import-gmf examples` not reviewed |
+| `simulate` | simulation | `plugins/simulation.md` | none | n/a | keep experimental | 10 subcommands, unreviewed |
+| `ctgan` | core distribution | none | none | n/a | keep experimental | no page; optional dependency |
+| `evaluate` | integrations | `plugins/integrations.md` | none | n/a | keep experimental | subcommands `sdmetrics anonymeter` wrap third-party libraries |
+| `lineage` | integrations | same | OpenLineage backend | none | keep experimental | needs a real run |
+| `mlflow` | integrations | same | MLflow server | none | keep experimental | needs a real run |
+| `healthcare-codes` | healthcare-codes | `plugins/healthcare-codes.md` | code-set downloads | none | keep experimental | licence of code sets to confirm; 5 test modules did not collect here |
+
+Counts: 9 promote, 13 not (2 later for Fabric reasons, 4 later for dbt, 7 keep experimental).
+
+### 7.2 Why these nine and not more
+
+They are the commands for which a run exists on a Fabric or SQL service, or which touch no service at all, and whose page can be fenced to what is proven. `profile-model` has a receipt, but it proves the narrow case; promoting it would freeze a command whose main claim (relationships) is unproven. The dbt group is a page-size problem, not an evidence problem: four commands share one 720-line page, and a page is available only when every claim on it is mapped.
+
+## 8. Effort
+
+Person-days, one person who knows the code. Ranges reflect review findings.
+
+| Block | Items | Days |
+|---|---|---|
+| W0: P-BAR check, `AVAILABLE.md`, ratchet list, `### Promoted` convention, tests | M | 3 |
+| W-plug: mechanism (6.4) | M to L | 5 |
+| Fabric commands: `setup-fabric` 1, `deploy-notebook` 1, `notebook` 0.5, `known-answer` and `check-answers` 1.5, `export-model` 2, `publish` 4, page claim table and stale-text fixes 4 | | 14 |
+| `profile-db` and `sqlserver.md` | M | 3 |
+| Synapse write and `fabric-writers.md` fences | M | 3 |
+| Pages: REPRODUCIBILITY 1, DETERMINISM 1, QUICKSTART 1, SIGNING 3, VERIFY 3 | | 9 |
+| Audit commands: `canary` 1, `gameday` 1.5, `mask` 3 | | 5.5 |
+| `CLI.md` split (prep, no label) | M | 3 |
+| W-rm: note in `### Changed` for `privacy-k`, `quality` | S | 0.5 |
+| Fabric live batch on the release head (Owner time, mostly waiting) | | 2 |
+| **Total** | | **about 48** (range 38 to 62) |
+
+Critical path: W0 and W-plug (5 days, in parallel), then the Fabric block (about 14 days). With three people the elapsed time is about 4 weeks: one on W0, then pages and audit commands; one on W-plug, then Fabric commands; one on the page splits, `profile-db`, Synapse, and the live batch. With one person it is about 10 weeks. The least-risk cut if time runs short: drop `publish` (4 days plus its review) and ship the other eight plugin commands; the page `fabric-commands.md` then fences `publish` and stays unlabelled until 0.9.4.
 
 ## Appendix: facts to keep
 
@@ -351,3 +512,4 @@ Top five for the Owner: decisions 1, 2, 3, 4 and 5.
 - Mixed labels already exist: `docs/MODELS.md` says `available (shipped model commands); experimental (...)`.
 - Live `pytest -m live` results are not committed anywhere. Only the nine ids in `tests/docs/fabric_examples.json` can leave a committed receipt.
 - Run ids 38312820840 and 38245654398 are cited in prose with no file in the repo.
+- The Fabric receipts print `Shape v0.9.1` banners although the code is newer.
