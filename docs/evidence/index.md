@@ -20,6 +20,7 @@ You can inspect these receipts to trace the public documentation statements to t
 - [Installed VSIX and real editor receipt](vscode-install.md)
 - [Kerberos keytab sign-in to a Windows-authentication-only SQL Server — Owner-run receipt](kerberos-live.md)
 - [Semantic model profiling in a Fabric notebook — Owner-run receipt](semantic-model-notebook.md)
+- [Shape 0.9.1 release tag and digest check](release-0.9.1-verify.md)
 
 ## Related
 
