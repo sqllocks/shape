@@ -1,0 +1,525 @@
+{
+  "format": "shape-verify_cli-record",
+  "inputs": {
+    "fixtures/schemas/retail_3nf.json": "fe74ccb6fd079a1faa03ce2af2c856ada02ec8fb407dbcef846013e22164792b"
+  },
+  "recorded_utc": "2026-10-13T01:47:50Z",
+  "runs": {
+    "baseline": {
+      "exit_code": 1,
+      "report": {
+        "gates": [
+          {
+            "details": {
+              "address": {
+                "actual_columns": [
+                  "address_id",
+                  "address_type",
+                  "city",
+                  "customer_id",
+                  "is_primary",
+                  "lat",
+                  "lng",
+                  "state",
+                  "street",
+                  "zip_code"
+                ],
+                "expected_columns": [
+                  "address_id",
+                  "address_type",
+                  "city",
+                  "customer_id",
+                  "is_primary",
+                  "lat",
+                  "lng",
+                  "state",
+                  "street",
+                  "zip_code"
+                ],
+                "extra": [],
+                "missing": []
+              },
+              "customer": {
+                "actual_columns": [
+                  "customer_id",
+                  "email",
+                  "first_name",
+                  "gender",
+                  "is_active",
+                  "last_name",
+                  "loyalty_tier",
+                  "signup_date"
+                ],
+                "expected_columns": [
+                  "customer_id",
+                  "email",
+                  "first_name",
+                  "gender",
+                  "is_active",
+                  "last_name",
+                  "loyalty_tier",
+                  "signup_date"
+                ],
+                "extra": [],
+                "missing": []
+              },
+              "order": {
+                "actual_columns": [
+                  "customer_id",
+                  "order_date",
+                  "order_id",
+                  "order_total",
+                  "promotion_id",
+                  "shipping_address_id",
+                  "status",
+                  "store_id"
+                ],
+                "expected_columns": [
+                  "customer_id",
+                  "order_date",
+                  "order_id",
+                  "order_total",
+                  "promotion_id",
+                  "shipping_address_id",
+                  "status",
+                  "store_id"
+                ],
+                "extra": [],
+                "missing": []
+              },
+              "order_line": {
+                "actual_columns": [
+                  "discount_percent",
+                  "line_total",
+                  "order_id",
+                  "order_line_id",
+                  "product_id",
+                  "promotion_id",
+                  "quantity",
+                  "unit_price"
+                ],
+                "expected_columns": [
+                  "discount_percent",
+                  "line_total",
+                  "order_id",
+                  "order_line_id",
+                  "product_id",
+                  "promotion_id",
+                  "quantity",
+                  "unit_price"
+                ],
+                "extra": [],
+                "missing": []
+              },
+              "product": {
+                "actual_columns": [
+                  "category_id",
+                  "cost",
+                  "product_id",
+                  "product_name",
+                  "product_status",
+                  "unit_price"
+                ],
+                "expected_columns": [
+                  "category_id",
+                  "cost",
+                  "product_id",
+                  "product_name",
+                  "product_status",
+                  "unit_price"
+                ],
+                "extra": [],
+                "missing": []
+              },
+              "product_category": {
+                "actual_columns": [
+                  "category_id",
+                  "category_name",
+                  "level",
+                  "parent_category_id"
+                ],
+                "expected_columns": [
+                  "category_id",
+                  "category_name",
+                  "level",
+                  "parent_category_id"
+                ],
+                "extra": [],
+                "missing": []
+              },
+              "promotion": {
+                "actual_columns": [
+                  "discount_pct",
+                  "end_date",
+                  "promo_name",
+                  "promo_type",
+                  "promotion_id",
+                  "start_date"
+                ],
+                "expected_columns": [
+                  "discount_pct",
+                  "end_date",
+                  "promo_name",
+                  "promo_type",
+                  "promotion_id",
+                  "start_date"
+                ],
+                "extra": [],
+                "missing": []
+              },
+              "return": {
+                "actual_columns": [
+                  "order_id",
+                  "reason",
+                  "refund_amount",
+                  "return_date",
+                  "return_id"
+                ],
+                "expected_columns": [
+                  "order_id",
+                  "reason",
+                  "refund_amount",
+                  "return_date",
+                  "return_id"
+                ],
+                "extra": [],
+                "missing": []
+              },
+              "store": {
+                "actual_columns": [
+                  "city",
+                  "state",
+                  "store_id",
+                  "store_name",
+                  "store_type"
+                ],
+                "expected_columns": [
+                  "city",
+                  "state",
+                  "store_id",
+                  "store_name",
+                  "store_type"
+                ],
+                "extra": [],
+                "missing": []
+              }
+            },
+            "errors": [],
+            "gate": "schema_conformance",
+            "passed": true,
+            "warnings": [
+              "Table 'order_line' column 'quantity': expected type compatible with 'integer', got 'float64'"
+            ]
+          },
+          {
+            "details": {},
+            "errors": [],
+            "gate": "null_constraint",
+            "passed": true,
+            "warnings": []
+          },
+          {
+            "details": {},
+            "errors": [],
+            "gate": "unique_constraint",
+            "passed": true,
+            "warnings": []
+          },
+          {
+            "details": {
+              "orphan_counts": {
+                "address.customer_id->customer.customer_id": 0,
+                "order.customer_id->customer.customer_id": 25,
+                "order.promotion_id->promotion.promotion_id": 0,
+                "order.shipping_address_id->address.address_id": 0,
+                "order.store_id->store.store_id": 0,
+                "order_line.order_id->order.order_id": 0,
+                "order_line.product_id->product.product_id": 0,
+                "product.category_id->product_category.category_id": 0,
+                "return.order_id->order.order_id": 0
+              }
+            },
+            "errors": [
+              "order.customer_id has 25 orphan FK values not found in customer.customer_id"
+            ],
+            "gate": "referential_integrity",
+            "passed": false,
+            "warnings": []
+          }
+        ],
+        "passed": false,
+        "row_counts": {
+          "address": 1500,
+          "customer": 1000,
+          "order": 5000,
+          "order_line": 12500,
+          "product": 500,
+          "product_category": 50,
+          "promotion": 200,
+          "return": 850,
+          "store": 150
+        }
+      }
+    },
+    "shape": {
+      "exit_code": 1,
+      "report": {
+        "gates": [
+          {
+            "details": {
+              "address": {
+                "actual_columns": [
+                  "address_id",
+                  "address_type",
+                  "city",
+                  "customer_id",
+                  "is_primary",
+                  "lat",
+                  "lng",
+                  "state",
+                  "street",
+                  "zip_code"
+                ],
+                "expected_columns": [
+                  "address_id",
+                  "address_type",
+                  "city",
+                  "customer_id",
+                  "is_primary",
+                  "lat",
+                  "lng",
+                  "state",
+                  "street",
+                  "zip_code"
+                ],
+                "extra": [],
+                "missing": []
+              },
+              "customer": {
+                "actual_columns": [
+                  "customer_id",
+                  "email",
+                  "first_name",
+                  "gender",
+                  "is_active",
+                  "last_name",
+                  "loyalty_tier",
+                  "signup_date"
+                ],
+                "expected_columns": [
+                  "customer_id",
+                  "email",
+                  "first_name",
+                  "gender",
+                  "is_active",
+                  "last_name",
+                  "loyalty_tier",
+                  "signup_date"
+                ],
+                "extra": [],
+                "missing": []
+              },
+              "order": {
+                "actual_columns": [
+                  "customer_id",
+                  "order_date",
+                  "order_id",
+                  "order_total",
+                  "promotion_id",
+                  "shipping_address_id",
+                  "status",
+                  "store_id"
+                ],
+                "expected_columns": [
+                  "customer_id",
+                  "order_date",
+                  "order_id",
+                  "order_total",
+                  "promotion_id",
+                  "shipping_address_id",
+                  "status",
+                  "store_id"
+                ],
+                "extra": [],
+                "missing": []
+              },
+              "order_line": {
+                "actual_columns": [
+                  "discount_percent",
+                  "line_total",
+                  "order_id",
+                  "order_line_id",
+                  "product_id",
+                  "promotion_id",
+                  "quantity",
+                  "unit_price"
+                ],
+                "expected_columns": [
+                  "discount_percent",
+                  "line_total",
+                  "order_id",
+                  "order_line_id",
+                  "product_id",
+                  "promotion_id",
+                  "quantity",
+                  "unit_price"
+                ],
+                "extra": [],
+                "missing": []
+              },
+              "product": {
+                "actual_columns": [
+                  "category_id",
+                  "cost",
+                  "product_id",
+                  "product_name",
+                  "product_status",
+                  "unit_price"
+                ],
+                "expected_columns": [
+                  "category_id",
+                  "cost",
+                  "product_id",
+                  "product_name",
+                  "product_status",
+                  "unit_price"
+                ],
+                "extra": [],
+                "missing": []
+              },
+              "product_category": {
+                "actual_columns": [
+                  "category_id",
+                  "category_name",
+                  "level",
+                  "parent_category_id"
+                ],
+                "expected_columns": [
+                  "category_id",
+                  "category_name",
+                  "level",
+                  "parent_category_id"
+                ],
+                "extra": [],
+                "missing": []
+              },
+              "promotion": {
+                "actual_columns": [
+                  "discount_pct",
+                  "end_date",
+                  "promo_name",
+                  "promo_type",
+                  "promotion_id",
+                  "start_date"
+                ],
+                "expected_columns": [
+                  "discount_pct",
+                  "end_date",
+                  "promo_name",
+                  "promo_type",
+                  "promotion_id",
+                  "start_date"
+                ],
+                "extra": [],
+                "missing": []
+              },
+              "return": {
+                "actual_columns": [
+                  "order_id",
+                  "reason",
+                  "refund_amount",
+                  "return_date",
+                  "return_id"
+                ],
+                "expected_columns": [
+                  "order_id",
+                  "reason",
+                  "refund_amount",
+                  "return_date",
+                  "return_id"
+                ],
+                "extra": [],
+                "missing": []
+              },
+              "store": {
+                "actual_columns": [
+                  "city",
+                  "state",
+                  "store_id",
+                  "store_name",
+                  "store_type"
+                ],
+                "expected_columns": [
+                  "city",
+                  "state",
+                  "store_id",
+                  "store_name",
+                  "store_type"
+                ],
+                "extra": [],
+                "missing": []
+              }
+            },
+            "errors": [],
+            "gate": "schema_conformance",
+            "passed": true,
+            "warnings": [
+              "Table 'order_line' column 'quantity': expected type compatible with 'integer', got 'float64'"
+            ]
+          },
+          {
+            "details": {},
+            "errors": [],
+            "gate": "null_constraint",
+            "passed": true,
+            "warnings": []
+          },
+          {
+            "details": {},
+            "errors": [],
+            "gate": "unique_constraint",
+            "passed": true,
+            "warnings": []
+          },
+          {
+            "details": {
+              "orphan_counts": {
+                "address.customer_id->customer.customer_id": 0,
+                "order.customer_id->customer.customer_id": 25,
+                "order.promotion_id->promotion.promotion_id": 0,
+                "order.shipping_address_id->address.address_id": 0,
+                "order.store_id->store.store_id": 0,
+                "order_line.order_id->order.order_id": 0,
+                "order_line.product_id->product.product_id": 0,
+                "product.category_id->product_category.category_id": 0,
+                "return.order_id->order.order_id": 0
+              }
+            },
+            "errors": [
+              "order.customer_id has 25 orphan FK values not found in customer.customer_id"
+            ],
+            "gate": "referential_integrity",
+            "passed": false,
+            "warnings": []
+          }
+        ],
+        "passed": false,
+        "row_counts": {
+          "address": 1500,
+          "customer": 1000,
+          "order": 5000,
+          "order_line": 12500,
+          "product": 500,
+          "product_category": 50,
+          "promotion": 200,
+          "return": 850,
+          "store": 150
+        }
+      }
+    }
+  },
+  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
+  "shape_version": "0.9.1",
+  "version": 1,
+  "workload": "verify_cli:orphan_fk"
+}

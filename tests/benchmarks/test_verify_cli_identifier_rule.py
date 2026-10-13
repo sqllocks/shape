@@ -17,6 +17,8 @@ from pathlib import Path
 
 import pytest
 
+from .historical_imports import historical_imports
+
 ROOT = Path(__file__).resolve().parents[2]
 HARNESS = ROOT / "benchmarks" / "vs_refengine" / "profile_1to1"
 sys.path.insert(0, str(HARNESS.parent))
@@ -28,13 +30,18 @@ def _load(name: str, path: Path):
     assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
     sys.modules[name] = mod
-    spec.loader.exec_module(mod)
+    with historical_imports():
+        spec.loader.exec_module(mod)
     return mod
 
 
 @pytest.fixture
 def harness(monkeypatch, tmp_path):
     verify = _load("verify", HARNESS / "verify.py")
+    # The historical CLI helper is tested with its existing fake mapper.
+    verify.identifier_rule_baseline = lambda *args: (_ for _ in ()).throw(
+        RuntimeError("test mapper not installed")
+    )
     adapter = _load("adapter", HARNESS / "adapter.py")
     cli = _load("profile_1to1_verify_cli", HARNESS / "verify_cli.py")
     baseline = {"columns": {"zip": {"dtype": "integer"}}, "correlation_matrix": None}

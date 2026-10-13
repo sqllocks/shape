@@ -222,7 +222,6 @@ python scripts/check_user_facing.py --site site
       - EXTERNAL_REFERENCE_ASSETS.md
       - LOCATION_AS_CODE.md
       - NOT_BUILDING.md
-      - PERFORMANCE.md
       - SHAPE_MANIFESTO.md
       - specs/LOCATION_SPEC.md
       - specs/ONE_ZERO_CONTRACT.md

@@ -1,0 +1,1337 @@
+{
+  "format": "shape-profile-record",
+  "input_digest": "066250d87b7571de7e2c8ccfbe50b6af6736044693724806bd206f670363472a",
+  "inputs": {
+    "profile/edge/e3.csv": "4c977834185f528d893d240e3cdbc8f964ae0c8415108f03710e4773e10e62c8"
+  },
+  "profile": {
+    "column_order": [
+      "paid",
+      "uid",
+      "const_int",
+      "const_float",
+      "all_null",
+      "yes_no",
+      "tf_str",
+      "numstr_int",
+      "numstr_dec",
+      "ssn",
+      "mac",
+      "ipv6",
+      "iban",
+      "lang",
+      "zip5",
+      "date_slash",
+      "us_date",
+      "text",
+      "signed_zero",
+      "neg_normal",
+      "int_nulls",
+      "skew_int",
+      "frac_ts",
+      "flag"
+    ],
+    "columns": {
+      "all_null": {
+        "cardinality": 0,
+        "cardinality_ratio": 0.0,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "float",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": false,
+        "max_value": null,
+        "mean": null,
+        "min_value": null,
+        "name": "all_null",
+        "null_count": 3,
+        "null_rate": 1.0,
+        "outlier_rate": null,
+        "pattern": null,
+        "quantiles": null,
+        "std": null,
+        "string_length": null,
+        "temporal_histogram": null,
+        "value_counts_ext": null,
+        "value_counts_ext_order": null
+      },
+      "const_float": {
+        "cardinality": 1,
+        "cardinality_ratio": 0.333333,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "float",
+        "enum_values": {
+          "2.5": 1.0
+        },
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": true,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": false,
+        "max_value": [
+          "float",
+          2.5
+        ],
+        "mean": 2.5,
+        "min_value": [
+          "float",
+          2.5
+        ],
+        "name": "const_float",
+        "null_count": 0,
+        "null_rate": 0.0,
+        "outlier_rate": null,
+        "pattern": null,
+        "quantiles": null,
+        "std": 0.0,
+        "string_length": null,
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "2.5": 1.0
+        },
+        "value_counts_ext_order": [
+          "2.5"
+        ]
+      },
+      "const_int": {
+        "cardinality": 1,
+        "cardinality_ratio": 0.333333,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "integer",
+        "enum_values": {
+          "7": 1.0
+        },
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": true,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": false,
+        "max_value": [
+          "int",
+          7
+        ],
+        "mean": 7.0,
+        "min_value": [
+          "int",
+          7
+        ],
+        "name": "const_int",
+        "null_count": 0,
+        "null_rate": 0.0,
+        "outlier_rate": null,
+        "pattern": null,
+        "quantiles": null,
+        "std": 0.0,
+        "string_length": null,
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "7": 1.0
+        },
+        "value_counts_ext_order": [
+          "7"
+        ]
+      },
+      "date_slash": {
+        "cardinality": 3,
+        "cardinality_ratio": 1.0,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.333333,
+          0.666667
+        ],
+        "dtype": "datetime",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": true,
+        "max_value": [
+          "str",
+          "2013/7/14"
+        ],
+        "mean": null,
+        "min_value": [
+          "str",
+          "2005/11/5"
+        ],
+        "name": "date_slash",
+        "null_count": 0,
+        "null_rate": 0.0,
+        "outlier_rate": null,
+        "pattern": null,
+        "quantiles": null,
+        "std": null,
+        "string_length": null,
+        "temporal_histogram": {
+          "hi_year": 2012,
+          "lo_year": 2005,
+          "month_weights": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.333333,
+            0.333333,
+            0.0,
+            0.0,
+            0.333333,
+            0.0
+          ],
+          "year_weights": [
+            0.333333,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.333333,
+            0.333333
+          ]
+        },
+        "value_counts_ext": {
+          "2005/11/5": 0.333333,
+          "2011/8/21": 0.333333,
+          "2013/7/14": 0.333333
+        },
+        "value_counts_ext_order": [
+          "2005/11/5",
+          "2013/7/14",
+          "2011/8/21"
+        ]
+      },
+      "flag": {
+        "cardinality": 2,
+        "cardinality_ratio": 0.666667,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "boolean",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": false,
+        "max_value": [
+          "bool",
+          true
+        ],
+        "mean": null,
+        "min_value": [
+          "bool",
+          false
+        ],
+        "name": "flag",
+        "null_count": 1,
+        "null_rate": 0.333333,
+        "outlier_rate": null,
+        "pattern": null,
+        "quantiles": null,
+        "std": null,
+        "string_length": null,
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "False": 0.5,
+          "True": 0.5
+        },
+        "value_counts_ext_order": [
+          "True",
+          "False"
+        ]
+      },
+      "frac_ts": {
+        "cardinality": 3,
+        "cardinality_ratio": 1.0,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": [
+          0.666667,
+          0.0,
+          0.0,
+          0.0,
+          0.333333,
+          0.0,
+          0.0
+        ],
+        "dtype": "datetime",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": [
+          0.333333,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.333333,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.333333,
+          0.0
+        ],
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": true,
+        "max_value": [
+          "str",
+          "2021-06-07 00:19:34.802"
+        ],
+        "mean": null,
+        "min_value": [
+          "str",
+          "2021-03-05 06:05:45.424"
+        ],
+        "name": "frac_ts",
+        "null_count": 0,
+        "null_rate": 0.0,
+        "outlier_rate": null,
+        "pattern": null,
+        "quantiles": null,
+        "std": null,
+        "string_length": null,
+        "temporal_histogram": {
+          "hi_year": 2021,
+          "lo_year": 2021,
+          "month_weights": [
+            0.0,
+            0.0,
+            0.333333,
+            0.333333,
+            0.0,
+            0.333333,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "year_weights": [
+            1.0
+          ]
+        },
+        "value_counts_ext": {
+          "2021-03-05 06:05:45.424": 0.333333,
+          "2021-04-12 22:44:14.793": 0.333333,
+          "2021-06-07 00:19:34.802": 0.333333
+        },
+        "value_counts_ext_order": [
+          "2021-03-05 06:05:45.424",
+          "2021-06-07 00:19:34.802",
+          "2021-04-12 22:44:14.793"
+        ]
+      },
+      "iban": {
+        "cardinality": 3,
+        "cardinality_ratio": 1.0,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "string",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": true,
+        "max_value": [
+          "str",
+          "DE88990187707686874958"
+        ],
+        "mean": null,
+        "min_value": [
+          "str",
+          "DE11520039909448066723"
+        ],
+        "name": "iban",
+        "null_count": 0,
+        "null_rate": 0.0,
+        "outlier_rate": null,
+        "pattern": "iban",
+        "quantiles": null,
+        "std": null,
+        "string_length": {
+          "max": 22.0,
+          "mean": 22.0,
+          "min": 22.0,
+          "p95": 22.0
+        },
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "DE11520039909448066723": 0.333333,
+          "DE81113769038933464512": 0.333333,
+          "DE88990187707686874958": 0.333333
+        },
+        "value_counts_ext_order": [
+          "DE11520039909448066723",
+          "DE88990187707686874958",
+          "DE81113769038933464512"
+        ]
+      },
+      "int_nulls": {
+        "cardinality": 2,
+        "cardinality_ratio": 0.666667,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "integer",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": false,
+        "max_value": [
+          "float",
+          4.0
+        ],
+        "mean": 3.5,
+        "min_value": [
+          "float",
+          3.0
+        ],
+        "name": "int_nulls",
+        "null_count": 1,
+        "null_rate": 0.333333,
+        "outlier_rate": null,
+        "pattern": null,
+        "quantiles": null,
+        "std": 0.7071067811865476,
+        "string_length": null,
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "3.0": 0.5,
+          "4.0": 0.5
+        },
+        "value_counts_ext_order": [
+          "4.0",
+          "3.0"
+        ]
+      },
+      "ipv6": {
+        "cardinality": 3,
+        "cardinality_ratio": 1.0,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "string",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": true,
+        "max_value": [
+          "str",
+          "cece:7b7b:0:f5f5:4d4d:4040:c9c9:a6a6"
+        ],
+        "mean": null,
+        "min_value": [
+          "str",
+          "2626:bdbd:404:4f4f:c7c7:e0e:101:3232"
+        ],
+        "name": "ipv6",
+        "null_count": 0,
+        "null_rate": 0.0,
+        "outlier_rate": null,
+        "pattern": "ip_address",
+        "quantiles": null,
+        "std": null,
+        "string_length": {
+          "max": 39.0,
+          "mean": 37.0,
+          "min": 36.0,
+          "p95": 38.7
+        },
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "2626:bdbd:404:4f4f:c7c7:e0e:101:3232": 0.333333,
+          "7070:8989:7070:dfdf:1c1c:5757:ecec:8888": 0.333333,
+          "cece:7b7b:0:f5f5:4d4d:4040:c9c9:a6a6": 0.333333
+        },
+        "value_counts_ext_order": [
+          "cece:7b7b:0:f5f5:4d4d:4040:c9c9:a6a6",
+          "7070:8989:7070:dfdf:1c1c:5757:ecec:8888",
+          "2626:bdbd:404:4f4f:c7c7:e0e:101:3232"
+        ]
+      },
+      "lang": {
+        "cardinality": 2,
+        "cardinality_ratio": 0.666667,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "string",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": false,
+        "max_value": [
+          "str",
+          "es"
+        ],
+        "mean": null,
+        "min_value": [
+          "str",
+          "en"
+        ],
+        "name": "lang",
+        "null_count": 0,
+        "null_rate": 0.0,
+        "outlier_rate": null,
+        "pattern": "language_code",
+        "quantiles": null,
+        "std": null,
+        "string_length": {
+          "max": 2.0,
+          "mean": 2.0,
+          "min": 2.0,
+          "p95": 2.0
+        },
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "en": 0.333333,
+          "es": 0.666667
+        },
+        "value_counts_ext_order": [
+          "es",
+          "en"
+        ]
+      },
+      "mac": {
+        "cardinality": 3,
+        "cardinality_ratio": 1.0,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "string",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": true,
+        "max_value": [
+          "str",
+          "8d:39:8a:db:18:a9"
+        ],
+        "mean": null,
+        "min_value": [
+          "str",
+          "13:2e:86:1a:97:b3"
+        ],
+        "name": "mac",
+        "null_count": 0,
+        "null_rate": 0.0,
+        "outlier_rate": null,
+        "pattern": "mac_address",
+        "quantiles": null,
+        "std": null,
+        "string_length": {
+          "max": 17.0,
+          "mean": 17.0,
+          "min": 17.0,
+          "p95": 17.0
+        },
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "13:2e:86:1a:97:b3": 0.333333,
+          "50:b8:dc:52:4a:9c": 0.333333,
+          "8d:39:8a:db:18:a9": 0.333333
+        },
+        "value_counts_ext_order": [
+          "8d:39:8a:db:18:a9",
+          "50:b8:dc:52:4a:9c",
+          "13:2e:86:1a:97:b3"
+        ]
+      },
+      "neg_normal": {
+        "cardinality": 3,
+        "cardinality_ratio": 1.0,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "float",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": true,
+        "max_value": [
+          "float",
+          0.34
+        ],
+        "mean": -3.8213333333333335,
+        "min_value": [
+          "float",
+          -6.314
+        ],
+        "name": "neg_normal",
+        "null_count": 0,
+        "null_rate": 0.0,
+        "outlier_rate": null,
+        "pattern": null,
+        "quantiles": null,
+        "std": 3.627294492226036,
+        "string_length": null,
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "-5.49": 0.333333,
+          "-6.314": 0.333333,
+          "0.34": 0.333333
+        },
+        "value_counts_ext_order": [
+          "-6.314",
+          "-5.49",
+          "0.34"
+        ]
+      },
+      "numstr_dec": {
+        "cardinality": 3,
+        "cardinality_ratio": 1.0,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "float",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": true,
+        "max_value": [
+          "float",
+          976.67
+        ],
+        "mean": 676.0866666666667,
+        "min_value": [
+          "float",
+          158.49
+        ],
+        "name": "numstr_dec",
+        "null_count": 0,
+        "null_rate": 0.0,
+        "outlier_rate": null,
+        "pattern": null,
+        "quantiles": null,
+        "std": 450.1952001447076,
+        "string_length": null,
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "158.49": 0.333333,
+          "893.1": 0.333333,
+          "976.67": 0.333333
+        },
+        "value_counts_ext_order": [
+          "158.49",
+          "893.1",
+          "976.67"
+        ]
+      },
+      "numstr_int": {
+        "cardinality": 3,
+        "cardinality_ratio": 1.0,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "integer",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": true,
+        "max_value": [
+          "int",
+          43
+        ],
+        "mean": 8.333333333333334,
+        "min_value": [
+          "int",
+          -38
+        ],
+        "name": "numstr_int",
+        "null_count": 0,
+        "null_rate": 0.0,
+        "outlier_rate": null,
+        "pattern": null,
+        "quantiles": null,
+        "std": 41.74126655161932,
+        "string_length": null,
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "-38": 0.333333,
+          "20": 0.333333,
+          "43": 0.333333
+        },
+        "value_counts_ext_order": [
+          "43",
+          "-38",
+          "20"
+        ]
+      },
+      "paid": {
+        "cardinality": 3,
+        "cardinality_ratio": 1.0,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "integer",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": true,
+        "is_unique": true,
+        "max_value": [
+          "int",
+          1002
+        ],
+        "mean": 1001.0,
+        "min_value": [
+          "int",
+          1000
+        ],
+        "name": "paid",
+        "null_count": 0,
+        "null_rate": 0.0,
+        "outlier_rate": null,
+        "pattern": null,
+        "quantiles": null,
+        "std": 1.0,
+        "string_length": null,
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "1000": 0.333333,
+          "1001": 0.333333,
+          "1002": 0.333333
+        },
+        "value_counts_ext_order": [
+          "1001",
+          "1002",
+          "1000"
+        ]
+      },
+      "signed_zero": {
+        "cardinality": 1,
+        "cardinality_ratio": 0.333333,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "integer",
+        "enum_values": {
+          "0": 1.0
+        },
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": true,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": false,
+        "max_value": [
+          "int",
+          0
+        ],
+        "mean": 0.0,
+        "min_value": [
+          "int",
+          0
+        ],
+        "name": "signed_zero",
+        "null_count": 0,
+        "null_rate": 0.0,
+        "outlier_rate": null,
+        "pattern": null,
+        "quantiles": null,
+        "std": 0.0,
+        "string_length": null,
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "0": 1.0
+        },
+        "value_counts_ext_order": [
+          "0"
+        ]
+      },
+      "skew_int": {
+        "cardinality": 3,
+        "cardinality_ratio": 1.0,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "integer",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": true,
+        "max_value": [
+          "int",
+          4
+        ],
+        "mean": 2.0,
+        "min_value": [
+          "int",
+          0
+        ],
+        "name": "skew_int",
+        "null_count": 0,
+        "null_rate": 0.0,
+        "outlier_rate": null,
+        "pattern": null,
+        "quantiles": null,
+        "std": 2.0,
+        "string_length": null,
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "0": 0.333333,
+          "2": 0.333333,
+          "4": 0.333333
+        },
+        "value_counts_ext_order": [
+          "4",
+          "0",
+          "2"
+        ]
+      },
+      "ssn": {
+        "cardinality": 3,
+        "cardinality_ratio": 1.0,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "string",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": true,
+        "max_value": [
+          "str",
+          "713-35-2359"
+        ],
+        "mean": null,
+        "min_value": [
+          "str",
+          "251-63-8659"
+        ],
+        "name": "ssn",
+        "null_count": 0,
+        "null_rate": 0.0,
+        "outlier_rate": null,
+        "pattern": "ssn",
+        "quantiles": null,
+        "std": null,
+        "string_length": {
+          "max": 11.0,
+          "mean": 11.0,
+          "min": 11.0,
+          "p95": 11.0
+        },
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "251-63-8659": 0.333333,
+          "596-40-9321": 0.333333,
+          "713-35-2359": 0.333333
+        },
+        "value_counts_ext_order": [
+          "251-63-8659",
+          "713-35-2359",
+          "596-40-9321"
+        ]
+      },
+      "text": {
+        "cardinality": 2,
+        "cardinality_ratio": 0.666667,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "string",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": false,
+        "max_value": [
+          "str",
+          "note 47 about gamma"
+        ],
+        "mean": null,
+        "min_value": [
+          "str",
+          "note 3 about beta"
+        ],
+        "name": "text",
+        "null_count": 1,
+        "null_rate": 0.333333,
+        "outlier_rate": null,
+        "pattern": null,
+        "quantiles": null,
+        "std": null,
+        "string_length": {
+          "max": 19.0,
+          "mean": 18.0,
+          "min": 17.0,
+          "p95": 18.9
+        },
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "note 3 about beta": 0.5,
+          "note 47 about gamma": 0.5
+        },
+        "value_counts_ext_order": [
+          "note 3 about beta",
+          "note 47 about gamma"
+        ]
+      },
+      "tf_str": {
+        "cardinality": 2,
+        "cardinality_ratio": 0.666667,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "boolean",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": false,
+        "max_value": [
+          "str",
+          "false"
+        ],
+        "mean": null,
+        "min_value": [
+          "str",
+          "1"
+        ],
+        "name": "tf_str",
+        "null_count": 1,
+        "null_rate": 0.333333,
+        "outlier_rate": null,
+        "pattern": null,
+        "quantiles": null,
+        "std": null,
+        "string_length": null,
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "1": 0.5,
+          "false": 0.5
+        },
+        "value_counts_ext_order": [
+          "false",
+          "1"
+        ]
+      },
+      "uid": {
+        "cardinality": 3,
+        "cardinality_ratio": 1.0,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "string",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": true,
+        "max_value": [
+          "str",
+          "330aa716-8360-44b2-035a-c1418f921a90"
+        ],
+        "mean": null,
+        "min_value": [
+          "str",
+          "066e1130-ae69-ee39-e506-6375d7451eb4"
+        ],
+        "name": "uid",
+        "null_count": 0,
+        "null_rate": 0.0,
+        "outlier_rate": null,
+        "pattern": "uuid",
+        "quantiles": null,
+        "std": null,
+        "string_length": {
+          "max": 36.0,
+          "mean": 36.0,
+          "min": 36.0,
+          "p95": 36.0
+        },
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "066e1130-ae69-ee39-e506-6375d7451eb4": 0.333333,
+          "1b0d9397-8a45-956a-1395-a5d30aa4e7e2": 0.333333,
+          "330aa716-8360-44b2-035a-c1418f921a90": 0.333333
+        },
+        "value_counts_ext_order": [
+          "330aa716-8360-44b2-035a-c1418f921a90",
+          "066e1130-ae69-ee39-e506-6375d7451eb4",
+          "1b0d9397-8a45-956a-1395-a5d30aa4e7e2"
+        ]
+      },
+      "us_date": {
+        "cardinality": 3,
+        "cardinality_ratio": 1.0,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": [
+          0.666667,
+          0.333333,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "dtype": "datetime",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": true,
+        "max_value": [
+          "str",
+          "11/12/2018"
+        ],
+        "mean": null,
+        "min_value": [
+          "str",
+          "08/03/2004"
+        ],
+        "name": "us_date",
+        "null_count": 0,
+        "null_rate": 0.0,
+        "outlier_rate": null,
+        "pattern": null,
+        "quantiles": null,
+        "std": null,
+        "string_length": null,
+        "temporal_histogram": {
+          "hi_year": 2017,
+          "lo_year": 2004,
+          "month_weights": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.333333,
+            0.0,
+            0.333333,
+            0.333333,
+            0.0
+          ],
+          "year_weights": [
+            0.333333,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.333333,
+            0.0,
+            0.333333
+          ]
+        },
+        "value_counts_ext": {
+          "08/03/2004": 0.333333,
+          "10/05/2015": 0.333333,
+          "11/12/2018": 0.333333
+        },
+        "value_counts_ext_order": [
+          "08/03/2004",
+          "11/12/2018",
+          "10/05/2015"
+        ]
+      },
+      "yes_no": {
+        "cardinality": 3,
+        "cardinality_ratio": 1.0,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "boolean",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": true,
+        "max_value": [
+          "str",
+          "yes"
+        ],
+        "mean": null,
+        "min_value": [
+          "str",
+          "NO"
+        ],
+        "name": "yes_no",
+        "null_count": 0,
+        "null_rate": 0.0,
+        "outlier_rate": null,
+        "pattern": null,
+        "quantiles": null,
+        "std": null,
+        "string_length": null,
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "NO": 0.333333,
+          "Yes": 0.333333,
+          "yes": 0.333333
+        },
+        "value_counts_ext_order": [
+          "yes",
+          "Yes",
+          "NO"
+        ]
+      },
+      "zip5": {
+        "cardinality": 3,
+        "cardinality_ratio": 1.0,
+        "distribution": null,
+        "distribution_params": null,
+        "dow_histogram": null,
+        "dtype": "string",
+        "enum_values": null,
+        "fit_score": null,
+        "fk_ref_table": null,
+        "hour_histogram": null,
+        "is_enum": false,
+        "is_foreign_key": false,
+        "is_primary_key": false,
+        "is_unique": true,
+        "max_value": [
+          "str",
+          "39298"
+        ],
+        "mean": null,
+        "min_value": [
+          "str",
+          "03415"
+        ],
+        "name": "zip5",
+        "null_count": 0,
+        "null_rate": 0.0,
+        "outlier_rate": null,
+        "pattern": "postal_code",
+        "quantiles": null,
+        "std": null,
+        "string_length": {
+          "max": 5.0,
+          "mean": 5.0,
+          "min": 5.0,
+          "p95": 5.0
+        },
+        "temporal_histogram": null,
+        "value_counts_ext": {
+          "03415": 0.333333,
+          "15122": 0.333333,
+          "39298": 0.333333
+        },
+        "value_counts_ext_order": [
+          "03415",
+          "15122",
+          "39298"
+        ]
+      }
+    },
+    "correlation_matrix": {
+      "int_nulls": {
+        "neg_normal": -1.0,
+        "numstr_dec": -1.0,
+        "numstr_int": 1.0,
+        "paid": -1.0,
+        "skew_int": 1.0
+      },
+      "neg_normal": {
+        "int_nulls": -1.0,
+        "numstr_dec": 0.6672,
+        "numstr_int": 0.1303,
+        "paid": -0.8036,
+        "skew_int": -0.1136
+      },
+      "numstr_dec": {
+        "int_nulls": -1.0,
+        "neg_normal": 0.6672,
+        "numstr_int": -0.6517,
+        "paid": -0.0928,
+        "skew_int": -0.8159
+      },
+      "numstr_int": {
+        "int_nulls": 1.0,
+        "neg_normal": 0.1303,
+        "numstr_dec": -0.6517,
+        "paid": -0.6948,
+        "skew_int": 0.9703
+      },
+      "paid": {
+        "int_nulls": -1.0,
+        "neg_normal": -0.8036,
+        "numstr_dec": -0.0928,
+        "numstr_int": -0.6948,
+        "skew_int": -0.5
+      },
+      "skew_int": {
+        "int_nulls": 1.0,
+        "neg_normal": -0.1136,
+        "numstr_dec": -0.8159,
+        "numstr_int": 0.9703,
+        "paid": -0.5
+      }
+    },
+    "detected_fks": {},
+    "name": "e3",
+    "primary_key": [
+      "paid"
+    ],
+    "row_count": 3
+  },
+  "recorded_utc": "2026-10-13T01:47:50Z",
+  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
+  "shape_version": "0.9.1",
+  "version": 1,
+  "workload": "profile:edge/e3.csv"
+}

@@ -19,13 +19,16 @@ from pathlib import Path
 
 import pytest
 
+from .historical_imports import historical_imports
+
 ROOT = Path(__file__).resolve().parents[2]
 HARNESS = ROOT / "benchmarks" / "vs_refengine" / "demo_1to1"
 _spec = importlib.util.spec_from_file_location("demo_1to1_differences", HARNESS / "differences.py")
 assert _spec is not None and _spec.loader is not None
 differences = importlib.util.module_from_spec(_spec)
 sys.modules[_spec.name] = differences  # its dataclasses look their module up
-_spec.loader.exec_module(differences)
+with historical_imports():
+    _spec.loader.exec_module(differences)
 
 BLOCK_1000 = (
     "  Rows to generate: 1,000\n  Targets: generated\n"

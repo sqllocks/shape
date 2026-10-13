@@ -1,12 +1,13 @@
 name: Nightly
 on:
   schedule: [{cron: '17 3 * * *'}]
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Lead-only recording: enter record-0.9.1'
+        required: false
+        type: string
 permissions: {contents: read}
-env:
-  # The reference engine's short name, set outside the repository (a repository variable); the
-  # comparison harness (benchmarks/vs_refengine) and its tests derive the engine's names from it.
-  REFENGINE_NAME: ${{ secrets.REFENGINE_NAME }}
 jobs:
   parity-suite:
     # P8-02: the nightly parity suite, `run.py --full` over every domain and every profiling
@@ -23,18 +24,22 @@ jobs:
     env: {BENCH_OUT_DIR: "${{ github.workspace }}/bench-out"}
     steps:
       - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - name: Pinned RefEngine baseline and venv (plan section 1.2)
-        env: {REFENGINE_DEPLOY_KEY: "${{ secrets.REFENGINE_DEPLOY_KEY }}"}
-        run: source scripts/env.sh && bash benchmarks/vs_refengine/setup_refengine.sh
-      - name: Shape venv (pyarrow pinned like the RefEngine venv, so timings share one pyarrow)
+      - name: Shape 0.9.1 baseline venv
+        run: |
+          source scripts/env.sh
+          bash benchmarks/vs_refengine/setup_baseline.sh
+          "$BASELINE_PY" -m pip install 'pandas>=2' 'scipy>=1.11'
+          "$BASELINE_PY" -m pip freeze > "$BENCH_OUT_DIR/baseline_freeze.txt"
+      - name: Shape venv (same PyArrow as the release baseline)
         run: |
           source scripts/env.sh
           python -m venv "$SHAPE_VENV"
           "$SHAPE_VENV/bin/pip" install -U pip
           "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains 'pyarrow==25.0.1'
-      - run: source scripts/env.sh && python benchmarks/vs_refengine/check_coverage.py
+      - run: source scripts/env.sh && python benchmarks/vs_refengine/recorded/check.py
       - run: >-
           source scripts/env.sh &&
           python benchmarks/vs_refengine/nightly.py run --shard ${{ matrix.shard }}
@@ -46,7 +51,7 @@ jobs:
           path: |
             ${{ github.workspace }}/bench-out/nightly/
             ${{ github.workspace }}/bench-out/verify/
-            ${{ github.workspace }}/bench-out/refengine_freeze.txt
+            ${{ github.workspace }}/bench-out/baseline_freeze.txt
   parity-publish:
     # P8-02: merge the shards, judge the night (green only when every workload of the full
     # suite was recorded and its verifier exited 0), append to the nightly history and build
@@ -457,12 +462,6 @@ jobs:
         run: source scripts/env.sh && "$SHAPE_VENV/bin/python" -m pytest -m emulator plugins/shape-fabric/tests/test_sqlserver_sink_emulator.py -q
       - name: shape seed against the real server (W5-05)
         run: source scripts/env.sh && "$SHAPE_VENV/bin/python" -m pytest -m emulator plugins/shape-fabric/tests/test_seed_sqlserver_emulator.py -q
-      - name: Pinned baseline venv (plan section 1.2) with pyodbc
-        env: {REFENGINE_DEPLOY_KEY: "${{ secrets.REFENGINE_DEPLOY_KEY }}"}
-        run: |
-          source scripts/env.sh && bash benchmarks/vs_refengine/setup_refengine.sh
-          unset REFENGINE_DEPLOY_KEY
-          "$REFENGINE_PY" -m pip install pyodbc
       - name: T-22 parity of database profiling on the real server
         run: source scripts/env.sh && "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/db_1to1/verify.py --mssql "$SHAPE_TEST_MSSQL;Database=tempdb"
       - if: always()
@@ -583,3 +582,49 @@ jobs:
       - run: pip install -e '.[dev]' -e plugins/shape-fabric
       # the Fabric demo and content tests need their own requirements (fabric-demo job)
       - run: python -m pytest -q -m nightly --ignore=tests/demo/fabric --ignore=tests/demo/content
+
+  record-baseline:
+    # Lead downloads and reviews this artifact; the workflow never commits it.
+    if: github.event_name == 'workflow_dispatch' && inputs.confirm == 'record-0.9.1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      BENCH_OUT_DIR: "${{ github.workspace }}/bench-out"
+      SHAPE_TEST_MSSQL: "Driver={ODBC Driver 18 for SQL Server};Server=localhost,1433;UID=sa;PWD=Shape_Emulator_1;Encrypt=yes;TrustServerCertificate=yes"
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - name: Microsoft ODBC Driver 18
+        run: |
+          curl -sSL -o "$RUNNER_TEMP/packages-microsoft-prod.deb" "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb"
+          sudo dpkg -i "$RUNNER_TEMP/packages-microsoft-prod.deb"
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
+      - run: docker compose -f ci/emulators/docker-compose.yml up -d --wait mssql
+      - name: Baseline release and recording dependencies
+        run: |
+          source scripts/env.sh
+          bash benchmarks/vs_refengine/setup_baseline.sh
+          "$BASELINE_PY" -m pip install 'sqllocks-shape-sqlserver==0.9.1' 'pandas>=2' 'scipy>=1.11'
+          "$BASELINE_PY" -m pip freeze > "$BENCH_OUT_DIR/baseline_freeze.txt"
+          python -m venv "$SHAPE_VENV"
+          "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-sqlserver 'pyarrow==25.0.1'
+      - name: Record every release workload, equivalence before timing
+        run: |
+          source scripts/env.sh
+          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/record_baseline.py --all --smoke \
+            --mssql "$SHAPE_TEST_MSSQL;Database=tempdb" --out benchmarks/vs_refengine/recorded
+          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/profile_1to1/datasets.py
+          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/record_baseline.py --all \
+            --mssql "$SHAPE_TEST_MSSQL;Database=tempdb" --out benchmarks/vs_refengine/recorded
+          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/recorded/check.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: recorded-baseline
+          path: |
+            benchmarks/vs_refengine/recorded/
+            bench-out/baseline_freeze.txt
+      - if: always()
+        run: docker compose -f ci/emulators/docker-compose.yml down -v

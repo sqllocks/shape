@@ -10,10 +10,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 permissions: {contents: read}
-env:
-  # The reference engine's short name, set outside the repository (a repository variable); the
-  # comparison harness (benchmarks/vs_refengine) and its tests derive the engine's names from it.
-  REFENGINE_NAME: ${{ secrets.REFENGINE_NAME }}
 jobs:
   test:
     # T-06: the full Python 3.11-3.14 matrix on Linux; 3.11 and 3.14 on macOS and Windows.
@@ -307,47 +303,51 @@ jobs:
       - run: bash scripts/ci_pure_wheel.sh python
   bench-quick:
     # Verifiers, then the quick benchmark (D1, D2, retail small+medium; 3 runs) against the
-    # pinned RefEngine. On a private repository the standard runner has 2 vCPUs, so ratios are
+    # Shape 0.9.1. On a private repository the standard runner has 2 vCPUs, so ratios are
     # informational until the repository is public (O-05).
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env: {BENCH_OUT_DIR: "${{ github.workspace }}/bench-out"}
     steps:
       - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - name: Pinned RefEngine baseline and venv (plan section 1.2)
-        env: {REFENGINE_DEPLOY_KEY: "${{ secrets.REFENGINE_DEPLOY_KEY }}"}
-        run: source scripts/env.sh && bash benchmarks/vs_refengine/setup_refengine.sh
-      - name: Shape venv (pyarrow pinned like the RefEngine venv)
+      - name: Shape 0.9.1 baseline venv
+        run: |
+          source scripts/env.sh
+          bash benchmarks/vs_refengine/setup_baseline.sh
+          "$BASELINE_PY" -m pip install 'pandas>=2' 'scipy>=1.11'
+          "$BASELINE_PY" -m pip freeze > "$BENCH_OUT_DIR/baseline_freeze.txt"
+      - name: Shape venv (same PyArrow as the release baseline)
         run: |
           source scripts/env.sh
           python -m venv "$SHAPE_VENV"
           "$SHAPE_VENV/bin/pip" install -U pip
           "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains 'pyarrow==25.0.1'
-      - name: Reference SSH setup contract (the setup runs on Linux)
-        run: source scripts/env.sh && "$SHAPE_VENV/bin/python" -m pytest -q benchmarks/vs_refengine/tests/test_setup_refengine.py
-      - run: source scripts/env.sh && python benchmarks/vs_refengine/check_coverage.py
+      - name: Published baseline setup contract
+        run: source scripts/env.sh && "$SHAPE_VENV/bin/python" -m pytest -q benchmarks/vs_refengine/tests/test_setup_baseline.py
+      - run: source scripts/env.sh && python benchmarks/vs_refengine/recorded/check.py
       # P6-01e: the committed baseline fixtures (schemas, plans, composites) still equal the pinned
       # baseline's output, and every domain and composite has the baseline's row counts at every scale.
       - run: |
           source scripts/env.sh
           "$SHAPE_VENV/bin/pip" install -e plugins/shape-domains
-          "$REFENGINE_PY" benchmarks/vs_refengine/plan_fixtures.py --check
+          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/recorded/check.py
           "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/domain_1to1/rowcounts.py
       - run: source scripts/env.sh && python benchmarks/vs_refengine/run.py --quick --out "$BENCH_OUT_DIR/results.json"
       # P6-09: `shape verify` against the baseline's `verify` on retail small (internal harness).
       - run: |
           source scripts/env.sh
-          "$REFENGINE_PY" benchmarks/vs_refengine/dump_schema.py retail
-          "$REFENGINE_PY" benchmarks/vs_refengine/domain_1to1/generate.py --impl refengine --domain retail --scale small --seed 42
-          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/domain_1to1/generate.py --impl reference_port --domain retail --scale small --seed 1042
+          "$BASELINE_PY" benchmarks/vs_refengine/domain_1to1/generate.py --impl shape --domain retail --scale small --seed 42
+          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/domain_1to1/generate.py --impl shape --domain retail --scale small --seed 1042
           "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/verify_1to1/verify.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: benchmark-results-quick
           path: |
+            ${{ github.workspace }}/bench-out/baseline_freeze.txt
             ${{ github.workspace }}/bench-out/results.json
             ${{ github.workspace }}/bench-out/verify/
   build:
