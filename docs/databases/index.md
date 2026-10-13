@@ -7,7 +7,7 @@ Status: available.
 `shape-databases` writes generated Arrow batches to DuckDB, PostgreSQL, MySQL, Snowflake and
 Databricks. Optional driver imports happen when a connection opens. Shape writes to
 PostgreSQL and MySQL through `shape-databases`; neither has a direct profiling source
-in 0.9.1. Export their data to Parquet or CSV and profile the file.
+in 0.9.2. Export their data to Parquet or CSV and profile the file.
 
 The shipped database and platform sources are `mssql`, `duckdb`, `onelake` and
 `semantic-model`. DuckDB reads come from `shape-integrations`. Snowflake and Databricks

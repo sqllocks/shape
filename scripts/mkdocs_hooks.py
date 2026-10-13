@@ -356,7 +356,7 @@ def on_post_build(config: Any) -> None:
     index = [
         "# Shape documentation",
         "",
-        "Early access 0.9.1. Profiling, contracts and drift are available.",
+        "Early access 0.9.2. Profiling, contracts and drift are available.",
         "",
     ]
     full = index.copy()

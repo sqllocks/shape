@@ -5,10 +5,10 @@ Shape plugin: industry domains with their reference data (`shape.domains`).
 | Domain | Tables | Reference data |
 |---|---|---|
 | `retail` | customer, address, product_category, product, store, promotion, order, order_line, return (3NF) | product categories, product and promotion names, 40,977 US ZIP locations |
-| `capital_markets` | exchange, sector, industry, company, daily_price, dividend, earnings, insider_transaction, split, trade | exchanges, GICS sectors, index memberships, 123 S&P 500 constituents |
+| `capital_markets` | exchange, sector, industry, company, daily_price, dividend, earnings, insider_transaction, split, trade | exchanges, synthetic sectors, index memberships, 123 S&P 500 constituents |
 | `education` | department, course, instructor, student, course_section, academic_standing, enrollment, financial_aid, grade_appeal | aid types, course catalog, department names |
 | `financial` | branch, transaction_category, customer, account, loan, card, loan_payment, statement, transaction, fraud_flag | branch, merchant and transaction category names; the retail ZIP locations |
-| `healthcare` | provider, facility, patient, encounter, diagnosis, procedure, medication, claim, claim_line | CPT and ICD-10 codes, insurance plans, medication names, specialties; the retail ZIP locations |
+| `healthcare` | provider, facility, patient, encounter, diagnosis, procedure, medication, claim, claim_line | synthetic procedure and ICD-10 codes, insurance plans, medication names, specialties; the retail ZIP locations |
 | `hr` | department, position, employee, compensation, performance_review, time_off_request, training, training_enrollment, termination | department names, position titles, training courses |
 | `insurance` | agent, policyholder, policy_type, policy, coverage, claim, claim_payment, premium_payment, underwriting | claim categories, peril types, policy types; the retail ZIP locations |
 | `iot` | device_type, location, device, sensor, reading, alert, maintenance_log, command | alert severity levels, device types, sensor types; the retail ZIP locations |
@@ -43,3 +43,16 @@ city, state code and county; GeoNames, CC BY 4.0), which `shape profile --refere
 
 Its version always equals core's (`sqllocks-shape`), and it is released together with core.
 How plugins are written: `docs/plugins/authoring.md` in the repository.
+
+## Synthetic procedure and sector references (0.9.2)
+
+Healthcare procedure codes are `SP-01` through `SP-49`, with invented descriptions;
+none is a CPT code. The five-character prefix/hyphen format preserves code width.
+Capital-markets sectors use `SA` through `SK` and synthetic sector/industry labels,
+including the labels in the company reference table. These are not GICS categories.
+The legacy reference aliases `cpt_codes` and `gics_sectors`, and schema column names,
+remain available for existing specifications. See the root third-party notices.
+
+The same seed now selects replacement labels at the same row positions and with the
+same weights. Recreate healthcare and capital-markets fixtures when upgrading from
+0.9.1; unchanged schema, row counts and charges do not imply identical dataset ids.

@@ -1,6 +1,6 @@
 """The capital markets domain: exchanges, sectors, industries, companies, daily prices, dividends,
 earnings, insider transactions, splits and trades (10 tables), with the reference data it draws
-from (exchanges, GICS sectors, index memberships, S&P 500 constituents)."""
+from (exchanges, synthetic sectors, index memberships, S&P 500 constituents)."""
 
 from __future__ import annotations
 

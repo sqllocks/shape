@@ -302,16 +302,16 @@ shape registry shapes/registry tag orders day1 "$(python -c 'import json; print(
     shape: warning: --capture full keeps real values in day.shape; do not commit or share it
     {"shape_content_id": "0cb35faaeb87e0b7baeb655c583d4222db902b30183fb72e8e185e1ebdb04bf7", "written": "day.shape"}
     shape: warning: the registry now holds real values from the data (a raw profile); keep it as private as the data
-    {"content_id": "35ea68aedbec5f4bef5eeecec5a23a0403080ca69ed7f8d67b1528271a6e1555"}
+    {"content_id": "01e59c232ed975d8053c6c494c7e3575faed0b6cb9651a4028cbde6373125748"}
     shape: warning: --capture full keeps real values in day.shape; do not commit or share it
     {"shape_content_id": "7d00f3f08859889f695af0d6c9af650933e25fd061c096776206e16b9dae3616", "written": "day.shape"}
     shape: warning: the registry now holds real values from the data (a raw profile); keep it as private as the data
-    {"content_id": "59939ad1725d4dd126afa98fef92ceb02ee48cbf16701ffee7ff672ebe244598"}
+    {"content_id": "72899c21811768cf6ed04abd5bd51647bc21da512912a355530e54d9e340027e"}
     shape: warning: --capture full keeps real values in day.shape; do not commit or share it
     {"shape_content_id": "a098e95b2f043449865a8b2d84978c9d1319816d8180e64091106b3a097a700c", "written": "day.shape"}
     shape: warning: the registry now holds real values from the data (a raw profile); keep it as private as the data
-    {"content_id": "13e204a587c294a1d030d629fac07614182ce04bfbff94e5d3356e3fda0ca2d1"}
-    {"content_id": "35ea68aedbec5f4bef5eeecec5a23a0403080ca69ed7f8d67b1528271a6e1555"}
+    {"content_id": "c937f2a8c04638b32df9c3aac52c18b9ba3a61a4062058c1f6e2238a9244425a"}
+    {"content_id": "01e59c232ed975d8053c6c494c7e3575faed0b6cb9651a4028cbde6373125748"}
     ```
 
 <a id="local-example-1"></a>
@@ -327,8 +327,8 @@ shape bisect shapes/registry orders --good day1 --bad latest
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    first bad version: 2026-03-02  content id 59939ad1725d
-    last good version: 2026-03-01  content id 35ea68aedbec
+    first bad version: 2026-03-02  content id 72899c218117
+    last good version: 2026-03-01  content id 01e59c232ed9
     changes between them:
       amount: mean_shift 39.5772 -> 50.9789
       amount: distribution_shift {"p05": 23.8401, "p25": 34.16625, "p5... -> {"p05": 36.809, "p25": 43.53675, "p50...

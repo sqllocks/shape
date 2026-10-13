@@ -190,7 +190,7 @@ def test_claim_round_trip(ts, all_resources):
     p2 = claims["CLM-P-0002"]
     assert p2["insurance"][0]["preAuthRef"] == ["PA12345"]
     assert p2["insurance"][0]["coverage"] == {"reference": "Coverage/E2"}
-    assert p2["item"][0]["modifier"][0]["coding"][0]["code"] == "25"
+    assert p2["item"][0]["modifier"][0]["coding"][0]["code"] == "S0"
     assert p2["item"][0]["locationCodeableConcept"]["coding"][0]["code"] == "11"
     assert (
         p2["provider"]["reference"] == f"Organization/{ts.rows('medical_claim')[1]['billing_npi']}"
@@ -220,9 +220,24 @@ def test_institutional_claim_details(ts, all_resources):
     assert info["discharge"]["code"]["coding"][0]["code"] == "01"
     assert c["careTeam"][0]["provider"]["reference"].startswith("Practitioner/")
     assert c["item"][0]["revenue"]["coding"][0]["code"] == "0120"
-    assert c["item"][2]["productOrService"]["coding"][0]["system"] == R.SYS_CPT
+    assert c["item"][2]["productOrService"]["coding"][0]["system"] == (
+        f"{R.SYSTEM_BASE}:synthetic-procedure"
+    )
     assert c["item"][0]["productOrService"]["coding"][0]["code"] == "not-applicable"
     assert "locationCodeableConcept" not in c["item"][0]
+
+
+def test_rel092_synthetic_procedures_do_not_claim_a_standard_code_system():
+    assert R._procedure_coding("SP-01") == {
+        "system": f"{R.SYSTEM_BASE}:synthetic-procedure",
+        "code": "SP-01",
+    }
+    for shape_only in ("00000", "0000F", "0000T", "0000U"):
+        assert R._procedure_coding(shape_only)["system"] == R.SYS_CPT
+    assert R._modifiers({"modifier_1": "S0"})[0]["coding"][0]["system"] == (
+        f"{R.SYSTEM_BASE}:synthetic-modifier"
+    )
+    assert R._modifiers({"modifier_1": "00"})[0]["coding"][0]["system"] == R.SYS_CPT
 
 
 def test_eob_round_trip(ts, all_resources):

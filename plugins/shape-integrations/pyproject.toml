@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sqllocks-shape-integrations"
 # Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
-version = "0.9.1"
+version = "0.9.2"
 description = "Shape plugin: OpenLineage, MLflow, Presidio, SDMetrics, Anonymeter and Ibis/DuckDB adapters"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -23,7 +23,7 @@ classifiers = [
 ]
 # Every third-party library is an extra, so a host installs only the adapters it uses and core
 # never carries them (T-07). Without its library an adapter exits 2 with the pip command.
-dependencies = ["sqllocks-shape==0.9.1"]
+dependencies = ["sqllocks-shape==0.9.2"]
 
 [project.urls]
 Homepage = "https://github.com/sqllocks/shape"

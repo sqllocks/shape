@@ -24,7 +24,7 @@ separate from the measured profile content.
 |---|---|
 | `format`, `format_version`, `version` | `shape`, with container format version 2. |
 | `kind` | `profile`; distinguishes this payload from a model. |
-| `shape_version` | Writer version 0.9.1. |
+| `shape_version` | Writer version 0.9.2. |
 | `min_shape_version` | Minimum reader version; 0.9.0 is a format minimum, not the current docs version. |
 | `name` | Stable name `orders`. |
 | `content_hashes` | Hash of the `profile.json` component. |
