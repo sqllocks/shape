@@ -1,0 +1,39 @@
+{
+  "run_id": "38327274076",
+  "commit": "c80398dbe8f8fe5cb735e6e4a8e62bbe50e5b3a4",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "AMD EPYC 9V45 96-Core Processor",
+    "logical_cpus": 4,
+    "ram_bytes": 16766414848,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "26.0.0",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "workspace": "shape-test, service principal shape-ci-fabric",
+  "page": "docs/plugins/fabric-writers.md",
+  "example": "synapse-write",
+  "command": "shape generate retail --to synapse://myws.sql.azuresynapse.net/pool1 \\\n  --auth cli --sink-config synapse.staging_path=abfss://stage@myacct.dfs.core.windows.net/shape",
+  "executed_command": "shape generate retail --to \"$SHAPE_TEST_SYNAPSE_URI\" \\\n  --auth cli --sink-config synapse.staging_path=\"$SHAPE_TEST_SYNAPSE_STAGING\"",
+  "exit_code": 2,
+  "status": "failed",
+  "elapsed_seconds": 16.395729157999995,
+  "stdout": "shape: error: loading dbo.customer failed: ('42000', '[42000] [Microsoft][ODBC Driver 18 for SQL Server][SQL Server]111212;Operation cannot be performed within a transaction. (111212) (SQLExecDirectW)')\n"
+}

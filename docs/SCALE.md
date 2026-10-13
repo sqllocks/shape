@@ -123,6 +123,8 @@ a token.
 
 **Needs a Fabric account. Not run in CI.**
 
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers.
+
 ```bash
 shape jobs list
 shape jobs status JOB          # asks Fabric for a fabric_spark job
@@ -130,7 +132,16 @@ shape jobs cancel JOB
 shape jobs resume JOB          # a failed or cancelled job
 ```
 
-<!-- owner: Fabric maintainer — supply the transcript for docs/SCALE.md example 2. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    <job-id>  fabric_spark submitted 
+    <job-id>  fabric_spark submitted 
+    <job-id>  fabric_spark cancelled 
+    <job-id>  fabric_spark submitted 
+    ```
+
+Evidence: [run 38332340250, ubuntu-latest, `00dd1429675b`](evidence/transcripts/docs-transcripts-38332340250-00dd1429675b-ubuntu-latest-scale-jobs.json).
 
 
 * **Local jobs.** `cancel` stops the run between chunks, also when the run is in another process
@@ -155,13 +166,22 @@ path is refused ("the Items API names an operation URL off the Fabric API").
 
 **Needs a Fabric account. Not run in CI.**
 
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers. A write to a remote target needs `--yes` or `SHAPE_CONFIRM_REMOTE=1`; the recorded run set the variable.
+
 ```bash
 export SHAPE_FABRIC_TOKEN=...   # an Entra token for the Fabric API
 shape generate retail --scale large --scale-mode fabric_spark \
     --fabric-workspace WORKSPACE_GUID --fabric-lakehouse LAKEHOUSE_GUID --table-prefix demo_
 ```
 
-<!-- owner: Fabric maintainer — supply the transcript for docs/SCALE.md example 3. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    submitted spark-def26b56 (Fabric run <guid>); 19,625,400 rows queued
+      status: shape jobs status spark-def26b56   cancel: shape jobs cancel spark-def26b56
+    ```
+
+Evidence: [run 38332340250, ubuntu-latest, `00dd1429675b`](evidence/transcripts/docs-transcripts-38332340250-00dd1429675b-ubuntu-latest-scale-fabric-spark.json).
 
 
 The command writes the job spec (the schema, seed, row counts and chunk size; no credentials) to

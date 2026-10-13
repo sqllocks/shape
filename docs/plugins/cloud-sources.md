@@ -99,14 +99,22 @@ Use [the tested starters](../TUTORIAL.md) for local commands and complete output
 
 <!-- example: 0 -->
 
-**Needs a Fabric account. Not run in CI.**
+**Needs a Fabric notebook (sempy signs in as the notebook's user). Not run in CI.**
 
 ```
 pip install 'sqllocks-shape-fabric[semantic-link]'
 shape profile semantic-model://Sales/Retail/Customer -o customer.shape
 ```
 
-<!-- owner: Fabric maintainer — supply the transcript for docs/plugins/cloud-sources.md example 0. -->
+Owner-run in a Fabric notebook on 2026-10-12 (the `shape` script is not on the notebook's `PATH`, so it ran as `python -m shape`; workspace `shape-test`, model `shape_sm`, whose only table is `publicholidays`), exit 0:
+
+```text
+!{sys.executable} -m shape profile "semantic-model://shape-test/shape_sm/publicholidays" -o customer.shape; echo exit=$?
+{"shape_content_id": "d79f97dbd9ef2c41b2340cf04e10742b2da15b14c11007b18356655b998c557a", "written": "customer.shape"}
+exit=0
+```
+
+Evidence: [Owner-run notebook receipt, 2026-10-12, Shape 0.9.1](../evidence/semantic-model-notebook.md).
 
 
 `semantic-model://<workspace>/<model>/<table>`: workspace and model are names or GUIDs, and a `/`

@@ -882,7 +882,7 @@
   {
     "page": "docs/plugins/cloud-sources.md",
     "index": 0,
-    "kind": "cloud:Fabric"
+    "kind": "service:owner-receipt"
   },
   {
     "page": "docs/plugins/fabric-auth.md",
@@ -912,7 +912,7 @@
   {
     "page": "docs/plugins/fabric-commands.md",
     "index": 4,
-    "kind": "cloud:Fabric"
+    "kind": "service:owner-receipt"
   },
   {
     "page": "docs/plugins/fabric-commands.md",

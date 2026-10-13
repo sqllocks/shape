@@ -1,0 +1,39 @@
+{
+  "run_id": "38338859503",
+  "commit": "b432568bdbd359cb5d74a49a9b195890911e58ca",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "logical_cpus": 4,
+    "ram_bytes": 16766414848,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "26.0.0",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "workspace": "shape-test, service principal shape-ci-fabric",
+  "page": "docs/plugins/fabric-writers.md",
+  "example": "synapse-write",
+  "command": "shape generate retail --to synapse://myws.sql.azuresynapse.net/pool1 \\\n  --auth cli --sink-config synapse.staging_path=abfss://stage@myacct.dfs.core.windows.net/shape",
+  "executed_command": "shape generate retail --to \"$SHAPE_TEST_SYNAPSE_URI\" \\\n  --auth cli --sink-config synapse.staging_path=\"$SHAPE_TEST_SYNAPSE_STAGING\"",
+  "exit_code": 0,
+  "status": "passed",
+  "elapsed_seconds": 48.65495066599999,
+  "stdout": "Wrote 21,750 rows in 9 tables to synapse://<workspace>.sql.azuresynapse.net/<pool> (48.00s)\n"
+}

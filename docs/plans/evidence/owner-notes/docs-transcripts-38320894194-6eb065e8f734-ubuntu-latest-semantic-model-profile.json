@@ -1,0 +1,39 @@
+{
+  "run_id": "38320894194",
+  "commit": "6eb065e8f7349613291e67678b05227ab1e002ff",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "Intel(R) Xeon(R) 6973P-C",
+    "logical_cpus": 4,
+    "ram_bytes": 16765374464,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "26.0.0",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "workspace": "shape-test, service principal shape-ci-fabric",
+  "page": "docs/plugins/cloud-sources.md",
+  "example": "semantic-model-profile",
+  "command": "pip install 'sqllocks-shape-fabric[semantic-link]'\nshape profile semantic-model://Sales/Retail/Customer -o customer.shape",
+  "executed_command": "pip install 'sqllocks-shape-fabric[semantic-link]'\nshape profile \"semantic-model://$FABRIC_WORKSPACE_ID/$FABRIC_SEMANTIC_MODEL/$DOCS_SEM_TABLE\" -o customer.shape",
+  "exit_code": 125,
+  "status": "failed",
+  "elapsed_seconds": 0.00015534800002114935,
+  "stdout": "missing value: DOCS_SEM_TABLE\n"
+}

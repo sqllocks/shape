@@ -1,0 +1,39 @@
+{
+  "run_id": "38320894194",
+  "commit": "6eb065e8f7349613291e67678b05227ab1e002ff",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "Intel(R) Xeon(R) 6973P-C",
+    "logical_cpus": 4,
+    "ram_bytes": 16765374464,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "26.0.0",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "workspace": "shape-test, service principal shape-ci-fabric",
+  "page": "docs/SINKS.md",
+  "example": "sinks-onelake",
+  "command": "shape generate retail --scale small --seed 7 \\\n  --to abfss://landing@myacct.dfs.core.windows.net/raw \\\n  --table-format store=csv --batch-date 2026-10-02\n# raw/order/ingest_date=2026-10-02/order_20261002.parquet, raw/store/.../store_20261002.csv, ...\n\nshape stream retail -t order --to abfss://landing@myacct.dfs.core.windows.net/live \\\n  --roll-seconds 30 --realtime --rate 200 --checkpoint-seconds 30\nshape generate retail --to delta+abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Tables",
+  "executed_command": "shape generate retail --scale small --seed 7 \\\n  --to abfss://$DOCS_WS@onelake.dfs.fabric.microsoft.com/$DOCS_LH/Files/shape_docs/raw \\\n  --table-format store=csv --batch-date 2026-10-02\n# raw/order/ingest_date=2026-10-02/order_20261002.parquet, raw/store/.../store_20261002.csv, ...\n\nshape stream retail -t order --to abfss://$DOCS_WS@onelake.dfs.fabric.microsoft.com/$DOCS_LH/Files/shape_docs/live \\\n  --roll-seconds 30 --realtime --rate 200 --checkpoint-seconds 30\nshape generate retail --to delta+abfss://$DOCS_WS@onelake.dfs.fabric.microsoft.com/$DOCS_LH/Tables",
+  "exit_code": 2,
+  "status": "failed",
+  "elapsed_seconds": 0.2862079609999455,
+  "stdout": "shape: error: refusing to write to non-local target abfss://<workspace-id>@onelake.dfs.fabric.microsoft.com/<lakehouse-id>/Files/shape_docs/raw without confirmation; pass --yes or set SHAPE_CONFIRM_REMOTE=1\n"
+}
