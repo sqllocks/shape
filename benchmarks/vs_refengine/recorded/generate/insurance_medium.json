@@ -11975,7 +11975,7 @@
   "inputs": {
     "fixtures/schemas/insurance_3nf.json": "00ea14af7d85e46d55508d6e550de4140bd1b0816d5c2d182b2d20d0794ce91e"
   },
-  "recorded_utc": "2026-10-12T18:59:22Z",
+  "recorded_utc": "2026-10-13T01:47:50Z",
   "seeds": {
     "42": {
       "dataset_id": "sha256:54b4d044d5bc1c65dd04a7147e16f01196ec2ea1768dfdcd2483ef235740fcef",

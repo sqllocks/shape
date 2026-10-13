@@ -4,7 +4,7 @@
   "inputs": {
     "fixtures/schemas/capital_markets_3nf.json": "41107a78b33990d4fdb65d29928faa659f0a46b1b402a663f166035a2fdc4a2d"
   },
-  "recorded_utc": "2026-10-12T18:59:22Z",
+  "recorded_utc": "2026-10-13T01:47:50Z",
   "seeds": {
     "42": {
       "dataset_id": "sha256:4b5476c3ff8c34ca5ed0f647e2fa8c7492bc3e0e96bddf3b393e3e3b3fe4ae6c",

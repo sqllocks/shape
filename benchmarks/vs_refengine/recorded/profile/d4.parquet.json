@@ -3373,9 +3373,9 @@
         "cardinality_ratio": 0.44495,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": -0.018845539547614833,
-          "s": 0.47918743894623855,
-          "scale": 2.7072553143764484
+          "loc": -0.01884553954761354,
+          "s": 0.4791874389462388,
+          "scale": 2.7072553143764466
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -38804,9 +38804,9 @@
         "cardinality_ratio": 0.44777,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": -0.056421256697816786,
-          "s": 0.481073538582883,
-          "scale": 2.8004478749974413
+          "loc": -0.05642125669781307,
+          "s": 0.48107353858288376,
+          "scale": 2.8004478749974373
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -50650,9 +50650,9 @@
         "cardinality_ratio": 0.44687,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": -0.11486128816977546,
-          "s": 0.4855025683498685,
-          "scale": 2.8597965736250797
+          "loc": -0.11486128816977823,
+          "s": 0.485502568349868,
+          "scale": 2.8597965736250823
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -59396,9 +59396,9 @@
         "cardinality_ratio": 0.80436,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": -185.26925758253958,
-          "s": 0.025972022186179076,
-          "scale": 236.18414693415383
+          "loc": -185.26925762102994,
+          "s": 0.02597202218194504,
+          "scale": 236.18414697265735
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -62556,9 +62556,9 @@
         "cardinality_ratio": 0.44643,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": -0.007047974532646339,
+          "loc": -0.00704797453264615,
           "s": 0.5048509651795792,
-          "scale": 2.7725141356662797
+          "scale": 2.7725141356662792
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -74470,7 +74470,7 @@
         "distribution_params": {
           "loc": 0.011010380274093947,
           "s": 0.5049827087430344,
-          "scale": 2.6876564423062153
+          "scale": 2.687656442306215
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -98428,7 +98428,7 @@
         "distribution_params": {
           "loc": 0.06917179265904569,
           "s": 0.5201022021425605,
-          "scale": 2.609769054418896
+          "scale": 2.6097690544188956
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -107260,9 +107260,9 @@
         "cardinality_ratio": 0.87365,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": -321.88969255253136,
-          "s": 0.024208617493645824,
-          "scale": 412.54137550486627
+          "loc": -321.8896927575218,
+          "s": 0.024208617481613112,
+          "scale": 412.5413757099172
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -110420,9 +110420,9 @@
         "cardinality_ratio": 0.44873,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": 0.0618563382049388,
-          "s": 0.516884917215287,
-          "scale": 2.6907796604268466
+          "loc": 0.061856338204940464,
+          "s": 0.5168849172152873,
+          "scale": 2.690779660426845
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -122473,9 +122473,9 @@
         "cardinality_ratio": 0.44655,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": 0.08360648528474734,
-          "s": 0.5141205207681252,
-          "scale": 2.634813934219373
+          "loc": 0.0836064852847446,
+          "s": 0.5141205207681245,
+          "scale": 2.634813934219376
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -131375,9 +131375,9 @@
         "cardinality_ratio": 0.89479,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": -234.43965610847727,
-          "s": 0.03531394687230609,
-          "scale": 345.37563767148595
+          "loc": -234.43965611835873,
+          "s": 0.03531394687129512,
+          "scale": 345.3756376813736
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -143498,9 +143498,9 @@
         "cardinality_ratio": 0.9001,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": -406.34727903774154,
-          "s": 0.02468894892666127,
-          "scale": 527.4958232725667
+          "loc": -406.3472790727719,
+          "s": 0.024688948925021197,
+          "scale": 527.4958233076076
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -146658,9 +146658,9 @@
         "cardinality_ratio": 0.44634,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": 0.051061523783599023,
-          "s": 0.5134214743604268,
-          "scale": 2.65670642900499
+          "loc": 0.05106152378359962,
+          "s": 0.513421474360427,
+          "scale": 2.6567064290049895
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -158789,9 +158789,9 @@
         "cardinality_ratio": 0.44715,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": 0.011722743777961984,
-          "s": 0.5027299218721053,
-          "scale": 2.700360135550067
+          "loc": 0.011722743777966903,
+          "s": 0.5027299218721064,
+          "scale": 2.7003601355500617
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -170979,9 +170979,9 @@
         "cardinality_ratio": 0.44726,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": 0.04110482884516519,
-          "s": 0.5164489237336014,
-          "scale": 2.6463866236164333
+          "loc": 0.04110482884517001,
+          "s": 0.5164489237336024,
+          "scale": 2.6463866236164275
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -183178,9 +183178,9 @@
         "cardinality_ratio": 0.44604,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": 0.006199648055365696,
-          "s": 0.502289387956896,
-          "scale": 2.7014904307246317
+          "loc": 0.006199648055365508,
+          "s": 0.5022893879568959,
+          "scale": 2.701490430724632
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -195383,9 +195383,9 @@
         "cardinality_ratio": 0.44727,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": 0.11061326529185848,
-          "s": 0.5304171293919465,
-          "scale": 2.6174131993656937
+          "loc": 0.11061326529185962,
+          "s": 0.5304171293919469,
+          "scale": 2.6174131993656924
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -207651,9 +207651,9 @@
         "cardinality_ratio": 0.44657,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": -0.22776358247482623,
-          "s": 0.4613384548508121,
-          "scale": 2.9179070752085865
+          "loc": -0.22776358247481923,
+          "s": 0.4613384548508134,
+          "scale": 2.9179070752085794
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -219925,9 +219925,9 @@
         "cardinality_ratio": 0.44489,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": -0.013581036523491545,
-          "s": 0.4975175466365003,
-          "scale": 2.7004661877485074
+          "loc": -0.013581036523490821,
+          "s": 0.49751754663650044,
+          "scale": 2.7004661877485066
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -229103,9 +229103,9 @@
         "cardinality_ratio": 0.93357,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": -654.6910174429983,
-          "s": 0.023257857134464287,
-          "scale": 846.061699899817
+          "loc": -654.691017192532,
+          "s": 0.023257857141351354,
+          "scale": 846.061699649283
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -261445,7 +261445,7 @@
     ],
     "row_count": 100000
   },
-  "recorded_utc": "2026-10-12T18:59:22Z",
+  "recorded_utc": "2026-10-13T01:47:50Z",
   "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
   "shape_version": "0.9.1",
   "version": 1,

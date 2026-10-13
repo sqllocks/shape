@@ -12040,7 +12040,7 @@
   "inputs": {
     "fixtures/schemas/supply_chain_3nf.json": "7bef5b73619b7823a07b17bc23bfd4f0d5064226ad844ed00fc3e9a12932d24c"
   },
-  "recorded_utc": "2026-10-12T18:59:22Z",
+  "recorded_utc": "2026-10-13T01:47:50Z",
   "seeds": {
     "42": {
       "dataset_id": "sha256:f6c943879f81afd18af827388e0e6c7425b8435a82deaba491520e3d31930821",

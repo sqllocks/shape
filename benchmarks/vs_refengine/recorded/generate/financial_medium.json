@@ -11975,7 +11975,7 @@
   "inputs": {
     "fixtures/schemas/financial_3nf.json": "0db0fb8cbde298eeb5130720bd0400b8ed82fc2ecd3f8fd54e3640a173b3492e"
   },
-  "recorded_utc": "2026-10-12T18:59:22Z",
+  "recorded_utc": "2026-10-13T01:47:50Z",
   "seeds": {
     "42": {
       "dataset_id": "sha256:4f1c8b6c39cdaf209863b719b2a1070ce2f60752df36093b5e0ac959a6e7d130",
