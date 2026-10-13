@@ -49,6 +49,8 @@ Use [the tested starters](../TUTORIAL.md) for local commands and complete output
 
 **Needs a Fabric account. Not run in CI.**
 
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers.
+
 ```
 shape publish retail -t lakehouse --base-path onelake://MyWorkspace/MyLakehouse/Files
 shape publish retail -t sql-database --connection-string env://SHAPE_SQL_CONNECTION
@@ -56,7 +58,135 @@ shape publish retail -t warehouse --connection-string env://WH --staging-path on
 shape publish retail -t eventhouse --connection-string https://<query-uri-host> --database mydb
 ```
 
-<!-- owner: Fabric maintainer — supply the transcript for docs/plugins/fabric-commands.md example 0. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Shape v0.9.1 — Publishing retail → lakehouse
+    Scale: small | Seed: 42 | Format: parquet
+    
+    Generating data...
+    table                                 rows  columns
+    ---------------------------------------------------
+    customer                             1,000        8
+    product_category                        50        4
+    promotion                              200        6
+    store                                  150        5
+    address                              1,500       10
+    product                                500        6
+    order                                5,000        8
+    order_line                          12,500        8
+    return                                 850        5
+    ---------------------------------------------------
+    TOTAL                               21,750
+    
+    Publishing to Lakehouse (parquet)...
+      customer: 1,000 rows → onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/customer/dt=latest/part-0001.parquet
+      product_category: 50 rows → onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/product_category/dt=latest/part-0001.parquet
+      promotion: 200 rows → onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/promotion/dt=latest/part-0001.parquet
+      store: 150 rows → onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/store/dt=latest/part-0001.parquet
+      address: 1,500 rows → onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/address/dt=latest/part-0001.parquet
+      product: 500 rows → onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/product/dt=latest/part-0001.parquet
+      order: 5,000 rows → onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/order/dt=latest/part-0001.parquet
+      order_line: 12,500 rows → onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/order_line/dt=latest/part-0001.parquet
+      return: 850 rows → onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/return/dt=latest/part-0001.parquet
+    
+    Published 9 tables to lakehouse.
+    Manifest: onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/manifest/_control/run_manifest.json
+    
+    Publish complete.
+    Shape v0.9.1 — Publishing retail → sql-database
+    Scale: small | Seed: 42 | Format: parquet
+    
+    Generating data...
+    table                                 rows  columns
+    ---------------------------------------------------
+    customer                             1,000        8
+    product_category                        50        4
+    promotion                              200        6
+    store                                  150        5
+    address                              1,500       10
+    product                                500        6
+    order                                5,000        8
+    order_line                          12,500        8
+    return                                 850        5
+    ---------------------------------------------------
+    TOTAL                               21,750
+    
+    Publishing to SQL Database (auth=cli)...
+      customer: 1,000 rows
+      product_category: 50 rows
+      promotion: 200 rows
+      store: 150 rows
+      address: 1,500 rows
+      product: 500 rows
+      order: 5,000 rows
+      order_line: 12,500 rows
+      return: 850 rows
+    
+    Publish complete.
+    Shape v0.9.1 — Publishing retail → warehouse
+    Scale: small | Seed: 42 | Format: parquet
+    
+    Generating data...
+    table                                 rows  columns
+    ---------------------------------------------------
+    customer                             1,000        8
+    product_category                        50        4
+    promotion                              200        6
+    store                                  150        5
+    address                              1,500       10
+    product                                500        6
+    order                                5,000        8
+    order_line                          12,500        8
+    return                                 850        5
+    ---------------------------------------------------
+    TOTAL                               21,750
+    
+    Publishing to Warehouse (auth=cli)...
+      customer: 1,000 rows
+      product_category: 50 rows
+      promotion: 200 rows
+      store: 150 rows
+      address: 1,500 rows
+      product: 500 rows
+      order: 5,000 rows
+      order_line: 12,500 rows
+      return: 850 rows
+    
+    Publish complete.
+    Shape v0.9.1 — Publishing retail → eventhouse
+    Scale: small | Seed: 42 | Format: parquet
+    
+    Generating data...
+    table                                 rows  columns
+    ---------------------------------------------------
+    customer                             1,000        8
+    product_category                        50        4
+    promotion                              200        6
+    store                                  150        5
+    address                              1,500       10
+    product                                500        6
+    order                                5,000        8
+    order_line                          12,500        8
+    return                                 850        5
+    ---------------------------------------------------
+    TOTAL                               21,750
+    
+    Publishing to Eventhouse (shape_eh)...
+      customer: 1,000 rows
+      product_category: 50 rows
+      promotion: 200 rows
+      store: 150 rows
+      address: 1,500 rows
+      product: 500 rows
+      order: 5,000 rows
+      order_line: 12,500 rows
+      return: 850 rows
+    
+    Publish complete.
+    ```
+
+Evidence: [run 38400931371, ubuntu-latest, `c37ff1b1dadb`](../evidence/transcripts/docs-transcripts-38400931371-c37ff1b1dadb-ubuntu-latest-publish-targets.json).
 
 
 `DOMAIN` is a domain or a generation schema file. `-s/--scale`, `--seed`, `-m/--mode 3nf|star` as in
@@ -87,12 +217,34 @@ Use [the tested starters](../TUTORIAL.md) for local commands and complete output
 
 **Needs a Fabric account. Not run in CI.**
 
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers.
+
 ```
 shape notebook retail --target lakehouse -o retail.ipynb      # or print the JSON: no -o
 shape deploy-notebook retail --workspace "Demo" --auth cli
 ```
 
-<!-- owner: Fabric maintainer — supply the transcript for docs/plugins/fabric-commands.md example 1. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Shape v0.9.1 — Notebook Generated
+      Domain: retail
+      Scale:  small
+      Target: lakehouse
+      Cells:  5
+      Output: retail.ipynb
+    Shape v0.9.1 — Deploy Notebook
+      Domain:    retail
+      Workspace: Demo
+      Name:      Shape_retail_small
+    
+      Notebook created: Shape_retail_small
+      Item ID: <guid>
+    
+    Open the notebook in Fabric and click Run All to generate data.
+    ```
+
+Evidence: [run 38400931371, ubuntu-latest, `c37ff1b1dadb`](../evidence/transcripts/docs-transcripts-38400931371-c37ff1b1dadb-ubuntu-latest-notebook-deploy.json).
 
 
 The notebook installs Shape, generates the domain with `shape.generate`, checks foreign keys and
