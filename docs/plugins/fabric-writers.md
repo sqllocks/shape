@@ -158,7 +158,32 @@ shape generate retail --to synapse://myws.sql.azuresynapse.net/pool1 \
 refusal from the pool fails the write and a table this call created is dropped. A primary key is
 declared `NONCLUSTERED ... NOT ENFORCED` (the pool does not enforce keys). Column types are the
 Warehouse's (`VARCHAR(8000)`, `DATETIME2(6)`, `BIT`, ...; no `(N)VARCHAR(MAX)`, which a clustered
-columnstore index cannot hold), and timestamps are staged in microseconds in UTC.
+columnstore index cannot hold), and timestamps are written in UTC with microsecond precision (see
+**Dedicated-pool behaviour** below for how they are staged).
+
+**Dedicated-pool behaviour.** A dedicated pool differs from SQL Server and the Fabric Warehouse in
+four ways that the writer already handles; they matter when you read the pool's errors or compare
+what you wrote with what you read back. They were found by running `test_synapse_round_trip`
+against a live pool.
+
+- **Table DDL runs outside a transaction.** The pool refuses `CREATE TABLE` and `DROP TABLE` inside
+  one with error 111212 ("Operation cannot be performed within a transaction"), so the writer sends
+  them in autocommit. A `replace` therefore drops and re-creates the table before the load: a
+  failed load cannot bring the old table back.
+- **No `DROP TABLE IF EXISTS`.** The pool does not parse it (error 103010). After a failed load the
+  writer looks the table up in the catalog and drops it only if it is there. If you clean up by
+  hand, use `IF OBJECT_ID(N'[dbo].[t]', N'U') IS NOT NULL DROP TABLE [dbo].[t]`.
+- **Timestamps are staged as Parquet INT96.** `COPY INTO` into a dedicated pool cannot read Parquet
+  `INT64` timestamps with microsecond or nanosecond precision (it fails with
+  `ClassCastException: Long cannot be cast to Binary`). INT96 loads into `datetime2` with the
+  microseconds intact
+  ([data loading strategies](https://learn.microsoft.com/azure/synapse-analytics/sql-data-warehouse/design-elt-data-loading#3-prepare-the-data-for-loading)).
+- **`NaN` and `±Infinity` are read back as `NULL`.** A T-SQL `float` holds only finite values, and
+  the writers (Warehouse, SQL database and Synapse) store a non-finite float as `NULL` before
+  anything reaches the pool. In the live test the generated `score` column had `NaN` in 11 rows
+  (every fourth row, 0 to 40); each came back `NULL`, and no other cell differed (run
+  38312820840). A row-for-row comparison of a float column must treat `NaN` and `NULL` as the same
+  cell. See [sinks](../SINKS.md) and [known limitations](../KNOWN_LIMITATIONS.md).
 
 **Sign-in** is the plugin's `--auth` modes ([fabric-auth](fabric-auth.md)): `cli`, `msi`, `spn`,
 `device-code` and `fabric` send a Microsoft Entra token for the SQL connection and for the storage;
