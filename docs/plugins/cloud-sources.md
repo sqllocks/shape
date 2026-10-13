@@ -119,6 +119,15 @@ relationships (see [fabric-commands.md](fabric-commands.md)).
 | `max_rows` | read at most this many rows, as a DAX `TOPN` through `evaluate_dax`; `0` reads none |
 | `mode` | sempy's read mode (`xmla` or `onelake`), where this `sempy` has one; not with `max_rows` |
 
+Outside a Fabric notebook, `sempy` can sign in as a service principal with
+`sempy.fabric.set_service_principal` (semantic-link 0.12 or later; see
+[Service principal support for semantic link](https://learn.microsoft.com/fabric/data-science/semantic-link-service-principal-support)).
+The lookup lists the workspace's models; when the default listing does not hold the model, it tries
+the REST listing (`list_datasets(mode="rest")`), the one Microsoft documents for service
+principals, and when neither lists it the error is "workspace W has no semantic model M" and a log
+warning names what each listing returned. The model name is compared exactly: a trailing space in
+a configured name does not match.
+
 `schema(uri)` is built from the model's column metadata (`sempy.fabric.list_columns`) and reads no
 rows. Hidden columns are included. Measures are not columns and are not read.
 

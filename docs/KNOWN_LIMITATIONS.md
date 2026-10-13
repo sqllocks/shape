@@ -40,16 +40,17 @@ The 1.x compatibility promises describe future policy.
   `ClassCastException: Long cannot be cast to Binary`); INT96 loads into `datetime2` with the
   microseconds intact
   ([data loading strategies](https://learn.microsoft.com/azure/synapse-analytics/sql-data-warehouse/design-elt-data-loading#3-prepare-the-data-for-loading)).
-
-- Fabric Warehouse rejects the inline `PRIMARY KEY` emitted by 0.9.1 with error 24584.
-  Workaround: create the destination tables yourself without inline keys, optionally add
-  `ALTER TABLE ... ADD CONSTRAINT ... PRIMARY KEY NONCLUSTERED (...) NOT ENFORCED`, then
-  write with `--write-mode append`. A fix is in progress.
-- Schema-enabled Lakehouses require `Tables/<schema>/<table>` (normally `dbo`), whereas
-  0.9.1's Delta target appends a table directly below the supplied directory. Workaround:
-  target a URI ending in `Tables/dbo` or another existing schema, rather than `Tables`.
-  Read back with `onelake://<workspace>/<lakehouse>/Tables/dbo/<table>`. Files landing zones
-  are unaffected. A fix is in progress.
+- 0.9.1 emitted the Warehouse primary key inside `CREATE TABLE`, which a Fabric Warehouse rejects
+  with error 24584. Fixed after 0.9.1: the key is added by a separate
+  `ALTER TABLE ... ADD CONSTRAINT ... PRIMARY KEY NONCLUSTERED (...) NOT ENFORCED` after the table is
+  created. On 0.9.1, create the destination tables yourself without inline keys, optionally add that
+  `ALTER TABLE`, and write with `--write-mode append`.
+- 0.9.1's Delta target appended a table directly below the supplied directory, but a schema-enabled
+  Lakehouse requires `Tables/<schema>/<table>` (normally `dbo`). Fixed after 0.9.1: the Delta
+  target takes `schema_enabled=true` and writes `Tables/<schema>/<table>`, with `dbo` as the default
+  schema, and the Spark worker and demo take `--lakehouse-schema`. On 0.9.1, target a URI ending in
+  `Tables/dbo` or another existing schema. Read back with
+  `onelake://<workspace>/<lakehouse>/Tables/dbo/<table>`. Files landing zones are unaffected.
 - **Fabric Warehouse `COPY INTO` can fall back to row-by-row `INSERT`.** Shape stages Parquet in
   OneLake and loads it with `COPY INTO`. When the Warehouse answers SQL error 13840 ("Access token
   couldn't be fetched for storage path"), it rolls back the statement, reapplies an uncommitted

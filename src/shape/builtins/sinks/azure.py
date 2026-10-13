@@ -30,6 +30,7 @@ import os
 import re
 import threading
 from collections.abc import Iterable, Mapping
+from pathlib import PurePosixPath
 from typing import Any
 from urllib.parse import unquote
 
@@ -193,7 +194,22 @@ class AbfssSink:
                 return
         where = f"abfss://{loc.container}@{loc.host}"
         try:
-            found = bool(fs.isdir(f"{loc.container}/{item}"))
+            # Any call on the item folder is a HEAD (adlfs checks that a path exists before it lists
+            # it), and OneLake refuses a HEAD on a Fabric-managed folder (the item, its Files and
+            # Tables) with OperationNotAllowedOnThePath. It allows HEAD on the workspace, so the
+            # workspace is listed and the item looked up by name. A listing shows names, not GUIDs:
+            # an item given by GUID is not checked here, and its first write reports it if absent.
+            if _GUID.match(item):
+                found = True
+            else:
+                try:
+                    listed = {
+                        PurePosixPath(str(name).strip("/")).name.lower()
+                        for name in fs.ls(loc.container, detail=False)
+                    }
+                except FileNotFoundError:
+                    listed = set()
+                found = item.lower() in listed
         except Exception as exc:
             translated = translate_error(exc, where)
             if translated is None:
