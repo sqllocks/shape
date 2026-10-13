@@ -627,7 +627,6 @@ CASES.update(
             range_ref="model.date_range",
             model_date_range={"start": "2021-05-01", "end": "2022-04-30"},
         ),
-        "temporal/unknown_pattern": _temporal("weekly", start="2022-01-01", end="2022-12-31"),
         "temporal/seasonal_month": _temporal(
             "seasonal", start="2022-01-01", end="2025-12-31", profiles={"month": _MONTHS_W}
         ),

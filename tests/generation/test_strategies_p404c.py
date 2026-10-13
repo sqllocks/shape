@@ -674,6 +674,8 @@ def test_temporal_empty_bucket_probability_is_spread_over_the_range():
     ("spec", "message"),
     [
         ({"start": "not a date"}, "start 'not a date' is not an ISO date"),
+        # the baseline draws an unknown pattern uniformly; Shape refuses it
+        ({"pattern": "weekly"}, "'pattern' must be one of uniform, seasonal, not 'weekly'"),
         ({"start": "2023-05-02", "end": "2023-05-01"}, "is before the start"),
         ({"start": "2023-05-01T08:00", "end": "2023-05-01T08:00"}, "end equals the start"),
         (

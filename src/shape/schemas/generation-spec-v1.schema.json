@@ -2685,6 +2685,7 @@
           "then": {
             "type": "object",
             "properties": {
+              "calendar": {},
               "date_range": {},
               "day_of_week_weights": {},
               "end": {},

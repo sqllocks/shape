@@ -113,8 +113,9 @@ def _children(key: str) -> list[str]:
 
 
 def _expected_differences(key: str) -> set[str]:
-    """Exactly what differs from the baseline's merged schema (``allowlist.py``), plus the one
-    schema override a domain carries on its own (capital_markets ``industry_name``, P6-01a)."""
+    """Exactly what differs from the baseline's merged schema (``allowlist.py``), plus the
+    overrides a domain carries on its own (``export_domains.OVERRIDES`` and ``DESCRIPTIONS``:
+    capital_markets ``industry_name``, P6-01a, and its trading-day ``trade_date``)."""
     out: set[str] = set()
     for table, column in allowlist.extra_columns(key).items():
         out.add(f"column {table}.{column}")
@@ -122,8 +123,13 @@ def _expected_differences(key: str) -> set[str]:
         out.add(f"relationship column {table}.{column}")
     for table, column in allowlist.renamed(key):
         out.add(f"generator {table}.{column}")
-    if "capital_markets" in _children(key):
-        out.add("generator capital_markets_industry.industry_name")
+    children = _children(key)
+    for domain, table, column in export_domains.OVERRIDES:
+        if domain in children:
+            out.add(f"generator {domain}_{table}.{column}")
+    for domain, table in export_domains.DESCRIPTIONS:
+        if domain in children:
+            out.add(f"description {domain}_{table}")
     return out
 
 
@@ -135,7 +141,8 @@ def _differences(mine: dict, base: dict) -> set[str]:
     for table, t in mine["tables"].items():
         b = base["tables"][table]
         assert t["primary_key"] == b["primary_key"], table
-        assert t["description"] == b["description"], table
+        if t["description"] != b["description"]:
+            out.add(f"description {table}")
         for column in set(t["columns"]) | set(b["columns"]):
             if column not in b["columns"]:
                 out.add(f"column {table}.{column}")
