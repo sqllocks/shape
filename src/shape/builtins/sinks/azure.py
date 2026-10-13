@@ -193,7 +193,13 @@ class AbfssSink:
                 return
         where = f"abfss://{loc.container}@{loc.host}"
         try:
-            found = bool(fs.isdir(f"{loc.container}/{item}"))
+            # List the item; do not probe it. OneLake refuses a HEAD on a Fabric-managed folder
+            # (the item folder, its Files and Tables) with OperationNotAllowedOnThePath, but
+            # allows read-only listings of it (OneLake API parity with Azure Storage).
+            try:
+                found = bool(fs.ls(f"{loc.container}/{item}", detail=False))
+            except FileNotFoundError:
+                found = False
         except Exception as exc:
             translated = translate_error(exc, where)
             if translated is None:
