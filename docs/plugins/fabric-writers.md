@@ -14,6 +14,18 @@ back its table (a `truncate` or `replace` keeps the old rows), and staged files 
 
 The `onelake://<workspace>/<lakehouse>/Tables/<table>` form reads a Delta table and
 `.../Files/<path>` reads files, through the core `abfss://` source (see [cloud-sources.md](cloud-sources.md)).
+For a schema-enabled Lakehouse, read `.../Tables/<schema>/<table>` instead. The `lakehouse`
+writer and `shape publish -t lakehouse` write a Files landing zone; they do not register managed
+Lakehouse tables. Use the Delta sink with the [appropriate table layout](cloud-sources.md#lakehouse-table-layouts)
+or load the landing files in Fabric. Notebook deployment also generates Parquet under Files.
+For Spark generation, use `--lakehouse-schema dbo`; for Demo Spark, store that option with
+`shape demo init`. Both omit the schema component for classic Lakehouses.
+
+Warehouse and Synapse primary keys are informational: table creation is followed by
+`ALTER TABLE ... ADD CONSTRAINT ... PRIMARY KEY NONCLUSTERED (...) NOT ENFORCED` in the same
+DDL batch. SQL Server and Azure SQL keep their enforced inline keys. Staging upload and
+cleanup use one cached filesystem with the same credential, including after a failed load;
+an unrelated ambient storage key cannot replace an explicit identity.
 
 ## `mssql://`: a live SQL Server, Azure SQL or Fabric SQL sink
 
@@ -85,6 +97,27 @@ should go on a command line (use an environment variable and pass it as an optio
 modes and `env://`, `kv://` and `file://` credential references are added to these writers by the
 sign-in work package and will apply here without a change to the sink.
 
+## Warehouse OneLake storage-token failures
+
+Warehouse `COPY INTO` reads OneLake under the SQL connection's Microsoft Entra
+identity by default. Shape's client-side credential uploads the staging files;
+it cannot supply a storage token to the Warehouse's server-side reader.
+Microsoft documents GUID-based OneLake source URLs and the permissions needed
+for Microsoft Entra or an explicitly configured Workspace Identity. A Workspace
+Identity is a separate Fabric configuration, so Shape does not switch to it
+automatically. See [the Fabric COPY authentication requirements](https://learn.microsoft.com/en-us/sql/t-sql/statements/copy-into-transact-sql?view=fabric).
+
+When the Warehouse reports SQL error **13840** while obtaining the OneLake
+storage token, Shape warns and loads the already staged Parquet through
+parameterized SQL `INSERT` on the existing connection. This path consumes at most
+5,000 rows per batch and has lower throughput than `COPY INTO`. Shape rolls back
+the failed COPY transaction, reapplies an uncommitted truncate or replace,
+verifies the number of rows loaded, and removes staging files on success or
+failure. Primary keys retain their informational Warehouse behavior. Other COPY
+errors fail the write; they do not activate this recovery path. A service
+principal still needs permission to write the Warehouse and read and write the
+staging Lakehouse.
+
 ## `synapse://`: a Synapse dedicated SQL pool
 
 `synapse` (`shape.sinks`, `shape_fabric.SynapseSink`; the writer is `shape_fabric.SynapseWriter`)
@@ -141,3 +174,84 @@ removal that itself fails is a `RuntimeWarning`).
 
 Out of scope: serverless SQL pools, Synapse Spark pools and Synapse pipelines (those are
 `integrations/synapse`).
+
+## Time limits
+
+Every SQL connection the Fabric writers open (`SqlDatabaseWriter`, `WarehouseWriter`,
+`SynapseWriter`) gives each statement a deadline, so a stalled load fails with the driver's timeout
+message instead of waiting for ever. `SHAPE_SQL_QUERY_TIMEOUT` sets it in seconds (default 900).
+`SHAPE_SQL_QUERY_TIMEOUT` does **not** cover `shape profile-db`, which connects through the SQL
+Server plugin (see [sqlserver.md](sqlserver.md)).
+
+When `COPY INTO` fails with error 13840 and the Warehouse writer falls back to parameterized
+`INSERT` (see [Known limitations](../KNOWN_LIMITATIONS.md)), one table may spend at most
+`SHAPE_WAREHOUSE_INSERT_SECONDS` seconds there (default 600). A larger table stops with an error
+that names the cause and the rows already sent, and the write is rolled back.
+
+## Unattended live tests
+
+Run `pytest -m live plugins/shape-fabric/tests/test_live_owner_matrix.py` for the Owner matrix,
+and the other `test_live*.py` modules for emitters, deployed notebooks and scale routing.
+Missing credentials fail with the variable name (P6-07a and LIVE-FIX #15). Service errors and failed assertions fail;
+these tests never use interactive sign-in or xfail. Local contract tests do not replace this
+live validation.
+
+Set `FABRIC_TENANT_ID`, `FABRIC_CLIENT_ID` and `FABRIC_CLIENT_SECRET` for a service principal
+in the target tenant. Grant it access to each target workspace/item, OneLake read/write/delete
+permissions, and SQL permissions to create, load, read and drop the test tables and schemas.
+Use dedicated test items: the tests create unique names and remove what they create.
+
+| Cases | Additional variables |
+|---|---|
+| Classic Lakehouse Delta, Files, prefix and `onelake://` read-back | `FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH=onelake://<workspace>/<lakehouse>/Tables` |
+| Schema-enabled Lakehouse Delta, Files, prefix and read-back | `FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH` in the same root form; `FABRIC_LAKEHOUSE_SCHEMA` names an existing schema (default `dbo`) |
+| Warehouse COPY with/without keys, failed-load cleanup, publish | `FABRIC_WAREHOUSE_CONNECTION_STRING` (ODBC, no password), `FABRIC_STAGING_PATH` (OneLake Files folder) |
+| Fabric SQL database write and `profile-db` | `FABRIC_SQL_CONNECTION_STRING` (ODBC, no password) |
+| `profile-db` on the sample Warehouse | `FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING`; optional `FABRIC_SAMPLE_WAREHOUSE_SCHEMA` (default `dbo`) |
+| Publish to Lakehouse Files | `FABRIC_STAGING_PATH`, in `test_live_commands.py`; Files layout is independent of Lakehouse schemas |
+| Eventhouse emit and ingestion/read-back | `FABRIC_EVENTHOUSE_URI`, `FABRIC_EVENTHOUSE_TOKEN` for the existing token tests; the token must grant ingestion, query and table management |
+| Eventstream emit/write | `FABRIC_EVENTSTREAM_CONNECTION_STRING` for its custom Event Hubs-compatible endpoint; the endpoint connection string replaces SPN authentication |
+| Notebook deploy and setup | `FABRIC_WORKSPACE_ID`, plus the common SPN variables, in `test_live_commands.py` |
+| Spark worker | `FABRIC_WORKSPACE_ID`, `FABRIC_LAKEHOUSE_ID`, plus common SPN variables; set `FABRIC_LAKEHOUSE_SCHEMA` when the test Lakehouse has schemas enabled |
+| Synapse dedicated-pool round trip | `SHAPE_TEST_SYNAPSE_URI`, `SHAPE_TEST_SYNAPSE_STAGING`, `SHAPE_TEST_SYNAPSE_AUTH=spn`, `SHAPE_TEST_SYNAPSE_TENANT_ID`, `SHAPE_TEST_SYNAPSE_CLIENT_ID`, `SHAPE_TEST_SYNAPSE_CLIENT_SECRET` |
+
+### The `fabric-live` workflow
+
+`.github/workflows/fabric-live.yml` runs these tests nightly and on demand
+(`gh workflow run fabric-live.yml -f ref=<branch>`), as the service principal `shape-ci-fabric`, with
+the values held by the `fabric-live` environment. Each test is printed as it starts, a test that
+stays 10 minutes dumps every thread's stack, the step is capped at 50 minutes, and a failed test
+prints its failure at once. After the tests the run lists the items left in the workspace and, for
+the Git workspace, Fabric's answers to `git/connection`, `git/status` and `git/myGitCredentials`
+(read-only). Two dispatch inputs, both off by default, do one-time setup:
+
+| Input | What it does |
+|---|---|
+| `set_git_credentials` | As the service principal, sets its own Git credentials on the Git workspace (`FABRIC_GIT_WORKSPACE_ID`) to the existing GitHub connection `shape-fabric-sync-gh`: `PATCH .../git/myGitCredentials` with `ConfiguredConnection`. It reads the credentials first and changes nothing when they already point at that connection. It prints only the source and the connection id. Timeout: 5 minutes. |
+| `delete_leftover_notebooks` | Lists the Notebook items of the test workspace with their ids, then deletes only those named `shape_live_nb_` plus 8 hex digits (what the deploy-notebook test names its notebook). Nothing else is deleted. Timeout: 5 minutes. |
+
+Only one run waits behind a running one: dispatch a run when none is pending.
+
+The Owner matrix needs two distinct Lakehouse items and a sample Warehouse:
+
+- `FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH` is the root Tables URI of a **classic,
+  schema-less Lakehouse**, for example
+  `onelake://<workspace-guid>/<classic-lakehouse-guid>/Tables`.
+- `FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH` is the root Tables URI of a **schema-enabled
+  Lakehouse**, for example `onelake://<workspace-guid>/<schema-lakehouse-guid>/Tables`.
+  Do not append `/dbo` or a table name. The matrix selects `dbo`, or the existing
+  schema named by `FABRIC_LAKEHOUSE_SCHEMA`, when writing and reading its tables.
+- `FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING` names a **Fabric Warehouse containing
+  sample tables**, for example
+  `Data Source=<sql-endpoint>.datawarehouse.fabric.microsoft.com;Initial Catalog=<sample-warehouse-name>`.
+  Copy the SQL endpoint host from that Warehouse's settings. Do not include a
+  password, `UID` or `Authentication`: the common service-principal variables
+  provide the token. The Microsoft ODBC Driver 18 must be installed; Shape adds
+  the driver when it is absent from the string. The matrix profiles `dbo`, or
+  `FABRIC_SAMPLE_WAREHOUSE_SCHEMA` if set. Grant the principal permission to read
+  its tables and catalog metadata.
+
+`profile-db` receives its connection and secret through `SHAPE_SQLSERVER_CONNECTION_STRING`
+and `SHAPE_SQLSERVER_CLIENT_SECRET`; the matrix sets these from the Fabric variables for each
+test. No secret is placed in argv. `SHAPE_RECORD_DIR` optionally records scrubbed live tapes
+in the existing writer/command tests. Do not commit unreviewed live recordings.

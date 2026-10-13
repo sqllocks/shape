@@ -26,6 +26,7 @@ from shape_fabric import _tsql, commands
 from shape_fabric._storage import Storage
 from shape_fabric.fabric_api import FabricApi, tuple_transport
 from shape_fabric.recording import Tape, TapeTransport, save
+from shape_fabric.testing import remove_item
 
 from shape.cli.main import main
 
@@ -35,7 +36,8 @@ RECORD = os.environ.get("SHAPE_RECORD_DIR")
 
 def need(name):
     value = os.environ.get(name)
-    assert value, f"{name} is not set (live tests need it)"
+    if not value:
+        pytest.fail(f"live test needs {name}")
     return value
 
 
@@ -72,7 +74,7 @@ def real_api():
 
 
 @pytest.fixture
-def conversation(monkeypatch):
+def conversation(monkeypatch, request):
     """The real Fabric REST API, recorded when SHAPE_RECORD_DIR is set."""
     if not RECORD:
         yield None
@@ -86,7 +88,7 @@ def conversation(monkeypatch):
     tape = Tape(channel="http", scenario="live_commands")
     monkeypatch.setattr(commands, "API_TRANSPORT", tuple_transport(TapeTransport(tape, inner)))
     yield tape
-    save(Path(RECORD) / "live_commands.json", tape.document("live", None))
+    save(Path(RECORD) / f"live_commands_{request.node.name}.json", tape.document("live", None))
 
 
 def test_deploy_notebook_creates_a_notebook_item_and_it_can_be_removed(conversation, capsys):
@@ -98,14 +100,13 @@ def test_deploy_notebook_creates_a_notebook_item_and_it_can_be_removed(conversat
             ["deploy-notebook", "retail", "--workspace", workspace, "--notebook-name", name]
             + sign_in()
         )
-        out = capsys.readouterr().out
-        assert code == 0, out
+        captured = capsys.readouterr()
+        out = captured.out
+        assert code == 0, out + captured.err
         item = api.find_item(workspace, "Notebook", name)
         assert item is not None and item["id"] in out
     finally:
-        found = api.find_item(workspace, "Notebook", name)
-        if found:
-            api.delete_item(workspace, found["id"])
+        remove_item(api, workspace, "Notebook", name)
 
 
 def test_setup_creates_an_environment_and_a_second_run_finds_it(conversation, capsys):
@@ -119,9 +120,7 @@ def test_setup_creates_an_environment_and_a_second_run_finds_it(conversation, ca
         assert main(args) == 0
         assert "Found existing Environment" in capsys.readouterr().out
     finally:
-        found = api.find_item(workspace, "Environment", name)
-        if found:
-            api.delete_item(workspace, found["id"])
+        remove_item(api, workspace, "Environment", name)
 
 
 def test_publish_to_a_lakehouse_writes_the_landing_zone_and_the_manifest(capsys):

@@ -289,6 +289,20 @@ the policy.
   golden records; `shape resolve synth FILE -o OUT` plants seeded duplicates and writes the true
   clusters. See [RESOLVE.md](RESOLVE.md). Bad options or an unreadable file exit 2.
 
+## Cloud and Fabric options
+
+Three options reach cloud destinations and sources. Their help text, as `shape --help` prints it:
+
+| Option | Where | Help text |
+|---|---|---|
+| `--source-config KEY=REF` | before or after any command; repeatable | Azure readers: `token`, `account_key`, `sas_token` or `connection_string` from `env://`, `file://` or `kv://` |
+| `--lakehouse-schema NAME` | `shape generate` (with `--scale-mode fabric_spark`) and `shape demo init` | fabric_spark: schema-enabled Lakehouse schema (for example `dbo`); omitted for classic Lakehouses |
+| `--table-prefix P` | `shape generate` | prefix of the physical destination tables (Delta, database and Fabric sinks); with `--scale-mode` it needs `fabric_spark` |
+
+`--source-config` takes only `env://`, `file://` or `kv://` references, never a literal secret, and
+each key at most once. `--lakehouse-schema` must name a schema that already exists. See
+[Fabric platform notes](FABRIC_PLATFORM.md) and [scaling](SCALE.md).
+
 ## Non-local targets and chaos input
 
 - Commands that write to a non-local target (`generate --to`, `emit`, `stream`,

@@ -107,15 +107,22 @@ def world(tmp_path, monkeypatch, capsys):
     w.fs = MemoryFS()
     w.server = FakeSqlServer(w.fs)
     w.connections = []
+    w.warehouse = False
 
     def connect(connection_string, credential=None, **kw):
         w.connections.append((connection_string, credential))
+        kw["warehouse"] = w.warehouse
         return w.server.connect(connection_string, credential, **kw)
 
     monkeypatch.setattr(_tsql, "connect", connect)
     monkeypatch.setattr("shape.builtins.sources.azure._filesystem", lambda loc, options: w.fs)
 
     def run(*argv):
+        # This fixture uses one synthetic connection string for both Fabric dialects.
+        w.warehouse = any(
+            flag in ("-t", "--target") and value == "warehouse"
+            for flag, value in zip(argv, argv[1:], strict=False)
+        )
         code = main(list(argv))
         out = capsys.readouterr()
         return code, out.out, out.err
@@ -543,3 +550,18 @@ def test_fabric_publish_warehouse_with_a_staging_path(world):
     assert sum(s.startswith("COPY INTO") for s in world.server.statements) == 2
     assert {t: len(world.server.rows("dbo", t)) for t in ROWS} == ROWS
     assert world.fs.files == {} and "Publishing to Warehouse" in out
+
+
+def test_publish_warehouse_accepts_the_driverless_fabric_portal_string(world):
+    portal = "Data Source=host.datawarehouse.fabric.microsoft.com;Initial Catalog=shape_wh"
+    code, out, err = world.run(
+        "publish", world.schema, "-t", "warehouse",
+        "--connection-string", portal,
+        "--staging-path", "onelake://Analytics/Sales/Files",
+    )  # fmt: skip
+    assert code == 0, err
+    assert world.connections
+    assert all("Driver={ODBC Driver 18 for SQL Server}" in cs for cs, _ in world.connections)
+    assert all("Database=shape_wh" in cs for cs, _ in world.connections)
+    assert {table: len(world.server.rows("dbo", table)) for table in ROWS} == ROWS
+    assert world.fs.files == {} and "Publish complete." in out

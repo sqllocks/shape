@@ -48,6 +48,14 @@ What is not covered: the wording of messages (except the deprecation warning bel
 human-readable output, the order of keys in JSON, the exact exit code within "3 and above" for a
 verdict a command did not document, and timing.
 
+## Flags added since the 1.0 surface snapshot
+
+These flags are additions, which a minor release may make (see below), and each is in the
+[cloud and Fabric options](CLI.md#cloud-and-fabric-options) table of `CLI.md`: the global
+`--source-config KEY=REF`, `--lakehouse-schema NAME` on `shape generate` (with
+`--scale-mode fabric_spark`) and `shape demo init`, and `--table-prefix P` on `shape generate`.
+A script written without them is unaffected; an option you do not pass keeps its former behaviour.
+
 ## What may change in a minor release
 
 Additions: a new command or subcommand; a new flag; a new value for a flag with choices; a new

@@ -100,3 +100,28 @@ def test_http_gives_up_after_the_retries_and_does_not_retry_a_client_error():
     with pytest.raises(HttpError, match="404"):
         Http("t", bad, sleep=lambda s: None).request("GET", "https://x")
     assert len(attempts) == 1
+
+
+def test_operation_url_polls_the_fabric_api_for_a_regional_redirect_host():
+    from shape.scale.http import FABRIC_API, operation_url
+
+    op = "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9"
+    assert operation_url(f"{FABRIC_API}/operations/{op}") == f"{FABRIC_API}/operations/{op}"
+    redirect = f"https://wabi-us-central-b-primary-redirect.analysis.windows.net/v1/operations/{op}"
+    assert operation_url(redirect) == f"{FABRIC_API}/operations/{op}"  # the token stays home
+
+
+def test_operation_url_refuses_other_hosts_and_paths():
+    from shape.scale.http import operation_url
+
+    op = "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9"
+    for url in (
+        f"https://evil.example/v1/operations/{op}",
+        f"https://analysis.windows.net.evil.example/v1/operations/{op}",
+        f"http://x.analysis.windows.net/v1/operations/{op}",
+        f"https://u@x.analysis.windows.net/v1/operations/{op}",
+        f"https://x.analysis.windows.net:8443/v1/operations/{op}",
+        "https://x.analysis.windows.net/v1/workspaces",
+        "https://x.analysis.windows.net/v1/operations/not-a-guid",
+    ):
+        assert operation_url(url) is None, url

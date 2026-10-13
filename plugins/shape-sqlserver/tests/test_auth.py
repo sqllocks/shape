@@ -191,3 +191,32 @@ def test_fabric_auth_takes_the_notebook_token(monkeypatch, module):
 def test_sql_auth_has_no_token():
     with pytest.raises(SqlServerError, match="login in the connection string"):
         auth.access_token(Credentials("sql"))
+
+
+def test_connect_turns_a_portal_connection_string_into_an_odbc_one(monkeypatch):
+    """profile-db given the Fabric portal's ADO.NET string failed with IM002 (no driver)."""
+    import sys
+    import types
+
+    seen = []
+
+    class Error(Exception):
+        pass
+
+    def connect(cs, **kw):
+        seen.append(cs)
+        return types.SimpleNamespace(add_output_converter=lambda *a: None)
+
+    monkeypatch.setitem(sys.modules, "pyodbc", types.SimpleNamespace(connect=connect, Error=Error))
+    monkeypatch.setattr("shape_sqlserver.auth.register_converters", lambda conn: None)
+    from shape_sqlserver import auth
+
+    auth.connect(
+        "Data Source=x.datawarehouse.fabric.microsoft.com;Initial Catalog=wh",
+        auth.Credentials(method="sql"),
+    )
+    assert seen[0].lower().startswith("driver={odbc driver 18 for sql server}")
+    assert "x.datawarehouse.fabric.microsoft.com" in seen[0]
+    odbc = "Driver={ODBC Driver 18 for SQL Server};Server=s;UID=u;PWD=p"
+    auth.connect(odbc, auth.Credentials(method="sql"))
+    assert seen[1] == odbc

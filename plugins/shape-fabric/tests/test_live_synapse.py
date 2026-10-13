@@ -7,7 +7,7 @@
 Signs in with the Azure CLI session (``az login``); ``SHAPE_TEST_SYNAPSE_AUTH`` names another
 ``--auth`` mode (``msi``, ``spn``, ...), with ``SHAPE_TEST_SYNAPSE_TENANT_ID``,
 ``SHAPE_TEST_SYNAPSE_CLIENT_ID`` and ``SHAPE_TEST_SYNAPSE_CLIENT_SECRET`` for a service principal.
-The test skips, naming the missing setting, when the connection settings are absent. It writes a
+The test fails, naming the missing setting, when the connection settings are absent. It writes a
 table with a unique name, reads it back, compares the row count and the dataset id
 (``shape.repro.dataset_id``) of what was written with what was read, and drops the table.
 """
@@ -29,15 +29,32 @@ pytestmark = pytest.mark.live
 def need(*names):
     missing = [n for n in names if not os.environ.get(n)]
     if missing:
-        pytest.skip(f"live test needs {', '.join(missing)}")
+        pytest.fail(f"live test needs {', '.join(missing)}")
     return [os.environ[n] for n in names]
+
+
+def credential():
+    mode = os.environ.get("SHAPE_TEST_SYNAPSE_AUTH", "cli")
+    settings = AuthSettings(mode=mode)
+    if mode == "spn":
+        tenant, client, _ = need(
+            "SHAPE_TEST_SYNAPSE_TENANT_ID",
+            "SHAPE_TEST_SYNAPSE_CLIENT_ID",
+            "SHAPE_TEST_SYNAPSE_CLIENT_SECRET",
+        )
+        reference = "env://SHAPE_TEST_SYNAPSE_CLIENT_SECRET"
+        settings = AuthSettings(
+            mode=mode,
+            tenant_id=tenant,
+            client_id=client,
+            client_secret=reference,
+        )
+    return build_credential(settings)
 
 
 def test_synapse_round_trip():
     uri, staging = need("SHAPE_TEST_SYNAPSE_URI", "SHAPE_TEST_SYNAPSE_STAGING")
-    credential = build_credential(
-        AuthSettings(mode=os.environ.get("SHAPE_TEST_SYNAPSE_AUTH", "cli"))
-    )
+    identity = credential()
     table = f"shape_live_{uuid.uuid4().hex[:8]}"
     batches = [sample_batch(0, 30), sample_batch(30, 12)]
     written = pa.Table.from_batches(batches)
@@ -45,7 +62,7 @@ def test_synapse_round_trip():
     from shape_sqlserver.sql import build_connection_string
 
     conn_string = str(build_connection_string(host, pool))
-    conn = _tsql.connect(conn_string, credential)
+    conn = _tsql.connect(conn_string, identity)
     try:
         assert (
             SynapseSink().write(
@@ -53,7 +70,7 @@ def test_synapse_round_trip():
                 table,
                 iter(batches),
                 staging_path=staging,
-                credential=credential,
+                credential=identity,
                 distribution="HASH(id)",
                 commit_rows=30,
             )

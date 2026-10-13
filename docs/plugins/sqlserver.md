@@ -193,6 +193,17 @@ split at `_` and at CamelCase boundaries: `customer_id`, `CustomerId`, `customer
 has no word boundary to split at, so it is not matched: declare the key, or use `_` or
 CamelCase.
 
+### Time ranges and zoned text
+
+Database profiling uses SQL's declared column types. A time bucket such as `18:00-18:59`
+stays text. If sampled text contains a zoned timestamp that the relationship inference cannot
+model, that column receives a `profiling_note`; its SQL type and sampled statistics are kept,
+and other columns and tables are still profiled. Unrelated catalog, permission and profiling
+errors remain failures. Ordinary file/DataFrame profiling still requires zoned text to be
+converted to a timestamp explicitly.
+
+See [Time zones and dateless text](../PROFILING_NOTES.md#time-zones-and-dateless-text).
+
 ## Read a table
 
 `mssql://` is a `shape.sources` plugin: one table as Arrow record batches.
@@ -213,6 +224,17 @@ The URI never carries a secret. Options: `connection` (an open connection, left 
 reading twice gives the same data. `datetimeoffset` arrives as UTC timestamps, `money` and
 `decimal` as `decimal128`, `uniqueidentifier` as text. A column of a user-defined alias type
 (`CREATE TYPE Amount FROM decimal(10, 2)`) is read and profiled as its base system type.
+
+## Time limits
+
+`shape profile-db` connects with a 30-second login timeout (`timeout=30`) and sets no limit on a
+statement's run time. `SHAPE_SQL_QUERY_TIMEOUT` (default 900 seconds) and
+`SHAPE_WAREHOUSE_INSERT_SECONDS` (default 600 seconds) belong to the Fabric writers and do **not**
+apply to `profile-db`; see [fabric-writers.md](fabric-writers.md#time-limits).
+
+A Fabric portal connection string (`Data Source=...;Initial Catalog=...`) is accepted: the plugin
+turns it into an ODBC string with `Driver={ODBC Driver 18 for SQL Server}`. An ODBC string, with
+or without `Driver=`, or a DSN passes through unchanged.
 
 ## For plugin authors
 

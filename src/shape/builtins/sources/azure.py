@@ -105,7 +105,11 @@ def _filesystem(loc: Location, options: Mapping[str, Any]) -> Any:
         ) from exc
     kwargs: dict[str, Any] = dict(resolved.adlfs_options or {})
     if resolved.credential is not None:
-        kwargs["credential"] = resolved.credential
+        kwargs["credential"] = (
+            auth.GuardedCredential(resolved.credential)
+            if hasattr(resolved.credential, "get_token")
+            else resolved.credential
+        )
     if "connection_string" not in kwargs:
         account = (
             options.get("account_name")
@@ -120,7 +124,9 @@ def _filesystem(loc: Location, options: Mapping[str, Any]) -> Any:
         kwargs["account_name"] = account
         if loc.host and not loc.host.endswith(_ADLS_SUFFIX):  # OneLake and sovereign clouds
             kwargs["account_host"] = loc.host.replace(".dfs.", ".blob.", 1)
-    return adlfs.AzureBlobFileSystem(**kwargs)
+    from ._adlfs import filesystem
+
+    return filesystem(adlfs, kwargs)
 
 
 def _suffix_compression(path: str) -> tuple[str, str | None]:

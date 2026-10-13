@@ -10,6 +10,7 @@ no network is needed.
 from __future__ import annotations
 
 import json
+import re
 import time
 import urllib.error
 import urllib.request
@@ -72,6 +73,33 @@ def on_fabric_api(url: str) -> bool:
     (``Location``, ``continuationUri``) carry the bearer token, so only these are followed."""
     parts, api = urlsplit(url), urlsplit(FABRIC_API)
     return parts.scheme == "https" and parts.netloc.lower() == api.netloc and not parts.username
+
+
+_OPERATION = re.compile(r"/v1/operations/([0-9A-Fa-f]{8}-(?:[0-9A-Fa-f]{4}-){3}[0-9A-Fa-f]{12})/?")
+
+
+def operation_url(url: str) -> str | None:
+    """The Fabric API URL to poll for the long-running operation ``url`` names, or ``None``.
+
+    Fabric answers a long-running create with a ``Location`` that is either on the Fabric API or,
+    in practice, on a regional ``*.analysis.windows.net`` redirect host (observed:
+    ``wabi-us-central-b-primary-redirect.analysis.windows.net/v1/operations/<id>``). The bearer
+    token never goes to that host: the operation id is taken from its path and polled on the
+    Fabric API itself. Any other host, or any other path, is refused."""
+    if on_fabric_api(url):
+        return url
+    parts = urlsplit(url)
+    host = (parts.hostname or "").lower()
+    match = _OPERATION.fullmatch(parts.path)
+    if (
+        parts.scheme == "https"
+        and not parts.username
+        and (host == "analysis.windows.net" or host.endswith(".analysis.windows.net"))
+        and parts.port in (None, 443)
+        and match
+    ):
+        return f"{FABRIC_API}/operations/{match.group(1).lower()}"
+    return None
 
 
 def _host_path(url: str) -> str:

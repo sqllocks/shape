@@ -1458,6 +1458,13 @@ def _build_parser(plugin_commands=()):
 
     p = argparse.ArgumentParser(prog="shape", description="Shape as Code")
     p.add_argument("--version", "-V", action="store_true", help="print the version and exit")
+    p.add_argument(
+        "--source-config",
+        action="append",
+        metavar="KEY=REF",
+        help="Azure readers: token, account_key, sas_token or connection_string from env://, "
+        "file:// or kv:// (may appear before or after the command)",
+    )
     g = p.add_argument_group("run logging and metrics (before the command)")
     g.add_argument("--log-json", action="store_true", help="log JSON lines to stderr")
     g.add_argument("--log-level", default="INFO", metavar="LEVEL", help="log level (default INFO)")
@@ -2437,6 +2444,14 @@ def _dispatch(argv):
     line, whichever command reads the artifact (docs/SIGNING.md)."""
     restore = _notices_to_stderr()
     try:
+        from shape.cli.source_credentials import extract
+
+        argv, options = extract(argv)
+        if options:
+            from shape.security.azure_credentials import source_credentials
+
+            with source_credentials(options):
+                return _dispatch_command(argv)
         return _dispatch_command(argv)
     finally:
         import warnings

@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import importlib
 import inspect
+import logging
 import sys
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -141,7 +142,28 @@ def check_model(workspace: str, model: str) -> Any:
     if workspace not in (*_values(workspaces, "Name"), *_values(workspaces, "Id")):
         raise ShapeError(f"semantic-model workspace {workspace} not found")
     datasets = _frame(fab, "list_datasets", workspace, model, workspace=workspace)
-    if model not in (*_values(datasets, "Dataset Name"), *_values(datasets, "Dataset Id")):
+    found = (*_values(datasets, "Dataset Name"), *_values(datasets, "Dataset Id"))
+    if model not in found:
+        # A service principal may not see XMLA-listed models; Microsoft documents the REST listing
+        # for it (semantic link service principal support), so it is tried before refusing.
+        try:
+            rest = fab.list_datasets(workspace=workspace, mode="rest")
+        except Exception as exc:  # noqa: BLE001 - older sempy, or no REST access: report below
+            rest, rest_error = None, _one_line(exc)
+        else:
+            rest_error = ""
+            found_rest = (*_values(rest, "Dataset Name"), *_values(rest, "Dataset Id"))
+            if model in found_rest:
+                return fab
+        seen = [str(v) for v in _values(datasets, "Dataset Name")][:20]
+        seen_rest = [str(v) for v in _values(rest, "Dataset Name")][:20] if rest is not None else []
+        logging.getLogger(__name__).warning(
+            "semantic model %s not listed in workspace %s (default listing: %s; REST listing: %s)",
+            model,
+            workspace,
+            seen,
+            seen_rest or rest_error or "none",
+        )
         raise ShapeError(f"workspace {workspace} has no semantic model {model}")
     return fab
 

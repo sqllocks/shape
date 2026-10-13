@@ -4,8 +4,9 @@ Order, first match wins:
 
 1. an explicit token or credential in the call's options (``token``, ``credential``, or the
    storage keys ``account_key``, ``sas_token``, ``connection_string``);
-2. inside Fabric (or Synapse), ``notebookutils.credentials.getToken("storage")``;
-3. ``azure.identity.DefaultAzureCredential`` (managed identity, a service principal from the
+2. storage environment keys (account key, SAS, connection string, in that order);
+3. inside Fabric (or Synapse), ``notebookutils.credentials.getToken("storage")``;
+4. ``azure.identity.DefaultAzureCredential`` (managed identity, a service principal from the
    environment, the Azure CLI).
 
 Nothing here imports an Azure package until it is needed.
@@ -20,13 +21,19 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, NamedTuple
 
+from shape.security.azure_credentials import (
+    AuthError as AuthError,
+)
+from shape.security.azure_credentials import (
+    GuardedCredential as GuardedCredential,
+)
+from shape.security.azure_credentials import (
+    with_environment_keys as with_environment_keys,
+)
+
 STORAGE_SCOPE = "https://storage.azure.com/.default"
 STORAGE_AUDIENCE = "storage"
 _KEY_OPTIONS = ("account_key", "sas_token", "connection_string")
-
-
-class AuthError(RuntimeError):
-    """No credential could be resolved, or the one found failed."""
 
 
 class AccessToken(NamedTuple):
@@ -105,6 +112,7 @@ def _default_credential() -> Any:
 
 def resolve(options: Mapping[str, Any]) -> Resolved:
     """Pick the credential for one call, in the documented order."""
+    options = with_environment_keys(options)
     if options.get("credential") is not None:
         return Resolved("explicit-credential", credential=options["credential"])
     if options.get("token"):
@@ -125,4 +133,4 @@ def bearer_token(resolved: Resolved) -> str:
             "this source needs a token or credential; a key, SAS or connection string "
             "cannot be used for Delta tables"
         )
-    return str(resolved.credential.get_token(STORAGE_SCOPE).token)
+    return str(GuardedCredential(resolved.credential).get_token(STORAGE_SCOPE).token)

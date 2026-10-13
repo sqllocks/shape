@@ -89,6 +89,13 @@ ingestion and queries retain the 100-second `timeout` default.
 Profile a lakehouse straight from OneLake: `shape profile onelake://<workspace>/<lakehouse>/Tables/<table>`
 (Delta) or `.../Files/<path>`; authentication and `adlfs` handling are core's `abfss://` source.
 
+Schema-enabled Lakehouses are read at `.../Tables/<schema>/<table>`, usually `dbo`.
+The core Delta sink takes `schema_enabled=true` (CLI: `--sink-config delta.schema_enabled=true`),
+with `schema_name=dbo` by default, and honours `--table-prefix`. The Spark worker takes
+`--lakehouse-schema dbo`. Files writers and `shape publish -t lakehouse` remain Files landing zones.
+Warehouse and Synapse keys use a separate `ALTER TABLE ... NONCLUSTERED ... NOT ENFORCED`
+statement after creation. See [the live-test variables](../../docs/plugins/fabric-writers.md#unattended-live-tests).
+
 ## `mssql://`: a live SQL Server, Azure SQL or Fabric SQL sink
 
 `shape-fabric` registers three `shape.sinks` entries: `sqlserver` (URI schemes `mssql` and

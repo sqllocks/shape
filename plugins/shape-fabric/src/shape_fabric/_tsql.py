@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import math
+import os
 import re
 import time
 from collections.abc import Mapping, Sequence
@@ -181,8 +182,8 @@ def create_table_sql(
     primary_key: Sequence[str] = (),
     options: str | None = None,
 ) -> str:
-    """``CREATE TABLE`` for ``schema``. Key columns are ``NOT NULL``; a Warehouse key is
-    declared ``NONCLUSTERED ... NOT ENFORCED`` (the Warehouse does not enforce keys).
+    """DDL for ``schema``. Key columns are ``NOT NULL``; a Warehouse key is added by a
+    separate ``ALTER TABLE ... NONCLUSTERED ... NOT ENFORCED`` after ``CREATE TABLE``.
     ``options`` is the text of a trailing ``WITH (...)`` clause (a Synapse pool's distribution
     and index); the caller builds it from checked names only."""
     columns = columns or {}
@@ -202,17 +203,23 @@ def create_table_sql(
             sql_type = f"BIGINT IDENTITY({identity[0]}, {identity[1]})"
             nullable = False
         lines.append(f"    {ident(field.name)} {sql_type} {'NULL' if nullable else 'NOT NULL'}")
-    if key:
+    if key and not warehouse:
         cols = ", ".join(ident(c) for c in key)
         name = ident(_key_name(table))
-        if warehouse:
-            lines.append(f"    CONSTRAINT {name} PRIMARY KEY NONCLUSTERED ({cols}) NOT ENFORCED")
-        else:
-            lines.append(f"    CONSTRAINT {name} PRIMARY KEY ({cols})")
+        lines.append(f"    CONSTRAINT {name} PRIMARY KEY ({cols})")
     body = ",\n".join(lines)
     # every name went through ident(); there are no values in this statement
     tail = f"\nWITH ({options})" if options else ""
-    return f"CREATE TABLE {qualified(schema_name, table)} (\n{body}\n){tail}"  # nosec B608
+    sql = f"CREATE TABLE {qualified(schema_name, table)} (\n{body}\n){tail}"  # nosec B608
+    if key and warehouse:
+        # Fabric Warehouse and dedicated Synapse pools require this separate statement.
+        # Return one DDL batch, so create_ddl callers also get the declared constraint.
+        cols = ", ".join(ident(c) for c in key)
+        sql += (
+            f";\nALTER TABLE {qualified(schema_name, table)} ADD CONSTRAINT "
+            f"{ident(_key_name(table))} PRIMARY KEY NONCLUSTERED ({cols}) NOT ENFORCED"
+        )
+    return sql
 
 
 def _key_name(table: str) -> str:
@@ -406,6 +413,44 @@ def widest_first(batch: pa.RecordBatch) -> bool:
     return True
 
 
+def text_input_sizes(batch: pa.RecordBatch) -> list[Any] | None:
+    """``pyodbc`` ``setinputsizes`` entries sized from the whole batch (text and binary columns at
+    their longest value, ``None`` for the rest), or ``None`` where pyodbc is not importable.
+
+    With the sizes set, ``fast_executemany`` is safe whatever row comes first: the driver no
+    longer sizes its buffers from row 0, so a longer value later in the batch is not cut."""
+    try:
+        import pyodbc  # type: ignore[import-not-found,unused-ignore]
+    except ImportError:
+        return None
+    sizes: list[Any] = []
+    for col in batch.columns:
+        t = col.type
+        if pat.is_string(t) or pat.is_large_string(t):
+            top = pc.max(pc.utf8_length(col)).as_py() or 0
+            sizes.append((pyodbc.SQL_WVARCHAR, 0 if top > 4000 else max(top, 1), 0))
+        elif pat.is_binary(t) or pat.is_large_binary(t):
+            top = pc.max(pc.binary_length(col)).as_py() or 0
+            sizes.append((pyodbc.SQL_VARBINARY, 0 if top > 8000 else max(top, 1), 0))
+        else:
+            sizes.append(None)
+    return sizes
+
+
+def use_fast_executemany(cursor: Any, batch: pa.RecordBatch) -> None:
+    """Turn on ``fast_executemany`` for ``batch`` where it is safe: always when the text sizes can
+    be set explicitly, else only when row 0 holds the longest value of every text column. (Before
+    this, a batch whose first row was not the longest fell back to one round trip per row.)"""
+    if not hasattr(cursor, "fast_executemany"):
+        return
+    sizes = text_input_sizes(batch) if hasattr(cursor, "setinputsizes") else None
+    if sizes is not None:
+        cursor.setinputsizes(sizes)
+        cursor.fast_executemany = True
+    else:
+        cursor.fast_executemany = widest_first(batch)
+
+
 def rows_as_params(batch: pa.RecordBatch) -> list[tuple[Any, ...]]:
     """The rows of a normalized ``batch`` as parameter tuples of Python natives."""
     columns = [c.to_pylist() for c in batch.columns]
@@ -417,76 +462,37 @@ def rows_as_params(batch: pa.RecordBatch) -> list[tuple[Any, ...]]:
 
 # --- connections -------------------------------------------------------------------------
 
-_ADO_PAIR = re.compile(r"""\s*([^=;]+?)\s*=\s*("(?:[^"]|"")*"|'(?:[^']|'')*'|[^;]*)""")
-_TRUE = ("true", "yes", "1")
-_FALSE = ("false", "no", "0")
-
-
-def _unquote(value: str) -> str:
-    value = value.strip()
-    if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
-        return value[1:-1].replace(value[0] * 2, value[0])
-    return value
-
 
 def normalize_connection_string(cs: str, driver: str | None = None) -> str:
-    """``cs`` as an ODBC connection string. The Fabric portal gives the ADO.NET form
-    (``Data Source=...;Initial Catalog=...``); an ODBC string (it has ``Driver=``) is returned
-    unchanged. ``Encrypt=Strict`` is kept, ``Application Name`` and ``MultipleActiveResultSets``
-    become ODBC's ``APP`` and ``MARS_Connection``; other ADO.NET-only settings (``Persist Security
-    Info``, pooling) have no ODBC meaning and are left out. ``driver`` defaults to the SQL Server
-    plugin's (ODBC Driver 18)."""
-    if re.search(r"(^|;)\s*driver\s*=", cs, re.IGNORECASE):
-        return cs
-    driver = driver or _sql().DEFAULT_DRIVER
-    parts = {m.group(1).strip().lower(): _unquote(m.group(2)) for m in _ADO_PAIR.finditer(cs)}
-    server = parts.get("data source") or parts.get("server")
-    if not server:
-        raise ShapeError("the connection string has no server (Data Source= or Server=)")
-    if server.lower().startswith("tcp:"):
-        server = server[4:]
-
-    def flag(*keys: str) -> bool | None:
-        for key in keys:
-            if key in parts:
-                low = parts[key].lower()
-                return True if low in _TRUE else False if low in _FALSE else None
-        return None
-
-    encrypt = flag("encrypt")
-    trust = flag("trust server certificate", "trustservercertificate")
-    timeout = parts.get("connect timeout") or parts.get("connection timeout")
-    if timeout and not timeout.strip().isdigit():
-        raise ShapeError(f"the connection timeout must be whole seconds, not {timeout!r}")
-    extra: dict[str, str] = {}
-    if "authentication" in parts:
-        extra["Authentication"] = parts["authentication"].replace(" ", "")
-    if parts.get("encrypt", "").strip().lower() == "strict":
-        extra["Encrypt"] = "strict"  # TDS 8 with strict certificate checks: never weakened
-    if parts.get("application name"):
-        extra["APP"] = parts["application name"]
-    mars = flag("multipleactiveresultsets", "multiple active result sets")
-    if mars is not None:
-        extra["MARS_Connection"] = "yes" if mars else "no"
-    return str(
-        build_connection_string(
-            server,
-            parts.get("initial catalog") or parts.get("database"),
-            user=parts.get("user id") or parts.get("uid") or parts.get("user"),
-            password=parts.get("password") or parts.get("pwd"),
-            driver=driver,
-            encrypt=True if encrypt is None else encrypt,
-            trust_server_certificate=bool(trust),
-            timeout=int(timeout) if timeout else 30,
-            extra=extra,
-        )
-    )
+    """:func:`shape_sqlserver.sql.normalize_connection_string` (the Fabric portal's ADO.NET string
+    as an ODBC one), with its refusals as :class:`ShapeError`."""
+    sql = _sql()
+    try:
+        return str(sql.normalize_connection_string(cs, driver))
+    except sql.SqlServerError as exc:
+        raise ShapeError(str(exc)) from None
 
 
 def is_warehouse(connection_string: str | None) -> bool:
     return bool(connection_string) and any(
         h in str(connection_string).lower() for h in WAREHOUSE_HOSTS
     )
+
+
+QUERY_TIMEOUT_SECONDS = 900
+
+
+def _bounded(conn: Any, query_timeout: int | None) -> Any:
+    """Give every statement on ``conn`` a deadline (pyodbc's default is none)."""
+    seconds = query_timeout
+    if seconds is None:
+        raw = os.environ.get("SHAPE_SQL_QUERY_TIMEOUT", "")
+        seconds = int(raw) if raw.strip().isdigit() else QUERY_TIMEOUT_SECONDS
+    try:
+        conn.timeout = seconds
+    except AttributeError:  # not a pyodbc connection (a test double): nothing to bound
+        pass
+    return conn
 
 
 _LOGIN_KEYS = re.compile(r"(^|;)\s*(uid|pwd|user id|password|authentication)\s*=", re.IGNORECASE)
@@ -497,6 +503,7 @@ def connect(
     credential: Any = None,
     *,
     timeout: int = 120,
+    query_timeout: int | None = None,
     retries: int = 3,
     retry_delay: float = 2.0,
 ) -> Any:
@@ -506,7 +513,14 @@ def connect(
     ``Authentication=`` mode). With a ``credential`` its token for Azure SQL / Fabric is passed
     to the driver, and the connection string must not hold a login. Token sign-in is retried (a
     managed identity endpoint can be slow to answer right after a notebook starts).
+
+    ``timeout`` bounds the login; ``query_timeout`` (default :data:`QUERY_TIMEOUT_SECONDS`, or
+    ``SHAPE_SQL_QUERY_TIMEOUT``) bounds every statement, so a stalled load fails with the driver's
+    timeout message instead of waiting forever.
     """
+    # Direct connections (including publish setup/cleanup) need the same portal-string
+    # normalization as SqlConnection. Already normalized ODBC strings stay unchanged.
+    connection_string = normalize_connection_string(connection_string)
     try:
         import pyodbc  # type: ignore[import-not-found,unused-ignore]
     except ImportError as exc:
@@ -519,7 +533,7 @@ def connect(
             conn = pyodbc.connect(connection_string, autocommit=False, timeout=timeout)
         except pyodbc.Error as exc:
             raise ShapeError(f"could not connect: {redact(str(exc))}") from None
-        return conn
+        return _bounded(conn, query_timeout)
     if _LOGIN_KEYS.search(connection_string):
         raise ShapeError(
             "a connection string used with a credential must not hold UID, PWD or Authentication"
@@ -529,11 +543,14 @@ def connect(
         try:
             token = token_for(credential, SCOPE_SQL).encode("utf-16-le")
             packed = len(token).to_bytes(4, "little") + token
-            return pyodbc.connect(
-                connection_string,
-                attrs_before={ACCESS_TOKEN_ATTR: packed},
-                autocommit=False,
-                timeout=timeout,
+            return _bounded(
+                pyodbc.connect(
+                    connection_string,
+                    attrs_before={ACCESS_TOKEN_ATTR: packed},
+                    autocommit=False,
+                    timeout=timeout,
+                ),
+                query_timeout,
             )
         except AuthError:
             raise

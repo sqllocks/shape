@@ -51,6 +51,7 @@ class ConnectionProfile:
     client_id: str = ""
     client_secret: str = ""
     local_path: str = ""  # a folder on this machine that receives the tables as Parquet files
+    lakehouse_schema: str = ""  # empty: classic; otherwise an existing schema for Spark tables
 
     def targets(self) -> list[str]:
         """The target kinds this profile can write to, in a fixed order."""
@@ -82,6 +83,13 @@ def check_profile(profile: ConnectionProfile) -> ConnectionProfile:
     from shape.security import credrefs
 
     check_name(profile.name, "connection profile name")
+    if profile.lakehouse_schema:
+        from shape.security.names import safe_name
+
+        try:
+            safe_name(profile.lakehouse_schema, "Lakehouse schema")
+        except ValueError as exc:
+            raise DemoError(str(exc)) from None
     if profile.auth_method not in AUTH_METHODS:
         raise DemoError(
             f"unknown auth method {profile.auth_method!r}; choose one of {', '.join(AUTH_METHODS)}"
@@ -164,7 +172,10 @@ class ConnectionRegistry:
         check_profile(profile)
         with locked(self.path):  # another process may be saving a profile right now
             data = self._load_all()
-            data[profile.name] = asdict(profile)
+            entry = asdict(profile)
+            if not profile.lakehouse_schema:
+                entry.pop("lakehouse_schema")  # preserve the classic profile's stored form
+            data[profile.name] = entry
             self._save_all(data)
 
     def load(self, name: str) -> ConnectionProfile:

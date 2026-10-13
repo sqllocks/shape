@@ -398,17 +398,19 @@ jobs:
         run: python -m pytest -m live tests/builtins/test_abfss_sink_live.py -q
   fabric-git-sync-live:
     # W7-01: a shape/ folder of .shape files next to Fabric items survives Fabric Git integration in
-    # both directions. Runs only where the owner's O-02 secrets and the Git remote exist; uploads the
-    # shape-live-check JSON result (no secret, tenant or workspace id).
+    # both directions. Runs against the Git-connected workspace (shape-git-test) with the values the
+    # fabric-live environment holds (variables for ids and the remote, secrets for the secrets);
+    # uploads the shape-live-check JSON result (no secret, tenant or workspace id).
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    environment: fabric-live
     env:
-      HAVE_GIT_SYNC: ${{ secrets.FABRIC_CLIENT_ID != '' && secrets.FABRIC_WORKSPACE_ID != '' && secrets.FABRIC_GIT_REMOTE != '' }}
-      FABRIC_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
-      FABRIC_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
+      HAVE_GIT_SYNC: ${{ vars.FABRIC_CLIENT_ID != '' && vars.FABRIC_GIT_WORKSPACE_ID != '' && vars.FABRIC_GIT_REMOTE != '' }}
+      FABRIC_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
+      FABRIC_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
       FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
-      FABRIC_WORKSPACE_ID: ${{ secrets.FABRIC_WORKSPACE_ID }}
-      FABRIC_GIT_REMOTE: ${{ secrets.FABRIC_GIT_REMOTE }}
+      FABRIC_GIT_WORKSPACE_ID: ${{ vars.FABRIC_GIT_WORKSPACE_ID }}
+      FABRIC_GIT_REMOTE: ${{ vars.FABRIC_GIT_REMOTE }}
       FABRIC_GIT_TOKEN: ${{ secrets.FABRIC_GIT_TOKEN }}
       SHAPE_LIVE_RESULT: ${{ github.workspace }}/git-sync-result.json
     steps:
