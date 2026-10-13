@@ -22,7 +22,28 @@ CLI; the code enforces a minimum of 0.9.0.  Git is needed for comparisons.
 
 Evidence: `editors/vscode/package.json`, `editors/vscode/src/extension.ts`, the bundled schemas
 and snippets. The repository workflow builds a `.vsix`; this page makes no marketplace claim.
-<!-- owner: editor maintainer — run a VS Code install transcript before publishing an install command. -->
+The workflow builds the VSIX from this checkout, installs it into an isolated VS Code instance, then runs **Shape: Compare with Git HEAD** in that installed extension against a real `.shape` artifact and the real Shape CLI. The runner supplies the paths below. The command driver asserts that a diff editor opens and that the two text forms differ.
+
+<!-- owner-example: vscode-install -->
+
+```bash {.runnable-owner}
+code --install-extension "$SHAPE_DOCS_VSIX" --force \
+  --user-data-dir "$SHAPE_DOCS_VSCODE_USER" --extensions-dir "$SHAPE_DOCS_VSCODE_EXTENSIONS"
+xvfb-run -a node "$SHAPE_DOCS_REPO/scripts/docs_vscode_command.cjs"
+```
+
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-vscode-install.json).
+
+## Local installation receipt
+
+The [installed-editor receipt](evidence/vscode-install.md) records a clean local Linux installation on 2026-10-12 UTC: VS Code 1.141.0, Shape extension 0.1.0 and Shape CLI 0.9.1. After building the repository's VSIX, the actual install/list commands used empty temporary profile and extension directories:
+
+```bash
+code --install-extension editors/vscode/shape.vsix
+code --list-extensions --show-versions
+```
+
+The installed list included `sqllocks.shape@0.1.0`. In the installed extension, a real `shape.yml` opened as YAML and a two-row `.shape` artifact opened as read-only text matching the real `shape cat` output. All installation and editor checks exited 0. The receipt used published software and a local virtual display, without a VM or signed-in account.
 
 ## Related
 

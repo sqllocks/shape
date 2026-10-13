@@ -50,9 +50,17 @@ cat orders-data.csv >> orders.csv
 shape profile orders.csv -o orders.shape
 ```
 
-## Next step
+## Owner-run receipt
 
-<!-- owner: database maintainer — execute a MySQL export/write transcript against a disposable server before publishing commands. -->
+On 2026-10-11, the Owner ran the export statement above against disposable MySQL 8.4 in Docker without an error, copied the server file as `orders-data.csv`, then ran the header, copy and profile steps above with Shape 0.9.1 from PyPI in a clean `python:3.12-slim` container:
+
+```json
+{"shape_content_id": "4694f326df223d6bf96334146870d08519d400f2e98057829878b64ba8eca2ed", "written": "orders.shape"}
+```
+
+The `written` JSON is the success evidence; the receipt's `exit=True` lines came from PowerShell interpolation and are not bash exit statuses. The [Owner-run export receipt](../evidence/mysql-export-profile.md) links to the earlier MySQL write over TLS with the server CA: 21,750 rows in nine tables, exit 0. These receipts describe those disposable runs only.
+
+## Next step
 
 These pages describe implementation behavior. They make no account or service-validation
 claim. Authentication, permissions and server limits remain properties of your deployment.

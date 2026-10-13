@@ -157,7 +157,7 @@
   {
     "page": "docs/CLI.md",
     "index": 5,
-    "kind": "cloud:Kafka"
+    "kind": "service:owner-transcripts"
   },
   {
     "page": "docs/CLI.md",
@@ -297,12 +297,12 @@
   {
     "page": "docs/EMIT.md",
     "index": 2,
-    "kind": "cloud:Kafka"
+    "kind": "service:owner-transcripts"
   },
   {
     "page": "docs/EMIT.md",
     "index": 3,
-    "kind": "cloud:Kafka"
+    "kind": "service:owner-transcripts"
   },
   {
     "page": "docs/EMIT.md",
@@ -797,7 +797,7 @@
   {
     "page": "docs/SINKS.md",
     "index": 2,
-    "kind": "cloud:PostgreSQL"
+    "kind": "service:owner-transcripts"
   },
   {
     "page": "docs/SINKS.md",
@@ -812,7 +812,7 @@
   {
     "page": "docs/TESTING_WITH_SHAPE.md",
     "index": 3,
-    "kind": "cloud:PostgreSQL"
+    "kind": "service:owner-transcripts"
   },
   {
     "page": "docs/TRANSFORMS.md",
@@ -887,7 +887,7 @@
   {
     "page": "docs/plugins/fabric-auth.md",
     "index": 0,
-    "kind": "cloud:Fabric"
+    "kind": "service:owner-receipt"
   },
   {
     "page": "docs/plugins/fabric-commands.md",
@@ -997,7 +997,7 @@
   {
     "page": "docs/plugins/streaming.md",
     "index": 1,
-    "kind": "cloud:Kafka"
+    "kind": "service:owner-transcripts"
   },
   {
     "page": "docs/plugins/streaming.md",

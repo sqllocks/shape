@@ -1,0 +1,37 @@
+{
+  "run_id": "38266883768",
+  "commit": "1fa052d08a93cecd303f4db1a9682539b59471b1",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "Intel(R) Xeon(R) 6973P-C",
+    "logical_cpus": 4,
+    "ram_bytes": 16765378560,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "25.0.1",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "page": "docs/SINKS.md",
+  "example": "postgres-sink",
+  "command": "shape stream retail -t order --to postgresql://shape@localhost:5432/shape \\\n  --commit-rows 500 --realtime --rate 100 --max-events 20 \\\n  --sink-config postgres.table_prefix=stream_ --fresh",
+  "exit_code": 0,
+  "status": "passed",
+  "elapsed_seconds": 1.9508449979999796,
+  "stdout": "shape stream: 20 events delivered, offset 20 of 5,000, max-events, 52 events/s\n"
+}

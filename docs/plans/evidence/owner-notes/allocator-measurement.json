@@ -1,0 +1,281 @@
+{
+  "machine": {
+    "label": "owner-notes-2-linux-x86_64-2026-10-12",
+    "cpu_model": "INTEL(R) XEON(R) PLATINUM 8573C",
+    "logical_cpus": 5,
+    "affinity_cpus": 5,
+    "visible_ram": "18440136 kB",
+    "cgroup_memory_max": "17179869184",
+    "cgroup_cpu_max": "400000 100000",
+    "os": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "kernel": "6.18.44",
+    "python": "3.12.14",
+    "pyarrow": "25.0.1",
+    "shape": "0.9.1",
+    "commit": "8d10aa0a768383a947fa77d9547b066f8cfbd9cc",
+    "transparent_hugepage": "always [madvise] never",
+    "retail_schema_sha256": "5b1fdfb31f5e7ce15a7a647ec2bb4e12bbfab2277cafe53eb4260dfdacfaec63"
+  },
+  "captured_at_utc": "2026-10-12T12:42:49.557777+00:00",
+  "workload": "retail:medium",
+  "seed": 42,
+  "repeats": 3,
+  "warmups_per_cell": 1,
+  "runs": {
+    "shape-first/policy": [
+      {
+        "generation_seconds": 0.42123516399999517,
+        "import_seconds": 0.2420919229999754,
+        "peak_generation_rss_kib": 301828,
+        "sha256": "065ba48e48d7bc20d1195267fe86218c5d8a274b35377d221e97a99e31bffbcc",
+        "rows": {
+          "address": 75000,
+          "customer": 50000,
+          "order": 500000,
+          "order_line": 1250000,
+          "product": 5000,
+          "product_category": 50,
+          "promotion": 200,
+          "return": 85000,
+          "store": 150
+        },
+        "arrow_default_backend": "system",
+        "load_before": 0.1318359375
+      },
+      {
+        "generation_seconds": 0.3692468919999783,
+        "import_seconds": 0.25570129199991243,
+        "peak_generation_rss_kib": 300576,
+        "sha256": "065ba48e48d7bc20d1195267fe86218c5d8a274b35377d221e97a99e31bffbcc",
+        "rows": {
+          "address": 75000,
+          "customer": 50000,
+          "order": 500000,
+          "order_line": 1250000,
+          "product": 5000,
+          "product_category": 50,
+          "promotion": 200,
+          "return": 85000,
+          "store": 150
+        },
+        "arrow_default_backend": "system",
+        "load_before": 0.20166015625
+      },
+      {
+        "generation_seconds": 0.3179898719999983,
+        "import_seconds": 0.24649595299990779,
+        "peak_generation_rss_kib": 295572,
+        "sha256": "065ba48e48d7bc20d1195267fe86218c5d8a274b35377d221e97a99e31bffbcc",
+        "rows": {
+          "address": 75000,
+          "customer": 50000,
+          "order": 500000,
+          "order_line": 1250000,
+          "product": 5000,
+          "product_category": 50,
+          "promotion": 200,
+          "return": 85000,
+          "store": 150
+        },
+        "arrow_default_backend": "system",
+        "load_before": 0.265625
+      }
+    ],
+    "shape-first/default": [
+      {
+        "generation_seconds": 0.32394879599996784,
+        "import_seconds": 0.32402945900003033,
+        "peak_generation_rss_kib": 329384,
+        "sha256": "065ba48e48d7bc20d1195267fe86218c5d8a274b35377d221e97a99e31bffbcc",
+        "rows": {
+          "address": 75000,
+          "customer": 50000,
+          "order": 500000,
+          "order_line": 1250000,
+          "product": 5000,
+          "product_category": 50,
+          "promotion": 200,
+          "return": 85000,
+          "store": 150
+        },
+        "arrow_default_backend": "mimalloc",
+        "load_before": 0.20166015625
+      },
+      {
+        "generation_seconds": 0.31346454699996684,
+        "import_seconds": 0.27620363799996994,
+        "peak_generation_rss_kib": 331740,
+        "sha256": "065ba48e48d7bc20d1195267fe86218c5d8a274b35377d221e97a99e31bffbcc",
+        "rows": {
+          "address": 75000,
+          "customer": 50000,
+          "order": 500000,
+          "order_line": 1250000,
+          "product": 5000,
+          "product_category": 50,
+          "promotion": 200,
+          "return": 85000,
+          "store": 150
+        },
+        "arrow_default_backend": "mimalloc",
+        "load_before": 0.265625
+      },
+      {
+        "generation_seconds": 0.36547912099990754,
+        "import_seconds": 0.22310174300002927,
+        "peak_generation_rss_kib": 329928,
+        "sha256": "065ba48e48d7bc20d1195267fe86218c5d8a274b35377d221e97a99e31bffbcc",
+        "rows": {
+          "address": 75000,
+          "customer": 50000,
+          "order": 500000,
+          "order_line": 1250000,
+          "product": 5000,
+          "product_category": 50,
+          "promotion": 200,
+          "return": 85000,
+          "store": 150
+        },
+        "arrow_default_backend": "mimalloc",
+        "load_before": 0.265625
+      }
+    ],
+    "pyarrow-first/policy": [
+      {
+        "generation_seconds": 0.3371218460000591,
+        "import_seconds": 0.23601912000003722,
+        "peak_generation_rss_kib": 301188,
+        "sha256": "065ba48e48d7bc20d1195267fe86218c5d8a274b35377d221e97a99e31bffbcc",
+        "rows": {
+          "address": 75000,
+          "customer": 50000,
+          "order": 500000,
+          "order_line": 1250000,
+          "product": 5000,
+          "product_category": 50,
+          "promotion": 200,
+          "return": 85000,
+          "store": 150
+        },
+        "arrow_default_backend": "mimalloc",
+        "load_before": 0.20166015625
+      },
+      {
+        "generation_seconds": 0.3875520509999433,
+        "import_seconds": 0.23281681299999946,
+        "peak_generation_rss_kib": 301624,
+        "sha256": "065ba48e48d7bc20d1195267fe86218c5d8a274b35377d221e97a99e31bffbcc",
+        "rows": {
+          "address": 75000,
+          "customer": 50000,
+          "order": 500000,
+          "order_line": 1250000,
+          "product": 5000,
+          "product_category": 50,
+          "promotion": 200,
+          "return": 85000,
+          "store": 150
+        },
+        "arrow_default_backend": "mimalloc",
+        "load_before": 0.265625
+      },
+      {
+        "generation_seconds": 0.32610786899999766,
+        "import_seconds": 0.1892667839999831,
+        "peak_generation_rss_kib": 305260,
+        "sha256": "065ba48e48d7bc20d1195267fe86218c5d8a274b35377d221e97a99e31bffbcc",
+        "rows": {
+          "address": 75000,
+          "customer": 50000,
+          "order": 500000,
+          "order_line": 1250000,
+          "product": 5000,
+          "product_category": 50,
+          "promotion": 200,
+          "return": 85000,
+          "store": 150
+        },
+        "arrow_default_backend": "mimalloc",
+        "load_before": 0.96533203125
+      }
+    ],
+    "pyarrow-first/default": [
+      {
+        "generation_seconds": 0.4313347800000429,
+        "import_seconds": 0.25249334199997975,
+        "peak_generation_rss_kib": 338972,
+        "sha256": "065ba48e48d7bc20d1195267fe86218c5d8a274b35377d221e97a99e31bffbcc",
+        "rows": {
+          "address": 75000,
+          "customer": 50000,
+          "order": 500000,
+          "order_line": 1250000,
+          "product": 5000,
+          "product_category": 50,
+          "promotion": 200,
+          "return": 85000,
+          "store": 150
+        },
+        "arrow_default_backend": "mimalloc",
+        "load_before": 0.20166015625
+      },
+      {
+        "generation_seconds": 0.3572601079999913,
+        "import_seconds": 0.23934690799990221,
+        "peak_generation_rss_kib": 335128,
+        "sha256": "065ba48e48d7bc20d1195267fe86218c5d8a274b35377d221e97a99e31bffbcc",
+        "rows": {
+          "address": 75000,
+          "customer": 50000,
+          "order": 500000,
+          "order_line": 1250000,
+          "product": 5000,
+          "product_category": 50,
+          "promotion": 200,
+          "return": 85000,
+          "store": 150
+        },
+        "arrow_default_backend": "mimalloc",
+        "load_before": 0.265625
+      },
+      {
+        "generation_seconds": 0.2922766789999969,
+        "import_seconds": 0.19275309600004675,
+        "peak_generation_rss_kib": 321660,
+        "sha256": "065ba48e48d7bc20d1195267fe86218c5d8a274b35377d221e97a99e31bffbcc",
+        "rows": {
+          "address": 75000,
+          "customer": 50000,
+          "order": 500000,
+          "order_line": 1250000,
+          "product": 5000,
+          "product_category": 50,
+          "promotion": 200,
+          "return": 85000,
+          "store": 150
+        },
+        "arrow_default_backend": "mimalloc",
+        "load_before": 0.96533203125
+      }
+    ]
+  },
+  "generated_bytes_identical": true,
+  "summary": {
+    "shape-first/policy": {
+      "median_generation_seconds": 0.3692468919999783,
+      "median_peak_generation_rss_kib": 300576
+    },
+    "shape-first/default": {
+      "median_generation_seconds": 0.32394879599996784,
+      "median_peak_generation_rss_kib": 329928
+    },
+    "pyarrow-first/policy": {
+      "median_generation_seconds": 0.3371218460000591,
+      "median_peak_generation_rss_kib": 301624
+    },
+    "pyarrow-first/default": {
+      "median_generation_seconds": 0.3572601079999913,
+      "median_peak_generation_rss_kib": 335128
+    }
+  }
+}

@@ -28,7 +28,7 @@ Status: available.
 
 ## 0.9.1
 
-<!-- owner: release date -->
+**Release date: 2026-10-11**
 
 ### Fixed
 

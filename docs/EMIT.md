@@ -267,18 +267,28 @@ unchanged. Only `kafka://` takes a registry format: any other target refuses it 
 
 <!-- example: 2 -->
 
-**Needs a Kafka account. Not run in CI.**
+Install the Kafka plugin's `[avro]` extra first. This example uses the workflow's disposable broker and a Schema Registry with HTTP Basic authentication. The runner verifies that an unauthenticated request returns 401 before emitting. The loopback HTTP registry is for the isolated container example; use HTTPS outside it. `REGISTRY_PASSWORD` is supplied privately by the runner.
 
-```
-pip install 'sqllocks-shape-kafka[avro]'        # or [protobuf]; json-schema needs no extra
-shape emit retail --table order_line --sink kafka://broker:9092/orders \
-    --event-format avro \
-    --sink-config kafka.schema_registry_url=https://registry.example:8081 \
+<!-- owner-example: kafka-avro -->
+
+```bash {.runnable-owner}
+shape emit retail --table order_line --sink kafka://localhost:9092/avro-orders \
+    --max-events 20 --fresh --event-format avro \
+    --sink-config kafka.schema_registry_url=http://localhost:8081 \
     --sink-config kafka.schema_registry_username=svc \
     --sink-config kafka.schema_registry_password=env://REGISTRY_PASSWORD
+python "$SHAPE_DOCS_REPO/scripts/docs_owner_assertions.py"
 ```
 
-<!-- owner: Kafka maintainer — supply the transcript for docs/EMIT.md example 2. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    %4|1791817460.684|GETPID|rdkafka#producer-1| [thrd:main]: Failed to acquire idempotence PID from broker localhost:9092/1: Broker: Coordinator load in progress: retrying
+    shape emit: 20 events delivered, offset 20 of 12,500, max-events, 83 events/s
+    Verified 20 Confluent Avro records using the authenticated registry schema
+    ```
+
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-kafka-avro.json).
 
 
 | `--sink-config` key | meaning |
@@ -360,14 +370,25 @@ its drift in the stream, day by day:
 
 <!-- example: 3 -->
 
-**Needs a Kafka account. Not run in CI.**
+The setup writes a three-day plan with an `order_line.quantity` distribution change on day two. Two-second days keep the real-time container example bounded; this demonstrates delivery, not a throughput measurement.
 
-```
+<!-- owner-example: kafka-drift -->
+
+```bash {.runnable-owner}
+python "$SHAPE_DOCS_REPO/scripts/docs_owner_setup.py" drift
 shape emit retail --drift-plan plan.json --rows customer=500 --rows order=2000 \
-    --sink kafka://broker:9092/orders --realtime --day-seconds 60 --answer-key key.jsonl
+    --sink kafka://localhost:9092/drift-orders --realtime --day-seconds 2 \
+    --answer-key key.jsonl --fresh
 ```
 
-<!-- owner: Kafka maintainer — supply the transcript for docs/EMIT.md example 3. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared three-day order_line.quantity drift plan
+    shape emit: 54,750 events delivered, offset 54,750 of 54,750, complete, 2,127 events/s
+    ```
+
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-kafka-drift.json).
 
 
 * **Day d is generated from `plan.schema_at(schema, d)` with seed + d**, exactly as `shape
@@ -534,7 +555,24 @@ profiler's bounded profile of each table, JSON). `--json` adds a `live` object t
 ### Overhead
 
 The tee profiles events on the feeding thread. The no-live-profile option disables that work.
-<!-- owner: performance maintainer — publish only committed, machine-labelled overhead measurements. -->
+The following workload records three paired 5,000-event runs, with and without the live tee, against local files. It verifies identical events before recording timings. Raw timings apply only to the labelled runner and workload; they are not a throughput promise.
+
+<!-- owner-example: emit-overhead -->
+
+```bash {.runnable-owner}
+python "$SHAPE_DOCS_REPO/scripts/docs_owner_measurements.py" emit
+```
+
+Evidence: [run 38273696299, ubuntu-latest, `7e0aa725e228`](evidence/transcripts/docs-transcripts-38273696299-7e0aa725e228-ubuntu-latest-emit-overhead.json).
+
+A [committed local measurement](evidence/live-fidelity-measurement.md) records the machine label, all samples and the harness output. On the labelled Xeon Platinum 8573C cloud environment (four CPU quota), Shape 0.9.1 / Python 3.12.14 / PyArrow 25.0.1, `retail:medium` at event seed 1007 used three interleaved repetitions per mode/sink. Observed median rates:
+
+| Sink | No tee events/s | Tee events/s | Tee + profile events/s |
+|---|---:|---:|---:|
+| file | 230,684 | 230,075 | 234,572 |
+| null | 2,586,073 | 612,014 | 335,013 |
+
+These results describe this machine and workload. File-sink variation includes a slightly higher median with profiling; it does not establish that profiling speeds up Shape. Cloud and broker sinks were not measured.
 
 ## Limits
 

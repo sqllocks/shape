@@ -31,14 +31,24 @@ Use [the tested starters](../TUTORIAL.md) for local commands and complete output
 
 <!-- example: 0 -->
 
-**Needs a Fabric account. Not run in CI.**
+**Needs an Active Directory domain and SQL Server (Windows authentication). Not run in CI.**
 
 ```bash
-shape generate retail --to mssql://sql01.corp.example/shop \
-  --auth kerberos --keytab file:///etc/shape/svc.keytab --principal svc_shape@CORP.EXAMPLE
+shape generate retail --to 'mssql://dc01.corp.example/shop?trust_server_certificate=true' \
+  --auth kerberos --keytab file:///etc/shape/svc.keytab --principal svc_shape@CORP.EXAMPLE --yes
 ```
 
-<!-- owner: Fabric maintainer — supply the transcript for docs/plugins/fabric-auth.md example 0. -->
+Owner-reported output, exit 0:
+
+```text
+Wrote 21,750 rows in 9 tables to mssql://dc01.corp.example/shop?trust_server_certificate=true (2.42s)
+```
+
+SQL Server recorded both connections as `auth_scheme = KERBEROS` from the Linux client.
+`--yes` confirms a write to a non-local target; `trust_server_certificate=true` is only for a
+server that uses a self-signed certificate (ODBC Driver 18 encrypts by default).
+
+Evidence: [Owner-run Kerberos receipt, 2026-10-12, Shape 0.9.1](../evidence/kerberos-live.md).
 
 
 For `shape generate --to mssql://` and `shape emit` / `shape stream --to mssql://` (not

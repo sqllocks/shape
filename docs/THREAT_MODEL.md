@@ -3,7 +3,7 @@
 Status: experimental.
 
 
-Review the shipped source and tests for each control. <!-- owner: security reviewer — confirm this threat model against the deployment before publishing an assurance statement. -->
+Review the shipped source and tests for each control. This page describes the controls the code implements and the residual risks; it provides no assurance about any particular deployment. [Owner decision, 2026-10-11](DECISIONS.md#threat-model).
 
 ## Assets
 
