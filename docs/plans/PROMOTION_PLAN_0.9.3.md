@@ -1,6 +1,8 @@
-# Promotion plan for 0.9.3
+# Promotion plan for 0.9.4 (written as 0.9.3)
 
 Status: plan. Not a user-facing page. Written for the lead (session `PROMO-093`). Revised 2026-10-13 for the Owner's decisions.
+
+**Retargeted to 0.9.4 (Owner, 2026-10-13).** The release that was 0.9.2 ships as 0.9.3 (0.9.2 went to TestPyPI only), so every "0.9.3" below means the next release, 0.9.4. The file name is kept so existing links work.
 
 Base: `int/0.9.2` at `c10923be9278bc63f2713ac0ed32a548b59a7afb`. Fabric evidence read from `origin/docs/fabric-transcripts` at `10c4cd633f282d7e5c3a0a5cf44f205c9d926b80`. This plan builds no code and changes no label.
 
