@@ -1,6 +1,6 @@
 # Shape documentation
 
-Early access 0.9.1. Profiling, contracts and drift are available.
+Early access 0.9.2. Profiling, contracts and drift are available.
 
 - [Anatomy of a .shape file](https://docs.shapedata.ai/dev/ANATOMY/)
 - [Python API guide](https://docs.shapedata.ai/dev/API/)
@@ -22,6 +22,7 @@ Early access 0.9.1. Profiling, contracts and drift are available.
 - [Contributing](https://docs.shapedata.ai/dev/CONTRIBUTING/)
 - [The public dataset library](https://docs.shapedata.ai/dev/DATASET_LIBRARY/)
 - [Shape and dbt](https://docs.shapedata.ai/dev/DBT/)
+- [Public owner decisions](https://docs.shapedata.ai/dev/DECISIONS/)
 - [shape demo](https://docs.shapedata.ai/dev/DEMO/)
 - [Schema design](https://docs.shapedata.ai/dev/DESIGN/)
 - [Data detective packs](https://docs.shapedata.ai/dev/DETECTIVE/)
@@ -120,6 +121,25 @@ Early access 0.9.1. Profiling, contracts and drift are available.
 - [MySQL](https://docs.shapedata.ai/dev/databases/mysql/)
 - [PostgreSQL](https://docs.shapedata.ai/dev/databases/postgresql/)
 - [Snowflake](https://docs.shapedata.ai/dev/databases/snowflake/)
+- [Allocator policy — committed product A/B measurement](https://docs.shapedata.ai/dev/evidence/allocator-measurement/)
+- [Databricks write receipt](https://docs.shapedata.ai/dev/evidence/databricks-write/)
+- [Fresh local Delta extension installation and real fallback](https://docs.shapedata.ai/dev/evidence/delta-extension-fallback/)
+- [Doctor additional-environment receipts](https://docs.shapedata.ai/dev/evidence/doctor-additional-environments/)
+- [Hosted GitHub Action drift receipt](https://docs.shapedata.ai/dev/evidence/github-action-drift/)
+- [Hosted GitHub Action pass receipt](https://docs.shapedata.ai/dev/evidence/github-action-pass/)
+- [Hosted GitHub Action required-check receipt](https://docs.shapedata.ai/dev/evidence/github-action-ruleset/)
+- [Published receipts](https://docs.shapedata.ai/dev/evidence/)
+- [Kerberos keytab sign-in to a Windows-authentication-only SQL Server — Owner-run receipt](https://docs.shapedata.ai/dev/evidence/kerberos-live/)
+- [Live fidelity overhead — committed local measurement](https://docs.shapedata.ai/dev/evidence/live-fidelity-measurement/)
+- [Local Delta doctor receipt — CLI example 5](https://docs.shapedata.ai/dev/evidence/local-delta-doctor/)
+- [MySQL export and profile receipt](https://docs.shapedata.ai/dev/evidence/mysql-export-profile/)
+- [MySQL 8.4 (local Docker), over TLS with the server's own CA — Owner-run receipt](https://docs.shapedata.ai/dev/evidence/mysql-live/)
+- [PostgreSQL export and profile receipt](https://docs.shapedata.ai/dev/evidence/postgresql-export-profile/)
+- [PostgreSQL 17 (local Docker, reached from the VM over the Hyper-V network) — Owner-run receipt](https://docs.shapedata.ai/dev/evidence/postgresql-live/)
+- [Shape 0.9.1 release tag and digest check](https://docs.shapedata.ai/dev/evidence/release-0.9.1-verify/)
+- [Semantic model profiling in a Fabric notebook — Owner-run receipt](https://docs.shapedata.ai/dev/evidence/semantic-model-notebook/)
+- [Snowflake write receipt](https://docs.shapedata.ai/dev/evidence/snowflake-write/)
+- [Installed VSIX and real editor receipt](https://docs.shapedata.ai/dev/evidence/vscode-install/)
 - [Shape by SQLLocks](https://docs.shapedata.ai/dev/)
 - [Plugin API v1](https://docs.shapedata.ai/dev/plugins/api-v1/)
 - [Writing a Shape plugin](https://docs.shapedata.ai/dev/plugins/authoring/)

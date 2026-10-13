@@ -1,0 +1,39 @@
+{
+  "run_id": "38337418136",
+  "commit": "de4c1fb128851ab5f56220981fd1b54ca57dc2c2",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
+    "logical_cpus": 4,
+    "ram_bytes": 16765370368,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "26.0.0",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "workspace": "shape-test, service principal shape-ci-fabric",
+  "page": "docs/plugins/sqlserver.md",
+  "example": "profile-db-warehouse",
+  "command": "shape profile-db --server myserver.database.windows.net --database shop \\\n    --schema dbo --sample-rows 1000 -o shop.shape --json shop-summary.json",
+  "executed_command": "shape profile-db --server \"$DOCS_SAMPLE_SERVER\" --database \"$DOCS_SAMPLE_DB\" \\\n    --schema dbo --sample-rows 1000 -o shop.shape --json shop-summary.json",
+  "exit_code": 0,
+  "status": "passed",
+  "elapsed_seconds": 10.722736425999983,
+  "stdout": "{\"written\": \"shop.shape\", \"shape_content_id\": \"5226585e9359764bb7571869ddf5b34e3e2fcd3b7ef620505f513fe7487262fa\", \"tables\": 7, \"relationships\": 5}\n"
+}

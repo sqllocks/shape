@@ -1,0 +1,37 @@
+{
+  "run_id": "38273696299",
+  "commit": "7e0aa725e228e99b432b6f6bc568ae2a0cfe7e56",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "logical_cpus": 4,
+    "ram_bytes": 16766410752,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "25.0.1",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "page": "docs/TROUBLESHOOTING.md",
+  "example": "delta-fallback",
+  "command": "python -m pip --disable-pip-version-check install --quiet 'sqllocks-shape[azure,delta-fallback]'\npython - <<'PYTHON'\nimport duckdb\ncon = duckdb.connect()\ncon.execute(\"INSTALL delta\")\ncon.execute(\"LOAD delta\")\nprint(\"DuckDB delta extension installed and loaded\")\ncon.close()\nPYTHON\nshape profile \"$SHAPE_DOCS_REPO/tests/fixtures/delta_fallback/dv\" -o deletion-vectors.json",
+  "exit_code": 0,
+  "status": "passed",
+  "elapsed_seconds": 5.6542028989999835,
+  "stdout": "DuckDB delta extension installed and loaded\nshape: note: dv: the Delta table uses reader feature(s) deletionVectors that deltalake cannot read; reading it with DuckDB delta_scan instead\n{\"provenance\": {\"as_of\": null, \"fallback_reason\": \"dv: the Delta table uses reader feature(s) deletionVectors that deltalake cannot read; reading it with DuckDB delta_scan instead\", \"format\": \"delta\", \"reader\": \"duckdb\", \"reader_features\": [\"deletionVectors\"], \"timestamp\": \"2026-10-03T03:48:46.451000+00:00\", \"version\": 2}, \"shape_content_id\": \"138321eea84d2b15e1bcdc49b2f67c96b6bf78c93d75b5c59d205274aa58549a\", \"written\": \"deletion-vectors.json\"}\n"
+}

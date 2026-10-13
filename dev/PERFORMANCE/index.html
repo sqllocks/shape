@@ -13,6 +13,10 @@
         <link rel="canonical" href="https://docs.shapedata.ai/dev/PERFORMANCE/">
       
       
+        <link rel="prev" href="../reference/performance/">
+      
+      
+        <link rel="next" href="../specs/SHAPE_MODEL_V2/">
       
       
         
@@ -23,7 +27,7 @@
     
     
       
-        <title>Performance - Shape by SQLLocks</title>
+        <title>Release regression benchmarks - Shape by SQLLocks</title>
       
     
     
@@ -102,7 +106,7 @@
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
         <div class="md-header__topic"><span class="md-ellipsis">Documentation</span></div>
-        <div class="md-header__topic" data-md-component="header-topic"><span class="md-ellipsis">Performance</span></div>
+        <div class="md-header__topic" data-md-component="header-topic"><span class="md-ellipsis">Release regression benchmarks</span></div>
       </div>
     </div>
     <a class="shape-website-link" href="https://shapedata.ai/">shapedata.ai</a>
@@ -3982,8 +3986,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -4007,6 +4013,8 @@
       
         
       
+        
+      
     
     
     
@@ -4016,11 +4024,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" checked>
         
           
           <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
@@ -4041,7 +4049,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_12">
             <span class="md-nav__icon md-icon"></span>
             
@@ -4252,6 +4260,114 @@
                 
   
   
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release regression benchmarks
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release regression benchmarks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#profiling-in-process-exact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profiling (in-process, exact)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generation-generate-and-write-parquet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generation (generate and write Parquet)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#streaming-retail-order-events-to-a-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Streaming (retail order events to a file)
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
   
   
     
@@ -4277,10 +4393,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_8" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_9" >
         
           
-          <label class="md-nav__link" for="__nav_12_8" id="__nav_12_8_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_12_9" id="__nav_12_9_label" tabindex="0">
             
   
   
@@ -4298,8 +4414,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_8_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_12_8">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_9">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -4537,6 +4653,8 @@
       
         
       
+        
+      
     
     
     
@@ -4673,6 +4791,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../evidence/release-0.9.1-verify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release 0.9.1 tag and digest check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../V1_DONE/" class="md-nav__link">
         
   
@@ -4709,6 +4855,10 @@
   
     
     
+      
+        
+      
+        
       
         
       
@@ -4902,6 +5052,616 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DECISIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Public owner decisions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../evidence/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Published receipts
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_14_7" id="__nav_14_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_14_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Published receipts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/vscode-install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installed VSIX and real editor receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/live-fidelity-measurement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Live fidelity overhead — committed local measurement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/allocator-measurement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allocator policy — committed product A/B measurement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/local-delta-doctor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Delta doctor receipt — CLI example 5
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/snowflake-write/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Snowflake write receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/databricks-write/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Databricks write receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/kerberos-live/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kerberos keytab sign-in — Owner-run receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/semantic-model-notebook/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Semantic model profiling in a Fabric notebook — Owner-run receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/postgresql-export-profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PostgreSQL export and profile receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/mysql-export-profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL export and profile receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/postgresql-live/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PostgreSQL 17 (local Docker, reached from the VM over the Hyper-V network) — Owner-run receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/mysql-live/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL 8.4 (local Docker), over TLS with the server's own CA — Owner-run receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/github-action-pass/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hosted GitHub Action pass receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/github-action-drift/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hosted GitHub Action drift receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/github-action-ruleset/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hosted GitHub Action required-check receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/doctor-additional-environments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Doctor additional-environment receipts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/delta-extension-fallback/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fresh local Delta extension installation and real fallback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -5580,20 +6340,112 @@
 <p>Status: available.</p>
 <!-- Generated by scripts/gen_performance_page.py from the benchmark results; do not edit by hand. -->
 
-<p>Every speed-up on this page is a ratio measured in one job: Shape and the earlier engine Shape replaced ran the same workload on the same machine, each in a fresh process, and the median of the runs is reported. <strong>A workload's numbers are published only after its equivalence verifier exited 0</strong>: Shape's output must be statistically equivalent to the baseline's (same tables, columns, distributions and relationships within fixed tolerances, with fixed seeds) before any timing counts. A workload whose verifier did not pass is listed without numbers. These checks were retired after 0.9.1; this page preserves the recorded results.</p>
+<p>Every ratio compares the candidate with Shape 0.9.1, the last published release, timed in the same job on the same machine in fresh processes. Only workloads whose equivalence verifier exited 0 publish numbers; fixed tolerances and seeds apply. Release-day measurements from the 4-vCPU runner are recorded in the release timing snapshot, <code>recorded/timings_0.9.1.json</code>.</p>
 <ul>
-<li>Measured: 2026-09-30T13:39:09Z, mode <code>quick</code>, 3 runs per tool.</li>
-<li>Shape commit: <code>79b4250efba8</code></li>
-<li>Machine: 4 cores, Intel(R) Xeon(R) Processor @ 2.10GHz, Python 3.11.15.</li>
+<li>Measured: 2026-10-12T03:39:33Z, mode <code>quick</code>, 3 runs per tool.</li>
+<li>Shape commit: <code>d09731e59b63</code> (modified tree: nothing is published)</li>
+<li>Machine: 5 cores, AMD EPYC 9V74 80-Core Processor, Python 3.11.16.</li>
 </ul>
 <h2 id="profiling-in-process-exact">Profiling (in-process, exact)<a class="headerlink" href="#profiling-in-process-exact" title="Permanent link">&para;</a></h2>
-<p>No measurement recorded.</p>
+<table>
+<thead>
+<tr>
+<th>Workload</th>
+<th>Verifier</th>
+<th>Baseline median (s)</th>
+<th>Shape median (s)</th>
+<th>Speed-up</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D1 (200k rows x 6 columns), CSV</td>
+<td>modified tree</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>D1 (200k rows x 6 columns), PARQUET</td>
+<td>modified tree</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>D2 (1M rows x 20 columns), CSV</td>
+<td>modified tree</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>D2 (1M rows x 20 columns), PARQUET</td>
+<td>modified tree</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
 <h2 id="generation-generate-and-write-parquet">Generation (generate and write Parquet)<a class="headerlink" href="#generation-generate-and-write-parquet" title="Permanent link">&para;</a></h2>
-<p>No measurement recorded.</p>
+<table>
+<thead>
+<tr>
+<th>Workload</th>
+<th>Verifier</th>
+<th>Baseline median (s)</th>
+<th>Shape median (s)</th>
+<th>Speed-up</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>retail, medium</td>
+<td>modified tree</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>retail, small</td>
+<td>modified tree</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
 <h2 id="streaming-retail-order-events-to-a-file">Streaming (retail <code>order</code> events to a file)<a class="headerlink" href="#streaming-retail-order-events-to-a-file" title="Permanent link">&para;</a></h2>
-<p>No measurement recorded.</p>
+<table>
+<thead>
+<tr>
+<th>Workload</th>
+<th>Verifier</th>
+<th>Baseline median (s)</th>
+<th>Shape median (s)</th>
+<th>Speed-up</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>retail <code>order</code>, medium</td>
+<td>modified tree</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>retail <code>order</code>, small</td>
+<td>modified tree</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
 <p>No verified measurement is published yet.</p>
-<p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Performance&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FPERFORMANCE%2F">Report a problem with this page</a></p>
+<p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Release+regression+benchmarks&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FPERFORMANCE%2F">Report a problem with this page</a></p>
 
 
 
