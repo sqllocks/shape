@@ -143,3 +143,31 @@ def test_transcripts_mode_is_a_gated_job_of_fabric_live_and_changes_nothing_else
     assert capture["if"].startswith("${{ inputs.transcripts &&")
     assert not any(step.get("continue-on-error") for step in capture["steps"])
     assert any(s.get("uses", "").startswith("actions/upload-artifact@") for s in capture["steps"])
+
+
+def test_preclean_deletes_only_exact_names_children_first():
+    from docs_fabric_preclean import NOTEBOOK, TABLES, clean_kql, clean_notebook, doomed
+
+    assert doomed(["Customer", "customer_audit", "ORDER", "keep_me", "order_line"]) == [
+        "order_line",
+        "ORDER",
+        "Customer",
+    ]
+    assert TABLES.index("order_line") < TABLES.index("order") < TABLES.index("customer")
+    report: dict = {}
+    gone: list[str] = []
+    items = [
+        {"type": "Notebook", "displayName": NOTEBOOK, "id": "a"},
+        {"type": "Notebook", "displayName": NOTEBOOK + "_2", "id": "b"},
+        {"type": "Lakehouse", "displayName": NOTEBOOK, "id": "c"},
+    ]
+    clean_notebook(items, gone.append, report)
+    assert gone == ["a"]
+    commands: list[str] = []
+
+    def post(csl: str):
+        commands.append(csl)
+        return [["customer"], ["unrelated"]] if csl == ".show tables" else []
+
+    clean_kql(post, report)
+    assert commands == [".show tables", ".drop table ['customer']"]
