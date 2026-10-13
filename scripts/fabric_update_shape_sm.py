@@ -236,7 +236,11 @@ def main() -> int:
             print(f"{schema}.{table} is not visible in the SQL endpoint: seed first")
             return 1
         added[table] = [c[0] for c in cols]
-        files[f"definition/tables/{table}.tmdl"] = table_tmdl(table, schema, cols, expression)
+        key = f"definition/tables/{table}.tmdl"
+        if key in files:  # already in the model (an earlier run): keep it as it is
+            print(f"table {table} is already in the model: kept")
+        else:
+            files[key] = table_tmdl(table, schema, cols, expression)
     model = files["definition/model.tmdl"].rstrip("\n")
     for table in TABLES:
         if f"ref table {quote(table)}" not in model:
@@ -248,6 +252,12 @@ def main() -> int:
     for child, ccol, parent, pcol in RELATIONSHIPS:
         if ccol not in added[child] or pcol not in added[parent]:
             skipped.append(f"{child}.{ccol} -> {parent}.{pcol}")
+            continue
+        pair = (
+            f"fromColumn: {quote(child)}.{quote(ccol)}\n\ttoColumn: {quote(parent)}.{quote(pcol)}"
+        )
+        if pair in relationships:
+            print(f"relationship {child}.{ccol} -> {parent}.{pcol} is already in the model: kept")
             continue
         relationships += (
             f"\n\nrelationship {uuid.uuid4()}\n\tfromColumn: {quote(child)}.{quote(ccol)}"
