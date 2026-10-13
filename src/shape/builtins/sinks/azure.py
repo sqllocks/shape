@@ -21,7 +21,9 @@ file every N rows or seconds; see :mod:`shape.builtins.sinks._roll`); ``mode`` (
 ``spool_bytes``; the credential options of the source.
 
 Atomic publish: a file is spooled while it is written, uploaded to ``_shape_tmp/`` and renamed to
-its final name, so a reader never sees a partial file (:mod:`shape.io.store`).
+its final name, so a reader never sees a partial file (:mod:`shape.io.store`). OneLake refuses that
+move (a Blob copy and delete: ``OperationNotAllowedOnThePath``), so there the file is written
+straight to its final name, which a block blob shows only once its last block is committed.
 """
 
 from __future__ import annotations
@@ -225,6 +227,7 @@ class AbfssSink:
             loc.fs_path,
             label=f"{where}/{loc.path}".rstrip("/"),
             translate=lambda exc: translate_error(exc, where),
+            direct=is_onelake(loc.host),
             **kwargs,
         )
 

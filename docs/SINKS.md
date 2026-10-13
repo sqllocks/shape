@@ -75,6 +75,12 @@ shape generate retail --to delta+abfss://ws@onelake.dfs.fabric.microsoft.com/lh.
   and renamed to its final name when complete, so a Fabric pipeline or a storage-event trigger
   never sees a partial file. On a hierarchical namespace the rename is atomic; on a flat blob
   namespace (Azurite) it is a server-side copy and delete, and the final blob still appears whole.
+  OneLake refuses that move (a Blob copy and delete fails with `OperationNotAllowedOnThePath`;
+  [OneLake API parity](https://learn.microsoft.com/fabric/onelake/onelake-api-parity)), so for an
+  `onelake.dfs.fabric.microsoft.com` target each file is written straight to its final name, and a
+  block blob shows only once its last block is committed. The target must be inside the item's
+  `Files` folder (`.../<item>.Lakehouse/Files/<folder>`): OneLake does not let the API create or
+  change the item folder or its `Files` and `Tables` folders themselves.
   `--manifest` writes `_SUCCESS` in each folder after its files.
 * **Rolling.** `--roll-rows N` and `--roll-seconds S` start a new numbered file; rows-based rolling
   is exact and deterministic. In a stream, every checkpoint also completes the file, so

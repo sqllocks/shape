@@ -9,7 +9,9 @@ event trigger, a ``shape`` source) never sees a partial file:
   with ``_`` or ``.``) and is moved to its final name with ``fs.mv`` when complete. On a
   hierarchical namespace the move is a rename; on a flat blob namespace it is a server-side copy
   and a delete, and the final blob still appears only whole, because a block blob is not visible
-  until its last block is committed.
+  until its last block is committed. With ``direct=True`` (OneLake, whose Blob endpoint refuses the
+  copy: ``OperationNotAllowedOnThePath``) the file is written straight to its final name; the same
+  rule keeps it invisible until the last block is committed, and a failed upload leaves nothing.
 
 ``manifest`` writes a ``_SUCCESS`` file last, for pipelines that wait for it.
 """
@@ -208,8 +210,10 @@ class FsspecStore(Store):
         spool_bytes: int = 32 << 20,
         sleep: Callable[[float], None] = time.sleep,
         translate: Callable[[BaseException], BaseException | None] | None = None,
+        direct: bool = False,
     ) -> None:
         self.fs = fs
+        self._direct = direct
         self.root = root.rstrip("/")
         self._label = label or self.root
         self._retries = max(0, retries)
@@ -239,7 +243,11 @@ class FsspecStore(Store):
     def create(self, rel: str) -> PendingFile:
         final = self._path(rel)
         name = PurePosixPath(final).name
-        temp = f"{self.root}/{TEMP_DIR}/{uuid.uuid4().hex[:12]}-{_temp_stem(name)}"
+        temp = (
+            final
+            if self._direct
+            else f"{self.root}/{TEMP_DIR}/{uuid.uuid4().hex[:12]}-{_temp_stem(name)}"
+        )
         spool = tempfile.SpooledTemporaryFile(max_size=self._spool_bytes)  # noqa: SIM115
         return PendingFile(self, rel, temp, spool, final)  # type: ignore[arg-type]
 
@@ -253,7 +261,8 @@ class FsspecStore(Store):
 
         self._call(upload, "upload")
         spool.close()
-        self._call(lambda: self.fs.mv(pending._temp, pending.final), "publish")
+        if not self._direct:
+            self._call(lambda: self.fs.mv(pending._temp, pending.final), "publish")
 
     def exists(self, rel: str) -> bool:
         return bool(self._call(lambda: self.fs.exists(self._path(rel)), "exists"))
@@ -283,6 +292,8 @@ class FsspecStore(Store):
         self._call(rm, "delete")
 
     def _remove(self, temp: str) -> None:
+        if self._direct:
+            return  # nothing is visible until the commit, and the final name may hold an older file
         with contextlib.suppress(Exception):
             self.fs.rm(temp)
 
