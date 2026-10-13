@@ -582,9 +582,9 @@ def test_a_missing_or_unlisted_pool_fails(tmp_path: Path) -> None:
 
 
 def test_a_raised_generator_version_needs_the_manifest_updated() -> None:
-    versions = {**pm.strategy_versions(), "native": 2}
+    versions = {**pm.strategy_versions(), "native": 3}
     problems = pm.verify(versions=versions)
-    assert problems and all("native version 1, but native is at version 2" in p for p in problems)
+    assert problems and all("native version 2, but native is at version 3" in p for p in problems)
     assert len(problems) == len(pm.load()["files"]) - 7  # every pool but the 7 locale files
 
 

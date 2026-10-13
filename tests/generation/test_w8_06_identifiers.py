@@ -489,19 +489,19 @@ def test_a_faker_identifier_still_honours_max_length() -> None:
     assert all(len(v) <= 9 for v in column(document, "free_email"))
 
 
-def test_the_faker_strategy_is_at_generator_version_2_and_keeps_1() -> None:
+def test_the_faker_strategy_is_at_generator_version_3_and_keeps_1_and_2() -> None:
     from shape.generation import versions
 
     faker = providers.Faker()
-    assert versions.generator_version(faker) == 2
-    assert versions.supported(faker) == (1, 2)
+    assert versions.generator_version(faker) == 3
+    assert versions.supported(faker) == (1, 3)
     assert Engine(GenSchema.from_dict(doc("faker", ["free_email"]))).generator_versions == {
-        "faker": 2,
+        "faker": 3,
         "sequence": 1,
     }
 
 
-@pytest.mark.parametrize("version", [0, 3])
+@pytest.mark.parametrize("version", [0, 4])
 def test_a_faker_version_it_does_not_have_is_refused(version: int) -> None:
     from shape.generation.versions import GeneratorPinError
 

@@ -6,7 +6,18 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+### Changed
+
+- The `ipv4` provider of the `native` and `faker` strategies no longer gives public addresses
+  that can belong to real organizations. By default it draws from the RFC 5737 documentation
+  blocks (`192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24`); `"range": "private"` draws from
+  the RFC 1918 private blocks (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`) instead. A new
+  `ipv6` provider draws from the RFC 3849 documentation prefix `2001:db8::/32`, and the `faker`
+  strategy keeps the `faker` package's `ipv4_public` and `ipv4_private` to the same blocks. This
+  changes generated output, so `native` is at generator version 2 and `faker` at generator
+  version 3. A spec that pins `native` 1 or `faker` 1 or 2 (`shape pin`), and a run manifest that
+  records them, still reproduce the old addresses. See `docs/GENERATION_STRATEGIES.md` and
+  `docs/GENERATION_STABILITY.md`.
 
 ## 0.9.1
 

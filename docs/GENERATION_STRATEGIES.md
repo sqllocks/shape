@@ -174,7 +174,8 @@ URI domains and paths). `provider` defaults to `word`. Every draw is row address
 | `ssn` | `AAA-GG-SSSS`, `AAA` 900 to 999 (never assigned), `GG` 1 to 99, `SSSS` 1 to 9999 |
 | `street_address` | `<100..9998> <street> <St, Ave, Blvd, Dr, Ln, Way, Ct, Pl, Rd or Cir>` |
 | `uri` | `https://<domain>/<path>`, `domain` one of `example.com`, `example.org`, `example.net` |
-| `ipv4` | `A.B.C.D`, `A` and `D` 1 to 254, `B` and `C` 0 to 255 |
+| `ipv4` | `A.B.C.D` in one of the RFC 5737 documentation blocks `192.0.2.0/24`, `198.51.100.0/24` and `203.0.113.0/24` (the block chosen uniformly), `D` 1 to 254; `"range": "private"` gives the RFC 1918 blocks `10.0.0.0/8`, `172.16.0.0/12` and `192.168.0.0/16` instead (the block chosen uniformly, then the address in it, `D` 1 to 254) |
+| `ipv6` | `2001:db8:HHHH:HHHH:HHHH:HHHH:HHHH:HHHH`, six groups of four lower-case hexadecimal digits after the RFC 3849 documentation prefix `2001:db8::/32` |
 | `postcode` | five digits, 00501 to 99950 |
 | `zip_plus4` | `NNNNN-NNNN`: a `postcode` and four digits, 0001 to 9999 |
 | `pystr`, `word` | 12 characters from `a-z0-9` |
@@ -187,7 +188,17 @@ options give realistic values instead; **they can produce real people's addresse
 never use them for data that leaves a test system**: `"domains": "realistic"` (`email`,
 `company_email`, `uri`: real mail providers and `.com` hosts) and `"range": "assignable"` (`ssn`:
 areas 001 to 899 without 666; `phone_number`: `(AAA) EEE-SSSS`, `EEE` 200 to 998, `SSSS` 1000 to
-9998). Any other value of either option is a `StrategyError`. The `ipv4` provider is unchanged.
+9998). Any other value of either option is a `StrategyError`.
+
+**Addresses that cannot belong to a real network.** `ipv4` and `ipv6` never give a public address,
+so a generated "attacker IP" in a security or network log is never a real organization's address.
+`ipv4` takes `"range"`: `reserved` (the default, the RFC 5737 documentation blocks) or `private`
+(the RFC 1918 blocks, for internal-network realism); `ipv6` takes only `reserved`. Any other value
+is a `StrategyError`. Neither follows the run switch below: there is no realistic, public form.
+This is `native` generator version 2 and `faker` generator version 3; a spec that pins `native` 1
+or `faker` 1 or 2 keeps the old `ipv4` (`A.B.C.D`, `A` and `D` 1 to 254, `B` and `C` 0 to 255:
+any address, public ones included) and has no `ipv6` (`faker` 1 and 2 pass `ipv6` to the `faker`
+package). See [GENERATION_STABILITY.md](GENERATION_STABILITY.md).
 
 **One switch for a whole run.** Realistic identifiers can also be turned on for every column of a
 run at once; reserved stays the default. The mode of a column is decided, most specific first, by:
@@ -236,6 +247,7 @@ switch) gives what the package makes:
 | `domain_name`, `free_email_domain`, `dga`, `hostname` | one of those three (`hostname` keeps its first label: `web-12.example.org`) |
 | any with `phone` in its name (`basic_phone_number`, ...) | `(AAA) 555-01SS`, as `phone_number` |
 | `msisdn` | `1AAA55501SS`: the same fictional lines as a North American MSISDN |
+| `ipv4_public`, `ipv4_private` | an `ipv4` value: the documentation blocks, and the private blocks for `ipv4_private` (`faker` 3; not affected by the mode) |
 
 The `safe_*` providers already use the reserved hosts and are left as they are; any other provider
 (names, jobs, words) does not change with the mode.

@@ -52,8 +52,9 @@ def builtin_objects() -> list[tuple[str, str, Any]]:
 
 
 # Built-ins whose output changed after W1-15, so their version was raised (the older versions
-# stay selectable): W8-06 keeps the faker package's identifier providers reserved by default.
-RAISED = {("shape.strategies", "faker"): 2}
+# stay selectable): W8-06 keeps the faker package's identifier providers reserved by default, and
+# `ipv4` and `ipv6` keep to the documentation (or private) address blocks.
+RAISED = {("shape.strategies", "faker"): 3, ("shape.strategies", "native"): 2}
 
 
 def test_every_builtin_strategy_and_distribution_declares_version_1() -> None:

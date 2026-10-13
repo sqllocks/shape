@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "model": {
+    "name": "golden_addresses",
+    "seed": 42
+  },
+  "tables": {
+    "hosts": {
+      "name": "hosts",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "generator": {
+            "strategy": "sequence"
+          }
+        },
+        "ipv4": {
+          "name": "ipv4",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "ipv4"
+          }
+        },
+        "ipv4_private": {
+          "name": "ipv4_private",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "ipv4",
+            "range": "private"
+          }
+        },
+        "ipv6": {
+          "name": "ipv6",
+          "type": "string",
+          "generator": {
+            "strategy": "native",
+            "provider": "ipv6"
+          }
+        }
+      }
+    }
+  },
+  "generators": {
+    "native": 2,
+    "sequence": 1
+  }
+}

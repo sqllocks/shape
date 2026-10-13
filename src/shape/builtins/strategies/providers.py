@@ -42,6 +42,10 @@ SHAPE_API = "1.0"
 RESERVED_DOMAINS = ("example.com", "example.org", "example.net")
 DOMAIN_MODES = ("reserved", "realistic")
 RANGE_MODES = ("reserved", "assignable")
+# `ipv4` and `ipv6` never give a public address (`native` 2, `faker` 3): the documentation blocks of
+# RFC 5737 and RFC 3849 by default, or the RFC 1918 private blocks with `"range": "private"`.
+IPV4_RANGES = ("reserved", "private")
+IPV4_DOCUMENTATION_BLOCKS = ((192, 0, 2), (198, 51, 100), (203, 0, 113))
 
 PYSTR_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789"
 PYSTR_LENGTH = 12
@@ -217,8 +221,9 @@ def _ssn(ctx: GenerationContext, spec: Mapping[str, Any]) -> pa.Array:
     )
 
 
-def _ipv4(ctx: GenerationContext) -> pa.Array:
-    # a.b.c.d with the first and last octet in 1..254
+def _ipv4_v1(ctx: GenerationContext) -> pa.Array:
+    # a.b.c.d with the first and last octet in 1..254: `native` 1 and `faker` 1 and 2 (a pinned
+    # spec), which can be any public address
     parts = [
         arrow_array(_ints(ctx, "a", 1, 255)),
         arrow_array(_ints(ctx, "b", 0, 256)),
@@ -227,6 +232,52 @@ def _ipv4(ctx: GenerationContext) -> pa.Array:
     ]
     return kernel_ops.template_strings(
         ["", ".", ".", ".", ""], [(0, 0), (1, 0), (2, 0), (3, 0)], parts, ctx.n_rows
+    )
+
+
+def _ipv4_range(spec: Mapping[str, Any], ctx: GenerationContext) -> str:
+    # the column's own key only: an address is never a public one, so the run switch does not
+    # apply
+    mode = str(spec.get("range", "reserved"))
+    if mode not in IPV4_RANGES:
+        raise StrategyError(
+            f"provider {_provider(spec)!r} takes range {' or '.join(IPV4_RANGES)}, "
+            f"not {mode!r} ({where(ctx)})"
+        )
+    return mode
+
+
+def _ipv4(ctx: GenerationContext, spec: Mapping[str, Any]) -> pa.Array:
+    # One of three blocks, chosen uniformly, then a host in it with the last octet in 1..254.
+    # Reserved (default): the RFC 5737 documentation blocks 192.0.2.0/24, 198.51.100.0/24 and
+    # 203.0.113.0/24. Private: the RFC 1918 blocks 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16.
+    block = _pick(ctx, "block", 3)
+    if _ipv4_range(spec, ctx) == "reserved":
+        a, b, c = np.array(IPV4_DOCUMENTATION_BLOCKS, dtype=np.int64)[block].T
+    else:
+        b, c = _ints(ctx, "b", 0, 256), _ints(ctx, "c", 0, 256)
+        a = np.choose(block, [10, 172, 192])
+        b = np.choose(block, [b, 16 + b % 16, 168])
+    parts = [arrow_array(np.ascontiguousarray(octet)) for octet in (a, b, c)]
+    parts.append(arrow_array(_ints(ctx, "d", 1, 255)))
+    return kernel_ops.template_strings(
+        ["", ".", ".", ".", ""], [(0, 0), (1, 0), (2, 0), (3, 0)], parts, ctx.n_rows
+    )
+
+
+def _ipv6(ctx: GenerationContext, spec: Mapping[str, Any]) -> pa.Array:
+    # 2001:db8:HHHH:HHHH:HHHH:HHHH:HHHH:HHHH, the RFC 3849 documentation prefix 2001:db8::/32
+    mode = str(spec.get("range", "reserved"))
+    if mode != "reserved":
+        raise StrategyError(
+            f"provider {_provider(spec)!r} takes range reserved, not {mode!r} ({where(ctx)})"
+        )
+    hexes = kernel_ops.random_strings(
+        stream(ctx, "hex"), ctx.row_start, ctx.n_rows, 24, "0123456789abcdef"
+    )
+    groups = [pc.utf8_slice_codeunits(hexes, i, i + 4) for i in range(0, 24, 4)]
+    return kernel_ops.template_strings(
+        ["2001:db8:", ":", ":", ":", ":", ":", ""], [(i, 0) for i in range(6)], groups, ctx.n_rows
     )
 
 
@@ -333,11 +384,18 @@ PROVIDERS: dict[str, _Provider] = {
     "state_abbr": _plain(_state_abbr),
     "uri": _uri,
     "company_email": _company_email,
-    "ipv4": _plain(_ipv4),
+    "ipv4": _ipv4,
+    "ipv6": _ipv6,
     "postcode": _plain(_postcode),
     "zip_plus4": _plain(_zip_plus4),
     "pystr": _plain(_word),
     "word": _plain(_word),
+}
+
+# The providers of `native` 1 and `faker` 1 and 2 (a pinned spec): `ipv4` as it was, no `ipv6`.
+V1_PROVIDERS: dict[str, _Provider] = {
+    **{name: make for name, make in PROVIDERS.items() if name != "ipv6"},
+    "ipv4": _plain(_ipv4_v1),
 }
 
 
@@ -400,24 +458,38 @@ def _provider(spec: Mapping[str, Any]) -> str:
 class Native:
     """Text from the built-in pools: ``spec['provider']`` is one of ``first_name``, ``last_name``,
     ``name``, ``email``, ``phone_number``, ``ssn``, ``company``, ``street_address``, ``sentence``,
-    ``city``, ``state_abbr``, ``uri``, ``company_email``, ``ipv4``, ``postcode``, ``zip_plus4``,
-    ``pystr`` or
-    ``word`` (the default), or ``digits`` / ``digit_ids`` (``spec['width']`` zero-padded digits,
-    random or counting up).
-    The column's ``max_length`` truncates."""
+    ``city``, ``state_abbr``, ``uri``, ``company_email``, ``ipv4``, ``ipv6``, ``postcode``,
+    ``zip_plus4``, ``pystr`` or ``word`` (the default), or ``digits`` / ``digit_ids``
+    (``spec['width']`` zero-padded digits, random or counting up).
+    The column's ``max_length`` truncates.
+
+    Generator version 2 keeps ``ipv4`` to the documentation blocks of RFC 5737 (or, with
+    ``"range": "private"``, the private blocks of RFC 1918) and adds ``ipv6``; version 1 (a pinned
+    spec) gives any ``ipv4`` address, as it did, and has no ``ipv6``.
+    """
 
     name = "native"
-    generator_version = 1
+    generator_version = 2
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
+        return self.generate_versioned(spec, ctx, self.generator_version)
+
+    def generate_versioned(
+        self, spec: Mapping[str, Any], ctx: GenerationContext, version: int
+    ) -> pa.Array:
+        if not 1 <= version <= self.generator_version:
+            raise StrategyError(
+                f"native has generator versions 1 to {self.generator_version}, not {version}"
+            )
         provider = _provider(spec)
         if provider in SPEC_PROVIDERS:
             return SPEC_PROVIDERS[provider](spec, ctx)
-        make = PROVIDERS.get(provider)
+        served = PROVIDERS if version >= 2 else V1_PROVIDERS
+        make = served.get(provider)
         if make is None:
             raise StrategyError(
                 f"native strategy does not handle provider {provider!r} for column {where(ctx)}; "
-                f"it serves {', '.join(sorted(PROVIDERS))}"
+                f"it serves {', '.join(sorted(served))}"
             )
         return _truncate(make(ctx, spec), ctx)
 
@@ -564,10 +636,15 @@ class Faker:
     Generator version 2 (issue #766) keeps the package's e-mail, URL, host and phone providers
     to the reserved values unless the column or the run asks for realistic ones; version 1 (a
     pinned spec) returns what the package makes, as it did.
+
+    Generator version 3 serves ``ipv4`` and ``ipv6`` as ``native`` 2 does (documentation or
+    private blocks, never a public address) and keeps the package's ``ipv4_public`` and
+    ``ipv4_private`` to the same blocks; versions 1 and 2 give the old ``ipv4`` and the
+    package's ``ipv6``, ``ipv4_public`` and ``ipv4_private``.
     """
 
     name = "faker"
-    generator_version = 2
+    generator_version = 3
 
     def generate(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         return self.generate_versioned(spec, ctx, self.generator_version)
@@ -582,9 +659,14 @@ class Faker:
         provider = _provider(spec)
         if provider in SPEC_PROVIDERS:
             return SPEC_PROVIDERS[provider](spec, ctx)
-        make = PROVIDERS.get(provider)
+        make = (PROVIDERS if version >= 3 else V1_PROVIDERS).get(provider)
         if make is not None:
             return _truncate(make(ctx, spec), ctx)
+        if version >= 3 and provider in ("ipv4_public", "ipv4_private"):
+            # the package's addresses can be anyone's: the blocks of the native `ipv4`
+            if provider == "ipv4_private":
+                spec = {**spec, "range": "private"}
+            return _truncate(_ipv4(ctx, spec), ctx)
         family = _faker_family(provider) if version >= 2 else None
         if family == "phone" and _range_mode(spec, ctx) == "reserved":
             # a phone number of the package can be anyone's: the lines reserved for fiction

@@ -46,8 +46,12 @@ kernel modes in the regular test suite.
 Every strategy (`shape.strategies`) and every distribution (`shape.distributions`, and the
 families behind `strategy: distribution`) has an integer **generator version**, which names the
 algorithm that maps parameters, seed and row index to values. All built-ins are at version 1,
-except `faker` at version 2 (W8-06: the `faker` package's e-mail, URL, host and phone providers are
-reserved by default; version 1 returns the package's values as before).
+except `native` at version 2 and `faker` at version 3. `faker` 2 (W8-06) keeps the `faker`
+package's e-mail, URL, host and phone providers reserved by default; version 1 returns the
+package's values as before. `native` 2 and `faker` 3 keep `ipv4` to the RFC 5737 documentation
+blocks (or the RFC 1918 private blocks with `"range": "private"`) and add `ipv6` in
+`2001:db8::/32`; `native` 1 and `faker` 1 and 2 give the old `ipv4`, which can be any public
+address (`docs/GENERATION_STRATEGIES.md`).
 
 - A change that alters the output for the same inputs **must raise the version**. The previous
   version stays implemented and selectable for the whole 1.x line.
@@ -297,8 +301,9 @@ follows the same manifest.
 
 `tests/generation/golden_bytes/` holds the SHA-256 of every file the writers produce for a fixed set
 of specs at seed 42 and 100 rows per table: the pinned spec of every built-in strategy and
-distribution family (`tests/generation/pinned/`), every `native` provider (so every reference pool)
-and a spec of every column type with the values a writer must escape or format
+distribution family (`tests/generation/pinned/`), every `native` provider (so every reference pool),
+the `ipv4` and `ipv6` addresses of `native` 2, and a spec of every column type with the values a
+writer must escape or format
 (`golden_bytes/specs/`). Each table is written as CSV, TSV, JSON Lines and SQL in every dialect (a
 table with a struct or list column has no CSV or TSV form).
 
@@ -371,9 +376,9 @@ shape pin shop.json --check         # exit 1 and list the names that are not pin
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    pinned 8 generators in shop.json: conditional_table=1, distribution=1, faker=2, normal=1, sequence=1, temporal=1, uniform=1, weighted_enum=1
+    pinned 8 generators in shop.json: conditional_table=1, distribution=1, faker=3, normal=1, sequence=1, temporal=1, uniform=1, weighted_enum=1
     shop.json already pins all 8 generators it uses
-    {"added": {}, "generators": {"conditional_table": 1, "distribution": 1, "faker": 2, "normal": 1, "sequence": 1, "temporal": 1, "uniform": 1, "weighted_enum": 1}, "spec": "shop.json", "unused": [], "written": null, "format": "shape-result", "version": 1, "command": "pin", "exit_code": 0}
+    {"added": {}, "generators": {"conditional_table": 1, "distribution": 1, "faker": 3, "normal": 1, "sequence": 1, "temporal": 1, "uniform": 1, "weighted_enum": 1}, "spec": "shop.json", "unused": [], "written": null, "format": "shape-result", "version": 1, "command": "pin", "exit_code": 0}
     shop.json pins all 8 generators it uses
     ```
 
@@ -391,6 +396,6 @@ python scripts/golden_bytes.py --update   # rewrite the corpus
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    418 files match the golden byte corpus
-    wrote 418 file digests to tests/generation/golden_bytes/hashes.json
+    425 files match the golden byte corpus
+    wrote 425 file digests to tests/generation/golden_bytes/hashes.json
     ```
