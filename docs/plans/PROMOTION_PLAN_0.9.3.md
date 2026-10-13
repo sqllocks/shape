@@ -6,7 +6,7 @@ Base: `int/0.9.2` at `c10923be9278bc63f2713ac0ed32a548b59a7afb`. Fabric evidence
 
 ## Decisions (Owner, 2026-10-13)
 
-The Owner's words, relayed by the lead: "Recommendations except #2. We want to get those in .9.3".
+The Owner's words, relayed by the lead: "Recommendations except #2. We want to get those in .9.3", then "6–16 yes".
 
 | # | Decision | Owner answer | Effect on this plan |
 |---|---|---|---|
@@ -15,7 +15,11 @@ The Owner's words, relayed by the lead: "Recommendations except #2. We want to g
 | 3 | Evidence freshness | Accepted | A receipt counts if it is from the same release line, or the source of that path is unchanged since. Fabric is re-recorded on the release head. See 1.2 for how "same release line" is read. |
 | 4 | What is a real run | Accepted | Self-hosted containers count. Cloud emulators do not. |
 | 5 | Mixed pages | Accepted | In-page experimental fences; one real split (`CLI.md`). |
-| 6 to 12 | Python API stance, surface edits before the freeze, `rules` mutant kinds, `### Promoted` heading, remove `privacy-k` and `quality`, live-run batch, claim-table cost | Accepted (read from "Recommendations except #2"; the lead relayed only 1 to 5 by number, so the lead should confirm 6 to 12) | Section 5 marks each. |
+| 6 to 12 | Python API stance, surface edits before the freeze, `rules` mutant kinds, `### Promoted` heading, remove `privacy-k` and `quality`, live-run batch, claim-table cost | Owner-confirmed ("6–16 yes", 13 Oct, about 14:20Z) | Section 5 marks each. |
+| 13 | `profile-db --client-secret` | Accepted | Takes `env://`, `file://` or `kv://` references only and refuses a literal, before the freeze. Folded into the `profile-db` work package (4.11). |
+| 14 | Two spellings of each Fabric command | Accepted | Freeze both (`shape publish` and `shape fabric publish`, and so on). |
+| 15 | "Same minor version" | Accepted | Means the same release or unchanged source (1.2). |
+| 16 | Plugin and core version coupling | Accepted | A stable plugin command is promised only with a plugin of the same release as the core, stated in `CLI_STABILITY.md`. |
 
 Correction to the Fabric evidence (relayed by the lead). The three Fabric owner notes are resolved by real runs on `docs/fabric-transcripts` at `10c4cd633f282d7e5c3a0a5cf44f205c9d926b80`. That branch lands on `int/0.9.2` shortly. I checked each file with `git cat-file -e` on that commit:
 
@@ -369,7 +373,7 @@ W0 and W-plug first. Pages 8 to 10 need only W0 and text. Items 11 to 15 can run
 
 Surfaces are from `shape <cmd> --help` with the first-party plugins installed. A freeze covers flag names, value kinds, choices, positionals and exit classes. It does not cover banner text (`Shape v0.9.1 — ...`) or output layout, as in `CLI_STABILITY.md`. Among the plugin commands that take flags directly, only `profile-db`, `profile-model` and `dbt-report` have `--json`, and only `publish` has `--dry-run` (the commands with subcommands were not checked). The promise therefore covers only what exists. Exit classes: 0 ok, 1 a check failed, 2 bad input.
 
-**Both spellings are documented.** The commands exist at top level (`shape publish`) and under `shape fabric` (`shape fabric publish`, `... setup`, `... notebook`, `... deploy-notebook`, `... export-model`, `... known-answer`, `... check-answers`, `... publish-report`). `setup-fabric` is `fabric setup`. Recommend freezing both, because both are documented and removing either later would be a break (decision 14).
+**Both spellings are documented.** The commands exist at top level (`shape publish`) and under `shape fabric` (`shape fabric publish`, `... setup`, `... notebook`, `... deploy-notebook`, `... export-model`, `... known-answer`, `... check-answers`, `... publish-report`). `setup-fabric` is `fabric setup`. Decision 14: freeze both, because both are documented and removing either later would be a break.
 
 | Command | Frozen surface | Change before the freeze | Work packages | Size |
 |---|---|---|---|---|
@@ -380,13 +384,13 @@ Surfaces are from `shape <cmd> --help` with the first-party plugins installed. A
 | `check-answers` | `ANSWERS RESULTS`, `--places` | none | claim table | S |
 | `export-model` | `DOMAIN`, `-s --source-type {lakehouse,warehouse,sql_database} --source-name -o --include-measures --no-measures --schema-name -m {3nf,star}` | `--source-type sql_database` uses an underscore; `publish -t` uses `sql-database`. Accept the hyphen as an alias now; both then freeze | W-em-1 alias and test (S); claim table; fence the XMLA-deploy claim (no live run) | M |
 | `publish` | `DOMAIN\|SCHEMA.json`, `-s --seed -m {3nf,star} -t {lakehouse,eventhouse,sql-database,warehouse} --workspace-id --lakehouse-id --base-path --staging-path --database --format {parquet,csv,jsonl,delta} --credential --write-mode {create,append,truncate,replace} --batch-size --schema-name --dry-run --connection-string` and the auth block. Run manifest keys. | (a) `--base-path` and `--staging-path` overlap for a warehouse ("instead of"): keep both, document precedence. (b) `--format delta` works for local folders only: say so in the choices help or refuse early. (c) `--write-mode create` default makes example 0 not re-runnable: put re-runnable flags in the examples. (d) auth values `--client-secret --sql-password --keytab` take references (good). | W-pub-1 split example 0 into four examples (S); W-pub-2 claim table for four targets, about 30 rows (M); W-pub-3 surface edits (S); re-record | M |
-| `profile-db` | `--connection-string --server --database --auth {sql,cli,msi,spn,fabric} --tenant-id --client-id --client-secret --schema --tables --sample-rows -o --json`; `--json` keys | (a) `--client-secret` takes a plain value; make it take a reference like `publish` before the freeze (decision 13). (b) `--auth` choices differ from `publish` (no `device-code`, no `kerberos`): decide whether to add them (additive) or document the difference. (c) list the `--json` keys in a test (the transcript shows `written` and `shape_content_id`; I did not list the rest). | W-pdb-1 reference-form secret (S); W-pdb-2 pin the `--json` keys (S); re-record (S); fence the Azure SQL claim | M |
+| `profile-db` | `--connection-string --server --database --auth {sql,cli,msi,spn,fabric} --tenant-id --client-id --client-secret --schema --tables --sample-rows -o --json`; `--json` keys | (a) `--client-secret` takes a plain value; decision 13: it takes `env://`, `file://` or `kv://` references only and refuses a literal, like `publish`. (b) `--auth` choices differ from `publish` (no `device-code`, no `kerberos`): decide whether to add them (additive) or document the difference. (c) list the `--json` keys in a test (the transcript shows `written` and `shape_content_id`; I did not list the rest). | W-pdb-1 reference-only `--client-secret`: refuse a literal, with a test and a changelog line (S); W-pdb-2 pin the `--json` keys (S); re-record (S); fence the Azure SQL claim | M |
 
 Exit classes of each plugin command must be one of 0, 1, 2 or a documented verdict. W-plug adds a test that runs each promoted command on a bad input and checks for exit 2 and a one-line `shape: error:` message, as `tests/regressions/test_iss_cli_errors.py` does for core commands.
 
 ## 5. Risks and open questions for the Owner
 
-Status after the Owner's answer of 2026-10-13: **Accepted** means as recommended. **Reversed** means the Owner chose the other way. **Open** is new.
+Status after the Owner's answers of 2026-10-13: **Accepted** means as recommended. **Reversed** means the Owner chose the other way. Decisions 6 to 16 are Owner-confirmed ("6–16 yes").
 
 1. **Legacy labels (ratchet or relabel).** *Accepted.* 71 pages say available with no proof; 15 mention experimental commands; `DICTIONARY.md` and `PROJECT.md` are plain mislabels. Freeze the list in `tests/docs/available_legacy.txt`, let it only shrink, relabel nothing silently in 0.9.3. Move `DICTIONARY.md` and `PROJECT.md` to the front of the 0.9.4 queue.
 2. **Plugin commands cannot be stable.** *Reversed: they get in 0.9.3.* My advice was to promote none and to reach Fabric through `generate`. The risk I named stays: the plugin's release cycle is now inside a core promise. Section 6 limits it: only first-party plugins can be listed, and the promise holds when the plugin is installed at the same release as the core. Nine plugin commands are promoted (section 7).
@@ -400,10 +404,10 @@ Status after the Owner's answer of 2026-10-13: **Accepted** means as recommended
 10. **Remove or keep `privacy-k` and `quality`.** *Accepted.* Remove in 0.10, with a note in 0.9.3 `### Changed` (work package W-rm, S).
 11. **Cost and access of live runs.** *Accepted.* The lead dispatches one batch on the release head, after the Owner confirms the workspace is clean (the pre-clean step records what it deleted).
 12. **Size of the claim tables.** *Accepted.* About 25 to 40 rows per page, by hand.
-13. **Secrets on the command line.** *Open.* `profile-db --client-secret` takes a plain value. Once frozen, a plain-value flag stays for all of 1.x. Recommend: before the freeze accept `env://`, `file://` and `kv://` references and refuse a literal, as `--source-config` does. `generate`, `publish`, `deploy-notebook` and `setup-fabric` already take `--client-secret REF`, so only `profile-db` differs.
-14. **Two spellings of each Fabric command.** *Open.* `shape publish` and `shape fabric publish` both work. Recommend freezing both; list them as one row each in `CLI_STABILITY.md`.
-15. **Reading of "same minor version".** *Open.* See 1.2. Recommend "same release, or unchanged source", because 0.9.2 changed the writers.
-16. **Plugin version coupling.** *Open, mostly settled by existing checks.* `scripts/check_versions.py` already enforces lockstep: every first-party plugin has the core's version and pins first-party requirements with `==`. Recommend stating in `CLI_STABILITY.md` that a stable plugin command is promised with a plugin of the same release as the core. A user who forces a mismatch with `pip --no-deps` is outside the promise.
+13. **Secrets on the command line.** *Accepted.* `profile-db --client-secret` takes a plain value. Once frozen, a plain-value flag stays for all of 1.x. Decided: before the freeze `profile-db --client-secret` accepts `env://`, `file://` and `kv://` references only and refuses a literal, as `--source-config` does. `generate`, `publish`, `deploy-notebook` and `setup-fabric` already take `--client-secret REF`, so only `profile-db` differs.
+14. **Two spellings of each Fabric command.** *Accepted.* `shape publish` and `shape fabric publish` both work. Recommend freezing both; list them as one row each in `CLI_STABILITY.md`.
+15. **Reading of "same minor version".** *Accepted.* See 1.2. Recommend "same release, or unchanged source", because 0.9.2 changed the writers.
+16. **Plugin version coupling.** *Accepted.* `scripts/check_versions.py` already enforces lockstep: every first-party plugin has the core's version and pins first-party requirements with `==`. Recommend stating in `CLI_STABILITY.md` that a stable plugin command is promised with a plugin of the same release as the core. A user who forces a mismatch with `pip --no-deps` is outside the promise.
 
 ## 6. Plugin command stability (W-plug)
 
