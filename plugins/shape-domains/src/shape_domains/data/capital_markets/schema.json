@@ -373,7 +373,7 @@
   },
   "daily_price": {
    "name": "daily_price",
-   "description": "Daily OHLCV bars — generated via Geometric Brownian Motion",
+   "description": "Daily OHLCV bars on US trading days; each row's prices are an independent draw, not a price series",
    "cdm_mapping": null,
    "primary_key": [
     "price_id"
@@ -410,8 +410,122 @@
      "type": "date",
      "generator": {
       "strategy": "temporal",
-      "pattern": "trading_days",
+      "pattern": "seasonal",
       "range_ref": "model.date_range",
+      "profiles": {
+       "day_of_week": {
+        "Mon": 1,
+        "Tue": 1,
+        "Wed": 1,
+        "Thu": 1,
+        "Fri": 1,
+        "Sat": 0,
+        "Sun": 0
+       }
+      },
+      "calendar": {
+       "events": [
+        {
+         "name": "new_years_day",
+         "lift": 0.0,
+         "rule": {
+          "observed": {
+           "month": 1,
+           "day": 1
+          }
+         }
+        },
+        {
+         "name": "martin_luther_king_day",
+         "lift": 0.0,
+         "rule": {
+          "month": 1,
+          "weekday": "mon",
+          "n": 3
+         }
+        },
+        {
+         "name": "washingtons_birthday",
+         "lift": 0.0,
+         "rule": {
+          "month": 2,
+          "weekday": "mon",
+          "n": 3
+         }
+        },
+        {
+         "name": "good_friday",
+         "lift": 0.0,
+         "rule": {
+          "easter": -2
+         }
+        },
+        {
+         "name": "memorial_day",
+         "lift": 0.0,
+         "rule": {
+          "month": 5,
+          "weekday": "mon",
+          "n": -1
+         }
+        },
+        {
+         "name": "juneteenth",
+         "lift": 0.0,
+         "rule": {
+          "observed": {
+           "month": 6,
+           "day": 19,
+           "from_year": 2022
+          }
+         }
+        },
+        {
+         "name": "independence_day",
+         "lift": 0.0,
+         "rule": {
+          "observed": {
+           "month": 7,
+           "day": 4
+          }
+         }
+        },
+        {
+         "name": "labor_day",
+         "lift": 0.0,
+         "rule": {
+          "month": 9,
+          "weekday": "mon",
+          "n": 1
+         }
+        },
+        {
+         "name": "thanksgiving",
+         "lift": 0.0,
+         "rule": {
+          "month": 11,
+          "weekday": "thu",
+          "n": 4
+         }
+        },
+        {
+         "name": "christmas_day",
+         "lift": 0.0,
+         "rule": {
+          "observed": {
+           "month": 12,
+           "day": 25
+          }
+         }
+        },
+        {
+         "name": "national_day_of_mourning",
+         "lift": 0.0,
+         "date": "2025-01-09"
+        }
+       ]
+      },
+      "granularity": "day",
       "unit": "ns"
      },
      "nullable": false,

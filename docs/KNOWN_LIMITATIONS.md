@@ -28,6 +28,16 @@ The 1.x compatibility promises describe future policy.
 - Exact profiling can scan all input. Do not infer a memory or elapsed-time guarantee from a
   small local tutorial. Optional analyses and generation may materialize tables.
 - Plugins run in the same process. Allow-lists restrict loading, not plugin behavior.
+- Generated rows are drawn independently: no generation strategy makes a time series per
+  entity. In the `capital_markets` domain, one ticker's `daily_price` rows are unrelated from
+  day to day, a day's `close` does not lead to the next day's `open`, and the rows are not
+  ordered by date. Use the prices for volume, schema and join testing, not for returns,
+  volatility or backtests.
+- `capital_markets` trading days skip weekends and the US market holidays (the full-day
+  closures, Juneteenth from 2022 and 2025-01-09). A New Year's Day on a Saturday also closes the
+  Friday before (December 31), which the exchanges keep open. That date is outside the shipped
+  2022-2025 range. Early closes are not modelled. Other `capital_markets` dates (dividends,
+  earnings, insider transactions, trades) can still fall on any day.
 
 ## Alpine and musllinux
 

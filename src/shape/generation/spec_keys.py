@@ -42,6 +42,7 @@ _TEMPORAL = frozenset(
         "day_of_week_weights",
         "granularity",
         "unit",
+        "calendar",
     }
 )
 

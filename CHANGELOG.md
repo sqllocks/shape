@@ -6,7 +6,24 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+### Changed
+
+- The `temporal` strategy refuses a `pattern` other than `uniform` or `seasonal` with an error
+  naming the column. Before, any other value (`"trading_days"`) was silently `uniform`. A
+  schema with such a pattern now fails to generate: use `uniform` or `seasonal`.
+
+### Added
+
+- `temporal` with `pattern: "seasonal"` takes a `calendar` (a calendar spec, as in
+  `docs/GENERATION_CALENDARS.md`): each day's weight is multiplied by the calendar's factor, so a
+  factor of 0 closes the day. See `docs/GENERATION_STRATEGIES.md`.
+
+### Fixed
+
+- `capital_markets`: `daily_price.trade_date` falls on US trading days only (weekdays that are
+  not market holidays). Its `pattern: "trading_days"` was uniform over every day, weekends and
+  holidays included. The `daily_price` prices are still independent draws per row, not a price
+  series; the domain documentation now says so (`docs/KNOWN_LIMITATIONS.md`).
 
 ## 0.9.1
 

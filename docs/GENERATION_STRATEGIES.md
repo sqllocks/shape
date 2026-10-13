@@ -312,6 +312,8 @@ before this one, and an inline strategy other than `fixed` and `lookup`.
 0.70), `add` (plus a uniform offset, `offset_min` and `offset_max`, default 0 to 10) or `subtract`
 (minus such an offset, never below 0). `params.min` and `params.max` stand for either pair. The
 result is rounded to the column's `scale` (2 without one). A null source gives null. `float64`.
+The source is a column of the same row: a `correlated` column never depends on another row, so it
+does not chain one day's close to the next day's open.
 
 ### `reference_data`
 `{"dataset": "colors"}` or `{"dataset": "products", "field": "category"}`. A dataset of strings is
@@ -373,8 +375,9 @@ ZIP code keeps its leading zero).
   pattern and `start == end` is one single day (a business day's landing file). An `end` with a time
   (`2026-05-01T12:00:00`) is the exact bound, exclusive for `uniform`. An `end` before the start is
   an error that says so; `start == end` with a time is an error that asks for dates.
-* `pattern: "uniform"` (the default, and what any other value means): uniform on `[start, end]`
-  (`end` as above).
+* `pattern: "uniform"` (the default): uniform on `[start, end]` (`end` as above). The pattern is
+  `uniform` or `seasonal`; any other value (`"trading_days"`) is an error naming the column, not
+  a silent `uniform`.
 * `pattern: "seasonal"`: `profiles.month` (`Jan`..`Dec`) and `profiles.day_of_week` (`Mon`..`Sun`)
   weigh the days (a name left out weighs `1/12` or `1/7`; `month_weights` and
   `day_of_week_weights` at the top level are accepted too). The probability of a (month, weekday)
@@ -387,14 +390,33 @@ ZIP code keeps its leading zero).
   every value lies in `[start, end)` for the seasonal and `hour_of_day` patterns too. A profile
   (`month`, `day_of_week`, `hour_of_day`) is a mapping of names to numbers; a list or a weight that is not a number is an error naming the
   column.
+* `calendar` (with `pattern: "seasonal"`): a calendar spec, as `calendar_from_spec` reads it
+  ([Calendars](GENERATION_CALENDARS.md)). Its factor for a day multiplies the day's weight, so
+  a lift draws more rows on that day and a factor of 0 closes it: no value falls on a closed day.
+  A calendar that closes every day of the range, and a `calendar` with `pattern: "uniform"`, are
+  errors naming the column. Weekends are `profiles.day_of_week` weights of 0 for `Sat` and
+  `Sun`, holidays are events with `"lift": 0`:
+
+  ```json
+  {"strategy": "temporal", "pattern": "seasonal", "range_ref": "model.date_range",
+   "profiles": {"day_of_week": {"Sat": 0, "Sun": 0}},
+   "calendar": {"events": [{"name": "good_friday", "lift": 0, "rule": {"easter": -2}}]},
+   "granularity": "day"}
+  ```
+
+  A weight of 0 for a weekday is exact when every (month, weekday) pair has a day in the range
+  (any range of a year or more). In a shorter range the share of the pairs with no day is spread
+  over every day, the weekend included (above); a calendar factor of 0 is exact for any range.
 * `profiles.hour_of_day` replaces the time of day by a whole second in an hour drawn uniformly, from
   one weight per hour (`{"0": 0.01, ..., "23": 0.02}`, a profile's hour histogram), or from
   `{"distribution": "bimodal", "peaks": [12, 18], "std_dev": 2}`: equally likely Gaussian
   peaks, wrapped around midnight. Without it the time of day is uniform to the microsecond.
 * `"granularity": "day"` cuts every value to midnight (a date column: the hour profile is ignored).
 * The column is `timestamp[us]`, or the `unit` given (`s`, `ms`, `us` or `ns`): the same instants in
-  another Arrow unit, for output that must match a `timestamp[ns]` column type. Calendars, paydays
-  and trends (`shape.calendars`) are separate.
+  another Arrow unit, for output that must match a `timestamp[ns]` column type.
+* Each row's value is drawn on its own: `temporal` does not order a column by entity or make a
+  time series. No built-in strategy does (`correlated` relates columns of one row, not one row
+  to the previous); see the [known limitations](KNOWN_LIMITATIONS.md).
 
 ### Reference datasets (`shape.generation.reference`)
 `load_dataset(name)` finds a dataset in this order: datasets registered in the process

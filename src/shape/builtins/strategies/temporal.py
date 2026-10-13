@@ -5,13 +5,14 @@ from the generation kernel's temporal sampler (five words per row)."""
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 import numpy as np
 import numpy.typing as npt
 import pyarrow as pa  # type: ignore[import-untyped]
 
+from shape.builtins.calendars import calendar_from_spec
 from shape.generation import kernel_ops
 from shape.generation.arrowkit import array as arrow_array
 from shape.generation.arrowkit import to_numpy as arrow_numpy
@@ -23,6 +24,7 @@ SHAPE_API = "1.0"
 _DAY_US = 86_400_000_000
 _MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 _DOW = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+_PATTERNS = ("uniform", "seasonal")
 
 
 def _microseconds(text: Any, what: str, ctx: GenerationContext) -> int:
@@ -202,16 +204,40 @@ def _day_weights(
     return w
 
 
+def _calendar_factors(
+    spec: Any, first_day: int, n_days: int, ctx: GenerationContext
+) -> npt.NDArray[np.float64]:
+    """The factor of each day of the range from a calendar spec (``docs/GENERATION_CALENDARS.md``):
+    0 is a closed day, which is never drawn."""
+    if not isinstance(spec, Mapping):
+        raise StrategyError(
+            f"temporal 'calendar' must be a calendar spec mapping, not a "
+            f"{type(spec).__name__} ({where(ctx)})"
+        )
+    start = date(1970, 1, 1) + timedelta(days=first_day)
+    end = start + timedelta(days=n_days - 1)
+    try:
+        factors = np.asarray(calendar_from_spec(spec).factors(start, end), dtype=np.float64)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise StrategyError(f"temporal 'calendar' is not valid: {exc} ({where(ctx)})") from exc
+    if (factors < 0).any() or not np.isfinite(factors).all() or factors.sum() <= 0:
+        raise StrategyError(
+            f"temporal 'calendar' must leave at least one open day in the range ({where(ctx)})"
+        )
+    return factors
+
+
 class Temporal:
     """Timestamps (``timestamp[us]``, or the ``unit`` asked for: ``s``, ``ms``, ``us`` or ``ns``;
     the values are the same instants whatever the unit).
 
     The range is ``date_range`` (or ``range``) ``{"start", "end"}``, or top-level ``start`` and
     ``end``, or ``range_ref: "model.date_range"``; the default is 2022-01-01 .. 2025-12-31.
-    ``pattern: "uniform"`` (the default, and what any unknown pattern means) draws uniformly on
-    ``[start, end)``. An ``end`` that is a date (``2026-05-01``) stands for the whole day, so the
-    end day is a possible day for every pattern and ``start == end`` is one single day; an ``end``
-    with a time of day is the exact, exclusive bound. ``pattern: "seasonal"`` weights days by
+    ``pattern: "uniform"`` (the default) draws uniformly on ``[start, end)``; a pattern other
+    than ``uniform`` or ``seasonal`` is an error naming the column. An ``end`` that is a date
+    (``2026-05-01``) stands for the whole day, so the end day is a possible day for every pattern
+    and ``start == end`` is one single day; an ``end`` with a time of day is the exact, exclusive
+    bound. ``pattern: "seasonal"`` weights days by
     ``profiles.month`` (``Jan`` ..
     ``Dec``) and ``profiles.day_of_week`` (``Mon`` .. ``Sun``; missing names weigh 1/12 and 1/7,
     and ``month_weights`` / ``day_of_week_weights`` at the top level are accepted too); the end
@@ -219,7 +245,9 @@ class Temporal:
     second of an hour drawn uniformly, with one weight per hour (keys ``"0"`` .. ``"23"``), or with
     ``{"distribution": "bimodal", "peaks": [12, 18],
     "std_dev": 2}`` from equally likely Gaussian peaks wrapped around midnight. Without it the
-    time of day is uniform.
+    time of day is uniform. ``calendar`` (seasonal only) is a calendar spec
+    (:func:`shape.builtins.calendars.calendar_from_spec`) whose factor multiplies each day's
+    weight: a day with factor 0 (a closed day) is never drawn.
     """
 
     name = "temporal"
@@ -252,7 +280,19 @@ class Temporal:
     def _microseconds(self, spec: Mapping[str, Any], ctx: GenerationContext) -> pa.Array:
         window = _range(spec, ctx)
         start = window.start
-        if spec.get("pattern", "uniform") != "seasonal":
+        pattern = spec.get("pattern")
+        pattern = "uniform" if pattern is None else pattern
+        if pattern not in _PATTERNS:  # an unknown pattern was silently uniform
+            raise StrategyError(
+                f"temporal 'pattern' must be one of {', '.join(_PATTERNS)}, not {pattern!r} "
+                f"({where(ctx)})"
+            )
+        calendar = spec.get("calendar")
+        if pattern == "uniform":
+            if calendar:
+                raise StrategyError(
+                    f"temporal 'calendar' needs pattern 'seasonal', not 'uniform' ({where(ctx)})"
+                )
             return arrow_array(
                 _uniform(window, ctx).astype("datetime64[us]"), type=pa.timestamp("us")
             )
@@ -265,7 +305,7 @@ class Temporal:
         dow_w = _profile(profiles.get("day_of_week"), "day_of_week", ctx)
         hour_profile = _profile(profiles.get("hour_of_day"), "hour_of_day", ctx)
         hours = self._hours(hour_profile, ctx)
-        if not month_w and not dow_w and not hour_profile:
+        if not month_w and not dow_w and not hour_profile and not calendar:
             return arrow_array(
                 _uniform(window, ctx).astype("datetime64[us]"), type=pa.timestamp("us")
             )
@@ -279,6 +319,8 @@ class Temporal:
             days = _day_weights(
                 first, n_days, _weights(month_w, _MONTHS, ctx), _weights(dow_w, _DOW, ctx)
             )
+        if calendar:
+            days = days * _calendar_factors(calendar, first, n_days, ctx)
         edges = _Edges(window, first, n_days)
         values = kernel_ops.temporal_sample(
             arrow_array(edges.weigh(days)),

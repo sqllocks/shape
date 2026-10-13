@@ -27,6 +27,10 @@ domain = load_domain("retail")  # schema + reference data registered
 tables = Engine(domain.schema, scale="medium", seed=1).generate().tables
 ```
 
+`capital_markets` dates `daily_price.trade_date` on US trading days (weekdays that are not market
+holidays). Its prices are independent draws per row, not a price series per ticker: a day's
+`close` does not lead to the next day's `open`. See `docs/KNOWN_LIMITATIONS.md` in the repository.
+
 Scales: `small`, `medium`, `large` and `xlarge` (and the other presets in the schema). Every domain also offers a `star` schema (`load_domain(name, mode="star")`). The ZIP locations are
 derived from GeoNames (CC BY 4.0), and the other reference data is carried over under the MIT license;
 see `THIRD_PARTY_NOTICES.md` in the repository.

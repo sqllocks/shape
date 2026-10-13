@@ -4,14 +4,17 @@ the engine.
 The plugin ships each domain's schema (3nf and star) and reference datasets. These tests check what
 it hands the engine and what the engine makes of it: the tables, column order and row counts of the
 baseline's plan at every scale, whole foreign keys, business rules, output that does not depend on
-the chunk size or thread count, the schema equal to the baseline's dump (with the two documented
-differences) and the reference data equal to the baseline's files. The statistical comparison with
-the baseline is ``domain_1to1/verify.py --domain D --impl shape``."""
+the chunk size or thread count, the schema equal to the baseline's dump (with the documented
+differences of ``export_domains.OVERRIDES`` and ``DESCRIPTIONS``) and the reference data equal to
+the baseline's files. The statistical comparison with the baseline is
+``domain_1to1/verify.py --domain D --impl shape``."""
 
 from __future__ import annotations
 
 import json
 import sys
+from collections import Counter
+from datetime import date, time, timedelta
 from pathlib import Path
 
 import pyarrow as pa
@@ -93,16 +96,24 @@ def test_the_shipped_files_equal_what_the_exporter_writes():
             assert shipped == built, (name, mode)
 
 
-def test_the_schema_is_the_baselines_dump_with_two_documented_differences(domain):
+def test_the_schema_is_the_baselines_dump_with_the_documented_differences(domain):
     """Nanosecond dates (``unit: ns`` on every non-seasonal temporal column, for T-21 (a)) and
-    ``capital_markets.industry.industry_name``, which the baseline fills with ``""``; generator keys
-    that no generator reads (``export_domains.UNREAD_KEYS``) are left out."""
+    ``export_domains.OVERRIDES`` (``capital_markets.industry.industry_name``, which the baseline
+    fills with ``""``, and ``daily_price.trade_date`` on trading days) and ``DESCRIPTIONS``;
+    generator keys that no generator reads (``export_domains.UNREAD_KEYS``) are left out."""
     dump = json.loads((BENCH / "fixtures" / "schemas" / f"{domain.name}_3nf.json").read_text())
     mine = domain.schema.to_dict()
     expected = schema_import.import_dump(dump).to_dict()
     for tname, table in mine["tables"].items():
+        if (domain.name, tname) in export_domains.DESCRIPTIONS:
+            assert table["description"] == export_domains.DESCRIPTIONS[(domain.name, tname)]
+            table["description"] = expected["tables"][tname]["description"]
         for cname, col in table["columns"].items():
             gen = col["generator"]
+            if (domain.name, tname, cname) in export_domains.OVERRIDES:
+                assert gen == export_domains.OVERRIDES[(domain.name, tname, cname)]
+                col["generator"] = expected["tables"][tname]["columns"][cname]["generator"]
+                continue
             if gen.get("unit") == "ns":
                 assert gen["strategy"] == "temporal" and gen.get("pattern") != "seasonal"
                 del gen["unit"]
@@ -110,9 +121,6 @@ def test_the_schema_is_the_baselines_dump_with_two_documented_differences(domain
             assert not unread & set(gen), (tname, cname)  # keys no generator reads are left out
             for key in unread:
                 expected["tables"][tname]["columns"][cname]["generator"].pop(key, None)
-            if (domain.name, tname, cname) in export_domains.OVERRIDES:
-                assert gen == {"strategy": "constant", "value": ""}
-                col["generator"] = expected["tables"][tname]["columns"][cname]["generator"]
     assert mine == expected
 
 
@@ -200,6 +208,66 @@ def test_text_keys_of_capital_markets_are_company_tickers():
     for child in ("daily_price", "dividend", "split", "earnings", "insider_transaction", "trade"):
         assert set(tables[child]["ticker"].to_pylist()) <= tickers, child
     assert tables["daily_price"].schema.field("trade_date").type == pa.timestamp("ns")
+
+
+# The US market's weekday closures in the shipped 2022-2025 range (the exchanges' published
+# holiday calendars), written out, not computed, so the test does not share the schema's rules.
+US_MARKET_HOLIDAYS = {
+    date.fromisoformat(d)
+    for d in (
+        "2022-01-17 2022-02-21 2022-04-15 2022-05-30 2022-06-20 2022-07-04 2022-09-05 2022-11-24 "
+        "2022-12-26 2023-01-02 2023-01-16 2023-02-20 2023-04-07 2023-05-29 2023-06-19 2023-07-04 "
+        "2023-09-04 2023-11-23 2023-12-25 2024-01-01 2024-01-15 2024-02-19 2024-03-29 2024-05-27 "
+        "2024-06-19 2024-07-04 2024-09-02 2024-11-28 2024-12-25 2025-01-01 2025-01-09 2025-01-20 "
+        "2025-02-17 2025-04-18 2025-05-26 2025-06-19 2025-07-04 2025-09-01 2025-11-27 2025-12-25"
+    ).split()
+}
+TRADING_DAYS = {
+    day
+    for day in (date(2022, 1, 1) + timedelta(days=i) for i in range(1461))
+    if day.weekday() < 5 and day not in US_MARKET_HOLIDAYS
+}
+
+
+def _trade_days(values: pa.Array | pa.ChunkedArray) -> list[date]:
+    return [v.date() for v in values.to_pylist()]
+
+
+def test_the_trading_calendar_has_the_markets_day_counts():
+    by_year = Counter(day.year for day in TRADING_DAYS)
+    assert by_year == {2022: 251, 2023: 250, 2024: 252, 2025: 250}
+
+
+@pytest.mark.parametrize("mode", ["3nf", "star"])
+def test_trade_dates_are_us_trading_days_at_every_scale(mode):
+    loaded = load_domain("capital_markets", mode=mode)
+    for scale in loaded.definition.scale_presets:
+        engine = Engine(loaded.schema, scale=scale, seed=1042)
+        total = engine.row_counts["daily_price"]
+        # the head and the tail of every preset (the largest has 12.6 million rows)
+        spans = [(0, total)] if total <= 400_000 else [(0, 200_000), (total - 200_000, 200_000)]
+        for start, n in spans:
+            days = _trade_days(engine.generate_column("daily_price", "trade_date", start, n))
+            assert set(days) <= TRADING_DAYS, (scale, start, sorted(set(days) - TRADING_DAYS)[:5])
+            assert all(day.weekday() < 5 for day in days), scale
+
+
+def test_trade_dates_cover_every_trading_day_and_only_those():
+    loaded = load_domain("capital_markets")
+    prices = Engine(loaded.schema, scale="small", seed=1042).generate().tables["daily_price"]
+    days = _trade_days(prices["trade_date"])
+    assert set(days) == TRADING_DAYS  # 25,200 rows over 1,003 days
+    assert all(v.time() == time(0) for v in prices["trade_date"].to_pylist())  # whole days
+
+
+@pytest.mark.parametrize("mode", ["3nf", "star"])
+def test_trade_dates_are_the_same_for_the_same_seed(mode):
+    loaded = load_domain("capital_markets", mode=mode)
+    first = Engine(loaded.schema, scale="demo", seed=7).generate().tables["daily_price"]
+    again = Engine(loaded.schema, scale="demo", seed=7).generate().tables["daily_price"]
+    assert first.equals(again)
+    other = Engine(loaded.schema, scale="demo", seed=8).generate().tables["daily_price"]
+    assert not first["trade_date"].equals(other["trade_date"])
 
 
 def test_the_baseline_fills_industry_name_with_empty_text():

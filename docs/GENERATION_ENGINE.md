@@ -308,10 +308,14 @@ tables (customer, address, product_category, product, store, promotion, order, o
 the row counts of the `small`, `medium`, `large` and `xlarge` presets, and its reference data. Its
 uniform dates are `timestamp[ns]` (`temporal` with `unit: "ns"`) and the seasonal ones
 `timestamp[us]`; the other domains follow the same rule (every non-seasonal `temporal` column is `ns`,
-including the `trading_days` pattern of `capital_markets`, which is uniform). `financial`, `healthcare`, `insurance`, `iot`, `real_estate`,
+including the seasonal `daily_price.trade_date` of `capital_markets`). `financial`, `healthcare`, `insurance`, `iot`, `real_estate`,
 `supply_chain` and `telecom` read the ZIP
 locations that `retail` ships. In `capital_markets`, `industry.industry_name` is the empty string for
 every row, as in the reference output it is checked against (its schema says `constant ""`).
+`daily_price.trade_date` is a US trading day: a weekday that is not a market holiday (`seasonal`
+with zero weekend weights and a `calendar` that closes the holidays). The prices of `daily_price`
+are independent draws per row (`open` from a log-normal, `high`, `low`, `close` and `adj_close`
+multiples of it), not a time series per ticker; see [Known limitations](KNOWN_LIMITATIONS.md).
 
 All fourteen domains are one packaged layout (`data/<domain>/schema.json`, `schema_star.json`,
 `reference/*.arrow`; `retail` also `transforms.json`, the maps behind `shape transform star|cdm`), built
