@@ -25,9 +25,11 @@ Why: a missing publisher or environment fails only that project's upload, half w
 Why: the tag and the TestPyPI build must be the same commit, and a tag run is blocked while
 documentation owner notes remain.
 
-- `release/0.9.2` has merged `main` after FRZ-01, live-findings, lakehouse-schemas, live/synapse,
-  macos-bounded-rss and owner-notes-3, and CI is green on its head.
-- `CHANGELOG.md` has no "Pending" markers left (search for `Pending`).
+- The release candidate is `int/0.9.2` at `89044891c1a5ceaeea83d33a63a63904ffd3623f` (all lanes
+  plus `release/0.9.2` b304ba58). Use it only once its CI run 38349806403 is green; if `int/0.9.2`
+  moves, use the new head and its green CI instead. `<RELEASE_SHA>` in the steps below is that SHA.
+- `CHANGELOG.md` has no "Pending" markers left (search for `Pending`) and `## Unreleased` holds
+  no entries (it reads "No unreleased changes.").
 - Owner notes are 0: `python scripts/check_docs_owners.py --release` prints 0. The Documentation
   workflow runs this on a tag and refuses to publish the docs site otherwise.
 
@@ -44,9 +46,9 @@ Known hits on `release/0.9.2` today (re-run after every lane merge; lanes add mo
 
 | Where | Decision |
 |---|---|
-| `docs/FAQ.md:36` "Not directly in 0.9.1" | Change to 0.9.2 (a statement about the current release). |
+| `docs/FAQ.md:36` "Not directly in 0.9.1" | Done (reads 0.9.2). |
 | `docs/plugins/trust-model.md:42` and `:85` (example error text, `==0.9.1` example) | Change to 0.9.2 so the examples match the release. |
-| `docs/TROUBLESHOOTING.md:39` "known 0.9.1 validator failure" | Delete the sentence once `fix/validate-multitable` is merged (it fixes the failure); do not just bump it. |
+| `docs/TROUBLESHOOTING.md:39` "known 0.9.1 validator failure" | Done: the sentence is gone from the candidate (the profile fix is in). |
 | `docs/KNOWN_LIMITATIONS.md` ("Shape is early access 0.9.1", heading "Fabric in 0.9.1") | Appears once `fix/live-findings` merges. Rewrite so 0.9.1 workarounds are marked fixed in 0.9.2; the lanes own this page. |
 | Pages from `integrate/owner-notes-3` (receipts; any `uses: sqllocks/shape@v0.9.1` example in a guide page) | Receipts are history and stay 0.9.1. Change the install or `@v` example in the guide pages to the 0.9.2 tag only after the tag exists (step 6), then push a docs-only fix; do not move the tag. |
 | `demo/TALK.md:87` ("available in 0.9.1"), `plugins/shape-domains/README.md:58` ("upgrading from 0.9.1"), `integrations/fabric/RUNBOOK.md:39` ("PyPI has an older 0.9.1") | Keep: they say when something began or name the older release. |
