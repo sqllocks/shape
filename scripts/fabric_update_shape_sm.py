@@ -113,6 +113,16 @@ def dump(files: dict[str, str], folder: str) -> None:
             print(text)
 
 
+def expression_source(files: dict[str, str]) -> str:
+    """The ``expressionSource`` of the model's existing Direct Lake partitions, as TMDL writes it:
+    a plain word, or a name in single quotes (``'DirectLake - shape_lh'``, a quote doubled)."""
+    for text in files.values():
+        found = re.search(r"expressionSource:[ \t]*('(?:[^']|'')*'|\S+)", text)
+        if found:
+            return found.group(1)
+    return ""
+
+
 def quote(name: str) -> str:
     return (
         name
@@ -213,13 +223,7 @@ def main() -> int:
     item = api.call("GET", f"/workspaces/{where.workspace}/lakehouses/{where.item}").json_object()
     props = item["properties"]["sqlEndpointProperties"]
     connection = f"Data Source={props['connectionString']};Initial Catalog={item['displayName']}"
-    expression = os.environ.get("SM_EXPRESSION") or ""
-    if not expression:
-        for text in files.values():
-            m = re.search(r"expressionSource:\s*(\S+)", text)
-            if m:
-                expression = m.group(1)
-                break
+    expression = os.environ.get("SM_EXPRESSION") or expression_source(files)
     expression = expression or "DatabaseQuery"
     print(f"expression source: {expression}")
 
