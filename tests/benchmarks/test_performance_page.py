@@ -197,7 +197,9 @@ def test_release_snapshot_pending_blocks_release_only(monkeypatch, tmp_path, pre
         snapshot.write_text("{}")
     text = page.render(_results())
     assert ("release timing snapshot pending: recorded/timings_0.9.1.json" in text) is not present
-    assert ("[the release timing snapshot]" in text) is present
+    assert ("the release timing snapshot, `recorded/timings_0.9.1.json`" in text) is present
+    # Public documentation never names the harness directory.
+    assert "benchmarks/vs_refengine" not in text
     docs = tmp_path / "docs"
     docs.mkdir()
     (docs / "PERFORMANCE.md").write_text(text)

@@ -115,7 +115,7 @@ def render(results: dict[str, Any], history: list[dict[str, Any]] | None = None)
     snapshot = ROOT / "benchmarks" / "vs_refengine" / "recorded" / snapshot_name
     timing_notice = (
         "Release-day measurements from the 4-vCPU runner are recorded in "
-        f"[the release timing snapshot](../benchmarks/vs_refengine/recorded/{snapshot_name})."
+        f"the release timing snapshot, `recorded/{snapshot_name}`."
         if snapshot.is_file()
         else f"release timing snapshot pending: recorded/{snapshot_name}\n\n"
         "<!-- owner: lead must record the release timing snapshot before publishing -->"
