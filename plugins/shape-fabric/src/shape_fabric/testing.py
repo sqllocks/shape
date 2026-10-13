@@ -224,6 +224,15 @@ class FakeFabricItems:
             rows = [i for i in self.items if kind in (None, i["type"])]
             return self._page(rows, query)
         doc = json.loads(body)
+        if doc["type"] == "Lakehouse" and not re.fullmatch(
+            r"[A-Za-z][A-Za-z0-9_]{0,122}", doc["displayName"]
+        ):
+            # what Fabric answers (live, 2026-10-12) to a hyphen in a Lakehouse name
+            bad = {
+                "errorCode": "InvalidInput",
+                "message": f"The request has invalid input. DisplayName: {doc['displayName']}",
+            }
+            return 400, {}, json.dumps(bad).encode()
         if any(
             i["displayName"] == doc["displayName"] and i["type"] == doc["type"] for i in self.items
         ):
