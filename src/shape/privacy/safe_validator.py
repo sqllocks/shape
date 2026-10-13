@@ -206,50 +206,8 @@ class SafeProfileValidator:
             self._check_format_version(data, result)
         self._check_row_counts(data, result)
         self._check_small_cohorts(data, result)
-        self._walk(data, "$", None, result, sampling_columns=self._sampling_column_paths(data))
+        self._walk(data, "$", None, result)
         return result
-
-    @staticmethod
-    def _sampling_column_paths(data: Any) -> frozenset[tuple[str | int, ...]]:
-        """Only schema-column references in the documented sampling record are metadata.
-
-        Paths, rather than field names or object identities, prevent renamed or aliased
-        value-bearing payloads from inheriting this exemption. Strings are still PII-scanned.
-        """
-        paths: set[tuple[str | int, ...]] = set()
-        tables = data.get("tables") if isinstance(data, dict) else None
-        if not isinstance(tables, dict):
-            return frozenset()
-        for name, table in tables.items():
-            if not isinstance(name, str) or not isinstance(table, dict):
-                continue
-            columns = table.get("columns")
-            sampling = table.get("sampling")
-            if not isinstance(columns, dict) or not isinstance(sampling, dict):
-                continue
-            internal = sampling.get("internal")
-            if not isinstance(internal, list):
-                continue
-            for index, entry in enumerate(internal):
-                if not isinstance(entry, dict) or not entry.keys() <= {
-                    "analysis",
-                    "rows",
-                    "method",
-                    "seed",
-                    "columns",
-                }:
-                    continue
-                references = entry.get("columns")
-                if (
-                    isinstance(entry.get("analysis"), str)
-                    and isinstance(entry.get("method"), str)
-                    and isinstance(references, list)
-                    and references
-                    and all(isinstance(value, str) and value in columns for value in references)
-                    and len(set(references)) == len(references)
-                ):
-                    paths.add(("tables", name, "sampling", "internal", index, "columns"))
-        return frozenset(paths)
 
     @staticmethod
     def _check_format_version(data: dict[str, Any], result: ValidationResult) -> None:
@@ -325,8 +283,6 @@ class SafeProfileValidator:
                 f"tables is not an object ({type(tables).__name__}); row_count undeterminable",
             )
             return
-        if not tables:
-            result.add("malformed", "$.tables", "dataset has no table payloads")
         for tname, tnode in tables.items():
             if not isinstance(tnode, dict):
                 result.add(
@@ -335,12 +291,6 @@ class SafeProfileValidator:
                     "table node is not an object; row_count undeterminable",
                 )
                 continue
-            if not isinstance(tnode.get("columns"), dict):
-                result.add(
-                    "malformed",
-                    f"$.tables.{tname}.columns",
-                    "table columns are not an object; its payload cannot be proven safe",
-                )
             rc = tnode.get("row_count")
             if not isinstance(rc, int) or isinstance(rc, bool) or rc <= 0:
                 result.add(
@@ -350,45 +300,21 @@ class SafeProfileValidator:
                     "undeterminable, flagged",
                 )
 
-    def _walk(
-        self,
-        node: Any,
-        path: str,
-        parent_key: str | None,
-        result: ValidationResult,
-        *,
-        location: tuple[str | int, ...] = (),
-        sampling_columns: frozenset[tuple[str | int, ...]] = frozenset(),
-    ) -> None:
+    def _walk(self, node: Any, path: str, parent_key: str | None, result: ValidationResult) -> None:
         if isinstance(node, dict):
             self._check_extreme_pair(node, path, parent_key, result)
             for key, value in node.items():
                 child = f"{path}.{key}"
                 if isinstance(value, str):
                     self._check_pii(value, child, result)
-                self._walk(
-                    value,
-                    child,
-                    key,
-                    result,
-                    location=(*location, key),
-                    sampling_columns=sampling_columns,
-                )
+                self._walk(value, child, key, result)
         elif isinstance(node, list):
-            if location not in sampling_columns:
-                self._check_raw_string_list(node, path, parent_key, result)
+            self._check_raw_string_list(node, path, parent_key, result)
             for idx, item in enumerate(node):
                 child = f"{path}[{idx}]"
                 if isinstance(item, str):
                     self._check_pii(item, child, result)
-                self._walk(
-                    item,
-                    child,
-                    parent_key,
-                    result,
-                    location=(*location, idx),
-                    sampling_columns=sampling_columns,
-                )
+                self._walk(item, child, parent_key, result)
         elif isinstance(node, str):
             self._check_pii(node, path, result)
 

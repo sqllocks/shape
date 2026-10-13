@@ -113,11 +113,6 @@ No unreleased changes.
   `shape fabric setup` names `shape fabric notebook` in its next steps.
 - *(Pending: not on `main` yet.)* **VS Code "Compare with Git HEAD".** The comparison document now opens; the custom
   editor had claimed it and no diff appeared.
-- Dataset safe validation recognises only schema-column references at the documented
-  per-table sampling-metadata path. The strings remain subject to PII scanning;
-  full captures, raw sensitive values, leaking table payloads and malformed datasets
-  are still rejected. This resolves the privacy-maintainer dataset-validator owner note.
-
 ### Changed
 
 - *(Pending: not on `main` yet.)* **Default Lakehouse name for `shape fabric setup` is `shape_lakehouse`** (was
@@ -140,10 +135,10 @@ No unreleased changes.
   reserve cross-release compatibility promises for future 1.x releases and exclude domain
   reference data from the generator content promise; this early-access patch changes no
   generator algorithm or format version. Exact affected writer fixtures were regenerated.
-- **Owner decision REL-092:** synthetic replacements resolve the healthcare and
-  capital-markets upstream-source owner notes in `THIRD_PARTY_NOTICES.md`. No
-  `docs/plans/OWNER_DECISIONS.md` existed on the specified main commit, so this entry
-  records the decision. Other domain owner notes remain unresolved.
+- **Owner decisions:** the synthetic replacements follow the Owner's decisions recorded in
+  `docs/plans/OWNER_DECISIONS.md` (GICS taxonomy and the 49 CPT codes replaced by synthetic
+  values in 0.9.2), and resolve the healthcare and capital-markets upstream-source owner notes in
+  `THIRD_PARTY_NOTICES.md`. Other domain owner notes remain unresolved.
 - Core and all twelve first-party plugins advance together to 0.9.2. Exact SQL headers
   and documented artifact/registry digests were regenerated for the new writer version.
 

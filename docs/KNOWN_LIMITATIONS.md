@@ -11,9 +11,10 @@ The 1.x compatibility promises describe future policy.
   does not select a writer. The Python tutorial explicitly writes its Arrow result to CSV.
 - DuckDB write URIs use `duckdb:///rel.duckdb`. Read URIs use `duckdb://rel.duckdb?table=T`.
   They come from different adapters: databases writes; integrations reads.
-- Since 0.9.2, `shape profile validate --safe` recognises verified schema-column references in
-  multi-table sampling metadata. It still scans those strings for personal-data patterns and
-  rejects full captures, leaking table payloads and malformed datasets.
+- Profiles written by 0.9.1 report `raw-string-list` findings under
+  `sampling.internal[].columns` on tables wide enough to sample, so `shape profile validate --safe`
+  fails them. Those lists hold column names, not values. Re-profile with 0.9.2, which records the
+  columns by position (`column_indexes`). 0.9.2 still reads the old profiles.
 - Snowflake and Databricks are write targets. Shape does not profile from them yet.
 - Model queries read model payloads, not saved profile payloads. A profile passed to a query
   is rejected. See [Models](MODELS.md).
