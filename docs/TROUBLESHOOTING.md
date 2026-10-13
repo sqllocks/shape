@@ -36,9 +36,8 @@ For version or as-of reads, confirm that the historical files remain available.
 
 A full capture or recorded unsafe marker fails safe validation. The scan also looks for
 retained values and personal-data patterns. Do not suppress the refusal simply to commit a file.
-Review the classification and capture policy. Multi-table dataset profiles have a known 0.9.1
-validator failure; see [Known limitations](KNOWN_LIMITATIONS.md). Single-table validation is
-shown in [Your first profile](tutorials/01-first-profile.md).
+Review the classification and capture policy. Validation of a profile is shown in
+[Your first profile](tutorials/01-first-profile.md).
 
 ## A folder is rejected or has the wrong tables
 

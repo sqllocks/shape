@@ -4,7 +4,7 @@ Check these constraints before you design a workflow.
 
 Status: available (profiles, contracts and drift); experimental (other surfaces).
 
-Shape is early access 0.9.1. Generation from a profile is available and is being hardened.
+Shape is early access 0.9.2. Generation from a profile is available and is being hardened.
 The 1.x compatibility promises describe future policy.
 
 - `shape generate --from X.shape` writes nothing without `--format`. An output directory alone
