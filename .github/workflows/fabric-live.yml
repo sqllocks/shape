@@ -245,7 +245,7 @@ jobs:
         # Run 38418635000 and 38437587616: the model definition and its Lakehouse tables exist, but the
         # engine answers "Cannot find table 'customer'". A refresh of a Direct Lake model reframes it on
         # the Lakehouse tables as they are now. Prints only the refresh status.
-        if: inputs.refresh_semantic_model
+        if: inputs.refresh_semantic_model || github.event_name == 'schedule'
         timeout-minutes: 15
         run: |
           python - <<'PY'
