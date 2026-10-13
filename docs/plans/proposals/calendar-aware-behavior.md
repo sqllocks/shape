@@ -1,6 +1,6 @@
 # Proposal: calendar-aware behavior modules
 
-Status: proposed 2026-10-12 (Owner approved proposing it). Not a work package yet: the lead decides whether it becomes one in `COMPLETION_PLAN.md` section 13, files its issue, and the issue's "Wanted" list (section 4 below, ready to paste) becomes its specification. Facts about the current code were read from `main` at `304efc6`.
+Status: proposed 2026-10-12 (Owner approved proposing it). Not a work package yet: the lead decides whether it becomes one in `COMPLETION_PLAN.md` section 13, files its issue, and the issue's "Wanted" list (section 4 below, ready to paste) becomes its specification. Facts about the current code were read from `main` at `304efc6`. Amended 2026-10-13: a working-hours window for delays (end of section 2b, Wanted item 9), moved here from the time-zone-aware time-of-day proposal.
 
 ## 1. The problem
 
@@ -32,6 +32,19 @@ Three additions, all opt-in:
 
 The calendar spec is the one generation already uses, so one calendar file can drive both.
 
+**Working hours.** An optional `working_hours` on a delay state moves a landing time that falls outside the window to the next moment inside it, so a claim adjuster's or a support agent's next step happens during office hours:
+
+```json
+"review": {"type": "delay",
+           "delay": {"kind": "lognormal", "mu": 1.5, "sigma": 0.6, "unit": "hours"},
+           "working_hours": {"sessions": [{"start": "09:00", "end": "12:00"}, {"start": "13:00", "end": "17:30"}],
+                             "days": ["mon", "tue", "wed", "thu", "fri"], "calendars": ["us_federal"],
+                             "count": "elapsed"},
+           "transitions": [...]}
+```
+
+`sessions` uses the notation of the time-zone-aware time-of-day proposal (local `HH:MM` intervals, evaluated in the module's `time_zone`). Holidays from `calendars` are closed days. `count` is `elapsed` (the delay is sampled in ordinary time and the landing time is moved forward into the window) or `working` (the delay counts only working time, so "4 working hours" started at 16:00 on a Friday ends at 11:00 on Monday). A window with no open time is a validation error.
+
 **c. Calendar conditions in guards.** A new condition leaf `{"type": "calendar", "field": F, "op": OP, "value": V}` with `F` one of `weekday`, `day_of_month`, `month`, `quarter`, `days_to_period_end` (with `period`), `is_holiday` (with a calendar). Each has an exact "ready" time, like `age` conditions today, so the simulator jumps to the right moment instead of polling.
 
 Time zone: the virtual clock is UTC microseconds and stays so; calendar fields are evaluated in UTC unless a module-level `time_zone` is given (IANA name, through the standard library's `zoneinfo`; core already depends on `tzdata` on Windows, where the system has no time zone database).
@@ -52,8 +65,9 @@ Time zone: the virtual clock is UTC microseconds and stays so; calendar fields a
 6. A stable way for plugins to build a calendar from a spec: either `with_spec` added to the `shape.calendars` protocol (plugin API change, `docs/plugins/stability.md`) or a public function listed in `docs/API_STABILITY.md`. The lead picks one.
 7. The example `subscription` module gains a month-start renewal using item 1, and a new example module shows quarter-end bunching with item 2.
 8. Documentation in `docs/plugins/behavior.md` with each new kind, the condition leaf and the format change.
+9. An optional `working_hours` on delay states (`sessions`, `days`, `calendars`, `count` `elapsed` or `working`), in the module's `time_zone`; part of format `shape-behavior/2`.
 
-Acceptance beyond section 13's common items: with a `quarter_end` lift the share of transitions landing in the lifted days exceeds the share without it by the expected ratio within a stated tolerance over a large population; no landing day has a calendar factor of 0; the same seed gives byte-identical events; a version 1 module produces byte-identical output before and after the change; an older reader rejects a version 2 module.
+Acceptance beyond section 13's common items: with a `quarter_end` lift the share of transitions landing in the lifted days exceeds the share without it by the expected ratio within a stated tolerance over a large population; no landing day has a calendar factor of 0; with `working_hours`, no landing time falls outside its sessions or on a listed holiday, and a `working` delay equals its sampled duration in working time; the same seed gives byte-identical events; a version 1 module produces byte-identical output before and after the change; an older reader rejects a version 2 module.
 
 ## 5. Open questions for the lead
 1. Whether item 2's thinning bound and fallback (shift to the nearest open day) should be configurable.
