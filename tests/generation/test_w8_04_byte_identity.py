@@ -770,7 +770,7 @@ def test_update_rewrites_the_corpus_and_check_reads_it(
         ROOT / "tests/generation/golden_bytes/lines.json"
     ).read_bytes()
     assert gb.main([]) == 0
-    assert "418 files match the golden byte corpus" in capsys.readouterr().out
+    assert "425 files match the golden byte corpus" in capsys.readouterr().out
     doc = json.loads((tmp_path / "hashes.json").read_text("utf-8"))
     key = sorted(doc["files"])[0]
     doc["files"][key] = "0" * 64
@@ -821,7 +821,7 @@ def test_the_corpus_matches_in_a_foreign_environment(child_kernel: str) -> None:
         cwd=ROOT,
     )
     assert done.returncode == 0, done.stdout + done.stderr
-    assert "418 files match the golden byte corpus" in done.stdout
+    assert "425 files match the golden byte corpus" in done.stdout
 
 
 # ---- 6. the version guard -----------------------------------------------------------------------
