@@ -109,7 +109,14 @@ def baseline_counts(generate_scales: list[str]) -> Counts:
     from shape.generation.engine import Engine
 
     plan = json.loads((HERE.parent / "fixtures/plan.json").read_text())
-    planned = {key: entry["row_counts"] for key, entry in plan.items()}
+    # Only tables count: the planner's working values (``daily_price_years``) are not tables.
+    planned = {
+        key: {
+            scale: {t: n for t, n in tables.items() if t in entry["order"]}
+            for scale, tables in entry["row_counts"].items()
+        }
+        for key, entry in plan.items()
+    }
     planned.update(recorded_composite_plans())
     out = {}
     for key, counts in planned.items():

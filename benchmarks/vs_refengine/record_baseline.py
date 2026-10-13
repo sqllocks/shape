@@ -399,13 +399,15 @@ def pools_worker(domain: str) -> dict[str, Any]:
 
 
 def plan_worker() -> dict[str, Any]:
+    from shape.generation.composite import resolve
     from shape.generation.engine import Engine
 
-    importer = harness("record_composite_importer", "schema_import.py")
     plans = {}
     inputs = {}
     for path in sorted((HERE / "fixtures/composites").glob("*.json")):
-        schema = importer.import_dump(json.loads(path.read_text())["schema"])
+        # The release's own composite plan, as the candidate side of rowcounts.py computes it:
+        # an imported dump of the fixture schema would not carry the composite's scaling.
+        schema = resolve(json.loads(path.read_text())["spec"]).schema
         counts = {
             scale: {table: int(engine.row_counts[table]) for table in schema.tables}
             for scale in schema.generation.scales

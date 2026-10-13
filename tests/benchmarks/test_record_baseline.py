@@ -388,3 +388,18 @@ def test_diagnostic_redacts_braced_connection_and_unbraced_password(password):
     redacted = r.redact(message, connection)
     assert password not in redacted and connection not in redacted
     assert "<redacted connection>" in redacted and "<redacted>" in redacted
+
+
+def test_composite_plans_are_the_releases_own_not_an_imported_dump():
+    """The imported fixture dump plans flat counts (30 for marketing_conversion at every scale);
+    the release's composite resolver scales them, and the fixture's own plan agrees with it."""
+    import json
+
+    r = recorder()
+    result = r.plan_worker()
+    path = r.HERE / "fixtures/composites/composite_telecom_bundle.json"
+    expected = json.loads(path.read_text())["plan"]["row_counts"]
+    planned = result["composites"]["composite_telecom_bundle"]["planned"]
+    assert planned["small"]["marketing_conversion"] == 600
+    for scale, tables in planned.items():
+        assert {t: n for t, n in expected[scale].items() if t in tables} == tables
