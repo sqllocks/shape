@@ -44,7 +44,7 @@ jobs:
         run: |
           source scripts/env.sh
           "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/profile_1to1/datasets.py
-          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/record_baseline.py --all \
+          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/record_baseline.py --all --replace \
             --mssql "$SHAPE_TEST_MSSQL;Database=tempdb" --out benchmarks/vs_refengine/recorded
           "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/recorded/check.py
       - uses: actions/upload-artifact@v4
