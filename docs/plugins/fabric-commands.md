@@ -109,12 +109,51 @@ Use [the tested starters](../TUTORIAL.md) for local commands and complete output
 
 **Needs a Fabric account. Not run in CI.**
 
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers.
+
 ```
 shape setup-fabric --workspace "Demo" --create-lakehouse
 shape setup-fabric --snippet        # print the cell to paste into a notebook instead
 ```
 
-<!-- owner: Fabric maintainer — supply the transcript for docs/plugins/fabric-commands.md example 2. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Shape v0.9.1 — Fabric Environment Setup
+      Workspace:   Demo
+      Environment: shape-env
+      Lakehouse:   yes
+    
+      Found existing Environment: shape-env
+      Created Lakehouse:   shape_lakehouse
+    
+    Setup complete:
+      Environment: shape-env
+      Lakehouse: shape_lakehouse
+    
+    Next steps:
+      1. Open the Environment in Fabric
+      2. Add these PyPI libraries:
+         - sqllocks-shape 0.9.1
+         - sqllocks-shape-domains 0.9.1
+         - deltalake >=0.17.0
+         - pyarrow >=14.0
+      3. Publish the environment
+      4. Attach to notebooks and run 'shape notebook' to generate data
+    # Shape environment setup: run this cell in any Fabric notebook.
+    %pip install sqllocks-shape==0.9.1 sqllocks-shape-domains==0.9.1 -q
+    
+    import shape
+    
+    result = shape.generate("retail", scale="small", seed=42)
+    problems = result.verify_integrity()
+    print(f"Shape v{shape.__version__} installed")
+    rows = sum(result.row_counts.values())
+    print(f"Generated {rows:,} rows in {len(result.tables)} tables")
+    print("Foreign-key integrity:", "PASS" if not problems else f"FAIL ({len(problems)})")
+    ```
+
+Evidence: [run 38337418136, ubuntu-latest, `de4c1fb12885`](../evidence/transcripts/docs-transcripts-38337418136-de4c1fb12885-ubuntu-latest-setup-fabric.json).
 
 
 Creates the Fabric Environment item (`--env-name`, default `shape-env`) and, with
