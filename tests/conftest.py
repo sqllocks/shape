@@ -5,10 +5,17 @@ from __future__ import annotations
 import importlib.util
 import ipaddress
 import socket
+import sys
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Any
 
 import pytest
+
+# Shared test inputs live beside the suites (``tests/nested_inputs.py``); the suite runs with
+# ``--import-mode=importlib``, which does not put ``tests/`` on ``sys.path``.
+if str(Path(__file__).parent) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).parent))
 
 # Tests marked `sign` import the optional `cryptography` package ([sign] extra) at module
 # level. Without it they cannot be collected, so `pytest -m "not sign"` must not collect them.

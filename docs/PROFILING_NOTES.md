@@ -537,6 +537,61 @@ A profile written before type inference was recorded has no `type_inference`: `s
 only the contract. The findings become `type` proposals with `shape proposals propose --kinds type` (`docs/PROPOSALS.md`).
 
 
+## Nested columns
+
+A Parquet file, a Delta table or a JSON Lines file can hold list, struct and map columns, and lists and structs inside
+them. `shape profile` reads them (Shape 0.9.1 stopped with `unhashable type: nested Arrow column`). A nested column is
+recorded as a whole. Nothing inside its values is profiled: a struct's fields, a list's elements and a map's keys and
+values have no statistics of their own.
+
+The column has `dtype` `nested` and the usual `null_count` and `null_rate`; the table's `row_count` is the number of rows.
+It has no `cardinality`, `min_value`, `max_value`, `mean`, `pattern` or value counts, and it is never a key. Three keys
+only a nested column has:
+
+| Key | Meaning |
+|---|---|
+| `arrow_type` | the Arrow type as text, as the reader gave it (`list<element: int64>`) |
+| `arrow_type_spec` | the same type exactly, as JSON: field names, nullability, units, time zones and nesting. A leaf is its Arrow name (`"int64"`) or, when the name does not read back as the same type, an Arrow IPC schema in base64. Field metadata is not kept |
+| `nested` | `kind` (`list`, `large_list`, `fixed_size_list`, `list_view`, `large_list_view`, `map`, `struct` or `union`), `rows`, `non_null`, and for a list or a map `length` and `element_null_rate` |
+
+`length` is the distribution of the lengths of the non-null lists or maps: `min`, `max`, `mean`, `std` (population), `p50`,
+`p95` and `hist` (length to count, up to 256 distinct lengths; a column with more has no `hist`). It is absent when no
+value is non-null. `element_null_rate` is the share of null list elements, or of null map values, among all elements; it
+is absent without an element. A struct has no `length`.
+
+```json
+"tags": {
+  "dtype": "nested", "null_count": 12, "null_rate": 0.2,
+  "arrow_type": "list<element: string>",
+  "arrow_type_spec": {"type": {"list": "list", "item": {"name": "element", "nullable": true, "type": "string"}}},
+  "nested": {"kind": "list", "rows": 60, "non_null": 48, "element_null_rate": 0.0,
+             "length": {"min": 1, "max": 4, "mean": 2.5, "std": 1.118034, "p50": 2.5, "p95": 4.0,
+                        "hist": {"1": 12, "2": 12, "3": 12, "4": 12}}}
+}
+```
+
+A table without a nested column has none of these keys, and the statistics of its other columns do not depend on a
+nested column being there. Both kernels (`SHAPE_KERNEL=rust` and `python`) give the same record.
+
+What the other commands do with a nested column:
+
+* `shape diff` compares the type by its structure and leaf types (`list<int64>`): the names Arrow writers give a list's item
+  or a map's entries do not count, a struct's field names do. A different type is a `dtype_change`, a different null rate is
+  a `null_rate_change`, and a shift in the mean length is a `length_change`.
+* `shape check` evaluates the contract rules that apply: `dtype` (`nested`), `nullable` and `max_null_rate`. A rule about
+  values (`pattern`, `distribution`) does not hold for a nested column.
+* `shape generate` writes the column with the recorded Arrow type, the recorded null rate and, for a list or a map, lengths
+  drawn from `length.hist` (from `mean`, `std`, `min` and `max` without a `hist`). The values inside come from the generator
+  of each leaf type, as for a column about which the profile says nothing; so a nested value has the right shape and types
+  but not the distribution of the original values. A nested value inside a nested value has 1 to 3 elements, a struct field
+  is never null, and a map's keys are distinct. A child type with no generator (binary, duration, union) is refused by
+  name. CSV, TSV and SQL hold flat values only: use Parquet, JSON Lines, IPC or Delta.
+* `shape profile --validate` refuses a nested column by name.
+* Profiles of the parts of one table merge when each part holds the same type; the lengths combine exactly when each part
+  kept its `hist`.
+
+Profiling the fields inside nested values is not done yet.
+
 ## Complete local run
 
 Run these commands in order after preparing the fixtures above.

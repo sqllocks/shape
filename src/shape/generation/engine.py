@@ -71,6 +71,7 @@ from shape.generation.copula_mixed import (
 from shape.generation.correlation import THRESHOLD, apply_copula
 from shape.generation.early_rules import EarlyRules
 from shape.generation.identifiers import DEFAULT_IDENTIFIERS, check_identifiers
+from shape.generation.nested import NESTED, NestedStrategy
 from shape.generation.rng import RowStream
 from shape.generation.rules import (
     RuleViolation,
@@ -84,6 +85,8 @@ from shape.generation.schema import Column, GenSchema, Issue, Table
 from shape.plugins.api.v1 import GenerationContext
 
 _T = TypeVar("_T")
+
+_NESTED_STRATEGY = NestedStrategy()
 
 DEFAULT_CHUNK_ROWS = 65_536
 THREADS_ENV = "SHAPE_THREADS"
@@ -719,6 +722,8 @@ class Engine:
 
     def _strategy(self, name: str) -> Any:
         found = self._strategies.get(name)
+        if found is None and name == NESTED:
+            return _NESTED_STRATEGY  # the engine's own: a nested column of a profile
         if found is None:
             from shape.plugins.host import default_host
 

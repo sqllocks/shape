@@ -2299,6 +2299,11 @@ def main(argv=None):
             if not errors.reader_gone(exc):
                 raise
             code = errors.pipe_closed()
+    if "deltalake" in sys.modules:
+        # delta-rs runs native threads, and a table behind an object store reaches Arrow through
+        # a Python file system that an Arrow pool thread frees: tearing the interpreter down
+        # around them can hang or abort (GitHub issue #1). End the process once all is flushed.
+        lifecycle.exit_on_return = True
     if lifecycle.exit_on_return:
         lifecycle.exit_now(code)
     return code
@@ -2332,7 +2337,7 @@ def _main(argv):
         from shape.security.redact import redact_text
 
         # The text of a driver, broker or auth error can echo a connection string or a token.
-        detail = redact_text(str(exc)) or "no detail"
+        detail = errors.one_line(redact_text(str(exc))) or "no detail"
         print(
             f"shape: error: {type(exc).__name__}: {detail} (run with --debug for the traceback)",
             file=sys.stderr,

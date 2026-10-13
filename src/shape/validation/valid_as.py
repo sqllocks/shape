@@ -165,6 +165,11 @@ def attach_validators(table_doc: dict[str, Any], cols: Iterable[Any], specs: Any
     for column, kinds in wanted.items():
         for kind in kinds:
             validator(kind)  # fail on an unknown kind or a missing code list before any work
+        if getattr(by_name[column], "kind", None) == "nested":
+            raise ValueError(
+                f"validators: column {column!r} is nested ({by_name[column].arr.type}); a code "
+                "validator reads text, number or date columns"
+            )
         counts = _distinct(by_name[column].arr)
         entry = table_doc["columns"][column].setdefault("validators", {})
         for kind in kinds:

@@ -154,6 +154,10 @@ def _column_dict(cp: ColumnProfile) -> dict[str, Any]:
         d["adequacy"] = cp.adequacy
     if cp.type_inference is not None:
         d["type_inference"] = cp.type_inference
+    if cp.nested is not None:  # only a nested column has these three keys
+        d["arrow_type"] = cp.arrow_type
+        d["arrow_type_spec"] = cp.arrow_type_spec
+        d["nested"] = cp.nested
     return d
 
 
@@ -192,6 +196,13 @@ def _plain(tagged: Any) -> Any:
 
 
 def _column_summary(col: dict[str, Any]) -> dict[str, Any]:
+    out = _flat_summary(col)
+    if col.get("arrow_type") is not None:  # a nested column also says which type it is
+        out["arrow_type"] = col["arrow_type"]
+    return out
+
+
+def _flat_summary(col: dict[str, Any]) -> dict[str, Any]:
     return {
         "dtype": col["dtype"],
         "null_rate": col["null_rate"],

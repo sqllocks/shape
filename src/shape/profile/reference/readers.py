@@ -81,6 +81,7 @@ def single_threaded_pools(threads: int | None = None) -> Iterator[None]:
 #   dt64     datetime64
 #   objdate  object array of datetime.date (Parquet date32)
 #   nullobj  object column of all None (Parquet null type)
+#   nested   a list, struct, map or union column, kept as the Arrow column (shape.profile.nested)
 # ---------------------------------------------------------------------------
 
 # pandas' default NA tokens (pandas._libs.parsers.STR_NA_VALUES)
@@ -288,10 +289,12 @@ def _clean_dictionary(col: Any) -> Any:
 
 def declared_name(typ: pa.DataType) -> str:
     """An Arrow type as the profile names types: ``string``, ``integer``, ``float``, ``boolean``,
-    ``date``, ``datetime`` (``decimal``, ``time``, ``binary``, ``duration``, ``null`` and
-    ``other`` for the rest)."""
+    ``date``, ``datetime`` (``decimal``, ``time``, ``binary``, ``duration``, ``null``, ``nested``
+    for a list, struct, map or union, and ``other`` for the rest)."""
     if pa.types.is_dictionary(typ):
         return declared_name(typ.value_type)
+    if pa.types.is_nested(typ):
+        return "nested"
     if pa.types.is_integer(typ):
         return "integer"
     if pa.types.is_floating(typ):
@@ -333,8 +336,9 @@ def _arrow_cols_untyped(t: pa.Table) -> list[_Col]:
             out.append(_Col(name, "cat", _clean_dictionary(col.unify_dictionaries())))
             continue
         if pa.types.is_nested(typ):
-            # pandas holds dicts / ndarrays here; value hashing then raises
-            raise TypeError(f"column {name}: unhashable type: nested Arrow column ({typ})")
+            # recorded whole (type, nulls, lengths): see shape.profile.nested
+            out.append(_Col(name, "nested", col))
+            continue
         if pa.types.is_uint64(typ) and col.null_count == 0:
             out.append(_Col(name, "uint64", col))
         elif pa.types.is_integer(typ):

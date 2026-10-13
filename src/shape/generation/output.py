@@ -187,7 +187,23 @@ def _target(fmt: str, sink: Any, output_dir: Path, table: str) -> Path:
     return output_dir if not extension else contained(output_dir, table, f".{extension}")
 
 
+_FLAT_FORMATS = ("csv", "tsv", "sql")
+
+
+def _refuse_nested(fmt: str, schema: GenSchema, table: str) -> None:
+    """A format of flat cells cannot hold a nested column: say which column, before any file."""
+    if fmt not in _FLAT_FORMATS:
+        return
+    for name, column in schema.tables[table].columns.items():
+        if column.type == "nested":
+            raise ValueError(
+                f"{table}.{name} is a nested column (list, struct or map) and {fmt} holds flat "
+                "values only: write parquet, jsonl, ipc or delta instead"
+            )
+
+
 def _options(fmt: str, schema: GenSchema, table: str, options: Mapping[str, Any]) -> dict[str, Any]:
+    _refuse_nested(fmt, schema, table)
     merged: dict[str, Any] = dict(options)
     if fmt == "sql":
         merged = {**sql_options(schema, table), **merged}

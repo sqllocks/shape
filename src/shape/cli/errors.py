@@ -40,6 +40,9 @@ EXPECTED: tuple[type[BaseException], ...] = (
     zipfile.BadZipFile,
 )
 
+# the start of a backtrace that a native library (delta-rs) appends to its message: "0: <unknown>"
+_BACKTRACE = re.compile(r"\n\s*0:\s")
+
 _NOT_FOUND = re.compile(r"^(?:source|file)\s+not found:\s*(?P<path>.+)$", re.IGNORECASE)
 
 
@@ -54,6 +57,12 @@ def set_debug(on: bool) -> None:
 
 def debug_enabled(flag: bool = False) -> bool:
     return flag or _debug or os.environ.get("SHAPE_DEBUG", "") not in ("", "0")
+
+
+def one_line(text: str) -> str:
+    """``text`` on one line: a native backtrace after the message is dropped and the white space
+    is collapsed, so a failure is always one ``shape: error:`` line."""
+    return " ".join(_BACKTRACE.split(text, maxsplit=1)[0].split())
 
 
 def describe(exc: BaseException) -> str:
@@ -73,7 +82,7 @@ def describe(exc: BaseException) -> str:
     if isinstance(exc, OSError) and exc.strerror:
         where = f" ({exc.filename})" if exc.filename is not None else ""
         return f"{exc.strerror}{where}"
-    return " ".join(str(exc).split()) or type(exc).__name__
+    return one_line(str(exc)) or type(exc).__name__
 
 
 def fail(exc: BaseException) -> int:

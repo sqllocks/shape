@@ -1,0 +1,143 @@
+"""GitHub issue #1: ``shape profile`` failed on any nested column and a Delta table aborted.
+
+* ``shape profile`` exits 0 on Parquet, Delta and JSON Lines inputs with list, struct, map and
+  nested-in-nested columns, alone and mixed with flat columns, under both kernels.
+* A local Delta read ends the process cleanly: deltalake's pyarrow dataset used to free its
+  Python-backed file system on an Arrow pool thread after Python had shut down (the thread waited
+  for the GIL, the main thread for the pool: a hang or ``terminate called without an active
+  exception``). A table without a nested column did it too.
+* No failure aborts: it is one ``shape: error:`` line and exit 2.
+"""
+
+from __future__ import annotations
+
+import subprocess
+import sys
+from collections.abc import Iterator
+from pathlib import Path
+
+import nested_inputs as ni
+import pyarrow as pa  # type: ignore[import-untyped]
+import pyarrow.parquet as pq  # type: ignore[import-untyped]
+import pytest
+
+import shape
+from shape.cli.main import main
+from shape.kernel import dispatch
+
+
+@pytest.fixture(params=["python", "rust"])
+def kernel(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
+    if request.param == "rust":
+        pytest.importorskip("shape._kernel")
+    monkeypatch.setenv("SHAPE_KERNEL", request.param)
+    dispatch.reset()
+    assert dispatch.kernel_name() == request.param
+    yield request.param
+    dispatch.reset()
+
+
+def _names(kind: str) -> tuple[str, ...]:
+    return ni.JSONL_NESTED if kind == "jsonl" else tuple(ni.NESTED_TYPES)
+
+
+@pytest.mark.parametrize("kind", ["parquet", "delta", "jsonl"])
+@pytest.mark.parametrize("shape_of", ["alone", "mixed", "all"])
+def test_profile_exits_zero_on_nested_columns(
+    kernel: str, kind: str, shape_of: str, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    names = _names(kind)
+    cases = {
+        "alone": [ni.nested_only(n) for n in names],
+        "mixed": [ni.table_with(n) for n in names],
+        "all": [ni.table_with(*names)],
+    }[shape_of]
+    for i, table in enumerate(cases):
+        src = ni.write(kind, tmp_path, table, stem=f"t{i}")
+        out = tmp_path / f"t{i}.shape"
+        code = main(["profile", str(src), "-o", str(out)])
+        err = capsys.readouterr().err
+        assert code == 0, f"{kind} {table.schema.names}: {err}"
+        assert "shape: error" not in err
+        assert out.exists()
+
+
+def test_the_report_repro_of_the_issue(tmp_path: Path) -> None:
+    pq.write_table(pa.table({"id": [1, 2], "li": [[1], [2]]}), str(tmp_path / "a.parquet"))
+    done = subprocess.run(
+        [sys.executable, "-m", "shape.cli.main", "profile", "a.parquet", "-o", "a.shape"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=False,
+    )
+    assert done.returncode == 0, done.stderr
+    assert "unhashable" not in done.stderr
+    assert shape.profile(str(tmp_path / "a.parquet")).to_dict()["columns"]["li"]["dtype"]
+
+
+def _run_profile(src: Path, out: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, "-m", "shape.cli.main", "profile", str(src), "-o", str(out)],
+        capture_output=True,
+        text=True,
+        timeout=60,  # a hang at exit is a failure, not a wait
+        check=False,
+    )
+
+
+@pytest.mark.parametrize("nested", [False, True], ids=["flat", "struct"])
+def test_a_local_delta_table_ends_the_process_cleanly(tmp_path: Path, nested: bool) -> None:
+    table = ni.table_with("st") if nested else ni.flat_table()
+    src = ni.write_delta(tmp_path / "d", table)
+    for run in range(8):  # the hang was a race: about two runs in three
+        try:
+            done = _run_profile(src, tmp_path / "d.shape")
+        except subprocess.TimeoutExpired:  # pragma: no cover - the failure being tested
+            pytest.fail(f"run {run}: the process did not end (hang at exit)")
+        assert done.returncode == 0, f"run {run} exit {done.returncode}: {done.stderr[-300:]}"
+        assert "terminate called" not in done.stderr
+
+
+def test_a_broken_delta_log_is_one_error_line_and_exit_2(tmp_path: Path) -> None:
+    src = ni.write_delta(tmp_path / "d", ni.flat_table())
+    for log in (src / "_delta_log").glob("*.json"):
+        log.write_text("not json\n")
+    done = _run_profile(src, tmp_path / "d.shape")
+    assert done.returncode == 2
+    lines = [x for x in done.stderr.splitlines() if x.strip() and "RuntimeWarning" not in x]
+    assert len(lines) == 1 and lines[0].startswith("shape: error:"), done.stderr
+    assert "<unknown>" not in lines[0]  # delta-rs appends its backtrace to the message
+
+
+def test_a_command_that_loaded_deltalake_ends_the_process_by_itself(tmp_path: Path) -> None:
+    """The command line ends the process once its output is flushed when delta-rs was loaded, so
+    a scan still running on Arrow's pool threads (through deltalake's Python file system, which
+    hangs the interpreter's exit) cannot hold the process. The script leaves such a scan behind."""
+    from deltalake import write_deltalake
+
+    src = tmp_path / "d"
+    for i in range(30):  # many files, so the scan is still going when the script ends
+        part = pa.table(
+            {"id": list(range(i * 1000, (i + 1) * 1000)), "s": [{"a": j} for j in range(1000)]}
+        )
+        write_deltalake(str(src), part, mode="append")
+    script = (
+        "import sys\n"
+        "from deltalake import DeltaTable\n"
+        "from shape.cli.main import main\n"
+        "sys.argv = ['shape', 'version']\n"
+        f"scan = DeltaTable({str(src)!r}).to_pyarrow_dataset().scanner(batch_size=2)\n"
+        "reader = scan.to_reader()\n"
+        "reader.read_next_batch()\n"
+        "main()\n"
+    )
+    for run in range(3):
+        try:
+            done = subprocess.run(
+                [sys.executable, "-c", script], capture_output=True, text=True, timeout=60
+            )
+        except subprocess.TimeoutExpired:  # pragma: no cover - the failure being tested
+            pytest.fail(f"run {run}: the process did not end")
+        assert done.returncode == 0, f"run {run}: exit {done.returncode}: {done.stderr[-300:]}"

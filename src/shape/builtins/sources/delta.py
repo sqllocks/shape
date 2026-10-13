@@ -20,6 +20,7 @@ from urllib.parse import urlparse
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.dataset as pa_dataset  # type: ignore[import-untyped]
 
+from shape.io import deltafs
 from shape.profile.reference import delta_fallback
 
 from . import _azure_auth as auth
@@ -121,7 +122,9 @@ class DeltaSource:
         error: BaseException | None = None
         if not delta_fallback.never_read_by_delta_rs(table):
             try:
-                return table.to_pyarrow_dataset()
+                if _is_cloud(uri):
+                    return table.to_pyarrow_dataset()
+                return deltafs.local_dataset(table, local_path(uri))
             except Exception as refusal:
                 if not delta_fallback.is_unsupported_feature_error(refusal):
                     raise
