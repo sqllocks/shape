@@ -202,6 +202,18 @@ Use dedicated test items: the tests create unique names and remove what they cre
 | Spark worker | `FABRIC_WORKSPACE_ID`, `FABRIC_LAKEHOUSE_ID`, plus common SPN variables; set `FABRIC_LAKEHOUSE_SCHEMA` when the test Lakehouse has schemas enabled |
 | Synapse dedicated-pool round trip | `SHAPE_TEST_SYNAPSE_URI`, `SHAPE_TEST_SYNAPSE_STAGING`, `SHAPE_TEST_SYNAPSE_AUTH=spn`, `SHAPE_TEST_SYNAPSE_TENANT_ID`, `SHAPE_TEST_SYNAPSE_CLIENT_ID`, `SHAPE_TEST_SYNAPSE_CLIENT_SECRET` |
 
+In the `fabric-live` workflow the Synapse variables come from the `fabric-live` environment:
+`SHAPE_TEST_SYNAPSE_URI` and `SHAPE_TEST_SYNAPSE_STAGING` (variables), `SHAPE_TEST_SYNAPSE_AUTH` set
+to `spn`, and the tenant, client id and secret taken from `FABRIC_TENANT_ID`, `FABRIC_CLIENT_ID`
+and `FABRIC_CLIENT_SECRET`. The pool is kept Paused to save cost, so the workflow also reads
+`SYNAPSE_SUBSCRIPTION_ID`, `SYNAPSE_RESOURCE_GROUP`, `SYNAPSE_WORKSPACE` and `SYNAPSE_POOL`
+(variables). It signs the Azure CLI in as the service principal, resumes the pool and waits
+(up to 15 minutes) until it is Online before the tests, and pauses it again in a step that runs
+after success, failure and cancellation. The principal needs Contributor on the resource group
+(to resume and pause), Storage Blob Data Contributor on the staging account, and a database user
+in `db_owner` on the pool; the workspace managed identity needs Storage Blob Data Contributor on
+the staging account for `COPY INTO`. A missing variable fails the test or the resume step by name.
+
 The Owner matrix needs two distinct Lakehouse items and a sample Warehouse:
 
 - `FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH` is the root Tables URI of a **classic,

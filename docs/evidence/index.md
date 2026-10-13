@@ -19,6 +19,7 @@ You can inspect these receipts to trace the public documentation statements to t
 - [Live fidelity overhead — committed local measurement](live-fidelity-measurement.md)
 - [Installed VSIX and real editor receipt](vscode-install.md)
 - [Kerberos keytab sign-in to a Windows-authentication-only SQL Server — Owner-run receipt](kerberos-live.md)
+- [Semantic model profiling in a Fabric notebook — Owner-run receipt](semantic-model-notebook.md)
 
 ## Related
 

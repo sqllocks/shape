@@ -31,6 +31,16 @@ The 1.x compatibility promises describe future policy.
 
 ## Fabric in 0.9.1
 
+- **NaN and ±Infinity are written as NULL** by the Fabric Warehouse, SQL database and Synapse
+  dedicated pool writers, because a T-SQL `float` holds only finite values. A table read back has
+  `NULL` where the generated data had `NaN`, so a row-for-row comparison of a float column must
+  treat `NaN` and `NULL` as the same cell. Other columns come back unchanged.
+- **Synapse dedicated pool: Parquet timestamps are staged as INT96.** A dedicated pool cannot read
+  Parquet `INT64` timestamps with microsecond or nanosecond precision (its `COPY INTO` fails with
+  `ClassCastException: Long cannot be cast to Binary`); INT96 loads into `datetime2` with the
+  microseconds intact
+  ([data loading strategies](https://learn.microsoft.com/azure/synapse-analytics/sql-data-warehouse/design-elt-data-loading#3-prepare-the-data-for-loading)).
+
 - Fabric Warehouse rejects the inline `PRIMARY KEY` emitted by 0.9.1 with error 24584.
   Workaround: create the destination tables yourself without inline keys, optionally add
   `ALTER TABLE ... ADD CONSTRAINT ... PRIMARY KEY NONCLUSTERED (...) NOT ENFORCED`, then

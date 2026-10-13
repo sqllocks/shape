@@ -254,6 +254,8 @@ class WarehouseWriter:
     def _copy_statement(self, schema_name: str, table: str, folder: Any) -> str:
         return copy_into_sql(schema_name, table, folder.https() + "/")
 
+    int96_timestamps = False  # staged Parquet timestamps as INT96 (a Synapse dedicated pool)
+
     def _stage(
         self,
         table: str,
@@ -274,7 +276,7 @@ class WarehouseWriter:
             path = folder.join(f"chunk_{index:06d}.parquet").abfss()
 
             def put(handle: BinaryIO, g: list[pa.RecordBatch] = group) -> None:
-                write_batches(handle, "parquet", g, schema)
+                write_batches(handle, "parquet", g, schema, int96_timestamps=self.int96_timestamps)
 
             self.storage.write(path, put)
             staged += sum(b.num_rows for b in group)

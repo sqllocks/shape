@@ -188,13 +188,21 @@ Use [the tested starters](../TUTORIAL.md) for local commands and complete output
 
 <!-- example: 4 -->
 
-**Needs a Fabric account. Not run in CI.**
+**Needs a Fabric notebook (sempy signs in as the notebook's user). Not run in CI.**
 
 ```
 shape profile-model Sales/Retail -o retail.shape [--tables Customer,Orders] [--max-rows 100000] [--json]
 ```
 
-<!-- owner: Fabric maintainer — supply the transcript for docs/plugins/fabric-commands.md example 4. -->
+Owner-run in a Fabric notebook on 2026-10-12 (as `python -m shape`; workspace `shape-test`, model `shape_sm`, one table and no relationships; without `--tables`), exit 0:
+
+```text
+!{sys.executable} -m shape profile-model shape-test/shape_sm -o retail.shape --max-rows 100000 --json; echo exit=$?
+{"written": "retail.shape", "shape_content_id": "0c2911b8b03d9b899654b1a1c8c42d3a8f21ce7807677b6809c5d8f0c14d2e66", "workspace": "shape-test", "model": "shape_sm", "tables": 1, "relationships": 0, "max_rows": 100000}
+exit=0
+```
+
+Evidence: [Owner-run notebook receipt, 2026-10-12, Shape 0.9.1](../evidence/semantic-model-notebook.md).
 
 
 Profiles every table of a Power BI / Fabric semantic model as one dataset profile and records the
