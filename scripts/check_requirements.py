@@ -1,5 +1,7 @@
+import re
 from pathlib import Path
-import re, sys, yaml
+
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 data = yaml.safe_load((ROOT / "docs/specs/requirements.yaml").read_text())

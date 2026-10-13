@@ -35,6 +35,9 @@ RESERVED_SOURCE_NAMES = frozenset({"safe", "validate", "export", "import", "list
 BASELINE_GATES = frozenset({"schema_drift"})
 BASELINE_KINDS = ("previous_run", "same_weekday", "rolling_window", "month_end", "pinned")
 GATE_MODES = ("observe", "enforce")
+#: the gates ``shape verify`` runs from its configuration or ``--source`` that are not in the
+#: built-in gate registry; ``gates.NAME.mode`` takes them too
+VERIFY_ONLY_GATES = frozenset({"memorization", "reconciliation", "timeseries_quality", "utility"})
 DEFAULT_REGISTRY = "shapes/registry"
 
 
@@ -401,7 +404,7 @@ def _semantic_problems(doc: dict[str, Any]) -> list[str]:
     if isinstance(doc.get("gates"), dict) and doc["gates"]:
         from shape.quality.gates import GateRunner
 
-        known = GateRunner.available_gates()
+        known = sorted({*GateRunner.available_gates(), *VERIFY_ONLY_GATES})
         for gname, gate in doc["gates"].items():
             if gname not in known:
                 out.append(f"gates: unknown gate {gname!r} (gates: {', '.join(known)})")

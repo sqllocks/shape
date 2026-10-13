@@ -54,7 +54,10 @@ Commit the safe form instead:
 
 
 A safe-profile JSON is scanned with the leak scanner before it is stored; one that fails (for
-example `shape profile safe --unsafe-full-fidelity` output) is not committed (exit 1). The safe
+example `shape profile safe --unsafe-full-fidelity` output) is not committed (exit 1). Any JSON
+document with `tables` counts as a safe profile here unless it declares another `format` and keeps
+no safe-profile key (`schema_version`, `redaction_manifest`, `unsafe`), so removing a key does not
+skip the scan. The safe
 form is deterministic, so committing the same data twice gives the same content id. `--k N` and
 `--sensitive` set the minimum cohort, as in `shape profile safe`.
 

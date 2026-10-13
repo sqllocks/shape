@@ -79,7 +79,7 @@ gates:
 | `…columns.COLUMN` | A column name, `table.column` or glob. `thresholds`, `ignore: true`, `owner`, `annotations` (strings, numbers, booleans). |
 | `ci.junit`, `ci.sarif`, `ci.json` | Optional default paths of the reports of `shape diff`, `check`, `verify`, `fidelity` and `profile validate --safe` (`--junit`, `--sarif`; the `shape-result` document). Each may contain `{command}`; no other braces. A flag overrides it; relative paths are relative to the folder holding `shape.yml`. See `docs/CI.md`. |
 | `notifications` | Optional list of webhook targets, each `{url, on, secret, commands}`: `url` and `secret` are `env://` or `file://` references (never the address itself), `on` is a list of `fail`, `drift` and `always`, `commands` an optional subset of `diff`, `check`, `verify` and `fidelity`. A file without the key behaves as before (an additive key of version 1). See `docs/NOTIFICATIONS.md`. |
-| `gates.NAME.mode` | `observe` or `enforce`. NAME is a gate of `shape verify` (`schema_conformance`, `referential_integrity`, …). A gate that is not listed is enforced. |
+| `gates.NAME.mode` | `observe` or `enforce`. NAME is a gate of `shape verify` (`schema_conformance`, `referential_integrity`, …, including `reconciliation`, `timeseries_quality`, `memorization` and `utility`). A gate that is not listed is enforced. |
 | `gates.NAME.fail_on` | Optional, only for a gate that compares with a baseline (`schema_drift`): `breaking` (default), `additive` or `cosmetic`. The gate fails on a change of that class or a stricter one. On any other gate it is a validation error naming the gate. |
 
 The JSON Schema is `src/shape/schemas/shape-project-v1.schema.json` (also `shape.project.schema()`).

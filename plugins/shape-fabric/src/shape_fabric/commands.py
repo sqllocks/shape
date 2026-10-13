@@ -576,7 +576,7 @@ def _run_setup(a: argparse.Namespace) -> int:
     for lib in library_spec()["customLibraries"]["pypi"]:
         print(f"     - {lib['name']} {lib['version']}")
     print("  3. Publish the environment")
-    print("  4. Attach to notebooks and run 'shape notebook' to generate data")
+    print("  4. Attach to notebooks and run 'shape fabric notebook' to generate data")
     return EXIT_OK
 
 

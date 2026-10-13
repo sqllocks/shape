@@ -263,6 +263,14 @@ def test_setup_replays_the_recorded_conversation(world):
     assert "sqllocks-shape 0.0.0" in out and "Publish the environment" in out
 
 
+def test_setup_next_steps_name_the_shape_fabric_notebook_command(world):
+    world.serve(FakeFabricItems())
+    code, out, _ = world.run("fabric", "setup", "--workspace", "Demo")
+    assert code == 0
+    assert "run 'shape fabric notebook' to generate data" in out
+    assert "'shape notebook'" not in out
+
+
 def test_setup_without_a_lakehouse_creates_only_the_environment(world):
     fake = world.serve(FakeFabricItems())
     code, out, _ = world.run("setup-fabric", "--workspace", "Demo", "--env-name", "my-env")
