@@ -6438,6 +6438,14 @@ are reported as
 no Delta table at <path>
 , with credentials
   removed from the path.
+The
+abfss://
+sink writes into a Fabric Lakehouse.
+It used to fail with
+OperationNotAllowedOnThePath
+, because it checked for the Lakehouse with a request OneLake
+  refuses on an item folder. It now finds the Lakehouse in the workspace listing. A Lakehouse
+  given by GUID is no longer checked up front; a missing one is reported by the first write.
 MySQL without TLS.
 The
 caching_sha2_password
@@ -65618,6 +65626,19 @@ _shape_tmp/
 writes
 _SUCCESS
 in each folder after its files.
+  On OneLake the sink checks that the Lakehouse exists by listing the workspace and looking the item
+  up by name, not by probing the item: OneLake refuses a HEAD request on the item folder and on its
+Files
+and
+Tables
+folders (
+OperationNotAllowedOnThePath
+) and allows HEAD on the workspace
+  (
+OneLake API parity
+). An item
+  given by GUID cannot be found in a listing, so it is not checked up front and a missing one is
+  reported by the first write.
 Rolling.
 --roll-rows N
 and

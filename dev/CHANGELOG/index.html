@@ -6701,6 +6701,10 @@
   only a raw storage token, give the schema in the path (<code>.../Tables/dbo</code>).</li>
 <li><strong>Missing Delta tables</strong> are reported as <code>no Delta table at &lt;path&gt;</code>, with credentials
   removed from the path.</li>
+<li><strong>The <code>abfss://</code> sink writes into a Fabric Lakehouse.</strong> It used to fail with
+  <code>OperationNotAllowedOnThePath</code>, because it checked for the Lakehouse with a request OneLake
+  refuses on an item folder. It now finds the Lakehouse in the workspace listing. A Lakehouse
+  given by GUID is no longer checked up front; a missing one is reported by the first write.</li>
 <li><strong>MySQL without TLS.</strong> The <code>caching_sha2_password</code> sign-in crash is replaced by a message
   that says to use verified TLS (<code>ssl_ca=PATH&amp;ssl-mode=VERIFY_CA</code>) or ask the administrator for
   a supported authentication method. Shape does not fetch an untrusted key.</li>

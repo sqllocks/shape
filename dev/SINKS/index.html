@@ -6679,7 +6679,13 @@ shape<span class="w"> </span>generate<span class="w"> </span>retail<span class="
   and renamed to its final name when complete, so a Fabric pipeline or a storage-event trigger
   never sees a partial file. On a hierarchical namespace the rename is atomic; on a flat blob
   namespace (Azurite) it is a server-side copy and delete, and the final blob still appears whole.
-  <code>--manifest</code> writes <code>_SUCCESS</code> in each folder after its files.</li>
+  <code>--manifest</code> writes <code>_SUCCESS</code> in each folder after its files.
+  On OneLake the sink checks that the Lakehouse exists by listing the workspace and looking the item
+  up by name, not by probing the item: OneLake refuses a HEAD request on the item folder and on its
+  <code>Files</code> and <code>Tables</code> folders (<code>OperationNotAllowedOnThePath</code>) and allows HEAD on the workspace
+  (<a href="https://learn.microsoft.com/fabric/onelake/onelake-api-parity">OneLake API parity</a>). An item
+  given by GUID cannot be found in a listing, so it is not checked up front and a missing one is
+  reported by the first write.</li>
 <li><strong>Rolling.</strong> <code>--roll-rows N</code> and <code>--roll-seconds S</code> start a new numbered file; rows-based rolling
   is exact and deterministic. In a stream, every checkpoint also completes the file, so
   <code>--checkpoint-every</code> / <code>--checkpoint-seconds</code> set how often readers see new rows.</li>
