@@ -36,7 +36,10 @@ a time; it is described [below](#daily-batches).
 [Run this example](#local-example-0).
 
 
-`--input DIR` holds one CSV, Parquet or JSON Lines file per table (the files `shape generate` writes).
+`--input DIR` holds one CSV, Parquet or JSON Lines file per table (the files `shape generate` writes,
+or the output of an earlier `shape chaos` run). The ground-truth logs of a chaos run
+(`_chaos_ground_truth*.jsonl`) are skipped, and a file that cannot be read as a table is an error
+that names the file.
 The first argument is the domain or generation schema the data came from: it names the primary keys
 and the relationships. For each table the delta contains
 
