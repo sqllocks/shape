@@ -70,7 +70,7 @@ class Fabric:
             print(f"{method} {url} -> {exc.status}\n{exc.text}")
             raise
 
-    def lro(self, method: str, path: str, body: Any = None) -> dict[str, Any]:
+    def lro(self, method: str, path: str, body: Any = None, result: bool = True) -> dict[str, Any]:
         response = self.call(method, path, body)
         if response.status != 202:
             return response.json_object()
@@ -80,8 +80,10 @@ class Fabric:
             state = self.call("GET", location)
             doc = state.json_object()
             if doc.get("status") == "Succeeded":
-                result = self.call("GET", location.rstrip("/") + "/result", ok=(200, 204))
-                return result.json_object() if result.status == 200 else {}
+                if not result:  # updateDefinition has no result to fetch (OperationHasNoResult)
+                    return {}
+                fetched = self.call("GET", location.rstrip("/") + "/result", ok=(200, 204))
+                return fetched.json_object() if fetched.status == 200 else {}
             if doc.get("status") in ("Failed", "Cancelled"):
                 raise RuntimeError(f"operation {doc.get('status')}: {json.dumps(doc)}")
             response = state
@@ -262,7 +264,12 @@ def main() -> int:
         folder + "-new",
     )
     parts = encode(files)
-    api.lro("POST", f"{base}/updateDefinition", {"definition": {"format": "TMDL", "parts": parts}})
+    api.lro(
+        "POST",
+        f"{base}/updateDefinition",
+        {"definition": {"format": "TMDL", "parts": parts}},
+        result=False,
+    )
     print("updateDefinition accepted")
     again = decode(api.lro("POST", f"{base}/getDefinition?format=TMDL")["definition"]["parts"])
     dump(again, folder + "-after")
