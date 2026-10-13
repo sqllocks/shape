@@ -8,7 +8,7 @@ import pytest
 
 
 def module():
-    path = Path(__file__).resolve().parents[2] / "benchmarks/vs_refengine/verify_1to1/verify.py"
+    path = Path(__file__).resolve().parents[2] / "benchmarks/regression/verify_1to1/verify.py"
     spec = importlib.util.spec_from_file_location("frz_verify_cli", path)
     assert spec and spec.loader
     m = importlib.util.module_from_spec(spec)

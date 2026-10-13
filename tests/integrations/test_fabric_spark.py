@@ -39,11 +39,11 @@ APPROXIMATE = {"distinct", "distinct_exact", "top", "quantiles", "error_models"}
 
 
 def _d3(n: int) -> pa.Table:
-    path = ROOT / "benchmarks" / "vs_refengine" / "profile_1to1" / "datasets.py"
-    spec = importlib.util.spec_from_file_location("vs_refengine_datasets_pf02", path)
+    path = ROOT / "benchmarks" / "regression" / "profile_1to1" / "datasets.py"
+    spec = importlib.util.spec_from_file_location("regression_datasets_pf02", path)
     assert spec and spec.loader
     mod = importlib.util.module_from_spec(spec)
-    sys.modules["vs_refengine_datasets_pf02"] = mod
+    sys.modules["regression_datasets_pf02"] = mod
     spec.loader.exec_module(mod)
     table: pa.Table = mod._d3_chunk(0, 0, n)
     return table

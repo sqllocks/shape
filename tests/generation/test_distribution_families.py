@@ -18,16 +18,16 @@ from shape.generation.engine import Engine
 from shape.generation.rng import RowStream
 
 ROOT = Path(__file__).resolve().parents[2]
-BENCH = ROOT / "benchmarks" / "vs_refengine"
+BENCH = ROOT / "benchmarks" / "regression"
 sys.path.insert(0, str(BENCH / "strategy_1to1"))
 import cases as cases_mod  # noqa: E402
 
 _spec = importlib.util.spec_from_file_location(
-    "vs_refengine_schema_import", BENCH / "schema_import.py"
+    "regression_schema_import", BENCH / "schema_import.py"
 )
 assert _spec and _spec.loader
 schema_import = importlib.util.module_from_spec(_spec)
-sys.modules["vs_refengine_schema_import"] = schema_import
+sys.modules["regression_schema_import"] = schema_import
 _spec.loader.exec_module(schema_import)
 
 

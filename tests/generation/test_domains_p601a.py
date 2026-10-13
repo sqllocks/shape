@@ -27,7 +27,7 @@ from shape.plugins.host import default_host
 from ..benchmarks.historical_imports import historical_imports
 
 ROOT = Path(__file__).resolve().parents[2]
-BENCH = ROOT / "benchmarks" / "vs_refengine"
+BENCH = ROOT / "benchmarks" / "regression"
 sys.path.insert(0, str(BENCH))
 sys.path.insert(0, str(BENCH / "domain_1to1"))
 

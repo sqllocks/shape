@@ -2,7 +2,7 @@
 
 ISS-profile (issue #2, integrated in INT-13) gives every safe column ``pattern_rates`` and
 ``pattern_contains_rates``: aggregate shares, never values, which the baseline's format does not
-have. ``benchmarks/vs_refengine/safe_profile_1to1/verify.py`` sets them aside only after checking
+have. ``benchmarks/regression/safe_profile_1to1/verify.py`` sets them aside only after checking
 them on both sides: the baseline column must not have them, and the product column must carry
 exactly the raw profile's rates. Nothing here needs the baseline's venv.
 """
@@ -16,7 +16,7 @@ from pathlib import Path
 from .historical_imports import historical_imports
 
 ROOT = Path(__file__).resolve().parents[2]
-HARNESS = ROOT / "benchmarks" / "vs_refengine" / "safe_profile_1to1"
+HARNESS = ROOT / "benchmarks" / "regression" / "safe_profile_1to1"
 sys.path.insert(0, str(HARNESS.parent))
 sys.path.insert(0, str(HARNESS))
 _spec = importlib.util.spec_from_file_location("safe_profile_1to1_verify", HARNESS / "verify.py")

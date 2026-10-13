@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 def module():
-    path = Path(__file__).resolve().parents[2] / "benchmarks/vs_refengine/profile_1to1/bench_cli.py"
+    path = Path(__file__).resolve().parents[2] / "benchmarks/regression/profile_1to1/bench_cli.py"
     spec = importlib.util.spec_from_file_location("frz_profile_cli", path)
     assert spec and spec.loader
     m = importlib.util.module_from_spec(spec)

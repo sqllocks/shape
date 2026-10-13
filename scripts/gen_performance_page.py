@@ -4,7 +4,7 @@
     python scripts/gen_performance_page.py --check               # exit 1 if the page is stale
     python scripts/gen_performance_page.py --results R --history H --out PAGE
 
-The input is a ``benchmarks/vs_refengine/results.json`` (``run.py``, or the nightly suite's
+The input is a ``benchmarks/regression/results.json`` (``run.py``, or the nightly suite's
 merged file with its ``nightly`` block) and, optionally, the nightly history
 (``nightly.py merge --history``).
 
@@ -33,7 +33,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from refengine_name import names_refengine  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_RESULTS = ROOT / "benchmarks" / "vs_refengine" / "results.json"
+DEFAULT_RESULTS = ROOT / "benchmarks" / "regression" / "results.json"
 DEFAULT_OUT = ROOT / "docs" / "PERFORMANCE.md"
 BASELINE_KEY = "baseline"  # the results' key for the baseline; never written to the page
 IMPL = "shape"
@@ -112,7 +112,7 @@ def render(results: dict[str, Any], history: list[dict[str, Any]] | None = None)
     machine = results.get("machine") or {}
     release_version = results.get("baseline", {}).get("version", "0.9.1")
     snapshot_name = f"timings_{release_version}.json"
-    snapshot = ROOT / "benchmarks" / "vs_refengine" / "recorded" / snapshot_name
+    snapshot = ROOT / "benchmarks" / "regression" / "recorded" / snapshot_name
     timing_notice = (
         "Release-day measurements from the 4-vCPU runner are recorded in "
         f"the release timing snapshot, `recorded/{snapshot_name}`."

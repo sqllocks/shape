@@ -30,11 +30,11 @@ def test_no_engine_in_ci():
         "db_1to1/verify.py",
         "verify_1to1/verify.py",
     ):
-        assert "import _refpkg" not in (ROOT / "benchmarks/vs_refengine" / name).read_text()
+        assert "import _refpkg" not in (ROOT / "benchmarks/regression" / name).read_text()
 
 
 def test_clauses_g_and_h_are_retired():
-    text = (ROOT / "benchmarks/vs_refengine/domain_1to1/verify.py").read_text()
+    text = (ROOT / "benchmarks/regression/domain_1to1/verify.py").read_text()
     for retired in (
         "BusinessRulesEngine",
         "FidelityComparator",

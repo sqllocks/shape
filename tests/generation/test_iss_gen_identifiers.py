@@ -19,7 +19,7 @@ from shape.builtins.strategies.providers import RESERVED_DOMAINS
 from shape.generation.engine import Engine
 from shape.generation.schema import GenSchema
 
-S1 = Path(__file__).resolve().parents[2] / "benchmarks" / "vs_refengine" / "strategy_1to1"
+S1 = Path(__file__).resolve().parents[2] / "benchmarks" / "regression" / "strategy_1to1"
 sys.path.insert(0, str(S1))
 import identifier_differences as differences  # noqa: E402
 

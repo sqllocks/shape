@@ -1,4 +1,4 @@
-"""The `verify` parity harness (benchmarks/vs_refengine/verify_1to1): its own logic, without the
+"""The `verify` parity harness (benchmarks/regression/verify_1to1): its own logic, without the
 baseline. The parity run itself needs the pinned checkout and is recorded in
 docs/plans/lane_status/P6-09.md."""
 
@@ -14,7 +14,7 @@ import pyarrow.parquet as pq
 
 from shape.quality import GateSchema, VerifyRunner
 
-BENCH = Path(__file__).resolve().parents[2] / "benchmarks" / "vs_refengine"
+BENCH = Path(__file__).resolve().parents[2] / "benchmarks" / "regression"
 sys.path.insert(0, str(BENCH))
 spec = importlib.util.spec_from_file_location("verify_1to1", BENCH / "verify_1to1" / "verify.py")
 assert spec and spec.loader

@@ -1,6 +1,6 @@
 """P6-04: the simulation parity harness's own rules, without the baseline.
 
-``benchmarks/vs_refengine/simulation_1to1/verify_patterns.py`` compares the simulators with the
+``benchmarks/regression/simulation_1to1/verify_patterns.py`` compares the simulators with the
 pinned baseline. These tests check the comparison itself on tables built here: the same table
 passes, a deliberately damaged one fails (the rules' negative control), the seed set cannot be
 changed, and every allow-list entry has a probe in a case module.
@@ -20,7 +20,7 @@ import pytest
 
 from .historical_imports import historical_imports
 
-BENCH = Path(__file__).resolve().parents[2] / "benchmarks" / "vs_refengine" / "simulation_1to1"
+BENCH = Path(__file__).resolve().parents[2] / "benchmarks" / "regression" / "simulation_1to1"
 
 
 def _load(*modules: str) -> list[ModuleType]:

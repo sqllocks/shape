@@ -199,7 +199,7 @@ def test_python_kernel_gives_the_same_document(monkeypatch):
 
 @pytest.mark.heavy
 def test_bounded_mode_memory_does_not_grow_with_rows(tmp_path):
-    """The 5M vs 50M check is benchmarks/vs_refengine/profile_1to1/rss_check.py; this is its
+    """The 5M vs 50M check is benchmarks/regression/profile_1to1/rss_check.py; this is its
     small version: peak memory of a CSV twice as large, both past the allocator ramp-up (about
     20M rows), is within 10%. Each scan fixes Arrow's serial-reader executor sizes. Linux and
     Windows measure RSS. macOS measures the exact peak of live heap bytes: RSS and physical

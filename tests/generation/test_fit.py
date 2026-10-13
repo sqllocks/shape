@@ -27,7 +27,7 @@ import shape
 from shape.generation.fit import COLUMN_FIELDS, fit_schema
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "benchmarks" / "vs_refengine" / "profile_1to1"))
+sys.path.insert(0, str(ROOT / "benchmarks" / "regression" / "profile_1to1"))
 import datasets  # type: ignore[import-not-found]  # noqa: E402
 
 N = 60_000

@@ -7,7 +7,7 @@ import pytest
 
 
 def test_reference_package_raises_exact_archival_error_on_import() -> None:
-    path = Path(__file__).resolve().parents[2] / "benchmarks/vs_refengine/_refpkg.py"
+    path = Path(__file__).resolve().parents[2] / "benchmarks/regression/_refpkg.py"
     spec = importlib.util.spec_from_file_location("frz_actual_archival_guard", path)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)

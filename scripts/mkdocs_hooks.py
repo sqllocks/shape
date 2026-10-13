@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-RESULTS = ROOT / "benchmarks" / "vs_refengine" / "results.json"
+RESULTS = ROOT / "benchmarks" / "regression" / "results.json"
 CLI_PAGE = "reference/cli.md"
 PERFORMANCE_PAGE = "reference/performance.md"
 HELP_WIDTH = "100"

@@ -1,7 +1,7 @@
 """P6-01e: composites (``shape composite``), the six presets and the ad-hoc ``a+b`` form.
 
 The baseline's merged schema and plan for each composite are committed fixtures
-(``benchmarks/vs_refengine/fixtures/composites/``, written by ``plan_fixtures.py`` whose ``--check``
+(``benchmarks/regression/fixtures/composites/``, written by ``plan_fixtures.py`` whose ``--check``
 proves they still equal the baseline's own output), so these tests need no baseline install. Per
 composite they check, end to end through ``shape composite``: the tables, their order, column
 order and row counts of the baseline's plan; the merged schema equal to the baseline's apart from
@@ -40,7 +40,7 @@ from shape.plugins.host import default_host
 from ..benchmarks.historical_imports import historical_imports
 
 ROOT = Path(__file__).resolve().parents[2]
-BENCH = ROOT / "benchmarks" / "vs_refengine"
+BENCH = ROOT / "benchmarks" / "regression"
 sys.path.insert(0, str(BENCH))
 sys.path.insert(0, str(BENCH / "domain_1to1"))
 

@@ -1,7 +1,7 @@
 """P4-08: ``shape learn``, the schema builder.
 
 The acceptance case: Shape's schema for D2 equals the one the pinned baseline's ``learn`` writes
-(``benchmarks/vs_refengine/fixtures/learn/d2_20000.json``, regenerated and checked by
+(``benchmarks/regression/fixtures/learn/d2_20000.json``, regenerated and checked by
 ``learn_1to1/baseline.py --check``) except for the columns in ``ALLOWED`` below, each with the
 reason it differs. ``learn_1to1/verify.py`` runs the same comparison on the full 1M-row D2 and on
 the multi-table set against the live baseline. Nothing here needs the baseline's venv.
@@ -23,7 +23,7 @@ from shape.generation.learn import DIFFERENCES, SchemaBuilder, learn, profile_fr
 from shape.generation.schema import GenSchema
 
 ROOT = Path(__file__).resolve().parents[2]
-BENCH = ROOT / "benchmarks" / "vs_refengine"
+BENCH = ROOT / "benchmarks" / "regression"
 sys.path.insert(0, str(BENCH))
 sys.path.insert(0, str(BENCH / "profile_1to1"))
 
@@ -37,8 +37,8 @@ def _load(name: str, path: Path) -> Any:
     return module
 
 
-learn_compare = _load("vs_refengine_learn_compare", BENCH / "learn_1to1" / "compare.py")
-learn_baseline = _load("vs_refengine_learn_baseline", BENCH / "learn_1to1" / "baseline.py")
+learn_compare = _load("regression_learn_compare", BENCH / "learn_1to1" / "compare.py")
+learn_baseline = _load("regression_learn_baseline", BENCH / "learn_1to1" / "baseline.py")
 
 # column -> (rule, why this column differs from the baseline's schema)
 ALLOWED = {

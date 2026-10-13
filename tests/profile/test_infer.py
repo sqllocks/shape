@@ -73,12 +73,12 @@ def test_chunked_arrays_and_python_lists_are_accepted():
 
 
 def _datasets_module():
-    path = ROOT / "benchmarks" / "vs_refengine" / "profile_1to1" / "datasets.py"
-    spec = importlib.util.spec_from_file_location("vs_refengine_datasets", path)
+    path = ROOT / "benchmarks" / "regression" / "profile_1to1" / "datasets.py"
+    spec = importlib.util.spec_from_file_location("regression_datasets", path)
     assert spec and spec.loader
     sys.path.insert(0, str(path.parents[1]))
     mod = importlib.util.module_from_spec(spec)
-    sys.modules["vs_refengine_datasets"] = mod
+    sys.modules["regression_datasets"] = mod
     spec.loader.exec_module(mod)
     return mod
 

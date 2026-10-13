@@ -16,7 +16,7 @@ from pathlib import Path
 from .historical_imports import historical_imports
 
 ROOT = Path(__file__).resolve().parents[2]
-HARNESS = ROOT / "benchmarks" / "vs_refengine" / "safe_profile_1to1"
+HARNESS = ROOT / "benchmarks" / "regression" / "safe_profile_1to1"
 sys.path.insert(0, str(HARNESS.parent))
 sys.path.insert(0, str(HARNESS))
 _spec = importlib.util.spec_from_file_location("safe_profile_1to1_verify_v", HARNESS / "verify.py")

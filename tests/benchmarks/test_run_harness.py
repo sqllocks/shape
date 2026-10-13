@@ -1,4 +1,4 @@
-"""Behaviour of the comparison driver ``benchmarks/vs_refengine/run.py`` that needs no baseline
+"""Behaviour of the comparison driver ``benchmarks/regression/run.py`` that needs no baseline
 checkout: the workload steps are replaced by stand-ins, so only the driver's own logic runs."""
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-BENCH = ROOT / "benchmarks" / "vs_refengine"
+BENCH = ROOT / "benchmarks" / "regression"
 sys.path.insert(0, str(BENCH))
 
 
@@ -24,7 +24,7 @@ def _load(name: str, path: Path):
     return mod
 
 
-run = _load("vs_refengine_run_driver", BENCH / "run.py")
+run = _load("regression_run_driver", BENCH / "run.py")
 
 
 def _record(kind: str, **extra) -> dict:

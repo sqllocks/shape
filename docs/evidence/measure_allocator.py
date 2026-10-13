@@ -20,7 +20,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
-sys.path.insert(0, str(ROOT / "benchmarks" / "vs_refengine"))
+sys.path.insert(0, str(ROOT / "benchmarks" / "regression"))
 from common import bench_lock, wait_for_quiet  # noqa: E402 — repository benchmark helpers
 
 CHILD = r"""

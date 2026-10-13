@@ -100,11 +100,11 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def _d2_table(n: int) -> pa.Table:
     """Dataset D2 (the T-22 mixed table) at ``n`` rows, from the benchmark generator."""
-    path = ROOT / "benchmarks" / "vs_refengine" / "profile_1to1" / "datasets.py"
-    spec = importlib.util.spec_from_file_location("vs_refengine_datasets", path)
+    path = ROOT / "benchmarks" / "regression" / "profile_1to1" / "datasets.py"
+    spec = importlib.util.spec_from_file_location("regression_datasets", path)
     assert spec and spec.loader
     mod = importlib.util.module_from_spec(spec)
-    sys.modules["vs_refengine_datasets"] = mod
+    sys.modules["regression_datasets"] = mod
     spec.loader.exec_module(mod)
     table: pa.Table = mod._d2_table(n)
     return table

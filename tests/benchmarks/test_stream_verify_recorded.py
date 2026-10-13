@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-BENCH = Path(__file__).resolve().parents[2] / "benchmarks" / "vs_refengine"
+BENCH = Path(__file__).resolve().parents[2] / "benchmarks" / "regression"
 
 
 def verifier():

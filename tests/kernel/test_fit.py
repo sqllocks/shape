@@ -105,12 +105,12 @@ def test_public_wrapper_samples_like_refengine():
 
 
 def _dataset_module():
-    path = ROOT / "benchmarks" / "vs_refengine" / "profile_1to1" / "datasets.py"
-    spec = importlib.util.spec_from_file_location("vs_refengine_datasets_fit", path)
+    path = ROOT / "benchmarks" / "regression" / "profile_1to1" / "datasets.py"
+    spec = importlib.util.spec_from_file_location("regression_datasets_fit", path)
     assert spec and spec.loader
     sys.path.insert(0, str(path.parents[1]))
     mod = importlib.util.module_from_spec(spec)
-    sys.modules["vs_refengine_datasets_fit"] = mod
+    sys.modules["regression_datasets_fit"] = mod
     spec.loader.exec_module(mod)
     return mod
 

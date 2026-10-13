@@ -1,5 +1,5 @@
 """P6-14: regression tests for the baseline defects Shape fixes (the allow-list PK-1..PK-9 in
-benchmarks/vs_refengine/pack_1to1/pack_common.py). Each fails on a plain port of the baseline."""
+benchmarks/regression/pack_1to1/pack_common.py). Each fails on a plain port of the baseline."""
 
 from __future__ import annotations
 

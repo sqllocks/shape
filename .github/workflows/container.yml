@@ -36,7 +36,7 @@ jobs:
         run: |
           pip install numpy pyarrow
           export BENCH_DATA_DIR="$RUNNER_TEMP/bench-data"
-          python benchmarks/vs_refengine/profile_1to1/datasets.py D1
+          python benchmarks/regression/profile_1to1/datasets.py D1
           mkdir -p "$RUNNER_TEMP/out" && chmod 777 "$RUNNER_TEMP/out"
           for f in d1.parquet d1.csv; do
             docker run --rm -v "$BENCH_DATA_DIR/profile:/data:ro" -v "$RUNNER_TEMP/out:/work" \

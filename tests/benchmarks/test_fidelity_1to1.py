@@ -1,6 +1,6 @@
 """P4-09: the fidelity report scores every column and table like the baseline's comparator.
 
-``benchmarks/vs_refengine/fidelity_1to1/fixtures/expected_scores.json`` holds what the baseline's
+``benchmarks/regression/fidelity_1to1/fixtures/expected_scores.json`` holds what the baseline's
 comparator gave for the pairs of ``golden_data.py`` (``golden.py --check`` proves the file still
 equals its output); Shape's scores must match it to rounding. The pairs cover every branch of the
 scoring: numeric, integer, decimal, nullable, categorical (chi-squared above and below its
@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-BENCH = Path(__file__).resolve().parents[2] / "benchmarks" / "vs_refengine" / "fidelity_1to1"
+BENCH = Path(__file__).resolve().parents[2] / "benchmarks" / "regression" / "fidelity_1to1"
 sys.path.insert(0, str(BENCH))
 
 import golden_data  # noqa: E402

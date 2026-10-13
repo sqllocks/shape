@@ -15,7 +15,7 @@ from shape.privacy.safe_profile import to_safe_profile
 from shape.privacy.safe_validator import SafeProfileValidator
 
 HERE = Path(__file__).resolve()
-sys.path.insert(0, str(HERE.parents[2] / "benchmarks" / "vs_refengine" / "safe_profile_1to1"))
+sys.path.insert(0, str(HERE.parents[2] / "benchmarks" / "regression" / "safe_profile_1to1"))
 from fixtures import FIXTURES  # noqa: E402
 
 CLEAN = {"clean_minimal", "clean_length_minmax", "ok_two_strings", "leak_email_key_value"}

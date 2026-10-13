@@ -30,7 +30,7 @@ class Unavailable:
 
 @contextmanager
 def historical_imports() -> Iterator[None]:
-    bench = Path(__file__).resolve().parents[2] / "benchmarks" / "vs_refengine"
+    bench = Path(__file__).resolve().parents[2] / "benchmarks" / "regression"
     spec = importlib.util.spec_from_file_location("frz_test_paths", bench / "paths.py")
     assert spec and spec.loader
     paths = importlib.util.module_from_spec(spec)

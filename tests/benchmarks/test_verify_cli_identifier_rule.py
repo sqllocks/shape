@@ -20,7 +20,7 @@ import pytest
 from .historical_imports import historical_imports
 
 ROOT = Path(__file__).resolve().parents[2]
-HARNESS = ROOT / "benchmarks" / "vs_refengine" / "profile_1to1"
+HARNESS = ROOT / "benchmarks" / "regression" / "profile_1to1"
 sys.path.insert(0, str(HARNESS.parent))
 sys.path.insert(0, str(HARNESS))
 

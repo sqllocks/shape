@@ -1,12 +1,12 @@
 """P4-01b, P4-01c: Shape's DDL import equals the baseline's on every baseline DDL fixture, apart
-from the intentional differences listed in ``benchmarks/vs_refengine/ddl_1to1/differences.py``.
+from the intentional differences listed in ``benchmarks/regression/ddl_1to1/differences.py``.
 
-``benchmarks/vs_refengine/ddl_1to1/fixtures/expected`` holds what the baseline's ``from-ddl`` made
+``benchmarks/regression/ddl_1to1/fixtures/expected`` holds what the baseline's ``from-ddl`` made
 of each input (``dump_ddl.py``, whose ``--check`` proves the files still equal the baseline's
 output). Each input is imported in both modes and compared field by field: the schema, every
 inference annotation, and (through the command) the written file and the ``--explain`` report.
 A difference is accepted only if the allow-list names it (input, mode and field); an entry that
-matches no difference fails too. ``benchmarks/vs_refengine/ddl_1to1/verify.py`` runs the same
+matches no difference fails too. ``benchmarks/regression/ddl_1to1/verify.py`` runs the same
 comparison as a script. Nothing here needs the baseline's venv.
 """
 
@@ -21,7 +21,7 @@ import pytest
 from .historical_imports import historical_imports
 
 ROOT = Path(__file__).resolve().parents[2]
-BENCH = ROOT / "benchmarks" / "vs_refengine"
+BENCH = ROOT / "benchmarks" / "regression"
 sys.path.insert(0, str(BENCH))
 sys.path.insert(0, str(BENCH / "ddl_1to1"))
 

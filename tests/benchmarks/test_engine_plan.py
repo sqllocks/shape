@@ -1,6 +1,6 @@
 """P4-02: the Shape engine plans the baseline's own schemas as the baseline does.
 
-``benchmarks/vs_refengine/fixtures/plan.json`` holds, for each of the 14 domains in both modes, the
+``benchmarks/regression/fixtures/plan.json`` holds, for each of the 14 domains in both modes, the
 baseline's table order, dependency levels, column order and row counts at every scale preset
 (``plan_fixtures.py``, which has ``--check`` to prove the fixtures still equal the baseline's
 output). Nothing here needs the baseline's venv.
@@ -16,16 +16,16 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-BENCH = ROOT / "benchmarks" / "vs_refengine"
+BENCH = ROOT / "benchmarks" / "regression"
 FIXTURES = BENCH / "fixtures"
 sys.path.insert(0, str(BENCH))
 
 _spec = importlib.util.spec_from_file_location(
-    "vs_refengine_schema_import", BENCH / "schema_import.py"
+    "regression_schema_import", BENCH / "schema_import.py"
 )
 assert _spec and _spec.loader
 schema_import = importlib.util.module_from_spec(_spec)
-sys.modules["vs_refengine_schema_import"] = schema_import
+sys.modules["regression_schema_import"] = schema_import
 _spec.loader.exec_module(schema_import)
 
 from shape.generation.engine import (  # noqa: E402

@@ -16,7 +16,7 @@ import pytest
 from .historical_imports import historical_imports
 
 ROOT = Path(__file__).resolve().parents[2]
-BENCH = ROOT / "benchmarks" / "vs_refengine"
+BENCH = ROOT / "benchmarks" / "regression"
 sys.path.insert(0, str(BENCH))
 
 
@@ -32,7 +32,7 @@ def _load(name: str, path: Path):
 
 @pytest.fixture
 def stream_prof(monkeypatch, tmp_path):
-    mod = _load("vs_refengine_stream_prof_bench", BENCH / "stream_prof" / "bench.py")
+    mod = _load("regression_stream_prof_bench", BENCH / "stream_prof" / "bench.py")
     monkeypatch.setattr(mod, "PROFILE_DATA_DIR", tmp_path)
     (tmp_path / "d2.parquet").write_bytes(b"")
     monkeypatch.setattr(mod, "wait_for_quiet", lambda *a, **k: 0.0)
@@ -96,7 +96,7 @@ def test_measure_product_names_a_dataset_with_the_wrong_row_count(measure, monke
 @pytest.fixture
 def kernel_bench(monkeypatch):
     pytest.importorskip("shape._kernel")
-    mod = _load("vs_refengine_kernel_bench", BENCH / "kernel_bench.py")
+    mod = _load("regression_kernel_bench", BENCH / "kernel_bench.py")
     monkeypatch.setattr(mod, "wait_for_quiet", lambda *a, **k: 0.0)
     monkeypatch.setenv("BENCH_LOCK_HELD", "1")
     return mod
@@ -162,7 +162,7 @@ def test_live_fidelity_overhead_is_timed_under_the_benchmark_lock(monkeypatch, t
 )
 def test_peak_rss_is_megabytes_on_every_platform(monkeypatch, platform, maxrss, mb):
     """``ru_maxrss`` is KiB on Linux and bytes on macOS; the harness records megabytes."""
-    gen = _load("vs_refengine_domain_generate", BENCH / "domain_1to1" / "generate.py")
+    gen = _load("regression_domain_generate", BENCH / "domain_1to1" / "generate.py")
     import common
 
     class Usage:
@@ -179,7 +179,7 @@ def test_peak_rss_is_megabytes_on_every_platform(monkeypatch, platform, maxrss, 
 def test_peak_rss_and_cpu_time_are_measured_on_windows_without_resource(monkeypatch):
     """Windows has no ``resource`` module: the peak working set (bytes) and the page faults come
     from GetProcessMemoryInfo, the CPU time from ``os.times()``; children are not measured."""
-    gen = _load("vs_refengine_domain_generate", BENCH / "domain_1to1" / "generate.py")
+    gen = _load("regression_domain_generate", BENCH / "domain_1to1" / "generate.py")
     import common
 
     monkeypatch.setattr(sys, "platform", "win32")
@@ -195,11 +195,11 @@ def test_peak_rss_and_cpu_time_are_measured_on_windows_without_resource(monkeypa
 def test_the_scripts_load_where_there_is_no_resource_module(monkeypatch):
     """Importing ``resource`` fails on Windows; no harness script may need it to load."""
     monkeypatch.setitem(sys.modules, "resource", None)  # import raises ImportError, as on Windows
-    assert _load("vs_refengine_common_no_resource", BENCH / "common.py").resource is None
+    assert _load("regression_common_no_resource", BENCH / "common.py").resource is None
     for name, path in [
-        ("vs_refengine_domain_generate_no_resource", BENCH / "domain_1to1" / "generate.py"),
-        ("vs_refengine_domain_bench_cli_no_resource", BENCH / "domain_1to1" / "bench_cli.py"),
-        ("vs_refengine_learn_bench_cli_no_resource", BENCH / "learn_1to1" / "bench_cli.py"),
+        ("regression_domain_generate_no_resource", BENCH / "domain_1to1" / "generate.py"),
+        ("regression_domain_bench_cli_no_resource", BENCH / "domain_1to1" / "bench_cli.py"),
+        ("regression_learn_bench_cli_no_resource", BENCH / "learn_1to1" / "bench_cli.py"),
     ]:
         for sibling in ("compare", "composites"):  # each folder has its own: not another's
             monkeypatch.delitem(sys.modules, sibling, raising=False)
@@ -259,6 +259,6 @@ def test_datasets_rejects_unknown_names_and_bad_row_counts(tmp_path, monkeypatch
 
 
 def test_datasets_without_names_means_every_dataset():
-    datasets = _load("vs_refengine_profile_datasets", BENCH / "profile_1to1" / "datasets.py")
+    datasets = _load("regression_profile_datasets", BENCH / "profile_1to1" / "datasets.py")
     assert datasets.parse_args([]).datasets == list(datasets.ALL)
     assert datasets.parse_args(["d2", "mt"]).datasets == ["D2", "MT"]

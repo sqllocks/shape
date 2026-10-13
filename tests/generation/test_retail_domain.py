@@ -23,7 +23,7 @@ from shape.plugins import kit
 from shape.plugins.host import default_host
 
 ROOT = Path(__file__).resolve().parents[2]
-BENCH = ROOT / "benchmarks" / "vs_refengine"
+BENCH = ROOT / "benchmarks" / "regression"
 sys.path.insert(0, str(BENCH))
 
 import schema_import  # noqa: E402

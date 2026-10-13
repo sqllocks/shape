@@ -191,7 +191,7 @@ def test_main_writes_the_page(tmp_path: Path) -> None:
 @pytest.mark.parametrize("present", [False, True])
 def test_release_snapshot_pending_blocks_release_only(monkeypatch, tmp_path, present):
     monkeypatch.setattr(page, "ROOT", tmp_path)
-    snapshot = tmp_path / "benchmarks/vs_refengine/recorded/timings_0.9.1.json"
+    snapshot = tmp_path / "benchmarks/regression/recorded/timings_0.9.1.json"
     if present:
         snapshot.parent.mkdir(parents=True)
         snapshot.write_text("{}")
@@ -199,7 +199,7 @@ def test_release_snapshot_pending_blocks_release_only(monkeypatch, tmp_path, pre
     assert ("release timing snapshot pending: recorded/timings_0.9.1.json" in text) is not present
     assert ("the release timing snapshot, `recorded/timings_0.9.1.json`" in text) is present
     # Public documentation never names the harness directory.
-    assert "benchmarks/vs_refengine" not in text
+    assert "benchmarks/regression" not in text
     docs = tmp_path / "docs"
     docs.mkdir()
     (docs / "PERFORMANCE.md").write_text(text)

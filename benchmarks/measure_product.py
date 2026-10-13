@@ -25,7 +25,7 @@ from datetime import datetime
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO / "benchmarks" / "vs_refengine"))
+sys.path.insert(0, str(REPO / "benchmarks" / "regression"))
 from common import bench_lock, wait_for_quiet  # noqa: E402
 
 DATA = Path(os.environ.get("BENCH_DATA_DIR", Path.home() / "bench-data")) / "profile"
@@ -57,7 +57,7 @@ print(json.dumps({"s": dt, "peak_rss_mb": rss, "rows": p.summary()["row_count"],
 
 def _child(path: Path) -> dict:
     out = subprocess.run(
-        [sys.executable, "-c", CHILD, str(path), str(REPO / "benchmarks" / "vs_refengine")],
+        [sys.executable, "-c", CHILD, str(path), str(REPO / "benchmarks" / "regression")],
         check=True,
         capture_output=True,
         text=True,

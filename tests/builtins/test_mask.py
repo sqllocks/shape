@@ -1,7 +1,7 @@
 """P6-03: the ``mask`` transform and ``shape mask``.
 
 Each deliberate difference from the baseline masker has a test that fails on the baseline's
-behaviour (named MASK-A1 .. MASK-A5 in ``benchmarks/vs_refengine/mask_1to1/verify.py``).
+behaviour (named MASK-A1 .. MASK-A5 in ``benchmarks/regression/mask_1to1/verify.py``).
 """
 
 from __future__ import annotations

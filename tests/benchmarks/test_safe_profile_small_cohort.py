@@ -2,7 +2,7 @@
 
 A safe column with fewer non-null rows than its ``k`` releases no ``mean``, ``std``,
 ``quantiles``, ``bounds`` or ``distribution_params``; the baseline releases them.
-``benchmarks/vs_refengine/safe_profile_1to1/verify.py`` withholds those keys, and only those, from
+``benchmarks/regression/safe_profile_1to1/verify.py`` withholds those keys, and only those, from
 the baseline after checking both sides: the column is below k by the raw profile's counts, the
 product holds null, and the baseline's ``mean`` and ``std`` are the raw profile's. Nothing here
 needs the baseline's venv.
@@ -19,7 +19,7 @@ from shape.privacy.safe_profile import SafeConfig
 from .historical_imports import historical_imports
 
 ROOT = Path(__file__).resolve().parents[2]
-HARNESS = ROOT / "benchmarks" / "vs_refengine" / "safe_profile_1to1"
+HARNESS = ROOT / "benchmarks" / "regression" / "safe_profile_1to1"
 sys.path.insert(0, str(HARNESS.parent))
 sys.path.insert(0, str(HARNESS))
 _spec = importlib.util.spec_from_file_location("safe_profile_1to1_small", HARNESS / "verify.py")

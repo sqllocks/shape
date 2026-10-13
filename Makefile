@@ -4,8 +4,8 @@ bootstrap:
 	$(PYTHON) -m pip install -e ".[dev]" -e plugins/shape-domains
 # Same commands as the `test` job in .github/workflows/ci.yml (T-27 scope: only paths that exist).
 check:
-	ruff check src tests plugins benchmarks/vs_refengine
-	ruff format --check src tests plugins benchmarks/vs_refengine
+	ruff check src tests plugins benchmarks/regression
+	ruff format --check src tests plugins benchmarks/regression
 	mypy
 	$(PYTHON) -m compileall -q src/shape
 	vulture src/shape scripts/vulture_whitelist.py --min-confidence 80

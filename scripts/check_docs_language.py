@@ -14,7 +14,7 @@ CLAIMS = re.compile(
 )
 PRODUCT = re.compile(
     r"\b(?:Shape Studio|Shape Hub|faster than|baseline library it replaces)\b"
-    r"|benchmarks/vs_refengine",
+    r"|benchmarks/regression",
     re.I,
 )
 

@@ -37,9 +37,9 @@ jobs:
       # sink (tests/cli/test_dry_run.py, W1-14 x W2-09); the plan's environment (§1) installs the
       # first-party plugins.
       - run: pip install -e '.[dev,streaming,advanced,docs]' -e plugins/shape-domains -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric -e plugins/shape-kafka
-      # T-27 scope: src tests plugins benchmarks/vs_refengine rust (only the paths that exist yet).
-      - run: ruff check src tests plugins benchmarks/vs_refengine
-      - run: ruff format --check src tests plugins benchmarks/vs_refengine
+      # T-27 scope: src tests plugins benchmarks/regression rust (only the paths that exist yet).
+      - run: ruff check src tests plugins benchmarks/regression
+      - run: ruff format --check src tests plugins benchmarks/regression
       # [tool.mypy] targets python_version 3.11. On 3.12+ legs pip installs a numpy whose
       # stubs use 3.12-only syntax (`type` statements), which mypy rejects under a 3.11
       # target, so the type check runs on the 3.11 legs (every OS).
@@ -316,7 +316,7 @@ jobs:
       - name: Shape 0.9.1 baseline venv
         run: |
           source scripts/env.sh
-          bash benchmarks/vs_refengine/setup_baseline.sh
+          bash benchmarks/regression/setup_baseline.sh
           "$BASELINE_PY" -m pip install 'pandas>=2' 'scipy>=1.11'
           "$BASELINE_PY" -m pip freeze > "$BENCH_OUT_DIR/baseline_freeze.txt"
       - name: Shape venv (same PyArrow as the release baseline)
@@ -326,22 +326,22 @@ jobs:
           "$SHAPE_VENV/bin/pip" install -U pip
           "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains 'pyarrow==25.0.1'
       - name: Published baseline setup contract
-        run: source scripts/env.sh && "$SHAPE_VENV/bin/python" -m pytest -q benchmarks/vs_refengine/tests/test_setup_baseline.py
-      - run: source scripts/env.sh && python benchmarks/vs_refengine/recorded/check.py
+        run: source scripts/env.sh && "$SHAPE_VENV/bin/python" -m pytest -q benchmarks/regression/tests/test_setup_baseline.py
+      - run: source scripts/env.sh && python benchmarks/regression/recorded/check.py
       # P6-01e: the committed baseline fixtures (schemas, plans, composites) still equal the pinned
       # baseline's output, and every domain and composite has the baseline's row counts at every scale.
       - run: |
           source scripts/env.sh
           "$SHAPE_VENV/bin/pip" install -e plugins/shape-domains
-          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/recorded/check.py
-          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/domain_1to1/rowcounts.py
-      - run: source scripts/env.sh && python benchmarks/vs_refengine/run.py --quick --out "$BENCH_OUT_DIR/results.json"
+          "$SHAPE_VENV/bin/python" benchmarks/regression/recorded/check.py
+          "$SHAPE_VENV/bin/python" benchmarks/regression/domain_1to1/rowcounts.py
+      - run: source scripts/env.sh && python benchmarks/regression/run.py --quick --out "$BENCH_OUT_DIR/results.json"
       # P6-09: `shape verify` against the baseline's `verify` on retail small (internal harness).
       - run: |
           source scripts/env.sh
-          "$BASELINE_PY" benchmarks/vs_refengine/domain_1to1/generate.py --impl shape --domain retail --scale small --seed 42
-          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/domain_1to1/generate.py --impl shape --domain retail --scale small --seed 1042
-          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/verify_1to1/verify.py
+          "$BASELINE_PY" benchmarks/regression/domain_1to1/generate.py --impl shape --domain retail --scale small --seed 42
+          "$SHAPE_VENV/bin/python" benchmarks/regression/domain_1to1/generate.py --impl shape --domain retail --scale small --seed 1042
+          "$SHAPE_VENV/bin/python" benchmarks/regression/verify_1to1/verify.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

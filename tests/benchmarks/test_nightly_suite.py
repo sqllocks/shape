@@ -14,7 +14,7 @@ from typing import Any
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-BENCH = ROOT / "benchmarks" / "vs_refengine"
+BENCH = ROOT / "benchmarks" / "regression"
 sys.path.insert(0, str(BENCH))
 
 
@@ -27,8 +27,8 @@ def _load(name: str, path: Path) -> Any:
     return mod
 
 
-run = _load("vs_refengine_run_p802", BENCH / "run.py")
-nightly = _load("vs_refengine_nightly_p802", BENCH / "nightly.py")
+run = _load("regression_run_p802", BENCH / "run.py")
+nightly = _load("regression_nightly_p802", BENCH / "nightly.py")
 
 DOMAINS = ["hr", "retail", "telecom"]
 PASS = {"status": "pass", "exit_code": 0, "command": "verify.py"}

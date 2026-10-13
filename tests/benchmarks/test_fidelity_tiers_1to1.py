@@ -1,6 +1,6 @@
 """P4-11: the fidelity tiers equal the baseline's, field by field.
 
-``benchmarks/vs_refengine/fidelity_tiers_1to1/fixtures/expected_tiers.json`` holds what the
+``benchmarks/regression/fidelity_tiers_1to1/fixtures/expected_tiers.json`` holds what the
 baseline's tiers gave for the pairs of ``tiers_golden_data.py`` (``golden.py --check`` proves the
 file still matches them). Shape's output must equal it under the harness's rules
 (``tiers_common.compare``): integers, names and flags equal, floats within 1e-9 relative, and the
@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-BENCH = Path(__file__).resolve().parents[2] / "benchmarks" / "vs_refengine" / "fidelity_tiers_1to1"
+BENCH = Path(__file__).resolve().parents[2] / "benchmarks" / "regression" / "fidelity_tiers_1to1"
 sys.path.insert(0, str(BENCH))
 
 import tiers_common  # noqa: E402

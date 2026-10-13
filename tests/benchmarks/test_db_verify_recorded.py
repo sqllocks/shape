@@ -11,7 +11,7 @@ from .test_profile_verify_recorded import profile
 
 
 def verifier():
-    path = Path(__file__).resolve().parents[2] / "benchmarks/vs_refengine/db_1to1/verify.py"
+    path = Path(__file__).resolve().parents[2] / "benchmarks/regression/db_1to1/verify.py"
     spec = importlib.util.spec_from_file_location("frz_db_verify", path)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)

@@ -17,11 +17,11 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def _port():
-    path = ROOT / "benchmarks" / "vs_refengine" / "profile_1to1" / "port.py"
-    spec = importlib.util.spec_from_file_location("vs_refengine_port", path)
+    path = ROOT / "benchmarks" / "regression" / "profile_1to1" / "port.py"
+    spec = importlib.util.spec_from_file_location("regression_port", path)
     assert spec and spec.loader
     mod = importlib.util.module_from_spec(spec)
-    sys.modules["vs_refengine_port"] = mod
+    sys.modules["regression_port"] = mod
     spec.loader.exec_module(mod)
     return mod
 

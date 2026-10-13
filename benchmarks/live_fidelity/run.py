@@ -44,7 +44,7 @@ import pyarrow.parquet as pq
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
-sys.path.insert(0, str(ROOT / "benchmarks" / "vs_refengine"))
+sys.path.insert(0, str(ROOT / "benchmarks" / "regression"))
 from common import bench_lock, wait_for_quiet  # noqa: E402
 from paths import BENCH_OUT_DIR, SHAPE_PY  # noqa: E402
 
@@ -54,7 +54,7 @@ EVENT_SEED = 1007
 ANOMALY_FRACTION = 0.2
 MIN_DROP = 3.0  # points the anomalies must take off the live overall
 CHECKPOINTS = (0.25, 0.55, 0.85)
-FIXTURES = ROOT / "benchmarks" / "vs_refengine" / "fixtures" / "schemas"
+FIXTURES = ROOT / "benchmarks" / "regression" / "fixtures" / "schemas"
 DEFAULT_WORKLOADS = (
     "retail:small",
     "retail:medium",

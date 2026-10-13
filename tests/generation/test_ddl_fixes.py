@@ -733,7 +733,7 @@ def test_columns_that_already_fit_are_unchanged() -> None:
 
 
 def fixture_inputs() -> dict[str, str]:
-    root = Path(__file__).resolve().parents[2] / "benchmarks" / "vs_refengine" / "ddl_1to1"
+    root = Path(__file__).resolve().parents[2] / "benchmarks" / "regression" / "ddl_1to1"
     paths = sorted(root.glob("fixtures/*.sql")) + sorted(root.glob("extra/*.sql"))
     return {p.stem: p.read_text(encoding="utf-8") for p in paths}
 

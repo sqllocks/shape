@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-BENCH = Path(__file__).resolve().parents[2] / "benchmarks" / "vs_refengine"
+BENCH = Path(__file__).resolve().parents[2] / "benchmarks" / "regression"
 sys.path.insert(0, str(BENCH))
 
 

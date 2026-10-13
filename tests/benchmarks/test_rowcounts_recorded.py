@@ -7,7 +7,7 @@ import pytest
 
 
 def module():
-    path = Path(__file__).resolve().parents[2] / "benchmarks/vs_refengine/domain_1to1/rowcounts.py"
+    path = Path(__file__).resolve().parents[2] / "benchmarks/regression/domain_1to1/rowcounts.py"
     spec = importlib.util.spec_from_file_location("frz_rowcounts", path)
     assert spec and spec.loader
     m = importlib.util.module_from_spec(spec)

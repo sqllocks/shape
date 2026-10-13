@@ -1,7 +1,7 @@
 """Report how two recorded Shape baseline stores differ for chosen domains (REL-092).
 
 The re-record after a TestPyPI publish writes a new store of generation recordings
-(shaped like ``benchmarks/vs_refengine/recorded``: ``MANIFEST.json`` and
+(shaped like ``benchmarks/regression/recorded``: ``MANIFEST.json`` and
 ``generate/<domain>_<scale>.json``).
 Healthcare and capital-markets output changes in 0.9.2 on purpose (synthetic procedure and
 classification labels), so the Owner reviews exactly those diffs before PyPI. This script prints a

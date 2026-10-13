@@ -1,4 +1,4 @@
-"""The comparisons of the parity harness (``benchmarks/vs_refengine/bridge_1to1/compare.py``) and
+"""The comparisons of the parity harness (``benchmarks/regression/bridge_1to1/compare.py``) and
 the vector matcher must be able to fail: a result compared with itself agrees, and each mutation is
 flagged. (The harness runs the same functions against the baseline's bridge.)"""
 
@@ -13,11 +13,7 @@ import pytest
 import vectors_lib as lib
 
 PATH = (
-    Path(__file__).resolve().parents[2]
-    / "benchmarks"
-    / "vs_refengine"
-    / "bridge_1to1"
-    / "compare.py"
+    Path(__file__).resolve().parents[2] / "benchmarks" / "regression" / "bridge_1to1" / "compare.py"
 )
 spec = importlib.util.spec_from_file_location("bridge_compare", PATH)
 assert spec and spec.loader
