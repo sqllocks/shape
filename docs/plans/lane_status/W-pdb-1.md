@@ -3,14 +3,18 @@
 Scope: 0.9.4 only. No code, tests, release files, regression data or golden
 corpus changed.
 
-Question for the owner: Where is the approved 0.9.4 promotion plan? After fetching
-origin, `origin/main` at `c10923be9` does not contain
-`docs/plans/PROMOTION_PLAN_0.9.3.md`. Please make the plan containing Decisions
-13 and section 4.11 row profile-db (a) available on main, or identify the approved
-replacement. Implementation is stopped rather than guessing those decisions.
+The missing-plan blocker is resolved. Read the approved plan from
+`origin/plan/promotion-093` into `/tmp/PROMOTION_PLAN.md`; it is not merged or
+committed. Decision 13 and section 4.11(a) confirm the original reference-only
+scope. `git merge origin/main` reports already up to date.
 
-No acceptance tests were written or run because the required plan is unavailable;
-there is no red evidence yet. This is a blocker report, not completed W-pdb-1 work.
+Current question for the lead: this checkout has no `uv.lock`, so the required
+`uv sync --frozen --group dev` cannot run. Should the lockfile come from another
+approved branch, or should I use the repository's documented development setup?
+No lockfile was generated and no dependency policy was changed.
+
+No acceptance tests were written or run yet: tool setup must precede checks per
+the follow-up. No red evidence is claimed. Implementation remains pending.
 
 ## Command record
 
@@ -37,3 +41,28 @@ Final delivery commands: `git diff --check` (0),
 `git add docs/plans/lane_status/W-pdb-1.md` (0),
 `git commit -s -m "W-pdb-1: record missing promotion plan blocker"` (0),
 `git push origin HEAD:refs/heads/lane/W-pdb-1` (0).
+
+
+## Follow-up command record
+
+- `git fetch origin` (0), with network permission; no retries needed.
+- `git fetch origin plan/promotion-093` (0); subsequent
+  `git show origin/plan/promotion-093:docs/plans/PROMOTION_PLAN_0.9.3.md > /tmp/PROMOTION_PLAN.md`
+  (128): narrow fetch updated FETCH_HEAD only; dependent commands did not run.
+- `git fetch origin refs/heads/plan/promotion-093:refs/remotes/origin/plan/promotion-093`
+  (0); `git show origin/plan/promotion-093:docs/plans/PROMOTION_PLAN_0.9.3.md > /tmp/PROMOTION_PLAN.md`
+  (0); `git merge origin/main` (0); `cat /tmp/PROMOTION_PLAN.md` (0).
+- `pip install uv` (0, already installed); `uv sync --frozen --group dev`
+  (2): default cache directory is read-only.
+- `UV_CACHE_DIR=/tmp/shape-uv-cache uv sync --frozen --group dev` (1):
+  required `uv.lock` absent. Activation and checks not run.
+- Read-only inspections: client-secret/credrefs search in SQL Server and Fabric
+  plugins (0); `cat src/shape/security/credrefs.py` (0); SQL Server file inventory
+  (0); plan section read (0); command source read (0); attempted
+  `cat plugins/shape-sqlserver/tests/test_command.py` (1, absent); publish resolver
+  read (0); plugin CLI source read (0); docs/example client-secret search (0);
+  changelog header read (0).
+- Python update of this status file (0).
+- `git diff --check` (0); `git add docs/plans/lane_status/W-pdb-1.md` (0);
+  `git commit -s -m "W-pdb-1: record frozen environment setup blocker"` (0);
+  `git push origin HEAD:refs/heads/lane/W-pdb-1` (0).
