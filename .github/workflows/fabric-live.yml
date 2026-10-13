@@ -325,6 +325,78 @@ jobs:
           print(text)
           open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8").write(text + "\n")
           PY
+      - name: Semantic model shape_sm - what its tables are bound to (read-only)
+        # Downloads the model definition (TMDL, a POST that changes nothing) and lists, for every table,
+        # its partition source (entity, schema, expression), then lists the folders under Tables/dbo of
+        # the schema-enabled Lakehouse, so a "Cannot find table" can be tied to a source that is gone.
+        if: always()
+        timeout-minutes: 10
+        run: |
+          python - <<'PY'
+          import base64, json, os, re, time, urllib.error, urllib.request
+          from azure.identity import ClientSecretCredential
+
+          env = os.environ
+          cred = ClientSecretCredential(env["FABRIC_TENANT_ID"], env["FABRIC_CLIENT_ID"], env["FABRIC_CLIENT_SECRET"])
+          fabric = cred.get_token("https://api.fabric.microsoft.com/.default").token
+          storage = cred.get_token("https://storage.azure.com/.default").token
+          ws = env["FABRIC_WORKSPACE_ID"]
+          model = env.get("FABRIC_SEMANTIC_MODEL", "shape_sm").strip()
+          API = "https://api.fabric.microsoft.com/v1"
+          out = ["## Semantic model " + model, ""]
+
+          def call(method, url, token, body=None):
+              req = urllib.request.Request(url, data=json.dumps(body).encode() if body is not None else None,
+                                           method=method, headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+              try:
+                  with urllib.request.urlopen(req, timeout=120) as resp:
+                      raw = resp.read()
+                      return resp.status, dict(resp.headers), (json.loads(raw) if raw else {})
+              except urllib.error.HTTPError as exc:
+                  return exc.code, dict(exc.headers), exc.read().decode()[:1500]
+
+          code, _, items = call("GET", f"{API}/workspaces/{ws}/items?type=SemanticModel", fabric)
+          found = [i for i in items.get("value", []) if i["displayName"] == model] if isinstance(items, dict) else []
+          out.append(f"- semantic models in the workspace: {[i['displayName'] for i in items.get('value', [])] if isinstance(items, dict) else items}")
+          if found:
+              mid = found[0]["id"]
+              code, headers, doc = call("POST", f"{API}/workspaces/{ws}/semanticModels/{mid}/getDefinition?format=TMDL", fabric)
+              if code == 202:
+                  op = re.search(r"/operations/([0-9a-fA-F-]{36})", headers.get("Location", headers.get("location", ""))).group(1)
+                  for _ in range(60):
+                      time.sleep(3)
+                      c2, _, st = call("GET", f"{API}/operations/{op}", fabric)
+                      if isinstance(st, dict) and st.get("status") == "Succeeded":
+                          code, _, doc = call("GET", f"{API}/operations/{op}/result", fabric)
+                          break
+                      if isinstance(st, dict) and st.get("status") == "Failed":
+                          out.append(f"- getDefinition failed: {st}")
+                          break
+              parts = doc.get("definition", {}).get("parts", []) if isinstance(doc, dict) else []
+              out.append(f"- definition parts: {len(parts)} (HTTP {code})")
+              for part in parts:
+                  path = part["path"]
+                  if not (path.startswith("definition/tables/") or path.endswith("expressions.tmdl")):
+                      continue
+                  text = base64.b64decode(part["payload"]).decode("utf-8", "replace")
+                  keep = [ln.strip() for ln in text.splitlines()
+                          if re.match(r"\s*(table |expression |partition |mode:|entityName:|schemaName:|expressionSource:|source =|column )", ln)]
+                  out.append(f"- `{path}`: " + " | ".join(keep[:40]))
+          else:
+              out.append(f"- no semantic model named {model!r}")
+
+          lake = env.get("FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH", "")
+          m = re.match(r"onelake://([^/]+)/([^/]+)/Tables", lake)
+          if m:
+              url = (f"https://onelake.dfs.fabric.microsoft.com/{m.group(1)}?resource=filesystem"
+                     f"&directory={m.group(2)}/Tables/dbo&recursive=false")
+              code, _, listing = call("GET", url, storage)
+              names = [p["name"].rsplit("/", 1)[-1] for p in listing.get("paths", [])] if isinstance(listing, dict) else listing
+              out += ["", f"- Tables/dbo of the schema-enabled Lakehouse (HTTP {code}): {names}"]
+          text = "\n".join(out)
+          print(text)
+          open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8").write(text + "\n")
+          PY
       - name: Step summary - which live tests ran, passed, failed, skipped
         if: always()
         run: |
