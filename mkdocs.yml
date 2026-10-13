@@ -214,6 +214,7 @@ nav:
     - Snowflake write receipt: evidence/snowflake-write.md
     - Databricks write receipt: evidence/databricks-write.md
     - Kerberos keytab sign-in — Owner-run receipt: evidence/kerberos-live.md
+    - Semantic model profiling in a Fabric notebook — Owner-run receipt: evidence/semantic-model-notebook.md
     - PostgreSQL export and profile receipt: evidence/postgresql-export-profile.md
     - MySQL export and profile receipt: evidence/mysql-export-profile.md
     - PostgreSQL 17 (local Docker, reached from the VM over the Hyper-V network) — Owner-run receipt: evidence/postgresql-live.md

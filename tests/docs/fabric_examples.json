@@ -171,53 +171,6 @@
     }
   },
   {
-    "id": "profile-model",
-    "page": "docs/plugins/fabric-commands.md",
-    "index": 4,
-    "note": "Fabric maintainer — supply the transcript for docs/plugins/fabric-commands.md example 4.",
-    "timeout": 1200,
-    "needs": [
-      "FABRIC_WORKSPACE_ID",
-      "FABRIC_SEMANTIC_MODEL"
-    ],
-    "rewrite": [
-      [
-        "\\[--tables [^\\]]*\\] ",
-        ""
-      ],
-      [
-        "\\[--max-rows 100000\\]",
-        "--max-rows 100000"
-      ],
-      [
-        "\\[--json\\]",
-        "--json"
-      ],
-      [
-        "Sales/Retail",
-        "\"$FABRIC_WORKSPACE_ID/$FABRIC_SEMANTIC_MODEL\""
-      ]
-    ]
-  },
-  {
-    "id": "semantic-model-profile",
-    "page": "docs/plugins/cloud-sources.md",
-    "index": 0,
-    "note": "Fabric maintainer — supply the transcript for docs/plugins/cloud-sources.md example 0.",
-    "timeout": 1200,
-    "needs": [
-      "FABRIC_WORKSPACE_ID",
-      "FABRIC_SEMANTIC_MODEL",
-      "DOCS_SEM_TABLE"
-    ],
-    "rewrite": [
-      [
-        "semantic-model://Sales/Retail/Customer",
-        "\"semantic-model://$FABRIC_WORKSPACE_ID/$FABRIC_SEMANTIC_MODEL/$DOCS_SEM_TABLE\""
-      ]
-    ]
-  },
-  {
     "id": "synapse-write",
     "page": "docs/plugins/fabric-writers.md",
     "index": 1,
