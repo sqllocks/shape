@@ -123,6 +123,7 @@ class DeltaSource:
         if not delta_fallback.never_read_by_delta_rs(table):
             try:
                 if _is_cloud(uri):
+                    deltafs.note_bridge()  # an object store has no native Arrow file system here
                     return table.to_pyarrow_dataset()
                 return deltafs.local_dataset(table, local_path(uri))
             except Exception as refusal:

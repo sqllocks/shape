@@ -112,9 +112,10 @@ def test_a_broken_delta_log_is_one_error_line_and_exit_2(tmp_path: Path) -> None
 
 
 def test_a_command_that_loaded_deltalake_ends_the_process_by_itself(tmp_path: Path) -> None:
-    """The command line ends the process once its output is flushed when delta-rs was loaded, so
-    a scan still running on Arrow's pool threads (through deltalake's Python file system, which
-    hangs the interpreter's exit) cannot hold the process. The script leaves such a scan behind."""
+    """A read through deltalake's Python file system (a table behind an object store) is marked
+    (``deltafs.note_bridge``): the command line then ends the process once its output is flushed,
+    so a scan still running on Arrow's pool threads cannot hold the interpreter's exit. The
+    script leaves such a scan behind."""
     from deltalake import write_deltalake
 
     src = tmp_path / "d"
@@ -127,6 +128,8 @@ def test_a_command_that_loaded_deltalake_ends_the_process_by_itself(tmp_path: Pa
         "import sys\n"
         "from deltalake import DeltaTable\n"
         "from shape.cli.main import main\n"
+        "from shape.io import deltafs\n"
+        "deltafs.note_bridge()\n"  # what a read of a table behind an object store does
         "sys.argv = ['shape', 'version']\n"
         f"scan = DeltaTable({str(src)!r}).to_pyarrow_dataset().scanner(batch_size=2)\n"
         "reader = scan.to_reader()\n"

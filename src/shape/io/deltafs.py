@@ -18,6 +18,17 @@ from typing import Any
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.fs as pafs  # type: ignore[import-untyped]
 
+#: True once a read has had to use deltalake's Python file system (a table behind an object
+#: store). The command line then ends the process by itself when its output is flushed
+#: (``shape.cli.main.main``), so that pool thread cannot hold the interpreter's exit.
+bridge_in_use = False
+
+
+def note_bridge() -> None:
+    """Record that deltalake's Python file system is in use (see :data:`bridge_in_use`)."""
+    global bridge_in_use
+    bridge_in_use = True
+
 
 def local_filesystem(path: str | os.PathLike[str]) -> Any:
     """The native Arrow file system rooted at the Delta table directory ``path``."""
@@ -32,6 +43,6 @@ def local_dataset(table: Any, path: str | os.PathLike[str]) -> Any:
 
 def local_table(table: Any, path: str | os.PathLike[str]) -> pa.Table:
     """All rows of ``table`` (a ``deltalake.DeltaTable`` of the local directory ``path``) as an
-    Arrow table; what ``table.to_pyarrow_table()`` returns, without its file system bridge."""
-    result: pa.Table = local_dataset(table, path).to_table()
+    Arrow table: ``table.to_pyarrow_table()`` with Arrow's own file system, not its bridge."""
+    result: pa.Table = table.to_pyarrow_table(filesystem=local_filesystem(path))
     return result

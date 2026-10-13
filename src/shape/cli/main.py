@@ -2299,10 +2299,11 @@ def main(argv=None):
             if not errors.reader_gone(exc):
                 raise
             code = errors.pipe_closed()
-    if "deltalake" in sys.modules:
-        # delta-rs runs native threads, and a table behind an object store reaches Arrow through
-        # a Python file system that an Arrow pool thread frees: tearing the interpreter down
-        # around them can hang or abort (GitHub issue #1). End the process once all is flushed.
+    bridge = sys.modules.get("shape.io.deltafs")
+    if bridge is not None and bridge.bridge_in_use:
+        # A table behind an object store reaches Arrow through a Python file system that an
+        # Arrow pool thread frees: tearing the interpreter down around it can hang or abort
+        # (GitHub issue #1). End the process once all is flushed.
         lifecycle.exit_on_return = True
     if lifecycle.exit_on_return:
         lifecycle.exit_now(code)
