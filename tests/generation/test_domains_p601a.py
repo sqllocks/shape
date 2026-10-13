@@ -29,6 +29,7 @@ BENCH = ROOT / "benchmarks" / "vs_refengine"
 sys.path.insert(0, str(BENCH))
 sys.path.insert(0, str(BENCH / "domain_1to1"))
 
+import domain_corrections  # noqa: E402
 import export_domains  # noqa: E402
 import schema_import  # noqa: E402
 
@@ -99,7 +100,8 @@ def test_the_schema_is_the_baselines_dump_with_two_documented_differences(domain
     that no generator reads (``export_domains.UNREAD_KEYS``) are left out."""
     dump = json.loads((BENCH / "fixtures" / "schemas" / f"{domain.name}_3nf.json").read_text())
     mine = domain.schema.to_dict()
-    expected = schema_import.import_dump(dump).to_dict()
+    # and the corrections of domain_corrections.py (rule text, insurance realism), nothing more
+    expected = domain_corrections.apply(schema_import.import_dump(dump).to_dict(), domain.name)
     for tname, table in mine["tables"].items():
         for cname, col in table["columns"].items():
             gen = col["generator"]

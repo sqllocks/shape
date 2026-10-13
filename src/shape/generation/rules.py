@@ -8,12 +8,13 @@ A rule is ``"left OP right"`` with ``OP`` one of ``>=``, ``<=``, ``>``, ``<``, `
 * ``cross_table``: ``left`` and ``right`` are ``table.column`` of two tables joined on the ``via``
   column both have (a left join from the ``left`` table).
 
-Other rule types are carried in the schema and ignored here. :func:`validate_rules` returns one
-:class:`RuleViolation` per broken rule. :func:`fix_rules` repairs ``cross_column`` rules (``<``
-and ``>``) and ``cross_table`` rules (``>=``, ``>`` and ``<=``) and returns the repaired tables
-and whatever still violates. Fixes draw from row-addressed streams (``rng.RowStream``, label
-``fix:<rule name>``), so a repair does not depend on how the tables were chunked or in what order
-rules ran in a previous process.
+Other rule types, and rules with empty text, are carried in the schema and ignored here
+(``GenSchema.validate`` warns about them). :func:`validate_rules` returns one
+:class:`RuleViolation` per broken rule. :func:`fix_rules` repairs ``cross_column`` rules (``<``,
+``<=``, ``>`` and ``>=``) and ``cross_table`` rules (``>=``, ``>`` and ``<=``) and returns the
+repaired tables and whatever still violates. Fixes draw from row-addressed streams
+(``rng.RowStream``, label ``fix:<rule name>``), so a repair does not depend on how the tables were
+chunked or in what order rules ran in a previous process.
 
 Tables are Arrow tables; a repaired column keeps its Arrow type (an integer column stays
 integer).
@@ -271,7 +272,12 @@ def _settle(
     or for an integer, the scaled value can stay on the wrong side."""
     stored = np.round(new) if integer else new
     with np.errstate(invalid="ignore"):
-        keeps = {"<": stored < bound, "<=": stored <= bound, ">": stored > bound}[op]
+        keeps = {
+            "<": stored < bound,
+            "<=": stored <= bound,
+            ">": stored > bound,
+            ">=": stored >= bound,
+        }[op]
         step = np.maximum(np.abs(bound), 1.0) * (0.05 + u * 0.65)
         if integer:
             step = np.maximum(np.floor(step), 1.0)
@@ -295,22 +301,20 @@ def _fix_cross_column(rule: BusinessRule, tables: Tables, seed: int) -> Tables:
     lv, rv = _numpy(lcol), _numpy(rcol)
     stream = RowStream(seed, rule.table, left, f"fix:{rule.name}")
     u = stream.uniform(0, n)
+    # A broken row moves past the bound, as for the strict rule: ``>=`` repairs like ``>`` and
+    # ``<=`` like ``<``, so only the rows that break the rule as written change.
+    with np.errstate(invalid="ignore"):
+        mask = {"<": lv >= rv, "<=": lv > rv, ">": lv <= rv, ">=": lv < rv}.get(op)
+    if mask is None:
+        return tables
+    below = op in ("<", "<=")
     if _is_temporal(lcol):
         days = (1 + np.floor(u * 29)).astype("timedelta64[D]").astype("timedelta64[us]")
-        if op == "<":
-            mask, new = lv >= rv, rv - days
-        elif op == ">":
-            mask, new = lv <= rv, rv + days
-        else:
-            return tables
+        new = rv - days if below else rv + days
     else:
         integer = pa.types.is_integer(lcol.type)
-        if op == "<":
-            mask, new = lv >= rv, _settle(np.round(rv * (0.3 + u * 0.65), 2), rv, op, u, integer)
-        elif op == ">":
-            mask, new = lv <= rv, _settle(np.round(rv * (1.05 + u * 0.95), 2), rv, op, u, integer)
-        else:
-            return tables
+        factor = 0.3 + u * 0.65 if below else 1.05 + u * 0.95
+        new = _settle(np.round(rv * factor, 2), rv, op, u, integer)
     if not mask.any():
         return tables
     return {**tables, rule.table: _replace(table, left, mask, np.where(mask, new, lv))}

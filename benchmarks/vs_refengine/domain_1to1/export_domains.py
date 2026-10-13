@@ -17,6 +17,10 @@ names the nested field ``industries.industry_name``, which the baseline does not
 back to the missing ``name`` key and yields ``""`` for every row. The schema says so with
 ``constant ""``; ``--check`` proves nothing else differs.
 
+The other deliberate differences are the corrections of ``domain_corrections.py`` (empty business
+rules given rule text, and the insurance dates, amounts and policy lines), applied to both modes,
+and the reference datasets it drops (``DROPPED_DATASETS``), which are not written.
+
 ``UNREAD_KEYS`` are generator keys of the baseline's dumps that no generator reads, in the baseline
 or in Shape: ``round`` on a ``distribution`` (both round a number by the column's ``scale``) and
 ``weight_field`` on ``reference_data`` and ``record_sample`` (the baseline weighs by a literal
@@ -38,6 +42,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
 import _refpkg  # noqa: E402
+import domain_corrections  # noqa: E402
 import export_retail  # noqa: E402
 from paths import REFENGINE_ROOT, SHAPE_ROOT  # noqa: E402
 
@@ -94,7 +99,7 @@ def schema_document(domain: str, mode: str) -> dict[str, Any]:
     for (d, table, column), generator in OVERRIDES.items():
         if d == domain:
             doc["tables"][table]["columns"][column]["generator"] = dict(generator)
-    return doc
+    return domain_corrections.apply(doc, domain)
 
 
 def dataset_table(domain: str, name: str) -> pa.Table:
@@ -122,9 +127,17 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 folder.mkdir(parents=True, exist_ok=True)
                 target.write_text(text, "utf-8")
+        dropped = domain_corrections.DROPPED_DATASETS.get(domain, frozenset())
         for name in DOMAINS[domain]:
-            table = dataset_table(domain, name)
             target = folder / "reference" / f"{name}.arrow"
+            if name in dropped:
+                if target.exists():
+                    if args.check:
+                        problems.append(f"{target} (dropped)")
+                    else:
+                        target.unlink()
+                continue
+            table = dataset_table(domain, name)
             if args.check:
                 if not target.exists() or not pa.ipc.open_file(target).read_all().equals(table):
                     problems.append(str(target))

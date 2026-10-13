@@ -44,6 +44,7 @@ sys.path.insert(0, str(BENCH / "domain_1to1"))
 
 import allowlist  # noqa: E402
 import composites  # noqa: E402
+import domain_corrections  # noqa: E402
 import export_domains  # noqa: E402
 import rowcounts  # noqa: E402
 import schema_import  # noqa: E402
@@ -124,6 +125,22 @@ def _expected_differences(key: str) -> set[str]:
         out.add(f"generator {table}.{column}")
     if "capital_markets" in _children(key):
         out.add("generator capital_markets_industry.industry_name")
+    for domain in _children(key):  # the corrections of the domains' own schemas
+        added = domain_corrections.added_columns(domain)
+        for table, column in domain_corrections.corrected_columns(domain):
+            kind = "column" if (table, column) in added else "generator"
+            out.add(f"{kind} {domain}_{table}.{column}")
+        out |= {f"rule {domain}_{name}" for name in domain_corrections.corrected_rules(domain)}
+    return out
+
+
+def _corrected_columns(key: str) -> dict[str, set[str]]:
+    """Per composite table, the columns ``domain_corrections.py`` adds or gives a new generator
+    (such a column can move: a derived, lookup or conditional column follows the others)."""
+    out: dict[str, set[str]] = {}
+    for domain in _children(key):
+        for table, column in domain_corrections.corrected_columns(domain):
+            out.setdefault(f"{domain}_{table}", set()).add(column)
     return out
 
 
@@ -143,7 +160,9 @@ def _differences(mine: dict, base: dict) -> set[str]:
                 out.add(f"missing column {table}.{column}")
             elif t["columns"][column] != b["columns"][column]:
                 out.add(f"generator {table}.{column}")
-    assert mine["business_rules"] == base["business_rules"]
+    rules, base_rules = ({r["name"]: r for r in doc["business_rules"]} for doc in (mine, base))
+    assert [n for n in rules if n in base_rules] == list(base_rules)  # the same order
+    out |= {f"rule {n}" for n in set(rules) | set(base_rules) if rules.get(n) != base_rules.get(n)}
     assert mine["generation"] == base["generation"]
     assert mine["model"] == base["model"]
     assert len(mine["relationships"]) == len(base["relationships"])
@@ -214,13 +233,16 @@ def test_tables_columns_and_row_counts_equal_the_baselines_at_small(run):
     plan = fixture["plan"]
     assert set(tables) == set(plan["order"])
     extras = allowlist.extra_columns(key)
+    corrected = _corrected_columns(key)
     for table, columns in plan["columns"].items():
         expected = list(dict.fromkeys(columns))
         found = tables[table].column_names
         if table in extras:  # the bridge is a foreign key: the engine puts it with the others
             assert extras[table] in found, table
             found = [c for c in found if c != extras[table]]
-        assert found == expected, table
+        moved = corrected.get(table, set())
+        assert set(expected) <= set(found) and set(found) - set(expected) <= moved, table
+        assert [c for c in found if c not in moved] == [c for c in expected if c not in moved]
         assert tables[table].num_rows == plan["row_counts"]["small"][table], table
 
 

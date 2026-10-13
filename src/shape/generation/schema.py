@@ -27,6 +27,10 @@ from shape.security.names import is_safe_name
 
 SCHEMA_VERSION = 1
 
+# The business rule types the rules engine (``shape.generation.rules``) checks. A rule of any
+# other type, or with empty text, is carried in the schema and reported by ``GenSchema.validate``.
+EVALUATED_RULE_TYPES = ("cross_column", "cross_table", "constraint")
+
 # Generator keys each strategy needs. A missing key is a warning from ``GenSchema.validate``;
 # a strategy that is not listed is a warning too (a plugin may register it).
 STRATEGY_REQUIRED_KEYS: dict[str, frozenset[str]] = {
@@ -191,8 +195,9 @@ class Relationship:
 @dataclass(slots=True)
 class BusinessRule:
     """A constraint over generated data: ``cross_table`` (``A.x >= B.y`` joined ``via`` a key),
-    ``cross_column`` or ``constraint`` (``left OP right`` inside ``table``). Other types are
-    carried and ignored by the rules engine."""
+    ``cross_column`` or ``constraint`` (``left OP right`` inside ``table``). Other types, and
+    rules with empty text, are carried and ignored by the rules engine;
+    :meth:`GenSchema.validate` warns about them."""
 
     name: str
     type: str
@@ -611,17 +616,27 @@ class GenSchema:
             if b.table and b.table not in self.tables
         ]
         for b in self.business_rules:
-            if b.type in ("cross_column", "constraint") and b.table in self.tables:
-                problem = self._comparison_problem(b, cross_table=False)
+            if not b.rule.strip():
+                problem: str | None = "its text is empty"
+            elif b.type not in EVALUATED_RULE_TYPES:
+                problem = (
+                    f"the rules engine does not evaluate type {b.type!r} (only "
+                    f"{', '.join(EVALUATED_RULE_TYPES)})"
+                )
             elif b.type == "cross_table":
                 problem = self._comparison_problem(b, cross_table=True)
+            elif not b.table:
+                problem = f"a {b.type} rule needs a table"
+            elif b.table in self.tables:
+                problem = self._comparison_problem(b, cross_table=False)
             else:
-                continue
+                continue  # the unknown table is an error above
             if problem:
+                subject = f"Rule {b.rule!r}" if b.rule.strip() else "The rule"
                 out.append(
                     Issue(
                         "warning",
-                        f"Rule {b.rule!r} is never checked or repaired: {problem}",
+                        f"{subject} is never checked or repaired: {problem}",
                         f"business_rules.{b.name}",
                     )
                 )

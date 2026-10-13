@@ -1461,24 +1461,24 @@
  "business_rules": [
   {
    "name": "account_opened_after_customer_since",
-   "type": "temporal_order",
-   "rule": "",
+   "type": "cross_table",
+   "rule": "account.opened_date >= customer.customer_since",
    "table": null,
-   "via": null,
+   "via": "customer_id",
    "when": null
   },
   {
    "name": "loan_after_customer_since",
-   "type": "temporal_order",
-   "rule": "",
+   "type": "cross_table",
+   "rule": "loan.origination_date >= customer.customer_since",
    "table": null,
-   "via": null,
+   "via": "customer_id",
    "when": null
   },
   {
    "name": "outstanding_leq_principal",
-   "type": "column_comparison",
-   "rule": "",
+   "type": "cross_column",
+   "rule": "outstanding_balance <= principal_amount",
    "table": "loan",
    "via": null,
    "when": null

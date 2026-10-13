@@ -1172,16 +1172,16 @@
  "business_rules": [
   {
    "name": "quantity_produced_leq_planned",
-   "type": "column_comparison",
-   "rule": "",
+   "type": "cross_column",
+   "rule": "quantity_produced <= quantity_planned",
    "table": "work_order",
    "via": null,
    "when": null
   },
   {
    "name": "sell_price_gte_unit_cost",
-   "type": "column_comparison",
-   "rule": "",
+   "type": "cross_column",
+   "rule": "sell_price >= unit_cost",
    "table": "product",
    "via": null,
    "when": null

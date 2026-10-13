@@ -27,6 +27,7 @@ BENCH = ROOT / "benchmarks" / "vs_refengine"
 sys.path.insert(0, str(BENCH))
 sys.path.insert(0, str(BENCH / "domain_1to1"))
 
+import domain_corrections  # noqa: E402
 import export_domains  # noqa: E402
 import schema_import  # noqa: E402
 
@@ -44,7 +45,6 @@ DATASETS = {
     "hr": {"department_names": 30, "position_titles": 79, "training_courses": 50},
     "insurance": {
         "claim_categories": 25,
-        "peril_types": 15,
         "policy_types": 30,
         "us_zip_locations": 40_977,
     },
@@ -99,7 +99,8 @@ def test_the_schema_is_the_baselines_dump_with_nanosecond_dates(domain):
     dump = json.loads((BENCH / "fixtures" / "schemas" / f"{domain.name}_3nf.json").read_text())
     assert not [k for k in export_domains.OVERRIDES if k[0] == domain.name]
     mine = domain.schema.to_dict()
-    expected = schema_import.import_dump(dump).to_dict()
+    # and the corrections of domain_corrections.py (rule text, insurance realism), nothing more
+    expected = domain_corrections.apply(schema_import.import_dump(dump).to_dict(), domain.name)
     for tname, table in mine["tables"].items():
         for cname, col in table["columns"].items():
             gen = col["generator"]
@@ -130,9 +131,16 @@ def test_small_tables_have_the_baselines_columns_in_order(name):
     result = Engine(loaded.schema, scale="small", seed=1042).generate()
     plan = PLAN[f"{name}_3nf"]
     assert set(result.tables) == set(plan["order"])
+    added = domain_corrections.added_columns(name)
+    corrected = domain_corrections.corrected_columns(name)
     for table, columns in plan["columns"].items():
         # the baseline lists a key column that has another strategy twice; the frame has it once
-        assert result.tables[table].column_names == list(dict.fromkeys(columns)), table
+        expected = list(dict.fromkeys(columns))
+        found = result.tables[table].column_names
+        assert set(found) == set(expected) | {c for t, c in added if t == table}, table
+        # a corrected column can move: a derived, lookup or conditional column follows the others
+        moved = {c for t, c in corrected if t == table}
+        assert [c for c in found if c not in moved] == [c for c in expected if c not in moved]
         assert result.tables[table].num_rows == plan["row_counts"]["small"][table]
 
 

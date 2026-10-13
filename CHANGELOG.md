@@ -6,7 +6,17 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+### Fixed
+
+- `GenSchema.validate()` warns about a business rule with empty text or a type the rules engine
+  does not evaluate; such a rule was carried silently and never checked or repaired.
+- Business rule repair handles `cross_column` rules with `>=` and `<=`, as it did `>` and `<`.
+- The empty business rules of the `education`, `financial`, `hr`, `insurance`, `iot`,
+  `manufacturing` and `supply_chain` domains have rule text the engine checks and repairs.
+- The `insurance` domain: claim, payment, premium and underwriting dates follow their policy and
+  claim, the filing lag is a distribution, no claim is paid more than its amount (new
+  `claim.total_paid`), each policy type has its own category, and claim causes and coverage types
+  follow the policy's new `line_of_business`. The unused `peril_types` dataset is no longer shipped.
 
 ## 0.9.1
 

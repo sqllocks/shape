@@ -48,6 +48,7 @@ sys.path.insert(0, str(HERE))
 import _refpkg  # noqa: E402
 import allowlist  # noqa: E402
 import composites  # noqa: E402
+import domain_corrections  # noqa: E402
 import dump_schema  # noqa: E402
 import generate  # noqa: E402
 from domain_differences import DELIBERATE  # noqa: E402
@@ -793,6 +794,24 @@ def main(argv: list[str] | None = None) -> int:
                 allowed_report.setdefault("problems", []).append(
                     f"(a) {t}: the bridge column {c} is missing"
                 )
+    # The corrections of the domains' own schemas (domain_corrections.py): a corrected column is
+    # reported as deliberate, not compared; an added one is left out; either may move.
+    corrected, added = (
+        domain_corrections.by_table(
+            pools.children if pools.composite else [domain], prefixed=pools.composite
+        )
+        if impl == "shape"
+        else ({}, {})
+    )
+    if added:
+        IM = {
+            t: df.drop(columns=sorted(added.get(t, set()) & set(df.columns)))
+            for t, df in IM.items()
+        }
+        im_types = {
+            t: {c: v for c, v in ty.items() if c not in added.get(t, set())}
+            for t, ty in im_types.items()
+        }
     fks_cmp = [fk for fk in fks if redirected.get(fk[0]) != fk[1]]
     fks_bridge = [
         (c, extras[c], p, pc_) for c, cc, p, pc_ in fks if c in redirected and redirected[c] == cc
@@ -864,6 +883,11 @@ def main(argv: list[str] | None = None) -> int:
             "arrow_types": {c: {"refengine": ts.get(c), "impl": ti.get(c)} for c in sp.columns},
             "columns": {},
         }
+        moved = corrected.get(tn, set())
+        if moved:
+            tr["columns_identical_and_ordered"] = set(sp.columns) == set(im.columns) and [
+                c for c in sp.columns if c not in moved
+            ] == [c for c in im.columns if c not in moved]
         tr["types_identical"] = all(ts.get(c) == ti.get(c) for c in sp.columns)
         tr["row_counts_identical"] = len(sp) == len(im)
         if not tr["columns_identical_and_ordered"]:
@@ -889,7 +913,11 @@ def main(argv: list[str] | None = None) -> int:
                 )
             cr["arrow_type_match"] = ts.get(c) == ti.get(c)
             allowed = DELIBERATE.get((domain, tn, c)) if impl == "shape" else None
-            if allowed is not None:
+            if c in moved:
+                cr["equivalent"] = True
+                cr["arrow_type_match"] = True
+                cr["deliberate"] = "corrected on purpose: domain_corrections.py"
+            elif allowed is not None:
                 failing = tuple(k for k, v in cr["checks"].items() if not v)
                 if not failing:
                     flagged.append(f"(b-e) {tn}.{c}: stale entry in domain_differences.py")

@@ -28,6 +28,8 @@ The 1.x compatibility promises describe future policy.
 - Exact profiling can scan all input. Do not infer a memory or elapsed-time guarantee from a
   small local tutorial. Optional analyses and generation may materialize tables.
 - Plugins run in the same process. Allow-lists restrict loading, not plugin behavior.
+- The `insurance` domain's claim status does not depend on the claim's age, and every policy
+  runs exactly 365 days. See [the domains](GENERATION_ENGINE.md#domains).
 
 ## Alpine and musllinux
 

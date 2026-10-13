@@ -1229,8 +1229,8 @@
   },
   {
    "name": "enrolled_leq_capacity",
-   "type": "column_comparison",
-   "rule": "",
+   "type": "cross_column",
+   "rule": "enrolled_count <= capacity",
    "table": "course_section",
    "via": null,
    "when": null

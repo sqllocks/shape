@@ -1135,8 +1135,8 @@
  "business_rules": [
   {
    "name": "max_salary_exceeds_min",
-   "type": "column_comparison",
-   "rule": "",
+   "type": "cross_column",
+   "rule": "max_salary > min_salary",
    "table": "position",
    "via": null,
    "when": null

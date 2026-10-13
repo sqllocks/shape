@@ -32,7 +32,7 @@ domain plugin, a profile fit, a DDL file or a hand-written JSON file. It holds
 | `model` | `name`, `domain`, `schema_mode` (`3nf` or `star`), `locale`, `seed`, `date_range` |
 | `tables` | per table: `primary_key`, and ordered `columns`, each with a `type`, `nullable`, `null_rate`, a `generator` (a `strategy` name plus that strategy's keys) and an optional `identity` (below) |
 | `relationships` | parent/child links with column lists and a type |
-| `business_rules` | `cross_column`, `cross_table` and `constraint` rules, `A OP B` |
+| `business_rules` | `cross_column`, `cross_table` and `constraint` rules, `A OP B` (a rule of another type, or with empty text, is never checked: `validate()` warns about it) |
 | `generation` | the current `scale`, the `scales` presets (rows per table), and `derived_counts` |
 | `correlated_columns` | per table, `[column_a, column_b, r]` triples |
 
@@ -136,9 +136,13 @@ They need whole tables, so `generate()` runs them and `iter_chunks()` does not. 
    decimals are rounded to 2 places), or `lookup_parent`.
 3. **Business rules** (`rules.py`): `validate_rules` lists the rules the data breaks (an
    `A OP B` comparison, or a `constraint` `x BETWEEN low AND high`, both ends included);
-   `fix_rules` repairs `cross_column` (`<`, `>`) and `cross_table` (`>=`, `>`, `<=`) rules and
-   returns what still violates. Repairs draw from the `fix:<rule>` stream. `remaining_violations`
-   is what the finished tables break.
+   `fix_rules` repairs `cross_column` (`<`, `<=`, `>`, `>=`) and `cross_table` (`>=`, `>`, `<=`)
+   rules and returns what still violates. A broken row moves past the bound, a non-strict rule as
+   its strict form does; rows that hold are left alone. Repairs draw from the `fix:<rule>` stream.
+   `remaining_violations` is what the finished tables break. A rule whose text is empty, or whose
+   type is not one of `cross_column`, `cross_table` and `constraint`, is skipped here; `GenSchema.validate()`
+   reports it as a warning (`... is never checked or repaired: its text is empty`), as it does a
+   comparison that names a column the table does not have.
 
    **Mixed-type copula** (`copula_mixed.py`, opt in with `shape generate --from PROFILE
    --mixed-copula`): the schema's `generation.output.copula_mixed` block (`format`
@@ -312,6 +316,17 @@ including the `trading_days` pattern of `capital_markets`, which is uniform). `f
 `supply_chain` and `telecom` read the ZIP
 locations that `retail` ships. In `capital_markets`, `industry.industry_name` is the empty string for
 every row, as in the reference output it is checked against (its schema says `constant ""`).
+
+Every business rule of the shipped domains has rule text that the rules engine checks and repairs.
+In `insurance` the dates follow their parents: a claim's incident falls in its policy's 365-day
+term, it is filed after a log-normal lag (median about five days), a claim payment follows the
+filing, a premium payment falls in the term and underwriting comes before the policy takes effect.
+`claim.total_paid` sums the claim's payments, and the rule `paid_within_claim_amount` raises a
+claim that was paid more than it claimed. Each policy type appears once, with its own line of
+business, which policies, coverages and claims carry as `line_of_business` and which decides a
+claim's cause and a coverage's type. Two things it does not model: claim status does not depend
+on the claim's age, and every policy runs exactly 365 days (no strategy derives a category from a
+date difference or draws a day offset from a set of lengths yet).
 
 All fourteen domains are one packaged layout (`data/<domain>/schema.json`, `schema_star.json`,
 `reference/*.arrow`; `retail` also `transforms.json`, the maps behind `shape transform star|cdm`), built

@@ -987,8 +987,8 @@
   },
   {
    "name": "max_range_exceeds_min",
-   "type": "column_comparison",
-   "rule": "",
+   "type": "cross_column",
+   "rule": "max_range > min_range",
    "table": "sensor",
    "via": null,
    "when": null

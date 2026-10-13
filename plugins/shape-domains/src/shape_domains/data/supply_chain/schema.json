@@ -1407,16 +1407,16 @@
  "business_rules": [
   {
    "name": "received_leq_ordered",
-   "type": "column_comparison",
-   "rule": "",
+   "type": "cross_column",
+   "rule": "quantity_received <= quantity_ordered",
    "table": "purchase_order_line",
    "via": null,
    "when": null
   },
   {
    "name": "shipment_delivery_after_ship",
-   "type": "column_comparison",
-   "rule": "",
+   "type": "cross_column",
+   "rule": "delivery_date > ship_date",
    "table": "shipment",
    "via": null,
    "when": null

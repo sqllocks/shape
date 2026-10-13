@@ -181,3 +181,71 @@ def test_fix_is_deterministic_and_leaves_other_rules_alone():
 def test_empty_tables():
     t = {"t": pa.table({"a": pa.array([], pa.float64()), "b": pa.array([], pa.float64())})}
     assert fix_rules(t, _s(rule("cross_column", "a < b", "t"))) == (t, [])
+
+
+def test_fix_cross_column_non_strict_orders():
+    # ``>=`` and ``<=`` are repaired as ``>`` and ``<`` are; a row on the bound already holds.
+    t = {"t": pa.table({"a": [5.0, 4.0, 1.0], "b": [4.0, 4.0, 2.0]})}
+    fixed, remaining = fix_rules(t, _s(rule("cross_column", "a <= b", "t")))
+    a = fixed["t"]["a"].to_pylist()
+    assert remaining == [] and a[1:] == [4.0, 1.0] and 0.3 * 4 - 0.01 <= a[0] < 4.0
+    fixed, remaining = fix_rules(t, _s(rule("cross_column", "b >= a", "t")))
+    b = fixed["t"]["b"].to_pylist()
+    assert remaining == [] and b[1:] == [4.0, 2.0] and 5.0 * 1.05 - 0.01 <= b[0] <= 5.0 * 2.0
+
+    ints = {"t": pa.table({"a": pa.array([3, 9], pa.int64()), "b": pa.array([3, 3], pa.int64())})}
+    fixed, remaining = fix_rules(ints, _s(rule("cross_column", "a <= b", "t")))
+    assert fixed["t"]["a"].type == pa.int64() and remaining == []
+    assert fixed["t"]["a"].to_pylist()[0] == 3 and fixed["t"]["a"].to_pylist()[1] < 3
+
+    d = dt.datetime
+    dates = {
+        "t": pa.table(
+            {
+                "filed": pa.array([d(2020, 1, 1), d(2020, 2, 1), None], pa.timestamp("us")),
+                "incident": pa.array(
+                    [d(2020, 1, 10), d(2020, 2, 1), d(2020, 1, 1)], pa.timestamp("us")
+                ),
+            }
+        )
+    }
+    fixed, remaining = fix_rules(dates, _s(rule("cross_column", "filed >= incident", "t")))
+    f0, f1, f2 = fixed["t"]["filed"].to_pylist()
+    assert remaining == [] and f1 == d(2020, 2, 1) and f2 is None
+    assert dt.timedelta(days=1) <= f0 - d(2020, 1, 10) <= dt.timedelta(days=29)
+    fixed, remaining = fix_rules(dates, _s(rule("cross_column", "incident <= filed", "t")))
+    i0 = fixed["t"]["incident"].to_pylist()[0]
+    assert remaining == [] and dt.timedelta(days=1) <= d(2020, 1, 1) - i0 <= dt.timedelta(days=29)
+
+
+def _rule_warnings(*rules: BusinessRule) -> list[tuple[str, str]]:
+    return [
+        (i.location, i.message)
+        for i in _s(*rules).validate()
+        if i.location.startswith("business_rules.")
+    ]
+
+
+def test_validate_reports_a_rule_the_engine_never_evaluates():
+    """An empty rule text, or a type the rules engine does not read, was carried silently: nothing
+    checked or repaired it and nothing said so (the insurance domain's ``temporal_order`` rules)."""
+    empty = BusinessRule(name="filed_after_incident", type="temporal_order", rule="")
+    assert _rule_warnings(empty) == [
+        (
+            "business_rules.filed_after_incident",
+            "The rule is never checked or repaired: its text is empty",
+        )
+    ]
+    for blank in ("", "   "):
+        (found,) = _rule_warnings(rule("cross_column", blank, "customer"))
+        assert found[1].endswith("its text is empty")
+    (found,) = _rule_warnings(rule("temporal_order", "order.placed >= customer.joined"))
+    assert "does not evaluate type 'temporal_order'" in found[1]
+    assert "cross_column, cross_table, constraint" in found[1]
+    (found,) = _rule_warnings(rule("cross_column", "score > 0"))
+    assert found[1].endswith("a cross_column rule needs a table")
+    issues = _s(empty).validate()
+    assert [i.level for i in issues if i.location.startswith("business_rules.")] == ["warning"]
+    # rules the engine evaluates stay quiet
+    assert _rule_warnings(rule("cross_column", "score > 0", "customer")) == []
+    assert _rule_warnings(rule("constraint", "score BETWEEN 0 AND 100", "customer")) == []

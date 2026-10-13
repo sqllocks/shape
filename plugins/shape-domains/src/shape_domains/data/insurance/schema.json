@@ -326,8 +326,10 @@
      "name": "type_name",
      "type": "string",
      "generator": {
-      "strategy": "reference_data",
-      "dataset": "policy_types"
+      "strategy": "record_sample",
+      "dataset": "policy_types",
+      "field": "name",
+      "unique": true
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -339,7 +341,100 @@
      "name": "category",
      "type": "string",
      "generator": {
-      "strategy": "weighted_enum",
+      "strategy": "conditional_table",
+      "source_column": "type_name",
+      "table": {
+       "Standard Auto": {
+        "Auto": 1.0
+       },
+       "Preferred Auto": {
+        "Auto": 1.0
+       },
+       "High-Risk Auto": {
+        "Auto": 1.0
+       },
+       "Classic Car": {
+        "Auto": 1.0
+       },
+       "Commercial Auto": {
+        "Commercial": 1.0
+       },
+       "Homeowners HO-3": {
+        "Home": 1.0
+       },
+       "Homeowners HO-5": {
+        "Home": 1.0
+       },
+       "Condo HO-6": {
+        "Home": 1.0
+       },
+       "Renters HO-4": {
+        "Home": 1.0
+       },
+       "Mobile Home": {
+        "Home": 1.0
+       },
+       "Term Life 10-Year": {
+        "Life": 1.0
+       },
+       "Term Life 20-Year": {
+        "Life": 1.0
+       },
+       "Term Life 30-Year": {
+        "Life": 1.0
+       },
+       "Whole Life": {
+        "Life": 1.0
+       },
+       "Universal Life": {
+        "Life": 1.0
+       },
+       "Variable Life": {
+        "Life": 1.0
+       },
+       "Individual Health": {
+        "Health": 1.0
+       },
+       "Family Health": {
+        "Health": 1.0
+       },
+       "Supplemental Health": {
+        "Health": 1.0
+       },
+       "Dental": {
+        "Health": 1.0
+       },
+       "Vision": {
+        "Health": 1.0
+       },
+       "General Liability": {
+        "Commercial": 1.0
+       },
+       "Professional Liability": {
+        "Commercial": 1.0
+       },
+       "Workers Compensation": {
+        "Commercial": 1.0
+       },
+       "Commercial Property": {
+        "Commercial": 1.0
+       },
+       "Business Owners Policy": {
+        "Commercial": 1.0
+       },
+       "Personal Umbrella": {
+        "Umbrella": 1.0
+       },
+       "Commercial Umbrella": {
+        "Umbrella": 1.0
+       },
+       "Flood Insurance": {
+        "Home": 1.0
+       },
+       "Earthquake Insurance": {
+        "Home": 1.0
+       }
+      },
       "values": {
        "Auto": 0.25,
        "Home": 0.2,
@@ -530,6 +625,21 @@
      "max_length": null,
      "precision": null,
      "scale": null
+    },
+    "line_of_business": {
+     "name": "line_of_business",
+     "type": "string",
+     "generator": {
+      "strategy": "lookup",
+      "source_table": "policy_type",
+      "source_column": "category",
+      "via": "policy_type_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
     }
    }
   },
@@ -567,11 +677,57 @@
      "precision": null,
      "scale": null
     },
+    "line_of_business": {
+     "name": "line_of_business",
+     "type": "string",
+     "generator": {
+      "strategy": "lookup",
+      "source_table": "policy",
+      "source_column": "line_of_business",
+      "via": "policy_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
+    },
     "coverage_type": {
      "name": "coverage_type",
      "type": "string",
      "generator": {
-      "strategy": "weighted_enum",
+      "strategy": "conditional_table",
+      "source_column": "line_of_business",
+      "table": {
+       "Auto": {
+        "Liability": 0.3,
+        "Collision": 0.25,
+        "Comprehensive": 0.2,
+        "Medical": 0.1,
+        "Uninsured": 0.15
+       },
+       "Home": {
+        "Property": 0.55,
+        "Liability": 0.3,
+        "Medical": 0.15
+       },
+       "Commercial": {
+        "Property": 0.35,
+        "Liability": 0.45,
+        "Medical": 0.1,
+        "Collision": 0.1
+       },
+       "Umbrella": {
+        "Liability": 1.0
+       },
+       "Health": {
+        "Medical": 1.0
+       },
+       "Life": {
+        "Death Benefit": 0.8,
+        "Accidental Death": 0.2
+       }
+      },
       "values": {
        "Liability": 0.25,
        "Collision": 0.18,
@@ -674,11 +830,15 @@
      "name": "incident_date",
      "type": "date",
      "generator": {
-      "strategy": "temporal",
-      "start": "2020-01-01",
-      "end": "2025-12-31",
-      "pattern": "uniform",
-      "unit": "ns"
+      "strategy": "derived",
+      "source": "policy.effective_date",
+      "via": "policy_id",
+      "rule": "add_days",
+      "params": {
+       "distribution": "uniform",
+       "min": 0,
+       "max": 364
+      }
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -692,8 +852,14 @@
      "generator": {
       "strategy": "derived",
       "source": "incident_date",
-      "operation": "add_days",
-      "days": 7
+      "rule": "add_days",
+      "params": {
+       "distribution": "log_normal",
+       "mean": 1.6,
+       "sigma": 1.0,
+       "min": 0,
+       "max": 365
+      }
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -737,16 +903,137 @@
      "precision": null,
      "scale": null
     },
+    "line_of_business": {
+     "name": "line_of_business",
+     "type": "string",
+     "generator": {
+      "strategy": "lookup",
+      "source_table": "policy",
+      "source_column": "line_of_business",
+      "via": "policy_id"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": 20,
+     "precision": null,
+     "scale": null
+    },
     "cause": {
      "name": "cause",
      "type": "string",
      "generator": {
-      "strategy": "reference_data",
-      "dataset": "claim_categories"
+      "strategy": "conditional_table",
+      "source_column": "line_of_business",
+      "table": {
+       "Auto": {
+        "Rear-End Collision": 2.2,
+        "Side-Impact Collision": 1.5,
+        "Single Vehicle Accident": 1.3,
+        "Multi-Vehicle Accident": 1.0,
+        "Theft - Vehicle": 0.8,
+        "Vandalism": 0.7,
+        "Wind/Hail Damage": 0.6,
+        "Falling Object": 0.3,
+        "Glass/Windshield": 0.8,
+        "Uninsured Motorist": 0.6,
+        "Hit and Run": 0.7
+       },
+       "Home": {
+        "Theft - Property": 0.9,
+        "Vandalism": 0.7,
+        "Wind/Hail Damage": 1.8,
+        "Water Damage - Plumbing": 1.4,
+        "Water Damage - Storm": 1.1,
+        "Fire Damage": 0.9,
+        "Smoke Damage": 0.5,
+        "Lightning Strike": 0.4,
+        "Falling Object": 0.6,
+        "Slip and Fall": 1.2,
+        "Dog Bite": 0.5,
+        "Roof Damage": 1.0,
+        "Foundation Damage": 0.4,
+        "Pipe Burst/Freeze": 0.9,
+        "Natural Disaster": 0.5
+       },
+       "Commercial": {
+        "Theft - Property": 0.9,
+        "Vandalism": 0.7,
+        "Wind/Hail Damage": 1.0,
+        "Water Damage - Plumbing": 0.8,
+        "Fire Damage": 0.9,
+        "Smoke Damage": 0.3,
+        "Slip and Fall": 1.5,
+        "Equipment Breakdown": 1.0,
+        "Rear-End Collision": 0.6,
+        "Multi-Vehicle Accident": 0.5,
+        "Workplace Injury": 1.2,
+        "Professional Error": 0.6
+       },
+       "Umbrella": {
+        "Multi-Vehicle Accident": 1.0,
+        "Slip and Fall": 1.0,
+        "Dog Bite": 0.6
+       },
+       "Health": {
+        "Medical Emergency": 1.0,
+        "Hospital Admission": 0.8,
+        "Outpatient Procedure": 1.2,
+        "Prescription": 1.5,
+        "Dental Treatment": 0.6,
+        "Vision Care": 0.4
+       },
+       "Life": {
+        "Death - Natural Causes": 1.0,
+        "Death - Accident": 0.3,
+        "Terminal Illness": 0.15
+       }
+      },
+      "values": {
+       "Rear-End Collision": 2.2,
+       "Side-Impact Collision": 1.5,
+       "Single Vehicle Accident": 1.3,
+       "Multi-Vehicle Accident": 1.0,
+       "Theft - Vehicle": 0.8,
+       "Theft - Property": 0.9,
+       "Vandalism": 0.7,
+       "Wind/Hail Damage": 1.8,
+       "Water Damage - Plumbing": 1.4,
+       "Water Damage - Storm": 1.1,
+       "Fire Damage": 0.9,
+       "Smoke Damage": 0.5,
+       "Lightning Strike": 0.4,
+       "Falling Object": 0.6,
+       "Slip and Fall": 1.2,
+       "Dog Bite": 0.5,
+       "Roof Damage": 1.0,
+       "Foundation Damage": 0.4,
+       "Pipe Burst/Freeze": 0.9,
+       "Glass/Windshield": 0.8,
+       "Medical Emergency": 1.0,
+       "Uninsured Motorist": 0.6,
+       "Hit and Run": 0.7,
+       "Natural Disaster": 0.5,
+       "Equipment Breakdown": 0.4
+      }
      },
      "nullable": false,
      "null_rate": 0.0,
      "max_length": 100,
+     "precision": null,
+     "scale": null
+    },
+    "total_paid": {
+     "name": "total_paid",
+     "type": "float",
+     "generator": {
+      "strategy": "computed",
+      "rule": "sum_children",
+      "child_table": "claim_payment",
+      "child_column": "payment_amount"
+     },
+     "nullable": false,
+     "null_rate": 0.0,
+     "max_length": null,
      "precision": null,
      "scale": null
     }
@@ -790,11 +1077,17 @@
      "name": "payment_date",
      "type": "date",
      "generator": {
-      "strategy": "temporal",
-      "start": "2020-01-01",
-      "end": "2025-12-31",
-      "pattern": "uniform",
-      "unit": "ns"
+      "strategy": "derived",
+      "source": "claim.filed_date",
+      "via": "claim_id",
+      "rule": "add_days",
+      "params": {
+       "distribution": "log_normal",
+       "mean": 3.4,
+       "sigma": 0.8,
+       "min": 1,
+       "max": 730
+      }
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -876,11 +1169,15 @@
      "name": "payment_date",
      "type": "date",
      "generator": {
-      "strategy": "temporal",
-      "start": "2020-01-01",
-      "end": "2025-12-31",
-      "pattern": "uniform",
-      "unit": "ns"
+      "strategy": "derived",
+      "source": "policy.effective_date",
+      "via": "policy_id",
+      "rule": "add_days",
+      "params": {
+       "distribution": "uniform",
+       "min": 0,
+       "max": 364
+      }
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -981,11 +1278,15 @@
      "name": "assessed_date",
      "type": "date",
      "generator": {
-      "strategy": "temporal",
-      "start": "2020-01-01",
-      "end": "2025-12-31",
-      "pattern": "uniform",
-      "unit": "ns"
+      "strategy": "derived",
+      "source": "policy.effective_date",
+      "via": "policy_id",
+      "rule": "add_days",
+      "params": {
+       "distribution": "uniform",
+       "min": -60,
+       "max": -1
+      }
      },
      "nullable": false,
      "null_rate": 0.0,
@@ -1159,17 +1460,25 @@
  "business_rules": [
   {
    "name": "claim_after_policy_effective",
-   "type": "temporal_order",
-   "rule": "",
+   "type": "cross_table",
+   "rule": "claim.incident_date >= policy.effective_date",
    "table": null,
-   "via": null,
+   "via": "policy_id",
    "when": null
   },
   {
    "name": "filed_after_incident",
-   "type": "temporal_order",
-   "rule": "",
-   "table": null,
+   "type": "cross_column",
+   "rule": "filed_date >= incident_date",
+   "table": "claim",
+   "via": null,
+   "when": null
+  },
+  {
+   "name": "paid_within_claim_amount",
+   "type": "cross_column",
+   "rule": "claim_amount >= total_paid",
+   "table": "claim",
    "via": null,
    "when": null
   }
