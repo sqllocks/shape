@@ -42,12 +42,20 @@ Use [the tested starters](../TUTORIAL.md) for local commands and complete output
 
 **Needs a Fabric account. Not run in CI.**
 
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers.
+
 ```bash
 shape profile-db --server myserver.database.windows.net --database shop \
     --schema dbo --sample-rows 1000 -o shop.shape --json shop-summary.json
 ```
 
-<!-- owner: Fabric maintainer — supply the transcript for docs/plugins/sqlserver.md example 1. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    {"written": "shop.shape", "shape_content_id": "5226585e9359764bb7571869ddf5b34e3e2fcd3b7ef620505f513fe7487262fa", "tables": 7, "relationships": 5}
+    ```
+
+Evidence: [run 38337418136, ubuntu-latest, `de4c1fb12885`](../evidence/transcripts/docs-transcripts-38337418136-de4c1fb12885-ubuntu-latest-profile-db-warehouse.json).
 
 
 | Option | Meaning |
