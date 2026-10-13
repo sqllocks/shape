@@ -17,6 +17,11 @@ on:
         required: false
         default: false
         type: boolean
+      refresh_semantic_model:
+        description: Refresh (reframe) the semantic model shape_sm so its Direct Lake tables read the current Lakehouse tables; waits for the refresh to end (default - do nothing)
+        required: false
+        default: false
+        type: boolean
       delete_leftover_notebooks:
         description: List, then delete, only the Notebook items named shape_live_nb_<8 hex> in shape-test (the deploy-notebook test's leftovers; default - do nothing)
         required: false
@@ -235,6 +240,55 @@ jobs:
           for item in doomed:
               call("DELETE", f"{base}/{item['id']}")
               print(f"  deleted {item['id']}  {item['displayName']}")
+          PY
+      - name: Refresh the semantic model shape_sm (opt-in; changes no definition and deletes nothing)
+        # Run 38418635000 and 38437587616: the model definition and its Lakehouse tables exist, but the
+        # engine answers "Cannot find table 'customer'". A refresh of a Direct Lake model reframes it on
+        # the Lakehouse tables as they are now. Prints only the refresh status.
+        if: inputs.refresh_semantic_model
+        timeout-minutes: 15
+        run: |
+          python - <<'PY'
+          import json, os, time, urllib.error, urllib.request
+          from azure.identity import ClientSecretCredential
+
+          env = os.environ
+          cred = ClientSecretCredential(env["FABRIC_TENANT_ID"], env["FABRIC_CLIENT_ID"], env["FABRIC_CLIENT_SECRET"])
+          fabric = cred.get_token("https://api.fabric.microsoft.com/.default").token
+          pbi = cred.get_token("https://analysis.windows.net/powerbi/api/.default").token
+          ws = env["FABRIC_WORKSPACE_ID"]
+          name = env.get("FABRIC_SEMANTIC_MODEL", "shape_sm").strip()
+
+          def call(method, url, token, body=None):
+              req = urllib.request.Request(url, data=json.dumps(body).encode() if body is not None else None,
+                                           method=method, headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+              try:
+                  with urllib.request.urlopen(req, timeout=120) as resp:
+                      raw = resp.read()
+                      return resp.status, (json.loads(raw) if raw else {})
+              except urllib.error.HTTPError as exc:
+                  return exc.code, exc.read().decode()[:800]
+
+          code, items = call("GET", f"https://api.fabric.microsoft.com/v1/workspaces/{ws}/items?type=SemanticModel", fabric)
+          ids = [i["id"] for i in items.get("value", []) if i["displayName"] == name]
+          assert len(ids) == 1, f"expected one semantic model named {name}, found {len(ids)}"
+          base = f"https://api.powerbi.com/v1.0/myorg/groups/{ws}/datasets/{ids[0]}/refreshes"
+          code, out = call("POST", base, pbi, {"type": "full"})
+          print("refresh requested:", code, out if isinstance(out, str) else "")
+          assert code in (200, 202), (code, out)
+          for _ in range(80):
+              time.sleep(10)
+              code, hist = call("GET", base + "?$top=1", pbi)
+              latest = (hist.get("value") or [{}])[0] if isinstance(hist, dict) else {}
+              status = latest.get("status")
+              print("refresh status:", status)
+              if status in ("Completed", "Failed", "Disabled", "Cancelled"):
+                  if status != "Completed":
+                      print("refresh error:", str(latest.get("serviceExceptionJson", ""))[:600])
+                  assert status == "Completed", status
+                  break
+          else:
+              raise SystemExit("the refresh did not end in 800 s")
           PY
       - name: Live tests
         # Bounded below the job limit so the summary and upload steps always run. Every test name is
