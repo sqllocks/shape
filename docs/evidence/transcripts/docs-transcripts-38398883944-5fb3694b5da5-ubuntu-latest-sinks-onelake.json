@@ -1,0 +1,39 @@
+{
+  "run_id": "38398883944",
+  "commit": "5fb3694b5da59220e2b957f65cb132a9a2b9dc6a",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "AMD EPYC 7763 64-Core Processor",
+    "logical_cpus": 4,
+    "ram_bytes": 16766414848,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "26.0.0",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "workspace": "shape-test, service principal shape-ci-fabric",
+  "page": "docs/SINKS.md",
+  "example": "sinks-onelake",
+  "command": "shape generate retail --scale small --seed 7 \\\n  --to abfss://landing@myacct.dfs.core.windows.net/raw \\\n  --table-format store=csv --batch-date 2026-10-02\n# raw/order/ingest_date=2026-10-02/order_20261002.parquet, raw/store/.../store_20261002.csv, ...\n\nshape stream retail -t order --to abfss://landing@myacct.dfs.core.windows.net/live \\\n  --roll-seconds 30 --realtime --rate 200 --checkpoint-seconds 30\nshape generate retail --to delta+abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Tables",
+  "executed_command": "shape generate retail --scale small --seed 7 \\\n  --to abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Files/shape_docs/raw \\\n  --table-format store=csv --batch-date 2026-10-02\n# raw/order/ingest_date=2026-10-02/order_20261002.parquet, raw/store/.../store_20261002.csv, ...\n\nshape stream retail -t order --to abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Files/shape_docs/live \\\n  --roll-seconds 30 --realtime --rate 200 --checkpoint-seconds 30\nshape generate retail --to delta+abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Tables",
+  "exit_code": 0,
+  "status": "passed",
+  "elapsed_seconds": 73.241042408,
+  "stdout": "Wrote 21,750 rows in 9 tables to abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Files/shape_docs/raw (12.65s)\nshape stream: 5,000 events delivered, offset 5,000 of 5,000, complete, 210 events/s\nWrote 21,750 rows in 9 tables to delta+abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Tables (32.39s)\n"
+}
