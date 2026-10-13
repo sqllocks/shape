@@ -32,6 +32,11 @@ on:
         required: false
         default: update
         type: string
+      preclean:
+        description: With transcripts - first delete exactly the Notebook Shape_retail_small and the nine retail tables in shape_sqldb, shape_wh and shape_eh (Owner-approved 2026-10-13; default - do nothing)
+        required: false
+        default: false
+        type: boolean
       set_git_credentials:
         description: Set the CI principal's own Git credentials on the Git workspace to the shared GitHub connection (idempotent one-time setup; default - do nothing)
         required: false
@@ -717,6 +722,12 @@ jobs:
             fi
             sleep 20
           done
+      - name: Pre-clean the leftovers of earlier example runs (opt-in, exact names only)
+        # Owner-approved 2026-10-13. Lists each store, deletes only the Notebook Shape_retail_small
+        # and the nine retail tables that exist, prints every deletion; see scripts/docs_fabric_preclean.py.
+        if: inputs.preclean
+        timeout-minutes: 10
+        run: python scripts/docs_fabric_preclean.py
       - name: Run the page commands and capture real receipts
         timeout-minutes: 130
         run: |

@@ -52,6 +52,8 @@ An unknown scheme is an error that lists the schemes installed.
 
 **Needs a Fabric account. Not run in CI.**
 
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers. A write to a remote target needs `--yes` or `SHAPE_CONFIRM_REMOTE=1`; the recorded run set the variable. The test tenant has no ADLS Gen2 account, so the recorded run wrote the first two commands to a OneLake Lakehouse instead (`ws` is the workspace, `lh` the Lakehouse, folders `Files/shape_docs/raw` and `Files/shape_docs/live`); the output below shows those OneLake paths. The third command, `delta+abfss://…/Tables`, ran as shown.
+
 ```bash
 shape generate retail --scale small --seed 7 \
   --to abfss://landing@myacct.dfs.core.windows.net/raw \
@@ -63,7 +65,15 @@ shape stream retail -t order --to abfss://landing@myacct.dfs.core.windows.net/li
 shape generate retail --to delta+abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Tables
 ```
 
-<!-- owner: Fabric maintainer — supply the transcript for docs/SINKS.md example 0. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Wrote 21,750 rows in 9 tables to abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Files/shape_docs/raw (12.65s)
+    shape stream: 5,000 events delivered, offset 5,000 of 5,000, complete, 210 events/s
+    Wrote 21,750 rows in 9 tables to delta+abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Tables (32.39s)
+    ```
+
+Evidence: [run 38398883944, ubuntu-latest, `5fb3694b5da5`](evidence/transcripts/docs-transcripts-38398883944-5fb3694b5da5-ubuntu-latest-sinks-onelake.json).
 
 
 * **Layout.** `--path-template` (default `{table}/ingest_date={date}/{table}_{yyyymmdd}.{ext}`;

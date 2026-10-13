@@ -1,0 +1,17 @@
+Owner-approved pre-clean (2026-10-13), fabric-live run 38400931371, step "Pre-clean the leftovers of earlier example runs".
+Verbatim lines printed by scripts/docs_fabric_preclean.py (the Notebook's item id is omitted):
+notebooks named Shape_retail_small: 1
+deleted Notebook Shape_retail_small
+shape_sqldb: dbo has 9 table(s); retail tables present: ['return', 'order_line', 'order', 'product', 'address', 'store', 'promotion', 'product_category', 'customer']
+shape_sqldb: deleted dbo.return
+shape_sqldb: deleted dbo.order_line
+shape_sqldb: deleted dbo.order
+shape_sqldb: deleted dbo.product
+shape_sqldb: deleted dbo.address
+shape_sqldb: deleted dbo.store
+shape_sqldb: deleted dbo.promotion
+shape_sqldb: deleted dbo.product_category
+shape_sqldb: deleted dbo.customer
+shape_wh: dbo has 7 table(s); retail tables present: none
+shape_eh: 33 table(s); retail tables present: ['order']
+shape_eh: deleted table order
