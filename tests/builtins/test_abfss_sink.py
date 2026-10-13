@@ -573,12 +573,16 @@ def test_onelake_missing_item_cannot_be_created_by_storage(lake: Any) -> None:
     assert not any(p.endswith(".parquet") or "_shape_tmp" in p for p in lake.find("ws"))
 
 
-def test_onelake_missing_item_by_guid_is_refused_too(lake: Any) -> None:
+def test_onelake_item_by_guid_is_not_probed(lake: Any) -> None:
+    """A workspace listing shows item names, not GUIDs, and OneLake refuses a HEAD on the item
+    folder, so an item given by GUID is not checked up front (its first write reports it)."""
+    rec = RecordingFs(lake)
     other = "99999999-8888-7777-6666-555555555555"
-    with pytest.raises(FileNotFoundError, match=f'OneLake item "{other}" does not exist'):
-        AbfssSink().write(
-            f"abfss://{WS_GUID}@{OL}/{other}/Files/x", "t", [batch(0, 1)], filesystem=lake
-        )
+    rows = AbfssSink().write(
+        f"abfss://{WS_GUID}@{OL}/{other}/Files/x", "t", [batch(0, 1)], filesystem=rec
+    )
+    assert rows == 1
+    assert "isdir" not in rec.calls and "ls" not in rec.calls
 
 
 @pytest.mark.parametrize("area", ["Files/x", "Tables/x", "Tables", "Other/x"])
@@ -645,8 +649,9 @@ def test_the_item_is_checked_once_per_uri(lake: Any) -> None:
     sink = AbfssSink()
     for table in ("a", "b", "c"):
         sink.write(LH_FILES, table, [batch(0, 1)], filesystem=rec)
-    item_checks = [c for c in rec.calls if c == "isdir"]
+    item_checks = [c for c in rec.calls if c == "ls"]  # the item is listed, never probed
     assert len(item_checks) == 1
+    assert "isdir" not in rec.calls
 
 
 def test_adls_host_is_not_checked_and_makes_no_extra_call(fs: Any) -> None:
@@ -707,6 +712,9 @@ class _Forbidden(Exception):
 def test_a_failing_item_check_is_translated_like_any_storage_error(lake: Any) -> None:
     class Denied(RecordingFs):
         def isdir(self, *a: Any, **k: Any) -> Any:
+            raise _Forbidden("AuthorizationFailure sig=TOPSECRET")
+
+        def ls(self, *a: Any, **k: Any) -> Any:
             raise _Forbidden("AuthorizationFailure sig=TOPSECRET")
 
         def exists(self, *a: Any, **k: Any) -> Any:
@@ -805,3 +813,48 @@ def test_cli_exits_2_before_any_file_appears(
     err = capsys.readouterr().err
     assert f"shape: error: {message}" in err
     assert everything(cli_lake) == before
+
+
+class NoItemProbe:
+    """A filesystem like OneLake's Blob endpoint: a HEAD on the workspace's item folder is refused
+    (``OperationNotAllowedOnThePath``, live run 38349635166); listing it and what is below works."""
+
+    def __init__(self, inner: Any) -> None:
+        self._inner = inner
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._inner, name)
+
+    def _refuse_item(self, path: str) -> None:
+        if len([p for p in path.strip("/").split("/") if p]) == 2:
+            raise OSError(
+                "Operation returned an invalid status 'Bad Request'\n"
+                "ErrorCode:OperationNotAllowedOnThePath"
+            )
+
+    def isdir(self, path: str) -> bool:
+        self._refuse_item(path)
+        return bool(self._inner.isdir(path))
+
+    def exists(self, path: str, **kw: Any) -> bool:
+        self._refuse_item(path)
+        return bool(self._inner.exists(path, **kw))
+
+
+def test_onelake_item_check_lists_the_item_instead_of_probing_it(fs: Any) -> None:
+    """SINKS.md example 0 failed against OneLake: the sink checked that the Lakehouse exists with a
+    HEAD on the item folder, which OneLake refuses. Listing the item is allowed."""
+    fs.mkdir("ws/lh.Lakehouse/Files")
+    uri = "abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Files/raw"
+    rows = AbfssSink().write(
+        uri, "orders", [batch(0, 5)], filesystem=NoItemProbe(fs), batch_date="2026-10-02"
+    )
+    assert rows == 5
+    final = "ws/lh.Lakehouse/Files/raw/orders/ingest_date=2026-10-02/orders_20261002.parquet"
+    assert pq.read_table(fs.open(final, "rb")).num_rows == 5
+
+
+def test_a_missing_onelake_item_is_still_reported(fs: Any) -> None:
+    uri = "abfss://ws@onelake.dfs.fabric.microsoft.com/nope.Lakehouse/Files/raw"
+    with pytest.raises(FileNotFoundError, match="does not exist"):
+        AbfssSink().write(uri, "orders", [batch(0, 5)], filesystem=NoItemProbe(fs))
