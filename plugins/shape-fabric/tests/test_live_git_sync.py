@@ -155,7 +155,11 @@ class Fabric:
         return details["branchName"], (details.get("directoryName") or "").strip("/")
 
     def status(self):
-        response = self.http.request("GET", f"{FABRIC_API}/workspaces/{self.ws}/git/status")
+        # Fabric asks the Git provider before it answers, which took longer than the client's
+        # default 30 s read timeout (run 38315796207); the wait stays bounded.
+        response = self.http.request(
+            "GET", f"{FABRIC_API}/workspaces/{self.ws}/git/status", timeout=180.0
+        )
         if response.status == 202:
             done = self.wait(response, "git status")
             response = self.http.request("GET", done_location(done, response))
@@ -309,6 +313,15 @@ def test_shape_files_survive_a_git_sync_in_both_directions(tmp_path):
             branch, directory = fabric.connection()
             git.clone(branch)
         with check.step("setup-item"):
+            # The repository can be ahead of the workspace (a commit made outside this test);
+            # Fabric then refuses to commit (CommitFailedDueToIncomingChanges, run 38323914094),
+            # so the workspace takes the incoming commits first.
+            behind = fabric.status()
+            if (
+                behind.get("remoteCommitHash")
+                and behind["remoteCommitHash"] != behind["workspaceHead"]
+            ):
+                fabric.update_from_git(behind["remoteCommitHash"], behind["workspaceHead"])
             item_id = fabric.create_notebook(name, "initial")
             status = fabric.status()
             fabric.commit_to_git(status["workspaceHead"])
