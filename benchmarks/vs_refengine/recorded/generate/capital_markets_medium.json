@@ -1,0 +1,1719 @@
+{
+  "format": "shape-generate-record",
+  "identifier_forms": [],
+  "inputs": {
+    "fixtures/schemas/capital_markets_3nf.json": "41107a78b33990d4fdb65d29928faa659f0a46b1b402a663f166035a2fdc4a2d"
+  },
+  "recorded_utc": "2026-10-12T18:59:22Z",
+  "seeds": {
+    "42": {
+      "dataset_id": "sha256:4b5476c3ff8c34ca5ed0f647e2fa8c7492bc3e0e96bddf3b393e3e3b3fe4ae6c",
+      "tables": {
+        "company": {
+          "columns": [
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "company_name",
+              "type": "string"
+            },
+            {
+              "name": "cik",
+              "type": "string"
+            },
+            {
+              "name": "exchange_code",
+              "type": "string"
+            },
+            {
+              "name": "sector_name",
+              "type": "string"
+            },
+            {
+              "name": "industry_name",
+              "type": "string"
+            },
+            {
+              "name": "market_cap_tier",
+              "type": "string"
+            },
+            {
+              "name": "founding_year",
+              "type": "int64"
+            },
+            {
+              "name": "hq_state",
+              "type": "string"
+            },
+            {
+              "name": "website",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:7222e643b07e42eff41f49ea9a212dc1cff82da9ef12c97d14d4ca72f92d7078",
+          "parquet_bytes": 13134,
+          "parquet_sha256": "c596b7fd37508538ed53affa47c70e869209077c93620bdd9c142ca4b4280ae6",
+          "rows": 500
+        },
+        "daily_price": {
+          "columns": [
+            {
+              "name": "price_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "trade_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "open",
+              "type": "double"
+            },
+            {
+              "name": "volume",
+              "type": "double"
+            },
+            {
+              "name": "high",
+              "type": "double"
+            },
+            {
+              "name": "low",
+              "type": "double"
+            },
+            {
+              "name": "close",
+              "type": "double"
+            },
+            {
+              "name": "adj_close",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:97a524f0e3a6009ce1c858b7b4930c32db34da33896f813e7651dc0413fcd2bb",
+          "parquet_bytes": 5659374,
+          "parquet_sha256": "f4c7224ab5e54314751179b7dd2286e44ee29475755c97b0d2a95bb48bbffb29",
+          "rows": 126000
+        },
+        "dividend": {
+          "columns": [
+            {
+              "name": "dividend_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "ex_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "amount",
+              "type": "double"
+            },
+            {
+              "name": "frequency",
+              "type": "string"
+            },
+            {
+              "name": "pay_date",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:968c833da597e9e090f1dee6f3d802a455dad4fde8c7f632199d94e04d739be9",
+          "parquet_bytes": 27004,
+          "parquet_sha256": "dad0948b41ccf1bcc2fc2e042a4e800c22cca81a10263a151c7869a1a754e3a3",
+          "rows": 750
+        },
+        "earnings": {
+          "columns": [
+            {
+              "name": "earnings_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "report_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "fiscal_quarter",
+              "type": "string"
+            },
+            {
+              "name": "eps_estimate",
+              "type": "double"
+            },
+            {
+              "name": "surprise_pct",
+              "type": "double"
+            },
+            {
+              "name": "eps_actual",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:b56caab669915a64224ae3963c094797da391d1fb905c5720da40c2f5515e6f0",
+          "parquet_bytes": 50741,
+          "parquet_sha256": "741b56772ec041a50bdd80408f5c5479f96fcb4a3e24d6e4383be386c258d71b",
+          "rows": 2000
+        },
+        "exchange": {
+          "columns": [
+            {
+              "name": "exchange_id",
+              "type": "int64"
+            },
+            {
+              "name": "exchange_name",
+              "type": "string"
+            },
+            {
+              "name": "exchange_code",
+              "type": "string"
+            },
+            {
+              "name": "mic",
+              "type": "string"
+            },
+            {
+              "name": "timezone",
+              "type": "string"
+            },
+            {
+              "name": "trading_hours_start",
+              "type": "string"
+            },
+            {
+              "name": "trading_hours_end",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:209b35c0ad4270b85a88d4d2b41261687c4eec8462e12f22c2ffca97fa37db60",
+          "parquet_bytes": 2241,
+          "parquet_sha256": "d7c595cc9a0ed50ae01c9fe2745f9780911dd731eccefe2906b4212cb44bd56a",
+          "rows": 3
+        },
+        "industry": {
+          "columns": [
+            {
+              "name": "industry_id",
+              "type": "int64"
+            },
+            {
+              "name": "sector_id",
+              "type": "int64"
+            },
+            {
+              "name": "industry_name",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:a092abfb24cb42c5c75d6ed6d1c781dc27a5761eedf3d3a5836e1cad0d1a7335",
+          "parquet_bytes": 1435,
+          "parquet_sha256": "06150b952d5f008c0aec7ab043af418309e2a987f524942937d4bbeaf3038eb7",
+          "rows": 61
+        },
+        "insider_transaction": {
+          "columns": [
+            {
+              "name": "txn_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "txn_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "insider_name",
+              "type": "string"
+            },
+            {
+              "name": "insider_title",
+              "type": "string"
+            },
+            {
+              "name": "txn_type",
+              "type": "string"
+            },
+            {
+              "name": "shares",
+              "type": "double"
+            },
+            {
+              "name": "price_per_share",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:4d4ca9a94107de17ef4cc13c0d6695a26255ea036eae71deb4f349852f285b43",
+          "parquet_bytes": 47940,
+          "parquet_sha256": "b932514ce4c8079f351bd09c28c85e3bb5f1c6d024aca8f718cc9d48cb4ecc5b",
+          "rows": 1000
+        },
+        "sector": {
+          "columns": [
+            {
+              "name": "sector_id",
+              "type": "int64"
+            },
+            {
+              "name": "sector_name",
+              "type": "string"
+            },
+            {
+              "name": "sector_code",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:49e51a6612e2032648df1d062295432c2d081b4ed33f7704eb0b7bf042bee678",
+          "parquet_bytes": 1284,
+          "parquet_sha256": "f8d8ea340a4401a8dfb42cc6debfc90e3da4ebac60752a51b841c7165319c467",
+          "rows": 11
+        },
+        "split": {
+          "columns": [
+            {
+              "name": "split_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "split_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "ratio_from",
+              "type": "double"
+            },
+            {
+              "name": "ratio_to",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:13c23d9e73caf8f2b64e21751d6defdc3ede28fdf5a45b0cc1d2d7299e00094d",
+          "parquet_bytes": 2191,
+          "parquet_sha256": "12c5a0f3cafeba732157dd1cbdc84f3e22b6751124d7a2839aaaf19e219a5f3b",
+          "rows": 25
+        },
+        "trade": {
+          "columns": [
+            {
+              "name": "trade_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "timestamp",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "price",
+              "type": "double"
+            },
+            {
+              "name": "volume",
+              "type": "double"
+            },
+            {
+              "name": "side",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:40ffc644d611bc7b2937160d982ec637c19c250d7371c5505d59e9d7e7179d43",
+          "parquet_bytes": 13043161,
+          "parquet_sha256": "0265f4aa83489962da25da487bc6a571509e84f267ced4f8f495c0f6dae04bf0",
+          "rows": 500000
+        }
+      }
+    },
+    "43": {
+      "dataset_id": "sha256:7a673bfe824beb79457866b85fa6b4029cd9fb2a148b1a4d72974703c569db7c",
+      "tables": {
+        "company": {
+          "columns": [
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "company_name",
+              "type": "string"
+            },
+            {
+              "name": "cik",
+              "type": "string"
+            },
+            {
+              "name": "exchange_code",
+              "type": "string"
+            },
+            {
+              "name": "sector_name",
+              "type": "string"
+            },
+            {
+              "name": "industry_name",
+              "type": "string"
+            },
+            {
+              "name": "market_cap_tier",
+              "type": "string"
+            },
+            {
+              "name": "founding_year",
+              "type": "int64"
+            },
+            {
+              "name": "hq_state",
+              "type": "string"
+            },
+            {
+              "name": "website",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:1306b7299d1f1589ce8e677b23316256524cde490ebd5df9ca45f85003c73835",
+          "parquet_bytes": 12954,
+          "parquet_sha256": "06b53cdf3fd5e8e6265e069f78293b80391d9fa7dc35521060352da609b92f71",
+          "rows": 500
+        },
+        "daily_price": {
+          "columns": [
+            {
+              "name": "price_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "trade_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "open",
+              "type": "double"
+            },
+            {
+              "name": "volume",
+              "type": "double"
+            },
+            {
+              "name": "high",
+              "type": "double"
+            },
+            {
+              "name": "low",
+              "type": "double"
+            },
+            {
+              "name": "close",
+              "type": "double"
+            },
+            {
+              "name": "adj_close",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:29b85b2210ba20950d361e50eb3feb1aafaae36143ef315c7caa97864ca817c9",
+          "parquet_bytes": 5662691,
+          "parquet_sha256": "da314077967e04107dfa95cc28826699c1fcad5b7d0cecb18b202e56dbba8469",
+          "rows": 126000
+        },
+        "dividend": {
+          "columns": [
+            {
+              "name": "dividend_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "ex_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "amount",
+              "type": "double"
+            },
+            {
+              "name": "frequency",
+              "type": "string"
+            },
+            {
+              "name": "pay_date",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:ae18e9c6c1703d70a84e951ed61efb69473483c24d734817190283fc35544a2a",
+          "parquet_bytes": 27122,
+          "parquet_sha256": "0fdec1a44ef4f07b3688e321413c2aad68dab275222b935a79e5049dc570a4ec",
+          "rows": 750
+        },
+        "earnings": {
+          "columns": [
+            {
+              "name": "earnings_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "report_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "fiscal_quarter",
+              "type": "string"
+            },
+            {
+              "name": "eps_estimate",
+              "type": "double"
+            },
+            {
+              "name": "surprise_pct",
+              "type": "double"
+            },
+            {
+              "name": "eps_actual",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:2a00e3e3b10682ce6f9a457e34d7bb1e1768f77ab6c060f10e01a17222e3666d",
+          "parquet_bytes": 50787,
+          "parquet_sha256": "e9cb33c60f55b07f6e7b4256dc78229c268d1e506f3826f4f2d7cc4f52db2a0b",
+          "rows": 2000
+        },
+        "exchange": {
+          "columns": [
+            {
+              "name": "exchange_id",
+              "type": "int64"
+            },
+            {
+              "name": "exchange_name",
+              "type": "string"
+            },
+            {
+              "name": "exchange_code",
+              "type": "string"
+            },
+            {
+              "name": "mic",
+              "type": "string"
+            },
+            {
+              "name": "timezone",
+              "type": "string"
+            },
+            {
+              "name": "trading_hours_start",
+              "type": "string"
+            },
+            {
+              "name": "trading_hours_end",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:92aefabe28281d6006d0ad9eb36ca41cd8859228905547a72323eec3c97739b4",
+          "parquet_bytes": 2246,
+          "parquet_sha256": "10d7e9a19f618da19c8fb4706b0653f2011732b1bcbfe074c82d2e2959c6a08f",
+          "rows": 3
+        },
+        "industry": {
+          "columns": [
+            {
+              "name": "industry_id",
+              "type": "int64"
+            },
+            {
+              "name": "sector_id",
+              "type": "int64"
+            },
+            {
+              "name": "industry_name",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:4dcc997c53cf55f510bcf13f635b7a181fb966ef02096afc18076eb32da7c3ed",
+          "parquet_bytes": 1435,
+          "parquet_sha256": "53174c3796b45288b1149d1ee21788cc71220a0da1a357e52128c4c334277774",
+          "rows": 61
+        },
+        "insider_transaction": {
+          "columns": [
+            {
+              "name": "txn_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "txn_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "insider_name",
+              "type": "string"
+            },
+            {
+              "name": "insider_title",
+              "type": "string"
+            },
+            {
+              "name": "txn_type",
+              "type": "string"
+            },
+            {
+              "name": "shares",
+              "type": "double"
+            },
+            {
+              "name": "price_per_share",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:5a01ca51b3ccc2491f7039a2653dca14a77acd7818788074b80a5f53f8c7238b",
+          "parquet_bytes": 48154,
+          "parquet_sha256": "45a4a313a261d2c04d715ed1b85b323f89026a5f7c18fbccee6f84dab070b424",
+          "rows": 1000
+        },
+        "sector": {
+          "columns": [
+            {
+              "name": "sector_id",
+              "type": "int64"
+            },
+            {
+              "name": "sector_name",
+              "type": "string"
+            },
+            {
+              "name": "sector_code",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:6ab91059e1579a25112207250a40f52dfada5861b7d89ad37caf52c31bd7c6ad",
+          "parquet_bytes": 1285,
+          "parquet_sha256": "e17e876dfea91ededbb85087b87a189d7cc4660b37b9e94581262fda1058eb5a",
+          "rows": 11
+        },
+        "split": {
+          "columns": [
+            {
+              "name": "split_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "split_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "ratio_from",
+              "type": "double"
+            },
+            {
+              "name": "ratio_to",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:8053139e665075c6dc4cfb1d312027423102ad9c9b69f945cc9fe748bd8f580f",
+          "parquet_bytes": 2177,
+          "parquet_sha256": "b9f97dbf272f40f9bb47c17164cf7677ceb361969926270bd8181a3820dec69f",
+          "rows": 25
+        },
+        "trade": {
+          "columns": [
+            {
+              "name": "trade_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "timestamp",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "price",
+              "type": "double"
+            },
+            {
+              "name": "volume",
+              "type": "double"
+            },
+            {
+              "name": "side",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:22444eef02aafcb8a74364a078b87ac4eaf98026fd24bdb2123ade3743b2be36",
+          "parquet_bytes": 13051722,
+          "parquet_sha256": "76ba97ed22bdd4b5f439744005a767e9325248aed59eadd94f5ed7d857a8b60a",
+          "rows": 500000
+        }
+      }
+    },
+    "44": {
+      "dataset_id": "sha256:05937bb4a21a0ce1c5558eef34cdfce68987c93fe9d9a606cf5fd5a468684ea4",
+      "tables": {
+        "company": {
+          "columns": [
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "company_name",
+              "type": "string"
+            },
+            {
+              "name": "cik",
+              "type": "string"
+            },
+            {
+              "name": "exchange_code",
+              "type": "string"
+            },
+            {
+              "name": "sector_name",
+              "type": "string"
+            },
+            {
+              "name": "industry_name",
+              "type": "string"
+            },
+            {
+              "name": "market_cap_tier",
+              "type": "string"
+            },
+            {
+              "name": "founding_year",
+              "type": "int64"
+            },
+            {
+              "name": "hq_state",
+              "type": "string"
+            },
+            {
+              "name": "website",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:4c69bd209d69885173413faf901f61cf8329661ead1105982aae4a491e800b00",
+          "parquet_bytes": 13021,
+          "parquet_sha256": "dc4b3ae683d8be0b6461a88d5b3bbde2c394596a635a1dd2f8444e780fa2a9a1",
+          "rows": 500
+        },
+        "daily_price": {
+          "columns": [
+            {
+              "name": "price_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "trade_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "open",
+              "type": "double"
+            },
+            {
+              "name": "volume",
+              "type": "double"
+            },
+            {
+              "name": "high",
+              "type": "double"
+            },
+            {
+              "name": "low",
+              "type": "double"
+            },
+            {
+              "name": "close",
+              "type": "double"
+            },
+            {
+              "name": "adj_close",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:e230087e67ea1154d616fc53fdc39f289afc6c34f8f04fd99e6af32a62d03870",
+          "parquet_bytes": 5667046,
+          "parquet_sha256": "8fedff2878c18e071b55dbc7052d999b3933cefa7783639fded1d148186068dd",
+          "rows": 126000
+        },
+        "dividend": {
+          "columns": [
+            {
+              "name": "dividend_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "ex_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "amount",
+              "type": "double"
+            },
+            {
+              "name": "frequency",
+              "type": "string"
+            },
+            {
+              "name": "pay_date",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:5d139596117b15fd5cf9fc73cfeb1d21f589815d05cd72b5bb4479850547c84c",
+          "parquet_bytes": 27037,
+          "parquet_sha256": "34d97d96307e7dbdc28dc55bbcc46c165bb1880b3fc10a952234e3dc4345770a",
+          "rows": 750
+        },
+        "earnings": {
+          "columns": [
+            {
+              "name": "earnings_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "report_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "fiscal_quarter",
+              "type": "string"
+            },
+            {
+              "name": "eps_estimate",
+              "type": "double"
+            },
+            {
+              "name": "surprise_pct",
+              "type": "double"
+            },
+            {
+              "name": "eps_actual",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:afc932ee9b6ad95f7eba365ab9ee12a452e746b26f582ec1abe76b655fe17103",
+          "parquet_bytes": 50727,
+          "parquet_sha256": "7d5403d29bba3a41405dedb409a140887c50ecbea37271cc27ea1964887908ba",
+          "rows": 2000
+        },
+        "exchange": {
+          "columns": [
+            {
+              "name": "exchange_id",
+              "type": "int64"
+            },
+            {
+              "name": "exchange_name",
+              "type": "string"
+            },
+            {
+              "name": "exchange_code",
+              "type": "string"
+            },
+            {
+              "name": "mic",
+              "type": "string"
+            },
+            {
+              "name": "timezone",
+              "type": "string"
+            },
+            {
+              "name": "trading_hours_start",
+              "type": "string"
+            },
+            {
+              "name": "trading_hours_end",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:816467c429cbbbed8465b27e3c44bd70cf882738e6f7a289cdeed49acca4583d",
+          "parquet_bytes": 2283,
+          "parquet_sha256": "880a8024ab48ea80160587139786401a7bf15f2095e7f2fb91936a284e5090d2",
+          "rows": 3
+        },
+        "industry": {
+          "columns": [
+            {
+              "name": "industry_id",
+              "type": "int64"
+            },
+            {
+              "name": "sector_id",
+              "type": "int64"
+            },
+            {
+              "name": "industry_name",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:164afc64d842e5ae21a1beab8f865d77654af5831b1c3e236fb34761245cdc2f",
+          "parquet_bytes": 1435,
+          "parquet_sha256": "293eaf810206d913bcb191c7aaf826b00d990c12e33aebd8b0a918d6b4f4a385",
+          "rows": 61
+        },
+        "insider_transaction": {
+          "columns": [
+            {
+              "name": "txn_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "txn_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "insider_name",
+              "type": "string"
+            },
+            {
+              "name": "insider_title",
+              "type": "string"
+            },
+            {
+              "name": "txn_type",
+              "type": "string"
+            },
+            {
+              "name": "shares",
+              "type": "double"
+            },
+            {
+              "name": "price_per_share",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:8711349f322e238146940e698bdfc70c9003eb0af13f4e0686bd7ea371fec1b4",
+          "parquet_bytes": 48166,
+          "parquet_sha256": "f2b1c877f498c0d24d99148c2e65d6f8b37a47352187c258d1264f149870b1d7",
+          "rows": 1000
+        },
+        "sector": {
+          "columns": [
+            {
+              "name": "sector_id",
+              "type": "int64"
+            },
+            {
+              "name": "sector_name",
+              "type": "string"
+            },
+            {
+              "name": "sector_code",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:76ad0cafc6c14cc9795ab0fd73854932be8b2ab7ee7db1228b6cda506fa1d11e",
+          "parquet_bytes": 1277,
+          "parquet_sha256": "c4d5011d5b5094c8293237bda3a55a0dd407dfdcc164f3fe532f8277f2150852",
+          "rows": 11
+        },
+        "split": {
+          "columns": [
+            {
+              "name": "split_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "split_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "ratio_from",
+              "type": "double"
+            },
+            {
+              "name": "ratio_to",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:0c1c33ec8d0d0d46768f5b540282c455ee475c6a381cb65c3c61806ec450b56d",
+          "parquet_bytes": 2182,
+          "parquet_sha256": "926b050df40ac7ee871c0b2a5b78c34514494fdf6b8b1adb2d67fc17b7a2f4e8",
+          "rows": 25
+        },
+        "trade": {
+          "columns": [
+            {
+              "name": "trade_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "timestamp",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "price",
+              "type": "double"
+            },
+            {
+              "name": "volume",
+              "type": "double"
+            },
+            {
+              "name": "side",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:53567a1c5ffdb3ecb210b046f4363a32157a69abbfd7c3322a2e9815c2a6d9d0",
+          "parquet_bytes": 13042431,
+          "parquet_sha256": "8b1481419ae1d32949892817a96ca52ed754bc8bb4853be276ffad5e962528a5",
+          "rows": 500000
+        }
+      }
+    },
+    "45": {
+      "dataset_id": "sha256:6b50b8a0ec68aaa3ac292c0beceb45ce6bc9312286932ee2c5afa515d3d80cb9",
+      "tables": {
+        "company": {
+          "columns": [
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "company_name",
+              "type": "string"
+            },
+            {
+              "name": "cik",
+              "type": "string"
+            },
+            {
+              "name": "exchange_code",
+              "type": "string"
+            },
+            {
+              "name": "sector_name",
+              "type": "string"
+            },
+            {
+              "name": "industry_name",
+              "type": "string"
+            },
+            {
+              "name": "market_cap_tier",
+              "type": "string"
+            },
+            {
+              "name": "founding_year",
+              "type": "int64"
+            },
+            {
+              "name": "hq_state",
+              "type": "string"
+            },
+            {
+              "name": "website",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:6d88b39d16bfbeeb0c5c6ef93cbf520b8a93de55303b92ab6c63f099da8cbd36",
+          "parquet_bytes": 13172,
+          "parquet_sha256": "1bf4fe9c2ea39259811757f9981fba07022f47d6d8179fe7bc61b37f3ec0f5af",
+          "rows": 500
+        },
+        "daily_price": {
+          "columns": [
+            {
+              "name": "price_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "trade_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "open",
+              "type": "double"
+            },
+            {
+              "name": "volume",
+              "type": "double"
+            },
+            {
+              "name": "high",
+              "type": "double"
+            },
+            {
+              "name": "low",
+              "type": "double"
+            },
+            {
+              "name": "close",
+              "type": "double"
+            },
+            {
+              "name": "adj_close",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:7b0d5c2370c42334b777f6431cb7a874327e4505b7fc6deb367444f798d0df0f",
+          "parquet_bytes": 5655263,
+          "parquet_sha256": "1cc6cc807532878a8953081ae8cb9ae84de03de2d0d18fa5e06b028348294a31",
+          "rows": 126000
+        },
+        "dividend": {
+          "columns": [
+            {
+              "name": "dividend_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "ex_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "amount",
+              "type": "double"
+            },
+            {
+              "name": "frequency",
+              "type": "string"
+            },
+            {
+              "name": "pay_date",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:1b33c5561592ff898f78a9d0b43b7b499a69f68fe4469a81a05245f799e9cb73",
+          "parquet_bytes": 26982,
+          "parquet_sha256": "b69120bd86060379bb15fc2827353bfc7af8110bd8909603ba7f70cb96a756c7",
+          "rows": 750
+        },
+        "earnings": {
+          "columns": [
+            {
+              "name": "earnings_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "report_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "fiscal_quarter",
+              "type": "string"
+            },
+            {
+              "name": "eps_estimate",
+              "type": "double"
+            },
+            {
+              "name": "surprise_pct",
+              "type": "double"
+            },
+            {
+              "name": "eps_actual",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:efecf1e1499b7030f16b995939ed4cbc388d662a8ab658873e51b67f528d263e",
+          "parquet_bytes": 50774,
+          "parquet_sha256": "9fe4b65b3eed54e5ad170fe7e08a15eb46db369a0c71d3636584a7738401b501",
+          "rows": 2000
+        },
+        "exchange": {
+          "columns": [
+            {
+              "name": "exchange_id",
+              "type": "int64"
+            },
+            {
+              "name": "exchange_name",
+              "type": "string"
+            },
+            {
+              "name": "exchange_code",
+              "type": "string"
+            },
+            {
+              "name": "mic",
+              "type": "string"
+            },
+            {
+              "name": "timezone",
+              "type": "string"
+            },
+            {
+              "name": "trading_hours_start",
+              "type": "string"
+            },
+            {
+              "name": "trading_hours_end",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:e2fa803fb86a18664774716572c87946d20d421e5d3ca9dc195fd9effc660a22",
+          "parquet_bytes": 2266,
+          "parquet_sha256": "cbb7f9a36b20f2f0bd3de89ab06b572d07ccaa68dd9ece1bf28b98a5c5a4dd63",
+          "rows": 3
+        },
+        "industry": {
+          "columns": [
+            {
+              "name": "industry_id",
+              "type": "int64"
+            },
+            {
+              "name": "sector_id",
+              "type": "int64"
+            },
+            {
+              "name": "industry_name",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:bc88a5dff1aa3ecba94c1f868a67d3541b3d53507ab099f530792b261390857e",
+          "parquet_bytes": 1435,
+          "parquet_sha256": "7b84728dd94b9488fea32d9fdd9abd402f608dc26a3850181035573b41331617",
+          "rows": 61
+        },
+        "insider_transaction": {
+          "columns": [
+            {
+              "name": "txn_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "txn_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "insider_name",
+              "type": "string"
+            },
+            {
+              "name": "insider_title",
+              "type": "string"
+            },
+            {
+              "name": "txn_type",
+              "type": "string"
+            },
+            {
+              "name": "shares",
+              "type": "double"
+            },
+            {
+              "name": "price_per_share",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:e96ea2666f9d38397a5aefd4f7814257d6668c41e5b1dfafced5003fffdc6d1c",
+          "parquet_bytes": 48057,
+          "parquet_sha256": "b9946d0806ebe62fbd293ff80ff74d2e275d4d1339ca2fb9996f040fe0bc1f7a",
+          "rows": 1000
+        },
+        "sector": {
+          "columns": [
+            {
+              "name": "sector_id",
+              "type": "int64"
+            },
+            {
+              "name": "sector_name",
+              "type": "string"
+            },
+            {
+              "name": "sector_code",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:6548cfa074b9b54489b2b477a36d6d1a2bc89a5d7f5b15c1924d6bb36f383674",
+          "parquet_bytes": 1231,
+          "parquet_sha256": "067dd781013b2d38a2bb0cdf1aa23fef064afd4952c4fedb3aa44eb1e9e4fa2b",
+          "rows": 11
+        },
+        "split": {
+          "columns": [
+            {
+              "name": "split_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "split_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "ratio_from",
+              "type": "double"
+            },
+            {
+              "name": "ratio_to",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:5b7c729b3dd641152174b6202ba6ea527c6f9e0a6b28337e65d18ff2d91ef052",
+          "parquet_bytes": 2189,
+          "parquet_sha256": "e05b9754506773fc101fb6781915dc1328ac9ee5e4fc4a9b5ade80da169d72fd",
+          "rows": 25
+        },
+        "trade": {
+          "columns": [
+            {
+              "name": "trade_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "timestamp",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "price",
+              "type": "double"
+            },
+            {
+              "name": "volume",
+              "type": "double"
+            },
+            {
+              "name": "side",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:fd02058c43a6db19f52937a49106c39fadf129070ac8248354b9ea3411204dc9",
+          "parquet_bytes": 13040327,
+          "parquet_sha256": "aa16ea0ed90ebfd213ef979aa7d66fe022fe43eb369e2e5bd34a47275feec84c",
+          "rows": 500000
+        }
+      }
+    },
+    "46": {
+      "dataset_id": "sha256:81e14c626a86cd796433631a9586bab2617634f6dad591ca3a72dc12c897a5b1",
+      "tables": {
+        "company": {
+          "columns": [
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "company_name",
+              "type": "string"
+            },
+            {
+              "name": "cik",
+              "type": "string"
+            },
+            {
+              "name": "exchange_code",
+              "type": "string"
+            },
+            {
+              "name": "sector_name",
+              "type": "string"
+            },
+            {
+              "name": "industry_name",
+              "type": "string"
+            },
+            {
+              "name": "market_cap_tier",
+              "type": "string"
+            },
+            {
+              "name": "founding_year",
+              "type": "int64"
+            },
+            {
+              "name": "hq_state",
+              "type": "string"
+            },
+            {
+              "name": "website",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:a7dc0b73e620d69557af6b49b01e660dd17f44510dca995f4a56b66de0f9e83d",
+          "parquet_bytes": 13003,
+          "parquet_sha256": "bb74e9a7a3ecc745026a8d79c589a99f04785bf9a977492785a324d3d03cc8b8",
+          "rows": 500
+        },
+        "daily_price": {
+          "columns": [
+            {
+              "name": "price_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "trade_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "open",
+              "type": "double"
+            },
+            {
+              "name": "volume",
+              "type": "double"
+            },
+            {
+              "name": "high",
+              "type": "double"
+            },
+            {
+              "name": "low",
+              "type": "double"
+            },
+            {
+              "name": "close",
+              "type": "double"
+            },
+            {
+              "name": "adj_close",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:26e1dc9ce0d7743d0c1777ffbbeb74df3fe501f4cec7b2e3e2f53b3a2d7da146",
+          "parquet_bytes": 5662050,
+          "parquet_sha256": "8a7fbd5f61f1d5f85582a32d87cae247baf85a08d47e76d5ff7195ccad9d79f8",
+          "rows": 126000
+        },
+        "dividend": {
+          "columns": [
+            {
+              "name": "dividend_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "ex_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "amount",
+              "type": "double"
+            },
+            {
+              "name": "frequency",
+              "type": "string"
+            },
+            {
+              "name": "pay_date",
+              "type": "timestamp[ns]"
+            }
+          ],
+          "dataset_id": "sha256:7691d3225d7ca6f7ac9d3ea1160e311dc8d0d2f7ef2536ea8168371fca856d74",
+          "parquet_bytes": 26978,
+          "parquet_sha256": "ae680815d96c2fc88bf43c6ef5f189116009113f2028ddd95a660f4a63a03670",
+          "rows": 750
+        },
+        "earnings": {
+          "columns": [
+            {
+              "name": "earnings_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "report_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "fiscal_quarter",
+              "type": "string"
+            },
+            {
+              "name": "eps_estimate",
+              "type": "double"
+            },
+            {
+              "name": "surprise_pct",
+              "type": "double"
+            },
+            {
+              "name": "eps_actual",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:1169ed0eea254b91d45a8c5640ab1cf6d8f5f9a83102ccd57126d9b6423798ec",
+          "parquet_bytes": 50838,
+          "parquet_sha256": "81b04a7f10c7f94c7b70438a3fcd86ea373e1963072ad1ce372962cda4dac5ae",
+          "rows": 2000
+        },
+        "exchange": {
+          "columns": [
+            {
+              "name": "exchange_id",
+              "type": "int64"
+            },
+            {
+              "name": "exchange_name",
+              "type": "string"
+            },
+            {
+              "name": "exchange_code",
+              "type": "string"
+            },
+            {
+              "name": "mic",
+              "type": "string"
+            },
+            {
+              "name": "timezone",
+              "type": "string"
+            },
+            {
+              "name": "trading_hours_start",
+              "type": "string"
+            },
+            {
+              "name": "trading_hours_end",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:ba22ceb0237a0d684275b97159a6119a939c3a7d9d341534b61da4ba7860fe85",
+          "parquet_bytes": 2272,
+          "parquet_sha256": "084649b9387a7a0b653386b00a3a56046058d3a53c2cbb22d83795f0157b59e9",
+          "rows": 3
+        },
+        "industry": {
+          "columns": [
+            {
+              "name": "industry_id",
+              "type": "int64"
+            },
+            {
+              "name": "sector_id",
+              "type": "int64"
+            },
+            {
+              "name": "industry_name",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:d585b3a838591d8da954e0a277bda71ebe5d3f0b2a6b1dff5bfc1a11af2abc46",
+          "parquet_bytes": 1435,
+          "parquet_sha256": "23c8b5a8c1d98c1f37120447ff219ae73da6438cbcbe48fbe18d101eb77ebea9",
+          "rows": 61
+        },
+        "insider_transaction": {
+          "columns": [
+            {
+              "name": "txn_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "txn_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "insider_name",
+              "type": "string"
+            },
+            {
+              "name": "insider_title",
+              "type": "string"
+            },
+            {
+              "name": "txn_type",
+              "type": "string"
+            },
+            {
+              "name": "shares",
+              "type": "double"
+            },
+            {
+              "name": "price_per_share",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:85c237eb42f158c178f5885e1b97fd58fe8551cb272f4567a3ff3770c6def216",
+          "parquet_bytes": 48075,
+          "parquet_sha256": "17ee397e3cf437acaa0d8d29877beb3d3fac7cadfc1fa1862142e5f7216e7c07",
+          "rows": 1000
+        },
+        "sector": {
+          "columns": [
+            {
+              "name": "sector_id",
+              "type": "int64"
+            },
+            {
+              "name": "sector_name",
+              "type": "string"
+            },
+            {
+              "name": "sector_code",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:7e6391e951f79f7ddf66925f753257a49b36d7bcab039fde947dc6781d2392e7",
+          "parquet_bytes": 1281,
+          "parquet_sha256": "30ee7a14450f6b1a04f4b17732db88a96ca02ecfc6c9385297507a44fdb738f5",
+          "rows": 11
+        },
+        "split": {
+          "columns": [
+            {
+              "name": "split_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "split_date",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "ratio_from",
+              "type": "double"
+            },
+            {
+              "name": "ratio_to",
+              "type": "double"
+            }
+          ],
+          "dataset_id": "sha256:fcc28b1c5a30317057062447e62c68d13870edd72d2ea5542b887d13939815b2",
+          "parquet_bytes": 2202,
+          "parquet_sha256": "400c763c0fb0c4a45dd64eaa1078d316e273ea6980ce27780ce09793dadc88a6",
+          "rows": 25
+        },
+        "trade": {
+          "columns": [
+            {
+              "name": "trade_id",
+              "type": "int64"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "timestamp",
+              "type": "timestamp[ns]"
+            },
+            {
+              "name": "price",
+              "type": "double"
+            },
+            {
+              "name": "volume",
+              "type": "double"
+            },
+            {
+              "name": "side",
+              "type": "string"
+            }
+          ],
+          "dataset_id": "sha256:2b474fde6251af7e767c8310ed91d1ce8cef76614713ebe81307376126553fc5",
+          "parquet_bytes": 13045840,
+          "parquet_sha256": "5907bc9947e5e9ab82b4859eabcbeab5ba685ba5e940ad5ef37fc4beff175b05",
+          "rows": 500000
+        }
+      }
+    }
+  },
+  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
+  "shape_version": "0.9.1",
+  "version": 1,
+  "workload": "generate:capital_markets:medium"
+}

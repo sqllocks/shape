@@ -47,3 +47,13 @@ def test_missing_composite_recording_returns_2_without_planning(monkeypatch, cap
     )
     assert m.main(["baseline", "--generate-scales", ""]) == 2
     assert "composite_" in capsys.readouterr().err
+
+
+def test_baseline_planned_counts_keep_tables_only(monkeypatch):
+    """The planner's working value ``daily_price_years`` is not a table and is never compared."""
+    m = module()
+    monkeypatch.setattr(m, "recorded_composite_plans", lambda: {})
+    counts = m.baseline_counts([])
+    for scale, tables in counts["capital_markets_3nf"]["planned"].items():
+        assert "daily_price" in tables, scale
+        assert "daily_price_years" not in tables, scale

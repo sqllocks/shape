@@ -1,0 +1,485 @@
+{
+  "format": "shape-db-record",
+  "inputs": {
+    "scenario/warehouse/dimcustomer": "2cdd85ac40246928cb78784841e0fe518bae82a7ed2ebf28bcf3ad50742f13fb",
+    "scenario/warehouse/dimproduct": "63b521627a143853b849703ea212d19021922cf44a9ec08aa92a36470e358457",
+    "scenario/warehouse/factsales": "c3e72745aeb3d60ed754d5a767c76c03235d159b6b236c2f2ab4754cb644b920"
+  },
+  "profile": {
+    "relationships": [
+      {
+        "child": "factsales",
+        "child_columns": [
+          "customer_key"
+        ],
+        "evidence": "name",
+        "name": "fk_factsales_customer_key",
+        "parent": "dimcustomer",
+        "parent_columns": [
+          "customer_key"
+        ],
+        "type": "one_to_many"
+      },
+      {
+        "child": "factsales",
+        "child_columns": [
+          "product_key"
+        ],
+        "evidence": "name",
+        "name": "fk_factsales_product_key",
+        "parent": "dimproduct",
+        "parent_columns": [
+          "product_key"
+        ],
+        "type": "one_to_many"
+      }
+    ],
+    "table_order": [
+      "dimcustomer",
+      "dimproduct",
+      "factsales"
+    ],
+    "tables": {
+      "dimcustomer": {
+        "column_order": [
+          "customer_key",
+          "customer_name",
+          "region"
+        ],
+        "columns": {
+          "customer_key": {
+            "cardinality": 120,
+            "cardinality_ratio": 1.0,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "integer",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": false,
+            "is_primary_key": true,
+            "is_unique": true,
+            "max_value": [
+              "float",
+              120.0
+            ],
+            "mean": 60.5,
+            "min_value": [
+              "float",
+              1.0
+            ],
+            "name": "customer_key",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": 34.785054261852174,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          },
+          "customer_name": {
+            "cardinality": 120,
+            "cardinality_ratio": 1.0,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "string",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": false,
+            "is_primary_key": false,
+            "is_unique": true,
+            "max_value": null,
+            "mean": null,
+            "min_value": null,
+            "name": "customer_name",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": null,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          },
+          "region": {
+            "cardinality": 4,
+            "cardinality_ratio": 0.03333333333333333,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "string",
+            "enum_values": {
+              "east": 0.30833333333333335,
+              "north": 0.225,
+              "south": 0.21666666666666667,
+              "west": 0.25
+            },
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": true,
+            "is_foreign_key": false,
+            "is_primary_key": false,
+            "is_unique": false,
+            "max_value": null,
+            "mean": null,
+            "min_value": null,
+            "name": "region",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": null,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          }
+        },
+        "correlation_matrix": null,
+        "detected_fks": {},
+        "name": "dimcustomer",
+        "primary_key": [
+          "customer_key"
+        ],
+        "row_count": 120
+      },
+      "dimproduct": {
+        "column_order": [
+          "product_key",
+          "product_name",
+          "product_line"
+        ],
+        "columns": {
+          "product_key": {
+            "cardinality": 40,
+            "cardinality_ratio": 1.0,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "integer",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": false,
+            "is_primary_key": true,
+            "is_unique": true,
+            "max_value": [
+              "float",
+              40.0
+            ],
+            "mean": 20.5,
+            "min_value": [
+              "float",
+              1.0
+            ],
+            "name": "product_key",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": 11.69045194450012,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          },
+          "product_line": {
+            "cardinality": 5,
+            "cardinality_ratio": 0.125,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "string",
+            "enum_values": {
+              "line 0": 0.2,
+              "line 1": 0.2,
+              "line 2": 0.2,
+              "line 3": 0.2,
+              "line 4": 0.2
+            },
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": true,
+            "is_foreign_key": false,
+            "is_primary_key": false,
+            "is_unique": false,
+            "max_value": null,
+            "mean": null,
+            "min_value": null,
+            "name": "product_line",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": null,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          },
+          "product_name": {
+            "cardinality": 40,
+            "cardinality_ratio": 1.0,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "string",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": false,
+            "is_primary_key": false,
+            "is_unique": true,
+            "max_value": null,
+            "mean": null,
+            "min_value": null,
+            "name": "product_name",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": null,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          }
+        },
+        "correlation_matrix": null,
+        "detected_fks": {},
+        "name": "dimproduct",
+        "primary_key": [
+          "product_key"
+        ],
+        "row_count": 40
+      },
+      "factsales": {
+        "column_order": [
+          "sale_id",
+          "customer_key",
+          "product_key",
+          "amount",
+          "sale_date"
+        ],
+        "columns": {
+          "amount": {
+            "cardinality": 892,
+            "cardinality_ratio": 0.9911111111111112,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "float",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": false,
+            "is_primary_key": false,
+            "is_unique": true,
+            "max_value": [
+              "float",
+              900.67
+            ],
+            "mean": 444.8453,
+            "min_value": [
+              "float",
+              1.17
+            ],
+            "name": "amount",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": 258.23557559527785,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          },
+          "customer_key": {
+            "cardinality": 120,
+            "cardinality_ratio": 0.13333333333333333,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "integer",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": "dimcustomer",
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": true,
+            "is_primary_key": false,
+            "is_unique": false,
+            "max_value": [
+              "float",
+              120.0
+            ],
+            "mean": 58.992222222222225,
+            "min_value": [
+              "float",
+              1.0
+            ],
+            "name": "customer_key",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": 33.55832578901193,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          },
+          "product_key": {
+            "cardinality": 40,
+            "cardinality_ratio": 0.044444444444444446,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "integer",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": "dimproduct",
+            "hour_histogram": null,
+            "is_enum": true,
+            "is_foreign_key": true,
+            "is_primary_key": false,
+            "is_unique": false,
+            "max_value": [
+              "float",
+              40.0
+            ],
+            "mean": 19.923333333333332,
+            "min_value": [
+              "float",
+              1.0
+            ],
+            "name": "product_key",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": 11.373999485390335,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          },
+          "sale_date": {
+            "cardinality": 286,
+            "cardinality_ratio": 0.31777777777777777,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "date",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": false,
+            "is_primary_key": false,
+            "is_unique": false,
+            "max_value": null,
+            "mean": null,
+            "min_value": null,
+            "name": "sale_date",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": null,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          },
+          "sale_id": {
+            "cardinality": 900,
+            "cardinality_ratio": 1.0,
+            "distribution": null,
+            "distribution_params": null,
+            "dow_histogram": null,
+            "dtype": "integer",
+            "enum_values": null,
+            "fit_score": null,
+            "fk_ref_table": null,
+            "hour_histogram": null,
+            "is_enum": false,
+            "is_foreign_key": false,
+            "is_primary_key": true,
+            "is_unique": true,
+            "max_value": [
+              "float",
+              900.0
+            ],
+            "mean": 450.5,
+            "min_value": [
+              "float",
+              1.0
+            ],
+            "name": "sale_id",
+            "null_count": 0,
+            "null_rate": 0.0,
+            "outlier_rate": null,
+            "pattern": null,
+            "quantiles": null,
+            "std": 259.95191863111916,
+            "string_length": null,
+            "temporal_histogram": null,
+            "value_counts_ext": null,
+            "value_counts_ext_order": null
+          }
+        },
+        "correlation_matrix": null,
+        "detected_fks": {
+          "customer_key": "dimcustomer",
+          "product_key": "dimproduct"
+        },
+        "name": "factsales",
+        "primary_key": [
+          "sale_id"
+        ],
+        "row_count": 900
+      }
+    }
+  },
+  "recorded_utc": "2026-10-12T18:59:22Z",
+  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
+  "shape_version": "0.9.1",
+  "table_digests": {
+    "scenario/warehouse/dimcustomer": "sha256:c3d29f882ea80c5936804f06bd51435e53febca1a160d0181b0a570cc55421ad",
+    "scenario/warehouse/dimproduct": "sha256:08ab722bccaae6d353898c6e946805a2caa535a33c9ea4e83cb8f81a2328b631",
+    "scenario/warehouse/factsales": "sha256:194f6d19eb0252f37c3649f979a91df56a71d78dcd8a04abd801b8e671c64f84"
+  },
+  "version": 1,
+  "workload": "db:warehouse"
+}
