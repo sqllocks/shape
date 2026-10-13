@@ -1,20 +1,35 @@
-# W-gameday-1 — blocked pending plan
+# W-gameday-1 — progress and setup blocker
 
 Scope: 0.9.4 only. No release files, regression data, golden corpus, tests,
 implementation, gates or tolerances changed.
 
-## Question
+## Progress after lead follow-up
 
-The fetched `origin/main` at `c10923be9278bc63f2713ac0ed32a548b59a7afb`
-does not contain `docs/plans/PROMOTION_PLAN_0.9.3.md`. Which commit on
-`origin/main` provides the 0.9.4 Decisions and the complete section 4.2,
-including the required gameday dry-run document format and test criteria?
+The original missing-plan blocker is resolved. Read the plan from the remote
+tracking branch `origin/plan/promotion-093` into `/tmp/PROMOTION_PLAN.md` only;
+no plan content was committed or merged. Read its first paragraph, Decisions
+and section 4.2 in full. Work targets 0.9.4. The lane is already up to date
+with `origin/main` after `git merge origin/main` (exit 0).
 
-Stopped rather than inventing requirements. No red test evidence exists: the
-required acceptance criteria cannot be read. The existing completion plan
-is not a substitute for the requested promotion plan.
+Section 4.2 requests the generic `shape-dry-run` document for
+`gameday run --dry-run --json`. The existing helper in
+`src/shape/cli/machine.py` defines that format. No tests or implementation
+have been written; red evidence remains pending tool setup.
 
-## Validation
+## Current setup blocker and question
+
+`pip install uv` succeeded, but `uv sync --frozen --group dev` exited 1:
+
+```text
+error: Unable to find lockfile at `uv.lock`, but `--frozen` was provided. To create a lockfile, run `uv lock` or `uv sync` without the flag.
+```
+
+Which branch or commit supplies the intended `uv.lock`, or which alternative
+setup command is approved for this checkout? No lockfile was generated and
+no checks were run after the follow-up, because the lead requires the frozen
+setup before any check. Implementation is blocked before the tests-first step.
+
+## Earlier validation (before lead follow-up)
 
 `make check` exited 2 before running checks because `ruff` is unavailable
 (`make: ruff: No such file or directory`; underlying command error 127).
@@ -51,3 +66,22 @@ reported in the session response if unsuccessful.
 The locally recreated lane had no changes or task commits before recreation;
 it now starts at the successfully fetched base. No remote branch was deleted
 or force-pushed.
+
+## Follow-up command journal
+
+| Command / invocation | Exit |
+| --- | --- |
+| `git fetch origin` (network succeeded on first attempt) | 0 |
+| `git fetch origin plan/promotion-093 && git show origin/plan/promotion-093:docs/plans/PROMOTION_PLAN_0.9.3.md > /tmp/PROMOTION_PLAN.md` | 128 (fetch: 0; remote tracking ref absent) |
+| `cat /tmp/PROMOTION_PLAN.md`; `git status --short`; `git branch --show-current`; `git merge origin/main` | 0 (already up to date) |
+| `git fetch origin refs/heads/plan/promotion-093:refs/remotes/origin/plan/promotion-093 && git show origin/plan/promotion-093:docs/plans/PROMOTION_PLAN_0.9.3.md > /tmp/PROMOTION_PLAN.md` | 0 |
+| `cat /tmp/PROMOTION_PLAN.md` | 0 |
+| `sed -n '/^### 4.2 /,/^### 4.3 /p' /tmp/PROMOTION_PLAN.md`; `sed -n '1,32p' /tmp/PROMOTION_PLAN.md` | 0 |
+| Searches for existing dry-run format/handling in source, docs and tests; `rg --files -g AGENTS.md` | 0 |
+| `pip install uv && uv sync --frozen --group dev` | 1 (pip: 0; uv: 1) |
+| Read CLI gameday module, scenario tests, machine document/wrapper handling, scenario runner and `scripts/env.sh` | 0 |
+| `python` status-file update (this progress record) | 0 |
+
+Publication stages only this file, commits with the prefix `W-gameday-1:` and
+DCO sign-off, and pushes explicitly to `HEAD:refs/heads/lane/W-gameday-1`.
+Publication failures, if any, are reported in the session response.
