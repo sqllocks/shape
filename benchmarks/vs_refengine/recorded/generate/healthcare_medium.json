@@ -11975,7 +11975,7 @@
   "inputs": {
     "fixtures/schemas/healthcare_3nf.json": "d3e293f8895b42da80c81c7e708c389108ea23a91f7d91a8f1d5db69c7471587"
   },
-  "recorded_utc": "2026-10-12T18:59:22Z",
+  "recorded_utc": "2026-10-13T01:47:50Z",
   "seeds": {
     "42": {
       "dataset_id": "sha256:42140842a44577a305415f5b4614f13f827e78da41477b3cfcaec7fe869091eb",

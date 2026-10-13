@@ -3,7 +3,7 @@
   "inputs": {
     "fixtures/schemas/retail_3nf.json": "fe74ccb6fd079a1faa03ce2af2c856ada02ec8fb407dbcef846013e22164792b"
   },
-  "recorded_utc": "2026-10-12T18:59:22Z",
+  "recorded_utc": "2026-10-13T01:47:50Z",
   "runs": {
     "baseline": {
       "exit_code": 0,

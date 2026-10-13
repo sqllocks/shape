@@ -11048,7 +11048,7 @@
   "inputs": {
     "fixtures/schemas/education_3nf.json": "9ae9b7261bb541c171bc611802f41afdeae28818edbbf25adb76498558b751c0"
   },
-  "recorded_utc": "2026-10-12T18:59:22Z",
+  "recorded_utc": "2026-10-13T01:47:50Z",
   "seeds": {
     "42": {
       "dataset_id": "sha256:ebf0b023577f24912df28d16f49207d784701856896dc22966e0eee0ebb55e14",

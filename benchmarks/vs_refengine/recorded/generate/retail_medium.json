@@ -11048,7 +11048,7 @@
   "inputs": {
     "fixtures/schemas/retail_3nf.json": "fe74ccb6fd079a1faa03ce2af2c856ada02ec8fb407dbcef846013e22164792b"
   },
-  "recorded_utc": "2026-10-12T18:59:22Z",
+  "recorded_utc": "2026-10-13T01:47:50Z",
   "seeds": {
     "42": {
       "dataset_id": "sha256:30b7be204820d2a752a71ca9be9a7c9c4304ccfef48c438ee35e94d6df1d86f5",

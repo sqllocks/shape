@@ -4,7 +4,7 @@
   "inputs": {
     "fixtures/schemas/manufacturing_3nf.json": "aec8420436459ecdeeb16497fabc75bac993447f4547e25b1d07899bc961de9c"
   },
-  "recorded_utc": "2026-10-12T18:59:22Z",
+  "recorded_utc": "2026-10-13T01:47:50Z",
   "seeds": {
     "42": {
       "dataset_id": "sha256:c0b24dba7a149f148d59d31e994ad7b284262b779bb0b9f5af74b4715477847a",

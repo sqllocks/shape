@@ -11975,7 +11975,7 @@
   "inputs": {
     "fixtures/schemas/telecom_3nf.json": "18304a32dd0bbf6f8da533205b0b6dd747340720d40c77ef2aafc49e6ad818e9"
   },
-  "recorded_utc": "2026-10-12T18:59:22Z",
+  "recorded_utc": "2026-10-13T01:47:50Z",
   "seeds": {
     "42": {
       "dataset_id": "sha256:f02b578edb55ff871c850ac29c2743ee5aab09452c5f3a9d4b25426ce7f6f081",

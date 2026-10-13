@@ -12195,7 +12195,7 @@
   "inputs": {
     "fixtures/schemas/marketing_3nf.json": "ec4466f4eb1e43e717eea2e96c06918f823c643c66b8bef7d5e29f5efbff25e3"
   },
-  "recorded_utc": "2026-10-12T18:59:22Z",
+  "recorded_utc": "2026-10-13T01:47:50Z",
   "seeds": {
     "42": {
       "dataset_id": "sha256:f5b1135327299f608feb148a86e0d23892e180956b940184d86187f71220f32e",

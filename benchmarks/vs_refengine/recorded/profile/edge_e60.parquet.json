@@ -2875,9 +2875,9 @@
         "cardinality_ratio": 1.0,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": -322815.2579295543,
-          "s": 0.07150294968886328,
-          "scale": 369247.04178075073
+          "loc": -322815.25793843484,
+          "s": 0.0715029496871392,
+          "scale": 369247.0417896541
         },
         "dow_histogram": null,
         "dtype": "integer",
@@ -3084,7 +3084,7 @@
     ],
     "row_count": 60
   },
-  "recorded_utc": "2026-10-12T18:59:22Z",
+  "recorded_utc": "2026-10-13T01:47:50Z",
   "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
   "shape_version": "0.9.1",
   "version": 1,
