@@ -6,7 +6,11 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+### Fixed
+
+- **`shape profile-model` / `semantic-model://`.** A table the semantic model cannot read stops
+  with one error naming the model and table and suggesting a refresh, instead of the raw
+  sempy/ADOMD error.
 
 ## 0.9.2
 

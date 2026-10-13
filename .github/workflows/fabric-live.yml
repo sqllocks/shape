@@ -310,10 +310,20 @@ jobs:
       - name: Refresh the semantic model shape_sm (opt-in; changes no definition and deletes nothing)
         # Run 38418635000 and 38437587616: the model definition and its Lakehouse tables exist, but the
         # engine answers "Cannot find table 'customer'". A refresh of a Direct Lake model reframes it on
-        # the Lakehouse tables as they are now. Prints only the refresh status.
+        # the Lakehouse tables as they are now. Prints only the refresh status. On the nightly schedule a
+        # failed refresh is a warning and the live tests still run; a manual dispatch fails the step.
         if: inputs.refresh_semantic_model || github.event_name == 'schedule'
+        continue-on-error: ${{ github.event_name == 'schedule' }}
         timeout-minutes: 15
         run: |
+          missing=""
+          for v in FABRIC_TENANT_ID FABRIC_CLIENT_ID FABRIC_CLIENT_SECRET FABRIC_WORKSPACE_ID; do
+            [ -n "${!v}" ] || missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::cannot refresh the semantic model, missing:$missing"
+            exit 1
+          fi
           python - <<'PY'
           import json, os, time, urllib.error, urllib.request
           from azure.identity import ClientSecretCredential
@@ -323,7 +333,7 @@ jobs:
           fabric = cred.get_token("https://api.fabric.microsoft.com/.default").token
           pbi = cred.get_token("https://analysis.windows.net/powerbi/api/.default").token
           ws = env["FABRIC_WORKSPACE_ID"]
-          name = env.get("FABRIC_SEMANTIC_MODEL", "shape_sm").strip()
+          name = (env.get("FABRIC_SEMANTIC_MODEL") or "shape_sm").strip()
 
           def call(method, url, token, body=None):
               req = urllib.request.Request(url, data=json.dumps(body).encode() if body is not None else None,
@@ -331,32 +341,49 @@ jobs:
               try:
                   with urllib.request.urlopen(req, timeout=120) as resp:
                       raw = resp.read()
-                      return resp.status, (json.loads(raw) if raw else {})
+                      return resp.status, dict(resp.headers), (json.loads(raw) if raw else {})
               except urllib.error.HTTPError as exc:
-                  return exc.code, exc.read().decode()[:800]
+                  return exc.code, dict(exc.headers), exc.read().decode()[:800]
 
-          code, items = call("GET", f"https://api.fabric.microsoft.com/v1/workspaces/{ws}/items?type=SemanticModel", fabric)
+          def fail(message):
+              print(f"::warning::semantic model refresh: {message}")
+              raise SystemExit(message)
+
+          code, _, items = call("GET", f"https://api.fabric.microsoft.com/v1/workspaces/{ws}/items?type=SemanticModel", fabric)
+          if code != 200 or not isinstance(items, dict):
+              fail(f"listing the semantic models answered HTTP {code}, expected 200")
           ids = [i["id"] for i in items.get("value", []) if i["displayName"] == name]
-          assert len(ids) == 1, f"expected one semantic model named {name}, found {len(ids)}"
+          if len(ids) != 1:
+              fail(f"expected one semantic model named {name}, found {len(ids)}")
           base = f"https://api.powerbi.com/v1.0/myorg/groups/{ws}/datasets/{ids[0]}/refreshes"
-          code, out = call("POST", base, pbi, {"type": "full"})
+
+          def history():
+              code, _, hist = call("GET", base + "?$top=10", pbi)
+              return (hist.get("value") or []) if code == 200 and isinstance(hist, dict) else []
+
+          before = {r.get("requestId") for r in history()}
+          code, headers, out = call("POST", base, pbi, {"type": "full"})
           print("refresh requested:", code, out if isinstance(out, str) else "")
-          assert code in (200, 202), (code, out)
+          if code not in (200, 202):
+              fail(f"requesting the refresh answered HTTP {code}")
+          location = {k.lower(): v for k, v in headers.items()}.get("location", "")
+          request_id = location.rstrip("/").rsplit("/", 1)[-1] if "/refreshes/" in location else None
           for _ in range(80):
               time.sleep(10)
-              code, hist = call("GET", base + "?$top=1", pbi)
-              latest = (hist.get("value") or [{}])[0] if isinstance(hist, dict) else {}
+              mine = [r for r in history() if (r.get("requestId") == request_id if request_id else r.get("requestId") not in before)]
+              latest = mine[0] if mine else {}
               status = latest.get("status")
               print("refresh status:", status)
               if status in ("Completed", "Failed", "Disabled", "Cancelled"):
                   if status != "Completed":
                       print("refresh error:", str(latest.get("serviceExceptionJson", ""))[:600])
-                  assert status == "Completed", status
+                      fail(f"the refresh ended {status}")
                   break
           else:
-              raise SystemExit("the refresh did not end in 800 s")
+              fail("the refresh did not end in 800 s")
           PY
       - name: Live tests
+        if: ${{ !cancelled() }}
         # Bounded below the job limit so the summary and upload steps always run. Every test name is
         # printed as it starts (-v, unbuffered), and a test that sits for 10 minutes dumps the
         # stack of every thread (faulthandler_timeout) so a hang names the call it is stuck in.
@@ -482,78 +509,6 @@ jobs:
               except urllib.error.HTTPError as exc:
                   code, body = exc.code, exc.read().decode()
               out += [f"### GET /v1/workspaces/{ws}/{path} -> HTTP {code}", "```json", body[:4000], "```"]
-          text = "\n".join(out)
-          print(text)
-          open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8").write(text + "\n")
-          PY
-      - name: Semantic model shape_sm - what its tables are bound to (read-only)
-        # Downloads the model definition (TMDL, a POST that changes nothing) and lists, for every table,
-        # its partition source (entity, schema, expression), then lists the folders under Tables/dbo of
-        # the schema-enabled Lakehouse, so a "Cannot find table" can be tied to a source that is gone.
-        if: always()
-        timeout-minutes: 10
-        run: |
-          python - <<'PY'
-          import base64, json, os, re, time, urllib.error, urllib.request
-          from azure.identity import ClientSecretCredential
-
-          env = os.environ
-          cred = ClientSecretCredential(env["FABRIC_TENANT_ID"], env["FABRIC_CLIENT_ID"], env["FABRIC_CLIENT_SECRET"])
-          fabric = cred.get_token("https://api.fabric.microsoft.com/.default").token
-          storage = cred.get_token("https://storage.azure.com/.default").token
-          ws = env["FABRIC_WORKSPACE_ID"]
-          model = env.get("FABRIC_SEMANTIC_MODEL", "shape_sm").strip()
-          API = "https://api.fabric.microsoft.com/v1"
-          out = ["## Semantic model " + model, ""]
-
-          def call(method, url, token, body=None):
-              req = urllib.request.Request(url, data=json.dumps(body).encode() if body is not None else None,
-                                           method=method, headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
-              try:
-                  with urllib.request.urlopen(req, timeout=120) as resp:
-                      raw = resp.read()
-                      return resp.status, dict(resp.headers), (json.loads(raw) if raw else {})
-              except urllib.error.HTTPError as exc:
-                  return exc.code, dict(exc.headers), exc.read().decode()[:1500]
-
-          code, _, items = call("GET", f"{API}/workspaces/{ws}/items?type=SemanticModel", fabric)
-          found = [i for i in items.get("value", []) if i["displayName"] == model] if isinstance(items, dict) else []
-          out.append(f"- semantic models in the workspace: {[i['displayName'] for i in items.get('value', [])] if isinstance(items, dict) else items}")
-          if found:
-              mid = found[0]["id"]
-              code, headers, doc = call("POST", f"{API}/workspaces/{ws}/semanticModels/{mid}/getDefinition?format=TMDL", fabric)
-              if code == 202:
-                  op = re.search(r"/operations/([0-9a-fA-F-]{36})", headers.get("Location", headers.get("location", ""))).group(1)
-                  for _ in range(60):
-                      time.sleep(3)
-                      c2, _, st = call("GET", f"{API}/operations/{op}", fabric)
-                      if isinstance(st, dict) and st.get("status") == "Succeeded":
-                          code, _, doc = call("GET", f"{API}/operations/{op}/result", fabric)
-                          break
-                      if isinstance(st, dict) and st.get("status") == "Failed":
-                          out.append(f"- getDefinition failed: {st}")
-                          break
-              parts = doc.get("definition", {}).get("parts", []) if isinstance(doc, dict) else []
-              out.append(f"- definition parts: {len(parts)} (HTTP {code})")
-              for part in parts:
-                  path = part["path"]
-                  if not (path.startswith("definition/tables/") or path.endswith("expressions.tmdl")):
-                      continue
-                  text = base64.b64decode(part["payload"]).decode("utf-8", "replace")
-                  keep = [ln.strip() for ln in text.splitlines()
-                          if re.match(r"\s*(table |expression |partition |mode:|entityName:|schemaName:|expressionSource:|source =|column )", ln)]
-                  out.append(f"- `{path}`: " + " | ".join(keep[:40]))
-          else:
-              out.append(f"- no semantic model named {model!r}")
-
-          lake = env.get("FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH", "")
-          m = re.match(r"onelake://([^/]+)/([^/]+)/Tables", lake)
-          if m:
-              url = (f"https://onelake.dfs.fabric.microsoft.com/{m.group(1)}?resource=filesystem"
-                     f"&directory={m.group(2)}/Tables/dbo&recursive=false")
-              code, _, listing = call("GET", url, storage)
-              names = [p["name"].rsplit("/", 1)[-1] for p in listing.get("paths", [])] if isinstance(listing, dict) else listing
-              out += ["", f"- Tables/dbo of the schema-enabled Lakehouse (HTTP {code}): {names}"]
           text = "\n".join(out)
           print(text)
           open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8").write(text + "\n")
