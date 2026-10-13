@@ -76,10 +76,12 @@ shape generate retail --to delta+abfss://ws@onelake.dfs.fabric.microsoft.com/lh.
   never sees a partial file. On a hierarchical namespace the rename is atomic; on a flat blob
   namespace (Azurite) it is a server-side copy and delete, and the final blob still appears whole.
   `--manifest` writes `_SUCCESS` in each folder after its files.
-  On OneLake the sink checks that the Lakehouse exists by listing the item, not by probing it:
-  OneLake refuses a HEAD request on the item folder and on its `Files` and `Tables` folders
-  (`OperationNotAllowedOnThePath`), and allows reading them as listings
-  ([OneLake API parity](https://learn.microsoft.com/fabric/onelake/onelake-api-parity)).
+  On OneLake the sink checks that the Lakehouse exists by listing the workspace and looking the item
+  up by name, not by probing the item: OneLake refuses a HEAD request on the item folder and on its
+  `Files` and `Tables` folders (`OperationNotAllowedOnThePath`) and allows HEAD on the workspace
+  ([OneLake API parity](https://learn.microsoft.com/fabric/onelake/onelake-api-parity)). An item
+  given by GUID cannot be found in a listing, so it is not checked up front and a missing one is
+  reported by the first write.
 * **Rolling.** `--roll-rows N` and `--roll-seconds S` start a new numbered file; rows-based rolling
   is exact and deterministic. In a stream, every checkpoint also completes the file, so
   `--checkpoint-every` / `--checkpoint-seconds` set how often readers see new rows.

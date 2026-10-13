@@ -572,12 +572,16 @@ def test_onelake_missing_item_cannot_be_created_by_storage(lake: Any) -> None:
     assert not any(p.endswith(".parquet") or "_shape_tmp" in p for p in lake.find("ws"))
 
 
-def test_onelake_missing_item_by_guid_is_refused_too(lake: Any) -> None:
+def test_onelake_item_by_guid_is_not_probed(lake: Any) -> None:
+    """A workspace listing shows item names, not GUIDs, and OneLake refuses a HEAD on the item
+    folder, so an item given by GUID is not checked up front (its first write reports it)."""
+    rec = RecordingFs(lake)
     other = "99999999-8888-7777-6666-555555555555"
-    with pytest.raises(FileNotFoundError, match=f'OneLake item "{other}" does not exist'):
-        AbfssSink().write(
-            f"abfss://{WS_GUID}@{OL}/{other}/Files/x", "t", [batch(0, 1)], filesystem=lake
-        )
+    rows = AbfssSink().write(
+        f"abfss://{WS_GUID}@{OL}/{other}/Files/x", "t", [batch(0, 1)], filesystem=rec
+    )
+    assert rows == 1
+    assert "isdir" not in rec.calls and "ls" not in rec.calls
 
 
 @pytest.mark.parametrize("area", ["Files/x", "Tables/x", "Tables", "Other/x"])
@@ -821,7 +825,7 @@ class NoItemProbe:
         return getattr(self._inner, name)
 
     def _refuse_item(self, path: str) -> None:
-        if len([p for p in path.strip("/").split("/") if p]) <= 2:
+        if len([p for p in path.strip("/").split("/") if p]) == 2:
             raise OSError(
                 "Operation returned an invalid status 'Bad Request'\n"
                 "ErrorCode:OperationNotAllowedOnThePath"
