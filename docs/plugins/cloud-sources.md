@@ -60,13 +60,22 @@ Classic Lakehouses use `onelake://<workspace>/<lakehouse>/Tables/<table>`. Schem
 Lakehouses use `.../Tables/<schema>/<table>`, normally `dbo`. Both forms resolve to the same
 core Delta reader; include the actual schema in the read URI.
 
-For Delta writes, target `delta+abfss://<workspace>@onelake.dfs.fabric.microsoft.com/<lakehouse>.Lakehouse/Tables`.
-For a schema-enabled Lakehouse, add `--sink-config delta.schema_enabled=true`; the schema
-defaults to `dbo`, or use `--schema-name sales` for an existing schema. For a classic Lakehouse,
-omit that option. `--table-prefix shape_` names the physical tables `shape_<table>` in either
-layout. A target already ending in `Tables/dbo` can also be used directly, without
-`schema_enabled`; the sink appends the table name once. See the
-[0.9.1 limitations and workarounds](../KNOWN_LIMITATIONS.md#fabric-in-091).
+For Delta writes, target `delta+abfss://<workspace>@onelake.dfs.fabric.microsoft.com/<lakehouse>.Lakehouse/Tables`
+(use the workspace and Lakehouse ids). Shape asks Fabric which kind of Lakehouse it is
+(`GET /v1/workspaces/<workspace>/lakehouses/<lakehouse>`; a schema-enabled Lakehouse reports a
+`defaultSchema`) and writes `Tables/<schema>/<table>` to a schema-enabled one, with schema `dbo`
+unless you give `--schema-name sales` (an existing schema), or `Tables/<table>` to a classic one.
+A schema given for a classic Lakehouse is an error. `--table-prefix shape_` names the physical
+tables `shape_<table>` in either layout. Tables outside a schema folder of a schema-enabled
+Lakehouse are invisible to its SQL analytics endpoint and to semantic models, so the kind is never
+guessed.
+
+The lookup needs the Lakehouse ids and a sign-in that can read the item (`--auth`, or the notebook
+identity inside Fabric). When it cannot run, the write stops with `cannot tell whether Lakehouse
+... is schema-enabled`; state the kind instead with `--sink-config delta.schema_enabled=true` or
+`=false`. A target that already ends in `Tables/dbo` is used as written, and so is a location given
+together with a raw storage token and no identity to ask with. See
+[Troubleshooting](../TROUBLESHOOTING.md#cannot-tell-whether-the-lakehouse-is-schema-enabled).
 
 ## What is tested
 

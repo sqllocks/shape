@@ -393,10 +393,11 @@ class SeedingDemoMode:
 
         engine = Engine(schema, scale=scale, seed=seed)
         tables_root = f"onelake://{conn.workspace_id}/{conn.lakehouse_id}/Tables"
-        if conn.lakehouse_schema:
+        written_schema = fabric.get("lakehouse_schema") or conn.lakehouse_schema
+        if written_schema:  # the schema the worker was told to write under
             from urllib.parse import quote
 
-            tables_root += "/" + quote(conn.lakehouse_schema, safe="")
+            tables_root += "/" + quote(written_schema, safe="")
         for table in engine.order:
             self._manifest.add_artifact(
                 "lakehouse",

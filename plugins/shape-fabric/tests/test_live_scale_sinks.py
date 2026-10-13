@@ -104,6 +104,20 @@ def schema_doc(prefix: str) -> dict:
     }
 
 
+def remove_spark_tables(storage, workspace, lakehouse, schema_folder, prefix, tables) -> list[str]:
+    """Remove the Delta tables the Spark worker wrote: ``Tables/[<schema>/]<prefix>_<table>``.
+    Returns the folders it removed (a test of this function is in ``test_live_cleanup.py``)."""
+    root = f"onelake://{workspace}/{lakehouse}/Tables" + (
+        f"/{schema_folder}" if schema_folder else ""
+    )
+    removed = []
+    for table in tables:
+        folder = f"{root}/{prefix}_{table}"
+        storage.remove(folder, recursive=True)
+        removed.append(folder)
+    return removed
+
+
 def run(sink, prefix: str) -> None:
     engine = Engine(GenSchema.from_dict(schema_doc(prefix)), seed=3)
     ScaleRouter(engine, [sink], mode="local_mp", chunk_size=100).run()
@@ -210,15 +224,29 @@ def test_fabric_spark_runs_the_worker_notebook_to_success(tmp_path):
         token=fabric_token,
         storage_token=storage_token,
     )
-    deadline = time.monotonic() + 25 * 60
-    status = job["status"]
-    while status not in ("succeeded", "failed", "cancelled") and time.monotonic() < deadline:
-        time.sleep(20)
-        status = jobs.status(job["job_id"], fabric_token)["status"]
-    if status not in ("succeeded", "failed", "cancelled"):
-        jobs.cancel(job["job_id"], fabric_token)
-    final = jobs.status(job["job_id"], fabric_token)
-    assert status == "succeeded", (
-        f"Fabric worker {final['fabric'].get('fabric_run_id')}: "
-        f"status={status}; error={final.get('error')}; progress={final.get('progress')}"
-    )
+    final = None
+    try:
+        deadline = time.monotonic() + 25 * 60
+        status = job["status"]
+        while status not in ("succeeded", "failed", "cancelled") and time.monotonic() < deadline:
+            time.sleep(20)
+            status = jobs.status(job["job_id"], fabric_token)["status"]
+        if status not in ("succeeded", "failed", "cancelled"):
+            jobs.cancel(job["job_id"], fabric_token)
+        final = jobs.status(job["job_id"], fabric_token)
+        assert status == "succeeded", (
+            f"Fabric worker {final['fabric'].get('fabric_run_id')}: "
+            f"status={status}; error={final.get('error')}; progress={final.get('progress')}"
+        )
+    finally:
+        # The router records the schema it resolved from the Lakehouse; remove the worker's tables
+        # whatever the outcome.
+        fabric = (final or job).get("fabric") or {}
+        remove_spark_tables(
+            Storage(credential=cred),
+            workspace,
+            lakehouse,
+            fabric.get("lakehouse_schema"),
+            prefix,
+            list(schema_doc(prefix)["tables"]),
+        )

@@ -57,8 +57,8 @@ def add_arguments(sub: Any) -> None:
     ini.add_argument(
         "--lakehouse-schema",
         default="",
-        help="an existing schema for schema-enabled Lakehouse Spark tables (for example dbo); "
-        "omit for classic",
+        help="the schema for schema-enabled Lakehouse Spark tables (default dbo; the Lakehouse "
+        "kind is looked up in Fabric; an error for a classic Lakehouse)",
     )
     ini.add_argument("--auth", choices=AUTH_METHODS, default="cli", help="sign-in (default: cli)")
     ini.add_argument("--tenant-id", help="Entra tenant (spn, device-code)")

@@ -61,8 +61,8 @@ def add_arguments(ge: argparse.ArgumentParser) -> None:
     g.add_argument(
         "--lakehouse-schema",
         metavar="NAME",
-        help="fabric_spark: schema-enabled Lakehouse schema (for example dbo); "
-        "omitted for classic Lakehouses",
+        help="fabric_spark: the schema of a schema-enabled Lakehouse (default dbo; the "
+        "Lakehouse kind is looked up in Fabric; an error for a classic Lakehouse)",
     )
     g.add_argument(
         "--fabric-notebook",

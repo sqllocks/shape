@@ -173,12 +173,17 @@ are generated on the driver (table by table, so the driver never makes the execu
 the schema has a post-pass). A run fails (and records no success) unless every table has exactly
 the rows the spec asked for, counted by reading each Delta table back once it is written.
 
-For a schema-enabled Lakehouse, add `--lakehouse-schema dbo` (or another existing schema).
-The worker then writes `Tables/<schema>/<prefix><table>`. Omit it for a classic Lakehouse.
-The Files area used for job specs is the same for both kinds.
-Demo Spark runs use the same setting from their connection profile: add
-`--lakehouse-schema dbo` to `shape demo init` for a schema-enabled Lakehouse. The session
-manifest records the schema in each table's read-back/cleanup path.
+The worker needs to know whether the Lakehouse is schema-enabled, so `fabric_spark` asks Fabric
+before it uploads anything (`GET /v1/workspaces/<workspace>/lakehouses/<lakehouse>`). A
+schema-enabled Lakehouse gets `Tables/<schema>/<prefix><table>`, with schema `dbo` unless you pass
+`--lakehouse-schema sales` (an existing schema); a classic one gets `Tables/<prefix><table>`.
+`--lakehouse-schema` on a classic Lakehouse is an error, and a lookup that fails stops the run with
+`cannot tell whether Lakehouse ... is schema-enabled` (see
+[Troubleshooting](TROUBLESHOOTING.md#cannot-tell-whether-the-lakehouse-is-schema-enabled)); a 401 or
+403 stays an authentication error. The Files area used for job specs is the same for both kinds.
+Demo Spark runs use the same lookup: `--lakehouse-schema` in `shape demo init` is optional, and the
+session manifest records the schema the worker was told to use in each table's read-back and cleanup
+path.
 
 ## Library
 

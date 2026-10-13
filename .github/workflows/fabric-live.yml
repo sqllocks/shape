@@ -12,6 +12,16 @@ on:
         required: false
         default: ''
         type: string
+      seed:
+        description: Also seed the schema-enabled Lakehouse with the retail domain and update the shape_sm semantic model
+        required: false
+        default: false
+        type: boolean
+      sm_mode:
+        description: shape_sm step - update (default) or inspect (download the definition only)
+        required: false
+        default: update
+        type: string
       set_git_credentials:
         description: Set the CI principal's own Git credentials on the Git workspace to the shared GitHub connection (idempotent one-time setup; default - do nothing)
         required: false
@@ -374,3 +384,66 @@ jobs:
           code="${pytest_exit:-missing}"
           echo "pytest exit code: $code"
           [ "$code" = "0" ]
+  # Dispatch-only: seed the schema-enabled Lakehouse (shape_lh, schema dbo) with the retail domain at
+  # scale `small` through the product's own writer, record exactly what was written and what the SQL
+  # endpoint lists, then add the tables and relationships to the semantic model shape_sm over REST.
+  seed:
+    if: always() && github.event_name == 'workflow_dispatch' && inputs.seed
+    needs: fabric-live
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: fabric-live
+    env:
+      FABRIC_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
+      FABRIC_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
+      FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
+      FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH: ${{ vars.FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH }}
+      AZURE_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
+      SM_MODE: ${{ inputs.sm_mode }}
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Microsoft ODBC Driver 18 for SQL Server and unixODBC
+        run: |
+          curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/ubuntu/$(lsb_release -rs)/prod $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
+      - name: Install Shape and the plugins from this checkout
+        run: >-
+          pip install -e '.[dev,azure,delta]'
+          -e 'plugins/shape-fabric[sqlserver,eventhubs,entra]'
+          -e plugins/shape-domains
+      - name: Remove the test tables an earlier Spark live test left in shape_lh dbo (Owner-approved)
+        run: python -u scripts/fabric_cleanup_leftovers.py
+      - name: Seed shape_lh with the retail domain
+        id: seed
+        run: python -u scripts/fabric_seed_retail.py
+      - name: Update the shape_sm semantic model
+        if: always() && (steps.seed.outcome == 'success' || inputs.sm_mode == 'inspect')
+        run: python -u scripts/fabric_update_shape_sm.py
+      - name: Step summary
+        if: always()
+        run: |
+          {
+            echo "## Seed record"
+            echo '```json'
+            cat seed-record.json 2>/dev/null || echo "(no record: the seed step did not finish)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fabric-seed
+          path: |
+            seed-record.json
+            sm-definition
+            sm-definition-new
+            sm-definition-after
+          if-no-files-found: ignore
