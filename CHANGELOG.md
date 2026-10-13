@@ -62,6 +62,10 @@ No unreleased changes.
   only a raw storage token, give the schema in the path (`.../Tables/dbo`).
 - **Missing Delta tables** are reported as `no Delta table at <path>`, with credentials
   removed from the path.
+- **The `abfss://` sink writes into a Fabric Lakehouse.** It used to fail with
+  `OperationNotAllowedOnThePath`, because it checked for the Lakehouse with a request OneLake
+  refuses on an item folder. It now finds the Lakehouse in the workspace listing. A Lakehouse
+  given by GUID is no longer checked up front; a missing one is reported by the first write.
 - **MySQL without TLS.** The `caching_sha2_password` sign-in crash is replaced by a message
   that says to use verified TLS (`ssl_ca=PATH&ssl-mode=VERIFY_CA`) or ask the administrator for
   a supported authentication method. Shape does not fetch an untrusted key.
