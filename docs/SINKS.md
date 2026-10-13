@@ -52,7 +52,7 @@ An unknown scheme is an error that lists the schemes installed.
 
 **Needs a Fabric account. Not run in CI.**
 
-Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers. A write to a remote target needs `--yes` or `SHAPE_CONFIRM_REMOTE=1`; the recorded run set the variable.
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers. A write to a remote target needs `--yes` or `SHAPE_CONFIRM_REMOTE=1`; the recorded run set the variable. The test tenant has no ADLS Gen2 account, so the recorded run wrote the first two commands to a OneLake Lakehouse instead (`ws` is the workspace, `lh` the Lakehouse, folders `Files/shape_docs/raw` and `Files/shape_docs/live`); the output below shows those OneLake paths. The third command, `delta+abfss://…/Tables`, ran as shown.
 
 ```bash
 shape generate retail --scale small --seed 7 \
