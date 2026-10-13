@@ -101,22 +101,80 @@ def test_the_cli_writes_the_nested_type(tmp_path: Path, capsys: pytest.CaptureFi
         assert written.schema.field(name).type.equals(_read_type(tmp_path, name))
 
 
-# A child type with no generator (binary, duration, union ...) is reported to the lead; until the
-# lead chooses a behaviour, `generate` refuses it by name instead of writing a wrong column.
-@pytest.mark.parametrize("child", [pa.binary(), pa.duration("us")], ids=["binary", "duration"])
-def test_a_child_type_without_a_generator_is_refused_by_name(
-    child: pa.DataType, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+@pytest.fixture(params=["python", "rust"])
+def kernel(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> Any:
+    if request.param == "rust":
+        pytest.importorskip("shape._kernel")
+    monkeypatch.setenv("SHAPE_KERNEL", request.param)
+    from shape.kernel import dispatch
+
+    dispatch.reset()
+    yield request.param
+    dispatch.reset()
+
+
+_BYTES_TABLE = pa.table(
+    {
+        "id": list(range(40)),
+        "bl": pa.array([[b"ab", b"c"]] * 40, pa.list_(pa.binary())),
+        "lb": pa.array([[b"abc"]] * 40, pa.list_(pa.large_binary())),
+        "fb": pa.array([[b"abcd"]] * 40, pa.list_(pa.binary(4))),
+        "du": pa.array([[1, 2]] * 40, pa.list_(pa.duration("ms"))),
+        "st": pa.array(
+            [{"b": b"x", "d": 5}] * 40, pa.struct([("b", pa.binary()), ("d", pa.duration("us"))])
+        ),
+    }
+)
+
+
+def test_bytes_and_durations_are_generated_inside_nested_columns(
+    kernel: str, tmp_path: Path
 ) -> None:
-    values: list[Any] = [[b"a"] if pa.types.is_binary(child) else [1]] * 20
-    table = pa.table({"id": list(range(20)), "bx": pa.array(values, pa.list_(child))})
-    src = ni.write_parquet(tmp_path / "t.parquet", table)
-    assert main(["profile", str(src), "-o", str(tmp_path / "t.shape")]) == 0
-    code = main(["generate", "--from", str(tmp_path / "t.shape"), "--rows", "5", "-o",
-                 str(tmp_path / "out"), "--format", "parquet"])  # fmt: skip
-    err = capsys.readouterr().err
-    assert code == 2
-    lines = [x for x in err.splitlines() if x.startswith("shape: error:")]
-    assert len(lines) == 1 and "bx" in lines[0] and str(child) in lines[0], err
+    out = _generated(_BYTES_TABLE, tmp_path, rows=200)
+    src = pq.read_schema(str(tmp_path / "t.parquet"))
+    for name in ("bl", "lb", "fb", "du", "st"):
+        assert out.schema.field(name).type.equals(src.field(name).type)
+    out.validate(full=True)
+    assert {len(b) for v in out.column("fb").to_pylist() if v for b in v} == {4}
+    lens = {len(b) for v in out.column("bl").to_pylist() if v for b in v}
+    assert min(lens) >= 1 and max(lens) <= 16 and len(lens) > 3
+    spans = [d for v in out.column("du").to_pylist() if v for d in v]
+    assert all(0 <= d.total_seconds() < 86_400 for d in spans) and len(set(spans)) > 10
+
+
+def test_bytes_are_the_same_on_both_kernels(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    pytest.importorskip("shape._kernel")
+    from shape.kernel import dispatch
+
+    tables = []
+    for mode in ("python", "rust"):
+        monkeypatch.setenv("SHAPE_KERNEL", mode)
+        dispatch.reset()
+        tables.append(_generated(_BYTES_TABLE, tmp_path, rows=100, seed=4))
+    dispatch.reset()
+    assert tables[0].equals(tables[1])
+
+
+@pytest.mark.parametrize(
+    "child",
+    [
+        pa.dense_union([pa.field("a", pa.int8())]),
+        pa.sparse_union([pa.field("a", pa.int8())]),
+    ],
+    ids=["dense_union", "sparse_union"],
+)
+def test_a_child_type_with_no_generator_is_refused_by_name(
+    child: pa.DataType, capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    from shape.generation.nested import check_generatable
+    from shape.profile.nested import arrow_type_to_spec
+
+    spec = {"arrow_type_spec": arrow_type_to_spec(pa.list_(child))}
+    with pytest.raises(ValueError) as err:
+        check_generatable(spec, "t.bx")
+    assert "t.bx" in str(err.value) and "union" in str(err.value)
 
 
 def test_chunking_does_not_change_the_table(tmp_path: Path) -> None:

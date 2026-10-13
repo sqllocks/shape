@@ -5,7 +5,7 @@ Builder session for the lead (`session_01FddYW7zsQ7zBaTkAPzXePV`). No decision, 
 `docs/plans/COMPLETION_PLAN.md` is touched; the recorded store, the golden corpus and every tolerance
 are unchanged.
 
-**Status: done and green (CI 26/26), except one open question for the lead: child types with no generator (below).**
+**Status: done and green (CI 26/26 at 120d159); the follow-up of the lead's decision on child types is in the later commits (see the end of this file).**
 
 ## Root causes
 
@@ -87,7 +87,7 @@ are unchanged.
 
 ## Behaviour I had to choose (please confirm or overrule)
 
-1. **Child types with no generator: OPEN, reported to the lead.** Generators exist for bool, int/uint,
+1. **Child types with no generator: DECIDED by the lead (later message).** Binary, large_binary, fixed_size_binary and duration children are now generated (seeded, row addressed; 1 to 16 bytes or the exact width; durations uniform over one day in the type's unit); union, extension, run-end and view types are refused by name. Original note: **reported to the lead.** Generators exist for bool, int/uint,
    float, string, date, timestamp, decimal, time, null and dictionary. None exists for binary,
    large_binary, fixed_size_binary, duration, union, list views and extension types. Until the lead answers,
    `generate` refuses by name: `shape: error: <table>.<column>: cannot generate the nested column <type>:
@@ -295,3 +295,13 @@ succeeded, conclusion `success`
 (https://github.com/sqllocks/shape/actions/runs/38474874650). An earlier dispatch on `8820960`
 (run 38472660907) was cancelled by me before it finished: the local full suite had shown that commit's exit
 hardening leaked between tests (see Checks), so it was not the commit to judge.
+
+## Follow-up after the lead's decision on child types
+
+* Bytes and duration children are generated inside nested columns (`generation/nested.py`); tests in both kernel
+  modes, equal between kernels. A flat-Delta regression test profiles a flat local table 20 times in subprocesses,
+  and the CHANGELOG has a Fixed line for the hang.
+* **Not done, needs the lead:** the decision asked for these as "ordinary type generators" so a *top-level* binary or
+  duration column also works. A flat profile column of those types is generated today as text (an existing behaviour
+  of `generate --from`), and changing it would change the output for an existing input, which the same message forbids;
+  a registered strategy also needs a pinned-corpus fixture per strategy. I limited the change to nested children.

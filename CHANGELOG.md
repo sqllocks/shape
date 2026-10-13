@@ -125,6 +125,10 @@ No unreleased changes.
   the same Arrow type. A local Delta table also no longer hangs or aborts the process at exit
   (`terminate called without an active exception`), and an error with a backtrace in its message
   is one `shape: error:` line.
+- **Local Delta tables no longer hang at exit.** `shape profile` (and every read of a local Delta
+  table) could hang, or abort with `terminate called without an active exception`, as the process
+  ended, in about two runs of three, with or without a nested column. A local table is now read
+  through Arrow's own file system.
 
 ### Changed
 

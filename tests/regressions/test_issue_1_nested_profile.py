@@ -148,3 +148,15 @@ def test_a_command_that_loaded_deltalake_ends_the_process_by_itself(tmp_path: Pa
         except subprocess.TimeoutExpired:  # pragma: no cover - the failure being tested
             pytest.fail(f"run {run}: the process did not end")
         assert done.returncode == 0, f"run {run}: exit {done.returncode}: {done.stderr[-300:]}"
+
+
+def test_a_flat_local_delta_table_profiles_cleanly_twenty_times(tmp_path: Path) -> None:
+    """The exit hang hit tables without a nested column too, in about two runs of three."""
+    src = ni.write_delta(tmp_path / "flat", ni.flat_table())
+    for run in range(20):
+        try:
+            done = _run_profile(src, tmp_path / "flat.shape")
+        except subprocess.TimeoutExpired:  # pragma: no cover - the failure being tested
+            pytest.fail(f"run {run}: the process did not end (hang at exit)")
+        assert done.returncode == 0, f"run {run} exit {done.returncode}: {done.stderr[-300:]}"
+        assert "terminate called" not in done.stderr

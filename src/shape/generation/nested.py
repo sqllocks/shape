@@ -17,7 +17,7 @@ Choices (``docs/PROFILING_NOTES.md``): a nested value with no recorded lengths (
 list, inside a struct, or a map inside a list) has 1 to 3 elements; a struct field is never null;
 the entries of a map have distinct keys (strings and integers get the slot number built in, any
 other key type drops the repeated keys, so such a map can be shorter); a child type with no
-generator (binary, duration, union, ...) is refused by name.
+generator (union, extension, run-end encoded and the view types) is refused by name.
 """
 
 from __future__ import annotations
@@ -72,6 +72,10 @@ def unsupported_child(typ: pa.DataType) -> pa.DataType | None:
         pa.types.is_date,
         pa.types.is_timestamp,
         pa.types.is_time,
+        pa.types.is_binary,
+        pa.types.is_large_binary,
+        pa.types.is_fixed_size_binary,
+        pa.types.is_duration,
     )
     return None if any(check(typ) for check in ok) else typ
 
@@ -154,6 +158,14 @@ def _leaf(typ: pa.DataType, ctx: GenerationContext, path: str, name: str) -> pa.
     if pa.types.is_dictionary(typ):
         values = _leaf(typ.value_type, ctx, path, name)
         return values.dictionary_encode().cast(typ)
+    if pa.types.is_duration(typ):
+        return _duration(typ, ctx, path)
+    if (
+        pa.types.is_binary(typ)
+        or pa.types.is_large_binary(typ)
+        or pa.types.is_fixed_size_binary(typ)
+    ):
+        return _binary(typ, ctx, path)
     from shape.profile.reference.readers import declared_name
 
     dtype = declared_name(typ)
@@ -167,6 +179,46 @@ def _leaf(typ: pa.DataType, ctx: GenerationContext, path: str, name: str) -> pa.
     if not isinstance(arr, pa.Array):
         arr = arrow_array(arr)
     return _to_leaf(arr, typ)
+
+
+#: Bytes of a binary child with no recorded length, and the span of a duration child (one day).
+DEFAULT_MIN_BYTES, DEFAULT_MAX_BYTES = 1, 16
+_UNIT_PER_SECOND = {"s": 1, "ms": 1_000, "us": 1_000_000, "ns": 1_000_000_000}
+
+
+def _duration(typ: pa.DataType, ctx: GenerationContext, path: str) -> pa.Array:
+    """Durations drawn uniformly from 0 to one day, in the unit of ``typ``."""
+    u = RowStream(ctx.seed, ctx.table, ctx.column, f"nested.duration{path}").uniform(
+        ctx.row_start, ctx.n_rows
+    )
+    span = 86_400 * _UNIT_PER_SECOND[typ.unit]
+    return pa.array(np.minimum((u * span).astype(np.int64), span - 1), pa.int64()).cast(typ)
+
+
+def _binary(typ: pa.DataType, ctx: GenerationContext, path: str) -> pa.Array:
+    """Random bytes (seeded, row addressed): ``byte_width`` of them for a fixed-size type, else
+    ``DEFAULT_MIN_BYTES`` to ``DEFAULT_MAX_BYTES``."""
+    n = ctx.n_rows
+    fixed = typ.byte_width if pa.types.is_fixed_size_binary(typ) else None
+    top = fixed if fixed is not None else DEFAULT_MAX_BYTES
+    words = RowStream(ctx.seed, ctx.table, ctx.column, f"nested.bytes{path}").raw(
+        ctx.row_start, n, per_row=max((top + 7) // 8, 1)
+    )
+    grid = np.ascontiguousarray(words).view(np.uint8).reshape(n, -1)[:, :top]
+    if fixed is not None:
+        return pa.FixedSizeBinaryArray.from_buffers(typ, n, [None, pa.py_buffer(grid.tobytes())])
+    span = DEFAULT_MAX_BYTES - DEFAULT_MIN_BYTES + 1
+    u = RowStream(ctx.seed, ctx.table, ctx.column, f"nested.bytes{path}.length").uniform(
+        ctx.row_start, n
+    )
+    lens = DEFAULT_MIN_BYTES + np.minimum((u * span).astype(np.int64), span - 1)
+    keep = np.arange(top)[None, :] < lens[:, None]
+    data = grid[keep]
+    wide = pa.types.is_large_binary(typ)
+    offsets = np.concatenate([[0], np.cumsum(lens)]).astype(np.int64 if wide else np.int32)
+    return pa.Array.from_buffers(
+        typ, n, [None, pa.py_buffer(offsets.tobytes()), pa.py_buffer(data.tobytes())]
+    )
 
 
 def _to_leaf(arr: pa.Array, typ: pa.DataType) -> pa.Array:
