@@ -126,15 +126,19 @@ def test_a_command_that_loaded_deltalake_ends_the_process_by_itself(tmp_path: Pa
         write_deltalake(str(src), part, mode="append")
     script = (
         "import sys\n"
+        "import importlib\n"
+        "cli = importlib.import_module('shape.cli.main')\n"
         "from deltalake import DeltaTable\n"
-        "from shape.cli.main import main\n"
         "from shape.io import deltafs\n"
-        "deltafs.note_bridge()\n"  # what a read of a table behind an object store does
+        "def command(argv):\n"  # a command whose read goes through the Python file system
+        "    deltafs.note_bridge()\n"
+        f"    scan = DeltaTable({str(src)!r}).to_pyarrow_dataset().scanner(batch_size=2)\n"
+        "    reader = scan.to_reader()\n"
+        "    reader.read_next_batch()\n"
+        "    return 0\n"
+        "cli._main = command\n"
         "sys.argv = ['shape', 'version']\n"
-        f"scan = DeltaTable({str(src)!r}).to_pyarrow_dataset().scanner(batch_size=2)\n"
-        "reader = scan.to_reader()\n"
-        "reader.read_next_batch()\n"
-        "main()\n"
+        "cli.main()\n"
     )
     for run in range(3):
         try:

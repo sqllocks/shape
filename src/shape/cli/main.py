@@ -2284,6 +2284,9 @@ def main(argv=None):
 
     lifecycle.quick_exit_allowed = argv is None
     lifecycle.exit_on_return = False
+    stale = sys.modules.get("shape.io.deltafs")
+    if stale is not None:
+        stale.bridge_in_use = False  # per command: a library user may have run a command before
     try:
         code = _main(argv)
     finally:
