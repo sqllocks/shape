@@ -100,6 +100,7 @@ def test_job_id_comes_from_the_earlier_example_or_the_newest_record(tmp_path):
     from docs_fabric_transcripts import resolve_job_id
 
     assert resolve_job_id("started job-0123456789ab", tmp_path) == "job-0123456789ab"
+    assert resolve_job_id("submitted spark-05281be1 (run)", tmp_path) == "spark-05281be1"
     (tmp_path / "job-aaaaaaaaaaaa.json").write_text("{}")
     assert resolve_job_id("no id here", tmp_path) == "job-aaaaaaaaaaaa"
     assert resolve_job_id("", tmp_path / "missing") == ""
@@ -137,6 +138,8 @@ def test_transcripts_mode_is_a_gated_job_of_fabric_live_and_changes_nothing_else
     capture = workflow["jobs"]["docs-fabric-transcripts"]
     assert capture["environment"] == "fabric-live"
     assert capture["timeout-minutes"] <= 150
+    assert capture["permissions"] == {"contents": "write"}
+    assert workflow["permissions"] == {"contents": "read"}
     assert capture["if"].startswith("${{ inputs.transcripts &&")
     assert not any(step.get("continue-on-error") for step in capture["steps"])
     assert any(s.get("uses", "").startswith("actions/upload-artifact@") for s in capture["steps"])

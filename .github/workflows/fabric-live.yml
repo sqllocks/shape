@@ -199,6 +199,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 150
     environment: fabric-live
+    permissions:
+      contents: write
     env:
       SHAPE_DOCS_RUNNER: ubuntu-latest
       EXAMPLES: ${{ inputs.examples }}

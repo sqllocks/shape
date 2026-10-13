@@ -105,7 +105,7 @@ def leaked(output: str, env: dict[str, str]) -> list[str]:
 
 def resolve_job_id(output: str, jobs_dir: Path) -> str:
     """The job a fabric_spark run created: from its output, else the newest stored record."""
-    found = re.search(r"\bjob-[0-9a-f]{12}\b", output)
+    found = re.search(r"\b(?:job|spark|local)-[0-9a-f]{8,12}\b", output)
     if found:
         return found.group(0)
     records = sorted(jobs_dir.glob("job-*.json"), key=lambda p: p.stat().st_mtime)

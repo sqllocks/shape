@@ -36,21 +36,23 @@
     "note": "Fabric maintainer — supply the transcript for docs/SINKS.md example 0.",
     "timeout": 1800,
     "needs": [
-      "DOCS_WS",
-      "DOCS_LH",
       "AZURE_CLIENT_SECRET"
     ],
     "rewrite": [
       [
         "abfss://landing@myacct\\.dfs\\.core\\.windows\\.net/",
-        "abfss://$DOCS_WS@onelake.dfs.fabric.microsoft.com/$DOCS_LH/Files/shape_docs/"
+        "abfss://shape-test@onelake.dfs.fabric.microsoft.com/shape_lh_classic.Lakehouse/Files/shape_docs/"
       ],
       [
         "delta\\+abfss://ws@onelake\\.dfs\\.fabric\\.microsoft\\.com/lh\\.Lakehouse/Tables",
-        "delta+abfss://$DOCS_WS@onelake.dfs.fabric.microsoft.com/$DOCS_LH/Tables"
+        "delta+abfss://shape-test@onelake.dfs.fabric.microsoft.com/shape_lh_classic.Lakehouse/Tables"
       ]
     ],
-    "after_text": "A write to a remote target needs `--yes` or `SHAPE_CONFIRM_REMOTE=1`; the recorded run set the variable."
+    "after_text": "A write to a remote target needs `--yes` or `SHAPE_CONFIRM_REMOTE=1`; the recorded run set the variable.",
+    "scrub_names": {
+      "shape-test": "ws",
+      "shape_lh_classic": "lh"
+    }
   },
   {
     "id": "scale-fabric-spark",

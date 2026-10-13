@@ -116,6 +116,8 @@ Run by hand:
 
 **Needs a Fabric account. Not run in CI.**
 
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers.
+
 ```
 pip install -e '.[dev]' -e 'plugins/shape-fabric[entra]'
 FABRIC_TENANT_ID=... FABRIC_CLIENT_ID=... FABRIC_CLIENT_SECRET=... FABRIC_WORKSPACE_ID=... \
@@ -124,7 +126,24 @@ SHAPE_LIVE_RESULT=git-sync-result.json \
 pytest -m live plugins/shape-fabric/tests/test_live_git_sync.py
 ```
 
-<!-- owner: Fabric maintainer — supply the transcript for docs/FABRIC_PLATFORM.md example 0. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    ======================================= test session starts ========================================
+    platform linux -- Python 3.12.15, pytest-9.1.1, pluggy-1.6.0
+    rootdir: <checkout>
+    configfile: pyproject.toml
+    plugins: Faker-40.43.0, hypothesis-6.169.0, platformdirs-4.13.0, sqllocks-shape-0.9.1, cov-7.1.0
+    collected 1 item
+    
+    plugins/shape-fabric/tests/test_live_git_sync.py .                                           [100%]
+    
+    ================================== 1 passed in 143.59s (0:02:23) ===================================
+    ```
+
+Evidence: [run 38320894194, ubuntu-latest, `6eb065e8f734`](evidence/transcripts/docs-transcripts-38320894194-6eb065e8f734-ubuntu-latest-git-sync-live.json).
+
+A second run of the same test against the same Git workspace (run 38327274076) failed with `CommitFailedDueToIncomingChanges`: the test leaves the workspace with changes to update from Git, so it passes on a clean workspace and fails when repeated until Git is updated.
 
 
 The nightly job `fabric-git-sync-live` runs it only where the secrets are set and uploads the
