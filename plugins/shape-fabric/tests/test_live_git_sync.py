@@ -313,6 +313,15 @@ def test_shape_files_survive_a_git_sync_in_both_directions(tmp_path):
             branch, directory = fabric.connection()
             git.clone(branch)
         with check.step("setup-item"):
+            # The repository can be ahead of the workspace (a commit made outside this test);
+            # Fabric then refuses to commit (CommitFailedDueToIncomingChanges, run 38323914094),
+            # so the workspace takes the incoming commits first.
+            behind = fabric.status()
+            if (
+                behind.get("remoteCommitHash")
+                and behind["remoteCommitHash"] != behind["workspaceHead"]
+            ):
+                fabric.update_from_git(behind["remoteCommitHash"], behind["workspaceHead"])
             item_id = fabric.create_notebook(name, "initial")
             status = fabric.status()
             fabric.commit_to_git(status["workspaceHead"])
