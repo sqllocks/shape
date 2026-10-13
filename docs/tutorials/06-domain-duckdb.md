@@ -89,7 +89,7 @@ shape profile validate --safe customer.shape
     CLEAN: no leaks found in customer.shape
     ```
 
-This single-table validation passes. The origin-verification note appears because the example artifact is unsigned; the data-minimisation verdict is a separate result. The successful single-table path contrasts with the documented multi-table dataset validator limitation you saw in the first tutorial. Before sharing a profile from your own data, review its retained information and the validation result. You now have a complete local round trip: a shipped domain produces related rows, the database writer stores them, SQL checks inspect them, and a source adapter reads a table for profiling. Reuse that sequence when you need a small database fixture for development.
+This single-table validation passes. The origin-verification note appears because the example artifact is unsigned; the data-minimisation verdict is a separate result. The multi-table dataset profile in the first tutorial passes the same scan. Before sharing a profile from your own data, review its retained information and the validation result. You now have a complete local round trip: a shipped domain produces related rows, the database writer stores them, SQL checks inspect them, and a source adapter reads a table for profiling. Reuse that sequence when you need a small database fixture for development.
 
 ## What's next
 

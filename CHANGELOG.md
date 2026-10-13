@@ -19,6 +19,12 @@ Status: available.
 - `shape.yml` `gates.NAME.mode` accepts the four gates only `shape verify` runs
   (`reconciliation`, `timeseries_quality`, `memorization`, `utility`).
 - `shape fabric setup` names `shape fabric notebook` in its next steps.
+- `shape profile validate --safe` no longer fails multi-table `--dataset` profiles of wide
+  tables. The profiler recorded the columns an analysis sampled as a list of names under
+  `sampling.internal[].columns`, which the leak scanner reads as a list of raw strings. It now
+  records them as positions in the table's `columns` (`column_indexes`). The scanner is
+  unchanged; profiles written by 0.9.1 still load and still report those findings until they
+  are re-profiled.
 
 ## 0.9.1
 

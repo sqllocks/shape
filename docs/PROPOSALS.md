@@ -329,7 +329,7 @@ shape generate --from shop.shape --decisions decisions.json --format csv -o out/
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    {"shape_content_id": "54ecf06034ce4a15fdffbbb2c26aab78bf3036a0ad7dee874b907b226d896e1d", "written": "shop.shape"}
+    {"shape_content_id": "9f059bc2d015b14d2e02d1de7a7a2e91f0f6ec3c3677c68f8d46b288f927d72a", "written": "shop.shape"}
     shape: note: shop.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
     {
       "written": "decisions.json",

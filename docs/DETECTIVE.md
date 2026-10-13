@@ -157,7 +157,7 @@ shape diff case/baseline.shape today.shape
 
     ```text {.expected}
     shape: warning: --capture full keeps real values in today.shape; do not commit or share it
-    {"shape_content_id": "abcae705b3f94a095413f66c481b8e9e69009d9c24ee0c240ffb9823a031dcd6", "written": "today.shape"}
+    {"shape_content_id": "d22b184b645e0011ced70f8d8b808399ffdd286859a0e26243f06855e31fa79a", "written": "today.shape"}
     shape: note: today.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
     shape: note: case/baseline.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
     shape: customer.last_name: null_rate_change [breaking]
