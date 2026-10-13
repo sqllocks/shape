@@ -40,6 +40,13 @@ invocations have their overall exit code recorded.
 | `test -f docs/plans/PROMOTION_PLAN_0.9.3.md`; instruction-file search; `git ls-tree -r --name-only origin/main docs/plans/PROMOTION_PLAN_0.9.3.md` | 0 (file test: 1; tree lookup empty) |
 | `cat /tmp/W-gameday-1-make-check.log`; `test -f docs/plans/PROMOTION_PLAN_0.9.3.md` | 1 |
 | `sed -n '36,184p' docs/plans/COMPLETION_PLAN.md`; `sed -n '565,646p' docs/plans/COMPLETION_PLAN.md` | 0 |
+| `git diff --check && git add docs/plans/lane_status/W-gameday-1.md && git commit -s -m 'W-gameday-1: record missing promotion plan blocker'` | 0 |
+| `git push origin HEAD:refs/heads/lane/W-gameday-1` | 0 |
+
+Final journal publication uses `git diff --check`, stages only this status file,
+commits with `W-gameday-1: complete blocker command journal` and a DCO sign-off,
+then repeats the same explicit lane-only push. These publication outcomes are
+reported in the session response if unsuccessful.
 
 The locally recreated lane had no changes or task commits before recreation;
 it now starts at the successfully fetched base. No remote branch was deleted
