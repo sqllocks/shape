@@ -31,6 +31,28 @@ documentation owner notes remain.
 - Owner notes are 0: `python scripts/check_docs_owners.py --release` prints 0. The Documentation
   workflow runs this on a tag and refuses to publish the docs site otherwise.
 
+## 1b. Version strings in the docs (lead, before step 2)
+
+Why: the version bump (`scripts/set_version.py`) does not touch prose. Run this on the merged
+release commit and decide each hit:
+
+```bash
+git grep -n "0\.9\.1" -- . ':!docs/plans' ':!tests' ':!CHANGELOG.md' ':!docs/evidence' ':!docs/assets' ':!THIRD_PARTY*' ':!docs/RELEASE_CHECKLIST.md'
+```
+
+Known hits on `release/0.9.2` today (re-run after every lane merge; lanes add more):
+
+| Where | Decision |
+|---|---|
+| `docs/FAQ.md:36` "Not directly in 0.9.1" | Change to 0.9.2 (a statement about the current release). |
+| `docs/plugins/trust-model.md:42` and `:85` (example error text, `==0.9.1` example) | Change to 0.9.2 so the examples match the release. |
+| `docs/TROUBLESHOOTING.md:39` "known 0.9.1 validator failure" | Delete the sentence once `fix/validate-multitable` is merged (it fixes the failure); do not just bump it. |
+| `docs/KNOWN_LIMITATIONS.md` ("Shape is early access 0.9.1", heading "Fabric in 0.9.1") | Appears once `fix/live-findings` merges. Rewrite so 0.9.1 workarounds are marked fixed in 0.9.2; the lanes own this page. |
+| Pages from `integrate/owner-notes-3` (receipts; any `uses: sqllocks/shape@v0.9.1` example in a guide page) | Receipts are history and stay 0.9.1. Change the install or `@v` example in the guide pages to the 0.9.2 tag only after the tag exists (step 6), then push a docs-only fix; do not move the tag. |
+| `demo/TALK.md:87` ("available in 0.9.1"), `plugins/shape-domains/README.md:58` ("upgrading from 0.9.1"), `integrations/fabric/RUNBOOK.md:39` ("PyPI has an older 0.9.1") | Keep: they say when something began or name the older release. |
+| `docs/PERFORMANCE.md`, `scripts/gen_performance_page.py:127`, `scripts/env.sh`, `benchmarks/vs_refengine/*` and `ci.yml`/`nightly.yml` (after FRZ-01: `BASELINE_VERSION` 0.9.1, `record-0.9.1`) | Keep through the release. They change only when the 0.9.2 baseline is committed (step 7.3), as one change that moves `BASELINE_VERSION`, the recorded store and the page together. |
+| `0.9.0` in `docs/ANATOMY.md`, `docs/CLI.md:427`, `docs/VSCODE.md:20`, `docs/specs/STATE_AND_COMPATIBILITY.md`, example JSON | Keep: they are format minimums or example output, not the current version. |
+
 ## 2. Move `main` to the release commit
 
 Why: Publish, the re-record and the tag all run from `main`. This is a fast-forward only
