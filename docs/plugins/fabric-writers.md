@@ -135,12 +135,20 @@ Use [the tested starters](../TUTORIAL.md) for local commands and complete output
 
 **Needs a Fabric account. Not run in CI.**
 
+Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers. A write to a remote target needs `--yes` or `SHAPE_CONFIRM_REMOTE=1`; the recorded run set the variable.
+
 ```
 shape generate retail --to synapse://myws.sql.azuresynapse.net/pool1 \
   --auth cli --sink-config synapse.staging_path=abfss://stage@myacct.dfs.core.windows.net/shape
 ```
 
-<!-- owner: Fabric maintainer — supply the transcript for docs/plugins/fabric-writers.md example 1. -->
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Wrote 21,750 rows in 9 tables to synapse://<workspace>.sql.azuresynapse.net/<pool> (48.00s)
+    ```
+
+Evidence: [run 38338859503, ubuntu-latest, `b432568bdbd3`](../evidence/transcripts/docs-transcripts-38338859503-b432568bdbd3-ubuntu-latest-synapse-write.json).
 
 
 | URI part or option | meaning |
