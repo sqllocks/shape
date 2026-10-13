@@ -70,7 +70,7 @@ class Fabric:
             print(f"{method} {url} -> {exc.status}\n{exc.text}")
             raise
 
-    def lro(self, method: str, path: str, body: Any = None) -> dict[str, Any]:
+    def lro(self, method: str, path: str, body: Any = None, result: bool = True) -> dict[str, Any]:
         response = self.call(method, path, body)
         if response.status != 202:
             return response.json_object()
@@ -80,8 +80,10 @@ class Fabric:
             state = self.call("GET", location)
             doc = state.json_object()
             if doc.get("status") == "Succeeded":
-                result = self.call("GET", location.rstrip("/") + "/result", ok=(200, 204))
-                return result.json_object() if result.status == 200 else {}
+                if not result:  # updateDefinition has no result to fetch (OperationHasNoResult)
+                    return {}
+                fetched = self.call("GET", location.rstrip("/") + "/result", ok=(200, 204))
+                return fetched.json_object() if fetched.status == 200 else {}
             if doc.get("status") in ("Failed", "Cancelled"):
                 raise RuntimeError(f"operation {doc.get('status')}: {json.dumps(doc)}")
             response = state
@@ -111,6 +113,16 @@ def dump(files: dict[str, str], folder: str) -> None:
         print(f"--- {folder}/{path} ({len(text)} bytes)")
         if len(text) < 8000:  # small definition parts are printed: the record of what was there
             print(text)
+
+
+def expression_source(files: dict[str, str]) -> str:
+    """The ``expressionSource`` of the model's existing Direct Lake partitions, as TMDL writes it:
+    a plain word, or a name in single quotes (``'DirectLake - shape_lh'``, a quote doubled)."""
+    for text in files.values():
+        found = re.search(r"expressionSource:[ \t]*('(?:[^']|'')*'|\S+)", text)
+        if found:
+            return found.group(1)
+    return ""
 
 
 def quote(name: str) -> str:
@@ -213,13 +225,7 @@ def main() -> int:
     item = api.call("GET", f"/workspaces/{where.workspace}/lakehouses/{where.item}").json_object()
     props = item["properties"]["sqlEndpointProperties"]
     connection = f"Data Source={props['connectionString']};Initial Catalog={item['displayName']}"
-    expression = os.environ.get("SM_EXPRESSION") or ""
-    if not expression:
-        for text in files.values():
-            m = re.search(r"expressionSource:\s*(\S+)", text)
-            if m:
-                expression = m.group(1)
-                break
+    expression = os.environ.get("SM_EXPRESSION") or expression_source(files)
     expression = expression or "DatabaseQuery"
     print(f"expression source: {expression}")
 
@@ -230,7 +236,11 @@ def main() -> int:
             print(f"{schema}.{table} is not visible in the SQL endpoint: seed first")
             return 1
         added[table] = [c[0] for c in cols]
-        files[f"definition/tables/{table}.tmdl"] = table_tmdl(table, schema, cols, expression)
+        key = f"definition/tables/{table}.tmdl"
+        if key in files:  # already in the model (an earlier run): keep it as it is
+            print(f"table {table} is already in the model: kept")
+        else:
+            files[key] = table_tmdl(table, schema, cols, expression)
     model = files["definition/model.tmdl"].rstrip("\n")
     for table in TABLES:
         if f"ref table {quote(table)}" not in model:
@@ -242,6 +252,12 @@ def main() -> int:
     for child, ccol, parent, pcol in RELATIONSHIPS:
         if ccol not in added[child] or pcol not in added[parent]:
             skipped.append(f"{child}.{ccol} -> {parent}.{pcol}")
+            continue
+        pair = (
+            f"fromColumn: {quote(child)}.{quote(ccol)}\n\ttoColumn: {quote(parent)}.{quote(pcol)}"
+        )
+        if pair in relationships:
+            print(f"relationship {child}.{ccol} -> {parent}.{pcol} is already in the model: kept")
             continue
         relationships += (
             f"\n\nrelationship {uuid.uuid4()}\n\tfromColumn: {quote(child)}.{quote(ccol)}"
@@ -258,7 +274,12 @@ def main() -> int:
         folder + "-new",
     )
     parts = encode(files)
-    api.lro("POST", f"{base}/updateDefinition", {"definition": {"format": "TMDL", "parts": parts}})
+    api.lro(
+        "POST",
+        f"{base}/updateDefinition",
+        {"definition": {"format": "TMDL", "parts": parts}},
+        result=False,
+    )
     print("updateDefinition accepted")
     again = decode(api.lro("POST", f"{base}/getDefinition?format=TMDL")["definition"]["parts"])
     dump(again, folder + "-after")

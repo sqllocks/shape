@@ -74,11 +74,18 @@ def main() -> int:
         print(f"  {tables}/{schema}/{name}")
     print("kept: " + ", ".join(n for n in every if n not in names))
     storage = Storage(credential=credential)
+    gone = True
     for name in names:
-        storage.remove(f"{tables}/{schema}/{name}", recursive=True)
-        print(f"deleted {tables}/{schema}/{name}")
-    print(f"deleted {len(names)} leftover table folders")
-    return 0
+        path = f"{tables}/{schema}/{name}"
+        existed = storage.exists(path)
+        storage.remove(path, recursive=True)
+        if storage.exists(path):
+            print(f"STILL THERE after delete: {path}")
+            gone = False
+        else:
+            print(f"deleted {path}" if existed else f"already absent in OneLake {path}")
+    print(f"{len(names)} listed by the SQL endpoint")
+    return 0 if gone else 1
 
 
 if __name__ == "__main__":

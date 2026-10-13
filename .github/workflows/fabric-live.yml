@@ -516,7 +516,7 @@ jobs:
         run: >-
           pip install -e '.[dev,azure,delta]'
           -e 'plugins/shape-fabric[sqlserver,eventhubs,entra]'
-          -e plugins/shape-domains
+          -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e plugins/shape-domains
       - name: Remove the test tables an earlier Spark live test left in shape_lh dbo (Owner-approved)
         run: python -u scripts/fabric_cleanup_leftovers.py
       - name: Seed shape_lh with the retail domain
