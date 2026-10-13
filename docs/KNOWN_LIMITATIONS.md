@@ -36,10 +36,12 @@ The 1.x compatibility promises describe future policy.
   `ALTER TABLE ... ADD CONSTRAINT ... PRIMARY KEY NONCLUSTERED (...) NOT ENFORCED`, then
   write with `--write-mode append`. A fix is in progress.
 - Schema-enabled Lakehouses require `Tables/<schema>/<table>` (normally `dbo`), whereas
-  0.9.1's Delta target appends a table directly below the supplied directory. Workaround:
-  target a URI ending in `Tables/dbo` or another existing schema, rather than `Tables`.
-  Read back with `onelake://<workspace>/<lakehouse>/Tables/dbo/<table>`. Files landing zones
-  are unaffected. A fix is in progress.
+  0.9.1's Delta target appended a table directly below the supplied directory, so the tables did
+  not appear in the SQL analytics endpoint or in semantic models. Fixed in 0.9.2: the Delta sink
+  and `fabric_spark` ask Fabric which kind of Lakehouse the target is and write the schema folder
+  (`dbo` by default); they stop with a clear error rather than guess. On 0.9.1, target a URI ending
+  in `Tables/dbo` (or another existing schema). Files landing zones were never affected. See
+  [Lakehouse table layouts](plugins/cloud-sources.md#lakehouse-table-layouts).
 - **Fabric Warehouse `COPY INTO` can fall back to row-by-row `INSERT`.** Shape stages Parquet in
   OneLake and loads it with `COPY INTO`. When the Warehouse answers SQL error 13840 ("Access token
   couldn't be fetched for storage path"), it rolls back the statement, reapplies an uncommitted

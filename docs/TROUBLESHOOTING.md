@@ -47,6 +47,18 @@ matching columns, in any order. Dataset mode treats files as named tables. Do no
 files into one partition folder. A `tables` contract requires a dataset profile; a single table
 cannot satisfy that input shape.
 
+## Cannot tell whether the Lakehouse is schema-enabled
+
+A schema-enabled Lakehouse keeps tables at `Tables/<schema>/<table>`; a classic one at
+`Tables/<table>`. A table in the wrong place is invisible to the SQL analytics endpoint and to
+semantic models, so Shape asks Fabric which kind the target is and never guesses. The write stops
+with `cannot tell whether Lakehouse ... is schema-enabled` when it cannot ask: the target names the
+workspace or Lakehouse instead of giving their ids, no sign-in was given (`--auth`, or the notebook
+identity), or Fabric did not answer. Use the ids in the URI and sign in with an identity that can
+read the Lakehouse, or state the kind: `--sink-config delta.schema_enabled=true` (schema `dbo`, or
+`--schema-name`) or `delta.schema_enabled=false`. A 401 or 403 from Fabric is reported as an
+authentication error instead. See [Lakehouse table layouts](plugins/cloud-sources.md#lakehouse-table-layouts).
+
 ## My model query rejects a .shape file
 
 The extension does not identify the payload kind. Queries operate on models, not profiles.
