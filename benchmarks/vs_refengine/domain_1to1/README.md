@@ -8,15 +8,12 @@ tools under the same conditions.
 
 | file | what it is |
 |---|---|
-| `port.py` | `generate(scale='medium', seed=42, refengine_root=...) -> dict[str, pyarrow.Table]` and `write_parquet(tables, dir)`. Uses only numpy, pyarrow and the standard library. Retail only. |
 | `generate.py` | Writes one run of a domain as Parquet, for `--impl refengine\|reference_port\|shape`, into `$BENCH_OUT_DIR/<impl>/<domain>/<scale>/seed<N>/`. Each impl runs in its own venv. |
 | `verify.py` | Equivalence verifier (T-21 clauses (a)-(h)); reads Parquet only, in the RefEngine venv. Tables, FKs and business rules come from `../dump_schema.py`. Exits 1 unless every clause holds, 2 if a required run directory is missing. |
 | `export_retail.py` | Writes the `shape-domains` plugin's retail data (the schema, from the baseline's dump, and the four reference datasets, from the baseline checkout); `--check` proves the shipped files equal what it would write. |
 | `export_domains.py` | The same for every domain, retail included (`capital_markets` to `telecom`; 3nf and star schemas, every reference file of the baseline's domain); `--check` proves the shipped files equal what it would write. One documented schema difference (`OVERRIDES`). |
 | `rowcounts.py` | Row counts equal the baseline's for every domain (3nf and star) and every composite at every scale preset (planned) and at `fabric_demo`, `demo` and `small` (generated). Exits 1 on any difference; runs a negative control first (exit 3 if the comparator is blind). No allow-list. |
 | `allowlist.py` | The narrow, named places where Shape deliberately differs from the baseline (composites only): CMP-1 (a link to a table's own key gets a bridge column) and CMP-2 (clashing dataset names). `verify.py` applies them to composite runs and nothing else. |
-| `full_seed_study.py` | Runs `verify.py`'s every clause for Shape seeds 1042-1049 and counts, per finding, the seeds it appears at (a chance miss at 1042 against a defect). Changes no verdict. |
-| `pipeline_run.py` | Writes what the Fabric generate notebook and the `generateSample` function produce (run in the `fabric-demo` environment) as a run directory, so `verify.py --impl shape` checks the pipeline path against T-21. Use a `BENCH_OUT_DIR` of its own: it replaces the product path's run. |
 | `bench.py` | Benchmark harness: every run is a fresh process (median of `--runs`), timing generate + write through `generate.py`. |
 
 The recorded results quoted below (`verify_*` reports for small, medium and large, the
