@@ -145,6 +145,12 @@ shape jobs resume JOB          # a failed or cancelled job
 
 ## `fabric_spark`
 
+Creating the worker notebook is a long-running Fabric operation. Fabric answers with a `Location`
+that is on the Fabric API or on a regional `*.analysis.windows.net` redirect host
+(`.../v1/operations/<id>`). Shape never sends the token to that host: it takes the operation id
+from the path and polls `https://api.fabric.microsoft.com/v1/operations/<id>`. Any other host or
+path is refused ("the Items API names an operation URL off the Fabric API").
+
 <!-- example: 3 -->
 
 **Needs a Fabric account. Not run in CI.**

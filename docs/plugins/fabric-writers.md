@@ -175,6 +175,19 @@ removal that itself fails is a `RuntimeWarning`).
 Out of scope: serverless SQL pools, Synapse Spark pools and Synapse pipelines (those are
 `integrations/synapse`).
 
+## Time limits
+
+Every SQL connection the Fabric writers open (`SqlDatabaseWriter`, `WarehouseWriter`,
+`SynapseWriter`) gives each statement a deadline, so a stalled load fails with the driver's timeout
+message instead of waiting for ever. `SHAPE_SQL_QUERY_TIMEOUT` sets it in seconds (default 900).
+`SHAPE_SQL_QUERY_TIMEOUT` does **not** cover `shape profile-db`, which connects through the SQL
+Server plugin (see [sqlserver.md](sqlserver.md)).
+
+When `COPY INTO` fails with error 13840 and the Warehouse writer falls back to parameterized
+`INSERT` (see [Known limitations](../KNOWN_LIMITATIONS.md)), one table may spend at most
+`SHAPE_WAREHOUSE_INSERT_SECONDS` seconds there (default 600). A larger table stops with an error
+that names the cause and the rows already sent, and the write is rolled back.
+
 ## Unattended live tests
 
 Run `pytest -m live plugins/shape-fabric/tests/test_live_owner_matrix.py` for the Owner matrix,
@@ -201,6 +214,23 @@ Use dedicated test items: the tests create unique names and remove what they cre
 | Notebook deploy and setup | `FABRIC_WORKSPACE_ID`, plus the common SPN variables, in `test_live_commands.py` |
 | Spark worker | `FABRIC_WORKSPACE_ID`, `FABRIC_LAKEHOUSE_ID`, plus common SPN variables; set `FABRIC_LAKEHOUSE_SCHEMA` when the test Lakehouse has schemas enabled |
 | Synapse dedicated-pool round trip | `SHAPE_TEST_SYNAPSE_URI`, `SHAPE_TEST_SYNAPSE_STAGING`, `SHAPE_TEST_SYNAPSE_AUTH=spn`, `SHAPE_TEST_SYNAPSE_TENANT_ID`, `SHAPE_TEST_SYNAPSE_CLIENT_ID`, `SHAPE_TEST_SYNAPSE_CLIENT_SECRET` |
+
+### The `fabric-live` workflow
+
+`.github/workflows/fabric-live.yml` runs these tests nightly and on demand
+(`gh workflow run fabric-live.yml -f ref=<branch>`), as the service principal `shape-ci-fabric`, with
+the values held by the `fabric-live` environment. Each test is printed as it starts, a test that
+stays 10 minutes dumps every thread's stack, the step is capped at 50 minutes, and a failed test
+prints its failure at once. After the tests the run lists the items left in the workspace and, for
+the Git workspace, Fabric's answers to `git/connection`, `git/status` and `git/myGitCredentials`
+(read-only). Two dispatch inputs, both off by default, do one-time setup:
+
+| Input | What it does |
+|---|---|
+| `set_git_credentials` | As the service principal, sets its own Git credentials on the Git workspace (`FABRIC_GIT_WORKSPACE_ID`) to the existing GitHub connection `shape-fabric-sync-gh`: `PATCH .../git/myGitCredentials` with `ConfiguredConnection`. It reads the credentials first and changes nothing when they already point at that connection. It prints only the source and the connection id. Timeout: 5 minutes. |
+| `delete_leftover_notebooks` | Lists the Notebook items of the test workspace with their ids, then deletes only those named `shape_live_nb_` plus 8 hex digits (what the deploy-notebook test names its notebook). Nothing else is deleted. Timeout: 5 minutes. |
+
+Only one run waits behind a running one: dispatch a run when none is pending.
 
 The Owner matrix needs two distinct Lakehouse items and a sample Warehouse:
 
