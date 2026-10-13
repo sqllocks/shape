@@ -31,10 +31,11 @@ The 1.x compatibility promises describe future policy.
 
 ## Fabric in 0.9.1
 
-- Fabric Warehouse rejects the inline `PRIMARY KEY` emitted by 0.9.1 with error 24584.
-  Workaround: create the destination tables yourself without inline keys, optionally add
-  `ALTER TABLE ... ADD CONSTRAINT ... PRIMARY KEY NONCLUSTERED (...) NOT ENFORCED`, then
-  write with `--write-mode append`. A fix is in progress.
+- 0.9.1 emitted the Warehouse primary key inside `CREATE TABLE`, which a Fabric Warehouse rejects
+  with error 24584. Fixed after 0.9.1: the key is added by a separate
+  `ALTER TABLE ... ADD CONSTRAINT ... PRIMARY KEY NONCLUSTERED (...) NOT ENFORCED` after the table is
+  created. On 0.9.1, create the destination tables yourself without inline keys, optionally add that
+  `ALTER TABLE`, and write with `--write-mode append`.
 - Schema-enabled Lakehouses require `Tables/<schema>/<table>` (normally `dbo`), whereas
   0.9.1's Delta target appended a table directly below the supplied directory, so the tables did
   not appear in the SQL analytics endpoint or in semantic models. Fixed in 0.9.2: the Delta sink

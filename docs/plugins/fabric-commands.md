@@ -118,7 +118,12 @@ shape setup-fabric --snippet        # print the cell to paste into a notebook in
 
 
 Creates the Fabric Environment item (`--env-name`, default `shape-env`) and, with
-`--create-lakehouse`, a Lakehouse (`--lakehouse-name`). An item that already exists is reused. The
+`--create-lakehouse`, a Lakehouse (`--lakehouse-name`, default `shape_lakehouse`). A Lakehouse name
+must begin with a letter and use only letters, digits and underscores, at most 123 characters
+([Create a lakehouse in Microsoft Fabric](https://learn.microsoft.com/fabric/data-engineering/create-lakehouse));
+Fabric refuses anything else with HTTP 400 `InvalidInput` (`shape-lakehouse` is refused for its
+hyphen), so Shape checks `--lakehouse-name` first and stops before any request. An item that already
+exists is reused. The
 command prints the libraries to add to the Environment; adding them is done in Fabric.
 
 ## `export-model`

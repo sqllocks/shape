@@ -298,7 +298,7 @@ def test_the_page_documents_git_sync_and_its_secrets():
         "FABRIC_TENANT_ID",
         "FABRIC_CLIENT_ID",
         "FABRIC_CLIENT_SECRET",
-        "FABRIC_WORKSPACE_ID",
+        "FABRIC_GIT_WORKSPACE_ID",
         "FABRIC_GIT_REMOTE",
         "FABRIC_GIT_TOKEN",
     ):

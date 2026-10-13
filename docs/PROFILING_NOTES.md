@@ -104,6 +104,16 @@ keys. UTC and fixed offsets (`+05:30`) need no time-zone database. A named zone 
 without one (Windows without the `tzdata` package) the profile stops with an error that names the zone and says
 `pip install tzdata`. A zone name the database does not know (`Mars/Base`) is reported as an unknown time zone.
 
+### Time zones and dateless text
+
+Text that is a time of day or a range of hours, such as an hour bucket `18:00-18:59`, has no date and
+is **plain text**, not a timestamp: it is not parsed, and its trailing `-18:59` is not read as a
+UTC offset. Text that carries a date and a zone or offset (`2026-10-12 18:00-04:00`) is zone-bearing
+date text. A database profile (`shape profile-db`) keeps the column's SQL type and sampled
+statistics and records a `profiling_note` on that column when the data-based relationship inference
+cannot model it; a file or DataFrame profile stops with an error naming the column until it is
+converted to a timestamp.
+
 ## Personal-data patterns
 
 For every text column the profile records `pattern_rates` (the share of non-null values that are wholly an SSN, email
