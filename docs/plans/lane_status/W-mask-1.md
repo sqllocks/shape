@@ -36,3 +36,15 @@ summarized to avoid reproducing the prohibited archived engine name.
 The branch was moved to the newly fetched base before any files were edited.
 Only this status report is committed. Commit and push outcomes are reported in
 the session response; no PR, tag or force-push is requested or performed.
+
+## Publication evidence
+
+- `git add docs/plans/lane_status/W-mask-1.md`: exit 0.
+- `git commit -s -m 'W-mask-1: record missing promotion plan blocker'`: exit 0,
+  commit `f4feaf5d8`.
+- `git push origin HEAD:refs/heads/lane/W-mask-1`: exit 0; created only the
+  assigned lane branch.
+- Python append of publication evidence: exit 0.
+- Final commands: stage this report, commit with prefix `W-mask-1:`, and push
+  `HEAD:refs/heads/lane/W-mask-1`. Their actual exit codes are reported in the
+  session response because they occur after this report is committed.
