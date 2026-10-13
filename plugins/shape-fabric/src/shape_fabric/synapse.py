@@ -200,6 +200,7 @@ class SynapseWriter(WarehouseWriter):
         self.storage = storage or Storage(credential=credential, filesystem=filesystem)
         self.schema_name = schema_name
         self.run_id = run_id or uuid.uuid4().hex[:12]
+        self.notes: list[str] = []
         self.copy_identity = copy_identity
         self._distribution: str | None = None
         self._index: str | None = None

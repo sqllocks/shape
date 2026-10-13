@@ -12,13 +12,15 @@ form, not by its length.
 
 from __future__ import annotations
 
+import json
 import re
 import time
 from collections.abc import Callable
 from typing import Any
 from urllib.parse import quote, urlsplit
 
-from shape.scale.http import FABRIC_API, Http, HttpError, Transport, on_fabric_api, same_origin
+from shape.scale.http import FABRIC_API, Http, HttpError, Transport, operation_url, same_origin
+from shape.security.redact import redact_text
 
 from ._auth import token_for
 from .errors import AuthError
@@ -108,6 +110,17 @@ def _seg(value: str) -> str:
     return quote(str(value), safe="")
 
 
+def _error_detail(error: Any) -> str:
+    """Keep the service code and explanation, then redact before any display truncation."""
+    if isinstance(error, dict):
+        code = error.get("errorCode") or error.get("code")
+        message = error.get("message")
+        parts = [str(part) for part in (code, message) if part]
+        if parts:
+            return redact_text(": ".join(parts))
+    return redact_text(str(error)) if error else "unknown error"
+
+
 def is_guid(value: str) -> bool:
     return bool(_GUID.match(value))
 
@@ -136,7 +149,18 @@ class FabricApi:
         token, self._first = self._first, None
         if token is None:
             token = token_for(self._credential, SCOPE_FABRIC)
-        return self._http.request(method, url, token=token, **options)
+        try:
+            return self._http.request(method, url, token=token, **options)
+        except HttpError as exc:
+            # A long requestId can push the actual code/message beyond HttpError's
+            # display limit. Read its complete response and show the meaningful fields.
+            try:
+                document = json.loads(exc.text)
+            except (ValueError, UnicodeDecodeError):
+                document = exc.text
+            if isinstance(document, dict):
+                document = document.get("error") or document
+            raise HttpError(exc.status, url, _error_detail(document)) from None
 
     # ---- workspaces ------------------------------------------------------------------------
 
@@ -207,7 +231,7 @@ class FabricApi:
         except HttpError as exc:
             if exc.status == 409:
                 raise ItemExistsError(
-                    f"a {kind} named {name!r} already exists in this workspace"
+                    f"{exc}; a {kind} named {name!r} already exists in this workspace"
                 ) from None
             raise
         if response.status in (200, 201):
@@ -229,11 +253,13 @@ class FabricApi:
     def _await(self, location: str, kind: str, name: str, wait: float = POLL_SECONDS) -> None:
         if not location:
             raise FabricApiError(f"creating the {kind} {name!r}: no operation URL to follow")
-        if not on_fabric_api(location):
+        polled = operation_url(location)
+        if polled is None:
             raise OperationUrlError(  # a FabricApiError (G7-eval, #434) and a ValueError (#434)
                 f"creating the {kind} {name!r}: the operation URL is off the Fabric API: "
                 f"{urlsplit(location).netloc!r}"
             )
+        location = polled
         # The bearer token goes with every poll: never to another origin or outside the API.
         try:
             same_origin(location, FABRIC_API)
@@ -253,8 +279,8 @@ class FabricApi:
             if status == "Failed":
                 error = state.get("error") or {}
                 raise FabricApiError(
-                    f"creating the {kind} {name!r} failed: "
-                    f"{error.get('message') or error.get('errorCode') or 'unknown error'}"
+                    f"creating the {kind} {name!r} failed (HTTP {answer.status}): "
+                    f"{_error_detail(error)}"
                 )
             if status not in _RUNNING:
                 # Cancelled, or a final state this client does not know: waiting cannot help.

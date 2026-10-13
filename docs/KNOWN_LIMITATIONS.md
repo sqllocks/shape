@@ -29,6 +29,47 @@ The 1.x compatibility promises describe future policy.
   small local tutorial. Optional analyses and generation may materialize tables.
 - Plugins run in the same process. Allow-lists restrict loading, not plugin behavior.
 
+## Fabric in 0.9.1
+
+- Fabric Warehouse rejects the inline `PRIMARY KEY` emitted by 0.9.1 with error 24584.
+  Workaround: create the destination tables yourself without inline keys, optionally add
+  `ALTER TABLE ... ADD CONSTRAINT ... PRIMARY KEY NONCLUSTERED (...) NOT ENFORCED`, then
+  write with `--write-mode append`. A fix is in progress.
+- Schema-enabled Lakehouses require `Tables/<schema>/<table>` (normally `dbo`), whereas
+  0.9.1's Delta target appends a table directly below the supplied directory. Workaround:
+  target a URI ending in `Tables/dbo` or another existing schema, rather than `Tables`.
+  Read back with `onelake://<workspace>/<lakehouse>/Tables/dbo/<table>`. Files landing zones
+  are unaffected. A fix is in progress.
+- **Fabric Warehouse `COPY INTO` can fall back to row-by-row `INSERT`.** Shape stages Parquet in
+  OneLake and loads it with `COPY INTO`. When the Warehouse answers SQL error 13840 ("Access token
+  couldn't be fetched for storage path"), it rolls back the statement, reapplies an uncommitted
+  truncate or replace, and loads the same staged files with parameterized `INSERT` statements in
+  5,000-row batches. The load stays all-or-nothing and the row count is verified, but it is far
+  slower than `COPY INTO` and Microsoft advises against singleton-style inserts for ingestion.
+  Shape never hides this: it prints `WARNING:` on stderr naming the table, the error, the row
+  count and the slower path, raises a `RuntimeWarning`, and adds the same line to
+  `WriteResult.notes`, which `WriteResult.summary()` prints. Any other `COPY INTO` error is still
+  an error. Microsoft's documented constraints that bear on it:
+  - `COPY INTO` reads OneLake with the executing user's Microsoft Entra identity unless a
+    credential is given; a workspace identity can be named with
+    `CREDENTIAL = (IDENTITY = 'Workspace Identity')`, which needs the identity added to the
+    source workspace as Contributor and the executing identity to hold at least Viewer on the
+    Warehouse's workspace
+    ([Ingest data into the warehouse](https://learn.microsoft.com/fabric/data-warehouse/ingest-data)).
+    Shape does not switch identities for you.
+  - A new service principal has no Fabric security token until it has made a first successful
+    Fabric REST API call; connecting to the SQL endpoint does not create one, and until then
+    `COPY INTO` and `OPENROWSET` against storage fail with missing-file or permission errors
+    even though the principal holds the permissions. Fabric also expects the token to be
+    renewed every 30 days
+    ([Service principals in Fabric Data Warehouse](https://learn.microsoft.com/fabric/data-warehouse/service-principals)).
+  - With workspace outbound access protection on, `COPY INTO` may read only from the same
+    workspace or from OneLake
+    ([Workspace outbound access protection for Data Warehouse](https://learn.microsoft.com/fabric/security/workspace-outbound-access-protection-data-warehouse)).
+  - `COPY INTO` accepts CSV, JSONL and Parquet from ADLS Gen2, Blob Storage and OneLake, and
+    Microsoft recommends files of at least 4 MB
+    ([Ingest data into the warehouse](https://learn.microsoft.com/fabric/data-warehouse/ingest-data)).
+
 ## Alpine and musllinux
 
 `confluent-kafka` has no musllinux wheels for ARM64 or x86_64 and builds from source.

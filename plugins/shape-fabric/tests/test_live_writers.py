@@ -44,16 +44,18 @@ RECORD = os.environ.get("SHAPE_RECORD_DIR")
 
 def need(name):
     value = os.environ.get(name)
-    assert value, f"{name} is not set (live tests need it)"
+    if not value:
+        pytest.fail(f"live test needs {name}")
     return value
 
 
 def credential():
+    tenant, client, secret = (
+        need(name) for name in ("FABRIC_TENANT_ID", "FABRIC_CLIENT_ID", "FABRIC_CLIENT_SECRET")
+    )
     from azure.identity import ClientSecretCredential
 
-    return ClientSecretCredential(
-        need("FABRIC_TENANT_ID"), need("FABRIC_CLIENT_ID"), need("FABRIC_CLIENT_SECRET")
-    )
+    return ClientSecretCredential(tenant, client, secret)
 
 
 def recording(name, channel, inner_factory):

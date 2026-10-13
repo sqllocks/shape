@@ -22,6 +22,16 @@ on:
         required: false
         default: ''
         type: string
+      set_git_credentials:
+        description: Set the CI principal's own Git credentials on the Git workspace to the shared GitHub connection (idempotent one-time setup; default - do nothing)
+        required: false
+        default: false
+        type: boolean
+      delete_leftover_notebooks:
+        description: List, then delete, only the Notebook items named shape_live_nb_<8 hex> in shape-test (the deploy-notebook test's leftovers; default - do nothing)
+        required: false
+        default: false
+        type: boolean
 permissions:
   contents: read
 concurrency:
@@ -42,12 +52,22 @@ jobs:
       FABRIC_WORKSPACE_ID: ${{ vars.FABRIC_WORKSPACE_ID }}
       FABRIC_LAKEHOUSE_ID: ${{ vars.FABRIC_LAKEHOUSE_ID }}
       FABRIC_SQL_ENDPOINT: ${{ vars.FABRIC_SQL_ENDPOINT }}
+      # onelake://<workspace>/<lakehouse>/Tables of a classic and of a schema-enabled Lakehouse.
+      FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH: ${{ vars.FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH }}
+      FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH: ${{ vars.FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH }}
       FABRIC_WAREHOUSE: ${{ vars.FABRIC_WAREHOUSE }}
       FABRIC_EVENTHOUSE_URI: ${{ vars.FABRIC_EVENTHOUSE_URI }}
       FABRIC_KQL_DB: ${{ vars.FABRIC_KQL_DB }}
       FABRIC_EVENTSTREAM_CONNECTION_STRING: ${{ secrets.FABRIC_EVENTSTREAM_CONNECTION_STRING }}
       # The Fabric SQL database item (shape_sqldb). No login in it: the service principal's token is passed.
       FABRIC_SQL_CONNECTION_STRING: ${{ secrets.FABRIC_SQL_CONNECTION_STRING }}
+      # The sample Warehouse (shape_wh_sample) and the semantic model (shape_sm) the profile tests read.
+      FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING: ${{ vars.FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING }}
+      FABRIC_SEMANTIC_MODEL: ${{ vars.FABRIC_SEMANTIC_MODEL }}
+      # The Git-connected workspace (shape-git-test), its remote and the token that writes to it.
+      FABRIC_GIT_WORKSPACE_ID: ${{ vars.FABRIC_GIT_WORKSPACE_ID }}
+      FABRIC_GIT_REMOTE: ${{ vars.FABRIC_GIT_REMOTE }}
+      FABRIC_GIT_TOKEN: ${{ secrets.FABRIC_GIT_TOKEN }}
       # DefaultAzureCredential signs in as the same service principal.
       AZURE_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
       AZURE_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
@@ -68,7 +88,7 @@ jobs:
       - name: Install Shape and the plugins from this checkout
         run: >-
           pip install -e '.[dev,azure]'
-          -e 'plugins/shape-fabric[sqlserver,eventhubs,entra]'
+          -e 'plugins/shape-fabric[sqlserver,eventhubs,entra,semantic-link]'
           -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e plugins/shape-domains
       - name: Derive the values the tests read (no secret is printed)
         run: |
@@ -136,13 +156,186 @@ jobs:
               print(f"::warning::{note}")
           sys.stdout.flush()
           PY
+      - name: Set the CI principal's Git credentials (opt-in setup, idempotent)
+        # Owner-approved (2026-10-12): link the principal's own Git credentials to the existing
+        # shared connection shape-fabric-sync-gh. Fabric's Git APIs use the calling principal's own
+        # credentials; it sees the connection but has none set (myGitCredentials source None), so
+        # git/status answers GitCredentialsNotConfigured. Does nothing when already set. Prints only
+        # the source and connection id, never a token; creates nothing new.
+        if: inputs.set_git_credentials
+        timeout-minutes: 5
+        run: |
+          python - <<'PY'
+          import json, os, urllib.error, urllib.request
+          from azure.identity import ClientSecretCredential
+
+          env = os.environ
+          ws = env["FABRIC_GIT_WORKSPACE_ID"]
+          name = env.get("FABRIC_GIT_CONNECTION_NAME", "shape-fabric-sync-gh")
+          cred = ClientSecretCredential(env["FABRIC_TENANT_ID"], env["FABRIC_CLIENT_ID"], env["FABRIC_CLIENT_SECRET"])
+          token = cred.get_token("https://api.fabric.microsoft.com/.default").token
+          base = "https://api.fabric.microsoft.com/v1"
+
+          def call(method, url, body=None):
+              data = json.dumps(body).encode() if body is not None else None
+              req = urllib.request.Request(url, data=data, method=method, headers={
+                  "Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+              try:
+                  with urllib.request.urlopen(req, timeout=60) as resp:
+                      raw = resp.read()
+                      return resp.status, (json.loads(raw) if raw else {})
+              except urllib.error.HTTPError as exc:
+                  return exc.code, exc.read().decode()[:1500]
+
+          def show(label, code, doc):
+              if isinstance(doc, dict):
+                  print(label, code, "source=" + str(doc.get("source")), "connectionId=" + str(doc.get("connectionId")))
+              else:
+                  print(label, code, doc)
+
+          code, conns = call("GET", f"{base}/connections")
+          assert code == 200, (code, conns)
+          ids = [c["id"] for c in conns.get("value", []) if c.get("displayName") == name]
+          assert len(ids) == 1, f"expected one connection named {name}, found {len(ids)}"
+          code, mine = call("GET", f"{base}/workspaces/{ws}/git/myGitCredentials")
+          show("before:", code, mine)
+          if code == 200 and mine.get("source") == "ConfiguredConnection" and mine.get("connectionId") == ids[0]:
+              print("already set; nothing to do")
+          else:
+              code, out = call("PATCH", f"{base}/workspaces/{ws}/git/myGitCredentials",
+                               {"source": "ConfiguredConnection", "connectionId": ids[0]})
+              show("PATCH:", code, out)
+              assert code in (200, 204), (code, out)
+          code, mine = call("GET", f"{base}/workspaces/{ws}/git/myGitCredentials")
+          show("after:", code, mine)
+          PY
+      - name: Delete the deploy-notebook test's leftover notebooks (opt-in, exact names only)
+        # Owner-approved (2026-10-12). Lists every Notebook with its id first, then deletes only
+        # items whose name is shape_live_nb_ followed by 8 hex digits (what the deploy-notebook test
+        # names its notebook). Nothing else is touched; shape_spark_worker stays.
+        if: inputs.delete_leftover_notebooks
+        timeout-minutes: 5
+        run: |
+          python - <<'PY'
+          import json, os, re, urllib.request
+          from azure.identity import ClientSecretCredential
+
+          env = os.environ
+          cred = ClientSecretCredential(env["FABRIC_TENANT_ID"], env["FABRIC_CLIENT_ID"], env["FABRIC_CLIENT_SECRET"])
+          token = cred.get_token("https://api.fabric.microsoft.com/.default").token
+          base = f"https://api.fabric.microsoft.com/v1/workspaces/{env['FABRIC_WORKSPACE_ID']}/items"
+
+          def call(method, url):
+              req = urllib.request.Request(url, method=method, headers={"Authorization": f"Bearer {token}"})
+              with urllib.request.urlopen(req, timeout=60) as resp:
+                  raw = resp.read()
+                  return json.loads(raw) if raw else {}
+
+          items, url = [], f"{base}?type=Notebook"
+          while url:
+              doc = call("GET", url)
+              items += doc.get("value", [])
+              more = doc.get("continuationToken")
+              url = f"{base}?type=Notebook&continuationToken={more}" if more else None
+          pattern = re.compile(r"shape_live_nb_[0-9a-f]{8}")
+          print("Notebook items in the workspace (the Items API gives no creation time):")
+          for item in items:
+              print(f"  {item['id']}  {item['displayName']}")
+          doomed = [i for i in items if pattern.fullmatch(i["displayName"])]
+          print(f"deleting {len(doomed)} item(s) named shape_live_nb_<8 hex>")
+          for item in doomed:
+              call("DELETE", f"{base}/{item['id']}")
+              print(f"  deleted {item['id']}  {item['displayName']}")
+          PY
       - name: Live tests
+        # Bounded below the job limit so the summary and upload steps always run. Every test name is
+        # printed as it starts (-v, unbuffered), and a test that sits for 10 minutes dumps the
+        # stack of every thread (faulthandler_timeout) so a hang names the call it is stuck in.
+        timeout-minutes: 50
+        env:
+          PYTHONUNBUFFERED: '1'
         run: |
           mkdir -p "$SHAPE_RECORD_DIR"
           set +e
-          python -m pytest -m live plugins/shape-fabric/tests -q -rs --junitxml=live-junit.xml
+          python -u -m pytest -m live plugins/shape-fabric/tests -v -rs --durations=0 \
+            -o faulthandler_timeout=600 --junitxml=live-junit.xml
           echo "pytest_exit=$?" >> "$GITHUB_ENV"
           exit 0
+      - name: List what the live tests left in the workspace (read-only)
+        # Lists every item in shape-test (type, name, id) so a stray item can be traced to the test
+        # that made it. It deletes nothing.
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          from azure.identity import ClientSecretCredential
+
+          env = os.environ
+          cred = ClientSecretCredential(env["FABRIC_TENANT_ID"], env["FABRIC_CLIENT_ID"], env["FABRIC_CLIENT_SECRET"])
+          token = cred.get_token("https://api.fabric.microsoft.com/.default").token
+          base = f"https://api.fabric.microsoft.com/v1/workspaces/{env['FABRIC_WORKSPACE_ID']}/items"
+
+          items, url = [], base
+          while url:
+              req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+              with urllib.request.urlopen(req, timeout=60) as resp:
+                  doc = json.loads(resp.read())
+              items += doc.get("value", [])
+              more = doc.get("continuationToken")
+              url = f"{base}?continuationToken={more}" if more else None
+          lines = ["## Workspace items after the live tests", ""]
+          for item in sorted(items, key=lambda i: (i["type"], i["displayName"])):
+              lines.append(f"- {item['type']} `{item['displayName']}` {item['id']}")
+          text = "\n".join(lines)
+          print(text)
+          open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8").write(text + "\n")
+          PY
+      - name: Git integration status of the Git workspace (read-only GETs, exact responses)
+        # What Fabric answers to the CI service principal for the Git-connected workspace. Read-only GET
+        # requests, nothing is connected or initialised.
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, os, urllib.error, urllib.request
+          from azure.identity import ClientSecretCredential
+
+          env = os.environ
+          ws = env.get("FABRIC_GIT_WORKSPACE_ID", "")
+          if not ws:
+              print("FABRIC_GIT_WORKSPACE_ID is not set")
+              raise SystemExit(0)
+          cred = ClientSecretCredential(env["FABRIC_TENANT_ID"], env["FABRIC_CLIENT_ID"], env["FABRIC_CLIENT_SECRET"])
+          token = cred.get_token("https://api.fabric.microsoft.com/.default").token
+          out = ["## Git integration of the Git workspace", ""]
+          # The connections this principal can use (Microsoft: a principal other than the one that
+          # connected the workspace needs access to the cloud connection and its own Git credentials).
+          conn_req = urllib.request.Request(
+              "https://api.fabric.microsoft.com/v1/connections", headers={"Authorization": f"Bearer {token}"}
+          )
+          try:
+              with urllib.request.urlopen(conn_req, timeout=60) as resp:
+                  items = json.loads(resp.read()).get("value", [])
+              rows = [
+                  {k: c.get(k) for k in ("id", "displayName", "connectivityType", "connectionDetails")}
+                  for c in items
+                  if "git" in json.dumps(c).lower()
+              ]
+              out += ["### GET /v1/connections (Git-related, as the CI principal)", "```json", json.dumps(rows)[:3000], "```"]
+          except urllib.error.HTTPError as exc:
+              out += [f"### GET /v1/connections -> HTTP {exc.code}", "```json", exc.read().decode()[:1500], "```"]
+          for path in ("git/connection", "git/status", "git/myGitCredentials"):
+              url = f"https://api.fabric.microsoft.com/v1/workspaces/{ws}/{path}"
+              req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+              try:
+                  with urllib.request.urlopen(req, timeout=60) as resp:
+                      code, body = resp.status, resp.read().decode()
+              except urllib.error.HTTPError as exc:
+                  code, body = exc.code, exc.read().decode()
+              out += [f"### GET /v1/workspaces/{ws}/{path} -> HTTP {code}", "```json", body[:4000], "```"]
+          text = "\n".join(out)
+          print(text)
+          open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8").write(text + "\n")
+          PY
       - name: Step summary - which live tests ran, passed, failed, skipped
         if: always()
         run: |

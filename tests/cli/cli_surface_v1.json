@@ -1404,6 +1404,10 @@
        "choices": null,
        "takes_value": true
       },
+      "--lakehouse-schema": {
+       "choices": null,
+       "takes_value": true
+      },
       "--local-path": {
        "choices": null,
        "takes_value": true
@@ -3046,6 +3050,10 @@
      "takes_value": true
     },
     "--keytab": {
+     "choices": null,
+     "takes_value": true
+    },
+    "--lakehouse-schema": {
      "choices": null,
      "takes_value": true
     },
@@ -7108,6 +7116,10 @@
    "takes_value": true
   },
   "--metrics": {
+   "choices": null,
+   "takes_value": true
+  },
+  "--source-config": {
    "choices": null,
    "takes_value": true
   },

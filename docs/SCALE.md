@@ -187,6 +187,13 @@ are generated on the driver (table by table, so the driver never makes the execu
 the schema has a post-pass). A run fails (and records no success) unless every table has exactly
 the rows the spec asked for, counted by reading each Delta table back once it is written.
 
+For a schema-enabled Lakehouse, add `--lakehouse-schema dbo` (or another existing schema).
+The worker then writes `Tables/<schema>/<prefix><table>`. Omit it for a classic Lakehouse.
+The Files area used for job specs is the same for both kinds.
+Demo Spark runs use the same setting from their connection profile: add
+`--lakehouse-schema dbo` to `shape demo init` for a schema-enabled Lakehouse. The session
+manifest records the schema in each table's read-back/cleanup path.
+
 ## Library
 
 ```python

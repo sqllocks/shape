@@ -54,6 +54,12 @@ def add_arguments(sub: Any) -> None:
     ini.add_argument("--eventhouse-database", help="Eventhouse (KQL) database name")
     ini.add_argument("--sql-db-conn", help="SQL database ODBC connection string, or a reference")
     ini.add_argument("--local-path", help="a folder on this machine that receives Parquet files")
+    ini.add_argument(
+        "--lakehouse-schema",
+        default="",
+        help="an existing schema for schema-enabled Lakehouse Spark tables (for example dbo); "
+        "omit for classic",
+    )
     ini.add_argument("--auth", choices=AUTH_METHODS, default="cli", help="sign-in (default: cli)")
     ini.add_argument("--tenant-id", help="Entra tenant (spn, device-code)")
     ini.add_argument("--client-id", help="Entra application (spn, device-code, msi)")
@@ -162,6 +168,7 @@ def _init(a: argparse.Namespace) -> int:
         name,
         workspace_id=_ask(a.workspace_id, "Fabric workspace ID"),
         lakehouse_id=_ask(a.lakehouse_id, "Lakehouse ID"),
+        lakehouse_schema=a.lakehouse_schema,
         warehouse_conn=_ask(a.warehouse_conn, "Warehouse connection string"),
         warehouse_staging_path=a.warehouse_staging_path or "",
         eventhouse_uri=_ask(a.eventhouse_uri, "Eventhouse URI"),

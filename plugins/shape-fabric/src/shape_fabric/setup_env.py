@@ -7,10 +7,27 @@ paste into any notebook instead.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 DEFAULT_ENVIRONMENT = "shape-env"
-DEFAULT_LAKEHOUSE = "shape-lakehouse"
+DEFAULT_LAKEHOUSE = "shape_lakehouse"
+
+# Microsoft Learn, "Create a lakehouse in Microsoft Fabric": the name begins with a letter and holds
+# only letters, digits and underscores, at most 123 characters. Fabric answers anything else with
+# HTTP 400 InvalidInput (a hyphen did: "DisplayName: shape-lakehouse").
+_LAKEHOUSE_NAME = re.compile(r"[A-Za-z][A-Za-z0-9_]{0,122}")
+
+
+def check_lakehouse_name(name: str) -> str:
+    """``name`` if Fabric accepts it as a Lakehouse name, else a ``ValueError`` saying why, before
+    any request is made."""
+    if not _LAKEHOUSE_NAME.fullmatch(name):
+        raise ValueError(
+            f"{name!r} is not a valid Lakehouse name: it must begin with a letter and use only "
+            "letters, digits and underscores (at most 123 characters), e.g. shape_lakehouse"
+        )
+    return name
 
 
 def _version() -> str:

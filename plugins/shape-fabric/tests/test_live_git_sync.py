@@ -8,12 +8,12 @@ changes the item in the workspace, runs "commit to Git", fetches the branch and 
 The workflow job (``fabric-git-sync-live``) runs only when the secrets are set; run by hand with
 
     FABRIC_TENANT_ID=... FABRIC_CLIENT_ID=... FABRIC_CLIENT_SECRET=... \\
-    FABRIC_WORKSPACE_ID=... FABRIC_GIT_REMOTE=https://github.com/<owner>/<repo>.git \\
+    FABRIC_GIT_WORKSPACE_ID=... FABRIC_GIT_REMOTE=https://github.com/<owner>/<repo>.git \\
     FABRIC_GIT_TOKEN=... [FABRIC_GIT_USER=x-access-token] [SHAPE_LIVE_RESULT=result.json] \\
     pytest -m live plugins/shape-fabric/tests/test_live_git_sync.py
 
 ``FABRIC_GIT_TOKEN`` needs write access to the repository. A missing variable fails the test with
-the variable's name (nothing is silently skipped). When ``SHAPE_LIVE_RESULT`` names a file, a
+the variable's name; a service failure remains a failure. When ``SHAPE_LIVE_RESULT`` names a file, a
 ``shape-live-check`` JSON result is written there, also when the test fails.
 """
 
@@ -40,7 +40,7 @@ NEEDED = (
     "FABRIC_TENANT_ID",
     "FABRIC_CLIENT_ID",
     "FABRIC_CLIENT_SECRET",
-    "FABRIC_WORKSPACE_ID",
+    "FABRIC_GIT_WORKSPACE_ID",  # the Git-connected workspace (shape-git-test), not shape-test
     "FABRIC_GIT_REMOTE",
     "FABRIC_GIT_TOKEN",
 )
@@ -49,7 +49,8 @@ OPERATION_SECONDS = 900
 
 def need(name):
     value = os.environ.get(name)
-    assert value, f"{name} is not set (live tests need it)"
+    if not value:
+        pytest.fail(f"live test needs {name}")
     return value
 
 
@@ -154,7 +155,11 @@ class Fabric:
         return details["branchName"], (details.get("directoryName") or "").strip("/")
 
     def status(self):
-        response = self.http.request("GET", f"{FABRIC_API}/workspaces/{self.ws}/git/status")
+        # Fabric asks the Git provider before it answers, which took longer than the client's
+        # default 30 s read timeout (run 38315796207); the wait stays bounded.
+        response = self.http.request(
+            "GET", f"{FABRIC_API}/workspaces/{self.ws}/git/status", timeout=180.0
+        )
         if response.status == 202:
             done = self.wait(response, "git status")
             response = self.http.request("GET", done_location(done, response))
@@ -284,8 +289,8 @@ def test_shape_files_survive_a_git_sync_in_both_directions(tmp_path):
         need("FABRIC_TENANT_ID"), need("FABRIC_CLIENT_ID"), need("FABRIC_CLIENT_SECRET")
     )
     secrets.append(credential.get_token("https://api.fabric.microsoft.com/.default").token)
-    fabric = Fabric(Http(secrets[-1]), need("FABRIC_WORKSPACE_ID"))
-    workspace_id = need("FABRIC_WORKSPACE_ID")
+    workspace_id = need("FABRIC_GIT_WORKSPACE_ID")
+    fabric = Fabric(Http(secrets[-1]), workspace_id)  # secrets[-1] is the Fabric API token
     check = LiveCheck(
         "fabric-git-sync",
         __version__,
@@ -308,6 +313,15 @@ def test_shape_files_survive_a_git_sync_in_both_directions(tmp_path):
             branch, directory = fabric.connection()
             git.clone(branch)
         with check.step("setup-item"):
+            # The repository can be ahead of the workspace (a commit made outside this test);
+            # Fabric then refuses to commit (CommitFailedDueToIncomingChanges, run 38323914094),
+            # so the workspace takes the incoming commits first.
+            behind = fabric.status()
+            if (
+                behind.get("remoteCommitHash")
+                and behind["remoteCommitHash"] != behind["workspaceHead"]
+            ):
+                fabric.update_from_git(behind["remoteCommitHash"], behind["workspaceHead"])
             item_id = fabric.create_notebook(name, "initial")
             status = fabric.status()
             fabric.commit_to_git(status["workspaceHead"])

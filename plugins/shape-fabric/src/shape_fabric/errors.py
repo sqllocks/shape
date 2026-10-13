@@ -22,6 +22,9 @@ class WriteResult:
     destination: str
     per_table: dict[str, int] = field(default_factory=dict)
     elapsed_seconds: float = 0.0
+    #: warnings about how the rows were written (a slower fallback path, for one): they appear in
+    #: :meth:`summary`, so a run's output says so and not only the log
+    notes: list[str] = field(default_factory=list)
 
     @property
     def tables_written(self) -> int:
@@ -37,6 +40,7 @@ class WriteResult:
             f"in {self.elapsed_seconds:.1f}s"
         ]
         lines += [f"  {name:<30} {rows:>12,}" for name, rows in self.per_table.items()]
+        lines += [f"  WARNING: {note}" for note in self.notes]
         return "\n".join(lines)
 
 

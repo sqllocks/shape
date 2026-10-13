@@ -134,6 +134,10 @@ def reconnecting_batches(
                 yield item
             return
         except retry_on as exc:
+            from shape.security.azure_credentials import AuthError, permanent_auth_error
+
+            if message := permanent_auth_error(exc):
+                raise AuthError(message) from None
             if isinstance(exc, _NotAnOffsetItem):
                 raise
             failures += 1

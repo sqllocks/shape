@@ -6,7 +6,15 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+### Fixed
+
+- LIVE-FIX: actionable MySQL no-TLS authentication errors; reference-only CLI Azure read
+  credentials and storage environment precedence; prompt permanent Azure authentication failures.
+- LIVE-FIX: Warehouse and Synapse keys declared after table creation, identity-preserving staging
+  cleanup, text time buckets and per-column database profiling notes, Delta table prefixes,
+  explicit Lakehouse schemas and clear missing-Delta-table errors.
+- LIVE-FIX: Fabric fakes enforce Warehouse DDL and both Lakehouse layouts; unattended live
+  coverage and documented 0.9.1 workarounds.
 
 ## 0.9.1
 
