@@ -140,7 +140,7 @@
     "kind": "local"
   },
   {
-    "page": "docs/CLI.md",
+    "page": "docs/CLI_EXPERIMENTAL.md",
     "index": 2,
     "kind": "local"
   },
@@ -160,7 +160,7 @@
     "kind": "service:owner-transcripts"
   },
   {
-    "page": "docs/CLI.md",
+    "page": "docs/CLI_EXPERIMENTAL.md",
     "index": 6,
     "kind": "syntax"
   },

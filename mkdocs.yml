@@ -179,6 +179,7 @@ nav:
   - Integrations: plugins/integrations.md
 - Reference:
   - Command line: CLI.md
+  - Experimental commands: CLI_EXPERIMENTAL.md
   - CLI reference (generated): reference/cli.md
   - CLI stability: CLI_STABILITY.md
   - Exit codes: EXIT_CODES.md

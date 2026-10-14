@@ -1,0 +1,332 @@
+# Experimental `shape` commands
+
+Status: experimental.
+
+These commands are not listed as stable. Their flags and behavior may change.
+See [the command line guide](CLI.md) for stable commands and common error handling.
+
+## Run the local examples
+
+The examples below use disposable local files from this checkout. The [example test environment](contributing/EXAMPLES.md) sets `SHAPE_DOCS_REPO`, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.
+
+<!-- example: 999 -->
+
+```bash {.runnable-reference}
+python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" CLI
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    Prepared local fixtures for CLI
+    ```
+
+
+## `shape vault`
+
+`shape vault keygen|inspect|verify|rekey` manage the value vault, an encrypted file of the values a
+safe capture withheld (`docs/VAULT.md`). `shape profile --vault OUT.shapevault --vault-policy
+POLICY.json --kek REF` writes one with the profile; `shape generate --from X.shape --vault VAULT
+--kek REF [--verify PUBKEY]` and `shape plan X.shape --vault VAULT --kek REF` use it. A key is
+always a reference (`env://NAME`, `file://PATH`, a path), never a literal value.
+
+| Command | Does |
+|---|---|
+| `shape vault keygen -o KEK.key` | writes a key-encryption key: 32 random bytes, base64, mode 0600; never overwrites |
+| `shape vault inspect VAULT [--json]` | prints the header; needs no key |
+| `shape vault verify VAULT --shape X.shape [--kek REF] [--verify PUBKEY] [--json]` | checks hash, ids, signature and, with a key, every column |
+| `shape vault rekey X.shape VAULT --kek OLD --new-kek NEW --out-shape X2.shape --out-vault V2.shapevault [--key SIGNING_KEY] [--dry-run] [--json]` | re-encrypts under a new key; never in place |
+
+Exit codes: 0 valid; 1 a wrong key, a hash, id, signature or authentication mismatch; 2 a malformed
+vault, a newer `version`, an unusable key, policy or path, or other bad input. `shape git-setup`
+also adds `*.shapevault` to `.gitignore`.
+
+## `shape migrate`
+
+`shape migrate SRC DST` (also installed as `shape-migrate`) writes a migrated copy of a persisted
+file, offline: a `.shape` artifact, or a safe profile, model, run manifest, contract or any other
+JSON kind in [the state and compatibility policy](specs/STATE_AND_COMPATIBILITY.md).
+
+[Run this example](#local-example-2).
+
+
+It never rewrites in place or overwrites a file, records `migrated_from` and `source_content_id`,
+refuses a downgrade (`--to N` below the file's version), reads its result back and checks the
+content id before publishing it, and migrates a file that is already current to nothing. `--kind
+KIND` names a JSON file that is not recognised by itself. Exit codes: 0 migrated, no-op or dry run;
+1 the source failed `--verify`; 2 refused or bad input. Strict reading of every format (`SHAPE_STRICT_FORMATS=1`) is described in
+the policy.
+
+## What each command expects
+
+- `shape types PROFILE.shape [--contract CONTRACT.json] [--min-confidence C] [--json]` lists the
+  columns whose declared, inferred or contract types disagree: a declared `string` that holds
+  integers or ISO dates, a `float` that holds whole numbers, an `integer` the identifier rule
+  calls a suspect, an inferred type that fewer than `C` (default 0.99) of the values fit, and a
+  contract `dtype` that differs from the profile's. Each line names the table, the column, both
+  types, the confidence and the option that would change it (`--types`, `--string-columns`). Exit
+  0 with no findings, 1 with findings, 2 for bad input; `--json` prints the findings as a list
+  (the same as `shape.types_report(profile, contract, min_confidence)`). See
+  [PROFILING_NOTES.md](PROFILING_NOTES.md#type-inference).
+- `shape explain DIFF.json` explains a `shape diff --json` or `shape drift` result in plain
+  English, deterministically (`docs/EXPLAIN.md`).
+- `shape rules mutate DATA CONTRACT.json` plants the corruptions of `shape chaos` one at a time and
+  reports which rules of the contract catch them (`--plan`, `--seed`, `--rate`, `--diff`,
+  `--min-score S`: exit 1 below S, `-o REPORT.json`, `--json`). `shape rules backtest REGISTRY NAME
+  CONTRACT.json` replays a contract over every committed version of a registry name (`--since`,
+  `--until`, `--window day|week|month`, `--incidents FILE`, `--fail-on-miss`: exit 1 on a missed
+  incident, `--compare OLD_CONTRACT.json`, `-o`, `--json`). Exit 2 for unusable input. See
+  `docs/RULES_TESTING.md`.
+- `shape capture SRC` reads everything `shape profile` reads (CSV, Parquet, JSONL, a folder or
+  glob, a Delta table with `--version N` or `--as-of TIMESTAMP`, an `abfss://` source) and writes a
+  **model** (JSON, or a model `.shape` with `-o OUT.shape`), which `shape query`,
+  `shape compatibility` and `shape plan` read. `--dataset` captures a folder of one file per table
+  as a model with one table each. The model has the same content whatever the file format; the
+  one difference is what the format itself carries: a CSV holds text and numbers only, so a date
+  column is text there and a timestamp in Parquet (both are captured as text values). It is not a
+  second way to profile; use `shape profile` for that.
+- `shape design INPUT.json` reads a **design input** and writes DDL for a 3NF, star or snowflake
+  schema, after linting it; `shape design DATA.csv --from-data` builds a design input from data.
+  See [DESIGN.md](DESIGN.md). `--tmdl DIR` also writes the star or snowflake design as a TMDL
+  semantic model.
+- `shape import-schema FILE -o OUT.gen.json` imports a JSON Schema, OpenAPI, Avro, Protobuf,
+  Pydantic or TMDL schema as a generation spec, with `--from`, `--report`, `--strict` and
+  `--allow-import` (Pydantic runs the module it imports). Exit 1 means `--strict` found an element
+  that was not imported; 2 is a malformed or ambiguous input. See [IMPORTERS.md](IMPORTERS.md).
+- `shape contract emit CONTRACT.json --to ddl|jsonschema|pandera|gx` writes a contract as database
+  DDL, a JSON Schema, a pandera schema or a Great Expectations suite, listing what the target cannot
+  say (`--strict` fails on it). See [CONTRACT_EMIT.md](CONTRACT_EMIT.md).
+- `shape pin SPEC [-o OUT] [--json]` writes into a generation spec the current generator version of
+  every strategy and distribution it uses (its `generators` map), so the same spec and seed give the
+  same dataset id in every 1.x release; a pin that is there is kept. `shape pin SPEC --check`
+  writes nothing: exit 1 and the names the spec does not pin, 0 when all are pinned, 2 for a spec
+  that is not valid or pins a version this Shape does not have. See
+  [GENERATION_STABILITY.md](GENERATION_STABILITY.md).
+- `--identifiers reserved|realistic` on `shape generate` (also with `--from` and `--scale-mode`),
+  `shape composite`, `shape demo run` and `shape pack run` is the run switch of the identifier
+  values (e-mail addresses, URIs, phone numbers, social security numbers): `reserved` values cannot
+  belong to a real person, `realistic` ones can, so never use them for data that leaves a test
+  system. Without the flag, a `pack run` spec's `scenario.identifiers` applies, then the schema's
+  top-level `"identifiers"`, then `reserved`; a column's own `domains` or `range` key wins over
+  all of them. A run with realistic identifiers prints one line on standard error
+  (`shape: realistic identifiers are on: ...`), and `pack run` records the mode in its manifest
+  (`reproducibility.identifiers`, which `pack replay` uses). Any other value exits 2. See
+  [GENERATION_STRATEGIES.md](GENERATION_STRATEGIES.md).
+- `shape fidelity REFERENCE SYNTHETIC` compares data with data: CSV, Parquet, JSONL or a folder
+  of one file per table. Given a captured evidence document (`REFERENCE.json`) it certifies the
+  CSV against it instead. A `.shape` file (a profile or a model) is not data and is refused with a one-line message; profile the synthetic data and
+  run `shape diff`.
+- `shape proposals propose|list|decide|contract` keeps the answers to what a profile cannot settle
+  alone (foreign keys, personal data, meaning) in a decision file; `shape generate --from` and
+  `shape plan` take it with `--decisions`. `propose --kinds rule` (one or several profiles) proposes
+  contract rules with evidence and a confidence, `list --status stale` shows accepted rules whose
+  evidence no longer holds after a re-profile, and `contract -d DECISIONS.json -o CONTRACT.json
+  [--merge EXISTING.json]` writes the accepted rules as a contract `shape check` reads (exit 2 on a
+  conflict with a rule in the file merged into). See [PROPOSALS.md](PROPOSALS.md#rules).
+- `shape report-card REAL SYNTHETIC` runs the fidelity scores and tiers, the utility gate, the
+  memorization gate and (with `--holdout`) a membership-inference test, and writes one card as
+  JSON, Markdown or HTML (`-o`, by extension). Exit 0 when every section that ran passed, 1 when
+  one failed or a `--require`d one did not run, 2 for unusable input. See
+  [REPORT_CARD.md](REPORT_CARD.md).
+- A generation schema file (what `shape from-ddl` and `shape learn` write) is JSON, or YAML when
+  it is named `.yaml` or `.yml` (needs PyYAML). Every command that takes one (`generate`,
+  `describe`, `presets`, `emit`, `stream`, `continue`, `time-travel`, `chaos`, `generate-drift`,
+  `validate`) reads both.
+- `shape proposals propose|list|decide` keeps the answers to what a profile cannot settle alone
+  (foreign keys, personal data, meaning) in a decision file; `shape generate --from` and
+  `shape plan` take it with `--decisions`. See [PROPOSALS.md](PROPOSALS.md).
+
+- `shape reference list|show` lists the reference packs Shape can find (ZIP to city, ISO codes,
+  IBAN lengths; your own in `SHAPE_REFERENCE_PATH`) and shows one with its manifest and first
+  rows; a pack whose file does not match its checksum is exit 2. `shape profile --validate
+  COLUMN=KIND` stores how many values of a column are valid IBANs, ISO codes or US ZIPs. See
+  [REFERENCE_PACKS.md](REFERENCE_PACKS.md).
+- `shape fingerprint embed|show|verify` writes, reads and checks a signed statement inside a Parquet
+  file or Delta table that the data is synthetic and which run made it; `shape generate
+  --fingerprint` writes it at generation time (exit 0 valid, 1 digest or signature mismatch, 2 none,
+  a newer version or bad input). See [FINGERPRINT.md](FINGERPRINT.md).
+- `shape share-bundle create|verify` checks generated data against its source (memorization gate and
+  a top-values check) and writes a zip with a signed attestation, or, for `verify`, recomputes its
+  dataset id and checks it (`create`: 1 a check failed, nothing written; `verify`: 1 tampered or
+  failing, 2 malformed). Evidence that the checks passed, not a privacy guarantee. See
+  [SHARE_BUNDLE.md](SHARE_BUNDLE.md).
+- `shape skew-rehearsal PROFILE.shape --schema SCHEMA --scale S -o DIR` generates at scale with the
+  profile's key skew and reports, per column, the profile's top share against the generated one
+  (exit 1 outside the tolerance, 2 no frequency data for a requested column). See
+  [SCALE.md](SCALE.md#skew-rehearsal).
+
+- `shape scorecard DATA` scores data quality by dimension ([SCORECARD.md](SCORECARD.md)); with
+  `--slice-by COLUMN` it scores every slice and exits 1 when `--max-slice-gap` is exceeded.
+  `shape skew TRAIN SERVING` compares serving data with training data (data or profiles) and
+  exits 0 when nothing is flagged, 1 when a feature is flagged, 2 for unusable input
+  ([FAIRNESS_AND_SKEW.md](FAIRNESS_AND_SKEW.md)).
+
+- `shape bridge` serves Shape's commands as a versioned JSON protocol on standard input and output
+  (one request and one response per line; `--once` for a single request; `--jobs-dir DIR` for the
+  job files). `shape bridge schema --out DIR` writes its JSON Schemas and `--check DIR` verifies a
+  directory against them. See [`BRIDGE.md`](BRIDGE.md).
+
+- `shape resolve run FILE` finds duplicate entities in a CSV, Parquet or JSONL file and writes
+  golden records; `shape resolve synth FILE -o OUT` plants seeded duplicates and writes the true
+  clusters. See [RESOLVE.md](RESOLVE.md). Bad options or an unreadable file exit 2.
+
+## Non-local targets and chaos input
+
+- Commands that write to a non-local target (`generate --to`, `emit`, `stream`,
+  `generate --scale-mode --sink`) need `--yes`, or `SHAPE_CONFIRM_REMOTE=1` (exactly `1`), or `y` at
+  the prompt on a terminal; otherwise they exit 2 with
+  `shape: error: refusing to write to non-local target URI without confirmation; pass --yes or set
+  SHAPE_CONFIRM_REMOTE=1`. Paths, `file://`, `duckdb://`, `console` and `localhost`/`127.0.0.1`/`::1` are local,
+  and `--dry-run` needs no confirmation. See `docs/SINKS.md`.
+- `shape chaos --input DIR` corrupts only tables listed in `DIR/_shape_provenance.json` (matching
+  sha256) or Parquet files with the `shape_synthetic` marker; `--allow-real-input` overrides, and
+  `-o` may not be the input folder. See `docs/CHAOS.md`.
+- `shape generate -o`, `continue`, `time-travel`, `pack run` and `chaos` write
+  `_shape_provenance.json` beside the tables (`format: shape-provenance`, `version: 1`).
+
+## Failure modes, detective, library, canary and game day
+
+- `shape failure-modes list [--json]` and `shape failure-modes show ID` print the failure mode
+  catalog (`docs/FAILURE_MODES.md`). `shape suite run failure-modes` runs the scenario of every
+  entry and checks that every check the entry names fires; it exits 1 when one does not.
+- `shape detective list`, `start NAME -o DIR`, `hint NAME N` and `check NAME --answer ANSWER.json`
+  play a data detective pack (`docs/DETECTIVE.md`). `check` exits 0 when every planted finding is
+  named and none is wrong, 1 otherwise, 2 for a malformed answer or an unknown pack.
+- `shape library list`, `show NAME` and `get NAME -o X.shape` print and copy the safe profiles of
+  public datasets (`docs/DATASET_LIBRARY.md`); `shape generate --from dataset:NAME` generates from
+  one with no network.
+- `shape canary make (library:NAME | ID) [--rows N] [--seed N] [--marker COLUMN=VALUE] [--format
+  csv|parquet|jsonl] -o DIR [--dry-run]` writes a marked batch with planted failures;
+  `shape canary check canary.json --result RESULT.json...` exits 0 when every expected detection is
+  present, 1 when one is missing (a blind spot), 2 for malformed input (`docs/CANARIES.md`).
+- `shape gameday run PLAN.json -o DIR [--seed N] [--dry-run]` plants failures in copies of your
+  local data and runs the checks you list; it exits 0 when every expectation was detected, 1 when
+  one was missed, 2 for a malformed plan (`docs/GAMEDAY.md`).
+
+## `shape suite`, `shape seed` and the starter library
+
+- `shape pack list --library` lists the starter scenarios and suites; `shape pack run library:NAME`
+  runs one and compares it with its answer key. `shape suite run NAME|FILE [--scale small]
+  [--seed N] [-o DIR] [--json]` runs a suite (`smoke`, `schema-evolution` or a `shape-suite` file):
+  exit 0 when every scenario met its key, 1 when one did not (the scenario, the expectation and
+  the observation are printed), 2 for a malformed suite or an unknown scenario. See
+  `docs/SCENARIO_LIBRARY.md`.
+- `shape seed SPEC|DOMAIN --target URI [--scale S] [--seed N] [--mode create|truncate|append]
+  [--dry-run] [--json]` writes the generated tables into a database (`mssql`, `postgres`, `mysql`)
+  or, with `sql://DIR`, into one ordered INSERT script per table, parents first. Exit 0 when
+  seeded or planned, 1 when `--mode create` found an existing table or `--mode append` a primary key
+  already in its table (nothing written), 2 for bad input or a failed write. See `docs/TESTING_WITH_SHAPE.md`, which also describes the pytest
+  plugin.
+
+## `shape demo`
+
+`shape demo init|list|run|preflight|cleanup|status|notebook|report` runs scenarios for talks, clients and
+workshops and cleans up after them; see `docs/DEMO.md`. Exit 0 done, 1 a run failed, a cleanup could not
+remove something or a preflight check failed, 2 bad input.
+
+## The project file
+
+`shape init` scaffolds a project and `shape project validate` checks its `shape.yml`; `profile`,
+`diff`, `check` and `verify` read it when it is present, and their flags override it
+(`--project FILE`, `--no-project`, `--source NAME`, `diff --baseline-date`). See
+`docs/PROJECT.md`.
+
+## `shape dictionary`
+
+`shape dictionary PROFILE.shape [--project FILE | --no-project] [--source NAME] [--format md|html|json] [--examples] -o OUT`
+writes a data dictionary (one entry per table and column) from a profile and `shape.yml`. Example
+and top values need `--examples` and are never written for a column classified `CONFIDENTIAL` or
+higher. Exit 0 done, 2 a missing or unreadable profile, an invalid `shape.yml` or a source that is
+not in the project. See `docs/DICTIONARY.md`.
+
+## Planned changes
+
+`shape changes validate|list|add|ack` manages `shape-changes.yml`, the reviewable list of planned
+changes that `diff`, `check` and `verify` read (`--changes FILE`, `--no-changes`, `--on DATE`). Exit
+0 done, 1 `validate` found problems, 2 bad input. See `docs/PLANNED_CHANGES.md`.
+
+## Parity and consumer contracts
+
+`shape parity A B` checks that environment B has the same shape as environment A (tables, columns,
+types, keys, relationships, null rates, distributions, table sizes); exit 0 parity, 1 a check
+failed, 2 unusable input. See `docs/PARITY.md`. `shape contracts validate FILE` checks a consumer
+contract file (exit 0 valid, 2 not, with every problem and its key path), and
+`shape contracts check-consumers PROFILE.shape` runs the consumer contracts of a source in the
+producer's CI (exit 0 every consumer passes, 1 one is broken, 2 unusable input; `--baseline`
+marks the violations a change introduced). See `docs/CONSUMER_CONTRACTS.md`.
+
+## The pull request check, the badge, notifications and plugin templates
+
+- `shape ci comment RESULT.json... [-o FILE] [--max-findings 50] [--title TEXT]` renders the Markdown
+  comment of a pull request from `shape-result` documents; `shape ci post-comment --body-file FILE
+  --repo OWNER/REPO --pr N` creates or updates the one Shape comment (the token comes from
+  `GITHUB_TOKEN`). Exit 0, 2 for a missing file or a document that is not a `shape-result`; for
+  `post-comment` also 1 for an HTTP error other than 403 and 404 (those print a notice and exit 0).
+  See `docs/PR_BOT.md`, the action `uses: sqllocks/shape@<tag>`.
+- `shape badge RESULT.json... -o badge.svg [--label shape]` writes the status badge: passing, drift,
+  failing or unknown. See [CI.md](CI.md).
+- `shape notify test [--project DIR]` sends a test notification to every target of `notifications:` in
+  `shape.yml`; `--notify REF` on `diff`, `check`, `verify` and `fidelity` adds a target for one run.
+  Exit 1 when a delivery failed, 2 without a project or notifications. See `docs/NOTIFICATIONS.md`.
+- `shape plugins new NAME --group GROUP [-o DIR] [--author TEXT]` creates a plugin package from a
+  template. See `docs/plugins/authoring.md`.
+
+## History: `shape bisect` and `shape timelapse`
+
+<!-- example: 6 -->
+
+Syntax reference. Replace the named arguments with your inputs.
+
+```
+shape bisect REGISTRY NAME --good REF --bad REF [--column COL] [--kind KIND] [--contract FILE]
+             [--verify-all] [--coarse week|month] [--json] [--source NAME] [threshold flags]
+shape bisect layers --layers SOURCE[,SOURCE...] --good-date D1 --bad-date D2 [--column COL]
+             [--map LAYER.COL=COL]... [--project shape.yml] [--json]
+shape timelapse REGISTRY NAME --column COL [--table T] [--since DATE] [--until DATE]
+             [--window day|week|month] [-o OUT.json|OUT.html] [--format json|text]
+```
+
+
+`bisect` finds the first committed version of `NAME` that changed (exit 0; exit 2 when `--good`
+tests bad, `--bad` tests good, or a version cannot be tested, for example a share-safe profile).
+`bisect layers` finds the layer of a pipeline where a change appears (exit 0 a layer shows it, 1
+none does, 2 unusable input). `timelapse` follows one column across the versions (`-o OUT.html` is
+one offline page). See `docs/HISTORY.md`.
+
+
+## Complete local run
+
+Run these commands in order after preparing the fixtures above.
+
+<a id="local-example-2"></a>
+
+### Example 3
+
+<!-- example: 2 -->
+
+```bash {.runnable-reference}
+shape migrate old.shape new.shape --dry-run   # print the plan, write nothing
+shape migrate old.shape new.shape             # new file + new.shape.receipt.json; old.shape kept
+shape migrate old.shape new-signed.shape --verify old.pub --sign-key release.key   # a signed source
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
+    {"destination": null, "dry_run": true, "plan": {"kind": "artifact", "noop": true, "result_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "source_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "source_version": 2, "steps": [], "target_version": 2}, "receipt": null, "written": false}
+    {"destination": null, "dry_run": false, "plan": {"kind": "artifact", "noop": true, "result_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "source_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "source_version": 2, "steps": [], "target_version": 2}, "receipt": null, "written": false}
+    {"destination": null, "dry_run": false, "plan": {"kind": "artifact", "noop": true, "result_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "source_content_id": "7cf1c15de54d60a4a786a42ae7c675fca759ed3a8b350fc214d07d0c5e959b78", "source_version": 2, "steps": [], "target_version": 2}, "receipt": null, "written": false}
+    ```
+
+
+## Cloud options for demos
+
+`shape demo init --lakehouse-schema NAME` selects an existing schema in a schema-enabled
+Lakehouse; omit it for a classic Lakehouse. See [Fabric platform notes](FABRIC_PLATFORM.md).
+
+## Streaming sign-in
+
+`shape emit` uses `--auth`, `--tenant-id`, `--client-id`, `--client-secret`, `--sql-user`
+and `--sql-password` with credential references as described in
+[SECURITY_SPECIFICATION.md](SECURITY_SPECIFICATION.md). A secret is a reference such as
+`env://NAME`, rather than a literal value. See [EMIT.md](EMIT.md).
