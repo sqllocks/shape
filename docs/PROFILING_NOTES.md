@@ -584,7 +584,8 @@ What the other commands do with a nested column:
   drawn from `length.hist` (from `mean`, `std`, `min` and `max` without a `hist`). The values inside come from the
   generator of each leaf type, as for a column about which the profile says nothing, so a nested value has the right shape
   and types but not the distribution of the original values:
-  * a nested value inside a nested value has 1 to 3 elements;
+  * a nested value inside a nested value has 1 to 3 elements when the profile records no lengths for it, so it is
+    never empty;
   * a struct field is never null;
   * numbers, booleans, text, dates, times, timestamps, decimals and dictionaries use the defaults of a column without
     statistics (integers and floats are uniform from 0 to 1);
@@ -593,7 +594,7 @@ What the other commands do with a nested column:
   * a binary child is 1 to 16 random bytes (a fixed-size binary has its width) and a duration is uniform over one day, in
     the type's unit;
   * a union, extension, run-end encoded or view type inside a nested column is not generated: `generate` stops with one
-    `shape: error:` line that names the table, the column and the type (exit 2).
+    `shape: error:` line that names the table, the column and the type (exit 2). The refusal stops the whole table: there is no option yet to leave a column out.
 
   CSV, TSV and SQL hold flat values only, so `generate` refuses a nested column for them by name; use Parquet, JSON Lines,
   IPC or Delta. `shape fidelity` compares flat columns and also refuses a nested column by name (exit 2).

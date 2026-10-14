@@ -153,3 +153,23 @@ def test_profile_of_the_issue_repro_and_jsonl_and_delta(tmp_path: Path) -> None:
     for src in ("a.parquet", "n.jsonl", "d"):
         clean(run(tmp_path, "profile", src, "-o", f"{src}.shape"))
         assert (tmp_path / f"{src}.shape").exists()
+
+
+@pytest.mark.skipif(not hasattr(pa, "uuid"), reason="pyarrow before 18 has no uuid extension type")
+def test_generate_refuses_a_child_type_without_a_generator(tmp_path: Path) -> None:
+    """One error line that names table.column, the whole type and the child type; exit 2."""
+    uuids = pa.ExtensionArray.from_storage(
+        pa.uuid(), pa.array([b"a" * 16, b"b" * 16], pa.binary(16))
+    )
+    table = pa.table(
+        {"id": [1, 2], "u": pa.ListArray.from_arrays(pa.array([0, 1, 2], pa.int32()), uuids)}
+    )
+    pq.write_table(table, str(tmp_path / "t.parquet"))
+    clean(run(tmp_path, "profile", "t.parquet", "-o", "t.shape"))
+    done = run(tmp_path, "generate", "--from", "t.shape", "--rows", "5", "-o", "out")
+    clean(done, ok=(2,))
+    line = next(x for x in done.stderr.splitlines() if x.startswith("shape: error:"))
+    assert "t.u" in line
+    assert "list<element: extension<arrow.uuid>>" in line
+    assert "child type extension<arrow.uuid>" in line
+    assert not (tmp_path / "out").exists()

@@ -346,3 +346,14 @@ Tests first; each was red before (`pytest ... -k` run: 9 failed, 1 passed before
 
 Not added: issue #1 asked for `shape profile --exclude` / `--columns` as a workaround. Nested columns now profile, so
 no option was added.
+
+## Review of 120d159..189c950 (approved, three items)
+
+* A: the 20-run flat Delta test is a guard (it passes on 0.9.2). The real regression test reads a 30-file Delta table
+  with one data file that is not Parquet, so the read fails while other files are still being scanned: on 0.9.2 the
+  process hung 4 times in 6 (test red at base: 61 s timeout), here 6 of 6 exit 2 with one error line.
+* B: CLI test that `generate` refuses `list<extension<arrow.uuid>>` written to Parquet: exit 2, one `shape: error:` line
+  with `t.u`, the whole type and the child type (skipped on pyarrow before 18, which has no uuid type).
+* C: `_binary` takes its bytes from `words.astype('<u8')`, so they do not depend on byte order.
+* Docs: PROFILING_NOTES says an unsupported child blocks the whole table (no option yet to leave a column out), and
+  that inner lists are never empty when the profile records no lengths.

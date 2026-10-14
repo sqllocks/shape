@@ -152,7 +152,8 @@ def test_a_command_that_loaded_deltalake_ends_the_process_by_itself(tmp_path: Pa
 
 
 def test_a_flat_local_delta_table_profiles_cleanly_twenty_times(tmp_path: Path) -> None:
-    """The exit hang hit tables without a nested column too, in about two runs of three."""
+    """A guard: profiling a flat local Delta table ends cleanly every time. (It passes on 0.9.2 too:
+    the hang needs a scan still in flight, see the corrupt-file test below.)"""
     src = ni.write_delta(tmp_path / "flat", ni.flat_table())
     for run in range(20):
         try:
@@ -214,3 +215,25 @@ def test_a_failed_cloud_delta_read_ends_the_process_with_logging_on(
             pytest.fail(f"run {run}: the process did not end")
         assert done.returncode == 2, f"run {run}: exit {done.returncode}: {done.stderr[-300:]}"
         assert "shape: error:" in done.stderr
+
+
+def test_a_delta_read_that_fails_after_the_scan_started_exits_2_not_hangs(tmp_path: Path) -> None:
+    """A data file that is not Parquet fails the read while other files are still being scanned on
+    Arrow's pool threads: on 0.9.2 the process then hung at exit (4 runs in 6). The error is one
+    line and exit 2."""
+    from deltalake import write_deltalake
+
+    src = tmp_path / "d"
+    for i in range(30):
+        part = pa.table({"id": list(range(i * 1000, (i + 1) * 1000)), "s": ["v"] * 1000})
+        write_deltalake(str(src), part, mode="append")
+    files = sorted(src.glob("*.parquet"))
+    files[15].write_bytes(b"PAR1 not a parquet file")
+    for run in range(6):
+        try:
+            done = _run_profile(src, tmp_path / "d.shape")
+        except subprocess.TimeoutExpired:  # pragma: no cover - the failure being tested
+            pytest.fail(f"run {run}: the process did not end (hang at exit)")
+        assert done.returncode == 2, f"run {run} exit {done.returncode}: {done.stderr[-300:]}"
+        errors = [x for x in done.stderr.splitlines() if x.startswith("shape: error:")]
+        assert len(errors) == 1, done.stderr

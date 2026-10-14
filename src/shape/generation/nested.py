@@ -204,7 +204,7 @@ def _binary(typ: pa.DataType, ctx: GenerationContext, path: str) -> pa.Array:
     words = RowStream(ctx.seed, ctx.table, ctx.column, f"nested.bytes{path}").raw(
         ctx.row_start, n, per_row=max((top + 7) // 8, 1)
     )
-    grid = np.ascontiguousarray(words).view(np.uint8).reshape(n, -1)[:, :top]
+    grid = np.ascontiguousarray(words.astype("<u8")).view(np.uint8).reshape(n, -1)[:, :top]
     if fixed is not None:
         return pa.FixedSizeBinaryArray.from_buffers(typ, n, [None, pa.py_buffer(grid.tobytes())])
     span = DEFAULT_MAX_BYTES - DEFAULT_MIN_BYTES + 1
