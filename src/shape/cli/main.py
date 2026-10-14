@@ -748,8 +748,12 @@ def _cmd_fidelity(a):
     from shape.quality import load_tables
 
     t0 = ci.started()
+    from shape.quality.verify import refuse_nested
+
     real = load_tables(a.reference, a.input_format)
     synth = load_tables(a.csv, a.input_format)
+    refuse_nested(real, "fidelity")
+    refuse_nested(synth, "fidelity")
     if not real:
         raise ValueError(f"no data files found in {a.reference}")
     if len(real) == 1 and len(synth) == 1:  # two single files compare whatever they are called
@@ -2284,6 +2288,9 @@ def main(argv=None):
 
     lifecycle.quick_exit_allowed = argv is None
     lifecycle.exit_on_return = False
+    stale = sys.modules.get("shape.io.deltafs")
+    if stale is not None:
+        stale.bridge_in_use = False  # per command: a library user may have run a command before
     try:
         code = _main(argv)
     finally:
@@ -2299,6 +2306,14 @@ def main(argv=None):
             if not errors.reader_gone(exc):
                 raise
             code = errors.pipe_closed()
+    bridge = sys.modules.get("shape.io.deltafs")
+    if bridge is not None and bridge.bridge_in_use:
+        # A table behind an object store reaches Arrow through a Python file system that an
+        # Arrow pool thread frees: tearing the interpreter down around it can hang or abort
+        # (GitHub issue #1). End the process once all is flushed.
+        lifecycle.exit_on_return = True
+        # the log line and the metrics file (the reason quick exit was off) are written by now
+        lifecycle.quick_exit_allowed = argv is None
     if lifecycle.exit_on_return:
         lifecycle.exit_now(code)
     return code
@@ -2332,7 +2347,7 @@ def _main(argv):
         from shape.security.redact import redact_text
 
         # The text of a driver, broker or auth error can echo a connection string or a token.
-        detail = redact_text(str(exc)) or "no detail"
+        detail = errors.one_line(redact_text(str(exc))) or "no detail"
         print(
             f"shape: error: {type(exc).__name__}: {detail} (run with --debug for the traceback)",
             file=sys.stderr,

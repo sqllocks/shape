@@ -388,3 +388,40 @@ def test_the_kit_runs_the_command_against_the_fake(fabric, tmp_path, monkeypatch
         commands.ProfileModelCommand(), argv=["Sales/Retail", "-o", "k.shape"], expect_exit=0
     )
     assert Path("k.shape").is_file()
+
+
+# --- an unreadable table is one clean error ----------------------------------------------------
+
+ADOMD = (
+    "AdomdErrorResponseException: Query (1, 35) Cannot find table 'customer'.\n"
+    "   at Microsoft.AnalysisServices.AdomdClient.AdomdConnection.XmlaClientProvider.Microsoft"
+)
+
+
+@pytest.mark.parametrize("failing", ["read_table", "evaluate_dax"])
+def test_an_unreadable_table_names_the_model_the_table_and_the_refresh(fabric, failing):
+    def boom(**_):
+        raise RuntimeError(ADOMD)
+
+    setattr(fabric, failing, boom)
+    argv = ["Sales/Retail", "-o", "unused.shape"]
+    if failing == "evaluate_dax":
+        argv += ["--max-rows", "5"]
+    code, out, err = run(*argv)
+    lines = [x for x in err.strip().splitlines() if not x.startswith("shape: warning:")]
+    assert code == 2 and len(lines) == 1, err
+    assert lines[0].startswith("shape: error:")
+    assert "Retail" in lines[0] and "Cannot find table" in lines[0]
+    assert "cannot read table" in lines[0]
+    assert "the semantic model may need a refresh" in lines[0]
+    assert "Traceback" not in err
+
+
+def test_an_unreadable_table_is_not_skipped(fabric, tmp_path):
+    def boom(**_):
+        raise RuntimeError(ADOMD)
+
+    fabric.read_table = boom
+    out = tmp_path / "m.shape"
+    code, _, err = run("Sales/Retail", "-o", str(out))
+    assert code == 2 and not out.exists()

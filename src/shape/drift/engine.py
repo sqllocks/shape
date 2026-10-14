@@ -441,10 +441,24 @@ def _suppressed(col: Mapping[str, Any]) -> frozenset[str]:
     return frozenset(str(k) for k in redacted) if isinstance(redacted, Mapping) else frozenset()
 
 
+def _nested_signature(col: Mapping[str, Any]) -> str:
+    """The text two nested columns are compared by (``shape.profile.nested.type_signature``)."""
+    from shape.profile.nested import arrow_type_from_spec, type_signature
+
+    spec = col.get("arrow_type_spec")
+    if isinstance(spec, dict):
+        try:
+            return type_signature(arrow_type_from_spec(spec))
+        except ValueError:
+            pass
+    return str(col.get("arrow_type") or "nested")
+
+
 def view_of_profile_column(col: Mapping[str, Any], rows: int) -> View:
     """A column of a :class:`~shape.profile.reference.Profile` (the profile's dict form)."""
     null_count = int(col.get("null_count") or 0)
     dtype = str(col["dtype"])
+    nested = dtype == "nested"
     categories: dict[str, float] | None = None
     if dtype != "datetime" and col.get("pattern") not in _PATTERN_DATE:
         # the profiler's enum rule says which columns are categories; a boolean always is
@@ -452,6 +466,11 @@ def view_of_profile_column(col: Mapping[str, Any], rows: int) -> View:
             col.get("enum_values") or (col.get("value_counts_ext") if dtype == "boolean" else None)
         )
     length = col.get("string_length") or {}
+    if dtype == "nested":
+        # a nested column is its exact Arrow type: two types differ when their text does, and the
+        # list lengths take the place of the string lengths
+        dtype = _nested_signature(col)
+        length = (col.get("nested") or {}).get("length") or {}
     mn, mx = _plain(col.get("min_value")), _plain(col.get("max_value"))
     view = View(
         dtype=dtype,
@@ -466,7 +485,7 @@ def view_of_profile_column(col: Mapping[str, Any], rows: int) -> View:
         quantiles=_quantile_pairs(col.get("quantiles")),
         pattern=col.get("pattern"),
         categories=categories,
-        length_mean=_number(length.get("mean")) if dtype == "string" else None,
+        length_mean=_number(length.get("mean")) if dtype == "string" or nested else None,
         outlier_rate=_number(col.get("outlier_rate")),
         distribution=col.get("distribution"),
         placeholders=list(col.get("placeholders") or ()),

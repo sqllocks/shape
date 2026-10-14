@@ -34,6 +34,7 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
 from shape.artifact.canonical import canonical_json
+from shape.io import deltafs
 
 FORMAT = "shape-fingerprint"
 VERSION = 1
@@ -226,7 +227,7 @@ def read_data(path: str | os.PathLike[str]) -> pa.Table:
     if kind_of(path) == "parquet":
         table: pa.Table = pq.read_table(path)
         return table.replace_schema_metadata(None)
-    table = _deltalake().DeltaTable(str(path)).to_pyarrow_table()
+    table = deltafs.local_table(_deltalake().DeltaTable(str(path)), path)
     return table.replace_schema_metadata(None)
 
 

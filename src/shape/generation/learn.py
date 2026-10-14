@@ -172,6 +172,9 @@ def _column(doc: Mapping[str, Any]) -> ColumnProfile:
         dow_histogram=doc.get("dow_histogram"),
         temporal_histogram=doc.get("temporal_histogram"),
         string_length=doc.get("string_length"),
+        arrow_type=doc.get("arrow_type"),
+        arrow_type_spec=doc.get("arrow_type_spec"),
+        nested=doc.get("nested"),
         outlier_rate=doc.get("outlier_rate"),
         value_counts_ext=value_counts,
         fit_score=doc.get("fit_score"),
@@ -400,8 +403,12 @@ class SchemaBuilder:
                 null_rate = float(cp.null_rate or 0.0)
                 columns[cname] = {
                     "name": cname,
-                    "type": _COLUMN_TYPES.get(cp.dtype, "string"),
-                    "generator": self.column_generator(cp, parent_pk, fit_threshold),
+                    "type": "nested"
+                    if cp.dtype == "nested"
+                    else _COLUMN_TYPES.get(cp.dtype, "string"),
+                    "generator": self.column_generator(
+                        cp, parent_pk, fit_threshold, f"{tname}.{cname}"
+                    ),
                     "nullable": null_rate > 0,
                     "null_rate": null_rate,
                     "max_length": None,
@@ -461,9 +468,16 @@ class SchemaBuilder:
     # ---- columns ------------------------------------------------------------------------
 
     def column_generator(
-        self, col: ColumnProfile, parent_pk: Mapping[str, str], fit_threshold: float = 0.80
+        self,
+        col: ColumnProfile,
+        parent_pk: Mapping[str, str],
+        fit_threshold: float = 0.80,
+        where: str | None = None,
     ) -> dict[str, Any]:
-        """The generator of one column: the first rule that applies."""
+        """The generator of one column: the first rule that applies. ``where`` (``table.column``)
+        names a nested column in the error for a child type that has no generator."""
+        if col.dtype == "nested":
+            return self._nested(col, where or col.name)
         digits = _digit_identifier_width(col)
         if digits is not None and col.is_enum and _is_covered_enum(col):
             # a ZIP code and the like: the profile lists every value, so keep the value set
@@ -528,6 +542,25 @@ class SchemaBuilder:
                 return {"strategy": "faker", "provider": provider, "max_length": limit}
             return {"strategy": "faker", "provider": provider}
         return {"strategy": "faker", "provider": "pystr"}
+
+    @staticmethod
+    def _nested(col: ColumnProfile, where: str) -> dict[str, Any]:
+        """A nested column is generated whole by the ``nested`` strategy (``generation.nested``)."""
+        from shape.generation.nested import NESTED, check_generatable
+
+        if not col.arrow_type_spec:
+            raise ValueError(
+                f"{where}: the profile does not record the Arrow type of this nested column "
+                "(profile it again with this version of Shape)"
+            )
+        gen: dict[str, Any] = {"strategy": NESTED, "arrow_type_spec": col.arrow_type_spec}
+        check_generatable(gen, where)
+        nested = col.nested or {}
+        if nested.get("length"):
+            gen["length"] = nested["length"]
+        if nested.get("element_null_rate"):
+            gen["element_null_rate"] = nested["element_null_rate"]
+        return gen
 
     @staticmethod
     def _temporal(col: ColumnProfile) -> dict[str, Any]:

@@ -469,3 +469,21 @@ def test_the_module_declares_the_plugin_api_and_the_host_loads_the_source():
     assert kit.check_module_api(ss) == "1.0"
     source = default_host().try_get("shape.sources", "semantic-model")
     assert isinstance(source, SemanticModelSource)
+
+
+@pytest.mark.parametrize("failing", ["read_table", "evaluate_dax"])
+def test_a_single_unreadable_table_is_one_clean_error(fabric, failing):
+    def boom(**_):
+        raise RuntimeError(
+            "AdomdErrorResponseException: Cannot find table 'Customer'.\n   at Microsoft"
+        )
+
+    setattr(fabric, failing, boom)
+    options = {"max_rows": 5} if failing == "evaluate_dax" else {}
+    source = SemanticModelSource()
+    with pytest.raises(ShapeError) as caught:
+        list(source.read(URI, **options))
+    message = str(caught.value)
+    assert "Retail" in message and "Customer" in message
+    assert "cannot read table" in message and "may need a refresh" in message
+    assert "\n" not in message

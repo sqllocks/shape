@@ -77,9 +77,12 @@ def _pairs(a: argparse.Namespace, second: str) -> tuple[dict[str, Any], dict[str
     """The reference tables and the matching other tables (a single file against a single file
     compares whatever they are called), and the names of reference tables the other side lacks."""
     from shape.quality import load_tables
+    from shape.quality.verify import refuse_nested
 
     real = load_tables(a.reference, a.input_format)
     other = load_tables(getattr(a, second), a.input_format)
+    refuse_nested(real, "fidelity")
+    refuse_nested(other, "fidelity")
     if not real:
         raise ValueError(f"no data files found in {a.reference}")
     if len(real) == 1 and len(other) == 1:

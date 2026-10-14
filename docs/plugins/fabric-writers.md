@@ -274,11 +274,12 @@ the values held by the `fabric-live` environment. Each test is printed as it sta
 stays 10 minutes dumps every thread's stack, the step is capped at 50 minutes, and a failed test
 prints its failure at once. After the tests the run lists the items left in the workspace and, for
 the Git workspace, Fabric's answers to `git/connection`, `git/status` and `git/myGitCredentials`
-(read-only). Two dispatch inputs, both off by default, do one-time setup:
+(read-only). Three dispatch inputs, all off by default, do one-time setup or repair:
 
 | Input | What it does |
 |---|---|
 | `set_git_credentials` | As the service principal, sets its own Git credentials on the Git workspace (`FABRIC_GIT_WORKSPACE_ID`) to the existing GitHub connection `shape-fabric-sync-gh`: `PATCH .../git/myGitCredentials` with `ConfiguredConnection`. It reads the credentials first and changes nothing when they already point at that connection. It prints only the source and the connection id. Timeout: 5 minutes. |
+| `refresh_semantic_model` | Refreshes the semantic model `FABRIC_SEMANTIC_MODEL` (`POST .../datasets/{id}/refreshes`, type `full`) and waits up to 15 minutes for it to end, so a Direct Lake model reads the Lakehouse tables as they are now. It changes no definition and prints only the refresh status. **The scheduled (nightly) run always does this**, before the tests. |
 | `delete_leftover_notebooks` | Lists the Notebook items of the test workspace with their ids, then deletes only those named `shape_live_nb_` plus 8 hex digits (what the deploy-notebook test names its notebook). Nothing else is deleted. Timeout: 5 minutes. |
 
 Only one run waits behind a running one: dispatch a run when none is pending.

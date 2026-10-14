@@ -42,6 +42,11 @@ on:
         required: false
         default: false
         type: boolean
+      refresh_semantic_model:
+        description: Refresh (reframe) the semantic model shape_sm so its Direct Lake tables read the current Lakehouse tables; waits for the refresh to end (default - do nothing)
+        required: false
+        default: false
+        type: boolean
       delete_leftover_notebooks:
         description: List, then delete, only the Notebook items named shape_live_nb_<8 hex> in shape-test (the deploy-notebook test's leftovers; default - do nothing)
         required: false
@@ -104,6 +109,20 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
+      - name: Mask the identifiers and paths this job could print
+        # This repository is public: mask every ID-bearing value, and every GUID inside one, before any
+        # step prints. Secrets are masked by GitHub already.
+        run: |
+          for v in FABRIC_TENANT_ID FABRIC_CLIENT_ID FABRIC_WORKSPACE_ID FABRIC_GIT_WORKSPACE_ID \
+                   FABRIC_LAKEHOUSE_ID FABRIC_SQL_ENDPOINT FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH \
+                   FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH FABRIC_EVENTHOUSE_URI \
+                   FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING SHAPE_TEST_SYNAPSE_URI \
+                   SHAPE_TEST_SYNAPSE_STAGING SYNAPSE_SUBSCRIPTION_ID; do
+            val="${!v}"
+            [ -n "$val" ] || continue
+            echo "::add-mask::$val"
+            printf '%s\n' "$val" | grep -oEi '[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}' | sed 's/^/::add-mask::/'
+          done
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - name: Microsoft ODBC Driver 18 for SQL Server and unixODBC
@@ -176,6 +195,7 @@ jobs:
           with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as f:
               for key, value in out.items():
                   assert "\n" not in value
+                  print(f"::add-mask::{value}")
                   f.write(f"{key}={value}\n")
           for key in out:
               print(f"derived {key}")
@@ -307,7 +327,112 @@ jobs:
               call("DELETE", f"{base}/{item['id']}")
               print(f"  deleted {item['id']}  {item['displayName']}")
           PY
+      - name: Refresh the semantic model shape_sm (opt-in; changes no definition and deletes nothing)
+        # Run 38418635000 and 38437587616: the model definition and its Lakehouse tables exist, but the
+        # engine answers "Cannot find table 'customer'". A refresh of a Direct Lake model reframes it on
+        # the Lakehouse tables as they are now. Prints only the refresh status. On the nightly schedule a
+        # failed refresh is a warning and the live tests still run; a manual dispatch fails the step.
+        if: inputs.refresh_semantic_model || github.event_name == 'schedule'
+        continue-on-error: ${{ github.event_name == 'schedule' }}
+        timeout-minutes: 15
+        run: |
+          missing=""
+          for v in FABRIC_TENANT_ID FABRIC_CLIENT_ID FABRIC_CLIENT_SECRET FABRIC_WORKSPACE_ID; do
+            [ -n "${!v}" ] || missing="$missing $v"
+          done
+          # The step is non-fatal on the nightly schedule, so a problem there is a warning.
+          level=error
+          [ "$GITHUB_EVENT_NAME" = "schedule" ] && level=warning
+          if [ -n "$missing" ]; then
+            echo "::$level::cannot refresh the semantic model, missing:$missing"
+            exit 1
+          fi
+          python - <<'PY'
+          import json, os, re, time, urllib.error, urllib.request
+          from azure.identity import ClientSecretCredential
+
+          env = os.environ
+
+          def fail(message):
+              level = "warning" if env.get("GITHUB_EVENT_NAME") == "schedule" else "error"
+              print(f"::{level}::semantic model refresh: {message}")
+              raise SystemExit(message)
+
+          GUID = re.compile(r"[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}")
+          # This log and summary are public: mask the IDs before any token or HTTP call.
+          for key in ("FABRIC_TENANT_ID", "FABRIC_CLIENT_ID", "FABRIC_WORKSPACE_ID", "FABRIC_GIT_WORKSPACE_ID"):
+              if env.get(key):
+                  print(f"::add-mask::{env[key]}")
+
+          def redact(text):
+              """Mask and replace every GUID in the WHOLE text; truncate only afterwards."""
+              text = str(text)
+              for guid in sorted(set(GUID.findall(text))):
+                  print(f"::add-mask::{guid}")
+              return GUID.sub("<guid>", text)
+
+          cred = ClientSecretCredential(env["FABRIC_TENANT_ID"], env["FABRIC_CLIENT_ID"], env["FABRIC_CLIENT_SECRET"])
+
+          def token_for(scope):
+              try:
+                  return cred.get_token(scope).token
+              except Exception as exc:  # never print the AADSTS text: it carries IDs
+                  fail(f"authentication failed ({type(exc).__name__}); check the service principal settings")
+
+          fabric = token_for("https://api.fabric.microsoft.com/.default")
+          pbi = token_for("https://analysis.windows.net/powerbi/api/.default")
+          ws = env["FABRIC_WORKSPACE_ID"]
+          name = (env.get("FABRIC_SEMANTIC_MODEL") or "shape_sm").strip()
+
+          def call(method, url, token, body=None):
+              req = urllib.request.Request(url, data=json.dumps(body).encode() if body is not None else None,
+                                           method=method, headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
+              try:
+                  with urllib.request.urlopen(req, timeout=120) as resp:
+                      raw = resp.read()
+                      return resp.status, dict(resp.headers), (json.loads(raw) if raw else {})
+              except urllib.error.HTTPError as exc:
+                  return exc.code, dict(exc.headers), redact(exc.read().decode())[:800]
+
+          code, _, items = call("GET", f"https://api.fabric.microsoft.com/v1/workspaces/{ws}/items?type=SemanticModel", fabric)
+          if code != 200 or not isinstance(items, dict):
+              fail(f"listing the semantic models answered HTTP {code}, expected 200")
+          ids = [i["id"] for i in items.get("value", []) if i["displayName"] == name]
+          if len(ids) != 1:
+              fail(f"expected one semantic model named {name}, found {len(ids)}")
+          base = f"https://api.powerbi.com/v1.0/myorg/groups/{ws}/datasets/{ids[0]}/refreshes"
+
+          def history():
+              code, _, hist = call("GET", base + "?$top=10", pbi)
+              return (hist.get("value") or []) if code == 200 and isinstance(hist, dict) else None
+
+          earlier = history()
+          before = None if earlier is None else {r.get("requestId") for r in earlier}
+          code, headers, out = call("POST", base, pbi, {"type": "full"})
+          print("refresh requested:", code, out if isinstance(out, str) else "")
+          if code not in (200, 202):
+              fail(f"requesting the refresh answered HTTP {code}")
+          location = {k.lower(): v for k, v in headers.items()}.get("location", "")
+          request_id = location.rstrip("/").rsplit("/", 1)[-1] if "/refreshes/" in location else None
+          if request_id is None and before is None:
+              fail("cannot identify this refresh: no Location header and the refresh history was unreadable")
+          for _ in range(80):
+              time.sleep(10)
+              mine = [r for r in history() or [] if (r.get("requestId") == request_id if request_id else r.get("requestId") not in before)]
+              latest = mine[0] if mine else {}
+              status = latest.get("status")
+              print("refresh status:", status)
+              if status in ("Completed", "Failed", "Disabled", "Cancelled"):
+                  if status != "Completed":
+                      print("refresh error:", redact(latest.get("serviceExceptionJson", ""))[:600])
+                      fail(f"the refresh ended {status}")
+                  break
+          else:
+              fail("the refresh did not end in 800 s")
+          PY
       - name: Live tests
+        # Runs after any earlier step failure (not after a cancel): nothing is skipped.
+        if: ${{ !cancelled() }}
         # Bounded below the job limit so the summary and upload steps always run. Every test name is
         # printed as it starts (-v, unbuffered), and a test that sits for 10 minutes dumps the
         # stack of every thread (faulthandler_timeout) so a hang names the call it is stuck in.
@@ -363,17 +488,42 @@ jobs:
             sleep 15
           done
       - name: List what the live tests left in the workspace (read-only)
-        # Lists every item in shape-test (type, name, id) so a stray item can be traced to the test
-        # that made it. It deletes nothing.
+        # Lists every item in shape-test (type and name, never the id: this log and summary are public)
+        # so a stray item can be traced to the test that made it. It deletes nothing.
         if: always()
         run: |
           python - <<'PY'
-          import json, os, urllib.request
+          import json, os, re, urllib.request
           from azure.identity import ClientSecretCredential
 
           env = os.environ
+
+          def fail(message):
+              print(f"::error::{message}")
+              raise SystemExit(1)
+
+          GUID = re.compile(r"[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}")
+          # This log and summary are public: mask the IDs before any token or HTTP call.
+          for key in ("FABRIC_TENANT_ID", "FABRIC_CLIENT_ID", "FABRIC_WORKSPACE_ID", "FABRIC_GIT_WORKSPACE_ID"):
+              if env.get(key):
+                  print(f"::add-mask::{env[key]}")
+
+          def redact(text):
+              """Mask and replace every GUID in the WHOLE text; truncate only afterwards."""
+              text = str(text)
+              for guid in sorted(set(GUID.findall(text))):
+                  print(f"::add-mask::{guid}")
+              return GUID.sub("<guid>", text)
+
           cred = ClientSecretCredential(env["FABRIC_TENANT_ID"], env["FABRIC_CLIENT_ID"], env["FABRIC_CLIENT_SECRET"])
-          token = cred.get_token("https://api.fabric.microsoft.com/.default").token
+
+          def token_for(scope):
+              try:
+                  return cred.get_token(scope).token
+              except Exception as exc:  # never print the AADSTS text: it carries IDs
+                  fail(f"authentication failed ({type(exc).__name__}); check the service principal settings")
+
+          token = token_for("https://api.fabric.microsoft.com/.default")
           base = f"https://api.fabric.microsoft.com/v1/workspaces/{env['FABRIC_WORKSPACE_ID']}/items"
 
           items, url = [], base
@@ -384,29 +534,56 @@ jobs:
               items += doc.get("value", [])
               more = doc.get("continuationToken")
               url = f"{base}?continuationToken={more}" if more else None
-          lines = ["## Workspace items after the live tests", ""]
+          for value in [env["FABRIC_WORKSPACE_ID"], *(i["id"] for i in items)]:
+              print(f"::add-mask::{value}")
+          lines = ["## Workspace items after the live tests", "", f"{len(items)} item(s):", ""]
           for item in sorted(items, key=lambda i: (i["type"], i["displayName"])):
-              lines.append(f"- {item['type']} `{item['displayName']}` {item['id']}")
+              lines.append(f"- {item['type']} `{item['displayName']}`")
           text = "\n".join(lines)
           print(text)
           open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8").write(text + "\n")
           PY
-      - name: Git integration status of the Git workspace (read-only GETs, exact responses)
+      - name: Git integration status of the Git workspace (read-only GETs, GUIDs redacted)
         # What Fabric answers to the CI service principal for the Git-connected workspace. Read-only GET
         # requests, nothing is connected or initialised.
         if: always()
         run: |
           python - <<'PY'
-          import json, os, urllib.error, urllib.request
+          import json, os, re, urllib.error, urllib.request
           from azure.identity import ClientSecretCredential
 
           env = os.environ
+
+          def fail(message):
+              print(f"::error::{message}")
+              raise SystemExit(1)
+
+          GUID = re.compile(r"[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}")
+          # This log and summary are public: mask the IDs before any token or HTTP call.
+          for key in ("FABRIC_TENANT_ID", "FABRIC_CLIENT_ID", "FABRIC_WORKSPACE_ID", "FABRIC_GIT_WORKSPACE_ID"):
+              if env.get(key):
+                  print(f"::add-mask::{env[key]}")
+
+          def redact(text):
+              """Mask and replace every GUID in the WHOLE text; truncate only afterwards."""
+              text = str(text)
+              for guid in sorted(set(GUID.findall(text))):
+                  print(f"::add-mask::{guid}")
+              return GUID.sub("<guid>", text)
+
+          cred = ClientSecretCredential(env["FABRIC_TENANT_ID"], env["FABRIC_CLIENT_ID"], env["FABRIC_CLIENT_SECRET"])
+
+          def token_for(scope):
+              try:
+                  return cred.get_token(scope).token
+              except Exception as exc:  # never print the AADSTS text: it carries IDs
+                  fail(f"authentication failed ({type(exc).__name__}); check the service principal settings")
+
           ws = env.get("FABRIC_GIT_WORKSPACE_ID", "")
           if not ws:
               print("FABRIC_GIT_WORKSPACE_ID is not set")
               raise SystemExit(0)
-          cred = ClientSecretCredential(env["FABRIC_TENANT_ID"], env["FABRIC_CLIENT_ID"], env["FABRIC_CLIENT_SECRET"])
-          token = cred.get_token("https://api.fabric.microsoft.com/.default").token
+          token = token_for("https://api.fabric.microsoft.com/.default")
           out = ["## Git integration of the Git workspace", ""]
           # The connections this principal can use (Microsoft: a principal other than the one that
           # connected the workspace needs access to the cloud connection and its own Git credentials).
@@ -421,9 +598,9 @@ jobs:
                   for c in items
                   if "git" in json.dumps(c).lower()
               ]
-              out += ["### GET /v1/connections (Git-related, as the CI principal)", "```json", json.dumps(rows)[:3000], "```"]
+              out += ["### GET /v1/connections (Git-related, as the CI principal)", "```json", redact(json.dumps(rows))[:3000], "```"]
           except urllib.error.HTTPError as exc:
-              out += [f"### GET /v1/connections -> HTTP {exc.code}", "```json", exc.read().decode()[:1500], "```"]
+              out += [f"### GET /v1/connections -> HTTP {exc.code}", "```json", redact(exc.read().decode())[:1500], "```"]
           for path in ("git/connection", "git/status", "git/myGitCredentials"):
               url = f"https://api.fabric.microsoft.com/v1/workspaces/{ws}/{path}"
               req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
@@ -432,7 +609,7 @@ jobs:
                       code, body = resp.status, resp.read().decode()
               except urllib.error.HTTPError as exc:
                   code, body = exc.code, exc.read().decode()
-              out += [f"### GET /v1/workspaces/{ws}/{path} -> HTTP {code}", "```json", body[:4000], "```"]
+              out += [f"### GET /v1/workspaces/<git workspace>/{path} -> HTTP {code}", "```json", redact(body)[:4000], "```"]
           text = "\n".join(out)
           print(text)
           open(env["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8").write(text + "\n")
@@ -442,7 +619,27 @@ jobs:
         run: |
           python - <<'PY'
           import os
+          import re
           import xml.etree.ElementTree as ET
+
+          GUID = re.compile(r"[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}")
+          # ::add-mask:: does not apply to the step summary, so redact the text itself: the masked
+          # values first (longest first), then every GUID.
+          MASKED = sorted(
+              {os.environ[k] for k in (
+                  "FABRIC_TENANT_ID", "FABRIC_CLIENT_ID", "FABRIC_WORKSPACE_ID", "FABRIC_GIT_WORKSPACE_ID",
+                  "FABRIC_LAKEHOUSE_ID", "FABRIC_SQL_ENDPOINT", "FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH",
+                  "FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH", "FABRIC_EVENTHOUSE_URI", "FABRIC_STAGING_PATH",
+                  "FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING", "FABRIC_WAREHOUSE_CONNECTION_STRING",
+                  "SHAPE_TEST_SYNAPSE_URI", "SHAPE_TEST_SYNAPSE_STAGING", "SYNAPSE_SUBSCRIPTION_ID",
+              ) if os.environ.get(k)},
+              key=len, reverse=True,
+          )
+
+          def redact(text):
+              for value in MASKED:
+                  text = text.replace(value, "<redacted>")
+              return GUID.sub("<guid>", text)
 
           path = "live-junit.xml"
           lines = ["## Fabric live tests", ""]
@@ -467,7 +664,7 @@ jobs:
                   if rows[kind]:
                       lines += ["", f"### {kind}", ""]
                       for name, why in rows[kind]:
-                          reason = f" - {why[0][:300]}" if why and why[0] else ""
+                          reason = f" - {redact(why[0])[:300]}" if why and why[0] else ""
                           lines.append(f"- `{name}`{reason}")
           open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8").write("\n".join(lines) + "\n")
           PY
@@ -509,6 +706,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
+      - name: Mask the identifiers and paths this job could print
+        # This repository is public: mask every ID-bearing value, and every GUID inside one, before any
+        # step prints. Secrets are masked by GitHub already.
+        run: |
+          for v in FABRIC_TENANT_ID FABRIC_CLIENT_ID FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH; do
+            val="${!v}"
+            [ -n "$val" ] || continue
+            echo "::add-mask::$val"
+            printf '%s\n' "$val" | grep -oEi '[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}' | sed 's/^/::add-mask::/'
+          done
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
       - name: Microsoft ODBC Driver 18 for SQL Server and unixODBC
