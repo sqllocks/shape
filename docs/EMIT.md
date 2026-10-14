@@ -170,6 +170,8 @@ Eventstream property `shape_synthetic`; the Parquet files of a table sink carry 
 
 ## Delivery, backpressure and checkpoints
 
+Streaming replay is checkpoint-deterministic for deterministic handlers/sources.
+
 Delivery is **at-least-once**. A batch is delivered when the sink's `send` returns, and only then
 can the checkpoint move past it. A bounded queue sits between the generator and the sink, so a
 slow sink blocks the generator (`--queue-batches`); transient `OSError`s are retried
