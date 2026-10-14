@@ -1,0 +1,193 @@
+{
+  "api_version": "1.0",
+  "cases": [
+    {
+      "name": "local-single-memory",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "domain": "${DIR}/schema.json",
+          "scale_mode": "local_single"
+        },
+        "command": "scale_generate",
+        "id": "local-single-memory"
+      },
+      "response": {
+        "api_version": "1.0",
+        "command": "scale_generate",
+        "id": "local-single-memory",
+        "ok": true,
+        "result": {
+          "chunks": "<any>",
+          "domain": "${DIR}/schema.json",
+          "elapsed_seconds": "<any>",
+          "mode": "local_single",
+          "parts_skipped": "<any>",
+          "peak_rss_gb": "<any>",
+          "processes": "<any>",
+          "rows_generated": 4340,
+          "scale": "small",
+          "scale_mode": "local_single",
+          "seed": 5,
+          "sinks_written": {
+            "memory": "ok"
+          },
+          "tables": {
+            "customer": 40,
+            "order": 1200,
+            "order_line": 3100
+          },
+          "threads": "<any>",
+          "throughput_rows_per_sec": "<any>"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "local-mp-parquet",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "chunk_size": 1000,
+          "domain": "${DIR}/schema.json",
+          "scale_mode": "local_mp",
+          "sink_config": {
+            "parquet": {
+              "output_dir": "${DIR}/scaled"
+            }
+          },
+          "sinks": [
+            "parquet"
+          ]
+        },
+        "command": "scale_generate",
+        "id": "local-mp-parquet"
+      },
+      "response": {
+        "api_version": "1.0",
+        "command": "scale_generate",
+        "id": "local-mp-parquet",
+        "ok": true,
+        "result": {
+          "chunks": "<any>",
+          "domain": "${DIR}/schema.json",
+          "elapsed_seconds": "<any>",
+          "mode": "local_mp",
+          "parts_skipped": "<any>",
+          "peak_rss_gb": "<any>",
+          "processes": "<any>",
+          "rows_generated": 4340,
+          "scale": "small",
+          "scale_mode": "local_mp",
+          "seed": 5,
+          "sinks_written": {
+            "parquet": "ok"
+          },
+          "tables": {
+            "customer": 40,
+            "order": 1200,
+            "order_line": 3100
+          },
+          "threads": "<any>",
+          "throughput_rows_per_sec": "<any>"
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "fabric-spark",
+      "needs": "fabric",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "domain": "${DIR}/schema.json",
+          "scale_mode": "fabric_spark",
+          "sink_config": {
+            "lakehouse_id": "22222222-2222-2222-2222-222222222222",
+            "token": "vector-token",
+            "workspace_id": "11111111-1111-1111-1111-111111111111"
+          },
+          "sinks": [
+            "lakehouse"
+          ]
+        },
+        "command": "scale_generate",
+        "id": "fabric-spark"
+      },
+      "response": {
+        "api_version": "1.0",
+        "command": "scale_generate",
+        "id": "fabric-spark",
+        "ok": true,
+        "result": {
+          "domain": "${DIR}/schema.json",
+          "fabric_run_id": "<any>",
+          "job_id": "<any>",
+          "scale": "small",
+          "spec_path": "<any>",
+          "status": "submitted",
+          "total_rows_queued": 4340
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "fabric-without-a-token",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "domain": "${DIR}/schema.json",
+          "scale_mode": "fabric_spark",
+          "sink_config": {
+            "lakehouse_id": "22222222-2222-2222-2222-222222222222",
+            "workspace_id": "11111111-1111-1111-1111-111111111111"
+          }
+        },
+        "command": "scale_generate",
+        "id": "fabric-without-a-token"
+      },
+      "response": {
+        "api_version": "1.0",
+        "command": "scale_generate",
+        "error": {
+          "code": "auth.missing_credentials",
+          "group": "auth",
+          "hint": null,
+          "message": "fabric_spark needs a Fabric token: sink_config.token or $SHAPE_FABRIC_TOKEN"
+        },
+        "id": "fabric-without-a-token",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-mode",
+      "request": {
+        "api_version": "1.0",
+        "args": {
+          "domain": "retail",
+          "scale_mode": "teleport"
+        },
+        "command": "scale_generate",
+        "id": "unknown-mode"
+      },
+      "response": {
+        "api_version": "1.0",
+        "command": "scale_generate",
+        "error": {
+          "code": "usage.invalid_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "argument 'scale_mode' must be one of local_single, local_mp, fabric_spark, got 'teleport'"
+        },
+        "id": "unknown-mode",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "scale_generate",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

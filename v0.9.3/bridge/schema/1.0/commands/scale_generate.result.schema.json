@@ -1,0 +1,205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "additionalProperties": true,
+      "properties": {
+        "domain": {
+          "type": "string"
+        },
+        "elapsed_seconds": {
+          "type": "number"
+        },
+        "memory_peak_gb": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "peak_rss_gb": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rows_generated": {
+          "type": "integer"
+        },
+        "scale": {
+          "type": "string"
+        },
+        "scale_mode": {
+          "type": "string"
+        },
+        "seed": {
+          "type": "integer"
+        },
+        "sinks_written": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "throughput_rows_per_sec": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "domain",
+        "scale",
+        "scale_mode",
+        "seed",
+        "rows_generated",
+        "elapsed_seconds",
+        "throughput_rows_per_sec",
+        "sinks_written"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": true,
+      "properties": {
+        "domain": {
+          "type": "string"
+        },
+        "fabric_run_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "job_id": {
+          "type": "string"
+        },
+        "spec_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string"
+        },
+        "total_rows_queued": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "job_id",
+        "status",
+        "domain"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": true,
+      "properties": {
+        "cancellable": {
+          "type": "boolean"
+        },
+        "command": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "group": {
+                  "type": "string"
+                },
+                "hint": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "message": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "group",
+                "message",
+                "hint"
+              ],
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "job_id": {
+          "type": "string"
+        },
+        "progress": {
+          "additionalProperties": {},
+          "type": "object"
+        },
+        "result": {},
+        "status": {
+          "enum": [
+            "running",
+            "submitted",
+            "succeeded",
+            "failed",
+            "cancelled",
+            "interrupted"
+          ]
+        },
+        "updated_at": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "job_id",
+        "command",
+        "status",
+        "created_at",
+        "updated_at",
+        "progress",
+        "result",
+        "error",
+        "cancellable"
+      ],
+      "type": "object"
+    }
+  ],
+  "title": "scale_generate result",
+  "x-api-version": "1.0"
+}

@@ -1,0 +1,7907 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Shape as Code — a portable, executable description of how data behaves.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.shapedata.ai/v0.9.3/GENERATION_STRATEGIES/">
+      
+      
+        <link rel="prev" href="../GENERATION_ENGINE/">
+      
+      
+        <link rel="next" href="../GENERATION_CALENDARS/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/brand/shape-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Generation strategies - Shape by SQLLocks</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../assets/stylesheets/brand.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+
+<link rel="alternate" type="text/plain" href="../llms.txt" title="Documentation text index">
+<script src="../assets/javascripts/mermaid.min.js"></script>
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#generation-strategies" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a class="md-header__button md-logo" data-md-component="logo" href=".." aria-label="Shape documentation home">
+      <img class="shape-logo-light" src="../assets/brand/shape-logo.svg" alt="Shape">
+<img class="shape-logo-dark" src="../assets/brand/shape-logo-white.svg" alt="Shape">
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Open navigation">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic"><span class="md-ellipsis">Documentation</span></div>
+        <div class="md-header__topic" data-md-component="header-topic"><span class="md-ellipsis">Generation strategies</span></div>
+      </div>
+    </div>
+    <a class="shape-website-link" href="https://shapedata.ai/">shapedata.ai</a>
+    
+      <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <label class="md-header__button md-icon" for="__search" aria-label="Search documentation">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    <div class="md-header__source"><a href="https://github.com/sqllocks/shape" class="md-source" title="Source repository">sqllocks/shape</a></div>
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Shape by SQLLocks" class="md-nav__button md-logo" aria-label="Shape by SQLLocks" data-md-component="logo">
+      <img class="shape-logo-light" src="../assets/brand/shape-logo.svg" alt="Shape">
+<img class="shape-logo-dark" src="../assets/brand/shape-logo-white.svg" alt="Shape">
+    </a>
+    Shape by SQLLocks
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/sqllocks/shape" class="md-source" title="Source repository">sqllocks/shape</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Start here
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Start here
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../INSTALL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONCEPTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GLOSSARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LEARNING_PATHS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Learning paths
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../QUICKSTART/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TUTORIAL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Starter tutorials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Starter tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Starter tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/01-first-profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1 Your first profile
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/02-read-report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2 Read the report
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/03-drift/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3 Commit a shape and catch drift
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/04-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4 Write a contract and check it
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/05-generate-profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5 Generate dev data from a profile
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/06-domain-duckdb/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6 Generate a domain into DuckDB
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Understand your results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Understand your results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../READ_REPORT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTML report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ANATOMY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Anatomy of a shape
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DRIFT_RED/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    When drift goes red
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Profiling
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SOURCES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROFILING_NOTES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROFILE_MERGE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mergeable profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROFILE_REGISTRY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profile registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FINGERPRINT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fingerprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../JOINT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Joint distributions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FAIRNESS_AND_SKEW/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Slices and skew
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EXPLAIN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explain and notebooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DICTIONARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data dictionary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SCORECARD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scorecards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RESOLVE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Duplicate detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DETECTIVE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data detective packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REFERENCE_PACKS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference packs and validators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DATASET_LIBRARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Public dataset library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts, checks and drift
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contracts, checks and drift
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DRIFT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drift
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRACTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONSUMER_CONTRACTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Consumer contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CANARIES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canaries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment parity
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DRIFT_REPORT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drift report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../VERIFY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verifying data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRACT_EMIT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Emitting a contract
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RULES_TESTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing your rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TESTING_WITH_SHAPE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing with Shape
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROPOSALS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proposals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PLANNED_CHANGES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planned changes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Generation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DESIGN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_ENGINE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation strategies
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-interface-stable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The interface (stable)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The interface (stable)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#generator-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generator version
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rules-every-strategy-follows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rules every strategy follows
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unknown-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unknown keys
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helpers
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-a-strategy-against-the-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing a strategy against the baseline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strategies-of-p4-04a" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategies of P4-04a
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Strategies of P4-04a">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sequence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uuid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        uuid
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#weighted_enum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        weighted_enum
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        distribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#empirical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        empirical
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strategies-of-p4-04b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategies of P4-04b
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Strategies of P4-04b">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#native-and-faker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        native and faker
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#formula" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        formula
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#derived" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        derived
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#computed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        computed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strategies-of-p4-04c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategies of P4-04c
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Strategies of P4-04c">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lookup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lookup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conditional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        conditional
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#correlated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        correlated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reference_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        reference_data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bootstrap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        bootstrap
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#record_sample-and-record_field" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        record_sample and record_field
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hierarchy-and-hierarchy_field" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hierarchy and hierarchy_field
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conditional_table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        conditional_table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        temporal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reference-datasets-shapegenerationreference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reference datasets (shape.generation.reference)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#address" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        address
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#locale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        locale
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strategies-of-p4-04d" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategies of P4-04d
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Strategies of P4-04d">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#foreign_key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        foreign_key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#composite_foreign_key-and-composite_fk_field" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        composite_foreign_key and composite_fk_field
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#first_per_parent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        first_per_parent
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self_referencing-and-self_ref_field" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        self_referencing and self_ref_field
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scd2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scd2
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#skewed-fan-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skewed fan-out
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_CALENDARS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calendars and timestamps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_SPEC/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation spec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_STABILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_KERNEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation kernel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LOCALES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Locales
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SCENARIO_PACKS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scenario packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SCENARIO_LIBRARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scenario library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../IMPORTERS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema importers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CHAOS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chaos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GAMEDAY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Game days
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FAILURE_MODES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Failure modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../INCREMENTAL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Incremental data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TRANSFORMS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transforms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SIMULATION_FILES_EVENTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulating files and events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SCALE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generating at scale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FIDELITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fidelity report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FIDELITY_TIERS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fidelity tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REPORT_CARD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report card
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outputs and integration
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Outputs and integration
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SINKS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sinks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LANDING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Landing layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EMIT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Emitting events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FABRIC_MIRROR/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric mirroring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EXCEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Excel workbooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DBT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dbt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BRIDGE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON bridge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DEMO/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Demos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTAINER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Container image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FABRIC_PLATFORM/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric platform inventory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CI/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shape in CI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PR_BOT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pull request check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../NOTIFICATIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Webhook notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Projects and history
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Projects and history
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROJECT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project file
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REGISTRY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../HISTORY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    History tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REPRODUCIBILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproducibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Privacy and trust
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Privacy and trust
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PRIVACY_MODEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Privacy model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../MASK/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Masking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../VAULT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Value vault
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SHARE_BUNDLE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Safe-to-share bundle
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SIGNING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../THREAT_MODEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SECURITY_SPECIFICATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugins
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Plugins
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/builtins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Built-in plugins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/authoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Writing a plugin
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/api-v1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugin API v1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/host/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugin host
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/stability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stability promise
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/trust-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trust model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/cloud-sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cloud sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/fabric-auth/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric sign-in
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/fabric-commands/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric commands
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/fabric-writers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric writers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/sqlserver/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQL Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/streaming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/simulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/behavior/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Behavior models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/healthcare-codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Healthcare code sets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/healthcare-standards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Healthcare standards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/integrations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integrations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CLI/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command line
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI reference (generated)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CLI_STABILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EXIT_CODES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exit codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API_STABILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance (generated)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PERFORMANCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release regression benchmarks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_12_9" id="__nav_12_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specifications
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specifications
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/SHAPE_MODEL_V2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shape model v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/SHAPE_2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Normative contract v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/SHAPE_ARTIFACT_SPEC/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/STATE_AND_COMPATIBILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State and compatibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/STREAMING_SEMANTICS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming semantics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../MODELS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API generated
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Project
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PRODUCT_ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RELEASE_POLICY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release policy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RELEASE_CHECKLIST/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release checklist
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/release-0.9.1-verify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release 0.9.1 tag and digest check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../V1_DONE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definition of done for 1.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Help and trust
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Help and trust
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TROUBLESHOOTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FAQ/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../KNOWN_LIMITATIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Known limitations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../WHAT_LEAVES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    What leaves my machine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LICENSING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Licensing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DECISIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Public owner decisions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../evidence/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Published receipts
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_14_7" id="__nav_14_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_14_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Published receipts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/vscode-install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installed VSIX and real editor receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/live-fidelity-measurement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Live fidelity overhead — committed local measurement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/allocator-measurement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allocator policy — committed product A/B measurement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/local-delta-doctor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Delta doctor receipt — CLI example 5
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/snowflake-write/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Snowflake write receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/databricks-write/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Databricks write receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/kerberos-live/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kerberos keytab sign-in — Owner-run receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/semantic-model-notebook/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Semantic model profiling in a Fabric notebook — Owner-run receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/postgresql-export-profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PostgreSQL export and profile receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/mysql-export-profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL export and profile receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/postgresql-live/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PostgreSQL 17 (local Docker, reached from the VM over the Hyper-V network) — Owner-run receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/mysql-live/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL 8.4 (local Docker), over TLS with the server's own CA — Owner-run receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/github-action-pass/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hosted GitHub Action pass receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/github-action-drift/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hosted GitHub Action drift receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/github-action-ruleset/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hosted GitHub Action required-check receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/doctor-additional-environments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Doctor additional-environment receipts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/delta-extension-fallback/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fresh local Delta extension installation and real fallback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SECURITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../databases/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platforms
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_15" id="__nav_15_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Platforms
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/duckdb/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DuckDB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/postgresql/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PostgreSQL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/mysql/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/snowflake/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Snowflake
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/databricks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Databricks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../VSCODE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VS Code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GITHUB_ACTION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GitHub Action
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16" >
+        
+          
+          <label class="md-nav__link" for="__nav_16" id="__nav_16_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Community
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Community
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/DOCS_STYLE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs style
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/EXAMPLES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tested examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GOVERNANCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CODE_OF_CONDUCT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code of conduct
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../POSTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Posts and videos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-interface-stable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The interface (stable)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The interface (stable)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#generator-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generator version
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rules-every-strategy-follows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rules every strategy follows
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unknown-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unknown keys
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helpers
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-a-strategy-against-the-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing a strategy against the baseline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strategies-of-p4-04a" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategies of P4-04a
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Strategies of P4-04a">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        sequence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#uuid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        uuid
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#weighted_enum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        weighted_enum
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#distribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        distribution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#empirical" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        empirical
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strategies-of-p4-04b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategies of P4-04b
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Strategies of P4-04b">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#native-and-faker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        native and faker
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#formula" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        formula
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#derived" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        derived
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#computed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        computed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strategies-of-p4-04c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategies of P4-04c
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Strategies of P4-04c">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lookup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lookup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conditional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        conditional
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#correlated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        correlated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reference_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        reference_data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bootstrap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        bootstrap
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#record_sample-and-record_field" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        record_sample and record_field
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hierarchy-and-hierarchy_field" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hierarchy and hierarchy_field
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conditional_table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        conditional_table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temporal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        temporal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reference-datasets-shapegenerationreference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reference datasets (shape.generation.reference)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#address" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        address
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#locale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        locale
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#strategies-of-p4-04d" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategies of P4-04d
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Strategies of P4-04d">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#foreign_key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        foreign_key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#composite_foreign_key-and-composite_fk_field" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        composite_foreign_key and composite_fk_field
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#first_per_parent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        first_per_parent
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#self_referencing-and-self_ref_field" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        self_referencing and self_ref_field
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scd2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scd2
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#skewed-fan-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skewed fan-out
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="generation-strategies">Generation strategies<a class="headerlink" href="#generation-strategies" title="Permanent link">&para;</a></h1>
+<p>Status: experimental.</p>
+<p>A strategy fills one column of a table, one chunk at a time. This page is the contract the
+strategies of Phase 4 are written against; the engine side is in <code>docs/GENERATION_ENGINE.md</code> and the
+native kernel in <code>docs/GENERATION_KERNEL.md</code>.</p>
+<h2 id="the-interface-stable">The interface (stable)<a class="headerlink" href="#the-interface-stable" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">MyStrategy</span><span class="p">:</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">"my_strategy"</span>                       <span class="c1"># the `strategy` value in a column's generator</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="n">ctx</span><span class="p">):</span>             <span class="c1"># spec: the generator dict; ctx: EngineContext</span>
+        <span class="o">...</span>                                    <span class="c1"># -&gt; pyarrow.Array of ctx.n_rows values</span>
+</code></pre></div>
+<p>Register it under the <code>shape.strategies</code> entry-point group. <code>generate</code> may also return a mapping of
+names to arrays when one strategy makes several columns; names that are not columns of the table
+are internal (later strategies read them from <code>ctx.columns</code>; they are not output).</p>
+<p><code>ctx</code> is the plugin API's <code>GenerationContext</code> (<code>seed</code>, <code>table</code>, <code>column</code>, <code>chunk</code>, <code>row_start</code>,
+<code>n_rows</code>, <code>columns</code>: the columns of this chunk built so far) plus, in the engine, <code>engine</code> (the
+schema, <code>row_counts</code>, <code>key_pool(table)</code>) and <code>column_def</code> (the column: <code>type</code>, <code>scale</code>, ...).</p>
+<h3 id="generator-version">Generator version<a class="headerlink" href="#generator-version" title="Permanent link">&para;</a></h3>
+<p>A strategy may declare <code>generator_version</code> (an integer, default 1): the version of the algorithm
+that maps parameters, seed and row index to values. A change that alters the output for the same
+inputs raises it, and the old version stays selectable through
+<code>generate_versioned(spec, ctx, version)</code>; a spec pins versions in its <code>generators</code> map. Read the
+version in effect for a name with <code>strategy_kit.pinned_version(ctx, name, latest)</code>. See
+<a href="../GENERATION_STABILITY/">GENERATION_STABILITY.md</a>.</p>
+<h3 id="rules-every-strategy-follows">Rules every strategy follows<a class="headerlink" href="#rules-every-strategy-follows" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Row addressed.</strong> The value of row <code>r</code> depends on the run seed, the table, the column, <code>r</code>,
+   the spec and the other columns <em>of the same row</em>, never on the chunk, the order of the calls or
+   the thread. Draw numbers from <code>shape.generation.strategy_kit.stream(ctx, label)</code>, a Philox
+   stream; read it at <code>ctx.row_start</code>. Use one label per independent random choice
+   (<code>"v"</code>, <code>"random0"</code>, ...), so no two share numbers. Never use <code>ctx.chunk</code> to key a draw, and
+   never <code>numpy.random</code> or <code>random</code> with a seed.
+   <code>tests/generation/test_strategies_p404a.py::test_identical_for_any_chunking_and_random_access</code>
+   is the test to copy.</li>
+<li><strong>No per-value Python on the hot path.</strong> Use whole arrays: numpy, Arrow compute, or the kernel
+   (<code>shape.generation.kernel_ops</code>).</li>
+<li><strong>Nulls belong to the engine.</strong> Return values for every row; the engine applies the column's
+   <code>null_rate</code> afterwards from its own stream. A strategy returns nulls only where the data
+   itself is null (a null in a referenced column).</li>
+<li><strong>Errors name the column.</strong> Raise <code>StrategyError</code> (a <code>ValueError</code>) with the strategy and
+   <code>table.column</code>: <code>require(spec, key, ctx, "strategy")</code>, <code>where(ctx)</code>.</li>
+<li><strong>Types.</strong> A strategy returns its natural type and the engine does not cast: integers
+   (<code>sequence</code>) as <code>int64</code>; numeric draws as <code>float64</code>; text as <code>string</code>. The one exception is a
+   generator that asks for it: <code>"output_type": "int64"</code> (or <code>float64</code>, <code>bool</code>, <code>string</code>) casts the
+   strategy's output (floats are rounded first), which is how a profile's integer and boolean
+   columns keep their type (<code>shape.generation.engine.cast_output</code>). Two more names read the
+   column's declared type and are applied to the finished table, so the passes in between still
+   work on numbers: <code>"output_type": "decimal"</code> is <code>decimal128(precision, scale)</code> (rounded to
+   <code>scale</code>; a value that does not fit <code>precision</code> is an error naming the column) and
+   <code>"output_type": "timestamp"</code> is <code>timestamp[us]</code> cut to the column's <code>precision</code> fractional
+   digits. <code>"output_type": "date"</code> is the day of a temporal value (<code>date32</code>) and <code>"time"</code> its time
+   of day (<code>time64[us]</code>). <code>shape from-ddl</code> writes them for <code>DECIMAL(p,s)</code>, <code>DATETIME</code> (3 digits),
+   <code>DATETIME2(n)</code>, <code>DATE</code> and <code>TIME</code> columns, and <code>bool</code> for <code>BIT</code> and <code>BOOLEAN</code> value sets.</li>
+</ol>
+<h3 id="unknown-keys">Unknown keys<a class="headerlink" href="#unknown-keys" title="Permanent link">&para;</a></h3>
+<p><code>GenSchema.validate()</code> warns about a key in a generator that its strategy does not read, with a "did
+you mean" hint for a close name (<code>sigmaa</code> for <code>sigma</code>), and says so when the key is a <strong>column</strong>
+property: <code>scale</code>, <code>null_rate</code>, <code>precision</code>, <code>max_length</code> and <code>nullable</code> belong on the column, so
+a <code>scale</code> in a <code>distribution</code> generator was ignored and the numbers kept 14 decimal places. The keys
+of every built-in strategy are in <code>shape.generation.spec_keys</code> (a test checks that no strategy reads
+a key that is missing there); a strategy or distribution family from a plugin is not checked.
+The same tables build the published JSON Schema, which reports these keys as errors at their place
+(<code>docs/GENERATION_SPEC.md</code>).</p>
+<h3 id="helpers">Helpers<a class="headerlink" href="#helpers" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Module</th>
+<th>Function</th>
+<th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>shape.generation.strategy_kit</code></td>
+<td><code>stream(ctx, label)</code></td>
+<td>the column's <code>RowStream</code>: <code>uniform</code>, <code>normal</code>, <code>raw</code> words</td>
+</tr>
+<tr>
+<td></td>
+<td><code>require(spec, key, ctx, strategy)</code>, <code>where(ctx)</code>, <code>StrategyError</code></td>
+<td>spec access and errors</td>
+</tr>
+<tr>
+<td></td>
+<td><code>spec_params(spec)</code></td>
+<td>the <code>params</code> mapping if there is one, else the spec</td>
+</tr>
+<tr>
+<td></td>
+<td><code>column_scale(ctx)</code>, <code>round_to_scale(values, ctx)</code></td>
+<td>the column's decimal scale</td>
+</tr>
+<tr>
+<td><code>shape.generation.kernel_ops</code></td>
+<td><code>alias_table</code>, <code>alias_draw</code></td>
+<td>weighted categorical draws (two words per row)</td>
+</tr>
+<tr>
+<td></td>
+<td><code>pool_take</code>, <code>template_strings</code>, <code>join_strings</code>, <code>string_case</code></td>
+<td>string assembly</td>
+</tr>
+<tr>
+<td></td>
+<td><code>uuid4</code>, <code>random_strings</code></td>
+<td>UUIDs and random text</td>
+</tr>
+<tr>
+<td></td>
+<td><code>day_weights</code>, <code>hour_weights_peaks</code>, <code>temporal_sample</code></td>
+<td>dates and times</td>
+</tr>
+</tbody>
+</table>
+<h2 id="testing-a-strategy-against-the-baseline">Testing a strategy against the baseline<a class="headerlink" href="#testing-a-strategy-against-the-baseline" title="Permanent link">&para;</a></h2>
+<p>Each strategy has cases in <code>strategy_1to1/cases.py</code> of the benchmark harness (a one-table schema
+per configuration). <code>baseline.py</code> there, run in the baseline venv, writes the fingerprints of the
+pinned baseline at its fixed seeds 43-46 to the harness's <code>fixtures/strategies/&lt;strategy&gt;.json</code>
+(<code>--check</code> proves the fixtures still equal the baseline's output). The test generates every case
+with the engine at Shape's seed 1042 and applies T-21 clauses (b)-(e) with <code>compare.py</code>: null rate,
+KS, total variation distance with vocabulary overlap, and for text the length, character-class
+and mask distributions. The test needs no baseline venv.</p>
+<p>To add a strategy: add its cases, run <code>baseline.py --strategy &lt;name&gt;</code>, copy
+<code>test_strategies_p404a.py</code> (equivalence, chunking, determinism, negative controls, bad specs).</p>
+<h2 id="strategies-of-p4-04a">Strategies of P4-04a<a class="headerlink" href="#strategies-of-p4-04a" title="Permanent link">&para;</a></h2>
+<h3 id="sequence"><code>sequence</code><a class="headerlink" href="#sequence" title="Permanent link">&para;</a></h3>
+<p><code>{"start": 1, "step": 1}</code>: <code>start + row * step</code> as <code>int64</code>, whatever the chunking.</p>
+<h3 id="uuid"><code>uuid</code><a class="headerlink" href="#uuid" title="Permanent link">&para;</a></h3>
+<p>Version-4 UUID strings (lowercase, <code>8-4-4-4-12</code>) from two words per row.</p>
+<h3 id="weighted_enum"><code>weighted_enum</code><a class="headerlink" href="#weighted_enum" title="Permanent link">&para;</a></h3>
+<p><code>{"values": {"gold": 0.5, "silver": 0.3, "bronze": 0.2}}</code>: a key drawn with probability
+proportional to its weight (weights may be any non-negative numbers with a positive sum, zero
+allowed). Keys that all read as numbers give a <code>float64</code> column, otherwise a <code>string</code> column.</p>
+<h3 id="distribution"><code>distribution</code><a class="headerlink" href="#distribution" title="Permanent link">&para;</a></h3>
+<p><code>{"distribution": "log_normal", "mean": 3.5, "sigma": 0.8, "min": 1, "max": 500}</code>; the parameters
+may also sit under <code>"params"</code>. <code>min</code> and <code>max</code> clip every value; the column's <code>scale</code> rounds. The
+column is <code>float64</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Family</th>
+<th>Spec parameters</th>
+<th>Family parameters (<code>families.py</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>uniform</code></td>
+<td><code>min</code> (0), <code>max</code> (1)</td>
+<td><code>low</code>, <code>high</code></td>
+</tr>
+<tr>
+<td><code>normal</code></td>
+<td><code>mean</code> (0), <code>std_dev</code> / <code>sigma</code> / <code>std</code> (1)</td>
+<td><code>mu</code>, <code>sigma</code></td>
+</tr>
+<tr>
+<td><code>log_normal</code></td>
+<td><code>mean</code> (0), <code>sigma</code> / <code>std</code> (1)</td>
+<td><code>mu</code>, <code>sigma</code> (of the log)</td>
+</tr>
+<tr>
+<td><code>pareto</code></td>
+<td><code>alpha</code> (1.5), <code>min</code> (1)</td>
+<td><code>alpha</code>, <code>xm</code></td>
+</tr>
+<tr>
+<td><code>zipf</code></td>
+<td><code>alpha</code> (1.5), <code>max</code> (1000)</td>
+<td><code>a</code>, <code>max</code> (truncated: <code>P(k)</code> proportional to <code>k ** -a</code>)</td>
+</tr>
+<tr>
+<td><code>geometric</code></td>
+<td><code>p</code> (0.5)</td>
+<td><code>p</code> (support 1, 2, ...)</td>
+</tr>
+<tr>
+<td><code>poisson</code></td>
+<td><code>lambda</code> (5)</td>
+<td><code>lam</code></td>
+</tr>
+<tr>
+<td><code>bernoulli</code></td>
+<td><code>probability</code> (0.5)</td>
+<td><code>p</code></td>
+</tr>
+</tbody>
+</table>
+<p>A name that is not a built-in family is looked up in the <code>shape.distributions</code> plugins (their
+<code>sample(params, ctx)</code> gets the spec's parameters).</p>
+<p><strong>Adding a family</strong> (the extension point P4-05 uses): subclass
+<code>shape.builtins.distributions.families.Family</code>, set <code>name</code>, <code>defaults</code> (parameter names and
+defaults) and <code>words_per_row</code>, implement <code>draw(stream, row_start, n, params)</code> returning float64,
+override <code>from_spec</code> when the spec spells parameters differently, and add the instance to <code>FAMILIES</code>.
+A family draws a fixed number of words per row (no rejection loops) so it stays row addressed.</p>
+<p><code>truncated</code> (<code>{"distribution": "truncated", "base": "normal", "base_params": {...}, "low": ..,
+"high": ..}</code>) restricts any family to <code>[low, high]</code> by rejection: a row takes the first of its
+candidates (each from its own derived stream) that lies inside, so it is the exact truncated
+distribution and the same for any chunking. The interval must hold at least 5% of the base
+distribution (estimated from a fixed probe of 4,096 base draws), otherwise it is an error.</p>
+<h3 id="empirical"><code>empirical</code><a class="headerlink" href="#empirical" title="Permanent link">&para;</a></h3>
+<p><code>{"quantiles": {"p1": .., "p5": .., "p10": .., "p25": .., "p50": .., "p75": .., "p90": .., "p95": ..,
+"p99": ..}}</code> (optionally <code>p0_5</code> and <code>p99_5</code> as tail anchors): a uniform draw mapped through the
+interpolated quantile function (<code>"interpolation": "linear"</code>, or <code>"cubic"</code> when scipy is installed,
+else linear with an <code>ImportWarning</code>). <code>min</code>/<code>max</code> clip. Values never leave the outermost anchors.</p>
+<h3 id="pattern"><code>pattern</code><a class="headerlink" href="#pattern" title="Permanent link">&para;</a></h3>
+<p><code>{"format": "ORD-{seq:5}-{random:3}"}</code>. <code>{seq}</code> / <code>{seq:6}</code>: the table's 1-based row number,
+zero-padded; <code>{random:4}</code>: that many characters from <code>A-Z0-9</code> (4 without a width); <code>{column}</code> /
+<code>{column:3}</code>: the value of another column of the same row, zero-padded; text outside tokens is
+literal; a token naming no column stays as written. A null in a referenced column gives a null
+row.</p>
+<h2 id="strategies-of-p4-04b">Strategies of P4-04b<a class="headerlink" href="#strategies-of-p4-04b" title="Permanent link">&para;</a></h2>
+<h3 id="native-and-faker"><code>native</code> and <code>faker</code><a class="headerlink" href="#native-and-faker" title="Permanent link">&para;</a></h3>
+<p><code>{"provider": "email"}</code>: realistic text from the reference pools in <code>shape/builtins/strategies/pools/</code>
+(one entry per line; names, companies, street names, sentences, cities, state codes, e-mail domains,
+URI domains and paths). <code>provider</code> defaults to <code>word</code>. Every draw is row addressed.</p>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>first_name</code>, <code>last_name</code>, <code>company</code>, <code>sentence</code>, <code>city</code>, <code>state_abbr</code></td>
+<td>one pool entry, uniformly</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td><code>first last</code></td>
+</tr>
+<tr>
+<td><code>email</code></td>
+<td><code>first.last&lt;1..998&gt;@domain</code>, lower case, <code>domain</code> one of <code>example.com</code>, <code>example.org</code>, <code>example.net</code>; follows the row's own <code>first_name</code> and <code>last_name</code> columns when the table has both</td>
+</tr>
+<tr>
+<td><code>company_email</code></td>
+<td><code>first.last@&lt;company, lower case, no spaces, commas or dots, 20 characters&gt;.example</code></td>
+</tr>
+<tr>
+<td><code>phone_number</code></td>
+<td><code>(AAA) 555-01SS</code>, <code>AAA</code> 200 to 998, <code>SS</code> 00 to 99: the 555-0100 to 555-0199 lines reserved for fiction</td>
+</tr>
+<tr>
+<td><code>ssn</code></td>
+<td><code>AAA-GG-SSSS</code>, <code>AAA</code> 900 to 999 (never assigned), <code>GG</code> 1 to 99, <code>SSSS</code> 1 to 9999</td>
+</tr>
+<tr>
+<td><code>street_address</code></td>
+<td><code>&lt;100..9998&gt; &lt;street&gt; &lt;St, Ave, Blvd, Dr, Ln, Way, Ct, Pl, Rd or Cir&gt;</code></td>
+</tr>
+<tr>
+<td><code>uri</code></td>
+<td><code>https://&lt;domain&gt;/&lt;path&gt;</code>, <code>domain</code> one of <code>example.com</code>, <code>example.org</code>, <code>example.net</code></td>
+</tr>
+<tr>
+<td><code>ipv4</code></td>
+<td><code>A.B.C.D</code>, <code>A</code> and <code>D</code> 1 to 254, <code>B</code> and <code>C</code> 0 to 255</td>
+</tr>
+<tr>
+<td><code>postcode</code></td>
+<td>five digits, 00501 to 99950</td>
+</tr>
+<tr>
+<td><code>zip_plus4</code></td>
+<td><code>NNNNN-NNNN</code>: a <code>postcode</code> and four digits, 0001 to 9999</td>
+</tr>
+<tr>
+<td><code>pystr</code>, <code>word</code></td>
+<td>12 characters from <code>a-z0-9</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Values that cannot belong to a real person (the default).</strong> Synthetic data is shared, emailed and
+loaded into test systems, so the identifier providers produce reserved values: the host names RFC 2606
+reserves (<code>email</code>, <code>uri</code>, and the <code>.example</code> top-level domain for <code>company_email</code>), the 9xx areas of
+<code>ssn</code>, which the SSA never assigns, and the 555-0100 to 555-0199 telephone lines. Two explicit
+options give realistic values instead; <strong>they can produce real people's addresses and numbers, so
+never use them for data that leaves a test system</strong>: <code>"domains": "realistic"</code> (<code>email</code>,
+<code>company_email</code>, <code>uri</code>: real mail providers and <code>.com</code> hosts) and <code>"range": "assignable"</code> (<code>ssn</code>:
+areas 001 to 899 without 666; <code>phone_number</code>: <code>(AAA) EEE-SSSS</code>, <code>EEE</code> 200 to 998, <code>SSSS</code> 1000 to
+9998). Any other value of either option is a <code>StrategyError</code>. The <code>ipv4</code> provider is unchanged.</p>
+<p><strong>One switch for a whole run.</strong> Realistic identifiers can also be turned on for every column of a
+run at once; reserved stays the default. The mode of a column is decided, most specific first, by:</p>
+<ol>
+<li>the column's own <code>"domains"</code> or <code>"range"</code> key;</li>
+<li>the run switch: <code>shape.generate(..., identifiers="realistic")</code>, <code>shape generate --identifiers
+   realistic</code> (also <code>shape composite</code>, <code>shape demo run</code>, <code>shape pack run</code>, a scenario spec's
+   <code>scenario.identifiers</code>, and the bridge <code>generate</code> command's <code>identifiers</code> argument);</li>
+<li>the schema's top-level <code>"identifiers": "realistic"</code>;</li>
+<li><code>reserved</code>.</li>
+</ol>
+<p>The values are <code>reserved</code> and <code>realistic</code>; anything else is refused with an error that names them
+(<code>identifiers must be reserved or realistic, not 'assignable'</code>). <code>realistic</code> reads as <code>"domains":
+"realistic"</code> on <code>email</code>, <code>company_email</code> and <code>uri</code> and as <code>"range": "assignable"</code> on
+<code>phone_number</code> and <code>ssn</code> (and on the <code>faker</code> package's identifier providers, below), so a run
+switched on gives exactly the values those column options give. <strong>Never use realistic identifiers
+for data that leaves a test system</strong>: a run with them prints one line on standard error (<code>shape:
+realistic identifiers are on: ...</code>), and <code>shape pack run</code> records the mode in its run manifest
+(<code>reproducibility.identifiers</code>; a manifest without it reads as <code>reserved</code>), which <code>shape pack
+replay</code> uses. The same seed and the same mode give the same values in both kernels, for any chunk
+size, and in every engine rebuilt from the run's schema (the multiprocess and Spark workers): the
+engine writes the mode it resolved into its copy of the schema, and a strategy reads it from its
+context (<code>EngineContext.identifiers</code>). The default output is unchanged: with no switch and no
+schema key, every value is what it was before the switch existed. The installed domains and the
+demo scenarios set neither, so they stay reserved. The <code>locale</code> strategy's phone numbers are always
+in a range reserved for fiction and do not follow the switch.</p>
+<p>The column's <code>max_length</code> cuts the text. <code>native</code> raises <code>StrategyError</code> for any other provider.
+<code>faker</code> serves the same providers identically; for any other provider it needs the <code>faker</code> package
+(<code>pip install 'sqllocks-shape[faker]'</code> or <code>pip install faker</code>; an <code>ImportError</code> naming them without
+it) and takes <code>args</code> as the provider's keyword
+arguments. It draws a pool of <code>min(rows of the table, 50,000)</code> values once, from a Faker seeded by
+the run seed, the table and the column, with the model's <code>locale</code>; row <code>r</code> reads pool entry <code>r</code>
+while the table fits the pool (each row its own entry; the values repeat where the provider
+repeats them), else a uniformly drawn entry. A strategy
+that needs more than the pools offer is a <code>shape.strategies</code> plugin.</p>
+<p>The <code>faker</code> package's own identifier providers follow the same rule. By default they are reserved,
+row by row; realistic (the column's <code>"domains": "realistic"</code> or <code>"range": "assignable"</code>, or the run
+switch) gives what the package makes:</p>
+<table>
+<thead>
+<tr>
+<th>Package providers</th>
+<th>Reserved value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>any with <code>email</code> in its name (<code>free_email</code>, <code>ascii_email</code>, <code>ascii_free_email</code>, <code>ascii_company_email</code>, ...)</td>
+<td>the package's local part <code>@</code> one of <code>example.com</code>, <code>example.org</code>, <code>example.net</code></td>
+</tr>
+<tr>
+<td>any whose name ends in <code>url</code> (<code>url</code>, <code>image_url</code>)</td>
+<td>the scheme and path kept, the host one of those three</td>
+</tr>
+<tr>
+<td><code>domain_name</code>, <code>free_email_domain</code>, <code>dga</code>, <code>hostname</code></td>
+<td>one of those three (<code>hostname</code> keeps its first label: <code>web-12.example.org</code>)</td>
+</tr>
+<tr>
+<td>any with <code>phone</code> in its name (<code>basic_phone_number</code>, ...)</td>
+<td><code>(AAA) 555-01SS</code>, as <code>phone_number</code></td>
+</tr>
+<tr>
+<td><code>msisdn</code></td>
+<td><code>1AAA55501SS</code>: the same fictional lines as a North American MSISDN</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>safe_*</code> providers already use the reserved hosts and are left as they are; any other provider
+(names, jobs, words) does not change with the mode.</p>
+<h3 id="formula"><code>formula</code><a class="headerlink" href="#formula" title="Permanent link">&para;</a></h3>
+<p><code>{"expression": "quantity * unit_price * (1 - discount_percent / 100)"}</code>: a column computed from
+other columns of the same row. The expression is parsed and checked against a fixed grammar, then
+evaluated on whole columns with numpy; it is never passed to <code>eval</code>. Allowed: the names of numeric
+or boolean columns generated earlier in the table, numbers, <code>+ - * / // % **</code>, unary <code>-</code> <code>+</code>,
+comparisons (chained too), <code>and</code> <code>or</code> <code>not</code>, <code>a if c else b</code>, <code>abs</code>, <code>round</code>, <code>min</code> and <code>max</code>
+(element-wise), <code>np_round</code>, <code>np_clip</code>, <code>np_where</code>, <code>np_maximum</code>, <code>np_minimum</code>, <code>np_abs</code>, <code>np_sqrt</code>,
+<code>np_log</code>, <code>np_exp</code>, <code>np_floor</code>, <code>np_ceil</code> and <code>np_nan</code>. Anything else (attribute access, other
+calls, text, indexing), an expression of more than 2,000 characters or one nested more than 100
+levels deep is a <code>StrategyError</code> naming the column. A null in any column the expression
+reads gives a null result; division by zero and the log of a negative give <code>inf</code> or <code>nan</code>, as in
+numpy. The column's <code>scale</code> rounds. Integer inputs give <code>int64</code>, comparisons give <code>bool</code>.</p>
+<h3 id="derived"><code>derived</code><a class="headerlink" href="#derived" title="Permanent link">&para;</a></h3>
+<p><code>{"source": "order_date", "rule": "add_days", "params": {"distribution": "uniform", "min": 3, "max": 30}}</code>.
+<code>source</code> is a column generated earlier in the table, or <code>"table.column"</code> with <code>via</code>, the name of
+this table's foreign-key column (the parent's column is read by key; a missing parent gives
+null). <code>rule</code> (alias <code>operation</code>) is <code>copy</code> (the default) or <code>add_days</code>: the source plus a whole
+number of days drawn by <code>params.distribution</code> (<code>uniform</code> with <code>min</code> and <code>max</code>, <code>log_normal</code> with
+<code>mean</code> and <code>sigma</code>, <code>normal</code> with <code>mean</code> and <code>std_dev</code>, the last two clipped to <code>[min, max]</code>; any
+other name is <code>uniform</code>; <code>min</code> and <code>max</code> default to 1 and 30). <code>"days": N</code> at the top of the spec is
+<code>add_days</code> of exactly <code>N</code>. The result keeps the source's date or timestamp type; ISO text is
+read as <code>timestamp[us]</code> and text that is not a date becomes null.</p>
+<h3 id="computed"><code>computed</code><a class="headerlink" href="#computed" title="Permanent link">&para;</a></h3>
+<p><code>{"rule": "sum_children", "child_table": "order_line", "child_column": "line_total"}</code>: written as a
+null placeholder and filled by the compute phase once every table exists
+(<code>docs/GENERATION_ENGINE.md</code>). Rules: <code>sum_children</code>, <code>count_children</code>, <code>avg_children</code>,
+<code>min_children</code>, <code>max_children</code> (rows without children get 0; floats are rounded to 2 places as
+numpy rounds, so a sum never prints as <code>114.49000000000001</code>) and <code>lookup_parent</code> (copy a column of
+the parent table through this table's foreign key). Sums and counts of integers stay integers.</p>
+<h2 id="strategies-of-p4-04c">Strategies of P4-04c<a class="headerlink" href="#strategies-of-p4-04c" title="Permanent link">&para;</a></h2>
+<p>These read other columns, other tables or reference datasets. All are row addressed.</p>
+<h3 id="lookup"><code>lookup</code><a class="headerlink" href="#lookup" title="Permanent link">&para;</a></h3>
+<p><code>{"source_table": "product", "source_column": "unit_price", "via": "product_id"}</code>: the
+<code>source_column</code> of the parent row whose key equals this row's <code>via</code> column (a column defined earlier
+in the table, usually a foreign key). The column has the source column's type. A null key, or a key
+with no parent row, gives null.</p>
+<p>The key column of the parent is <code>key</code> when the spec names one, else the parent column called
+<code>via</code>, else the column this table's foreign key <code>via</code> points at, else the parent's single-column
+primary key. Keys compare by value (an integer key matches the same number held as a float). When
+a key repeats in the parent, the first row wins. <code>shape.generation.lookup</code> is the helper:
+<code>lookup_values(ctx, source_table, source_column, via, key=None)</code> does the whole operation, and
+<code>key_index(engine, table, column)</code> returns the cached <code>KeyIndex</code> (built once per engine; its
+<code>positions(values)</code> gives the row of each key, <code>-1</code> for none). The parent table is generated in
+full once, the way <code>Engine.key_pool</code> does for a table that is not a sequence. A lookup that leads
+back to a table already being generated raises an error ("circular") instead of recursing.</p>
+<h3 id="conditional"><code>conditional</code><a class="headerlink" href="#conditional" title="Permanent link">&para;</a></h3>
+<p><code>{"condition": "promotion_id IS NOT NULL", "true_generator": {...}, "false_generator": {"fixed": 0.0}}</code>.</p>
+<ul>
+<li>Conditions: <code>&lt;column&gt; IS NULL</code>, <code>&lt;column&gt; IS NOT NULL</code> (the column name matches without regard to
+  case), <code>&lt;column&gt; == &lt;value&gt;</code>, <code>&lt;column&gt; != &lt;value&gt;</code> (the value may be quoted; both sides compare
+  as numbers when both read as numbers, otherwise as text; a null equals nothing, so <code>!=</code> is true
+  for it).</li>
+<li>Branches: <code>{"fixed": value}</code> or an inline <code>{"strategy": "lookup", ...}</code> (a null key gives 0;
+  a missing key gives null); <code>{}</code> gives 0.</li>
+<li>The column is <code>float64</code>; a text branch makes it <code>string</code> (the other branch is converted).</li>
+</ul>
+<p>Where the baseline silently degrades, Shape raises a <code>StrategyError</code> that names the column: a
+condition that is none of the four forms, a column the condition names that is not generated
+before this one, and an inline strategy other than <code>fixed</code> and <code>lookup</code>.</p>
+<h3 id="correlated"><code>correlated</code><a class="headerlink" href="#correlated" title="Permanent link">&para;</a></h3>
+<p><code>{"source_column": "unit_price", "rule": "multiply", "params": {"factor_min": 0.3, "factor_max": 0.7}}</code>.
+<code>rule</code> (also spelled <code>operation</code>) is <code>multiply</code> (source times a uniform factor, default 0.30 to
+0.70), <code>add</code> (plus a uniform offset, <code>offset_min</code> and <code>offset_max</code>, default 0 to 10) or <code>subtract</code>
+(minus such an offset, never below 0). <code>params.min</code> and <code>params.max</code> stand for either pair. The
+result is rounded to the column's <code>scale</code> (2 without one). A null source gives null. <code>float64</code>.</p>
+<h3 id="reference_data"><code>reference_data</code><a class="headerlink" href="#reference_data" title="Permanent link">&para;</a></h3>
+<p><code>{"dataset": "colors"}</code> or <code>{"dataset": "products", "field": "category"}</code>. A dataset of strings is
+sampled uniformly; a dataset of records with <code>field</code> gives that field of a uniformly chosen record
+(so a value repeated in the dataset is more likely); records without <code>field</code> are read as <code>name</code>
+(or <code>value</code>) with a <code>weight</code>, and a name is drawn in proportion to its weight. The column has the
+type of the values (<code>string</code>, <code>int64</code>, <code>float64</code>; a field that mixes types becomes <code>string</code>).</p>
+<h3 id="bootstrap"><code>bootstrap</code><a class="headerlink" href="#bootstrap" title="Permanent link">&para;</a></h3>
+<p><code>{"dataset": "people", "field": "income", "jitter": 0.01}</code>: <code>field</code> of a source row of a dataset of
+records, rows drawn with replacement. Every <code>bootstrap</code> column of a table that names the same
+dataset takes the same source row for a given row, so the columns keep the source's joint
+distribution. <code>jitter</code> (default 0.01, <code>0</code> for none) is the standard deviation of normal noise as a
+fraction of the source column's standard deviation; it applies to integer and float fields only (they
+become <code>float64</code>; a constant column and text are never jittered). Nulls stay null. The source rows are
+copied: a bootstrapped table contains the people of the source (<code>docs/FIDELITY_TIERS.md</code>). The
+library form, seeded with numpy's generator, is <code>shape.fidelity.bootstrap_table</code>.</p>
+<h3 id="record_sample-and-record_field"><code>record_sample</code> and <code>record_field</code><a class="headerlink" href="#record_sample-and-record_field" title="Permanent link">&para;</a></h3>
+<p><code>record_sample</code> (<code>{"dataset": "places", "field": "city"}</code>) is the anchor of a group of columns that
+share one randomly chosen record: this column is that record's <code>field</code>. <code>record_field</code>
+(<code>{"dataset": "places", "field": "zip"}</code>) columns of the same table and dataset give the other
+fields of the same record. <code>"unique": true</code> on the anchor gives every row a different record when
+the table has no more rows than the dataset (the records are a keyed permutation of the dataset,
+<code>shape.generation.permutation.permute</code>); with more rows it falls back to sampling with
+replacement, as the baseline does. With several <code>record_sample</code> columns for one dataset the last
+one defined decides the record.</p>
+<p><code>record_field</code> does not read what the anchor made: it recomputes the record from the anchor's own
+stream, so the pair agrees for any chunking, the anchor may be defined before or after the field,
+and the anchor's null rate does not touch the fields.</p>
+<h3 id="hierarchy-and-hierarchy_field"><code>hierarchy</code> and <code>hierarchy_field</code><a class="headerlink" href="#hierarchy-and-hierarchy_field" title="Permanent link">&para;</a></h3>
+<p><code>hierarchy</code> (<code>{"dataset": "us_zip", "field": "state", "levels": ["state", "city", "zip"]}</code>) is the
+anchor of a group of columns that follow one path down a hierarchy of a dataset of records: a state,
+a city of that state, a ZIP of that city, and one record under that ZIP. <code>hierarchy_field</code>
+(<code>{"dataset": "us_zip", "field": "lat"}</code>) gives another field of the same record, so a ZIP is always
+inside its city and the coordinates are the record's own. Optional keys of the anchor: <code>weighting</code>
+(<code>records</code>: every record equally likely, the default; <code>uniform</code>: every child of a node equally
+likely) and <code>top_weights</code> (a mapping from top-level value to weight, for example a profile's state
+shares). Draws are row addressed like <code>record_sample</code>'s. See <code>docs/JOINT.md</code>.</p>
+<h3 id="conditional_table"><code>conditional_table</code><a class="headerlink" href="#conditional_table" title="Permanent link">&para;</a></h3>
+<p><code>conditional_table</code> (<code>{"source_column": "dept", "table": {"cardio": {"A": 0.9, "B": 0.1}},
+"values": {"A": 1, "B": 1}}</code>) draws a category given the value of another column of the same row
+(defined earlier). <code>table</code> maps each source value to the weights of this column's values; a source
+value without an entry, or a null, draws from <code>values</code>, the column's own distribution. <code>shape
+generate --from</code> writes it from a profile's conditional probability tables. Labels that all read as
+numbers make a <code>float64</code> column, unless <code>output_type</code> is <code>"string"</code>, which keeps them as text (a
+ZIP code keeps its leading zero).</p>
+<h3 id="temporal"><code>temporal</code><a class="headerlink" href="#temporal" title="Permanent link">&para;</a></h3>
+<p><code>{"pattern": "seasonal", "start": "2022-01-01", "end": "2025-12-31", "profiles": {...}}</code>.</p>
+<ul>
+<li>Range: <code>date_range</code> (or <code>range</code>) <code>{"start", "end"}</code>, else top-level <code>start</code>/<code>end</code>, else
+  <code>range_ref: "model.date_range"</code> (the schema's own range), else 2022-01-01 to 2025-12-31. A bound
+  with a time-zone offset (<code>2024-01-01T05:00:00+05:00</code>) is that instant in UTC.</li>
+<li><code>end</code>: a date (<code>2026-05-01</code>) stands for the whole day, so the end day is a possible day for every
+  pattern and <code>start == end</code> is one single day (a business day's landing file). An <code>end</code> with a time
+  (<code>2026-05-01T12:00:00</code>) is the exact bound, exclusive for <code>uniform</code>. An <code>end</code> before the start is
+  an error that says so; <code>start == end</code> with a time is an error that asks for dates.</li>
+<li><code>pattern: "uniform"</code> (the default, and what any other value means): uniform on <code>[start, end]</code>
+  (<code>end</code> as above).</li>
+<li><code>pattern: "seasonal"</code>: <code>profiles.month</code> (<code>Jan</code>..<code>Dec</code>) and <code>profiles.day_of_week</code> (<code>Mon</code>..<code>Sun</code>)
+  weigh the days (a name left out weighs <code>1/12</code> or <code>1/7</code>; <code>month_weights</code> and
+  <code>day_of_week_weights</code> at the top level are accepted too). The probability of a (month, weekday)
+  bucket is the product of the two weights, shared equally by the days of the range in it; the
+  probability of a bucket with no day in the range is spread evenly over every day of the range, the
+  end day included. The end date is a possible day, as it is for <code>uniform</code>. Without a month or
+  weekday profile the range is uniform.
+  When the start or an exclusive end has a time of day, the partial first and last days weigh
+  the share of the day inside the range and their values are moved into that part of the day, so
+  every value lies in <code>[start, end)</code> for the seasonal and <code>hour_of_day</code> patterns too. A profile
+  (<code>month</code>, <code>day_of_week</code>, <code>hour_of_day</code>) is a mapping of names to numbers; a list or a weight that is not a number is an error naming the
+  column.</li>
+<li><code>profiles.hour_of_day</code> replaces the time of day by a whole second in an hour drawn uniformly, from
+  one weight per hour (<code>{"0": 0.01, ..., "23": 0.02}</code>, a profile's hour histogram), or from
+  <code>{"distribution": "bimodal", "peaks": [12, 18], "std_dev": 2}</code>: equally likely Gaussian
+  peaks, wrapped around midnight. Without it the time of day is uniform to the microsecond.</li>
+<li><code>"granularity": "day"</code> cuts every value to midnight (a date column: the hour profile is ignored).</li>
+<li>The column is <code>timestamp[us]</code>, or the <code>unit</code> given (<code>s</code>, <code>ms</code>, <code>us</code> or <code>ns</code>): the same instants in
+  another Arrow unit, for output that must match a <code>timestamp[ns]</code> column type. Calendars, paydays
+  and trends (<code>shape.calendars</code>) are separate.</li>
+</ul>
+<h3 id="reference-datasets-shapegenerationreference">Reference datasets (<code>shape.generation.reference</code>)<a class="headerlink" href="#reference-datasets-shapegenerationreference" title="Permanent link">&para;</a></h3>
+<p><code>load_dataset(name)</code> finds a dataset in this order: datasets registered in the process
+(<code>register_dataset(name, rows_or_table)</code>; a domain plugin registers the <code>reference_data</code> tables of
+its <code>DomainDefinition</code>), then <code>&lt;name&gt;.json</code> in each search directory (<code>add_search_path(dir)</code>, then
+the directories of the <code>SHAPE_REFERENCE_PATH</code> environment variable, named <code>REFERENCE_PATH_ENV</code>;
+<code>search_directories()</code> lists them), then the datasets of reference packs, in the search directories
+and then the shipped ones (<code>docs/REFERENCE_PACKS.md</code>). A JSON dataset is a list of
+strings or a list of objects whose keys are the fields (the first object names them). <code>Dataset</code>
+holds Arrow columns; <code>unregister_dataset</code> and <code>clear_search_paths</code> undo the above;
+<code>DatasetNotFoundError</code> lists where it looked. Loaded files are cached by path and modification time.</p>
+<h3 id="tests">Tests<a class="headerlink" href="#tests" title="Permanent link">&para;</a></h3>
+<p><code>tests/generation/test_strategies_p404c.py</code> follows the recipe above for these strategies; the
+cases are in <code>strategy_1to1/cases.py</code>. Datetime columns are compared on month, weekday and hour of
+day profiles (and the share of whole-second values) as well as KS.</p>
+<h3 id="address"><code>address</code><a class="headerlink" href="#address" title="Permanent link">&para;</a></h3>
+<p><code>{"strategy": "address", "scope": [{"state": "WA"}]}</code>: coherent addresses from a scope alone. The
+column is a struct of <code>address_line_1</code>, <code>city</code>, <code>county</code>, <code>state</code>, <code>postal_code</code>, <code>country</code>,
+<code>latitude</code>, <code>longitude</code>, <code>timezone</code>, <code>mode</code> and <code>reference_id</code>, or, with <code>"field": "city"</code> (also
+<code>zip</code>, <code>lat</code>, <code>lng</code>, ...), one of them as a plain column.</p>
+<ul>
+<li><strong>Scope.</strong> A list (or one entry) of <code>{"state": "WA"}</code>, <code>{"postal_code": "98101"}</code>,
+  <code>{"city": "Seattle", "state": "WA"}</code>, <code>{"county": ..., "state": ...}</code>, <code>"WA"</code>, <code>"98101"</code> or
+  <code>"Seattle, WA"</code>; <code>weights</code> (one per entry) and <code>exclude</code> (places to leave out). Without a scope
+  every state of the reference is an entry of equal weight. A place the reference does not have
+  is a <code>StrategyError</code> naming the column.</li>
+<li><strong>Reference.</strong> The places come from <code>reference</code>: <code>{"dataset": name}</code> (any dataset registered with
+  <code>shape.generation.reference.register_dataset</code>; its columns <code>city</code>, <code>state</code>, <code>postal_code</code> (or
+  <code>zip</code>), <code>latitude</code> (or <code>lat</code>) and <code>longitude</code> (or <code>lng</code>) are required, <code>county</code>, <code>country</code>,
+  <code>street</code>, <code>timezone</code> optional), or rows given inline (dicts, <code>AddressReference</code>, <code>Location</code>, or
+  what <code>shape.location.load_geonames_postal</code> returns). Without <code>reference</code> the dataset
+  <code>us_zip_locations</code> is used: 40,977 US ZIP codes with city, state and coordinates, shipped by the
+  <code>sqllocks-shape-domains</code> package (GeoNames data, attribution in <code>THIRD_PARTY_NOTICES.md</code>);
+  without that package the error says so. A named dataset keeps a schema small; the reference is
+  compiled once per engine, not per chunk.</li>
+<li><strong>Coherence.</strong> One place is drawn for every row, and the city, state, ZIP and coordinates are
+  that place's (the coordinates within 0.002 degrees of its reference point, or exactly at it in
+  <code>reference</code> and <code>exact_reference</code> modes). Every address column of a table with the same <code>group</code>
+  (default <code>address</code>) draws the same place for the same row, so separate <code>city</code>, <code>state</code>,
+  <code>postal_code</code>, <code>latitude</code> and <code>longitude</code> columns agree; give a second set of columns another
+  <code>group</code> for an independent address (a work address next to a home address).</li>
+<li><strong>Mode.</strong> <code>street_synthetic</code> (default): a house number 1 to 9999 and the reference street's name
+  (or, when the reference has no streets, a name and a suffix from Shape's street pools);
+  <code>geographic</code>: the number and <code>Synthetic Way</code>; <code>reference</code> and <code>exact_reference</code>: the reference's
+  street and point as they are (the reference needs streets).</li>
+</ul>
+<p>Row addressed: the value of row <code>r</code> depends on the seed, the table, the group, <code>r</code> and the spec,
+never on the chunk.</p>
+<h3 id="locale"><code>locale</code><a class="headerlink" href="#locale" title="Permanent link">&para;</a></h3>
+<p><code>{"strategy": "locale", "locale": "FR", "provider": "postcode"}</code>: places, postcodes, phone numbers in
+ranges reserved for fiction, and first names for a country, from data shipped with Shape. See
+<code>docs/LOCALES.md</code> for the countries, the sources and licences, and what is not shipped.</p>
+<h2 id="strategies-of-p4-04d">Strategies of P4-04d<a class="headerlink" href="#strategies-of-p4-04d" title="Permanent link">&para;</a></h2>
+<p>The relational strategies. All are row addressed (the parent or version of row <code>r</code> is a function of the
+seed, the table, the column and <code>r</code>), so a chunk read in any order gives the same values. The ones that look
+at a whole group of rows read the whole column once and keep the result with <code>Engine.cached</code>; the
+row-sequential passes run in the kernel (<code>shape.generation.kernel_relational</code>, <code>docs/GENERATION_KERNEL.md</code>).
+Their equivalence to the baseline is tested per strategy in <code>tests/generation/test_strategies_p404d.py</code>
+(cases in <code>strategy_1to1/relational_cases.py</code>).</p>
+<h3 id="foreign_key"><code>foreign_key</code><a class="headerlink" href="#foreign_key" title="Permanent link">&para;</a></h3>
+<p><code>{"ref": "parent.pk"}</code>: a value of the parent's key column. The parent comes from the engine's key pool
+(<code>ctx.engine.key_pool</code>); a <code>ref</code> to a column that is not the key uses that column's values.</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>distribution</code></td>
+<td><code>uniform</code> (default), <code>zipf</code> (<code>alpha</code>, 1.5) or <code>pareto</code> (<code>alpha</code>, 1.2); anything else is uniform. <code>alpha</code> and <code>max_per_parent</code> may be at the top level or under <code>params</code> (<code>params</code> wins)</td>
+</tr>
+<tr>
+<td><code>fan_out</code></td>
+<td>the 80/20 helper (<code>FanOut</code>, below): <code>{"top_fraction": 0.2, "top_share": 0.8, "shape": "power"}</code>; replaces <code>distribution</code></td>
+</tr>
+<tr>
+<td><code>max_per_parent</code></td>
+<td>with <code>pareto</code>: no parent gets more rows (a row-sequential pass over the table, kept in memory)</td>
+</tr>
+<tr>
+<td><code>constrained_by</code></td>
+<td>a column of this table; the key is drawn from the parent rows whose column of the same name has the same value. No such parent: null when the column is nullable, else any parent</td>
+</tr>
+<tr>
+<td><code>sample_rate</code>, <code>filter</code></td>
+<td>the rows take the parents of one random sample, without replacement, of <code>max(1, int(rows * sample_rate))</code> parent rows (those matching <code>"column = 'value'"</code>); a table with more rows than the sample wraps around it</td>
+</tr>
+</tbody>
+</table>
+<p>A <code>ref</code> to the table's own key draws uniformly among all its rows (<code>distribution</code> does not apply); give the
+column <code>nullable</code> and a <code>null_rate</code> for roots.</p>
+<p><code>zipf</code> is Zipf truncated to the parent rows, <code>P(k)</code> proportional to <code>k ** -alpha</code>. Ranks up to 2**20 are
+exact; a larger pool is drawn by inverting the integral of the same power law beyond that. <code>pareto</code> cuts a
+Lomax draw at its theoretical 99.5th percentile and scales it to the pool (the baseline cuts at the sample's
+percentile; the two agree for any realistic chunk).</p>
+<h3 id="composite_foreign_key-and-composite_fk_field"><code>composite_foreign_key</code> and <code>composite_fk_field</code><a class="headerlink" href="#composite_foreign_key-and-composite_fk_field" title="Permanent link">&para;</a></h3>
+<p><code>{"ref_table": "line", "ref_columns": ["order_no", "line_no"], "distribution": "uniform"}</code> draws one row of
+the parent table (<code>uniform</code>, or <code>zipf</code> with <code>params.alpha</code>; anything else is uniform) and hands every
+<code>ref_columns</code> value of it to the row: the column itself gets the first. <code>{"source_column": "order_no",
+"ref_column": "line_no"}</code> on another column reads one of them (the column must come after the
+<code>composite_foreign_key</code> column in the table). Only the table's own columns are output.</p>
+<h3 id="first_per_parent"><code>first_per_parent</code><a class="headerlink" href="#first_per_parent" title="Permanent link">&para;</a></h3>
+<p><code>{"parent_column": "customer_id", "default": true}</code>: <code>True</code> on the first row of each value of the parent
+column and <code>False</code> on the rest (<code>"default": false</code> swaps them). Nulls count as one value. Row-sequential:
+the parent column is generated for the whole table once.</p>
+<h3 id="self_referencing-and-self_ref_field"><code>self_referencing</code> and <code>self_ref_field</code><a class="headerlink" href="#self_referencing-and-self_ref_field" title="Permanent link">&para;</a></h3>
+<p><code>{"pk_column": "category_id", "levels": 3, "root_count": 8}</code> (<code>max_depth</code> is an alias of <code>levels</code>; <code>root_count</code>
+defaults to a tenth of the rows): the first <code>root_count</code> rows (at most <code>rows // levels</code>, at least 1) are level
+1 and have no parent; the rest share levels 2 .. <code>levels</code> evenly (the first levels take the remainder), and each
+takes a uniformly drawn row of the level above as its parent. <code>{"field": "level"}</code> on another column gives
+the 1-based level. The structure depends on the table's row count, not on the chunk.</p>
+<h3 id="lifecycle"><code>lifecycle</code><a class="headerlink" href="#lifecycle" title="Permanent link">&para;</a></h3>
+<p><code>{"phases": {"introduced": 0.1, "active": 0.75, "discontinued": 0.15}}</code> (or <code>"values"</code>): a label with
+probability proportional to its weight. Labels are always strings.</p>
+<h3 id="scd2"><code>scd2</code><a class="headerlink" href="#scd2" title="Permanent link">&para;</a></h3>
+<p><code>{"role": "effective_date", "business_key": "customer_id", "min_gap_days": 1}</code>. Roles: <code>effective_date</code> (the
+versions of a key get increasing dates in the model's <code>date_range</code>, at least <code>min_gap_days</code> apart, in row
+order; <code>timestamp[us]</code> at midnight), <code>end_date</code> (the next version's date minus <code>min_gap_days</code>; null for the
+latest; <code>effective_date_column</code> names the date column, default <code>effective_date</code>), <code>is_current</code> (the latest
+version) and <code>version</code> (1, 2, ... in date order; row order when there is no date column). Rows with a null
+business key get nulls.</p>
+<h2 id="skewed-fan-out">Skewed fan-out<a class="headerlink" href="#skewed-fan-out" title="Permanent link">&para;</a></h2>
+<p><code>shape.generation.fanout.FanOut(n_parents, top_fraction=0.2, top_share=0.8, shape="power" |
+"two_tier", shuffle=True)</code> draws a parent index for each child row (<code>draw(stream, row_start,
+n_rows)</code>) so that the top <code>top_fraction</code> of parents hold <code>top_share</code> of the children (the 80/20
+rule). <code>concentration_weights(...)</code> gives the rank weights and <code>top_share_of(parents, n_parents,
+fraction)</code> measures a generated column. <code>FanOut.from_spec</code> reads <code>{"top_fraction", "top_share",
+"shape", "shuffle"}</code>; P4-04d's <code>foreign_key</code> uses it for a <code>fan_out</code> key.</p>
+<p><code>kernel_ops.alias_table(weights)</code> returns an <code>AliasTable</code> (<code>size</code>, <code>prob</code>, <code>alias</code>), cached by the weights.</p>
+<p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Generation+strategies&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fv0.9.3%2FGENERATION_STRATEGIES%2F">Report a problem with this page</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  <div class="md-copyright__highlight">Shape by SQLLocks</div>
+  <div>Copyright SQLLocks. Released under the MIT license.</div>
+  <nav class="shape-footer-links" aria-label="Website, project and support">
+    <a href="https://shapedata.ai/">shapedata.ai</a>
+    <a href="https://github.com/sqllocks/shape">GitHub</a>
+    <a href="https://pypi.org/project/sqllocks-shape/">PyPI</a>
+    <a href="mailto:support@shapedata.ai">Support</a>
+    <a href="https://github.com/sqllocks/shape/blob/main/LICENSE">License (MIT)</a>
+    <a href="https://github.com/sqllocks/shape/blob/main/SECURITY.md">Security</a>
+  </nav>
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "navigation.indexes", "search.suggest", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../assets/javascripts/diagrams.js"></script>
+      
+    
+  </body>
+</html>

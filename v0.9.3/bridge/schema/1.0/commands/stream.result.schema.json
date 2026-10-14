@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "job_id": {
+      "type": "string"
+    },
+    "status": {
+      "const": "started"
+    },
+    "stream_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "stream_id",
+    "job_id",
+    "status"
+  ],
+  "title": "stream result",
+  "type": "object",
+  "x-api-version": "1.0"
+}

@@ -1,0 +1,613 @@
+{
+  "api_version": "1.1",
+  "cases": [
+    {
+      "name": "star",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "input": "${DIR}/retail.design.json",
+          "mode": "star"
+        },
+        "command": "design",
+        "id": "star"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "design",
+        "id": "star",
+        "ok": true,
+        "result": {
+          "ddl": "-- Schema design 'retail' (star)\n\n-- dimension: dim_customer\nCREATE TABLE [dim_customer] (\n    [sk_customer]                  BIGINT               NOT NULL,\n    [customer_id]                  BIGINT               NOT NULL,\n    [name]                         NVARCHAR(80)         NULL,\n    [city]                         NVARCHAR(60)         NULL,\n    [region]                       NVARCHAR(60)         NULL,\n    [country]                      NVARCHAR(60)         NULL,\n    [previous_name]                NVARCHAR(80)         NULL,\n    [valid_from]                   DATE                 NOT NULL,\n    [valid_to]                     DATE                 NULL,\n    [is_current]                   BIT                  NOT NULL,\n    CONSTRAINT [PK_dim_customer] PRIMARY KEY ([sk_customer])\n);\nGO\n\n-- dimension: dim_product\nCREATE TABLE [dim_product] (\n    [sk_product]                   BIGINT               NOT NULL,\n    [product_id]                   BIGINT               NOT NULL,\n    [sku]                          NVARCHAR(20)         NULL,\n    [category]                     NVARCHAR(40)         NULL,\n    [department]                   NVARCHAR(40)         NULL,\n    CONSTRAINT [PK_dim_product] PRIMARY KEY ([sk_product])\n);\nGO\n\n-- dimension: dim_promotion\nCREATE TABLE [dim_promotion] (\n    [sk_promotion]                 BIGINT               NOT NULL,\n    [promotion_id]                 BIGINT               NOT NULL,\n    [label]                        NVARCHAR(40)         NULL,\n    CONSTRAINT [PK_dim_promotion] PRIMARY KEY ([sk_promotion])\n);\nGO\n\n-- date: dim_date\nCREATE TABLE [dim_date] (\n    [sk_date]                      BIGINT               NOT NULL,\n    [date]                         DATE                 NOT NULL,\n    [year]                         BIGINT               NOT NULL,\n    [quarter]                      BIGINT               NOT NULL,\n    [month]                        BIGINT               NOT NULL,\n    [month_name]                   NVARCHAR(255)        NOT NULL,\n    [week_of_year]                 BIGINT               NOT NULL,\n    [day_of_month]                 BIGINT               NOT NULL,\n    [day_of_week]                  BIGINT               NOT NULL,\n    [day_of_week_name]             NVARCHAR(255)        NOT NULL,\n    [is_weekend]                   BIT                  NOT NULL,\n    [is_weekday]                   BIT                  NOT NULL,\n    [fiscal_year]                  BIGINT               NOT NULL,\n    [fiscal_quarter]               BIGINT               NOT NULL,\n    CONSTRAINT [PK_dim_date] PRIMARY KEY ([sk_date])\n);\nGO\n\n-- junk: dim_sales_junk\nCREATE TABLE [dim_sales_junk] (\n    [sk_junk]                      BIGINT               NOT NULL,\n    [status]                       NVARCHAR(12)         NULL,\n    [priority]                     NVARCHAR(8)          NULL,\n    [is_gift]                      BIT                  NULL,\n    CONSTRAINT [PK_dim_sales_junk] PRIMARY KEY ([sk_junk])\n);\nGO\n\n-- bridge: bridge_sales_promotion\nCREATE TABLE [bridge_sales_promotion] (\n    [sk_promotion_group]           BIGINT               NOT NULL,\n    [sk_promotion]                 BIGINT               NOT NULL,\n    [weighting_factor]             DECIMAL(9,6)         NULL,\n    CONSTRAINT [PK_bridge_sales_promotion] PRIMARY KEY ([sk_promotion_group], [sk_promotion])\n);\nGO\n\n-- fact: fact_sales\nCREATE TABLE [fact_sales] (\n    [sk_customer]                  BIGINT               NOT NULL,\n    [sk_product]                   BIGINT               NOT NULL,\n    [sk_order_date]                BIGINT               NOT NULL,\n    [sk_ship_date]                 BIGINT               NOT NULL,\n    [sk_junk]                      BIGINT               NOT NULL,\n    [sk_promotion_group]           BIGINT               NOT NULL,\n    [order_id]                     BIGINT               NOT NULL,\n    [line_no]                      BIGINT               NOT NULL,\n    [quantity]                     BIGINT               NOT NULL,\n    [amount]                       DECIMAL(18,2)        NOT NULL,\n    [discount_pct]                 DECIMAL(5,2)         NULL,\n    CONSTRAINT [PK_fact_sales] PRIMARY KEY ([order_id], [line_no])\n);\nGO\n\n-- foreign keys\nALTER TABLE [bridge_sales_promotion] ADD CONSTRAINT [FK_bridge_sales_promotion_sk_promotion] FOREIGN KEY ([sk_promotion]) REFERENCES [dim_promotion] ([sk_promotion]);\nGO\nALTER TABLE [fact_sales] ADD CONSTRAINT [FK_fact_sales_sk_customer] FOREIGN KEY ([sk_customer]) REFERENCES [dim_customer] ([sk_customer]);\nGO\nALTER TABLE [fact_sales] ADD CONSTRAINT [FK_fact_sales_sk_product] FOREIGN KEY ([sk_product]) REFERENCES [dim_product] ([sk_product]);\nGO\nALTER TABLE [fact_sales] ADD CONSTRAINT [FK_fact_sales_sk_order_date] FOREIGN KEY ([sk_order_date]) REFERENCES [dim_date] ([sk_date]);\nGO\nALTER TABLE [fact_sales] ADD CONSTRAINT [FK_fact_sales_sk_ship_date] FOREIGN KEY ([sk_ship_date]) REFERENCES [dim_date] ([sk_date]);\nGO\nALTER TABLE [fact_sales] ADD CONSTRAINT [FK_fact_sales_sk_junk] FOREIGN KEY ([sk_junk]) REFERENCES [dim_sales_junk] ([sk_junk]);\nGO\n",
+          "lint": [],
+          "passed": true,
+          "tables": {
+            "format": "shape-design-result",
+            "mode": "star",
+            "name": "retail",
+            "notes": [],
+            "tables": [
+              {
+                "columns": [
+                  {
+                    "name": "sk_customer",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "customer_id",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "max_length": 80,
+                    "name": "name",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  {
+                    "max_length": 60,
+                    "name": "city",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  {
+                    "max_length": 60,
+                    "name": "region",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  {
+                    "max_length": 60,
+                    "name": "country",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  {
+                    "max_length": 80,
+                    "name": "previous_name",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "valid_from",
+                    "nullable": false,
+                    "type": "date"
+                  },
+                  {
+                    "name": "valid_to",
+                    "nullable": true,
+                    "type": "date"
+                  },
+                  {
+                    "name": "is_current",
+                    "nullable": false,
+                    "type": "boolean"
+                  }
+                ],
+                "foreign_keys": [],
+                "kind": "dimension",
+                "name": "dim_customer",
+                "primary_key": [
+                  "sk_customer"
+                ],
+                "scd_type": 2,
+                "source_entity": "Customer"
+              },
+              {
+                "columns": [
+                  {
+                    "name": "sk_product",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "product_id",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "max_length": 20,
+                    "name": "sku",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  {
+                    "max_length": 40,
+                    "name": "category",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  {
+                    "max_length": 40,
+                    "name": "department",
+                    "nullable": true,
+                    "type": "string"
+                  }
+                ],
+                "foreign_keys": [],
+                "kind": "dimension",
+                "name": "dim_product",
+                "primary_key": [
+                  "sk_product"
+                ],
+                "scd_type": 1,
+                "source_entity": "Product"
+              },
+              {
+                "columns": [
+                  {
+                    "name": "sk_promotion",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "promotion_id",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "max_length": 40,
+                    "name": "label",
+                    "nullable": true,
+                    "type": "string"
+                  }
+                ],
+                "foreign_keys": [],
+                "kind": "dimension",
+                "name": "dim_promotion",
+                "primary_key": [
+                  "sk_promotion"
+                ],
+                "scd_type": 1,
+                "source_entity": "Promotion"
+              },
+              {
+                "columns": [
+                  {
+                    "name": "sk_date",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "date",
+                    "nullable": false,
+                    "type": "date"
+                  },
+                  {
+                    "name": "year",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "quarter",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "month",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "month_name",
+                    "nullable": false,
+                    "type": "string"
+                  },
+                  {
+                    "name": "week_of_year",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "day_of_month",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "day_of_week",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "day_of_week_name",
+                    "nullable": false,
+                    "type": "string"
+                  },
+                  {
+                    "name": "is_weekend",
+                    "nullable": false,
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "is_weekday",
+                    "nullable": false,
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "fiscal_year",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "fiscal_quarter",
+                    "nullable": false,
+                    "type": "integer"
+                  }
+                ],
+                "foreign_keys": [],
+                "kind": "date",
+                "name": "dim_date",
+                "primary_key": [
+                  "sk_date"
+                ]
+              },
+              {
+                "columns": [
+                  {
+                    "name": "sk_junk",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "max_length": 12,
+                    "name": "status",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  {
+                    "max_length": 8,
+                    "name": "priority",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "is_gift",
+                    "nullable": true,
+                    "type": "boolean"
+                  }
+                ],
+                "foreign_keys": [],
+                "kind": "junk",
+                "name": "dim_sales_junk",
+                "primary_key": [
+                  "sk_junk"
+                ],
+                "source_entity": "OrderLine"
+              },
+              {
+                "columns": [
+                  {
+                    "name": "sk_promotion_group",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "sk_promotion",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "weighting_factor",
+                    "nullable": true,
+                    "precision": 9,
+                    "scale": 6,
+                    "type": "decimal"
+                  }
+                ],
+                "foreign_keys": [
+                  {
+                    "columns": [
+                      "sk_promotion"
+                    ],
+                    "ref_columns": [
+                      "sk_promotion"
+                    ],
+                    "ref_table": "dim_promotion"
+                  }
+                ],
+                "kind": "bridge",
+                "name": "bridge_sales_promotion",
+                "primary_key": [
+                  "sk_promotion_group",
+                  "sk_promotion"
+                ],
+                "source_entity": "Promotion"
+              },
+              {
+                "columns": [
+                  {
+                    "name": "sk_customer",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "sk_product",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "sk_order_date",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "sk_ship_date",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "sk_junk",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "sk_promotion_group",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "order_id",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "line_no",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "quantity",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "amount",
+                    "nullable": false,
+                    "precision": 18,
+                    "scale": 2,
+                    "type": "decimal"
+                  },
+                  {
+                    "name": "discount_pct",
+                    "nullable": true,
+                    "precision": 5,
+                    "scale": 2,
+                    "type": "decimal"
+                  }
+                ],
+                "foreign_keys": [
+                  {
+                    "columns": [
+                      "sk_customer"
+                    ],
+                    "ref_columns": [
+                      "sk_customer"
+                    ],
+                    "ref_table": "dim_customer"
+                  },
+                  {
+                    "columns": [
+                      "sk_product"
+                    ],
+                    "ref_columns": [
+                      "sk_product"
+                    ],
+                    "ref_table": "dim_product"
+                  },
+                  {
+                    "columns": [
+                      "sk_order_date"
+                    ],
+                    "ref_columns": [
+                      "sk_date"
+                    ],
+                    "ref_table": "dim_date"
+                  },
+                  {
+                    "columns": [
+                      "sk_ship_date"
+                    ],
+                    "ref_columns": [
+                      "sk_date"
+                    ],
+                    "ref_table": "dim_date"
+                  },
+                  {
+                    "columns": [
+                      "sk_junk"
+                    ],
+                    "ref_columns": [
+                      "sk_junk"
+                    ],
+                    "ref_table": "dim_sales_junk"
+                  }
+                ],
+                "kind": "fact",
+                "name": "fact_sales",
+                "primary_key": [
+                  "order_id",
+                  "line_no"
+                ],
+                "source_entity": "OrderLine"
+              }
+            ],
+            "version": 1
+          }
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "postgres-3nf",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "dialect": "postgres",
+          "input": "${DIR}/tiny.design.json",
+          "schema_name": "dw"
+        },
+        "command": "design",
+        "id": "postgres-3nf"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "design",
+        "id": "postgres-3nf",
+        "ok": true,
+        "result": {
+          "ddl": "-- Schema design 'tiny' (3nf)\n\n-- relation: city\nCREATE TABLE \"dw\".\"city\" (\n    \"city_id\"                      BIGINT               NOT NULL,\n    \"city\"                         VARCHAR(255)         NULL,\n    CONSTRAINT \"PK_city\" PRIMARY KEY (\"city_id\")\n);\n\n-- relation: city_city\nCREATE TABLE \"dw\".\"city_city\" (\n    \"city\"                         VARCHAR(255)         NOT NULL,\n    \"country\"                      VARCHAR(255)         NULL,\n    CONSTRAINT \"PK_city_city\" PRIMARY KEY (\"city\")\n);\n\n-- foreign keys\nALTER TABLE \"dw\".\"city\" ADD CONSTRAINT \"FK_city_city\" FOREIGN KEY (\"city\") REFERENCES \"dw\".\"city_city\" (\"city\");\n",
+          "lint": [],
+          "passed": true,
+          "tables": {
+            "format": "shape-design-result",
+            "mode": "3nf",
+            "name": "tiny",
+            "notes": [],
+            "tables": [
+              {
+                "columns": [
+                  {
+                    "name": "city_id",
+                    "nullable": false,
+                    "type": "integer"
+                  },
+                  {
+                    "name": "city",
+                    "nullable": true,
+                    "type": "string"
+                  }
+                ],
+                "foreign_keys": [
+                  {
+                    "columns": [
+                      "city"
+                    ],
+                    "ref_columns": [
+                      "city"
+                    ],
+                    "ref_table": "city_city"
+                  }
+                ],
+                "kind": "relation",
+                "name": "city",
+                "primary_key": [
+                  "city_id"
+                ],
+                "source_entity": "City"
+              },
+              {
+                "columns": [
+                  {
+                    "name": "city",
+                    "nullable": false,
+                    "type": "string"
+                  },
+                  {
+                    "name": "country",
+                    "nullable": true,
+                    "type": "string"
+                  }
+                ],
+                "foreign_keys": [],
+                "kind": "relation",
+                "name": "city_city",
+                "primary_key": [
+                  "city"
+                ],
+                "source_entity": "City"
+              }
+            ],
+            "version": 1
+          }
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "lint-errors",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "input": "${DIR}/failing.design.json",
+          "mode": "star"
+        },
+        "command": "design",
+        "id": "lint-errors"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "design",
+        "id": "lint-errors",
+        "ok": true,
+        "result": {
+          "ddl": null,
+          "lint": [
+            {
+              "code": "D001",
+              "message": "fact 'sales' has no declared grain",
+              "path": "facts.sales",
+              "severity": "error"
+            }
+          ],
+          "passed": false,
+          "tables": null
+        },
+        "warnings": []
+      }
+    },
+    {
+      "name": "missing-file",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "input": "${DIR}/none.design.json"
+        },
+        "command": "design",
+        "id": "missing-file"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "design",
+        "error": {
+          "code": "input.not_found",
+          "group": "input",
+          "hint": null,
+          "message": "file not found: ${DIR}/none.design.json"
+        },
+        "id": "missing-file",
+        "ok": false,
+        "warnings": []
+      }
+    },
+    {
+      "name": "unknown-mode",
+      "request": {
+        "api_version": "1.1",
+        "args": {
+          "input": "${DIR}/retail.design.json",
+          "mode": "galaxy"
+        },
+        "command": "design",
+        "id": "unknown-mode"
+      },
+      "response": {
+        "api_version": "1.1",
+        "command": "design",
+        "error": {
+          "code": "usage.invalid_argument",
+          "group": "usage",
+          "hint": null,
+          "message": "argument 'mode' must be one of 3nf, star, snowflake, got 'galaxy'"
+        },
+        "id": "unknown-mode",
+        "ok": false,
+        "warnings": []
+      },
+      "valid_request": false
+    }
+  ],
+  "command": "design",
+  "format": "shape-bridge-vectors",
+  "version": 1
+}

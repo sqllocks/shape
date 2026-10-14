@@ -1,0 +1,7492 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Shape as Code — a portable, executable description of how data behaves.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.shapedata.ai/v0.9.3/DBT/">
+      
+      
+        <link rel="prev" href="../EXCEL/">
+      
+      
+        <link rel="next" href="../BRIDGE/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/brand/shape-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>dbt - Shape by SQLLocks</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../assets/stylesheets/brand.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+
+<link rel="alternate" type="text/plain" href="../llms.txt" title="Documentation text index">
+<script src="../assets/javascripts/mermaid.min.js"></script>
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#shape-and-dbt" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a class="md-header__button md-logo" data-md-component="logo" href=".." aria-label="Shape documentation home">
+      <img class="shape-logo-light" src="../assets/brand/shape-logo.svg" alt="Shape">
+<img class="shape-logo-dark" src="../assets/brand/shape-logo-white.svg" alt="Shape">
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Open navigation">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic"><span class="md-ellipsis">Documentation</span></div>
+        <div class="md-header__topic" data-md-component="header-topic"><span class="md-ellipsis">dbt</span></div>
+      </div>
+    </div>
+    <a class="shape-website-link" href="https://shapedata.ai/">shapedata.ai</a>
+    
+      <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <label class="md-header__button md-icon" for="__search" aria-label="Search documentation">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    <div class="md-header__source"><a href="https://github.com/sqllocks/shape" class="md-source" title="Source repository">sqllocks/shape</a></div>
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Shape by SQLLocks" class="md-nav__button md-logo" aria-label="Shape by SQLLocks" data-md-component="logo">
+      <img class="shape-logo-light" src="../assets/brand/shape-logo.svg" alt="Shape">
+<img class="shape-logo-dark" src="../assets/brand/shape-logo-white.svg" alt="Shape">
+    </a>
+    Shape by SQLLocks
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/sqllocks/shape" class="md-source" title="Source repository">sqllocks/shape</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Start here
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Start here
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../INSTALL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONCEPTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GLOSSARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LEARNING_PATHS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Learning paths
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../QUICKSTART/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TUTORIAL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Starter tutorials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Starter tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Starter tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/01-first-profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1 Your first profile
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/02-read-report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2 Read the report
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/03-drift/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3 Commit a shape and catch drift
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/04-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4 Write a contract and check it
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/05-generate-profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5 Generate dev data from a profile
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/06-domain-duckdb/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6 Generate a domain into DuckDB
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Understand your results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Understand your results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../READ_REPORT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTML report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ANATOMY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Anatomy of a shape
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DRIFT_RED/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    When drift goes red
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Profiling
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SOURCES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROFILING_NOTES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROFILE_MERGE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mergeable profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROFILE_REGISTRY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profile registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FINGERPRINT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fingerprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../JOINT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Joint distributions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FAIRNESS_AND_SKEW/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Slices and skew
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EXPLAIN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explain and notebooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DICTIONARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data dictionary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SCORECARD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scorecards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RESOLVE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Duplicate detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DETECTIVE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data detective packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REFERENCE_PACKS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference packs and validators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DATASET_LIBRARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Public dataset library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts, checks and drift
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contracts, checks and drift
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DRIFT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drift
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRACTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONSUMER_CONTRACTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Consumer contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CANARIES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canaries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment parity
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DRIFT_REPORT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drift report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../VERIFY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verifying data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRACT_EMIT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Emitting a contract
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RULES_TESTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing your rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TESTING_WITH_SHAPE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing with Shape
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROPOSALS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proposals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PLANNED_CHANGES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planned changes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Generation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DESIGN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_ENGINE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_STRATEGIES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_CALENDARS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calendars and timestamps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_SPEC/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation spec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_STABILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GENERATION_KERNEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation kernel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LOCALES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Locales
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SCENARIO_PACKS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scenario packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SCENARIO_LIBRARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scenario library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../IMPORTERS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema importers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CHAOS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chaos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GAMEDAY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Game days
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FAILURE_MODES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Failure modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../INCREMENTAL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Incremental data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TRANSFORMS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transforms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SIMULATION_FILES_EVENTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulating files and events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SCALE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generating at scale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FIDELITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fidelity report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FIDELITY_TIERS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fidelity tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REPORT_CARD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report card
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outputs and integration
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Outputs and integration
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SINKS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sinks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LANDING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Landing layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EMIT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Emitting events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FABRIC_MIRROR/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric mirroring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EXCEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Excel workbooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dbt
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dbt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#run-the-local-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the local examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-shape-from-dbt-a-dbt-project-as-a-generation-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. shape from-dbt: a dbt project as a generation schema
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-shape-to-dbt-tests-a-contract-or-a-profile-as-dbt-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. shape to-dbt-tests: a contract or a profile as dbt tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. shape to-dbt-tests: a contract or a profile as dbt tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-dbt-cannot-express-and-the-round-trip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What dbt cannot express (and the round trip)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-shape-dbt-seeds-generated-data-as-dbt-seeds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. shape dbt-seeds: generated data as dbt seeds
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. shape dbt-seeds: generated data as dbt seeds">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#size-guidance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Size guidance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-a-fabric-pipeline-dbt-job-then-shape-then-one-gate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. A Fabric pipeline: dbt job, then Shape, then one gate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-the-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running the tests
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-local-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete local run
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Complete local run">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 1
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 2
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 3
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 5
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 7
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../BRIDGE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON bridge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DEMO/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Demos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTAINER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Container image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FABRIC_PLATFORM/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric platform inventory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CI/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shape in CI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PR_BOT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pull request check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../NOTIFICATIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Webhook notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Projects and history
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Projects and history
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PROJECT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project file
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REGISTRY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../HISTORY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    History tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REPRODUCIBILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproducibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Privacy and trust
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Privacy and trust
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PRIVACY_MODEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Privacy model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../MASK/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Masking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../VAULT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Value vault
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SHARE_BUNDLE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Safe-to-share bundle
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SIGNING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../THREAT_MODEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SECURITY_SPECIFICATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugins
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Plugins
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/builtins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Built-in plugins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/authoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Writing a plugin
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/api-v1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugin API v1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/host/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugin host
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/stability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stability promise
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/trust-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trust model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/cloud-sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cloud sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/fabric-auth/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric sign-in
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/fabric-commands/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric commands
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/fabric-writers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric writers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/sqlserver/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQL Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/streaming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/simulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/behavior/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Behavior models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/healthcare-codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Healthcare code sets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/healthcare-standards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Healthcare standards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/integrations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integrations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CLI/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command line
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI reference (generated)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CLI_STABILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../EXIT_CODES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exit codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../API_STABILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance (generated)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PERFORMANCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release regression benchmarks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_12_9" id="__nav_12_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specifications
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specifications
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/SHAPE_MODEL_V2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shape model v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/SHAPE_2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Normative contract v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/SHAPE_ARTIFACT_SPEC/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/STATE_AND_COMPATIBILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State and compatibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../specs/STREAMING_SEMANTICS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming semantics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../MODELS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API generated
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Project
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PRODUCT_ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RELEASE_POLICY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release policy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../RELEASE_CHECKLIST/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release checklist
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/release-0.9.1-verify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release 0.9.1 tag and digest check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../V1_DONE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definition of done for 1.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Help and trust
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Help and trust
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../TROUBLESHOOTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FAQ/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../KNOWN_LIMITATIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Known limitations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../WHAT_LEAVES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    What leaves my machine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LICENSING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Licensing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DECISIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Public owner decisions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../evidence/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Published receipts
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_14_7" id="__nav_14_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_14_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Published receipts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/vscode-install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installed VSIX and real editor receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/live-fidelity-measurement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Live fidelity overhead — committed local measurement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/allocator-measurement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allocator policy — committed product A/B measurement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/local-delta-doctor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Delta doctor receipt — CLI example 5
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/snowflake-write/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Snowflake write receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/databricks-write/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Databricks write receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/kerberos-live/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kerberos keytab sign-in — Owner-run receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/semantic-model-notebook/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Semantic model profiling in a Fabric notebook — Owner-run receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/postgresql-export-profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PostgreSQL export and profile receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/mysql-export-profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL export and profile receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/postgresql-live/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PostgreSQL 17 (local Docker, reached from the VM over the Hyper-V network) — Owner-run receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/mysql-live/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL 8.4 (local Docker), over TLS with the server's own CA — Owner-run receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/github-action-pass/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hosted GitHub Action pass receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/github-action-drift/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hosted GitHub Action drift receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/github-action-ruleset/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hosted GitHub Action required-check receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/doctor-additional-environments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Doctor additional-environment receipts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/delta-extension-fallback/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fresh local Delta extension installation and real fallback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../SECURITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../databases/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platforms
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_15" id="__nav_15_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Platforms
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/duckdb/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DuckDB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/postgresql/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PostgreSQL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/mysql/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/snowflake/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Snowflake
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../databases/databricks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Databricks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../VSCODE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VS Code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GITHUB_ACTION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GitHub Action
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16" >
+        
+          
+          <label class="md-nav__link" for="__nav_16" id="__nav_16_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Community
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Community
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/DOCS_STYLE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs style
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/EXAMPLES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tested examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../GOVERNANCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CODE_OF_CONDUCT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code of conduct
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../POSTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Posts and videos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#run-the-local-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the local examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-shape-from-dbt-a-dbt-project-as-a-generation-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. shape from-dbt: a dbt project as a generation schema
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-shape-to-dbt-tests-a-contract-or-a-profile-as-dbt-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. shape to-dbt-tests: a contract or a profile as dbt tests
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. shape to-dbt-tests: a contract or a profile as dbt tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-dbt-cannot-express-and-the-round-trip" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What dbt cannot express (and the round trip)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-shape-dbt-seeds-generated-data-as-dbt-seeds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. shape dbt-seeds: generated data as dbt seeds
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. shape dbt-seeds: generated data as dbt seeds">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#size-guidance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Size guidance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-a-fabric-pipeline-dbt-job-then-shape-then-one-gate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. A Fabric pipeline: dbt job, then Shape, then one gate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-the-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running the tests
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-local-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete local run
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Complete local run">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 1
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 2
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 3
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 5
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 7
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="shape-and-dbt">Shape and dbt<a class="headerlink" href="#shape-and-dbt" title="Permanent link">&para;</a></h1>
+<p>Status: experimental.</p>
+<h2 id="run-the-local-examples">Run the local examples<a class="headerlink" href="#run-the-local-examples" title="Permanent link">&para;</a></h2>
+<p>The examples below use disposable local files from this checkout. The <a href="../contributing/EXAMPLES/">example test environment</a> sets <code>SHAPE_DOCS_REPO</code>, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.</p>
+<!-- example: 999 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>python<span class="w"> </span><span class="s2">"</span><span class="nv">$SHAPE_DOCS_REPO</span><span class="s2">/scripts/docs_example_setup.py"</span><span class="w"> </span>DBT
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>Prepared local fixtures for DBT
+</code></pre></div>
+</details>
+<p>Shape works with dbt in four ways. It is an integration: Shape does not replace dbt (see
+<a href="../PRODUCT_ARCHITECTURE/">PRODUCT_ARCHITECTURE.md</a>), and nothing here runs inside dbt but SQL and
+<code>schema.yml</code>.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Command</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>shape from-dbt</code></td>
+<td>a dbt project's sources, seeds or models and their tests become a generation schema</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>shape to-dbt-tests</code></td>
+<td>a contract (or a profile) becomes <code>schema.yml</code> tests that run in a dbt job</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>shape dbt-seeds</code></td>
+<td>generated tables become CSV seeds, with a <code>seeds:</code> block of column types</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>shape dbt-report</code></td>
+<td>one report for a dbt run and a Shape contract check and drift comparison</td>
+</tr>
+</tbody>
+</table>
+<p>It is file-based and works with dbt Core anywhere (a laptop, CI, the Fabric dbt job). The plugin
+reads and writes dbt's files and never imports or runs dbt, so <code>dbt-core</code> is not a dependency of
+Shape or of the plugin.</p>
+<p><a href="#local-example-0">Run this example</a>.</p>
+<p>A runnable sample, a jaffle-shop style project, is in
+<a href="https://github.com/sqllocks/shape/tree/main/examples/dbt_jaffle_shop"><code>examples/dbt_jaffle_shop</code></a>. Its test
+(<code>plugins/shape-dbt/tests/test_dbt_build.py</code>) does everything below against DuckDB.</p>
+<h2 id="1-shape-from-dbt-a-dbt-project-as-a-generation-schema">1. <code>shape from-dbt</code>: a dbt project as a generation schema<a class="headerlink" href="#1-shape-from-dbt-a-dbt-project-as-a-generation-schema" title="Permanent link">&para;</a></h2>
+<p><a href="#local-example-1">Run this example</a>.</p>
+<p>The schema is built by the builder <code>shape from-ddl</code> uses, so the generators, scale presets and
+smart inference are the same (<code>--no-smart</code>, <code>--explain</code>, <code>--scale</code>, <code>--domain</code> work alike).</p>
+<table>
+<thead>
+<tr>
+<th>dbt</th>
+<th>generation schema</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>unique</code> and <code>not_null</code> on one column</td>
+<td>primary key (the first, when several qualify; it is noted)</td>
+</tr>
+<tr>
+<td><code>dbt_utils.unique_combination_of_columns</code></td>
+<td>composite primary key</td>
+</tr>
+<tr>
+<td><code>not_null</code> test or constraint</td>
+<td><code>nullable: false</code></td>
+</tr>
+<tr>
+<td><code>relationships</code> (<code>to</code>, <code>field</code>)</td>
+<td><code>foreign_key</code> generator and a relationship</td>
+</tr>
+<tr>
+<td><code>accepted_values</code></td>
+<td><code>weighted_enum</code>: equal weights, or the frequencies of <code>--profile</code></td>
+</tr>
+<tr>
+<td><code>data_type</code> (a model contract or a source column)</td>
+<td>column type; <code>varchar(n)</code> gives <code>max_length</code>; <code>numeric(p,s)</code> gives <code>precision</code> and <code>scale</code></td>
+</tr>
+<tr>
+<td>model, source and column descriptions</td>
+<td>table description, and the metadata file</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>What is imported.</strong> The sources and the seeds; when a project has neither, its models.
+  <code>--select source|seed|model</code> (repeatable) chooses. <code>manifest.json</code> (dbt's own, from <code>dbt parse</code>,
+  <code>dbt compile</code> or <code>dbt docs generate</code>) and <code>schema.yml</code> / <code>sources.yml</code> give the same result;
+  both the <code>tests:</code> and <code>data_tests:</code> keys, and test arguments inline or under <code>arguments:</code>, are read.
+  A seed that has the name of a source is the same table (a project whose sources are loaded as
+  seeds by <code>shape dbt-seeds</code>, as the sample's are): the source is kept, because its tests describe it.</li>
+<li><strong>Decimals.</strong> A <code>numeric(18,2)</code> column becomes <code>type: decimal</code> with <code>precision: 18</code> and <code>scale: 2</code>.
+  In a profile the column stays <code>dtype: float</code> (the profiler's vocabulary does not have a decimal),
+  and generation writes it as a double rounded to the scale. The seeds sink declares
+  <code>numeric(p,s)</code> again.</li>
+<li><strong>Column descriptions</strong> have no place in the generation schema document, so the command writes
+  <code>shop.gen.dbt-meta.json</code> beside it (per table: the dbt kind, the description and, per column, the
+  description, the declared <code>data_type</code> and the names of its tests). <code>dbt-seeds --metadata</code> passes
+  the descriptions on to the seeds block.</li>
+<li><strong>A key without a <code>data_type</code></strong> is typed an integer (or its parent's type, for a foreign key); a
+  column with no type is typed from its name (<code>*_at</code> a timestamp, <code>*_date</code> a date, <code>is_*</code> a boolean,
+  <code>amount</code> and <code>price</code> a decimal), otherwise text. Each such guess, and a <code>data_type</code> Shape does not
+  know, is printed as a note.</li>
+<li>A <code>relationships</code> test to a table that is not imported is noted, and no foreign key is made.</li>
+</ul>
+<h2 id="2-shape-to-dbt-tests-a-contract-or-a-profile-as-dbt-tests">2. <code>shape to-dbt-tests</code>: a contract or a profile as dbt tests<a class="headerlink" href="#2-shape-to-dbt-tests-a-contract-or-a-profile-as-dbt-tests" title="Permanent link">&para;</a></h2>
+<p>"Capture once, compile for purpose": the contract (format v1,
+the drift defaults; unchanged) or a profile compiles to <code>schema.yml</code>
+data tests, so the checks run where the data is built, with no Python.</p>
+<p><a href="#local-example-2">Run this example</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Contract rule</th>
+<th>dbt test</th>
+<th>Package</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nullable: false</code></td>
+<td><code>not_null</code></td>
+<td>dbt</td>
+</tr>
+<tr>
+<td><code>unique: true</code></td>
+<td><code>unique</code></td>
+<td>dbt</td>
+</tr>
+<tr>
+<td><code>allowed_values</code></td>
+<td><code>accepted_values</code></td>
+<td>dbt</td>
+</tr>
+<tr>
+<td><code>min</code>, <code>max</code> (numbers)</td>
+<td><code>dbt_utils.accepted_range</code></td>
+<td><code>dbt_utils</code></td>
+</tr>
+<tr>
+<td><code>max_null_rate</code></td>
+<td><code>dbt_utils.not_null_proportion</code> (<code>at_least</code> is one minus the rate)</td>
+<td><code>dbt_utils</code></td>
+</tr>
+<tr>
+<td><code>row_count</code> <code>min</code> / <code>max</code></td>
+<td><code>dbt_expectations.expect_table_row_count_to_be_between</code></td>
+<td><code>dbt_expectations</code></td>
+</tr>
+<tr>
+<td><code>required_columns</code></td>
+<td><code>dbt_expectations.expect_column_to_exist</code></td>
+<td><code>dbt_expectations</code></td>
+</tr>
+<tr>
+<td><code>allow_extra_columns: false</code></td>
+<td><code>dbt_expectations.expect_table_columns_to_match_set</code></td>
+<td><code>dbt_expectations</code></td>
+</tr>
+<tr>
+<td>a profile's mean (<code>--distribution</code>)</td>
+<td><code>dbt_expectations.expect_column_mean_to_be_between</code></td>
+<td><code>dbt_expectations</code></td>
+</tr>
+<tr>
+<td>a profile's standard deviation</td>
+<td><code>dbt_expectations.expect_column_stdev_to_be_between</code></td>
+<td><code>dbt_expectations</code></td>
+</tr>
+<tr>
+<td>a profile's quartiles</td>
+<td><code>dbt_expectations.expect_column_quantile_values_to_be_between</code></td>
+<td><code>dbt_expectations</code></td>
+</tr>
+</tbody>
+</table>
+<p>The packages a file needs are named in its header, and <code>--packages-out packages.yml</code> writes the
+entries (<code>dbt-labs/dbt_utils</code> <code>&gt;=1.1.0,&lt;2.0.0</code>, <code>metaplane/dbt_expectations</code> <code>&gt;=0.10.0,&lt;0.11.0</code>);
+run <code>dbt deps</code>. Every test carries the tag <code>shape</code>: <code>dbt test --select tag:shape</code>.</p>
+<ul>
+<li><strong>From a profile</strong>, the contract is captured first (<code>contract_from_profile</code>): the dtype,
+  <code>nullable: false</code> where no value was null (else <code>max_null_rate</code>: the rate plus 0.01), <code>unique</code> for
+  a key (a primary key, or a name ending in <code>_id</code>, <code>_key</code>, <code>_uuid</code>), numeric <code>min</code> and <code>max</code> widened
+  by <code>--margin</code> (5%) of the observed range, and <code>allowed_values</code> for a text column with a complete
+  value set. The distribution bounds default to the drift defaults (the mean within 0.5 standard
+  deviations; the standard deviation within 0.67 to 1.5 times; the quartiles within the same band as
+  the mean), so a dbt test fails where <code>shape diff</code> would report a shift. A key has no bounds.</li>
+<li><strong>dbt allows one entry per model.</strong> Tests for a model that already has an entry in a
+  <code>schema.yml</code> go into that entry: <code>--merge FILE</code> adds them (a test that is already there is not
+  repeated; the file's <code>tests</code>/<code>data_tests</code> key is kept) and <code>-o</code> with the same path updates the
+  file in place. Comments in the written file are lost.</li>
+<li><code>--tests-key tests</code> is for dbt before 1.8; <code>--args-style inline</code> for dbt before 1.10
+  (the default writes arguments under <code>arguments:</code>).</li>
+<li><code>--kind models|seeds|sources</code> says where the tests go.</li>
+</ul>
+<h3 id="what-dbt-cannot-express-and-the-round-trip">What dbt cannot express (and the round trip)<a class="headerlink" href="#what-dbt-cannot-express-and-the-round-trip" title="Permanent link">&para;</a></h3>
+<p>The round trip is contract, dbt tests, contract. It is exact for what dbt tests can state:</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>In dbt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dtype</code></td>
+<td><strong>not expressible</strong>: a data type is adapter-specific. Use a model contract's <code>data_type</code>.</td>
+</tr>
+<tr>
+<td><code>pattern</code></td>
+<td><strong>not expressible</strong></td>
+</tr>
+<tr>
+<td><code>distribution</code> (a family name)</td>
+<td><strong>not expressible</strong></td>
+</tr>
+<tr>
+<td><code>min_true_rate</code>, <code>max_true_rate</code></td>
+<td><strong>not expressible</strong> (no portable aggregate test of a boolean)</td>
+</tr>
+<tr>
+<td><code>min</code>, <code>max</code> that are not numbers</td>
+<td><strong>not expressible</strong> (<code>accepted_range</code> is numeric)</td>
+</tr>
+<tr>
+<td><code>nullable: true</code>, <code>unique: false</code>, <code>allow_extra_columns: true</code></td>
+<td>say nothing; they normalise away</td>
+</tr>
+</tbody>
+</table>
+<p>These rules are not lost: they are written on the column as <code>meta.shape</code> (and noted in the
+output), so <code>contract_from_dbt_tests(text)</code> gives the whole contract back. <strong>dbt does not test
+them</strong>; reading the tests alone (<code>use_meta=False</code>) gives exactly <code>expressible(contract)</code>. The
+null rate is kept to nine decimals and <code>required_columns</code> is a set, so contracts are compared
+after <code>normalize_contract</code>. The distribution bounds have no place in contract v1 (and the format
+does not change): <code>contract_from_schema_yaml</code> returns them as a second value. A test
+(<code>test_any_contract_round_trips</code>) checks this for generated contracts, and
+<code>test_a_compiled_test_set_round_trips_and_passes_in_dbt</code> runs a compiled set in dbt.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">shape_dbt.totests</span><span class="w"> </span><span class="kn">import</span> <span class="n">compile_tests</span><span class="p">,</span> <span class="n">contract_from_dbt_tests</span><span class="p">,</span> <span class="n">expressible</span>
+
+<span class="n">compiled</span> <span class="o">=</span> <span class="n">compile_tests</span><span class="p">(</span><span class="n">contract</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">"orders"</span><span class="p">)</span>        <span class="c1"># .doc, .yaml(), .packages, .notes</span>
+<span class="k">assert</span> <span class="n">contract_from_dbt_tests</span><span class="p">(</span><span class="n">compiled</span><span class="o">.</span><span class="n">yaml</span><span class="p">(),</span> <span class="n">use_meta</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">==</span> <span class="n">expressible</span><span class="p">(</span><span class="n">contract</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="3-shape-dbt-seeds-generated-data-as-dbt-seeds">3. <code>shape dbt-seeds</code>: generated data as dbt seeds<a class="headerlink" href="#3-shape-dbt-seeds-generated-data-as-dbt-seeds" title="Permanent link">&para;</a></h2>
+<p><a href="#local-example-4">Run this example</a>.</p>
+<p>Each table becomes <code>seeds/&lt;table&gt;.csv</code>, and <code>seeds/_shape_seeds.yml</code> gets a <code>seeds:</code> entry with
+<code>config.column_types</code> for every column (and the descriptions, from the metadata). It is also the
+<code>dbt-seeds</code> sink of the plugin API (<code>dbt://PROJECT_DIR</code>). Writing a table again replaces its
+entry only.</p>
+<ul>
+<li><strong>Leading zeros.</strong> Text columns are always declared <code>varchar</code>, never inferred, so a ZIP code,
+  NDC or member number such as <code>02134</code> stays text in dbt. (Profiling the CSV with Shape is a
+  separate matter: see issue #46; profile the built table instead, as the sample's test does.)</li>
+<li><strong>Types per dialect</strong> (<code>--dialect</code>): <code>ansi</code> (the default), <code>duckdb</code>, <code>tsql</code> (Fabric Data
+  Warehouse, SQL Server: <code>bit</code>, <code>datetime2(6)</code>, <code>varchar(n)</code>) and <code>spark</code> (Fabric Lakehouse:
+  <code>string</code>). A decimal is <code>numeric(p,s)</code> with its precision and scale; a double is rounded to its scale.</li>
+</ul>
+<h3 id="size-guidance">Size guidance<a class="headerlink" href="#size-guidance" title="Permanent link">&para;</a></h3>
+<p>Seeds are for <strong>small, static files</strong>: dev, CI and demos. dbt Core hashes a seed only up to
+<code>--maximum-seed-size-mib</code> (default 1 MiB, checked in dbt-core 1.12.5): a larger seed is compared
+by its path, so <code>state:modified</code> no longer sees its content change. The sink therefore <strong>refuses a
+file over 1 MiB</strong> (<code>max_bytes</code>) unless you pass <code>--allow-large</code>. A dbt seed is loaded by the
+adapter through the warehouse's connection, not a bulk loader, so it gets slower with every row
+and is the wrong tool for volume.</p>
+<p>Measured once on this repository's sample (DuckDB, four vCPU, dbt-core 1.12.5, dbt-duckdb 1.11.0,
+one run each, <code>dbt seed</code> wall time including about 3 s of dbt start-up, on a local file database; not a
+benchmark, and not Fabric):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Orders</th>
+<th style="text-align: right;">Rows in all three tables</th>
+<th style="text-align: right;">CSV size</th>
+<th style="text-align: right;"><code>dbt seed</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1,000</td>
+<td style="text-align: right;">3,750</td>
+<td style="text-align: right;">0.10 MB</td>
+<td style="text-align: right;">3.3 s</td>
+</tr>
+<tr>
+<td style="text-align: right;">10,000</td>
+<td style="text-align: right;">37,500</td>
+<td style="text-align: right;">1.1 MB (over the limit)</td>
+<td style="text-align: right;">3.4 s</td>
+</tr>
+<tr>
+<td style="text-align: right;">100,000</td>
+<td style="text-align: right;">375,000</td>
+<td style="text-align: right;">11.8 MB</td>
+<td style="text-align: right;">5.5 s</td>
+</tr>
+</tbody>
+</table>
+<p>DuckDB is a local embedded database; a warehouse over the network is much slower per row.
+<strong>[VERIFY]</strong> the seed load time on the Fabric dbt job (adapters <code>dbt-fabric</code>, <code>dbt-fabricspark</code>).
+For more than about a megabyte, write Parquet or Delta (<code>shape generate -f parquet</code>, <code>-f delta</code>) and
+declare the files as a dbt source.</p>
+<h2 id="4-a-fabric-pipeline-dbt-job-then-shape-then-one-gate">4. A Fabric pipeline: dbt job, then Shape, then one gate<a class="headerlink" href="#4-a-fabric-pipeline-dbt-job-then-shape-then-one-gate" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>RunDbt (dbt job)  -&gt;  ProfileDbtOutputs (notebook shape_profile_dbt)  -&gt;  CheckGate (If) -&gt; FailGate
+        Completed (even when a dbt test failed)              Succeeded
+</code></pre></div>
+<ul>
+<li><strong><code>integrations/fabric/pipelines/shape_dbt_gate.DataPipeline</code></strong>, built from the same builder as
+  the other Shape pipelines (<code>build_pipelines.py</code>). Parameters: <code>dbtCommand</code>, <code>models</code>,
+  <code>tableRoot</code>, <code>contractPath</code>, <code>baselinePath</code>, <code>runResultsPath</code>, <code>manifestPath</code>, <code>outputDir</code>,
+  <code>failOnDrift</code>.</li>
+<li><strong><code>shape_profile_dbt.ipynb</code></strong> reads the models' Delta tables, profiles them together, checks them
+  against a multi-table contract (<code>{"tables": {model: contract}}</code>, which <code>shape to-dbt-tests</code>
+  also compiles to dbt tests) and diffs them against a baseline, then reads the dbt job's
+  <code>run_results.json</code> and <code>manifest.json</code> and writes <strong>one report</strong> (<code>report.md</code>, <code>report.json</code>)
+  in which a failed dbt test and a Shape contract or drift finding about the same column appear
+  together. It installs Shape and the plugin with <code>%pip</code> like the other notebooks (so the pipeline
+  passes <code>_inlineInstallationEnabled</code>, issue #7).</li>
+<li>The notebook runs after the dbt job <strong>completes</strong>, not only when it succeeds: a failed dbt test
+  still gives the combined report, and the gate fails the run (<code>ShapeDbtGateFailed</code>).</li>
+<li><strong>The helper outside Fabric</strong>: <code>shape dbt-report --run-results target/run_results.json
+  --manifest target/manifest.json --profile now.shape --contract c.json --baseline day1.shape</code>
+  gives the same report (exit 1 when a dbt test or model failed, a contract rule was violated, or,
+  with <code>--fail-on-drift</code>, the data drifted); <code>--check-result</code> and <code>--diff-result</code> take the JSON that
+  <code>shape check --json</code> and <code>shape diff --json</code> wrote. In Python: <code>shape_dbt.report.build_report</code>.</li>
+<li><strong>Run it on DuckDB</strong> with the sample: <code>plugins/shape-dbt/tests/test_dbt_build.py</code> makes a model
+  drift, fails a compiled dbt test and reads the report from the real <code>run_results.json</code>.</li>
+</ul>
+<p><strong>Needs a live Fabric workspace, not verified here ([VERIFY]):</strong> the dbt job activity (its type
+name <code>DbtJob</code> and its property names are the builder's reading of the preview; replace the activity
+with one exported from a workspace that has the "dbt jobs (preview)" tenant setting); where the
+dbt job writes <code>run_results.json</code> and <code>manifest.json</code> in OneLake (the Fabric documentation names
+<code>manifest.json</code> and <code>catalog.json</code> for <code>docs generate</code>; the paths are parameters); how a
+notebook reads the model tables of a Fabric Data Warehouse (<code>tableRoot</code>); the exit-value
+expressions; and the seed load time. The owner's checklist is
+<a href="https://github.com/sqllocks/shape/blob/main/integrations/fabric/RUNBOOK.md"><code>integrations/fabric/RUNBOOK.md</code></a>, section 13.</p>
+<h2 id="running-the-tests">Running the tests<a class="headerlink" href="#running-the-tests" title="Permanent link">&para;</a></h2>
+<p><a href="#local-example-6">Run this example</a>.</p>
+<p><code>pytest -m dbt</code> runs <code>dbt deps</code>, which needs the dbt package hub. On a runner without that access,
+point <code>SHAPE_DBT_PACKAGES_FILE</code> at a <code>packages.yml</code> with <code>local:</code> or <code>git:</code> entries for
+<code>dbt_utils</code>, <code>dbt_expectations</code> and <code>dbt_date</code>.</p>
+<h2 id="complete-local-run">Complete local run<a class="headerlink" href="#complete-local-run" title="Permanent link">&para;</a></h2>
+<p>Run these commands in order after preparing the fixtures above.</p>
+<p><a id="local-example-0"></a></p>
+<h3 id="example-1">Example 1<a class="headerlink" href="#example-1" title="Permanent link">&para;</a></h3>
+<!-- example: 0 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>--quiet<span class="w"> </span>--no-deps<span class="w"> </span>--no-build-isolation<span class="w"> </span>-e<span class="w"> </span><span class="s2">"</span><span class="nv">$SHAPE_DOCS_REPO</span><span class="s2">/plugins/shape-dbt"</span>
+shape<span class="w"> </span>plugins<span class="w"> </span>list
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>179 plugin(s)
+  shape.behaviors:entity_lifecycle        unloaded [sqllocks-shape-behavior]
+  shape.behaviors:equipment_maintenance   unloaded [sqllocks-shape-behavior]
+  shape.behaviors:event_sequence          unloaded [sqllocks-shape-behavior]
+  shape.behaviors:file_arrival            unloaded [sqllocks-shape-behavior]
+  shape.behaviors:healthcare_screening    unloaded [sqllocks-shape-behavior]
+  shape.behaviors:subscription            unloaded [sqllocks-shape-behavior]
+  shape.behaviors:telemetry_series        unloaded [sqllocks-shape-behavior]
+  shape.behaviors:transaction_stream      unloaded [sqllocks-shape-behavior]
+  shape.calendars:composite               unloaded [sqllocks-shape]
+  shape.calendars:us_federal              unloaded [sqllocks-shape]
+  shape.calendars:us_retail               unloaded [sqllocks-shape]
+  shape.chaos:file                        unloaded [sqllocks-shape]
+  shape.chaos:referential                 unloaded [sqllocks-shape]
+  shape.chaos:schema                      unloaded [sqllocks-shape]
+  shape.chaos:temporal                    unloaded [sqllocks-shape]
+  shape.chaos:value                       unloaded [sqllocks-shape]
+  shape.chaos:volume                      unloaded [sqllocks-shape]
+  shape.commands:behave                   unloaded [sqllocks-shape-behavior]
+  shape.commands:check-answers            unloaded [sqllocks-shape-fabric]
+  shape.commands:ctgan                    unloaded [sqllocks-shape]
+  shape.commands:dbt-report               unloaded [sqllocks-shape-dbt]
+  shape.commands:dbt-seeds                unloaded [sqllocks-shape-dbt]
+  shape.commands:deploy-notebook          unloaded [sqllocks-shape-fabric]
+  shape.commands:evaluate                 unloaded [sqllocks-shape-integrations]
+  shape.commands:export-model             unloaded [sqllocks-shape-fabric]
+  shape.commands:fabric                   unloaded [sqllocks-shape-fabric]
+  shape.commands:from-dbt                 unloaded [sqllocks-shape-dbt]
+  shape.commands:healthcare-codes         unloaded [sqllocks-shape-healthcare-codes]
+  shape.commands:known-answer             unloaded [sqllocks-shape-fabric]
+  shape.commands:lineage                  unloaded [sqllocks-shape-integrations]
+  shape.commands:mlflow                   unloaded [sqllocks-shape-integrations]
+  shape.commands:notebook                 unloaded [sqllocks-shape-fabric]
+  shape.commands:profile-db               unloaded [sqllocks-shape-sqlserver]
+  shape.commands:profile-model            unloaded [sqllocks-shape-fabric]
+  shape.commands:publish                  unloaded [sqllocks-shape-fabric]
+  shape.commands:publish-report           unloaded [sqllocks-shape-fabric]
+  shape.commands:setup-fabric             unloaded [sqllocks-shape-fabric]
+  shape.commands:simulate                 unloaded [sqllocks-shape-simulation]
+  shape.commands:to-dbt-tests             unloaded [sqllocks-shape-dbt]
+  shape.detectors:cpt                     unloaded [sqllocks-shape-healthcare-codes]
+  shape.detectors:email                   unloaded [sqllocks-shape]
+  shape.detectors:hcpcs                   unloaded [sqllocks-shape-healthcare-codes]
+  shape.detectors:icd10                   unloaded [sqllocks-shape-healthcare-codes]
+  shape.detectors:ipv4                    unloaded [sqllocks-shape]
+  shape.detectors:mbi                     unloaded [sqllocks-shape-healthcare-codes]
+  shape.detectors:member_id               unloaded [sqllocks-shape-healthcare-codes]
+  shape.detectors:ndc                     unloaded [sqllocks-shape-healthcare-codes]
+  shape.detectors:npi                     unloaded [sqllocks-shape-healthcare-codes]
+  shape.detectors:phone                   unloaded [sqllocks-shape]
+  shape.detectors:presidio                unloaded [sqllocks-shape-integrations]
+  shape.detectors:us_ssn                  unloaded [sqllocks-shape]
+  shape.distributions:bernoulli           unloaded [sqllocks-shape]
+  shape.distributions:beta                unloaded [sqllocks-shape]
+  shape.distributions:exponential         unloaded [sqllocks-shape]
+  shape.distributions:gamma               unloaded [sqllocks-shape]
+  shape.distributions:geometric           unloaded [sqllocks-shape]
+  shape.distributions:histogram           unloaded [sqllocks-shape]
+  shape.distributions:log_normal          unloaded [sqllocks-shape]
+  shape.distributions:lognormal           unloaded [sqllocks-shape]
+  shape.distributions:mixture             unloaded [sqllocks-shape]
+  shape.distributions:negative_binomial   unloaded [sqllocks-shape]
+  shape.distributions:normal              unloaded [sqllocks-shape]
+  shape.distributions:pareto              unloaded [sqllocks-shape]
+  shape.distributions:poisson             unloaded [sqllocks-shape]
+  shape.distributions:power_law_cutoff    unloaded [sqllocks-shape]
+  shape.distributions:triangular          unloaded [sqllocks-shape]
+  shape.distributions:truncated           unloaded [sqllocks-shape]
+  shape.distributions:uniform             unloaded [sqllocks-shape]
+  shape.distributions:weibull             unloaded [sqllocks-shape]
+  shape.distributions:zipf                unloaded [sqllocks-shape]
+  shape.domains:capital_markets           unloaded [sqllocks-shape-domains]
+  shape.domains:education                 unloaded [sqllocks-shape-domains]
+  shape.domains:financial                 unloaded [sqllocks-shape-domains]
+  shape.domains:healthcare                unloaded [sqllocks-shape-domains]
+  shape.domains:hr                        unloaded [sqllocks-shape-domains]
+  shape.domains:insurance                 unloaded [sqllocks-shape-domains]
+  shape.domains:iot                       unloaded [sqllocks-shape-domains]
+  shape.domains:manufacturing             unloaded [sqllocks-shape-domains]
+  shape.domains:marketing                 unloaded [sqllocks-shape-domains]
+  shape.domains:pulse                     unloaded [sqllocks-shape-domains]
+  shape.domains:real_estate               unloaded [sqllocks-shape-domains]
+  shape.domains:retail                    unloaded [sqllocks-shape-domains]
+  shape.domains:supply_chain              unloaded [sqllocks-shape-domains]
+  shape.domains:telecom                   unloaded [sqllocks-shape-domains]
+  shape.emitters:console                  unloaded [sqllocks-shape]
+  shape.emitters:eventhouse               unloaded [sqllocks-shape-fabric]
+  shape.emitters:eventhubs                unloaded [sqllocks-shape-eventhubs]
+  shape.emitters:eventstream              unloaded [sqllocks-shape-fabric]
+  shape.emitters:fhir                     unloaded [sqllocks-shape-healthcare-standards]
+  shape.emitters:file                     unloaded [sqllocks-shape]
+  shape.emitters:jsonl                    unloaded [sqllocks-shape]
+  shape.emitters:kafka                    unloaded [sqllocks-shape-kafka]
+  shape.fitters:auto                      unloaded [sqllocks-shape]
+  shape.reports:html                      unloaded [sqllocks-shape]
+  shape.reports:json                      unloaded [sqllocks-shape]
+  shape.reports:md                        unloaded [sqllocks-shape]
+  shape.sinks:abfss                       unloaded [sqllocks-shape]
+  shape.sinks:csv                         unloaded [sqllocks-shape]
+  shape.sinks:databricks                  unloaded [sqllocks-shape-databases]
+  shape.sinks:dbt-seeds                   unloaded [sqllocks-shape-dbt]
+  shape.sinks:delta                       unloaded [sqllocks-shape]
+  shape.sinks:duckdb                      unloaded [sqllocks-shape-databases]
+  shape.sinks:excel                       unloaded [sqllocks-shape]
+  shape.sinks:fabric-mirror               unloaded [sqllocks-shape]
+  shape.sinks:fhir-bundle                 unloaded [sqllocks-shape-healthcare-standards]
+  shape.sinks:fhir-ndjson                 unloaded [sqllocks-shape-healthcare-standards]
+  shape.sinks:ipc                         unloaded [sqllocks-shape]
+  shape.sinks:jsonl                       unloaded [sqllocks-shape]
+  shape.sinks:mysql                       unloaded [sqllocks-shape-databases]
+  shape.sinks:ncpdp                       unloaded [sqllocks-shape-healthcare-standards]
+  shape.sinks:omop                        unloaded [sqllocks-shape-healthcare-standards]
+  shape.sinks:parquet                     unloaded [sqllocks-shape]
+  shape.sinks:postgres                    unloaded [sqllocks-shape-databases]
+  shape.sinks:snowflake                   unloaded [sqllocks-shape-databases]
+  shape.sinks:sql                         unloaded [sqllocks-shape]
+  shape.sinks:sqlserver                   unloaded [sqllocks-shape-fabric]
+  shape.sinks:synapse                     unloaded [sqllocks-shape-fabric]
+  shape.sinks:tsv                         unloaded [sqllocks-shape]
+  shape.sinks:warehouse                   unloaded [sqllocks-shape-fabric]
+  shape.sinks:x12-277ca                   unloaded [sqllocks-shape-healthcare-standards]
+  shape.sinks:x12-834                     unloaded [sqllocks-shape-healthcare-standards]
+  shape.sinks:x12-835                     unloaded [sqllocks-shape-healthcare-standards]
+  shape.sinks:x12-837i                    unloaded [sqllocks-shape-healthcare-standards]
+  shape.sinks:x12-837p                    unloaded [sqllocks-shape-healthcare-standards]
+  shape.sources:abfss                     unloaded [sqllocks-shape]
+  shape.sources:csv                       unloaded [sqllocks-shape]
+  shape.sources:delta                     unloaded [sqllocks-shape]
+  shape.sources:duckdb                    unloaded [sqllocks-shape-integrations]
+  shape.sources:hl7v2                     unloaded [sqllocks-shape-healthcare-standards]
+  shape.sources:ipc                       unloaded [sqllocks-shape]
+  shape.sources:json                      unloaded [sqllocks-shape]
+  shape.sources:jsonl                     unloaded [sqllocks-shape]
+  shape.sources:mssql                     unloaded [sqllocks-shape-sqlserver]
+  shape.sources:onelake                   unloaded [sqllocks-shape-fabric]
+  shape.sources:parquet                   unloaded [sqllocks-shape]
+  shape.sources:semantic-model            unloaded [sqllocks-shape-fabric]
+  shape.sources:x12                       unloaded [sqllocks-shape-healthcare-standards]
+  shape.sources:xml                       unloaded [sqllocks-shape]
+  shape.strategies:address                unloaded [sqllocks-shape]
+  shape.strategies:bootstrap              unloaded [sqllocks-shape]
+  shape.strategies:choice                 unloaded [sqllocks-shape]
+  shape.strategies:composite_fk_field     unloaded [sqllocks-shape]
+  shape.strategies:composite_foreign_key  unloaded [sqllocks-shape]
+  shape.strategies:computed               unloaded [sqllocks-shape]
+  shape.strategies:conditional            unloaded [sqllocks-shape]
+  shape.strategies:conditional_table      unloaded [sqllocks-shape]
+  shape.strategies:constant               unloaded [sqllocks-shape]
+  shape.strategies:correlated             unloaded [sqllocks-shape]
+  shape.strategies:derived                unloaded [sqllocks-shape]
+  shape.strategies:distribution           unloaded [sqllocks-shape]
+  shape.strategies:empirical              unloaded [sqllocks-shape]
+  shape.strategies:faker                  unloaded [sqllocks-shape]
+  shape.strategies:first_per_parent       unloaded [sqllocks-shape]
+  shape.strategies:foreign_key            unloaded [sqllocks-shape]
+  shape.strategies:formula                unloaded [sqllocks-shape]
+  shape.strategies:hierarchy              unloaded [sqllocks-shape]
+  shape.strategies:hierarchy_field        unloaded [sqllocks-shape]
+  shape.strategies:lifecycle              unloaded [sqllocks-shape]
+  shape.strategies:locale                 unloaded [sqllocks-shape]
+  shape.strategies:lookup                 unloaded [sqllocks-shape]
+  shape.strategies:native                 unloaded [sqllocks-shape]
+  shape.strategies:normal                 unloaded [sqllocks-shape]
+  shape.strategies:pattern                unloaded [sqllocks-shape]
+  shape.strategies:record_field           unloaded [sqllocks-shape]
+  shape.strategies:record_sample          unloaded [sqllocks-shape]
+  shape.strategies:reference_data         unloaded [sqllocks-shape]
+  shape.strategies:scd2                   unloaded [sqllocks-shape]
+  shape.strategies:self_ref_field         unloaded [sqllocks-shape]
+  shape.strategies:self_referencing       unloaded [sqllocks-shape]
+  shape.strategies:sequence               unloaded [sqllocks-shape]
+  shape.strategies:temporal               unloaded [sqllocks-shape]
+  shape.strategies:uniform                unloaded [sqllocks-shape]
+  shape.strategies:uuid                   unloaded [sqllocks-shape]
+  shape.strategies:weighted_enum          unloaded [sqllocks-shape]
+  shape.stream_sources:eventhubs          unloaded [sqllocks-shape-eventhubs]
+  shape.stream_sources:kafka              unloaded [sqllocks-shape-kafka]
+  shape.transforms:cdm                    unloaded [sqllocks-shape]
+  shape.transforms:mask                   unloaded [sqllocks-shape]
+  shape.transforms:star                   unloaded [sqllocks-shape]
+</code></pre></div>
+</details>
+<p><a id="local-example-1"></a></p>
+<h3 id="example-2">Example 2<a class="headerlink" href="#example-2" title="Permanent link">&para;</a></h3>
+<!-- example: 1 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>shape<span class="w"> </span>from-dbt<span class="w"> </span>my_dbt_project<span class="w"> </span>-o<span class="w"> </span>shop.gen.json<span class="w">          </span><span class="c1"># a project directory</span>
+shape<span class="w"> </span>from-dbt<span class="w"> </span>my_dbt_project/target/manifest.json<span class="w"> </span>-o<span class="w"> </span>shop.gen.json<span class="w">    </span><span class="c1"># or a manifest</span>
+shape<span class="w"> </span>from-dbt<span class="w"> </span>my_dbt_project/models/staging/_sources.yml<span class="w"> </span>-o<span class="w"> </span>shop.gen.json
+shape<span class="w"> </span>from-dbt<span class="w"> </span>my_dbt_project<span class="w"> </span>--select<span class="w"> </span>model<span class="w">            </span><span class="c1"># generate the models instead</span>
+shape<span class="w"> </span>from-dbt<span class="w"> </span>my_dbt_project<span class="w"> </span>--profile<span class="w"> </span>day1.shape<span class="w">      </span><span class="c1"># weight the enums by a profile</span>
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>Shape dbt import
+
+  Output: shop.gen.json
+  Metadata: shop.gen.dbt-meta.json
+  Tables: 3
+  Relationships: 2
+  raw_customers: 3 columns (PK: customer_id)
+  raw_orders: 4 columns (PK: order_id)
+  raw_payments: 4 columns (PK: payment_id)
+Shape dbt import
+
+  Output: shop.gen.json
+  Metadata: shop.gen.dbt-meta.json
+  Tables: 3
+  Relationships: 2
+  raw_customers: 3 columns (PK: customer_id)
+  raw_orders: 4 columns (PK: order_id)
+  raw_payments: 4 columns (PK: payment_id)
+Shape dbt import
+
+  Output: shop.gen.json
+  Metadata: shop.gen.dbt-meta.json
+  Tables: 3
+  Relationships: 2
+  raw_customers: 3 columns (PK: customer_id)
+  raw_orders: 4 columns (PK: order_id)
+  raw_payments: 4 columns (PK: payment_id)
+Shape dbt import
+
+  Output: dbt_import.gen.json
+  Metadata: dbt_import.gen.dbt-meta.json
+  Tables: 5
+  Relationships: 1
+  customers: 7 columns (PK: customer_id)
+  orders: 5 columns (PK: order_id)
+  stg_customers: 0 columns
+  stg_orders: 0 columns
+  stg_payments: 0 columns
+shape: note: day1.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+Shape dbt import
+
+  Output: dbt_import.gen.json
+  Metadata: dbt_import.gen.dbt-meta.json
+  Tables: 3
+  Relationships: 2
+  raw_customers: 3 columns (PK: customer_id)
+  raw_orders: 4 columns (PK: order_id)
+  raw_payments: 4 columns (PK: payment_id)
+</code></pre></div>
+</details>
+<p><a id="local-example-2"></a></p>
+<h3 id="example-3">Example 3<a class="headerlink" href="#example-3" title="Permanent link">&para;</a></h3>
+<!-- example: 2 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>shape<span class="w"> </span>to-dbt-tests<span class="w"> </span>orders.contract.json<span class="w"> </span>--model<span class="w"> </span>orders<span class="w"> </span>-o<span class="w"> </span>models/marts/_shape_tests.yml
+shape<span class="w"> </span>to-dbt-tests<span class="w"> </span>marts.shape<span class="w"> </span>-o<span class="w"> </span>models/marts/_marts.yml<span class="w"> </span>--merge<span class="w"> </span>models/marts/_marts.yml<span class="w"> </span>--distribution
+shape<span class="w"> </span>to-dbt-tests<span class="w"> </span>contract.json<span class="w"> </span>--kind<span class="w"> </span>sources<span class="w"> </span>--source-name<span class="w"> </span>raw<span class="w"> </span>--model<span class="w"> </span>orders<span class="w"> </span>-o<span class="w"> </span>models/staging/_sources.yml<span class="w"> </span>--merge<span class="w"> </span>models/staging/_sources.yml
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>Wrote models/marts/_shape_tests.yml
+These tests need dbt packages; add to packages.yml and run `dbt deps`:
+packages:
+- package: dbt-labs/dbt_utils
+  version:
+  - '&gt;=1.1.0'
+  - &lt;2.0.0
+
+shape: note: marts.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+Wrote models/marts/_marts.yml
+These tests need dbt packages; add to packages.yml and run `dbt deps`:
+packages:
+- package: dbt-labs/dbt_utils
+  version:
+  - '&gt;=1.1.0'
+  - &lt;2.0.0
+- package: metaplane/dbt_expectations
+  version:
+  - '&gt;=0.10.0'
+  - &lt;0.11.0
+
+  note: orders.order_id.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.customer_id.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.customer_email.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.status.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.amount.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.amount.distribution: dbt tests cannot state it; kept as meta, not tested
+  note: orders.order_total.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.order_total.distribution: dbt tests cannot state it; kept as meta, not tested
+  note: orders.placed_at.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.shipped_at.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.order_date.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.discount_code.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.is_gift.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.region.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.tier.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.churned.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.zip.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.city.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.state.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.country.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.iban.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.notes.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.token.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.ssn.dtype: dbt tests cannot state it; kept as meta, not tested
+  note: orders.salary.dtype: dbt tests cannot state it; kept as meta, not tested
+Wrote models/staging/_sources.yml
+These tests need dbt packages; add to packages.yml and run `dbt deps`:
+packages:
+- package: dbt-labs/dbt_utils
+  version:
+  - '&gt;=1.1.0'
+  - &lt;2.0.0
+</code></pre></div>
+</details>
+<p><a id="local-example-4"></a></p>
+<h3 id="example-5">Example 5<a class="headerlink" href="#example-5" title="Permanent link">&para;</a></h3>
+<!-- example: 4 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>shape<span class="w"> </span>dbt-seeds<span class="w"> </span>shop.gen.json<span class="w"> </span>--project<span class="w"> </span>my_dbt_project<span class="w"> </span>--rows<span class="w"> </span><span class="nv">raw_orders</span><span class="o">=</span><span class="m">2000</span><span class="w"> </span>--dialect<span class="w"> </span>duckdb<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--metadata<span class="w"> </span>shop.gen.dbt-meta.json
+dbt<span class="w"> </span>build<span class="w"> </span>--project-dir<span class="w"> </span>my_dbt_project<span class="w"> </span>--profiles-dir<span class="w"> </span>my_dbt_project
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>  raw_customers: 1,000 rows -&gt; seeds/raw_customers.csv
+  raw_orders: 2,000 rows -&gt; seeds/raw_orders.csv
+  raw_payments: 12,500 rows -&gt; seeds/raw_payments.csv
+Seeds written to my_dbt_project/seeds; run `dbt seed` or `dbt build`
+17:28:10  Running with dbt=1.12.5
+17:28:11  Registered adapter: duckdb=1.11.0
+17:28:11  Found 5 models, 23 data tests, 3 seeds, 3 sources, 883 macros
+17:28:11  
+17:28:11  Concurrency: 1 threads (target='dev')
+17:28:11  
+17:28:12  1 of 31 START seed file main.raw_customers ..................................... [RUN]
+17:28:12  1 of 31 OK loaded seed file main.raw_customers ................................. [INSERT 1000 in 0.08s]
+17:28:12  2 of 31 START seed file main.raw_orders ........................................ [RUN]
+17:28:12  2 of 31 OK loaded seed file main.raw_orders .................................... [INSERT 2000 in 0.08s]
+17:28:12  3 of 31 START seed file main.raw_payments ...................................... [RUN]
+17:28:12  3 of 31 OK loaded seed file main.raw_payments .................................. [INSERT 12500 in 0.19s]
+17:28:12  4 of 31 START test source_accepted_values_raw_raw_orders_status__placed__shipped__completed__return_pending__returned  [RUN]
+17:28:12  4 of 31 PASS source_accepted_values_raw_raw_orders_status__placed__shipped__completed__return_pending__returned  [PASS in 0.07s]
+17:28:12  5 of 31 START test source_accepted_values_raw_raw_payments_payment_method__credit_card__coupon__bank_transfer__gift_card  [RUN]
+17:28:12  5 of 31 PASS source_accepted_values_raw_raw_payments_payment_method__credit_card__coupon__bank_transfer__gift_card  [PASS in 0.03s]
+17:28:12  6 of 31 START test source_not_null_raw_raw_customers_customer_id ............... [RUN]
+17:28:12  6 of 31 PASS source_not_null_raw_raw_customers_customer_id ..................... [PASS in 0.02s]
+17:28:12  7 of 31 START test source_not_null_raw_raw_orders_customer_id .................. [RUN]
+17:28:12  7 of 31 PASS source_not_null_raw_raw_orders_customer_id ........................ [PASS in 0.02s]
+17:28:12  8 of 31 START test source_not_null_raw_raw_orders_order_date ................... [RUN]
+17:28:12  8 of 31 PASS source_not_null_raw_raw_orders_order_date ......................... [PASS in 0.02s]
+17:28:12  9 of 31 START test source_not_null_raw_raw_orders_order_id ..................... [RUN]
+17:28:12  9 of 31 PASS source_not_null_raw_raw_orders_order_id ........................... [PASS in 0.02s]
+17:28:12  10 of 31 START test source_not_null_raw_raw_orders_status ...................... [RUN]
+17:28:12  10 of 31 PASS source_not_null_raw_raw_orders_status ............................ [PASS in 0.02s]
+17:28:12  11 of 31 START test source_not_null_raw_raw_payments_amount .................... [RUN]
+17:28:12  11 of 31 PASS source_not_null_raw_raw_payments_amount .......................... [PASS in 0.02s]
+17:28:12  12 of 31 START test source_not_null_raw_raw_payments_order_id .................. [RUN]
+17:28:12  12 of 31 PASS source_not_null_raw_raw_payments_order_id ........................ [PASS in 0.02s]
+17:28:12  13 of 31 START test source_not_null_raw_raw_payments_payment_id ................ [RUN]
+17:28:12  13 of 31 PASS source_not_null_raw_raw_payments_payment_id ...................... [PASS in 0.02s]
+17:28:12  14 of 31 START test source_not_null_raw_raw_payments_payment_method ............ [RUN]
+17:28:12  14 of 31 PASS source_not_null_raw_raw_payments_payment_method .................. [PASS in 0.02s]
+17:28:12  15 of 31 START test source_relationships_raw_raw_orders_customer_id__customer_id__source_raw_raw_customers_  [RUN]
+17:28:12  15 of 31 PASS source_relationships_raw_raw_orders_customer_id__customer_id__source_raw_raw_customers_  [PASS in 0.03s]
+17:28:12  16 of 31 START test source_relationships_raw_raw_payments_order_id__order_id__source_raw_raw_orders_  [RUN]
+17:28:12  16 of 31 PASS source_relationships_raw_raw_payments_order_id__order_id__source_raw_raw_orders_  [PASS in 0.03s]
+17:28:12  17 of 31 START test source_unique_raw_raw_customers_customer_id ................ [RUN]
+17:28:12  17 of 31 PASS source_unique_raw_raw_customers_customer_id ...................... [PASS in 0.02s]
+17:28:12  18 of 31 START test source_unique_raw_raw_orders_order_id ...................... [RUN]
+17:28:12  18 of 31 PASS source_unique_raw_raw_orders_order_id ............................ [PASS in 0.02s]
+17:28:12  19 of 31 START test source_unique_raw_raw_payments_payment_id .................. [RUN]
+17:28:12  19 of 31 PASS source_unique_raw_raw_payments_payment_id ........................ [PASS in 0.02s]
+17:28:12  20 of 31 START sql view model main.stg_customers ............................... [RUN]
+17:28:12  20 of 31 OK created sql view model main.stg_customers .......................... [OK in 0.05s]
+17:28:12  21 of 31 START sql view model main.stg_orders .................................. [RUN]
+17:28:12  21 of 31 OK created sql view model main.stg_orders ............................. [OK in 0.02s]
+17:28:12  22 of 31 START sql view model main.stg_payments ................................ [RUN]
+17:28:12  22 of 31 OK created sql view model main.stg_payments ........................... [OK in 0.02s]
+17:28:12  23 of 31 START sql table model main.orders ..................................... [RUN]
+17:28:13  23 of 31 OK created sql table model main.orders ................................ [OK in 0.12s]
+17:28:13  24 of 31 START test accepted_values_orders_status__placed__shipped__completed__return_pending__returned  [RUN]
+17:28:13  24 of 31 PASS accepted_values_orders_status__placed__shipped__completed__return_pending__returned  [PASS in 0.02s]
+17:28:13  25 of 31 START test not_null_orders_customer_id ................................ [RUN]
+17:28:13  25 of 31 PASS not_null_orders_customer_id ...................................... [PASS in 0.02s]
+17:28:13  26 of 31 START test not_null_orders_order_id ................................... [RUN]
+17:28:13  26 of 31 PASS not_null_orders_order_id ......................................... [PASS in 0.02s]
+17:28:13  27 of 31 START test unique_orders_order_id ..................................... [RUN]
+17:28:13  27 of 31 PASS unique_orders_order_id ........................................... [PASS in 0.02s]
+17:28:13  28 of 31 START sql table model main.customers .................................. [RUN]
+17:28:13  28 of 31 OK created sql table model main.customers ............................. [OK in 0.04s]
+17:28:13  29 of 31 START test not_null_customers_customer_id ............................. [RUN]
+17:28:13  29 of 31 PASS not_null_customers_customer_id ................................... [PASS in 0.02s]
+17:28:13  30 of 31 START test relationships_orders_customer_id__customer_id__ref_customers_  [RUN]
+17:28:13  30 of 31 PASS relationships_orders_customer_id__customer_id__ref_customers_ .... [PASS in 0.02s]
+17:28:13  31 of 31 START test unique_customers_customer_id ............................... [RUN]
+17:28:13  31 of 31 PASS unique_customers_customer_id ..................................... [PASS in 0.02s]
+17:28:13  
+17:28:13  Finished running 3 seeds, 2 table models, 23 data tests, 3 view models in 0 hours 0 minutes and 1.28 seconds (1.28s).
+17:28:13  
+17:28:13  Completed successfully
+17:28:13  
+17:28:13  Done. PASS=31 WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=31
+</code></pre></div>
+</details>
+<p><a id="local-example-6"></a></p>
+<h3 id="example-7">Example 7<a class="headerlink" href="#example-7" title="Permanent link">&para;</a></h3>
+<!-- example: 6 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code><span class="nb">set</span><span class="w"> </span>-o<span class="w"> </span>pipefail
+pip<span class="w"> </span>install<span class="w"> </span>--quiet<span class="w"> </span>--no-deps<span class="w"> </span>--no-build-isolation<span class="w"> </span>-e<span class="w"> </span><span class="s2">"</span><span class="nv">$SHAPE_DOCS_REPO</span><span class="s2">"</span><span class="w"> </span>-e<span class="w"> </span><span class="s2">"</span><span class="nv">$SHAPE_DOCS_REPO</span><span class="s2">/plugins/shape-dbt"</span>
+python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-q<span class="w"> </span>-m<span class="w"> </span><span class="s2">"not dbt"</span><span class="w"> </span>plugins/shape-dbt/tests<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-E<span class="w"> </span><span class="s1">'s/( in [0-9]+(\.[0-9]+)?s) \([0-9]+:[0-9]{2}:[0-9]{2}\)$/\1/'</span><span class="w"> </span><span class="c1"># no dbt needed</span>
+python<span class="w"> </span>-c<span class="w"> </span><span class="s1">'import dbt; print("dbt-duckdb is installed")'</span><span class="w">                               </span><span class="c1"># the dbt job in CI installs it; core never does</span>
+python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>-q<span class="w"> </span>-m<span class="w"> </span>dbt<span class="w"> </span>plugins/shape-dbt/tests<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span>-E<span class="w"> </span><span class="s1">'s/( in [0-9]+(\.[0-9]+)?s) \([0-9]+:[0-9]{2}:[0-9]{2}\)$/\1/'</span><span class="w"> </span><span class="c1"># dbt build against DuckDB</span>
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>............................................................................................ [ 85%]
+................                                                                             [100%]
+========================================= warnings summary =========================================
+plugins/shape-dbt/tests/test_report.py::test_the_cli_computes_the_check_and_the_drift_from_profiles
+  &lt;checkout&gt;/plugins/shape-dbt/src/shape_dbt/commands.py:353: ArtifactNotVerifiedWarning: /tmp/pytest-of-agent/pytest-14/test_the_cli_computes_the_chec0/now.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    current = shape.load(args.profile)
+
+plugins/shape-dbt/tests/test_report.py::test_the_cli_computes_the_check_and_the_drift_from_profiles
+  &lt;checkout&gt;/plugins/shape-dbt/src/shape_dbt/commands.py:357: ArtifactNotVerifiedWarning: /tmp/pytest-of-agent/pytest-14/test_the_cli_computes_the_chec0/base.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    drift = shape.diff(shape.load(args.baseline), current).to_dict()
+
+plugins/shape-dbt/tests/test_to_dbt_tests.py::test_the_cli_compiles_a_profile_with_distribution_bounds
+  &lt;checkout&gt;/plugins/shape-dbt/src/shape_dbt/commands.py:194: ArtifactNotVerifiedWarning: /tmp/pytest-of-agent/pytest-14/test_the_cli_compiles_a_profil0/orders.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    profile = shape.load(src)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+108 passed, 7 deselected, 3 warnings in 4.16s
+dbt-duckdb is installed
+.......                                                                                      [100%]
+========================================= warnings summary =========================================
+plugins/shape-dbt/tests/test_dbt_build.py::test_a_failed_dbt_test_and_a_shape_drift_finding_appear_in_one_report
+  &lt;checkout&gt;/plugins/shape-dbt/src/shape_dbt/commands.py:353: ArtifactNotVerifiedWarning: /tmp/pytest-of-agent/pytest-15/jaffle0/current.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    current = shape.load(args.profile)
+
+plugins/shape-dbt/tests/test_dbt_build.py::test_a_failed_dbt_test_and_a_shape_drift_finding_appear_in_one_report
+  &lt;checkout&gt;/plugins/shape-dbt/src/shape_dbt/commands.py:357: ArtifactNotVerifiedWarning: /tmp/pytest-of-agent/pytest-15/jaffle0/baseline.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+    drift = shape.diff(shape.load(args.baseline), current).to_dict()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+7 passed, 108 deselected, 2 warnings in 16.64s
+</code></pre></div>
+</details>
+<p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+dbt&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fv0.9.3%2FDBT%2F">Report a problem with this page</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  <div class="md-copyright__highlight">Shape by SQLLocks</div>
+  <div>Copyright SQLLocks. Released under the MIT license.</div>
+  <nav class="shape-footer-links" aria-label="Website, project and support">
+    <a href="https://shapedata.ai/">shapedata.ai</a>
+    <a href="https://github.com/sqllocks/shape">GitHub</a>
+    <a href="https://pypi.org/project/sqllocks-shape/">PyPI</a>
+    <a href="mailto:support@shapedata.ai">Support</a>
+    <a href="https://github.com/sqllocks/shape/blob/main/LICENSE">License (MIT)</a>
+    <a href="https://github.com/sqllocks/shape/blob/main/SECURITY.md">Security</a>
+  </nav>
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "navigation.indexes", "search.suggest", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../assets/javascripts/diagrams.js"></script>
+      
+    
+  </body>
+</html>

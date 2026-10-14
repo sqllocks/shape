@@ -1,0 +1,7864 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Shape as Code — a portable, executable description of how data behaves.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.shapedata.ai/v0.9.3/plugins/behavior/">
+      
+      
+        <link rel="prev" href="../simulation/">
+      
+      
+        <link rel="next" href="../healthcare-codes/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/brand/shape-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Behavior models - Shape by SQLLocks</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/brand.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+
+<link rel="alternate" type="text/plain" href="../../llms.txt" title="Documentation text index">
+<script src="../../assets/javascripts/mermaid.min.js"></script>
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#behavior-models-sqllocks-shape-behavior" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a class="md-header__button md-logo" data-md-component="logo" href="../.." aria-label="Shape documentation home">
+      <img class="shape-logo-light" src="../../assets/brand/shape-logo.svg" alt="Shape">
+<img class="shape-logo-dark" src="../../assets/brand/shape-logo-white.svg" alt="Shape">
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Open navigation">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic"><span class="md-ellipsis">Documentation</span></div>
+        <div class="md-header__topic" data-md-component="header-topic"><span class="md-ellipsis">Behavior models</span></div>
+      </div>
+    </div>
+    <a class="shape-website-link" href="https://shapedata.ai/">shapedata.ai</a>
+    
+      <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <label class="md-header__button md-icon" for="__search" aria-label="Search documentation">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    <div class="md-header__source"><a href="https://github.com/sqllocks/shape" class="md-source" title="Source repository">sqllocks/shape</a></div>
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Shape by SQLLocks" class="md-nav__button md-logo" aria-label="Shape by SQLLocks" data-md-component="logo">
+      <img class="shape-logo-light" src="../../assets/brand/shape-logo.svg" alt="Shape">
+<img class="shape-logo-dark" src="../../assets/brand/shape-logo-white.svg" alt="Shape">
+    </a>
+    Shape by SQLLocks
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/sqllocks/shape" class="md-source" title="Source repository">sqllocks/shape</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Start here
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Start here
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../INSTALL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONCEPTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../GLOSSARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../LEARNING_PATHS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Learning paths
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../QUICKSTART/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TUTORIAL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Starter tutorials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Starter tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Starter tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/01-first-profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1 Your first profile
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/02-read-report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2 Read the report
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/03-drift/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3 Commit a shape and catch drift
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/04-contract/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4 Write a contract and check it
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/05-generate-profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5 Generate dev data from a profile
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/06-domain-duckdb/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6 Generate a domain into DuckDB
+  
+
+    
+  </span>
+  
+  
+    
+  
+  
+    <span class="md-status md-status--available"></span>
+  
+
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Understand your results
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Understand your results
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../READ_REPORT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HTML report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ANATOMY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Anatomy of a shape
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../DRIFT_RED/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    When drift goes red
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Profiling
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../SOURCES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PROFILING_NOTES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profiling notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PROFILE_MERGE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mergeable profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PROFILE_REGISTRY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Profile registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../FINGERPRINT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fingerprint
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../JOINT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Joint distributions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../FAIRNESS_AND_SKEW/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Slices and skew
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../EXPLAIN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explain and notebooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../DICTIONARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data dictionary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../SCORECARD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scorecards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../RESOLVE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Duplicate detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../DETECTIVE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data detective packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../REFERENCE_PACKS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference packs and validators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../DATASET_LIBRARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Public dataset library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts, checks and drift
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contracts, checks and drift
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../DRIFT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drift
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRACTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONSUMER_CONTRACTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Consumer contracts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CANARIES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Canaries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PARITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment parity
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../DRIFT_REPORT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Drift report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../VERIFY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verifying data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRACT_EMIT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Emitting a contract
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../RULES_TESTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing your rules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TESTING_WITH_SHAPE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing with Shape
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PROPOSALS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Proposals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PLANNED_CHANGES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Planned changes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Generation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../DESIGN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../GENERATION_ENGINE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../GENERATION_STRATEGIES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation strategies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../GENERATION_CALENDARS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calendars and timestamps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../GENERATION_SPEC/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation spec
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../GENERATION_STABILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../GENERATION_KERNEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generation kernel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../LOCALES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Locales
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../SCENARIO_PACKS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scenario packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../SCENARIO_LIBRARY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scenario library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../IMPORTERS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Schema importers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CHAOS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chaos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../GAMEDAY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Game days
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../FAILURE_MODES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Failure modes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../INCREMENTAL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Incremental data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TRANSFORMS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transforms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../SIMULATION_FILES_EVENTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulating files and events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../SCALE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Generating at scale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../FIDELITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fidelity report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../FIDELITY_TIERS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fidelity tiers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../REPORT_CARD/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report card
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Outputs and integration
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Outputs and integration
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../SINKS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sinks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../LANDING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Landing layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../EMIT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Emitting events
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../FABRIC_MIRROR/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric mirroring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../EXCEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Excel workbooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../DBT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    dbt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../BRIDGE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON bridge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../DEMO/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Demos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTAINER/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Container image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../FABRIC_PLATFORM/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric platform inventory
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CI/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shape in CI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PR_BOT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pull request check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../NOTIFICATIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Webhook notifications
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Projects and history
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Projects and history
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PROJECT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project file
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../REGISTRY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../HISTORY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    History tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../REPRODUCIBILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reproducibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Privacy and trust
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Privacy and trust
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PRIVACY_MODEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Privacy model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../MASK/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Masking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../VAULT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Value vault
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../SHARE_BUNDLE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Safe-to-share bundle
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../SIGNING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../THREAT_MODEL/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../SECURITY_SPECIFICATION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugins
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Plugins
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../builtins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Built-in plugins
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../authoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Writing a plugin
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api-v1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugin API v1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../host/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plugin host
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stability promise
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../trust-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trust model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cloud-sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cloud sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fabric-auth/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric sign-in
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fabric-commands/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric commands
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fabric-writers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fabric writers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sqlserver/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SQL Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../streaming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../simulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Behavior models
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Behavior models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#run-the-local-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the local examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-concepts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Concepts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-module-document-native-format-shape-behavior1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Module document (native format shape-behavior/1)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Module document (native format shape-behavior/1)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-state-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 State types
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-transitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Transitions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Conditions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-python-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Python API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-population" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Population
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-events-and-the-extension-point" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Events and the extension point
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-importing-generic-module-framework-json" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Importing Generic Module Framework JSON
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. CLI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-domain-packs-on-the-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Domain packs on the engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Limits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-the-shapebehaviors-plugin-group" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. The shape.behaviors plugin group
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-primitives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Primitives
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. Primitives">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#111-event_sequencesteps-dropout-gap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.1 event_sequence(steps, dropout, gap)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#112-telemetry_seriesinterval-unit-level-noise-drift-missing_rate-stuck_rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.2 telemetry_series(interval, unit, level, noise, drift, missing_rate, stuck_rate)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#113-transaction_streamrate-amount-refund_rate-reversal_rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.3 transaction_stream(rate, amount, refund_rate, reversal_rate)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#114-file_arrivalschedule-late_rate-late_delay-missing_rate-duplicate_rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.4 file_arrival(schedule, late_rate, late_delay, missing_rate, duplicate_rate)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#115-entity_lifecyclestates-update_rate-delete_rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.5 entity_lifecycle(states, update_rate, delete_rate)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#116-the-parameters-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.6 The parameters file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#117-primitives-and-the-table-level-simulators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.7 Primitives and the table-level simulators
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-local-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete local run
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Complete local run">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 2
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 13
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 14
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 16
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-17" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 17
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../healthcare-codes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Healthcare code sets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../healthcare-standards/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Healthcare standards
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../integrations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Integrations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12" >
+        
+          
+          <label class="md-nav__link" for="__nav_12" id="__nav_12_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CLI/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command line
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI reference (generated)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CLI_STABILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../EXIT_CODES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exit codes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../API/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../API_STABILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/performance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance (generated)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PERFORMANCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release regression benchmarks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_12_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_12_9" id="__nav_12_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specifications
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_12_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_12_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specifications
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specs/SHAPE_MODEL_V2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shape model v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specs/SHAPE_2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Normative contract v2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specs/SHAPE_ARTIFACT_SPEC/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifact specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specs/STATE_AND_COMPATIBILITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State and compatibility
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../specs/STREAMING_SEMANTICS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Streaming semantics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../MODELS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API generated
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Project
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../PRODUCT_ARCHITECTURE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Product architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../RELEASE_POLICY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release policy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../RELEASE_CHECKLIST/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release checklist
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/release-0.9.1-verify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release 0.9.1 tag and digest check
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../V1_DONE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Definition of done for 1.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Help and trust
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Help and trust
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../TROUBLESHOOTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../FAQ/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../KNOWN_LIMITATIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Known limitations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../WHAT_LEAVES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    What leaves my machine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../LICENSING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Licensing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../DECISIONS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Public owner decisions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../evidence/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Published receipts
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_14_7" id="__nav_14_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_14_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Published receipts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/vscode-install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installed VSIX and real editor receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/live-fidelity-measurement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Live fidelity overhead — committed local measurement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/allocator-measurement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allocator policy — committed product A/B measurement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/local-delta-doctor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Delta doctor receipt — CLI example 5
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/snowflake-write/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Snowflake write receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/databricks-write/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Databricks write receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/kerberos-live/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kerberos keytab sign-in — Owner-run receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/semantic-model-notebook/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Semantic model profiling in a Fabric notebook — Owner-run receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/postgresql-export-profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PostgreSQL export and profile receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/mysql-export-profile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL export and profile receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/postgresql-live/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PostgreSQL 17 (local Docker, reached from the VM over the Hyper-V network) — Owner-run receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/mysql-live/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL 8.4 (local Docker), over TLS with the server's own CA — Owner-run receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/github-action-pass/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hosted GitHub Action pass receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/github-action-drift/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hosted GitHub Action drift receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/github-action-ruleset/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hosted GitHub Action required-check receipt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/doctor-additional-environments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Doctor additional-environment receipts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/delta-extension-fallback/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fresh local Delta extension installation and real fallback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../SECURITY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../databases/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platforms
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_15" id="__nav_15_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_15">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Platforms
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../databases/duckdb/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DuckDB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../databases/postgresql/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PostgreSQL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../databases/mysql/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MySQL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../databases/snowflake/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Snowflake
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../databases/databricks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Databricks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../VSCODE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VS Code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../GITHUB_ACTION/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GitHub Action
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_16" >
+        
+          
+          <label class="md-nav__link" for="__nav_16" id="__nav_16_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Community
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_16_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_16">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Community
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CONTRIBUTING/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/DOCS_STYLE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs style
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/EXAMPLES/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tested examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../GOVERNANCE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Governance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CODE_OF_CONDUCT/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code of conduct
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../CHANGELOG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../POSTS/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Posts and videos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#run-the-local-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Run the local examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-concepts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Concepts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-module-document-native-format-shape-behavior1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Module document (native format shape-behavior/1)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Module document (native format shape-behavior/1)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-state-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 State types
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-transitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Transitions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Conditions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-python-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Python API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-population" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Population
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-events-and-the-extension-point" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Events and the extension point
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-importing-generic-module-framework-json" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Importing Generic Module Framework JSON
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. CLI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-domain-packs-on-the-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Domain packs on the engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Limits
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-the-shapebehaviors-plugin-group" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. The shape.behaviors plugin group
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-primitives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Primitives
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="11. Primitives">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#111-event_sequencesteps-dropout-gap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.1 event_sequence(steps, dropout, gap)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#112-telemetry_seriesinterval-unit-level-noise-drift-missing_rate-stuck_rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.2 telemetry_series(interval, unit, level, noise, drift, missing_rate, stuck_rate)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#113-transaction_streamrate-amount-refund_rate-reversal_rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.3 transaction_stream(rate, amount, refund_rate, reversal_rate)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#114-file_arrivalschedule-late_rate-late_delay-missing_rate-duplicate_rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.4 file_arrival(schedule, late_rate, late_delay, missing_rate, duplicate_rate)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#115-entity_lifecyclestates-update_rate-delete_rate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.5 entity_lifecycle(states, update_rate, delete_rate)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#116-the-parameters-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.6 The parameters file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#117-primitives-and-the-table-level-simulators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11.7 Primitives and the table-level simulators
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-local-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete local run
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Complete local run">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 2
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-13" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 13
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-14" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 14
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 16
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-17" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example 17
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="behavior-models-sqllocks-shape-behavior">Behavior models: <code>sqllocks-shape-behavior</code><a class="headerlink" href="#behavior-models-sqllocks-shape-behavior" title="Permanent link">&para;</a></h1>
+<p>Status: experimental.</p>
+<h2 id="run-the-local-examples">Run the local examples<a class="headerlink" href="#run-the-local-examples" title="Permanent link">&para;</a></h2>
+<p>The examples below use disposable local files from this checkout. The <a href="../../contributing/EXAMPLES/">example test environment</a> sets <code>SHAPE_DOCS_REPO</code>, installs core and plugins from source, and prepares local services. Run each page in its own empty directory, in the order shown. Complete output appears beneath each command. Elapsed times, temporary paths, job IDs and generated signing keys vary; the harness validates those runtime fields and compares the remaining output exactly.</p>
+<!-- example: 999 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>python<span class="w"> </span><span class="s2">"</span><span class="nv">$SHAPE_DOCS_REPO</span><span class="s2">/scripts/docs_example_setup.py"</span><span class="w"> </span>behavior
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>Prepared local fixtures for behavior
+</code></pre></div>
+</details>
+<p>A domain-agnostic engine for things that <em>happen to entities over time</em>: a subscriber trials,
+pays, pauses and cancels; a pump runs, degrades, fails and is repaired; a patient is screened,
+diagnosed, treated and followed up. You describe the process as a <strong>state machine</strong> in a small
+declarative document, run it for a population on a <strong>virtual clock</strong>, and get a stream of
+timestamped <strong>events</strong> as an Arrow table. A domain pack turns those events into its tables
+(claims, invoices, work orders). Nothing in the engine knows about any one domain.</p>
+<div class="highlight"><pre><span></span><code>module documents ──► Module ─┐
+                             ├─► Simulator (virtual clock, seed) ──► events (Arrow)
+Population (attributes) ─────┘                                  └──► entities (Arrow)
+</code></pre></div>
+<p>Status of this page: <strong>API v1, stable for domain packs to build on.</strong> The names below are the
+contract; the implementation behind them may get faster. Anything not listed here is private.</p>
+<p>Use <a href="../../TUTORIAL/">the tested starters</a> for local commands and complete output.</p>
+<p><a href="#local-example-1">Run this example</a>.</p>
+<h2 id="1-concepts">1. Concepts<a class="headerlink" href="#1-concepts" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>entity</strong></td>
+<td>One simulated thing (member, subscriber, machine). Integer id, arrival time, optional end time, attributes.</td>
+</tr>
+<tr>
+<td><strong>module</strong></td>
+<td>One state machine. Several modules run side by side for the same entity and talk to each other through shared attributes and the "active condition / medication" sets.</td>
+</tr>
+<tr>
+<td><strong>state</strong></td>
+<td>A node. Entering a state at time <em>t</em> applies its effect (emit an event, set an attribute, ...) and chooses the next state.</td>
+</tr>
+<tr>
+<td><strong>virtual clock</strong></td>
+<td>Time is an integer count of microseconds since 1970-01-01 (UTC). Nothing reads the wall clock. Delays add to it; the run stops at the <code>until</code> time you give.</td>
+</tr>
+<tr>
+<td><strong>event</strong></td>
+<td>One row: an entity entered a state that emits something.</td>
+</tr>
+</tbody>
+</table>
+<p>Time moves per entity: an entity's instances of all modules are processed strictly in time
+order (ties broken by module order), so a module can read what another module did earlier.
+Entities never interact with each other, which is what makes the run vectorizable, resumable
+and independent of how the population is split.</p>
+<h2 id="2-module-document-native-format-shape-behavior1">2. Module document (native format <code>shape-behavior/1</code>)<a class="headerlink" href="#2-module-document-native-format-shape-behavior1" title="Permanent link">&para;</a></h2>
+<p>JSON (or a Python <code>dict</code>). Minimal example:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shape-behavior/1"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"trial_to_paid"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"initial"</span><span class="p">:</span><span class="w"> </span><span class="s2">"start"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"attributes"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"plan"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"categorical"</span><span class="p">,</span><span class="w"> </span><span class="nt">"values"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"basic"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.7</span><span class="p">,</span><span class="w"> </span><span class="nt">"pro"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.3</span><span class="p">}}},</span>
+<span class="w">  </span><span class="nt">"states"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"start"</span><span class="p">:</span><span class="w">  </span><span class="p">{</span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"initial"</span><span class="p">,</span><span class="w"> </span><span class="nt">"transition"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"direct"</span><span class="p">:</span><span class="w"> </span><span class="s2">"trial"</span><span class="p">}},</span>
+<span class="w">    </span><span class="nt">"trial"</span><span class="p">:</span><span class="w">  </span><span class="p">{</span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"delay"</span><span class="p">,</span><span class="w"> </span><span class="nt">"delay"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"exact"</span><span class="p">,</span><span class="w"> </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span><span class="w"> </span><span class="nt">"unit"</span><span class="p">:</span><span class="w"> </span><span class="s2">"days"</span><span class="p">},</span>
+<span class="w">               </span><span class="nt">"transition"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"distributed"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"p"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.4</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"paid"</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="nt">"p"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.6</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"gone"</span><span class="p">}]}},</span>
+<span class="w">    </span><span class="nt">"paid"</span><span class="p">:</span><span class="w">   </span><span class="p">{</span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"event"</span><span class="p">,</span><span class="w"> </span><span class="nt">"event"</span><span class="p">:</span><span class="w"> </span><span class="s2">"became_customer"</span><span class="p">,</span><span class="w"> </span><span class="nt">"transition"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"direct"</span><span class="p">:</span><span class="w"> </span><span class="s2">"end"</span><span class="p">}},</span>
+<span class="w">    </span><span class="nt">"gone"</span><span class="p">:</span><span class="w">   </span><span class="p">{</span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"event"</span><span class="p">,</span><span class="w"> </span><span class="nt">"event"</span><span class="p">:</span><span class="w"> </span><span class="s2">"trial_lapsed"</span><span class="p">,</span><span class="w"> </span><span class="nt">"transition"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"direct"</span><span class="p">:</span><span class="w"> </span><span class="s2">"end"</span><span class="p">}},</span>
+<span class="w">    </span><span class="nt">"end"</span><span class="p">:</span><span class="w">    </span><span class="p">{</span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"terminal"</span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Top-level keys: <code>format</code>, <code>name</code>, <code>initial</code> (state entered on arrival; default: the only state of
+type <code>initial</code>), <code>attributes</code> (population attributes this module needs, merged across modules,
+section 4), <code>states</code>, optional <code>remarks</code>.</p>
+<h3 id="21-state-types">2.1 State types<a class="headerlink" href="#21-state-types" title="Permanent link">&para;</a></h3>
+<p>Every state may carry <code>"remarks"</code>. All but <code>terminal</code> and <code>death</code> have a <code>transition</code>.</p>
+<table>
+<thead>
+<tr>
+<th><code>type</code></th>
+<th>Fields</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>initial</code></td>
+<td></td>
+<td>Entry point. No event.</td>
+</tr>
+<tr>
+<td><code>terminal</code></td>
+<td></td>
+<td>The instance stops. No event.</td>
+</tr>
+<tr>
+<td><code>simple</code></td>
+<td></td>
+<td>Pass-through. No event.</td>
+</tr>
+<tr>
+<td><code>delay</code></td>
+<td><code>delay</code></td>
+<td>The next state is entered after the delay. No event.</td>
+</tr>
+<tr>
+<td><code>guard</code></td>
+<td><code>condition</code>, optional <code>poll</code></td>
+<td>Waits until the condition holds, then transitions. A condition that depends only on age is waited for exactly; any other condition is re-tested every <code>poll</code> (default: the simulator's <code>poll</code>, 7 days). No event.</td>
+</tr>
+<tr>
+<td><code>set_attribute</code></td>
+<td><code>attribute</code>, <code>value</code> or <code>distribution</code></td>
+<td>Sets an entity attribute. No event.</td>
+</tr>
+<tr>
+<td><code>counter</code></td>
+<td><code>attribute</code>, <code>action</code> (<code>increment</code>/<code>decrement</code>), <code>amount</code></td>
+<td>Adds to a numeric attribute. No event.</td>
+</tr>
+<tr>
+<td><code>encounter</code></td>
+<td><code>codes</code>, <code>encounter_class</code></td>
+<td>Event <code>kind=encounter</code>.</td>
+</tr>
+<tr>
+<td><code>encounter_end</code></td>
+<td></td>
+<td>Event <code>kind=encounter_end</code>.</td>
+</tr>
+<tr>
+<td><code>condition_onset</code></td>
+<td><code>codes</code> (first one is used), <code>assign_to_attribute</code></td>
+<td>Event <code>kind=condition_onset</code>; the code becomes <strong>active</strong> for the entity.</td>
+</tr>
+<tr>
+<td><code>condition_end</code></td>
+<td><code>condition_onset</code> (state name) or <code>codes</code> or <code>referenced_by_attribute</code></td>
+<td>Event <code>kind=condition_end</code>; the code stops being active.</td>
+</tr>
+<tr>
+<td><code>medication_order</code></td>
+<td><code>codes</code>, <code>reason</code>, <code>assign_to_attribute</code></td>
+<td>Event <code>kind=medication_order</code>; active until ended.</td>
+</tr>
+<tr>
+<td><code>medication_end</code></td>
+<td><code>medication_order</code> (state name) or <code>codes</code> or <code>referenced_by_attribute</code></td>
+<td>Event <code>kind=medication_end</code>.</td>
+</tr>
+<tr>
+<td><code>procedure</code></td>
+<td><code>codes</code>, <code>reason</code></td>
+<td>Event <code>kind=procedure</code>.</td>
+</tr>
+<tr>
+<td><code>observation</code></td>
+<td><code>codes</code>, <code>unit</code>, one of <code>exact</code>, <code>range</code>, <code>attribute</code></td>
+<td>Event <code>kind=observation</code> with <code>value</code>.</td>
+</tr>
+<tr>
+<td><code>death</code></td>
+<td></td>
+<td>Event <code>kind=death</code>; the entity ends now.</td>
+</tr>
+<tr>
+<td><code>event</code></td>
+<td><code>event</code> (name), <code>codes</code>, <code>value</code>/<code>value_from</code>, <code>text_from</code>, <code>payload</code></td>
+<td><strong>Domain event</strong> (section 5): event with <code>kind=&lt;event&gt;</code> for packs to turn into rows.</td>
+</tr>
+</tbody>
+</table>
+<p><code>codes</code> is a list of <code>{"system": "...", "code": "...", "display": "..."}</code>. Shape ships no
+terminology: you supply the codes (and the right to use them).</p>
+<p>Durations: <code>{"kind": "exact", "value": 30, "unit": "days"}</code>,
+<code>{"kind": "uniform", "low": 1, "high": 3, "unit": "weeks"}</code>,
+<code>{"kind": "exponential", "mean": 90, "unit": "days"}</code>,
+<code>{"kind": "gaussian", "mean": 30, "std": 5, "unit": "days"}</code> (negative draws clip to 0),
+<code>{"kind": "lognormal", "mu": 3.0, "sigma": 0.5, "unit": "days"}</code>. Units: <code>seconds</code>, <code>minutes</code>,
+<code>hours</code>, <code>days</code>, <code>weeks</code>, <code>months</code> (30.4375 days), <code>years</code> (365.25 days).</p>
+<h3 id="22-transitions">2.2 Transitions<a class="headerlink" href="#22-transitions" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">"direct"</span><span class="p">:</span><span class="w"> </span><span class="s2">"next"</span><span class="p">}</span>
+<span class="p">{</span><span class="nt">"distributed"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"p"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.3</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a"</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="nt">"p"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.7</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b"</span><span class="p">}]}</span>
+<span class="p">{</span><span class="nt">"conditional"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"if"</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;co</span><span class="kc">n</span><span class="err">di</span><span class="kc">t</span><span class="err">io</span><span class="kc">n</span><span class="err">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a"</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"default"</span><span class="p">}]}</span>
+<span class="p">{</span><span class="nt">"complex"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"if"</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;co</span><span class="kc">n</span><span class="err">di</span><span class="kc">t</span><span class="err">io</span><span class="kc">n</span><span class="err">&gt;</span><span class="p">,</span><span class="w"> </span><span class="nt">"distributed"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"p"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.2</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a"</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="nt">"p"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.8</span><span class="p">,</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"b"</span><span class="p">}]},</span>
+<span class="w">             </span><span class="p">{</span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"default"</span><span class="p">}]}</span>
+</code></pre></div>
+<p>Probabilities must sum to 1 (within 1e-6; the GMF importer normalizes and warns). A probability
+may be <code>{"attribute": "risk", "default": 0.1}</code> to read it from a numeric entity attribute. The
+transition is chosen when the state is entered; a <code>delay</code> then holds the entity before the chosen
+state is entered.</p>
+<h3 id="23-conditions">2.3 Conditions<a class="headerlink" href="#23-conditions" title="Permanent link">&para;</a></h3>
+<p><code>true</code>, <code>false</code>, <code>{"type": "attribute", "attribute": A, "op": OP, "value": V}</code> (OP is <code>==</code>, <code>!=</code>,
+<code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>, <code>is_nil</code>, <code>is_not_nil</code>), <code>{"type": "age", "op": OP, "value": 18,
+"unit": "years"}</code>, <code>{"type": "date", "op": OP, "value": "2024-01-01"}</code> (the virtual clock),
+<code>{"type": "active_condition", "codes": [...]}</code>, <code>{"type": "active_medication", "codes": [...]}</code>,
+<code>{"type": "and"|"or", "conditions": [...]}</code>, <code>{"type": "not", "condition": C}</code>,
+<code>{"type": "at_least"|"at_most", "minimum"/"maximum": N, "conditions": [...]}</code>.</p>
+<h2 id="3-python-api">3. Python API<a class="headerlink" href="#3-python-api" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">shape_behavior</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Module</span><span class="p">,</span> <span class="n">load_module</span><span class="p">,</span> <span class="n">Population</span><span class="p">,</span> <span class="n">SimConfig</span><span class="p">,</span> <span class="n">Simulator</span><span class="p">,</span> <span class="n">Checkpoint</span><span class="p">,</span>
+    <span class="n">import_gmf</span><span class="p">,</span> <span class="n">ImportResult</span><span class="p">,</span> <span class="n">register_state_type</span><span class="p">,</span> <span class="n">StateHandler</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>All of it imports without loading numpy or pyarrow; they load when a simulation runs.</p>
+<div class="highlight"><pre><span></span><code><span class="n">module</span> <span class="o">=</span> <span class="n">load_module</span><span class="p">(</span><span class="s2">"trial_to_paid.json"</span><span class="p">)</span>            <span class="c1"># path, dict or built-in example name</span>
+<span class="n">population</span> <span class="o">=</span> <span class="n">Population</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">100_000</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="s2">"2020-01-01"</span><span class="p">,</span>
+                        <span class="n">attributes</span><span class="o">=</span><span class="p">{</span><span class="s2">"gender"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"categorical"</span><span class="p">,</span> <span class="s2">"values"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"F"</span><span class="p">:</span> <span class="mf">.5</span><span class="p">,</span> <span class="s2">"M"</span><span class="p">:</span> <span class="mf">.5</span><span class="p">}}},</span>
+                        <span class="n">age_at_start</span><span class="o">=</span><span class="p">{</span><span class="s2">"kind"</span><span class="p">:</span> <span class="s2">"uniform"</span><span class="p">,</span> <span class="s2">"low"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"high"</span><span class="p">:</span> <span class="mi">90</span><span class="p">,</span> <span class="s2">"unit"</span><span class="p">:</span> <span class="s2">"years"</span><span class="p">})</span>
+<span class="n">sim</span> <span class="o">=</span> <span class="n">Simulator</span><span class="p">([</span><span class="n">module</span><span class="p">],</span> <span class="n">population</span><span class="p">,</span> <span class="n">SimConfig</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="mi">7</span><span class="p">))</span>
+
+<span class="n">year1</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">run_until</span><span class="p">(</span><span class="s2">"2021-01-01"</span><span class="p">)</span>     <span class="c1"># Events for (start, 2021-01-01]; an Arrow table</span>
+<span class="n">year2</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">run_until</span><span class="p">(</span><span class="s2">"2022-01-01"</span><span class="p">)</span>     <span class="c1"># continues exactly where the clock stopped</span>
+<span class="n">people</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">entities</span><span class="p">()</span>                 <span class="c1"># one row per entity: id, arrival, end, attributes</span>
+<span class="n">sim</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">()</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"run.ckpt.npz"</span><span class="p">)</span>   <span class="c1"># resume later, in another process:</span>
+<span class="n">sim</span> <span class="o">=</span> <span class="n">Simulator</span><span class="o">.</span><span class="n">resume</span><span class="p">(</span><span class="s2">"run.ckpt.npz"</span><span class="p">,</span> <span class="p">[</span><span class="n">module</span><span class="p">])</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Signature (v1)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>load_module(source, *, strict=False)</code></td>
+<td>A <code>Module</code> from a path, a <code>dict</code> or the name of a built-in example. Validates; raises <code>ModuleError</code> listing every problem.</td>
+</tr>
+<tr>
+<td><code>Module.to_dict()</code> / <code>Module.name</code> / <code>Module.digest()</code></td>
+<td>Canonical document; stable content hash (guards <code>resume</code>).</td>
+</tr>
+<tr>
+<td><code>Population(size, *, start, attributes=None, age_at_start=None, arrival=None, lifetime=None, first_id=0)</code></td>
+<td>Who is simulated (section 4).</td>
+</tr>
+<tr>
+<td><code>SimConfig(seed=0, poll="7 days")</code></td>
+<td>Seed and the guard polling interval.</td>
+</tr>
+<tr>
+<td><code>Simulator(modules, population, config=None)</code></td>
+<td>Builds the entity arrays. Cheap.</td>
+</tr>
+<tr>
+<td><code>Simulator.run_until(until) -&gt; pyarrow.Table</code></td>
+<td>Advances the virtual clock to <code>until</code> and returns the events with <code>time</code> in <code>(previous clock, until]</code>. Calling with an earlier or equal time returns an empty table.</td>
+</tr>
+<tr>
+<td><code>Simulator.entities() -&gt; pyarrow.Table</code></td>
+<td>Entity table at the current clock.</td>
+</tr>
+<tr>
+<td><code>Simulator.now</code></td>
+<td>The virtual clock, a <code>datetime</code>.</td>
+</tr>
+<tr>
+<td><code>Simulator.checkpoint() -&gt; Checkpoint</code>, <code>Checkpoint.save(path)</code>, <code>Checkpoint.load(path)</code>, <code>Simulator.resume(checkpoint_or_path, modules)</code></td>
+<td>Resumability. A checkpoint holds arrays only (no pickles); <code>resume</code> refuses modules whose digest differs.</td>
+</tr>
+<tr>
+<td><code>import_gmf(source, *, strict=False) -&gt; ImportResult</code></td>
+<td>Section 6.</td>
+</tr>
+<tr>
+<td><code>register_state_type(name, handler)</code></td>
+<td>Extension point (section 5).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Determinism.</strong> The same modules, population and seed give identical events, whatever the
+number of <code>run_until</code> calls, whether the run was resumed from a checkpoint, and however the
+population is split into id ranges. Every random draw is a pure function of
+<code>(seed, entity id, module, step, draw index)</code>; nothing depends on iteration order or batch size.
+Python's <code>hash()</code> and global random state are never used.</p>
+<h2 id="4-population">4. Population<a class="headerlink" href="#4-population" title="Permanent link">&para;</a></h2>
+<p><code>Population</code> fields:</p>
+<ul>
+<li><code>size</code>, <code>first_id</code> (ids are <code>first_id .. first_id + size - 1</code>; run id ranges separately to shard).</li>
+<li><code>start</code>: the virtual-clock origin (a date or datetime, UTC).</li>
+<li><code>attributes</code>: <code>{name: spec}</code> with <code>kind</code> one of <code>constant</code> (<code>value</code>), <code>categorical</code>
+  (<code>values</code>: weights), <code>uniform</code> (<code>low</code>, <code>high</code>), <code>normal</code> (<code>mean</code>, <code>std</code>, optional <code>min</code>,
+  <code>max</code>), <code>bernoulli</code> (<code>p</code>, stored 0/1), <code>lognormal</code> (<code>mu</code>, <code>sigma</code>). Numeric attributes are
+  <code>float64</code> (missing is NaN); categorical ones are text (missing is null).</li>
+<li><code>age_at_start</code>: a distribution in years, giving each entity a <code>born</code> time (builtin attribute
+  <code>age</code>, derived from the clock). Default: every entity born at <code>start</code>.</li>
+<li><code>arrival</code>: when the entity's modules begin: <code>{"kind": "at_start"}</code> (default) or
+  <code>{"kind": "uniform", "days": 365}</code> (spread over the window) or any duration distribution.</li>
+<li><code>lifetime</code>: duration distribution from arrival to the entity's end, or none.</li>
+</ul>
+<p>Modules may declare the <code>attributes</code> they need; a <code>Population</code> attribute of the same name wins.</p>
+<h2 id="5-events-and-the-extension-point">5. Events and the extension point<a class="headerlink" href="#5-events-and-the-extension-point" title="Permanent link">&para;</a></h2>
+<p><code>run_until</code> returns an Arrow table with a fixed schema (<code>shape_behavior.EVENT_SCHEMA</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>entity_id</code></td>
+<td>int64</td>
+<td></td>
+</tr>
+<tr>
+<td><code>seq</code></td>
+<td>int32</td>
+<td>Per-entity event number, 0-based; <code>(entity_id, seq)</code> is unique.</td>
+</tr>
+<tr>
+<td><code>time</code></td>
+<td>timestamp[us]</td>
+<td>When the entity entered the state.</td>
+</tr>
+<tr>
+<td><code>module</code></td>
+<td>string</td>
+<td></td>
+</tr>
+<tr>
+<td><code>state</code></td>
+<td>string</td>
+<td>State name; <code>condition_end</code>/<code>medication_end</code> carry the onset state in <code>ref</code>.</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td>string</td>
+<td><code>encounter</code>, <code>condition_onset</code>, ..., <code>death</code>, <code>entity_end</code>, or a domain event name.</td>
+</tr>
+<tr>
+<td><code>code</code>, <code>system</code>, <code>display</code></td>
+<td>string</td>
+<td>From the state's first code, nullable.</td>
+</tr>
+<tr>
+<td><code>ref</code></td>
+<td>string</td>
+<td>Referenced state (ends), nullable.</td>
+</tr>
+<tr>
+<td><code>value</code></td>
+<td>float64</td>
+<td>Observation value, <code>value_from</code> attribute or <code>value</code>, nullable.</td>
+</tr>
+<tr>
+<td><code>unit</code></td>
+<td>string</td>
+<td>Nullable.</td>
+</tr>
+<tr>
+<td><code>text</code></td>
+<td>string</td>
+<td><code>text_from</code> attribute, nullable.</td>
+</tr>
+<tr>
+<td><code>payload</code></td>
+<td>string</td>
+<td>The state's static <code>payload</code>, as JSON text, nullable.</td>
+</tr>
+</tbody>
+</table>
+<p>Sorted by <code>(time, entity_id, seq)</code>.</p>
+<p><strong>Domain events.</strong> A <code>type: "event"</code> state emits a row with <code>kind</code> = its <code>event</code> name and
+whatever <code>codes</code>, <code>value</code>/<code>value_from</code>, <code>text_from</code>, <code>payload</code> it declares. A claims pack writes
+modules with events such as <code>claim_submitted</code>, then derives claim, line and fill tables from the
+event table (typically with joins and the entities table). That is the whole contract between a
+behavior module and a domain pack.</p>
+<p><strong>New state types.</strong> <code>register_state_type(name, handler)</code> adds a type that modules can use as
+<code>"type": name</code>. A handler is a <code>StateHandler</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">StateHandler</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span> <span class="o">...</span>        <span class="c1"># problems, empty if fine</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">StateContext</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Emission</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>         <span class="c1"># vectorized</span>
+</code></pre></div>
+<p><code>StateContext</code> has <code>.state</code> (the state document), <code>.rows</code> (indices of the entities entering the
+state now), <code>.time</code> (their entry times, int64 µs), <code>.attribute(name)</code>/<code>.set_attribute(name,
+values)</code> (numpy arrays over <code>.rows</code>), <code>.uniform(k)</code> (the deterministic draw <em>k</em> for each row),
+<code>.age_years</code>. <code>Emission</code> is a set of equal-length arrays for the event columns above. Handlers
+get whole arrays, never single rows, and must be deterministic given <code>ctx</code>.</p>
+<h2 id="6-importing-generic-module-framework-json">6. Importing Generic Module Framework JSON<a class="headerlink" href="#6-importing-generic-module-framework-json" title="Permanent link">&para;</a></h2>
+<p><code>import_gmf</code> reads module files <strong>that you download yourself</strong> from the Generic Module
+Framework's open library (or write by hand). Shape does not ship them: their terminology
+(SNOMED CT, LOINC) is licensed separately from the modules themselves, so you are responsible for
+having the right to use the codes your modules contain.</p>
+<div class="highlight"><pre><span></span><code><span class="n">result</span> <span class="o">=</span> <span class="n">import_gmf</span><span class="p">(</span><span class="s2">"diabetes.json"</span><span class="p">)</span>        <span class="c1"># a path, a JSON string or a dict</span>
+<span class="n">result</span><span class="o">.</span><span class="n">module</span>        <span class="c1"># a Module, runnable like any other</span>
+<span class="n">result</span><span class="o">.</span><span class="n">unsupported</span>   <span class="c1"># [Unsupported(state="Insulin_Dose", type="Device", reason="...")]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">report</span><span class="p">())</span>
+</code></pre></div>
+<p>CLI: <code>shape behave import-gmf diabetes.json -o diabetes.shape-module.json</code> converts and prints the
+report; <code>shape behave run</code> accepts a GMF file directly.</p>
+<p>Supported (common subset): states <code>Initial</code>, <code>Terminal</code>, <code>Simple</code>, <code>Delay</code>, <code>Guard</code>,
+<code>SetAttribute</code>, <code>Counter</code>, <code>Encounter</code>, <code>EncounterEnd</code>, <code>ConditionOnset</code>, <code>ConditionEnd</code>,
+<code>MedicationOrder</code>, <code>MedicationEnd</code>, <code>Procedure</code>, <code>Observation</code>, <code>Death</code>; transitions <code>direct</code>,
+<code>distributed</code>, <code>conditional</code>, <code>complex</code>; conditions <code>True</code>, <code>False</code>, <code>Gender</code>, <code>Age</code>, <code>Date</code>,
+<code>Attribute</code>, <code>Active Condition</code>, <code>Active Medication</code>, <code>And</code>, <code>Or</code>, <code>Not</code>, <code>At Least</code>, <code>At Most</code>.
+Everything else is <strong>reported</strong>, never ignored silently: with <code>strict=False</code> (default) an
+unsupported state runs as a pass-through, an unsupported condition counts as false and an
+unsupported transition ends the module there, and each is listed in <code>result.unsupported</code>;
+with <code>strict=True</code> the first one raises <code>UnsupportedGmfError</code>.</p>
+<p>Mapping notes: GMF <code>Gender</code> reads the entity attribute <code>gender</code> (<code>"M"</code>/<code>"F"</code>), so a population
+for GMF modules should define it. A wellness <code>Encounter</code> is treated as immediate (reported as a
+warning). Distributed probabilities that do not sum to 1 are normalized (warning). GMF
+<code>Observation</code> and <code>Procedure</code> durations are not modelled.</p>
+<h2 id="7-cli">7. CLI<a class="headerlink" href="#7-cli" title="Permanent link">&para;</a></h2>
+<p>Use <a href="../../TUTORIAL/">the tested starters</a> for local commands and complete output.</p>
+<!-- example: 8 -->
+
+<p>Syntax reference. Replace the named arguments with your inputs.</p>
+<div class="highlight"><pre><span></span><code>shape behave run MODULES... --population N --years Y --seed S -o OUT
+      [--start 2020-01-01] [--population-spec FILE.json] [--window-years 1]
+      [--poll "7 days"] [--strict] [--params FILE.json]
+shape behave check MODULES...            # validate; exit 1 on problems
+shape behave import-gmf FILE [-o OUT.json] [--strict]
+shape behave examples [-o DIR]           # write the built-in example modules
+</code></pre></div>
+<p><code>MODULES</code> are native or GMF JSON files, or the built-in example names <code>subscription</code>,
+<code>equipment_maintenance</code>, <code>healthcare_screening</code>. <code>run</code> writes <code>OUT/events/part-NNNN.parquet</code> (one
+file per window, so memory stays bounded), <code>OUT/entities.parquet</code> and <code>OUT/run.json</code> (seed,
+modules and digests, counts, import report). Exit codes: 0 success, 1 invalid module, 2 usage
+error. <code>--params</code> is described in section 11; an unreadable or wrong parameters file is a usage
+error (exit 2).</p>
+<h2 id="8-domain-packs-on-the-engine">8. Domain packs on the engine<a class="headerlink" href="#8-domain-packs-on-the-engine" title="Permanent link">&para;</a></h2>
+<p>A domain pack (claims, invoices, work orders) ships module documents and turns the event table
+into its tables. It uses the engine through the public names of section 3 only:
+<code>load_module</code> / <code>Module</code>, <code>Population</code>, <code>Simulator</code> and the <code>EVENT_SCHEMA</code> columns. Clinical
+modules are written on this API in a domain pack; Shape ships no terminology, so a pack supplies
+(or asks the user for) the code sets it needs.</p>
+<h2 id="9-limits">9. Limits<a class="headerlink" href="#9-limits" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Entities do not interact with each other.</li>
+<li>One event per state entry; durations of procedures and encounters are not modelled.</li>
+<li>Active condition/medication sets hold up to 64 distinct codes each.</li>
+<li>Guards on non-age conditions are polled, so an event can occur up to one <code>poll</code> late.</li>
+</ul>
+<h2 id="10-the-shapebehaviors-plugin-group">10. The <code>shape.behaviors</code> plugin group<a class="headerlink" href="#10-the-shapebehaviors-plugin-group" title="Permanent link">&para;</a></h2>
+<p>A behavior module is also a plugin of the entry-point group <code>shape.behaviors</code> (plugin API v1,
+protocol <code>Behavior</code>; <code>docs/plugins/api-v1.md</code>), so <code>shape plugins list</code> shows it, the engine can
+load it by name and <code>python -m shape.plugins.kit DISTRIBUTION</code> checks it.</p>
+<table>
+<thead>
+<tr>
+<th>Member</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td>The registry key; also the entry-point name.</td>
+</tr>
+<tr>
+<td><code>version</code></td>
+<td>The module's own version string.</td>
+</tr>
+<tr>
+<td><code>states</code></td>
+<td>The state names the module uses.</td>
+</tr>
+<tr>
+<td><code>attributes</code></td>
+<td>The entity attributes it reads or writes.</td>
+</tr>
+<tr>
+<td><code>events</code></td>
+<td>The event kinds it emits (<code>kind</code> column of section 5).</td>
+</tr>
+<tr>
+<td><code>simulate(population, seed, years)</code></td>
+<td>Runs that many entities for that many years from 2020-01-01 and returns the event table; deterministic per seed.</td>
+</tr>
+</tbody>
+</table>
+<p><code>shape_behavior.behaviors.behavior(document)</code> (or the class <code>ModuleBehavior</code>) wraps a module
+document into such an object, filling the members from the document; the engine runs a registered
+behavior that has a <code>module</code> (all of those wrapped this way). <code>shape behave run NAME</code> accepts the
+name of any registered behavior next to files and example names.</p>
+<p>The three built-in examples and the five primitives of section 11 register this way (<code>shape.behaviors:subscription</code>,
+<code>:equipment_maintenance</code>, <code>:healthcare_screening</code>, <code>:event_sequence</code>, <code>:telemetry_series</code>,
+<code>:transaction_stream</code>, <code>:file_arrival</code>, <code>:entity_lifecycle</code>). A third party does the same in its own
+distribution; <code>examples/behavior-plugin</code> is a complete one (installed from outside the repository
+by <code>tests/plugins/test_plugin_kit_install.py</code>):</p>
+<div class="highlight"><pre><span></span><code><span class="k">[project.entry-points.</span><span class="s2">"shape.behaviors"</span><span class="k">]</span>
+<span class="n">library_loans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"shape_example_behavior:LibraryLoans"</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">shape_behavior.behaviors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModuleBehavior</span>
+
+<span class="n">SHAPE_API</span> <span class="o">=</span> <span class="s2">"1.0"</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">LibraryLoans</span><span class="p">(</span><span class="n">ModuleBehavior</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">DOCUMENT</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">"0.1.0"</span><span class="p">)</span>      <span class="c1"># DOCUMENT: a module document</span>
+</code></pre></div>
+<p><code>shape.plugins.kit.check_behavior</code> loads the object, checks the members above, runs a small
+population twice per seed, and requires the events to be identical, non-empty, and only of
+declared kinds and states (rows of the engine itself, with an empty <code>state</code>, are the
+<code>entity_end</code> events of a population lifetime).</p>
+<h2 id="11-primitives">11. Primitives<a class="headerlink" href="#11-primitives" title="Permanent link">&para;</a></h2>
+<p>Five reusable behaviors, built on the engine and ready to name and run: an <strong>event sequence</strong>
+(a funnel), a <strong>telemetry series</strong>, a <strong>transaction stream</strong>, a <strong>file arrival</strong> process and an
+<strong>entity lifecycle</strong>. Each is a builder in <code>shape_behavior.primitives</code> that returns a validated
+<code>Module</code> (format <code>shape-behavior/1</code>) from keyword parameters, and a registered behavior
+(<code>shape.behaviors:NAME</code>, built with its defaults) that <code>shape behave run NAME</code> and the plugin
+conformance kit (<code>python -m shape.plugins.kit sqllocks-shape-behavior</code>) reach by name.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">shape_behavior.primitives</span><span class="w"> </span><span class="kn">import</span> <span class="n">telemetry_series</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shape_behavior.behaviors</span><span class="w"> </span><span class="kn">import</span> <span class="n">behavior</span>
+
+<span class="n">events</span> <span class="o">=</span> <span class="n">behavior</span><span class="p">(</span><span class="n">telemetry_series</span><span class="p">(</span><span class="n">interval</span><span class="o">=</span><span class="s2">"1 hour"</span><span class="p">,</span> <span class="n">missing_rate</span><span class="o">=</span><span class="mf">0.02</span><span class="p">))</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</code></pre></div>
+<ul>
+<li>Every parameter has a default, so the call with no argument runs. An invalid parameter raises
+  <code>ModuleError</code> naming it, for example <code>telemetry_series: interval must be a positive duration,
+  got '0 days'</code>; all problems are reported at once.</li>
+<li>The module records the effective parameters under <code>"parameters"</code> (and the name under
+  <code>"primitive"</code>); <code>run.json</code> copies them into each module's entry.</li>
+<li>A run is deterministic: the same seed and parameters give byte-identical
+  <code>OUT/events/part-NNNN.parquet</code>, also across a checkpoint resume (<code>Simulator.resume</code>).</li>
+<li>Durations are text such as <code>"90 seconds"</code>, <code>"1 hour"</code>, <code>"2 days"</code>, <code>"1 week"</code>. Rates "per year"
+  use the engine's 365.25-day year.</li>
+<li>Entities do not interact (section 9), and one state entry emits at most one event. Turning the
+  event table into domain tables is a domain pack's job (section 8).</li>
+<li>Four of the primitives add one state type each through the extension point of section 5
+  (<code>telemetry_reading</code>, <code>transaction_event</code>, <code>file_event</code>, <code>lifecycle_event</code>); importing
+  <code>shape_behavior.primitives</code> registers them, so a saved module document of a primitive loads
+  where that module is imported (the <code>shape behave</code> command always does).</li>
+</ul>
+<h3 id="111-event_sequencesteps-dropout-gap">11.1 <code>event_sequence(steps, dropout, gap)</code><a class="headerlink" href="#111-event_sequencesteps-dropout-gap" title="Permanent link">&para;</a></h3>
+<p>An ordered funnel of named events. Each entity starts the funnel on arrival (arrivals are spread
+over a year); after a step it continues with probability <code>1 - dropout</code> and otherwise leaves.</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>steps</code></td>
+<td><code>["visit", "view", "add_to_cart", "checkout"]</code></td>
+<td>Unique, non-empty step names.</td>
+</tr>
+<tr>
+<td><code>dropout</code></td>
+<td><code>0.4</code></td>
+<td>Probability of leaving after a step: one number for every step, or a list with one value per step but the last. 0 means everyone completes the funnel, 1 means everyone stops after the first step.</td>
+</tr>
+<tr>
+<td><code>gap</code></td>
+<td><code>"2 minutes"</code></td>
+<td>Time between consecutive steps (zero allowed). A gap beyond the run's end cuts the funnel at the horizon.</td>
+</tr>
+</tbody>
+</table>
+<p>Emits one event per step reached, <code>kind</code> = the step name.</p>
+<p>Use <a href="../../TUTORIAL/">the tested starters</a> for local commands and complete output.</p>
+<p><a href="#local-example-12">Run this example</a>.</p>
+<h3 id="112-telemetry_seriesinterval-unit-level-noise-drift-missing_rate-stuck_rate">11.2 <code>telemetry_series(interval, unit, level, noise, drift, missing_rate, stuck_rate)</code><a class="headerlink" href="#112-telemetry_seriesinterval-unit-level-noise-drift-missing_rate-stuck_rate" title="Permanent link">&para;</a></h3>
+<p>A regular reading per entity (a device), the first when it arrives.</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>interval</code></td>
+<td><code>"1 day"</code></td>
+<td>Time between readings; positive. An interval longer than the run gives one reading per entity.</td>
+</tr>
+<tr>
+<td><code>unit</code></td>
+<td><code>"celsius"</code></td>
+<td>Text put in the <code>unit</code> column.</td>
+</tr>
+<tr>
+<td><code>level</code></td>
+<td><code>20.0</code></td>
+<td>Mean value at the first reading.</td>
+</tr>
+<tr>
+<td><code>noise</code></td>
+<td><code>0.5</code></td>
+<td>Standard deviation of the gaussian noise (not negative).</td>
+</tr>
+<tr>
+<td><code>drift</code></td>
+<td><code>0.1</code></td>
+<td>Change of the mean per year of elapsed time (any sign).</td>
+</tr>
+<tr>
+<td><code>missing_rate</code></td>
+<td><code>0.02</code></td>
+<td>Share of readings skipped (no event). 1 gives no events at all.</td>
+</tr>
+<tr>
+<td><code>stuck_rate</code></td>
+<td><code>0.01</code></td>
+<td>Probability that a reading repeats the previous reading's value; consecutive repeats form a stuck run. 1 repeats the first reading for ever.</td>
+</tr>
+</tbody>
+</table>
+<p>Emits <code>kind</code> = <code>reading</code> with <code>value</code> and <code>unit</code>. State type <code>telemetry_reading</code> (whole-array
+handler; it draws only through <code>ctx.uniform</code>).</p>
+<p>Use <a href="../../TUTORIAL/">the tested starters</a> for local commands and complete output.</p>
+<p><a href="#local-example-13">Run this example</a>.</p>
+<p>Memory stays bounded by the window: <code>--window-years</code> sets how much virtual time one output file
+holds. 10,000 devices at a 1-hour interval for a year is about 87.8 million events;
+<code>tests/test_primitives_scale.py</code> runs it with <code>--window-years</code> of one week and records the peak
+memory of the process.</p>
+<h3 id="113-transaction_streamrate-amount-refund_rate-reversal_rate">11.3 <code>transaction_stream(rate, amount, refund_rate, reversal_rate)</code><a class="headerlink" href="#113-transaction_streamrate-amount-refund_rate-reversal_rate" title="Permanent link">&para;</a></h3>
+<p>Transactions as a Poisson process per entity (the gaps are exponential; entities exist from the
+start of the run).</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rate</code></td>
+<td><code>24</code></td>
+<td>Transactions per entity per year; positive.</td>
+</tr>
+<tr>
+<td><code>amount</code></td>
+<td><code>{"mu": 3.5, "sigma": 0.8}</code></td>
+<td>Lognormal parameters of the <code>value</code> (<code>sigma</code> not negative).</td>
+</tr>
+<tr>
+<td><code>refund_rate</code></td>
+<td><code>0.05</code></td>
+<td>Probability that a transaction is followed by a <code>refund</code> before the next transaction.</td>
+</tr>
+<tr>
+<td><code>reversal_rate</code></td>
+<td><code>0.01</code></td>
+<td>The same for a <code>reversal</code>.</td>
+</tr>
+</tbody>
+</table>
+<p><code>refund_rate + reversal_rate</code> must be below 1. A transaction has at most one follow-up. Emits
+<code>transaction</code> (<code>value</code> = the amount, <code>code</code> = its id, <code>ENTITY-N</code>), and <code>refund</code> / <code>reversal</code>
+(<code>ref</code> = the id of the transaction they follow, <code>value</code> = its amount). State type
+<code>transaction_event</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">shape_behavior.primitives</span><span class="w"> </span><span class="kn">import</span> <span class="n">transaction_stream</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">shape_behavior.behaviors</span><span class="w"> </span><span class="kn">import</span> <span class="n">behavior</span>
+
+<span class="n">table</span> <span class="o">=</span> <span class="n">behavior</span><span class="p">(</span><span class="n">transaction_stream</span><span class="p">(</span><span class="n">rate</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">refund_rate</span><span class="o">=</span><span class="mf">0.08</span><span class="p">))</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="114-file_arrivalschedule-late_rate-late_delay-missing_rate-duplicate_rate">11.4 <code>file_arrival(schedule, late_rate, late_delay, missing_rate, duplicate_rate)</code><a class="headerlink" href="#114-file_arrivalschedule-late_rate-late_delay-missing_rate-duplicate_rate" title="Permanent link">&para;</a></h3>
+<p>One entity per feed; every schedule slot (the first at the feed's start) has one outcome.</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>schedule</code></td>
+<td><code>"daily"</code></td>
+<td><code>daily</code>, <code>hourly</code> or <code>weekly</code>.</td>
+</tr>
+<tr>
+<td><code>late_rate</code></td>
+<td><code>0.1</code></td>
+<td>Probability that the file arrives <code>late_delay</code> after its slot.</td>
+</tr>
+<tr>
+<td><code>late_delay</code></td>
+<td>a quarter of the period</td>
+<td>Positive and shorter than the period.</td>
+</tr>
+<tr>
+<td><code>missing_rate</code></td>
+<td><code>0.03</code></td>
+<td>Probability that no file arrives (an event marks it at the slot time).</td>
+</tr>
+<tr>
+<td><code>duplicate_rate</code></td>
+<td><code>0.02</code></td>
+<td>Probability that the file arrives twice (the copy a tenth of a period later).</td>
+</tr>
+</tbody>
+</table>
+<p><code>late_rate + missing_rate + duplicate_rate</code> must not exceed 1; the rest arrive on time. Emits
+<code>file_arrived</code>, <code>file_late</code>, <code>file_missing</code>, <code>file_duplicate</code>; the <code>payload</code> of every event is
+<code>{"slot": "2020-01-05T00:00:00"}</code>, the expected arrival time. State type <code>file_event</code>.</p>
+<p>Use <a href="../../TUTORIAL/">the tested starters</a> for local commands and complete output.</p>
+<p><a href="#local-example-15">Run this example</a>.</p>
+<h3 id="115-entity_lifecyclestates-update_rate-delete_rate">11.5 <code>entity_lifecycle(states, update_rate, delete_rate)</code><a class="headerlink" href="#115-entity_lifecyclestates-update_rate-delete_rate" title="Permanent link">&para;</a></h3>
+<p>Create, any number of updates and an optional delete per entity, so the event table can drive
+change-data-capture style tables. Entities are created over a year.</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>states</code></td>
+<td><code>["active", "suspended", "closed"]</code></td>
+<td>Unique state names; the first is the state at creation.</td>
+</tr>
+<tr>
+<td><code>update_rate</code></td>
+<td><code>4</code></td>
+<td>Updates per entity per year while alive (not negative).</td>
+</tr>
+<tr>
+<td><code>delete_rate</code></td>
+<td><code>0.1</code></td>
+<td>Deletes per entity per year while alive (not negative); 0 means no entity is deleted.</td>
+</tr>
+</tbody>
+</table>
+<p>Emits <code>created</code> (<code>text</code> = the first state, <code>value</code> = version 1), <code>updated</code> (<code>text</code> = a state other
+than the previous one when there is more than one state, <code>value</code> = the new version) and <code>deleted</code>
+(<code>text</code> = its state, <code>value</code> = its last version). Nothing follows a delete. State type
+<code>lifecycle_event</code>.</p>
+<p>Use <a href="../../TUTORIAL/">the tested starters</a> for local commands and complete output.</p>
+<p><a href="#local-example-16">Run this example</a>.</p>
+<h3 id="116-the-parameters-file">11.6 The parameters file<a class="headerlink" href="#116-the-parameters-file" title="Permanent link">&para;</a></h3>
+<p><code>shape behave run NAME --params FILE.json</code> builds the primitive <code>NAME</code> (named among the modules on
+the command line) from a JSON document:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">"format"</span><span class="p">:</span><span class="w"> </span><span class="s2">"shape-behavior-params"</span><span class="p">,</span><span class="w"> </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"primitive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"telemetry_series"</span><span class="p">,</span>
+<span class="w"> </span><span class="nt">"params"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"interval"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1 hour"</span><span class="p">,</span><span class="w"> </span><span class="nt">"missing_rate"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.02</span><span class="p">}}</span>
+</code></pre></div>
+<p><code>params</code> may leave out any parameter (the default applies) and may be left out altogether. The
+file is a persisted format: <code>format</code> and an integer <code>version</code> are required, and
+<code>tests/fixtures/params_v1.json</code> is a frozen version-1 document that must keep loading. Exit
+status 2 (a usage error, naming the key) for a wrong <code>format</code>, a <code>version</code> newer than this Shape
+reads (the message says to upgrade), an unknown <code>primitive</code>, a primitive that is not among the
+modules, an unknown top-level key or an unknown parameter; an invalid parameter value is an
+invalid module (exit 1). <code>run.json</code> records the parameters each primitive ran with.</p>
+<h3 id="117-primitives-and-the-table-level-simulators">11.7 Primitives and the table-level simulators<a class="headerlink" href="#117-primitives-and-the-table-level-simulators" title="Permanent link">&para;</a></h3>
+<p><code>plugins/shape-simulation</code> works on tables a domain already generated; the primitives generate
+the events themselves from per-entity processes on the virtual clock.</p>
+<table>
+<thead>
+<tr>
+<th>Primitive</th>
+<th>Related simulator in <code>shape-simulation</code></th>
+<th>Use the primitive when</th>
+<th>Use the simulator when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>event_sequence</code></td>
+<td><code>clickstream_patterns</code></td>
+<td>you need a funnel for any named steps, per entity, with a probability per step.</td>
+<td>you need web sessions, page views, bounces and bot traffic as ready tables.</td>
+</tr>
+<tr>
+<td><code>telemetry_series</code></td>
+<td><code>iot_patterns</code></td>
+<td>you need a long, regular, deterministic series per device at any scale in bounded memory.</td>
+<td>you have device and reading tables and want alert storms and fleet status layered on them.</td>
+</tr>
+<tr>
+<td><code>transaction_stream</code></td>
+<td><code>financial_patterns</code></td>
+<td>you need transactions as a Poisson process with refunds and reversals tied to the original.</td>
+<td>you have transactions and accounts and want fraud bursts and settlement batches.</td>
+</tr>
+<tr>
+<td><code>file_arrival</code></td>
+<td><code>file_drop</code></td>
+<td>you need the arrival outcomes of a feed (on time, late, missing, duplicated) as events.</td>
+<td>you need the files themselves: partitions, manifests, <code>_done</code> flags, backfills.</td>
+</tr>
+<tr>
+<td><code>entity_lifecycle</code></td>
+<td><code>scd2_file_drops</code></td>
+<td>you need create, update and delete events per entity (change data capture).</td>
+<td>you need versioned rows and the full load plus daily delta files of a slowly changing dimension.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="complete-local-run">Complete local run<a class="headerlink" href="#complete-local-run" title="Permanent link">&para;</a></h2>
+<p>Run these commands in order after preparing the fixtures above.</p>
+<p><a id="local-example-1"></a></p>
+<h3 id="example-2">Example 2<a class="headerlink" href="#example-2" title="Permanent link">&para;</a></h3>
+<!-- example: 1 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>--quiet<span class="w"> </span>--no-deps<span class="w"> </span>--no-build-isolation<span class="w"> </span>-e<span class="w"> </span><span class="s2">"</span><span class="nv">$SHAPE_DOCS_REPO</span><span class="s2">/plugins/shape-behavior"</span>
+shape<span class="w"> </span>behave<span class="w"> </span>run<span class="w"> </span>subscription<span class="w"> </span>equipment_maintenance<span class="w"> </span>--population<span class="w"> </span><span class="m">100</span><span class="w"> </span>--years<span class="w"> </span><span class="m">0</span>.1<span class="w"> </span>--seed<span class="w"> </span><span class="m">7</span><span class="w"> </span>-o<span class="w"> </span>out/local
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>10 events for 100 entities in 0.3s -&gt; out/local
+</code></pre></div>
+</details>
+<p><a id="local-example-12"></a></p>
+<h3 id="example-13">Example 13<a class="headerlink" href="#example-13" title="Permanent link">&para;</a></h3>
+<!-- example: 12 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>shape<span class="w"> </span>behave<span class="w"> </span>run<span class="w"> </span>event_sequence<span class="w"> </span>--population<span class="w"> </span><span class="m">10000</span><span class="w"> </span>--years<span class="w"> </span><span class="m">1</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">7</span><span class="w"> </span>-o<span class="w"> </span>out/funnel
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>21,945 events for 10,000 entities in 0.3s -&gt; out/funnel
+</code></pre></div>
+</details>
+<p><a id="local-example-13"></a></p>
+<h3 id="example-14">Example 14<a class="headerlink" href="#example-14" title="Permanent link">&para;</a></h3>
+<!-- example: 13 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>cat<span class="w"> </span>&gt;<span class="w"> </span>telemetry.json<span class="w"> </span><span class="s">&lt;&lt;'EOF'</span>
+<span class="s">{"format": "shape-behavior-params", "version": 1, "primitive": "telemetry_series",</span>
+<span class="s"> "params": {"interval": "1 hour", "unit": "kPa", "level": 101.3, "noise": 0.4}}</span>
+<span class="s">EOF</span>
+shape<span class="w"> </span>behave<span class="w"> </span>run<span class="w"> </span>telemetry_series<span class="w"> </span>--params<span class="w"> </span>telemetry.json<span class="w"> </span>--population<span class="w"> </span><span class="m">100</span><span class="w"> </span>--years<span class="w"> </span><span class="m">0</span>.01<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--window-years<span class="w"> </span><span class="m">0</span>.02<span class="w"> </span>--seed<span class="w"> </span><span class="m">7</span><span class="w"> </span>-o<span class="w"> </span>out/telemetry
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>8,631 events for 100 entities in 0.4s -&gt; out/telemetry
+</code></pre></div>
+</details>
+<p><a id="local-example-15"></a></p>
+<h3 id="example-16">Example 16<a class="headerlink" href="#example-16" title="Permanent link">&para;</a></h3>
+<!-- example: 15 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>cat<span class="w"> </span>&gt;<span class="w"> </span>feed.json<span class="w"> </span><span class="s">&lt;&lt;'EOF'</span>
+<span class="s">{"format": "shape-behavior-params", "version": 1, "primitive": "file_arrival",</span>
+<span class="s"> "params": {"schedule": "hourly", "late_rate": 0.2, "late_delay": "20 minutes"}}</span>
+<span class="s">EOF</span>
+shape<span class="w"> </span>behave<span class="w"> </span>run<span class="w"> </span>file_arrival<span class="w"> </span>--params<span class="w"> </span>feed.json<span class="w"> </span>--population<span class="w"> </span><span class="m">12</span><span class="w"> </span>--years<span class="w"> </span><span class="m">0</span>.1<span class="w"> </span>-o<span class="w"> </span>out/feeds
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>10,745 events for 12 entities in 1.7s -&gt; out/feeds
+</code></pre></div>
+</details>
+<p><a id="local-example-16"></a></p>
+<h3 id="example-17">Example 17<a class="headerlink" href="#example-17" title="Permanent link">&para;</a></h3>
+<!-- example: 16 -->
+
+<div class="runnable-reference highlight"><pre><span></span><code>shape<span class="w"> </span>behave<span class="w"> </span>run<span class="w"> </span>entity_lifecycle<span class="w"> </span>--population<span class="w"> </span><span class="m">5000</span><span class="w"> </span>--years<span class="w"> </span><span class="m">3</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">1</span><span class="w"> </span>-o<span class="w"> </span>out/changes
+</code></pre></div>
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>50,371 events for 5,000 entities in 0.4s -&gt; out/changes
+</code></pre></div>
+</details>
+<p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Behavior+models&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fv0.9.3%2Fplugins%2Fbehavior%2F">Report a problem with this page</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  <div class="md-copyright__highlight">Shape by SQLLocks</div>
+  <div>Copyright SQLLocks. Released under the MIT license.</div>
+  <nav class="shape-footer-links" aria-label="Website, project and support">
+    <a href="https://shapedata.ai/">shapedata.ai</a>
+    <a href="https://github.com/sqllocks/shape">GitHub</a>
+    <a href="https://pypi.org/project/sqllocks-shape/">PyPI</a>
+    <a href="mailto:support@shapedata.ai">Support</a>
+    <a href="https://github.com/sqllocks/shape/blob/main/LICENSE">License (MIT)</a>
+    <a href="https://github.com/sqllocks/shape/blob/main/SECURITY.md">Security</a>
+  </nav>
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "navigation.indexes", "search.suggest", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../assets/javascripts/diagrams.js"></script>
+      
+    
+  </body>
+</html>

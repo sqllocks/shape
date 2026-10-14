@@ -1,0 +1,37 @@
+{
+  "run_id": "38266883768",
+  "commit": "1fa052d08a93cecd303f4db1a9682539b59471b1",
+  "runner": "ubuntu-latest",
+  "machine": {
+    "cpu": "Intel(R) Xeon(R) 6973P-C",
+    "logical_cpus": 4,
+    "ram_bytes": 16765378560,
+    "os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.12.15",
+    "pyarrow": "25.0.1",
+    "kernel": "rust",
+    "runner_image": "20261004.327.1",
+    "os_release": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.5 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "page": "docs/TROUBLESHOOTING.md",
+  "example": "delta-fallback",
+  "command": "python - <<'PYTHON'\nimport duckdb\ncon = duckdb.connect()\ncon.execute(\"INSTALL delta\")\ncon.execute(\"LOAD delta\")\nprint(\"DuckDB delta extension installed and loaded\")\ncon.close()\nPYTHON\nshape profile \"delta://$SHAPE_DOCS_REPO/tests/fixtures/delta_fallback/dv\" -o deletion-vectors.json",
+  "exit_code": 2,
+  "status": "failed",
+  "elapsed_seconds": 1.6046024980000198,
+  "stdout": "DuckDB delta extension installed and loaded\nshape: error: no installed source plugin reads 'delta:///home/runner/work/shape/shape/tests/fixtures/delta_fallback/dv'; check the scheme, install the extra (pip install 'sqllocks-shape[azure]' for abfss:// and Delta) and run `shape plugins doctor`\n"
+}
