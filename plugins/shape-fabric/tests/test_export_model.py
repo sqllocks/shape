@@ -85,6 +85,33 @@ def test_source_type_and_source_name_make_the_sql_expression(run, tmp_path, kind
     assert 'Source{[Schema="dbo", Item="customer"]}[Data]' in expression
 
 
+def test_the_hyphen_spelling_of_sql_database_gives_identical_output(run, tmp_path):
+    results = {}
+    for kind in ("sql_database", "sql-database"):
+        code, out, err = run(
+            "export-model",
+            "retail",
+            "--source-type",
+            kind,
+            "--source-name",
+            "Sales",
+            "-o",
+            f"{kind}.bim",
+        )
+        results[kind] = (code, out.replace(f"{kind}.bim", "OUT.bim"), err)
+    assert results["sql_database"][0] == 0
+    assert results["sql-database"] == results["sql_database"]
+    hyphen, underscore = (tmp_path / f"{k}.bim" for k in ("sql-database", "sql_database"))
+    assert hyphen.read_bytes() == underscore.read_bytes()
+
+
+def test_the_help_lists_both_spellings_of_sql_database(run):
+    code, out, _ = run("export-model", "--help")
+    assert code == 0
+    text = " ".join(out.split())
+    assert "sql_database" in text and "sql-database" in text
+
+
 def test_schema_name_is_used_for_sql_sources(run, tmp_path):
     run(
         "export-model", "retail", "--source-type", "warehouse", "--schema-name", "sales",

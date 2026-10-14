@@ -173,8 +173,8 @@ Use [the tested starters](../TUTORIAL.md) for local commands and complete output
 
 
 Writes a Tabular Object Model document (compatibility level 1604): typed columns, relationships,
-one Power Query partition per table for the source (`--source-type lakehouse|warehouse|sql_database`,
-`--source-name`, `--schema-name` for the SQL sources) and DAX measures (`--include-measures`, the
+one Power Query partition per table for the source (`--source-type lakehouse|warehouse|sql_database`, where `sql-database` is an accepted alias of
+`sql_database` that gives the same output, `--source-name`, `--schema-name` for the SQL sources) and DAX measures (`--include-measures`, the
 default, or `--no-measures`): a row count per table, a total and an average per decimal or float
 column, a total per other integer column. Measure names are unique across the model, as Tabular
 requires: a name that two measures would share is qualified with its table (`Total Unit Price

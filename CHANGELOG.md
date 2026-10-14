@@ -6,7 +6,7 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+- `shape export-model --source-type` accepts `sql-database` as an alias of `sql_database`, matching `publish -t`; both spellings give identical output.
 
 ## 0.9.2
 

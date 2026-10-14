@@ -145,8 +145,9 @@ def _configure_export_model(p: argparse.ArgumentParser) -> None:
     p.add_argument(
         "--source-type",
         default="lakehouse",
-        choices=("lakehouse", "warehouse", "sql_database"),
-        help="the data source the model's Power Query expressions read (default: lakehouse)",
+        choices=("lakehouse", "warehouse", "sql_database", "sql-database"),
+        help="the data source the model's Power Query expressions read; sql-database is an alias"
+        " of sql_database, as in publish -t (default: lakehouse)",
     )
     p.add_argument(
         "--source-name",
@@ -193,6 +194,7 @@ def _run_export_model(a: argparse.Namespace) -> int:
     is_file = Path(a.domain).is_file() or a.domain.lower().endswith(".json")
     schema = load_target(a.domain, None if is_file else (a.mode or "3nf"))
     schema.generation.scale = a.scale
+    a.source_type = a.source_type.replace("-", "_")
     exporter = SemanticModelExporter()
     tom = exporter.to_dict(
         schema,

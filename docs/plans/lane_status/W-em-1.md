@@ -1,45 +1,69 @@
-# W-em-1 — blocked before implementation
+# W-em-1: `export-model --source-type sql-database` alias
 
-Target: 0.9.4 only. Branch: `lane/W-em-1`, based on fetched
-`origin/main` at `c10923be9278bc63f2713ac0ed32a548b59a7afb`.
+Target: 0.9.4 only. Branch `lane/W-em-1`. Plan read from
+`origin/plan/promotion-093` (Decisions; section 4.11 row `export-model`); no plan content committed.
+This resolves the earlier blocker (plan location), which the lead answered.
 
-## Blocking question
+## What changed
 
-Where is the required `docs/plans/PROMOTION_PLAN_0.9.3.md` containing the
-0.9.4 Decisions and section 4.11? It is absent from the current `origin/main`.
-Please supply the plan on main or clarify the correct plan location before this
-lane proceeds. The task explicitly requires stopping instead of guessing.
+- `plugins/shape-fabric/src/shape_fabric/commands.py`: `--source-type` choices now
+  `lakehouse, warehouse, sql_database, sql-database`; the hyphen is normalised to
+  `sql_database` before use, so output (including the `Source type:` line) is identical.
+  Help text says `sql-database` is an alias, as in `publish -t`.
+- `plugins/shape-fabric/tests/test_export_model.py`: two tests: identical stdout/stderr/exit and
+  byte-identical `.bim` for both spellings; help lists both spellings.
+- `docs/plugins/fabric-commands.md`: alias documented. `CHANGELOG.md`: one line under Unreleased.
+- CLI surface snapshot: no update needed. `scripts/cli_surface.py` covers core commands only;
+  `export-model` is a plugin command (`plugins/shape-fabric`). `--check` passed inside `make check`.
+- No gate, tolerance, regression store, golden corpus or test was changed, skipped or xfailed.
 
-Only this status record changed. No implementation, tests, release files,
-regression stores, golden corpus, gates or tolerances changed. No red evidence
-exists because the required plan could not be read before starting tests.
+## Red evidence (new tests, before the implementation)
+
+```text
+E       assert (2, '', "usag...database')\n") == (0, 'Shape v0...point.\n', '')
+E         At index 0 diff: 2 != 0
+E       assert ('sql_database' in "usage: shape export-model [-h] ... [--source-type {lakehouse,warehouse,sql_database}] ..." and 'sql-database' in "...")
+FAILED plugins/shape-fabric/tests/test_export_model.py::test_the_hyphen_spelling_of_sql_database_gives_identical_output
+FAILED plugins/shape-fabric/tests/test_export_model.py::test_the_help_lists_both_spellings_of_sql_database
+2 failed, 27 passed
+```
+
+After: `29 passed` for the file.
+
+## Setup (repository does not use uv)
+
+`python -m venv .venv && . .venv/bin/activate && make bootstrap` then
+`pip install -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric -e plugins/shape-kafka`.
+Rust 1.97 was already present. `export-model` lives in `plugins/shape-fabric`
+(`grep -rn export-model`).
 
 ## Commands and exit codes
 
-Commands ran from `/workspace/shape` unless otherwise stated. Compound shell
-invocations are recorded together with their final exit code; relevant individual
-failures are called out.
+1. `git fetch origin plan/promotion-093:refs/remotes/origin/plan/promotion-093`: 0
+2. venv + `make bootstrap` + plugin `pip install -e`: 0
+3. `pytest plugins/shape-fabric/tests/test_export_model.py` before implementation: 1 (2 failed, red above)
+4. same, after implementation: 0 (29 passed)
+5. `make check`, run 1: 2. Stopped at `ruff check` (E501 in my new test); fixed.
+6. `make check`, run 2: **2**. All steps through `scripts/check_v1_done.py` passed (ruff, format,
+   mypy, compileall, vulture, lint-imports, scripts, `cli_surface.py --check`). The first pytest
+   step then ended with `22 failed, 18262 passed, 45 skipped` and
+   `Required test coverage of 86% not reached. Total coverage: 47.25%`, so make stopped there.
+   The later steps (heavy tests, `SHAPE_KERNEL=python` kernel tests, cargo fmt/clippy/test) did not run.
+7. The 22 failed tests re-run alone with my changes stashed: 1, the identical 22 fail.
 
-1. `/workspace`: `pwd; rg --files -g AGENTS.md -g CLAUDE.md -g CONTRIBUTING.md -g PROMOTION_PLAN_0.9.3.md -g network-policy.json /workspace /etc/codex` — 0.
-2. `cat /etc/codex/network-policy.json; git fetch origin; git checkout -b lane/W-em-1 origin/main` — 0 overall. Fetch failed (128) because the sandbox could not connect to the proxy; checkout succeeded (0).
-3. `cat CLAUDE.md CONTRIBUTING.md; rg --files -g AGENTS.md -g '*PROMOTION*'; rg -n 'Decisions|4.11|export-model' docs/plans/PROMOTION_PLAN_0.9.3.md; git status --short; cat /workspace/AGENTS.md 2>/dev/null` — 1 overall. Plan lookup failed (2); parent AGENTS.md was absent (1).
-4. `git fetch origin` with approved network access — 0. Fetched current main.
-5. `git checkout -B lane/W-em-1 origin/main; cat CLAUDE.md CONTRIBUTING.md docs/CONTRIBUTING.md; rg --files -g AGENTS.md; rg -n 'Decisions|4.11|export-model' docs/plans/PROMOTION_PLAN_0.9.3.md` — 2 overall. Checkout succeeded (0); read current CLAUDE.md and CONTRIBUTING.md, optional docs/CONTRIBUTING.md absent (cat 1); no AGENTS.md found (rg 1); required plan absent (rg 2).
-6. `git status --short; git rev-parse HEAD; git ls-files 'docs/plans/*' 'AGENTS.md' '**/AGENTS.md'; git config user.name; git config user.email; rg -n '^check:|^\\.PHONY|export-model|source-type' Makefile src/shape/cli.py` — 2 overall. Status clean; repository identity configured; final search reported absent src/shape/cli.py (2).
-7. `make check > /tmp/W-em-1-check.log 2>&1; result=$?; tail -n 30 /tmp/W-em-1-check.log; exit "$result"` — 2. Required checks attempted; unavailable Ruff stops the first gate:
+## `make check` is not green, and the failures are not from this change
 
-   ```text
-   ruff check src tests plugins benchmarks/vs_refengine
-   make: ruff: No such file or directory
-   make: *** [Makefile:7: check] Error 127
-   ```
+The 22 failures are in `tests/docs/*` and `tests/docs_site/*`: `test_branded_site`,
+`test_tutorial[06-domain-duckdb]`, 18 `test_reference_page[...]` cases and two docs-site tests.
+Causes seen in the log: `ModuleNotFoundError: No module named 'pymdownx'` (mkdocs build), no Docker
+daemon (`/var/run/docker.sock`), and `No module named 'shape_healthcare_codes'`. The environment lacks
+the docs extras and Docker; the CI plugin set does not include `shape-domains` docs fixtures.
+They fail identically without this change (step 7). I did not make them pass, because that
+would need the docs toolchain and Docker.
 
-8. `git ls-files --error-unmatch docs/plans/PROMOTION_PLAN_0.9.3.md; test -f AGENTS.md` — 1 overall; both commands returned 1, confirming the missing required plan and absent root AGENTS.md.
+The 47% coverage figure is not verified as pre-existing: I did not run the full suite on the base
+(76 minutes). It is probably a side effect of the failed or skipped docs tests, and this change adds
+two lines of code with two covering tests, but I cannot show that.
 
-Status file created using `apply_patch` successfully. Runtime skill and network
-reference read successfully; environment readiness and status tools succeeded.
-
-9. `git diff --check; git diff --stat; git status --short` — 0; only this new status file is present.
-10. `git add docs/plans/lane_status/W-em-1.md` — 0.
-11. `git commit -s -m "W-em-1: record missing promotion plan blocker"` — 0.
-12. `git push origin HEAD:refs/heads/lane/W-em-1` — 0, using approved network access. No other branch pushed.
+Needs a decision from the lead: run `make check` where the docs extras and Docker exist (CI), or tell
+me which extras to install here.
