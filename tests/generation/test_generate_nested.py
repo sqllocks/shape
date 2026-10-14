@@ -268,3 +268,80 @@ def test_a_few_long_lists_do_not_cost_rows_times_the_longest(tmp_path: Path) -> 
     took = time.perf_counter() - start
     assert out.num_rows == 100_000
     assert took < 5.0, f"{took:.1f}s: the cost follows the number of elements, not rows x longest"
+
+
+# --- review round 3: empty chunks, and the work per chunk --------------------------------------
+
+_CHILDREN = {
+    "int": pa.int64(),
+    "string": pa.string(),
+    "bool": pa.bool_(),
+    "float": pa.float64(),
+    "date": pa.date32(),
+    "timestamp": pa.timestamp("us"),
+    "decimal": pa.decimal128(10, 2),
+    "time": pa.time64("us"),
+    "binary": pa.binary(),
+    "large_binary": pa.large_binary(),
+    "fixed_binary": pa.binary(4),
+    "duration": pa.duration("ms"),
+    "dictionary": pa.dictionary(pa.int32(), pa.string()),
+    "struct": pa.struct([("a", pa.int64()), ("b", pa.binary(2))]),
+    "list": pa.list_(pa.int32()),
+    "map": pa.map_(pa.string(), pa.int64()),
+}
+
+
+@pytest.mark.parametrize("name", list(_CHILDREN))
+def test_lists_that_are_all_empty_generate_for_every_child_type(
+    kernel: str, name: str, tmp_path: Path
+) -> None:
+    typ = pa.list_(_CHILDREN[name])
+    table = pa.table({"id": list(range(20)), "c": pa.array([[]] * 20, typ)})
+    for rows in (10, 50):
+        out = _generated(table, tmp_path, rows=rows)
+        assert out.num_rows == rows
+        assert out.schema.field("c").type.equals(_read_type(tmp_path, "c"))
+        assert all(v in ([], None) for v in out.column("c").to_pylist())
+
+
+@pytest.mark.parametrize("name", ["binary", "fixed_binary", "int", "struct"])
+def test_a_chunk_without_elements_beside_one_with(kernel: str, name: str, tmp_path: Path) -> None:
+    from shape.generation.engine import Engine
+    from shape.generation.fit import PRESET, fit_schema
+
+    child = _CHILDREN[name]
+    one = {"binary": b"x", "fixed_binary": b"wxyz", "int": 7, "struct": {"a": 1, "b": b"ab"}}[name]
+    lists = [[] for _ in range(99)] + [[one]]
+    table = pa.table({"id": list(range(100)), "c": pa.array(lists, pa.list_(child))})
+    prof = shape.profile(str(ni.write_parquet(tmp_path / "t.parquet", table)))
+    fitted = fit_schema(prof, rows=100)
+    tables = [
+        Engine(fitted.schema, scale=PRESET, seed=3, chunk_rows=chunk).generate().tables["t"]
+        for chunk in (65_536, 10, 1)
+    ]
+    assert tables[0].equals(tables[1]) and tables[0].equals(tables[2])
+
+
+def test_the_lengths_drawn_per_chunk_follow_the_chunk_not_the_row_offset(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from shape.generation import nested
+    from shape.generation.engine import Engine
+    from shape.generation.fit import PRESET, fit_schema
+
+    prof = shape.profile(str(ni.write_parquet(tmp_path / "t.parquet", ni.table_with("li"))))
+    engine = Engine(fit_schema(prof, rows=41_000_000).schema, scale=PRESET, seed=1)
+    drawn: list[int] = []
+    real = nested._lengths
+
+    def counting(length: Any, fixed: Any, ctx: Any, path: str) -> Any:
+        drawn.append(ctx.n_rows)
+        return real(length, fixed, ctx, path)
+
+    monkeypatch.setattr(nested, "_lengths", counting)
+    engine.generate_chunk("t", 40_000_000, 1000, chunk=0)
+    assert 1000 <= sum(drawn) <= 1000 + 2 * nested.BLOCK_ROWS
+    drawn.clear()
+    engine.generate_chunk("t", 0, 1000, chunk=0)
+    assert 1000 <= sum(drawn) <= 1000 + 2 * nested.BLOCK_ROWS

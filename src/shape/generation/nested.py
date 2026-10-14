@@ -10,8 +10,8 @@ beyond its type is therefore not modelled.
 
 Everything is row addressed, like every strategy: the value of row ``r`` depends on the seed, the
 column and ``r`` alone, whatever the chunking. The elements of a list or a map are a column of
-their own: element ``i`` of the column is the i-th element after the lengths of all earlier rows,
-so a chunk costs its own elements (plus the cheap sum of the earlier rows' lengths).
+their own, numbered in blocks of ``BLOCK_ROWS`` rows (see there): a chunk costs its own elements
+and the lengths of the blocks it touches, whatever its place in the table.
 
 Choices (``docs/PROFILING_NOTES.md``): a nested value with no recorded lengths (a list inside a
 list, inside a struct, or a map inside a list) has 1 to 3 elements; a struct field is never null;
@@ -153,6 +153,8 @@ def _lengths(
 def _leaf(typ: pa.DataType, ctx: GenerationContext, path: str, name: str) -> pa.Array:
     """``ctx.n_rows`` values of the leaf type ``typ``."""
     n = ctx.n_rows
+    if n == 0:
+        return pa.array([], typ)
     if pa.types.is_null(typ):
         return pa.nulls(n)
     if pa.types.is_dictionary(typ):
@@ -242,22 +244,20 @@ def _to_leaf(arr: pa.Array, typ: pa.DataType) -> pa.Array:
     return arr.cast(typ)  # a timestamp, in its unit and zone
 
 
-_BLOCK = 1 << 20  # rows whose lengths are summed at a time to find where a chunk's elements start
+#: Rows per block of element ids. A list column has no row-to-element map that is cheap to find,
+#: so the elements of block ``b`` are numbered from ``b * BLOCK_ROWS * cap`` (``cap``: the longest
+#: list): an element's id depends on its block and its place in the block, never on the chunking,
+#: and a chunk draws the lengths of its own blocks only.
+BLOCK_ROWS = 4096
 
 
-def _element_base(
-    length: Mapping[str, Any] | None, fixed: int | None, ctx: GenerationContext, path: str
-) -> int:
-    """The number of elements in the rows before ``ctx.row_start``: the id of the chunk's first
-    element, so that an element's value depends on its place in the column and not on the
-    chunking."""
+def _longest(length: Mapping[str, Any] | None, fixed: int | None) -> int:
+    """The most elements a row can have: the id space of a row in the element numbering."""
     if fixed is not None:
-        return fixed * ctx.row_start
-    total = 0
-    for start in range(0, ctx.row_start, _BLOCK):
-        block = dataclasses.replace(ctx, row_start=start, n_rows=min(_BLOCK, ctx.row_start - start))
-        total += int(_lengths(length, None, block, path).sum())
-    return total
+        return max(fixed, 1)
+    if not length:
+        return DEFAULT_MAX_LENGTH
+    return max(int(length["max"]), 1)
 
 
 def _distinct_keys(
@@ -311,21 +311,40 @@ def _list_like(
     kind = nested_kind(typ)
     is_map = kind == "map"
     fixed = typ.list_size if kind == "fixed_size_list" else None
-    lens = _lengths(length, fixed, ctx, path)
-    total = int(lens.sum())
-    base = _element_base(length, fixed, ctx, path)
-    offsets = np.concatenate([[0], np.cumsum(lens)])
-    # the elements are a column of their own: element ``base + i`` is the i-th of this chunk
-    inner = dataclasses.replace(ctx, row_start=base, n_rows=total)
+    cap = _longest(length, fixed)
     value_type = typ.item_type if is_map else typ.value_type
-    child = _values(value_type, inner, f"{path}.v")
-    if element_null_rate:
-        u = RowStream(ctx.seed, ctx.table, ctx.column, f"nested.element{path}").uniform(base, total)
-        child = pc.if_else(pa.array(u < element_null_rate), pa.scalar(None, child.type), child)
+    key_type = typ.key_type if is_map else None
+    end = ctx.row_start + ctx.n_rows
+    lens_parts: list[np.ndarray[Any, Any]] = []
+    items: list[pa.Array] = []
+    keys: list[pa.Array] = []
+    for block in range(ctx.row_start // BLOCK_ROWS, (end - 1) // BLOCK_ROWS + 1):
+        start = block * BLOCK_ROWS
+        block_lens = _lengths(
+            length, fixed, dataclasses.replace(ctx, row_start=start, n_rows=BLOCK_ROWS), path
+        )
+        lo, hi = max(ctx.row_start, start) - start, min(end, start + BLOCK_ROWS) - start
+        mine = block_lens[lo:hi]
+        first = start * cap + int(block_lens[:lo].sum())  # the id of this chunk's first element
+        count = int(mine.sum())
+        inner = dataclasses.replace(ctx, row_start=first, n_rows=count)
+        part = _values(value_type, inner, f"{path}.v")
+        if element_null_rate:
+            u = RowStream(ctx.seed, ctx.table, ctx.column, f"nested.element{path}").uniform(
+                first, count
+            )
+            part = pc.if_else(pa.array(u < element_null_rate), pa.scalar(None, part.type), part)
+        items.append(part)
+        if is_map:
+            keys.append(_values(key_type, inner, f"{path}.k"))
+        lens_parts.append(mine)
+    lens = np.concatenate(lens_parts) if lens_parts else np.zeros(0, dtype=np.int64)
+    offsets = np.concatenate([[0], np.cumsum(lens)])
+    child = pa.concat_arrays(items) if items else pa.array([], value_type)
     child_keys = None
     if is_map:
-        key_type = typ.key_type
-        child_keys = _distinct_keys(_values(key_type, inner, f"{path}.k"), lens, offsets, key_type)
+        child_keys = pa.concat_arrays(keys) if keys else pa.array([], key_type)
+        child_keys = _distinct_keys(child_keys, lens, offsets, key_type)
         child_keys, child, lens = _distinct_entries(child_keys, child, lens, key_type)
         offsets = np.concatenate([[0], np.cumsum(lens)])
     if kind == "fixed_size_list":
@@ -364,6 +383,8 @@ def _distinct_entries(
 
 def _values(typ: pa.DataType, ctx: GenerationContext, path: str) -> pa.Array:
     """``ctx.n_rows`` values of ``typ`` with no recorded statistics (a child of a nested value)."""
+    if ctx.n_rows == 0:  # a chunk whose lists are all empty has no elements to draw
+        return pa.array([], typ)
     if pa.types.is_struct(typ):
         arrays = [
             _values(typ.field(i).type, ctx, f"{path}.{typ.field(i).name}")

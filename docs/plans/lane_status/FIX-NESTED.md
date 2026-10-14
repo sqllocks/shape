@@ -357,3 +357,27 @@ no option was added.
 * C: `_binary` takes its bytes from `words.astype('<u8')`, so they do not depend on byte order.
 * Docs: PROFILING_NOTES says an unsupported child blocks the whole table (no option yet to leave a column out), and
   that inner lists are never empty when the profile records no lengths.
+
+## Re-review of 189c950..1d641fb: two bugs of mine fixed
+
+* N1 (`generation/nested.py`): a chunk with no elements crashed `_binary` (`reshape` of size 0). `_values` and `_leaf`
+  now return an empty array of the type when there are no rows; tests: all-empty lists for 16 child types (int, string,
+  bool, float, date, timestamp, decimal, time, binary, large_binary, fixed_size_binary, duration, dictionary, struct,
+  list, map) on both kernels, and a column of 99 empty lists and one element at chunk sizes 65,536, 10 and 1 (equal tables).
+  Red before: 15 failed (binary, large_binary, fixed_size_binary, struct, the empty-chunk cases, the work count).
+* N2 (`_element_base`): every chunk re-drew the lengths of all earlier rows (quadratic). Element ids now come from
+  fixed blocks of 4,096 rows: block `b` numbers its elements from `b * 4096 * cap` (`cap`: the longest list, 3 when no
+  lengths are recorded), so a chunk draws the lengths of the blocks it touches only. A test counts the length draws of
+  a chunk at row 40,000,000 and at row 0: both within 1,000 + 2 blocks. Chunk invariance (65,536, 37 and 1) holds on both
+  kernels.
+  Timings, table with a list and a map column plus the four flat columns, this container (4 cores), default chunk:
+
+  | rows | 189c950 | now |
+  |---|---|---|
+  | 1M | 0.7 s | 1.2 s |
+  | 4M | 2.3 s | 3.1 s |
+  | 16M | 9.9 s | 11.7 s |
+
+  Linear in the rows (the quadratic version took 55 s at 16M on the reviewer's table). The 16M figure is about 18%
+  above 189c950's on this table; the numbers differ from the reviewer's 4.4 s because the tables differ.
+* N3: the CHANGELOG line about the hang no longer says "two runs in three".

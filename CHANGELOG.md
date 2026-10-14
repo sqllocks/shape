@@ -18,8 +18,8 @@ Status: available.
   nested column by name. An error whose message holds a backtrace is now one `shape: error:` line.
 - **Local Delta tables no longer hang at exit.** `shape profile` (and every read of a local Delta
   table) could hang, or abort with `terminate called without an active exception`, as the process
-  ended, in about two runs of three, with or without a nested column. A local table is now read
-  through Arrow's own file system.
+  ended after a failed read (for example a damaged data file or a nested column). A local table is
+  now read through Arrow's own file system.
 
 ## 0.9.2
 
