@@ -1,0 +1,8 @@
+  Read people: 4 rows x 4 columns
+
+Masking result
+==================================================
+  people: 2/4 columns masked (4 rows)
+    Masked: email (email), phone (phone)
+
+Written 1 CSV files to out/
