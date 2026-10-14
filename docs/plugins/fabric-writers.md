@@ -131,8 +131,8 @@ writes a table into a **dedicated SQL pool** of an Azure Synapse workspace. It f
 writer: it prepares the table with the same T-SQL helpers (same `write_mode` values, the safe `create`
 default, `schema_name`, `columns`, `primary_key`), stages the rows as Parquet files of at most
 `chunk_rows` rows (default 1,000,000) under `<staging_path>/staging/<run>/<table>/`, runs **one**
-`COPY INTO ... WITH (FILE_TYPE = 'PARQUET')` over that folder, checks that the number of rows it
-loaded equals the number staged (otherwise the write fails and a table this call created is dropped),
+`COPY INTO ... WITH (FILE_TYPE = 'PARQUET')` over that folder by default, checks that the number of
+rows it loaded equals the number staged (otherwise the write fails and a table this call created is dropped),
 and deletes the staged files, also when a step fails.
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
@@ -164,6 +164,8 @@ Evidence: [run 38338859503, ubuntu-latest, `b432568bdbd3`](../evidence/transcrip
 | `copy_identity` | who `COPY INTO` reads the storage as: `managed_identity` (default; the workspace's managed identity, `CREDENTIAL = (IDENTITY = 'Managed Identity')`) or `signed_in` (the Microsoft Entra identity of the connection, no `CREDENTIAL` clause; refused with a SQL login, which has no such identity) |
 | `distribution` | `ROUND_ROBIN` (default), `REPLICATE` or `HASH(column)`; the column must be one of the table's and is quoted |
 | `index` | `CLUSTERED COLUMNSTORE INDEX` (default) or `HEAP` |
+| `commit_rows` | positive integer; default unset (one load per call). Split the input into loads that reach this row count, rounded up to whole input batches, with one `COPY INTO` and commit per load. The first load uses `write_mode`; later loads append. A failure keeps earlier committed loads |
+| `table_prefix` | string; default empty. Prepend it to the physical table name before writing |
 | `write_mode`, `schema_name`, `chunk_rows`, `columns`, `primary_key`, `schema` | as the Warehouse writer (`schema` creates an empty table from no batches) |
 | `credential`, `connection_string`, `connection` | sign-in, below |
 
@@ -206,10 +208,11 @@ against a live pool.
 `connection_string` with the login. No password, token or connection string appears in an exception
 message or a log record.
 
-**What a failure leaves behind.** The load is one `COPY INTO`, committed once the row count has been
-checked. A failure rolls back and drops a table this call created (`replace` has already dropped the
+**What a failure leaves behind.** By default, the load is one `COPY INTO`, committed once the row
+count has been checked. A failure rolls back and drops a table this call created (`replace` has already dropped the
 old table and `truncate` has already emptied it); the staged files are removed in every case (a
-removal that itself fails is a `RuntimeWarning`).
+removal that itself fails is a `RuntimeWarning`). With `commit_rows`, earlier committed loads remain
+when a later load fails.
 
 Out of scope: serverless SQL pools, Synapse Spark pools and Synapse pipelines (those are
 `integrations/synapse`).

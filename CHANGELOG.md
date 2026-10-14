@@ -6,7 +6,8 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+- Pin the documented Synapse sink configuration keys to the options consumed by the sink,
+  and document the existing `commit_rows` and `table_prefix` options.
 
 ## 0.9.3
 
