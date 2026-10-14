@@ -56,7 +56,7 @@ permissions:
   contents: read
 concurrency:
   # One run at a time: two runs must never write the same workspace together.
-  group: fabric-live
+  group: fabric-workspace
   cancel-in-progress: false
 jobs:
   fabric-live:
@@ -65,40 +65,40 @@ jobs:
     timeout-minutes: 90
     environment: fabric-live
     env:
-      # Environment variables and secrets, under the names the environment holds them.
-      FABRIC_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
-      FABRIC_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
+      # Environment secrets, under the names the environment holds them.
+      FABRIC_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
+      FABRIC_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
       FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
-      FABRIC_WORKSPACE_ID: ${{ vars.FABRIC_WORKSPACE_ID }}
-      FABRIC_LAKEHOUSE_ID: ${{ vars.FABRIC_LAKEHOUSE_ID }}
-      FABRIC_SQL_ENDPOINT: ${{ vars.FABRIC_SQL_ENDPOINT }}
+      FABRIC_WORKSPACE_ID: ${{ secrets.FABRIC_WORKSPACE_ID }}
+      FABRIC_LAKEHOUSE_ID: ${{ secrets.FABRIC_LAKEHOUSE_ID }}
+      FABRIC_SQL_ENDPOINT: ${{ secrets.FABRIC_SQL_ENDPOINT }}
       # onelake://<workspace>/<lakehouse>/Tables of a classic and of a schema-enabled Lakehouse.
-      FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH: ${{ vars.FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH }}
-      FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH: ${{ vars.FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH }}
-      FABRIC_WAREHOUSE: ${{ vars.FABRIC_WAREHOUSE }}
-      FABRIC_EVENTHOUSE_URI: ${{ vars.FABRIC_EVENTHOUSE_URI }}
-      FABRIC_KQL_DB: ${{ vars.FABRIC_KQL_DB }}
+      FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH: ${{ secrets.FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH }}
+      FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH: ${{ secrets.FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH }}
+      FABRIC_WAREHOUSE: ${{ secrets.FABRIC_WAREHOUSE }}
+      FABRIC_EVENTHOUSE_URI: ${{ secrets.FABRIC_EVENTHOUSE_URI }}
+      FABRIC_KQL_DB: ${{ secrets.FABRIC_KQL_DB }}
       FABRIC_EVENTSTREAM_CONNECTION_STRING: ${{ secrets.FABRIC_EVENTSTREAM_CONNECTION_STRING }}
       # The Fabric SQL database item (shape_sqldb). No login in it: the service principal's token is passed.
       FABRIC_SQL_CONNECTION_STRING: ${{ secrets.FABRIC_SQL_CONNECTION_STRING }}
       # The sample Warehouse (shape_wh_sample) and the semantic model (shape_sm) the profile tests read.
-      FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING: ${{ vars.FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING }}
-      FABRIC_SEMANTIC_MODEL: ${{ vars.FABRIC_SEMANTIC_MODEL }}
+      FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING: ${{ secrets.FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING }}
+      FABRIC_SEMANTIC_MODEL: ${{ secrets.FABRIC_SEMANTIC_MODEL }}
       # The Git-connected workspace (shape-git-test), its remote and the token that writes to it.
-      FABRIC_GIT_WORKSPACE_ID: ${{ vars.FABRIC_GIT_WORKSPACE_ID }}
-      FABRIC_GIT_REMOTE: ${{ vars.FABRIC_GIT_REMOTE }}
+      FABRIC_GIT_WORKSPACE_ID: ${{ secrets.FABRIC_GIT_WORKSPACE_ID }}
+      FABRIC_GIT_REMOTE: ${{ secrets.FABRIC_GIT_REMOTE }}
       FABRIC_GIT_TOKEN: ${{ secrets.FABRIC_GIT_TOKEN }}
       # DefaultAzureCredential signs in as the same service principal.
-      AZURE_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
-      AZURE_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
       AZURE_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
       SHAPE_RECORD_DIR: ${{ github.workspace }}/live-tapes
       # Synapse dedicated SQL pool round trip (test_live_synapse.py): the same service principal.
       SHAPE_TEST_SYNAPSE_URI: ${{ vars.SHAPE_TEST_SYNAPSE_URI }}
       SHAPE_TEST_SYNAPSE_STAGING: ${{ vars.SHAPE_TEST_SYNAPSE_STAGING }}
       SHAPE_TEST_SYNAPSE_AUTH: spn
-      SHAPE_TEST_SYNAPSE_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
-      SHAPE_TEST_SYNAPSE_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
+      SHAPE_TEST_SYNAPSE_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
+      SHAPE_TEST_SYNAPSE_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
       SHAPE_TEST_SYNAPSE_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
       # Used only to resume and pause the pool around the tests.
       SYNAPSE_SUBSCRIPTION_ID: ${{ vars.SYNAPSE_SUBSCRIPTION_ID }}
@@ -693,12 +693,12 @@ jobs:
     timeout-minutes: 45
     environment: fabric-live
     env:
-      FABRIC_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
-      FABRIC_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
+      FABRIC_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
+      FABRIC_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
       FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
-      FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH: ${{ vars.FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH }}
-      AZURE_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
-      AZURE_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
+      FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH: ${{ secrets.FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH }}
+      AZURE_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
       AZURE_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
       SM_MODE: ${{ inputs.sm_mode }}
       PYTHONUNBUFFERED: '1'
@@ -768,26 +768,26 @@ jobs:
     env:
       SHAPE_DOCS_RUNNER: ubuntu-latest
       EXAMPLES: ${{ inputs.examples }}
-      # The environment's variables and secrets, under the names fabric-live.yml uses.
-      FABRIC_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
-      FABRIC_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
+      # The environment's secrets, under the names fabric-live.yml uses.
+      FABRIC_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
+      FABRIC_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
       FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
-      FABRIC_WORKSPACE_ID: ${{ vars.FABRIC_WORKSPACE_ID }}
-      FABRIC_LAKEHOUSE_ID: ${{ vars.FABRIC_LAKEHOUSE_ID }}
-      FABRIC_SQL_ENDPOINT: ${{ vars.FABRIC_SQL_ENDPOINT }}
-      FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH: ${{ vars.FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH }}
-      FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH: ${{ vars.FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH }}
-      FABRIC_WAREHOUSE: ${{ vars.FABRIC_WAREHOUSE }}
-      FABRIC_EVENTHOUSE_URI: ${{ vars.FABRIC_EVENTHOUSE_URI }}
-      FABRIC_KQL_DB: ${{ vars.FABRIC_KQL_DB }}
+      FABRIC_WORKSPACE_ID: ${{ secrets.FABRIC_WORKSPACE_ID }}
+      FABRIC_LAKEHOUSE_ID: ${{ secrets.FABRIC_LAKEHOUSE_ID }}
+      FABRIC_SQL_ENDPOINT: ${{ secrets.FABRIC_SQL_ENDPOINT }}
+      FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH: ${{ secrets.FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH }}
+      FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH: ${{ secrets.FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH }}
+      FABRIC_WAREHOUSE: ${{ secrets.FABRIC_WAREHOUSE }}
+      FABRIC_EVENTHOUSE_URI: ${{ secrets.FABRIC_EVENTHOUSE_URI }}
+      FABRIC_KQL_DB: ${{ secrets.FABRIC_KQL_DB }}
       FABRIC_SQL_CONNECTION_STRING: ${{ secrets.FABRIC_SQL_CONNECTION_STRING }}
-      FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING: ${{ vars.FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING }}
-      FABRIC_SEMANTIC_MODEL: ${{ vars.FABRIC_SEMANTIC_MODEL }}
-      FABRIC_GIT_WORKSPACE_ID: ${{ vars.FABRIC_GIT_WORKSPACE_ID }}
-      FABRIC_GIT_REMOTE: ${{ vars.FABRIC_GIT_REMOTE }}
+      FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING: ${{ secrets.FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING }}
+      FABRIC_SEMANTIC_MODEL: ${{ secrets.FABRIC_SEMANTIC_MODEL }}
+      FABRIC_GIT_WORKSPACE_ID: ${{ secrets.FABRIC_GIT_WORKSPACE_ID }}
+      FABRIC_GIT_REMOTE: ${{ secrets.FABRIC_GIT_REMOTE }}
       FABRIC_GIT_TOKEN: ${{ secrets.FABRIC_GIT_TOKEN }}
-      AZURE_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
-      AZURE_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
       AZURE_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
       SHAPE_TEST_SYNAPSE_URI: ${{ vars.SHAPE_TEST_SYNAPSE_URI }}
       SHAPE_TEST_SYNAPSE_STAGING: ${{ vars.SHAPE_TEST_SYNAPSE_STAGING }}

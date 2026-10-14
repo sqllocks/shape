@@ -28,7 +28,8 @@ environments ``pypi`` and ``testpypi``, so those names are part of the contract.
     (``scripts/build_release_dist.py``'s ``T04_TARGETS``) with the right manylinux/musllinux
     policy, each tested on Python 3.11 and 3.14.
 
-No workflow here may read a repository secret.
+The publishing and wheel workflows may not read repository secrets. Fabric workflows
+share a workspace concurrency group and read identifiers from environment secrets.
 
     python scripts/check_release_workflows.py                    # .github/workflows
     python scripts/check_release_workflows.py --dir path/to/workflows
@@ -39,6 +40,7 @@ Exit status: 0 when every check holds, 1 otherwise.
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -224,6 +226,78 @@ def check_wheels(wf: dict[str, Any], text: str) -> list[str]:
     return problems
 
 
+FABRIC_CONCURRENCY = {"group": "fabric-workspace", "cancel-in-progress": False}
+FABRIC_ID_INPUTS = {
+    "FABRIC_TENANT_ID",
+    "FABRIC_CLIENT_ID",
+    "FABRIC_WORKSPACE_ID",
+    "FABRIC_LAKEHOUSE_ID",
+    "FABRIC_SQL_ENDPOINT",
+    "FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH",
+    "FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH",
+    "FABRIC_WAREHOUSE",
+    "FABRIC_EVENTHOUSE_URI",
+    "FABRIC_KQL_DB",
+    "FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING",
+    "FABRIC_SEMANTIC_MODEL",
+    "FABRIC_GIT_WORKSPACE_ID",
+    "FABRIC_GIT_REMOTE",
+}
+FABRIC_NIGHTLY_JOBS = {
+    "fabric-live",
+    "fabric-git-sync-live",
+    "fabric-emit-e2e",
+    "emit-live",
+    "abfss-live",
+}
+
+
+def check_fabric_workflows(directory: Path) -> list[str]:
+    """Keep Fabric workspace locks shared and environment identifiers out of vars."""
+    problems: list[str] = []
+    for name in ("fabric-live.yml", "nightly.yml"):
+        path = directory / name
+        if not path.is_file():
+            problems.append(f"{name}: missing")
+            continue
+        try:
+            wf = _load(path)
+            for job_name, job in wf.get("jobs", {}).items():
+                job_text = yaml.safe_dump(job)
+                environment = job.get("environment")
+                if isinstance(environment, dict):
+                    environment = environment.get("name")
+                workspace_job = (
+                    name == "fabric-live.yml"
+                    or job_name in FABRIC_NIGHTLY_JOBS
+                    or re.search(r"(?:secrets|vars)\s*\.\s*FABRIC_", job_text)
+                    or environment == "fabric-live"
+                )
+                if workspace_job:
+                    lock = job.get("concurrency", wf.get("concurrency"))
+                    if lock != FABRIC_CONCURRENCY:
+                        problems.append(
+                            f"{name}: job {job_name} must use concurrency group "
+                            "fabric-workspace with cancel-in-progress: false"
+                        )
+                if name != "fabric-live.yml":
+                    continue
+                if environment != "fabric-live":
+                    problems.append(f"{name}: job {job_name} must use environment fabric-live")
+                for identifier in sorted(FABRIC_ID_INPUTS):
+                    if re.search(rf"vars\s*\.\s*{identifier}\b", job_text):
+                        problems.append(
+                            f"{name}: job {job_name} reads vars.{identifier}; "
+                            "use the fabric-live environment secret"
+                        )
+                for variable, value in (job.get("env") or {}).items():
+                    if variable in FABRIC_ID_INPUTS and value != f"${{{{ secrets.{variable} }}}}":
+                        problems.append(f"{name}: job {job_name} must read secrets.{variable}")
+        except (ValueError, yaml.YAMLError, AttributeError, TypeError) as exc:
+            problems.append(f"{name}: unreadable ({exc})")
+    return problems
+
+
 CHECKS = {"publish.yml": check_publish, "release.yml": check_release, "wheels.yml": check_wheels}
 
 
@@ -248,7 +322,7 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--dir", type=Path, default=ROOT / ".github" / "workflows")
     ns = p.parse_args(argv)
-    problems = check(ns.dir)
+    problems = check(ns.dir) + check_fabric_workflows(ns.dir)
     for line in problems:
         print(f"FAIL {line}", file=sys.stderr)
     if not problems:

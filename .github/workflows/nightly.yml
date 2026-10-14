@@ -217,6 +217,9 @@ jobs:
       - if: always()
         run: docker compose -f ci/emulators/docker-compose.yml down -v
   fabric-emit-e2e:
+    concurrency:
+      group: fabric-workspace
+      cancel-in-progress: false
     # P5-02: the Eventstream emitter (the Event Hubs emulator stands in for a custom endpoint)
     # and the Eventhouse emitter (the Kusto emulator), through the real runner.
     runs-on: ubuntu-latest
@@ -262,6 +265,9 @@ jobs:
       - if: always()
         run: docker compose -f ci/emulators/docker-compose.yml down -v
   emit-live:
+    concurrency:
+      group: fabric-workspace
+      cancel-in-progress: false
     # P5-02: the emitters against real Kafka, Event Hubs, an Eventstream and an Eventhouse. Runs
     # only where the secrets exist (a job-level check on one of them); a missing variable fails
     # its test by name.
@@ -296,6 +302,9 @@ jobs:
       - if: env.HAVE_LIVE == 'true' && env.FABRIC_EVENTHOUSE_URI != ''
         run: python -m pytest -m live plugins/shape-fabric/tests/test_live.py -q -k eventhouse
   fabric-live:
+    concurrency:
+      group: fabric-workspace
+      cancel-in-progress: false
     # P6-07a: the Fabric writers (Lakehouse files, SQL database, Warehouse COPY INTO, Eventhouse,
     # Eventstream) against real items. Runs only where the owner's O-02 secrets exist: every step is
     # gated on its own secrets (a job-level check, never a skipif), and a missing variable fails its
@@ -371,6 +380,9 @@ jobs:
           path: live-tapes
           if-no-files-found: ignore
   abfss-live:
+    concurrency:
+      group: fabric-workspace
+      cancel-in-progress: false
     # ISS2-sinks: the abfss:// and delta+abfss:// sinks against a real ADLS Gen2 account or OneLake
     # lakehouse (real rename, Delta commits). Runs only where the owner's O-02 secrets exist; a
     # missing variable fails its test by name (never a skipif). The secret names are the builder's
@@ -397,6 +409,9 @@ jobs:
       - if: env.HAVE_ABFSS == 'true'
         run: python -m pytest -m live tests/builtins/test_abfss_sink_live.py -q
   fabric-git-sync-live:
+    concurrency:
+      group: fabric-workspace
+      cancel-in-progress: false
     # W7-01: a shape/ folder of .shape files next to Fabric items survives Fabric Git integration in
     # both directions. Runs against the Git-connected workspace (shape-git-test) with the values the
     # fabric-live environment holds (variables for ids and the remote, secrets for the secrets);
