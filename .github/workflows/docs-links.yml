@@ -17,7 +17,14 @@ jobs:
       - run: pip install -r requirements-docs.txt
       - run: pip install --no-deps -e . -e plugins/shape-domains -e plugins/shape-databases -e plugins/shape-integrations
       - run: mkdocs build --strict
+      # --root-dir resolves the root-relative links of the 404 page; the site's own domain
+      # (site_url) is excluded because its pages are checked here as files and it is only
+      # published from a release tag.
       - uses: lycheeverse/lychee-action@v2
         with:
-          args: --no-progress --max-retries 3 --timeout 30 site/**/*.html site/*.html
+          args: >-
+            --no-progress --max-retries 3 --timeout 30
+            --root-dir ${{ github.workspace }}/site
+            --exclude '^https://docs\.shapedata\.ai/'
+            site/**/*.html site/*.html
           fail: true
