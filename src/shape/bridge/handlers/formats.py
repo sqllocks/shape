@@ -138,6 +138,13 @@ FORMATS: dict[str, Format] = {
         "shape.parity.report",
         since="1.2",
     ),
+    "canary": Format(
+        "shape-canary-v1.schema.json",
+        "shape-canary",
+        1,
+        "shape.scenario.canary.load_canary",
+        since="1.2",
+    ),
     "reference-pack": Format(
         "reference-pack-v1.schema.json",
         "shape-reference-pack",

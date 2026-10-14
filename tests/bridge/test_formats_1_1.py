@@ -82,3 +82,12 @@ def test_an_unknown_name_is_refused_with_the_list(api11, name):
 def test_name_must_be_a_string(api11):
     api11.fail("format_schema", "usage.invalid_argument", name=3)
     api11.fail("format_schema", "usage.unknown_argument", format="x")
+
+
+def test_canary_schema_is_published_in_1_2_and_keeps_1_1_unchanged(api11, api12):
+    assert "canary" not in api11.ok("format_schema")["names"]
+    api11.fail("format_schema", "input.unknown_format", name="canary")
+    result = api12.ok("format_schema", name="canary")
+    assert result["format"] == "shape-canary" and result["version"] == 1
+    sample = resources.files("shape").joinpath("schemas", "shape-canary-v1.schema.json")
+    assert result["schema"] == json.loads(sample.read_text("utf-8"))

@@ -1,0 +1,16 @@
+{
+  "format": "shape-canary",
+  "version": 1,
+  "id": "canary-null_flood-42",
+  "scenario": "library:null_flood",
+  "seed": 42,
+  "marker": {
+    "column": "shape_canary",
+    "value": "1"
+  },
+  "expected": [
+    "drift:null_rate_change",
+    "gate:null_check",
+    "rule:nullable"
+  ]
+}

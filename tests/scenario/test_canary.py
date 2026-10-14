@@ -420,3 +420,125 @@ def test_make_writes_only_to_a_local_directory(tmp_path):
     with pytest.raises(LibraryError):
         canary.make("null-flood", tmp_path / "f", fmt="xlsx")
     assert not Path(tmp_path / "f").exists()
+
+
+# ---- version 1 schema and machine output ---------------------------------------------------------
+
+
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_make_json_key_set_is_pinned(tmp_path, capsys, dry_run):
+    extra = ("--dry-run",) if dry_run else ()
+    code, _, text, _ = make(capsys, tmp_path, "null-flood", "--json", *extra)
+    doc = json.loads(text)
+    assert code == 0
+    assert set(doc) == {
+        "format",
+        "version",
+        "id",
+        "scenario",
+        "seed",
+        "marker",
+        "expected",
+        "directory",
+        "files",
+        "rows",
+        "dry_run",
+        "command",
+        "exit_code",
+        "payload",
+    }
+    assert doc["format"] == "shape-result" and doc["version"] == 1
+    assert doc["command"] == "canary make" and doc["exit_code"] == 0
+    assert doc["payload"]["format"] == "shape-canary"
+    assert doc["dry_run"] is dry_run
+
+
+@pytest.mark.parametrize("complete", [False, True])
+def test_check_json_key_set_is_pinned(tmp_path, capsys, pipeline, complete):
+    _, out, _, _ = make(capsys, tmp_path)
+    paths = pipeline.values() if complete else [pipeline["diff"]]
+    args = [a for p in paths for a in ("--result", p)]
+    code, text, _ = run(capsys, "canary", "check", out / "canary.json", *args, "--json")
+    doc = json.loads(text)
+    assert code == (0 if complete else 1)
+    assert set(doc) == {
+        "canary",
+        "ok",
+        "present",
+        "blind_spots",
+        "fired",
+        "format",
+        "version",
+        "command",
+        "exit_code",
+    }
+    assert doc["format"] == "shape-result" and doc["version"] == 1
+    assert doc["command"] == "canary check" and doc["exit_code"] == code
+    assert doc["ok"] is complete
+
+
+@pytest.fixture(scope="module")
+def canary_schema():
+    from jsonschema import Draft202012Validator
+
+    path = Path(shape.__file__).parent / "schemas" / "shape-canary-v1.schema.json"
+    schema = json.loads(path.read_text(encoding="utf-8"))
+    Draft202012Validator.check_schema(schema)
+    return Draft202012Validator(schema)
+
+
+def frozen_canary():
+    path = Path(__file__).parents[1] / "fixtures" / "canary" / "v1" / "canary.json"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def test_frozen_version_one_canary_validates_and_still_loads(canary_schema):
+    doc = frozen_canary()
+    canary_schema.validate(doc)
+    assert canary.parse_canary(doc) == doc
+    assert (
+        doc
+        == canary.Plan(
+            id="canary-null_flood-42",
+            scenario="library:null_flood",
+            seed=42,
+            directory="unused",
+            marker={"column": "shape_canary", "value": "1"},
+            expected=["drift:null_rate_change", "gate:null_check", "rule:nullable"],
+        ).document()
+    )
+
+
+def test_live_make_json_canary_payload_and_written_document_validate(
+    tmp_path, capsys, canary_schema
+):
+    code, out, text, _ = make(capsys, tmp_path, "null-flood", "--json")
+    assert code == 0
+    # The envelope replaces format/version; payload retains the shape-canary document.
+    canary_schema.validate(json.loads(text)["payload"])
+    doc = json.loads((out / "canary.json").read_text(encoding="utf-8"))
+    canary_schema.validate(doc)
+    assert doc == frozen_canary()
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        lambda d: d.update(format="other"),
+        lambda d: d.update(version=2),
+        lambda d: d.pop("scenario"),
+        lambda d: d.update(id="  "),
+        lambda d: d.update(seed=True),
+        lambda d: d.update(marker={"column": "x", "value": ""}),
+        lambda d: d.update(marker={"column": "x", "value": "1", "extra": "x"}),
+        lambda d: d.update(expected=[]),
+        lambda d: d.update(expected=["invalid"]),
+    ],
+)
+def test_canary_schema_rejects_malformed_documents(canary_schema, change):
+    from jsonschema import ValidationError
+
+    doc = frozen_canary()
+    change(doc)
+    with pytest.raises(ValidationError):
+        canary_schema.validate(doc)
