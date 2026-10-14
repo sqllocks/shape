@@ -524,3 +524,17 @@ Delivery: git diff --check, git add of the six intended files, a signed-off
 commit starting with W-pdb-1:, then git push -u origin lane/W-pdb-1.
 The final chat message records the resulting commit hash and delivery outcomes,
 so this report does not attempt to record its own future commit hash.
+
+## Follow-up (lead decision: keep 52e6fb0, add only what it lacks)
+
+The local duplicate implementation (ccd5b24, kept only in a local backup branch) was dropped; the lane
+was reset to origin/lane/W-pdb-1 (52e6fb0), no force-push. Added one test it lacked: an unresolvable
+`env://` reference exits 2 with one `shape: error:` line naming the reference, never a value.
+
+Commands (exit): `ruff check src tests plugins benchmarks/vs_refengine` (0);
+`ruff format --check src tests plugins benchmarks/vs_refengine` (0); `mypy` (0);
+`pytest -q plugins/shape-sqlserver/tests -p no:cov` (1: 174 passed, 19 errors, all in `test_emulator.py`
+with `ImportError: libodbc.so.2`, the ODBC driver library is not installable in this container);
+same command with `--ignore plugins/shape-sqlserver/tests/test_emulator.py` (0: 174 passed).
+A full local `make check` was not repeated, per the lead; an earlier run on the superseded commit
+failed only in 22 docs tests (5 re-run on the base and failing identically).

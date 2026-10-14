@@ -107,3 +107,21 @@ def test_client_secret_help_describes_reference_only_input(capsys):
     assert "--client-secret REF" in help_text
     for text in ("env://", "file://", "kv://", "literal", "SHAPE_SQLSERVER_CLIENT_SECRET"):
         assert text in help_text
+
+
+def test_client_secret_unresolvable_reference_exits_2_naming_only_the_reference(
+    monkeypatch, tmp_path, capsys
+):
+    monkeypatch.delenv("PROFILE_DB_TEST_MISSING", raising=False)
+    cmd = ProfileDbCommand()
+    parser = argparse.ArgumentParser()
+    cmd.configure(parser)
+    args = parser.parse_args(
+        ["--server", "srv", "--client-secret", "env://PROFILE_DB_TEST_MISSING", "-o", "x.shape"]
+    )
+    assert cmd.run(args) == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    lines = captured.err.splitlines()
+    assert len(lines) == 1 and lines[0].startswith("shape: error: ")
+    assert "PROFILE_DB_TEST_MISSING" in lines[0]
