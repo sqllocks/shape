@@ -62,4 +62,6 @@ One blocking problem: the published schema does not describe the document its re
    kinds `drift|gate|rule`. That matches `detect.parse_check` today, but a new detection kind would
    need a schema version bump. That is fine if intended; consider saying so in the description.
 4. `docs/CANARIES.md` does not mention the new schema file. Leave that to W-canary-2 (claim table/page).
-5. The lane status records `make check` timing out (exit 124). Full-suite proof is left to CI.
+5. The lane status records one `make check` run that exited 2 when the coverage stage was interrupted.
+   That run showed two schema-registration failures, which the lane then fixed. The full suite has not
+   completed since, so full-suite proof is left to CI.
