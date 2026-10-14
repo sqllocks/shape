@@ -896,6 +896,21 @@
   },
   {
     "page": "docs/plugins/fabric-commands.md",
+    "index": 8,
+    "kind": "cloud:Fabric"
+  },
+  {
+    "page": "docs/plugins/fabric-commands.md",
+    "index": 9,
+    "kind": "cloud:Fabric"
+  },
+  {
+    "page": "docs/plugins/fabric-commands.md",
+    "index": 10,
+    "kind": "cloud:Fabric"
+  },
+  {
+    "page": "docs/plugins/fabric-commands.md",
     "index": 1,
     "kind": "cloud:Fabric"
   },

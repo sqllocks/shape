@@ -45,17 +45,16 @@ database login: it applies to `publish -t sql-database|warehouse` only.
 
 Use [the tested starters](../TUTORIAL.md) for local commands and complete output.
 
+### lakehouse
+
 <!-- example: 0 -->
 
 **Needs a Fabric account. Not run in CI.**
 
-Recorded by a manual `workflow_dispatch` run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers.
+The output below is this target’s portion of the original four-target run. The command overwrites the fixed landing files on each run.
 
 ```
 shape publish retail -t lakehouse --base-path onelake://MyWorkspace/MyLakehouse/Files
-shape publish retail -t sql-database --connection-string env://SHAPE_SQL_CONNECTION
-shape publish retail -t warehouse --connection-string env://WH --staging-path onelake://W/L/Files
-shape publish retail -t eventhouse --connection-string https://<query-uri-host> --database mydb
 ```
 
 ??? info "Output (exit 0)"
@@ -94,6 +93,25 @@ shape publish retail -t eventhouse --connection-string https://<query-uri-host> 
     Manifest: onelake://<workspace-id>/<lakehouse-id>/Files/landing/retail/manifest/_control/run_manifest.json
     
     Publish complete.
+    ```
+
+Evidence: [run 38400931371, ubuntu-latest, `c37ff1b1dadb`](../evidence/transcripts/docs-transcripts-38400931371-c37ff1b1dadb-ubuntu-latest-publish-targets.json).
+
+### sql-database
+
+<!-- example: 8 -->
+
+**Needs a Fabric account. Not run in CI.**
+
+The output below is this target’s portion of the original four-target run. The command now uses `--write-mode replace` to reset the example tables on each run; it replaces their existing rows and schema. The Owner must re-record this command on the release head.
+
+```
+shape publish retail -t sql-database --connection-string env://SHAPE_SQL_CONNECTION --write-mode replace
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
     Shape v0.9.1 — Publishing retail → sql-database
     Scale: small | Seed: 42 | Format: parquet
     
@@ -124,6 +142,25 @@ shape publish retail -t eventhouse --connection-string https://<query-uri-host> 
       return: 850 rows
     
     Publish complete.
+    ```
+
+Evidence: [run 38400931371, ubuntu-latest, `c37ff1b1dadb`](../evidence/transcripts/docs-transcripts-38400931371-c37ff1b1dadb-ubuntu-latest-publish-targets.json).
+
+### warehouse
+
+<!-- example: 9 -->
+
+**Needs a Fabric account. Not run in CI.**
+
+The output below is this target’s portion of the original four-target run. The command now uses `--write-mode replace` to reset the example tables on each run; it replaces their existing rows and schema. The Owner must re-record this command on the release head.
+
+```
+shape publish retail -t warehouse --connection-string env://WH --staging-path onelake://W/L/Files --write-mode replace
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
     Shape v0.9.1 — Publishing retail → warehouse
     Scale: small | Seed: 42 | Format: parquet
     
@@ -154,6 +191,25 @@ shape publish retail -t eventhouse --connection-string https://<query-uri-host> 
       return: 850 rows
     
     Publish complete.
+    ```
+
+Evidence: [run 38400931371, ubuntu-latest, `c37ff1b1dadb`](../evidence/transcripts/docs-transcripts-38400931371-c37ff1b1dadb-ubuntu-latest-publish-targets.json).
+
+### eventhouse
+
+<!-- example: 10 -->
+
+**Needs a Fabric account. Not run in CI.**
+
+The output below is this target’s portion of the original four-target run. The command now uses `--write-mode replace` to reset the example tables on each run; it replaces their existing rows and schema. The Owner must re-record this command on the release head.
+
+```
+shape publish retail -t eventhouse --connection-string https://<query-uri-host> --database mydb --write-mode replace
+```
+
+??? info "Output (exit 0)"
+
+    ```text {.expected}
     Shape v0.9.1 — Publishing retail → eventhouse
     Scale: small | Seed: 42 | Format: parquet
     
@@ -187,7 +243,6 @@ shape publish retail -t eventhouse --connection-string https://<query-uri-host> 
     ```
 
 Evidence: [run 38400931371, ubuntu-latest, `c37ff1b1dadb`](../evidence/transcripts/docs-transcripts-38400931371-c37ff1b1dadb-ubuntu-latest-publish-targets.json).
-
 
 `DOMAIN` is a domain or a generation schema file. `-s/--scale`, `--seed`, `-m/--mode 3nf|star` as in
 `shape generate`. `--dry-run` generates and prints the table summary and publishes nothing.

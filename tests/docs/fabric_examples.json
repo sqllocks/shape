@@ -106,32 +106,67 @@
     ]
   },
   {
-    "id": "publish-targets",
+    "id": "publish-lakehouse",
     "page": "docs/plugins/fabric-commands.md",
     "index": 0,
     "note": "Fabric maintainer — supply the transcript for docs/plugins/fabric-commands.md example 0.",
     "timeout": 1800,
     "needs": [
       "FABRIC_WORKSPACE_ID",
-      "FABRIC_LAKEHOUSE_ID",
-      "FABRIC_SQL_CONNECTION_STRING",
-      "DOCS_WAREHOUSE_CONNECTION",
-      "DOCS_KQL_HOST",
-      "FABRIC_KQL_DB"
+      "FABRIC_LAKEHOUSE_ID"
     ],
-    "env": {
-      "SHAPE_SQL_CONNECTION": "FABRIC_SQL_CONNECTION_STRING",
-      "WH": "DOCS_WAREHOUSE_CONNECTION"
-    },
     "rewrite": [
       [
         "onelake://MyWorkspace/MyLakehouse/Files",
         "onelake://$FABRIC_WORKSPACE_ID/$FABRIC_LAKEHOUSE_ID/Files"
-      ],
+      ]
+    ]
+  },
+  {
+    "id": "publish-sql-database",
+    "page": "docs/plugins/fabric-commands.md",
+    "index": 8,
+    "note": "Fabric maintainer — supply the transcript for docs/plugins/fabric-commands.md example 8.",
+    "timeout": 1800,
+    "needs": [
+      "FABRIC_SQL_CONNECTION_STRING"
+    ],
+    "env": {
+      "SHAPE_SQL_CONNECTION": "FABRIC_SQL_CONNECTION_STRING"
+    }
+  },
+  {
+    "id": "publish-warehouse",
+    "page": "docs/plugins/fabric-commands.md",
+    "index": 9,
+    "note": "Fabric maintainer — supply the transcript for docs/plugins/fabric-commands.md example 9.",
+    "timeout": 1800,
+    "needs": [
+      "DOCS_WAREHOUSE_CONNECTION",
+      "FABRIC_WORKSPACE_ID",
+      "FABRIC_LAKEHOUSE_ID"
+    ],
+    "env": {
+      "WH": "DOCS_WAREHOUSE_CONNECTION"
+    },
+    "rewrite": [
       [
         "onelake://W/L/Files",
         "onelake://$FABRIC_WORKSPACE_ID/$FABRIC_LAKEHOUSE_ID/Files/shape_staging"
-      ],
+      ]
+    ]
+  },
+  {
+    "id": "publish-eventhouse",
+    "page": "docs/plugins/fabric-commands.md",
+    "index": 10,
+    "note": "Fabric maintainer — supply the transcript for docs/plugins/fabric-commands.md example 10.",
+    "timeout": 1800,
+    "needs": [
+      "DOCS_KQL_HOST",
+      "FABRIC_KQL_DB"
+    ],
+    "rewrite": [
       [
         "https://<query-uri-host> --database mydb",
         "https://$DOCS_KQL_HOST --database \"$FABRIC_KQL_DB\""

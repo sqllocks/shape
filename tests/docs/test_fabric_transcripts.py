@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import re
+import shlex
 import sys
 from pathlib import Path
 
@@ -171,3 +173,55 @@ def test_preclean_deletes_only_exact_names_children_first():
 
     clean_kql(post, report)
     assert commands == [".show tables", ".drop table ['customer']"]
+
+
+def test_publish_targets_are_independent_rerunnable_examples():
+    """Each target has its own prerequisites and keeps only its original recorded output."""
+    manifest = json.loads((ROOT / "tests/docs/fabric_examples.json").read_text())
+    entries = [entry for entry in manifest if entry["id"].startswith("publish-")]
+    targets = ("lakehouse", "sql-database", "warehouse", "eventhouse")
+    assert {entry["id"] for entry in entries} == {f"publish-{target}" for target in targets}
+    text = (ROOT / "docs/plugins/fabric-commands.md").read_text()
+    blocks = dict(re.findall(r"<!-- example: (\d+) -->(.*?)(?=<!-- example:|\Z)", text, re.S))
+    reference = json.loads((ROOT / "tests/docs/reference_examples.json").read_text())
+    shown = []
+    for entry in entries:
+        target = entry["id"].removeprefix("publish-")
+        block = blocks[str(entry["index"])]
+        command = re.search(r"```\n(.*?)\n```", block, re.S)[1]
+        args = shlex.split(command)
+        assert command.count("shape publish") == 1
+        assert args[args.index("-t") + 1] == target
+        if target != "lakehouse":
+            assert args[args.index("--write-mode") + 1] == "replace"
+        else:
+            assert "--write-mode" not in args  # Lakehouse overwrites the fixed landing files.
+        for pattern, _ in entry.get("rewrite", []):
+            assert re.search(pattern, command), (target, pattern)
+        assert any(
+            row["page"] == entry["page"]
+            and row["index"] == entry["index"]
+            and row["kind"] == "cloud:Fabric"
+            for row in reference
+        )
+        output = re.search(r"    ```text {\.expected}\n(.*?)    ```", block, re.S)[1]
+        output = "\n".join(line.removeprefix("    ") for line in output.splitlines()) + "\n"
+        assert output.count("— Publishing retail →") == 1
+        shown.append(output)
+    receipt = json.loads(
+        (
+            ROOT / "docs/evidence/transcripts/"
+            "docs-transcripts-38400931371-c37ff1b1dadb-ubuntu-latest-publish-targets.json"
+        ).read_text()
+    )
+    assert "".join(shown) == receipt["stdout"]
+    assert {entry["id"]: entry["needs"] for entry in entries} == {
+        "publish-lakehouse": ["FABRIC_WORKSPACE_ID", "FABRIC_LAKEHOUSE_ID"],
+        "publish-sql-database": ["FABRIC_SQL_CONNECTION_STRING"],
+        "publish-warehouse": [
+            "DOCS_WAREHOUSE_CONNECTION",
+            "FABRIC_WORKSPACE_ID",
+            "FABRIC_LAKEHOUSE_ID",
+        ],
+        "publish-eventhouse": ["DOCS_KQL_HOST", "FABRIC_KQL_DB"],
+    }
