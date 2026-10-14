@@ -381,3 +381,10 @@ no option was added.
   Linear in the rows (the quadratic version took 55 s at 16M on the reviewer's table). The 16M figure is about 18%
   above 189c950's on this table; the numbers differ from the reviewer's 4.4 s because the tables differ.
 * N3: the CHANGELOG line about the hang no longer says "two runs in three".
+
+## Re-review of 637e47e: L1
+
+`_longest` now takes the largest `hist` key into account (`max(length.max, largest hist key)`) and a row's length is
+clipped to that id space, so a hand-edited profile whose `hist` lists a length above `length.max` no longer makes
+element ids overlap across blocks. Test: `{"min": 0, "max": 1, "hist": {"5": 10}}` at 9,000 rows gives the same table
+as the consistent profile, on both kernels and at chunk sizes 65,536 and 37; red before.

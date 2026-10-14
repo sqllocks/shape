@@ -257,7 +257,9 @@ def _longest(length: Mapping[str, Any] | None, fixed: int | None) -> int:
         return max(fixed, 1)
     if not length:
         return DEFAULT_MAX_LENGTH
-    return max(int(length["max"]), 1)
+    # a profile edited by hand can list a length above its own ``max``: leave room for it
+    longest = max([int(length["max"]), *(int(k) for k in length.get("hist") or ())])
+    return max(longest, 1)
 
 
 def _distinct_keys(
@@ -324,6 +326,7 @@ def _list_like(
             length, fixed, dataclasses.replace(ctx, row_start=start, n_rows=BLOCK_ROWS), path
         )
         lo, hi = max(ctx.row_start, start) - start, min(end, start + BLOCK_ROWS) - start
+        block_lens = np.minimum(block_lens, cap)  # a guard: no row outgrows its id space
         mine = block_lens[lo:hi]
         first = start * cap + int(block_lens[:lo].sum())  # the id of this chunk's first element
         count = int(mine.sum())

@@ -345,3 +345,32 @@ def test_the_lengths_drawn_per_chunk_follow_the_chunk_not_the_row_offset(
     drawn.clear()
     engine.generate_chunk("t", 0, 1000, chunk=0)
     assert 1000 <= sum(drawn) <= 1000 + 2 * nested.BLOCK_ROWS
+
+
+def test_a_hist_key_above_the_recorded_max_does_not_overlap_element_ids(
+    kernel: str, tmp_path: Path
+) -> None:
+    """A profile edited by hand can list a length above ``length.max``: the element numbering
+    must still leave room for it, so the table is the one the consistent profile gives."""
+    import copy
+
+    from shape.generation.engine import Engine
+    from shape.generation.fit import PRESET, fit_schema
+
+    table = pa.table(
+        {"id": list(range(10)), "c": pa.array([[b"x"] * 5] * 10, pa.list_(pa.binary()))}
+    )
+    prof = shape.profile(str(ni.write_parquet(tmp_path / "t.parquet", table))).to_dict()
+    assert prof["columns"]["c"]["nested"]["length"]["hist"] == {"5": 10}
+    edited = copy.deepcopy(prof)
+    edited["columns"]["c"]["nested"]["length"].update({"min": 0, "max": 1})
+
+    def run(doc: dict[str, Any], chunk: int = 65_536) -> pa.Table:
+        engine = Engine(fit_schema(doc, rows=9000).schema, scale=PRESET, seed=2, chunk_rows=chunk)
+        return engine.generate().tables["t"]
+
+    consistent, inconsistent = run(prof), run(edited)
+    assert inconsistent.equals(consistent)
+    assert run(edited, chunk=37).equals(inconsistent)
+    elements = [b for row in inconsistent.column("c").to_pylist() if row for b in row]
+    assert len(set(elements)) > 0.9 * len(elements)  # no ids shared between rows
