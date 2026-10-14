@@ -99,6 +99,12 @@ RULES = {
 
 TABLE_RULES = ["row_count", "primary_key", "detected_fks", "correlation_matrix"]
 
+# README.md, "Deviations, stated plainly", item 1 (lines 142-143): time-only
+# text is dated today by dtparse._midnight(today). Its date-derived histograms
+# cannot match a fixed recording across days; hours and all other fields can.
+TIME_ONLY_FIXTURES = frozenset({"edge/x_time_only.csv", "edge/x_time_ampm.csv"})
+TIME_ONLY_DATE_FIELDS = frozenset({"dow_histogram", "temporal_histogram"})
+
 
 def _num_close(a: Any, b: Any, rule: Any, tol: Any) -> Any:
     if a is None or b is None:
@@ -215,6 +221,8 @@ def check_table(
     for c, scol in sp["columns"].items():
         pcol = po["columns"].get(c)
         for f, (rule, tol) in RULES.items():
+            if prefix in TIME_ONLY_FIXTURES and f in TIME_ONLY_DATE_FIELDS:
+                continue
             m = matrix.setdefault(f, [0, 0, 0])
             m[0] += 1
             if pcol is None:

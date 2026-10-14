@@ -128,3 +128,86 @@ def test_missing_recording_is_checked_before_missing_profile_input(monkeypatch, 
     )
     assert v.main(["stub.csv"]) == 2
     assert "no recording" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("dataset", ["edge/x_time_only.csv", "edge/x_time_ampm.csv"])
+@pytest.mark.parametrize("change_hour", [False, True])
+def test_time_only_profiles_on_a_different_weekday(
+    dataset, change_hour, monkeypatch, tmp_path, capsys
+):
+    import datetime as dt
+
+    from shape.profile.reference import dtparse
+
+    v = verifier()
+    baseline = v.sd.restore_order(v.load("profile", dataset)["profile"])
+    # Recordings date time-only values to Tuesday in October 2026 (AM/PM
+    # also contains year-1 values). Pin a Thursday in November of another year.
+    today = dt.datetime(2027, 11, 4)
+    assert baseline["columns"]["t"]["dow_histogram"][today.weekday()] == 0.0
+    monkeypatch.setattr(dtparse, "_midnight", lambda supplied_today: today)
+    assert dtparse.parse_mixed("09:00:00").date() == today.date()
+
+    times = (
+        [f"{h:02d}:{m:02d}:00" for h in (9, 10, 13) for m in (0, 30)]
+        if dataset == "edge/x_time_only.csv"
+        else ["3pm", "10am", "11:45 PM", "7:05 am"]
+    )
+    path = tmp_path / dataset
+    path.parent.mkdir()
+    path.write_text("id,t\n" + "".join(f"{i},{times[i % len(times)]}\n" for i in range(60)))
+    monkeypatch.setattr(v, "DATA", tmp_path)
+    candidate = v.shape_profile(dataset)
+    assert candidate["columns"]["t"]["dow_histogram"] != baseline["columns"]["t"]["dow_histogram"]
+    assert (
+        candidate["columns"]["t"]["temporal_histogram"]
+        != baseline["columns"]["t"]["temporal_histogram"]
+    )
+    if change_hour:
+        candidate["columns"]["t"]["hour_histogram"][0] += 2e-9
+    monkeypatch.setattr(v, "shape_profile", lambda ds: candidate)
+    assert v.main([dataset]) == int(change_hour)
+    output = capsys.readouterr().out
+    if change_hour:
+        assert "1 mismatches" in output
+        assert ".hour_histogram" in output
+    else:
+        assert "0 mismatches" in output
+    assert "hour_histogram: 2/2" in output if not change_hour else "hour_histogram: 1/2" in output
+
+
+@pytest.mark.parametrize(
+    "dataset", ["edge/x_dates_a.csv", "x_time_only.csv", "other/x_time_ampm.csv"]
+)
+@pytest.mark.parametrize("field", ["dow_histogram", "temporal_histogram"])
+def test_date_derived_fields_are_compared_for_every_other_fixture(dataset, field):
+    v = verifier()
+    baseline = profile(v)
+    candidate = copy.deepcopy(baseline)
+    baseline["columns"]["x"][field] = [1.0, 0.0] if field == "dow_histogram" else {"year": [2026]}
+    candidate["columns"]["x"][field] = [0.0, 1.0] if field == "dow_histogram" else {"year": [2027]}
+    matrix, failures = {}, []
+    v.compare_profile(baseline, candidate, dataset, matrix, failures)
+    assert len(failures) == 1
+    assert field in failures[0]
+    assert matrix[field] == [1, 0, 0]
+
+
+@pytest.mark.parametrize("dataset", ["edge/x_time_only.csv", "edge/x_time_ampm.csv"])
+def test_time_only_exception_keeps_every_other_field_compared(dataset):
+    v = verifier()
+    baseline = v.sd.restore_order(v.load("profile", dataset)["profile"])
+    for field in v.RULES:
+        if field in {"dow_histogram", "temporal_histogram"}:
+            continue
+        candidate = copy.deepcopy(baseline)
+        candidate["columns"]["t"][field] = (
+            "changed" if baseline["columns"]["t"][field] is None else None
+        )
+        matrix, failures = {}, []
+        v.compare_profile(baseline, candidate, dataset, matrix, failures)
+        assert len(failures) == 1, (field, failures)
+        assert f".t.{field}" in failures[0]
+        assert matrix[field] == [2, 1, 1]
+        assert "dow_histogram" not in matrix
+        assert "temporal_histogram" not in matrix
