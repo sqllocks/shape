@@ -6,7 +6,20 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+### Fixed
+
+- **Nested columns (issue #1).** `shape profile` now profiles Parquet, Delta and JSON Lines
+  tables that hold list, struct or map columns, where it stopped with `unhashable type: nested
+  Arrow column`. The profile records the column's exact Arrow type, its null rate and, for a list
+  or a map, the distribution of its lengths; the other columns are unchanged. `diff`, `check`,
+  `inspect` and `generate --from` work on such a profile, and `generate` writes the column with
+  the same Arrow type. `generate` stops with an error that names the column for a union,
+  extension, run-end encoded or view type inside a nested column, and `shape fidelity` refuses a
+  nested column by name. An error whose message holds a backtrace is now one `shape: error:` line.
+- **Local Delta tables no longer hang at exit.** `shape profile` (and every read of a local Delta
+  table) could hang, or abort with `terminate called without an active exception`, as the process
+  ended, in about two runs of three, with or without a nested column. A local table is now read
+  through Arrow's own file system.
 
 ## 0.9.2
 
@@ -117,19 +130,6 @@ No unreleased changes.
   `shape fabric setup` names `shape fabric notebook` in its next steps.
 - **VS Code "Compare with Git HEAD".** The comparison document now opens; the custom
   editor had claimed it and no diff appeared.
-- **Nested columns (issue #1).** `shape profile` now profiles Parquet, Delta and JSON Lines
-  tables that hold list, struct or map columns, where it stopped with `unhashable type: nested
-  Arrow column`. The profile records the column's exact Arrow type, its null rate and, for a list
-  or a map, the distribution of its lengths; the other columns are unchanged. `diff`, `check`,
-  `inspect` and `generate --from` work on such a profile, and `generate` writes the column with
-  the same Arrow type. A local Delta table also no longer hangs or aborts the process at exit
-  (`terminate called without an active exception`), and an error with a backtrace in its message
-  is one `shape: error:` line.
-- **Local Delta tables no longer hang at exit.** `shape profile` (and every read of a local Delta
-  table) could hang, or abort with `terminate called without an active exception`, as the process
-  ended, in about two runs of three, with or without a nested column. A local table is now read
-  through Arrow's own file system.
-
 ### Changed
 
 - **Default Lakehouse name for `shape fabric setup` is `shape_lakehouse`** (was

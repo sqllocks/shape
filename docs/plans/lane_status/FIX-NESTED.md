@@ -305,3 +305,16 @@ hardening leaked between tests (see Checks), so it was not the commit to judge.
   duration column also works. A flat profile column of those types is generated today as text (an existing behaviour
   of `generate --from`), and changing it would change the output for an existing input, which the same message forbids;
   a registered strategy also needs a pinned-corpus fixture per strategy. I limited the change to nested children.
+
+## Second follow-up (lead's decisions, same branch)
+
+* `shape fidelity` (scores and `--tier`) refuses a nested column by name, exit 2, one line
+  (`quality/verify.py` `refuse_nested`, used in `cli/main.py` and `cli/tiers.py`); `tests/cli/test_nested_fidelity.py`
+  is red before the change (Arrow's `Function 'count_distinct' has no kernel ...`; `--tier` gave `TypeError:
+  unhashable type: 'list'`) and green after.
+* CHANGELOG: both entries moved from `## 0.9.2` to `## Unreleased` -> `### Fixed`.
+* PROFILING_NOTES documents the confirmed behaviours, which child types generate and which are refused, and that the
+  bounded engine records a nested column as kind `other`.
+* Provenance note: the bytes/duration generators and the 20-run Delta test came from a delayed cross-session
+  notification (id be055107, shown as from the lead session). The lead did not send it and keeps the commit only if the
+  independent review accepts it.

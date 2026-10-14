@@ -748,8 +748,12 @@ def _cmd_fidelity(a):
     from shape.quality import load_tables
 
     t0 = ci.started()
+    from shape.quality.verify import refuse_nested
+
     real = load_tables(a.reference, a.input_format)
     synth = load_tables(a.csv, a.input_format)
+    refuse_nested(real, "fidelity")
+    refuse_nested(synth, "fidelity")
     if not real:
         raise ValueError(f"no data files found in {a.reference}")
     if len(real) == 1 and len(synth) == 1:  # two single files compare whatever they are called
