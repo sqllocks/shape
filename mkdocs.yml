@@ -157,6 +157,7 @@ nav:
   - Value vault: VAULT.md
   - Safe-to-share bundle: SHARE_BUNDLE.md
   - Signing: SIGNING.md
+  - Signed artifact migration: MIGRATION.md
   - Threat model: THREAT_MODEL.md
   - Security specification: SECURITY_SPECIFICATION.md
 - Plugins:

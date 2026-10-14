@@ -385,7 +385,7 @@ def prepare(page: str) -> None:
                 }
             )
         )
-    if page in {"CLI", "SIGNING"}:
+    if page in {"CLI", "MIGRATION"}:
         Path("new.shape").unlink(missing_ok=True)
         from shape.artifact.signing import load_private_key, sign_artifact, write_keypair
         from shape.cli.main import main as cli
@@ -395,7 +395,7 @@ def prepare(page: str) -> None:
         with contextlib.redirect_stdout(io.StringIO()):
             cli(["capture", "orders.parquet", "-o", "old.shape"])
         sign_artifact("old.shape", private)
-        if page == "CLI":
+        if page in {"CLI", "MIGRATION"}:
             write_keypair("release", passphrase="local-example")
     if page == "PRIVACY_MODEL":
         import base64

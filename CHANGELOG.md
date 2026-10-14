@@ -6,7 +6,11 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+### Changed
+
+- Signing documentation moves experimental migration instructions and their local example to
+  `docs/MIGRATION.md`, and signed-vault instructions to `docs/VAULT.md`. `docs/SIGNING.md`
+  lists only the supported verification readers and describes `kv://` through host resolvers.
 
 ## 0.9.3
 

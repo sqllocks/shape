@@ -28,6 +28,15 @@ Every persisted format here declares `format` and an integer `version` and follo
 minimum Shape release that reads it (exit 2). The `vault` field of the profile manifest is additive:
 a profile written before it (no `vault`) reads, verifies and generates as before.
 
+## Signed profiles
+
+A profile that has a value vault records `vault: {"vault_id", "sha256"}` in its
+manifest, so the signature covers the vault's hash: replace or alter the vault and `shape vault
+verify --verify PUBKEY` and `shape generate --vault ... --verify PUBKEY` fail (exit 1). Signing needs
+no extra step for this; sign the profile after the vault is written (`shape profile --sign KEY`
+does). `shape vault rekey` writes a new profile, drops the old signature (a notice says so) and
+signs the new one only with `--key`.
+
 ## The vault format
 
 ```json
