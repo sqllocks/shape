@@ -139,7 +139,7 @@ Open questions: **none**. The Owner's classifications decision resolved the orig
   user-facing wording, generated registries, shipped data, plugin skeletons,
   versions, release workflows, conformance coverage, CLI compatibility and v1
   checks. The timeout occurred in the large core coverage-stage pytest run,
-  after progress reached 16%, with no displayed failures. This is an incomplete
+  after progress reached 22%, with no displayed failures. This is an incomplete
   full-suite run, not a passing coverage result or a proven coverage deadlock.
   The heavy/Python-kernel/Rust check stages were not reached. No gate was changed.
 - Final `ruff check` and `ruff format --check` on all prompt-listed paths: 0.
@@ -150,3 +150,12 @@ Open questions: **none**. The Owner's classifications decision resolved the orig
 
 Finish uses a DCO-signed commit, ordinary push only to `lane/W-syn-4`, and
 `git ls-remote` verification. No force push, PR, merge, release change or tag.
+
+- `git commit -s -m 'W-syn-4: pin documented Synapse sink options'`: 0,
+  `a721d7e7da6fddd6e73e8c65a996e05466855984` (DCO trailer included).
+- `git push -u origin lane/W-syn-4`: 0; `git ls-remote --heads origin lane/W-syn-4`: 0,
+  matching the implementation commit exactly; `git status --short`: 0, clean.
+- Final log read showed the full-check progress advanced to **22%** before the
+  watchdog terminated it. This status-only follow-up corrects the earlier 16%
+  snapshot and records the verified implementation push. No scoped source or
+  tests changed after their final passing checks.
