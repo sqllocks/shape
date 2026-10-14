@@ -29,9 +29,9 @@ the files can be shared or used for testing. The same code is the `mask` built-i
 | Option | Meaning |
 |---|---|
 | `PATH` | a CSV or Parquet file, or a directory with one file per table |
-| `-o DIR` | where the masked files go (one per table, same file name and format); the command refuses a directory that would overwrite its input |
+| `-o DIR` | where the masked files go (one per table, same file name and format); the command refuses a directory that is not empty (or would overwrite its input), so use a new one for each run |
 | `--format csv\|parquet` | the format of a directory's files, and of the output (default: the file's extension; `csv` for a directory) |
-| `--seed N` | the output is the same for the same input and seed (default 42); unused with a key |
+| `--seed N` | the output is the same for the same input and seed (default 42); not allowed with a key (`--key-file`, `--key-env`), exit 2 |
 | `--key-file FILE` / `--key-env VAR` | keyed masking (below): read the secret key from a file or an environment variable |
 | `--exclude COLUMN` | leave this column as it is (repeatable) |
 | `--pii COLUMN=TYPE` | mask this column as `TYPE` even if nothing marks it as personal data (repeatable) |
@@ -188,16 +188,14 @@ Run these commands in order after preparing the fixtures above.
 
 ```bash {.runnable-reference}
 shape mask ./real_data/ -o ./masked/                  # every CSV file in the directory
-shape mask customers.csv -o ./masked/ --seed 7
-shape mask ./real_data/ -o ./masked/ --format parquet
-shape mask orders.csv -o ./masked/ --exclude notes --pii token=ssn --json
+shape mask customers.csv -o ./masked_seed/ --seed 7
+shape mask ./real_data/ -o ./masked_parquet/ --format parquet
+shape mask orders.csv -o ./masked_json/ --exclude notes --pii token=ssn --json
 ```
 
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
-      kind, table = _read_files([path], threads, csv)
       Read customers: 20 rows x 10 columns
       Read orders: 100 rows x 23 columns
 
@@ -216,7 +214,7 @@ shape mask orders.csv -o ./masked/ --exclude notes --pii token=ssn --json
       customers: 4/10 columns masked (20 rows)
         Masked: name (name), email (email), region (state), city (city)
 
-    Written 1 CSV files to masked/
+    Written 1 CSV files to masked_seed/
       Read customers: 20 rows x 10 columns
       Read orders: 100 rows x 23 columns
 
@@ -227,10 +225,8 @@ shape mask orders.csv -o ./masked/ --exclude notes --pii token=ssn --json
       orders: 8/23 columns masked (100 rows)
         Masked: customer_email (email), region (state), zip (zip), city (city), state (state), iban (iban), token (ssn), ssn (ssn)
 
-    Written 2 PARQUET files to masked/
-    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
-      kind, table = _read_files([path], threads, csv)
-    {"files": ["masked/orders.csv"], "keyed": false, "columns_masked": {"orders": ["customer_email", "region", "zip", "city", "state", "iban", "token", "ssn"]}, "column_types": {"orders": {"customer_email": "email", "region": "state", "zip": "zip", "city": "city", "state": "state", "iban": "iban", "token": "ssn", "ssn": "ssn"}}, "stats": {"orders": {"total_cols": 23, "masked_cols": 8, "rows": 100}}, "format": "shape-result", "version": 1, "command": "mask", "exit_code": 0}
+    Written 2 PARQUET files to masked_parquet/
+    {"files": ["masked_json/orders.csv"], "keyed": false, "columns_masked": {"orders": ["customer_email", "region", "zip", "city", "state", "iban", "token", "ssn"]}, "column_types": {"orders": {"customer_email": "email", "region": "state", "zip": "zip", "city": "city", "state": "state", "iban": "iban", "token": "ssn", "ssn": "ssn"}}, "stats": {"orders": {"total_cols": 23, "masked_cols": 8, "rows": 100}}, "format": "shape-result", "version": 1, "command": "mask", "exit_code": 0}
     ```
 
 <a id="local-example-2"></a>
@@ -241,15 +237,13 @@ shape mask orders.csv -o ./masked/ --exclude notes --pii token=ssn --json
 
 ```bash {.runnable-reference}
 export SHAPE_MASK_KEY="$(python -c 'import secrets; print(secrets.token_hex(32))')"
-shape mask ./real_data/ -o ./masked/ --key-env SHAPE_MASK_KEY
-shape mask ./real_data/ -o ./masked/ --key-file mask.key      # chmod 600
+shape mask ./real_data/ -o ./masked_env/ --key-env SHAPE_MASK_KEY
+shape mask ./real_data/ -o ./masked_file/ --key-file mask.key      # chmod 600
 ```
 
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
-      kind, table = _read_files([path], threads, csv)
       Read customers: 20 rows x 10 columns
       Read orders: 100 rows x 23 columns
 
@@ -260,9 +254,7 @@ shape mask ./real_data/ -o ./masked/ --key-file mask.key      # chmod 600
       orders: 8/23 columns masked (100 rows)
         Masked: customer_email (email), region (state), zip (zip), city (city), state (state), iban (iban), token (ssn), ssn (ssn)
 
-    Written 2 CSV files to masked/
-    <checkout>/src/shape/profile/reference/sources.py:430: UserWarning: orders.csv: read as integers although they look like identifiers: 'salary' (every value has 5 digits). A number loses its leading zeros; if these are identifiers, keep them as text with --string-columns salary.
-      kind, table = _read_files([path], threads, csv)
+    Written 2 CSV files to masked_env/
       Read customers: 20 rows x 10 columns
       Read orders: 100 rows x 23 columns
 
@@ -273,5 +265,5 @@ shape mask ./real_data/ -o ./masked/ --key-file mask.key      # chmod 600
       orders: 8/23 columns masked (100 rows)
         Masked: customer_email (email), region (state), zip (zip), city (city), state (state), iban (iban), token (ssn), ssn (ssn)
 
-    Written 2 CSV files to masked/
+    Written 2 CSV files to masked_file/
     ```

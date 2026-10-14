@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import errno
 import json
+import warnings
 from pathlib import Path
 from typing import Any
 
@@ -27,7 +28,11 @@ def add_arguments(sub: Any) -> None:
     )
     ma.add_argument("input", metavar="PATH", help="a data file, or a directory of data files")
     ma.add_argument(
-        "-o", "--output", required=True, metavar="DIR", help="directory for the masked files"
+        "-o",
+        "--output",
+        required=True,
+        metavar="DIR",
+        help="a new or empty directory for the masked files",
     )
     ma.add_argument(
         "--format",
@@ -36,7 +41,13 @@ def add_arguments(sub: Any) -> None:
         help="the file format of a directory's files and of the output (default: from the "
         "input file's extension; csv for a directory)",
     )
-    ma.add_argument("--seed", type=int, default=42, help="random seed (default 42)")
+    ma.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="random seed (default 42); not allowed with --key-file or --key-env, whose key "
+        "decides the masks",
+    )
     keys = ma.add_mutually_exclusive_group()
     keys.add_argument(
         "--key-file",
@@ -134,6 +145,14 @@ def run(a: argparse.Namespace) -> int:
     for p in files.values():
         if (out_dir / p.name).resolve() == p.resolve():
             raise ValueError("the output directory would overwrite the input files")
+    if out_dir.exists() and (not out_dir.is_dir() or any(out_dir.iterdir())):
+        raise ValueError(f"{out_dir} exists and is not an empty folder: use a new one")
+    if a.seed is not None and (a.key_file or a.key_env):
+        raise ValueError(
+            "--seed cannot be combined with --key-file or --key-env: a keyed mask comes from the "
+            "key alone"
+        )
+    seed = 42 if a.seed is None else a.seed
     pii = _pii(a.pii)
     key = _key(a, out_dir)
 
@@ -145,9 +164,13 @@ def run(a: argparse.Namespace) -> int:
                 raise ValueError(
                     f"{flag} {name!r} is not a column of the data (columns: {', '.join(known)})"
                 )
-    typed = profile({name: str(p) for name, p in files.items()}).to_dict()
+    with warnings.catch_warnings():
+        # the profiler advises --string-columns for number-like identifiers; mask has no such
+        # flag and reads every CSV value as text, so the hint does not apply
+        warnings.filterwarnings("ignore", message=r".*--string-columns", category=UserWarning)
+        typed = profile({name: str(p) for name, p in files.items()}).to_dict()
     transform = default_host().get("shape.transforms", "mask")
-    result = transform.mask(tables, seed=a.seed, exclude=a.exclude, pii=pii, profile=typed, key=key)
+    result = transform.mask(tables, seed=seed, exclude=a.exclude, pii=pii, profile=typed, key=key)
 
     out_dir.mkdir(parents=True, exist_ok=True)
     written = []

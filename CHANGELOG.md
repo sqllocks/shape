@@ -6,7 +6,7 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+- **`shape mask` guards.** `shape mask` now refuses an output folder that is not empty and `--seed` together with `--key-file` or `--key-env` (both exit 2), and no longer prints a `--string-columns` hint that it has no flag for.
 
 ## 0.9.2
 
