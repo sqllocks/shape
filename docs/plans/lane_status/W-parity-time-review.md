@@ -41,6 +41,6 @@ None blocking.
    from the printed matrix rather than appearing as "skipped", so a reader of the parity artifact
    cannot see that they were intentionally not compared. Optional: print a
    `  dow_histogram: skipped (README 142-143)` line for those two fixtures.
-2. Non-blocking, `tests/benchmarks/test_profile_verify_recorded.py:178`: the conditional
+2. Non-blocking, `tests/benchmarks/test_profile_verify_recorded.py:176`: the conditional
    expression `assert "..." in output if not change_hour else "..." in output` is correct but easy
    to misread; an explicit `if/else` would be clearer.
