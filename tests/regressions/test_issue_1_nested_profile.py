@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from collections.abc import Iterator
@@ -160,3 +161,56 @@ def test_a_flat_local_delta_table_profiles_cleanly_twenty_times(tmp_path: Path) 
             pytest.fail(f"run {run}: the process did not end (hang at exit)")
         assert done.returncode == 0, f"run {run} exit {done.returncode}: {done.stderr[-300:]}"
         assert "terminate called" not in done.stderr
+
+
+def test_a_normal_multi_line_message_numbered_from_zero_is_kept() -> None:
+    from shape.cli.errors import one_line
+
+    assert one_line("steps:\n0: first\n1: second") == "steps: 0: first 1: second"
+    delta = "Kernel error: bad\n   0: <unknown>\n   1: <unknown>\n  12: start_thread"
+    assert one_line(delta) == "Kernel error: bad"
+
+
+@pytest.mark.parametrize("how", ["flag", "env"])
+def test_a_failed_cloud_delta_read_ends_the_process_with_logging_on(
+    tmp_path: Path, how: str
+) -> None:
+    """--log-json / --metrics / SHAPE_LOG_JSON make the command line wait for its log line, which
+    used to switch off the exit by itself: a read through deltalake's Python file system that fails
+    midway hung the process (10 runs in 10)."""
+    from deltalake import write_deltalake
+
+    src = tmp_path / "d"
+    for i in range(30):
+        part = pa.table({"id": list(range(i * 1000, (i + 1) * 1000))})
+        write_deltalake(str(src), part, mode="append")
+    argv = "['shape', '--log-json', 'version']" if how == "flag" else "['shape', 'version']"
+    script = (
+        "import sys, importlib\n"
+        "cli = importlib.import_module('shape.cli.main')\n"
+        "from deltalake import DeltaTable\n"
+        "from shape.io import deltafs\n"
+        "def command(argv):\n"
+        "    deltafs.note_bridge()\n"
+        f"    scan = DeltaTable({str(src)!r}).to_pyarrow_dataset().scanner(batch_size=2)\n"
+        "    reader = scan.to_reader()\n"
+        "    reader.read_next_batch()\n"
+        "    raise OSError('connection lost')\n"
+        "cli._dispatch = command\n"
+        f"sys.argv = {argv}\n"
+        "cli.main()\n"
+    )
+    env = {**os.environ, "SHAPE_LOG_JSON": "1"} if how == "env" else dict(os.environ)
+    for run in range(3):
+        try:
+            done = subprocess.run(
+                [sys.executable, "-c", script],
+                capture_output=True,
+                text=True,
+                timeout=60,
+                env=env,
+            )
+        except subprocess.TimeoutExpired:  # pragma: no cover - the failure being tested
+            pytest.fail(f"run {run}: the process did not end")
+        assert done.returncode == 2, f"run {run}: exit {done.returncode}: {done.stderr[-300:]}"
+        assert "shape: error:" in done.stderr

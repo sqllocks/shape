@@ -9,13 +9,13 @@ statistics would (``SchemaBuilder.column_generator`` on a blank profile): that i
 beyond its type is therefore not modelled.
 
 Everything is row addressed, like every strategy: the value of row ``r`` depends on the seed, the
-column and ``r`` alone, whatever the chunking. A list of up to ``M`` elements takes ``M`` slots;
-slot ``j`` is generated for all the rows of the chunk by the child's generator (its own stream) and
-the rows whose list is longer than ``j`` keep it, so a chunk costs ``rows x M`` child values.
+column and ``r`` alone, whatever the chunking. The elements of a list or a map are a column of
+their own: element ``i`` of the column is the i-th element after the lengths of all earlier rows,
+so a chunk costs its own elements (plus the cheap sum of the earlier rows' lengths).
 
 Choices (``docs/PROFILING_NOTES.md``): a nested value with no recorded lengths (a list inside a
 list, inside a struct, or a map inside a list) has 1 to 3 elements; a struct field is never null;
-the entries of a map have distinct keys (strings and integers get the slot number built in, any
+the entries of a map have distinct keys (strings and integers get the entry's position built in, any
 other key type drops the repeated keys, so such a map can be shorter); a child type with no
 generator (union, extension, run-end encoded and the view types) is refused by name.
 """
@@ -242,28 +242,63 @@ def _to_leaf(arr: pa.Array, typ: pa.DataType) -> pa.Array:
     return arr.cast(typ)  # a timestamp, in its unit and zone
 
 
-def _unique_keys(
-    keys: list[pa.Array], lengths: np.ndarray[Any, Any], key_type: pa.DataType
-) -> tuple[list[pa.Array], np.ndarray[Any, Any]]:
-    """Slot ``j`` of a map's keys made distinct within a row; returns the keys and the lengths.
+_BLOCK = 1 << 20  # rows whose lengths are summed at a time to find where a chunk's elements start
 
-    A string key gets ``_j`` appended and an integer key ``j`` added to the row's first key, so
-    keys differ by construction. Any other key type keeps the first occurrence and drops repeats
-    (the row's map is then shorter)."""
+
+def _element_base(
+    length: Mapping[str, Any] | None, fixed: int | None, ctx: GenerationContext, path: str
+) -> int:
+    """The number of elements in the rows before ``ctx.row_start``: the id of the chunk's first
+    element, so that an element's value depends on its place in the column and not on the
+    chunking."""
+    if fixed is not None:
+        return fixed * ctx.row_start
+    total = 0
+    for start in range(0, ctx.row_start, _BLOCK):
+        block = dataclasses.replace(ctx, row_start=start, n_rows=min(_BLOCK, ctx.row_start - start))
+        total += int(_lengths(length, None, block, path).sum())
+    return total
+
+
+def _distinct_keys(
+    keys: pa.Array,
+    lens: np.ndarray[Any, Any],
+    offsets: np.ndarray[Any, Any],
+    key_type: pa.DataType,
+) -> pa.Array:
+    """The keys of a map's entries made distinct within a row.
+
+    A string key gets ``_<position>`` appended; an integer key becomes the row's first key plus
+    the position (modulo the type's range, so any width works). Any other key type is returned
+    as it is: ``_distinct_entries`` then drops the repeats."""
+    if len(keys) == 0:
+        return keys
+    row = np.repeat(np.arange(len(lens)), lens)
+    pos = np.arange(len(keys)) - offsets[row]
     if pa.types.is_string(key_type) or pa.types.is_large_string(key_type):
-        return [
-            pc.binary_join_element_wise(k, pa.scalar(f"_{j}", key_type), "")
-            for j, k in enumerate(keys)
-        ], lengths
-    if pa.types.is_integer(key_type) and keys:
-        info = np.iinfo(key_type.to_pandas_dtype())
-        base = np.asarray(keys[0].to_numpy(zero_copy_only=False), dtype=np.int64)
-        span = int(info.max) - int(info.min) - len(keys)
-        shifted = [
-            ((base - int(info.min)) % max(span, 1) + int(info.min) + j) for j in range(len(keys))
-        ]
-        return [pa.array(s, pa.int64()).cast(key_type, safe=False) for s in shifted], lengths
-    return keys, lengths
+        suffix = pc.cast(pa.array(pos, pa.int64()), key_type)
+        return pc.binary_join_element_wise(keys, suffix, pa.scalar("_", key_type))
+    if pa.types.is_integer(key_type):
+        first = keys.take(pa.array(offsets[row], pa.int64()))
+        raw = np.asarray(first.to_numpy(zero_copy_only=False))
+        wide = (
+            raw.astype(np.uint64)
+            if raw.dtype.kind == "u"
+            else raw.astype(np.int64).astype(np.uint64)
+        )
+        moved = wide + pos.astype(np.uint64)  # modulo 2**64
+        width = key_type.bit_width
+        if width < 64:
+            moved = moved & np.uint64((1 << width) - 1)
+        if pa.types.is_signed_integer(key_type):
+            signed = moved.astype(np.int64)
+            if width < 64:
+                signed = np.where(signed >= (1 << (width - 1)), signed - (1 << width), signed)
+            else:
+                signed = moved.view(np.int64)
+            return pa.array(signed, pa.int64()).cast(key_type)
+        return pa.array(moved, pa.uint64()).cast(key_type)
+    return keys
 
 
 def _list_like(
@@ -273,48 +308,26 @@ def _list_like(
     length: Mapping[str, Any] | None,
     element_null_rate: float | None,
 ) -> pa.Array:
-    n = ctx.n_rows
     kind = nested_kind(typ)
     is_map = kind == "map"
     fixed = typ.list_size if kind == "fixed_size_list" else None
     lens = _lengths(length, fixed, ctx, path)
-    top = int(lens.max()) if n else 0
-    value_type = typ.item_type if is_map else typ.value_type
-    key_type = typ.key_type if is_map else None
-    rows: list[np.ndarray[Any, Any]] = []
-    items: list[pa.Array] = []
-    keys: list[pa.Array] = []
-    for j in range(top):
-        live = np.nonzero(lens > j)[0]
-        take = pa.array(live, pa.int64())
-        item = _values(value_type, ctx, f"{path}[{j}].v")
-        if element_null_rate:
-            u = RowStream(ctx.seed, ctx.table, ctx.column, f"nested.element{path}[{j}]").uniform(
-                ctx.row_start, n
-            )
-            item = pc.if_else(pa.array(u < element_null_rate), pa.scalar(None, item.type), item)
-        items.append(item.take(take))
-        if is_map:
-            keys.append(_values(key_type, ctx, f"{path}[{j}].k"))
-        rows.append(live)
-    if is_map and keys:
-        keys, lens = _unique_keys(keys, lens, key_type)
-        keys = [k.take(pa.array(r, pa.int64())) for k, r in zip(keys, rows, strict=True)]
-    if rows:
-        row_ids = np.concatenate(rows)
-        order = np.argsort(
-            row_ids * max(top, 1)
-            + np.concatenate([np.full(len(r), j) for j, r in enumerate(rows)]),
-            kind="stable",
-        )
-        child = pa.concat_arrays(items).take(pa.array(order, pa.int64()))
-        child_keys = pa.concat_arrays(keys).take(pa.array(order, pa.int64())) if is_map else None
-    else:
-        child = pa.array([], value_type)
-        child_keys = pa.array([], key_type) if is_map else None
-    if is_map:
-        child_keys, child, lens = _distinct_entries(child_keys, child, lens, key_type)
+    total = int(lens.sum())
+    base = _element_base(length, fixed, ctx, path)
     offsets = np.concatenate([[0], np.cumsum(lens)])
+    # the elements are a column of their own: element ``base + i`` is the i-th of this chunk
+    inner = dataclasses.replace(ctx, row_start=base, n_rows=total)
+    value_type = typ.item_type if is_map else typ.value_type
+    child = _values(value_type, inner, f"{path}.v")
+    if element_null_rate:
+        u = RowStream(ctx.seed, ctx.table, ctx.column, f"nested.element{path}").uniform(base, total)
+        child = pc.if_else(pa.array(u < element_null_rate), pa.scalar(None, child.type), child)
+    child_keys = None
+    if is_map:
+        key_type = typ.key_type
+        child_keys = _distinct_keys(_values(key_type, inner, f"{path}.k"), lens, offsets, key_type)
+        child_keys, child, lens = _distinct_entries(child_keys, child, lens, key_type)
+        offsets = np.concatenate([[0], np.cumsum(lens)])
     if kind == "fixed_size_list":
         return pa.FixedSizeListArray.from_arrays(child, type=typ)
     if kind == "large_list":

@@ -172,3 +172,45 @@ def test_a_code_validator_refuses_a_nested_column_by_name(tmp_path: Path) -> Non
     src = ni.write("parquet", tmp_path, ni.table_with("li"))
     with pytest.raises(ValueError, match="column 'li' is nested"):
         shape.profile(str(src), validators={"li": "iban"})
+
+
+# --- review findings on the nested record ------------------------------------------------------
+
+
+def _element_rate(arr: pa.Array) -> Any:
+    from shape.profile.nested import nested_stats
+
+    return nested_stats(pa.chunked_array([arr]), len(arr)).get("element_null_rate")
+
+
+def test_a_map_has_an_element_null_rate() -> None:
+    values = [[("a", 1)], None, [], [("x", None), ("y", 2)], [("k", 3)], None]
+    # four entries (a, x, y, k), one of them with a null value
+    assert _element_rate(pa.array(values, pa.map_(pa.string(), pa.int64()))) == 0.25
+
+
+def test_a_map_split_in_chunks_and_sliced_has_the_same_rate() -> None:
+    from shape.profile.nested import nested_stats
+
+    arr = pa.array(
+        [[("a", 1)], None, [], [("x", None), ("y", 2)], [("k", 3)], None],
+        pa.map_(pa.string(), pa.int64()),
+    )
+    col = pa.chunked_array([arr.slice(0, 2), arr.slice(2, 3), arr.slice(5)])
+    assert nested_stats(col, 6)["element_null_rate"] == 0.25
+
+
+def test_a_list_and_a_fixed_size_list_have_an_element_null_rate() -> None:
+    assert _element_rate(pa.array([[1, None], None, [3, 4]], pa.list_(pa.int64()))) == 0.25
+    assert _element_rate(pa.array([[1, None], None, [3, 4]], pa.list_(pa.int64(), 2))) == 0.25
+
+
+def test_length_percentiles_are_rounded_like_the_mean() -> None:
+    import numpy as np
+
+    from shape.profile.nested import length_summary
+
+    out = length_summary(np.array([1, 2, 4, 8, 16, 33, 41]))
+    for key in ("mean", "std", "p50", "p95"):
+        assert out[key] == round(out[key], 6)
+    assert out["p95"] != 38.599999999999994

@@ -230,3 +230,41 @@ def test_the_fitted_schema_validates_without_warnings(tmp_path: Path) -> None:
     )
     issues = [i for i in fit_schema(prof).schema.validate() if "nested" in i.message]
     assert issues == []
+
+
+def test_null_map_values_are_drawn_at_the_recorded_rate(tmp_path: Path) -> None:
+    rows = [[("a", None), ("b", 2)] if i % 2 == 0 else [("c", 3), ("d", 4)] for i in range(200)]
+    table = pa.table(
+        {"id": list(range(200)), "m": pa.array(rows, pa.map_(pa.string(), pa.int64()))}
+    )
+    prof = shape.profile(str(ni.write_parquet(tmp_path / "t.parquet", table)))
+    assert prof.to_dict()["columns"]["m"]["nested"]["element_null_rate"] == 0.25
+    out = shape.generate(prof, n=400, seed=3).tables["t"]
+    items = [v for row in out.column("m").to_pylist() if row for _, v in row]
+    assert 0.15 < sum(v is None for v in items) / len(items) < 0.35
+
+
+def test_unsigned_64_bit_map_keys_are_generated(tmp_path: Path) -> None:
+    rows = [[(2**63 + i, "x"), (i, "y")] for i in range(40)]
+    table = pa.table(
+        {"id": list(range(40)), "m": pa.array(rows, pa.map_(pa.uint64(), pa.string()))}
+    )
+    out = _generated(table, tmp_path, rows=100)
+    assert out.schema.field("m").type.key_type == pa.uint64()
+    for row in out.column("m").to_pylist():
+        if row:
+            keys = [k for k, _ in row]
+            assert len(keys) == len(set(keys))
+
+
+def test_a_few_long_lists_do_not_cost_rows_times_the_longest(tmp_path: Path) -> None:
+    import time
+
+    lists = [[1] for _ in range(1999)] + [list(range(3000))]
+    table = pa.table({"id": list(range(2000)), "li": pa.array(lists, pa.list_(pa.int64()))})
+    prof = shape.profile(str(ni.write_parquet(tmp_path / "t.parquet", table)))
+    start = time.perf_counter()
+    out = shape.generate(prof, n=100_000, seed=1).tables["t"]
+    took = time.perf_counter() - start
+    assert out.num_rows == 100_000
+    assert took < 5.0, f"{took:.1f}s: the cost follows the number of elements, not rows x longest"

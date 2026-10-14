@@ -192,17 +192,26 @@ def _lengths(col: pa.ChunkedArray) -> np.ndarray[Any, Any]:
     return np.asarray(lens.to_numpy(zero_copy_only=False), dtype=np.int64)
 
 
+def _map_values(chunk: pa.MapArray) -> pa.Array:
+    """The values of the entries of ``chunk`` (``MapArray.items`` is the whole child array, so a
+    slice of a map is cut from the offsets)."""
+    offsets = chunk.offsets
+    first = offsets[0].as_py()
+    return chunk.items.slice(first, offsets[len(chunk)].as_py() - first)
+
+
 def _element_null_rate(col: pa.ChunkedArray) -> float | None:
     """The share of null elements (list) or null values (map) among all elements, else ``None``."""
     present = col.drop_null() if col.null_count else col
+    total = nulls = 0
     try:
-        flat = pc.list_flatten(present)
-    except pa.ArrowNotImplementedError:
+        for chunk in present.chunks:
+            flat = _map_values(chunk) if pa.types.is_map(col.type) else pc.list_flatten(chunk)
+            total += len(flat)
+            nulls += flat.null_count
+    except pa.ArrowNotImplementedError:  # a view type on an Arrow without the kernel
         return None
-    if pa.types.is_map(col.type):
-        flat = flat.field(1)  # the map's values; a key is never null
-    total = len(flat)
-    return round(flat.null_count / total, 6) if total else None
+    return round(nulls / total, 6) if total else None
 
 
 def length_summary(lens: np.ndarray[Any, Any]) -> dict[str, Any]:
@@ -212,8 +221,8 @@ def length_summary(lens: np.ndarray[Any, Any]) -> dict[str, Any]:
         "max": int(lens.max()),
         "mean": round(float(lens.mean()), 6),
         "std": round(float(lens.std()), 6),
-        "p50": float(np.percentile(lens, 50)),
-        "p95": float(np.percentile(lens, 95)),
+        "p50": round(float(np.percentile(lens, 50)), 6),
+        "p95": round(float(np.percentile(lens, 95)), 6),
     }
     values, counts = np.unique(lens, return_counts=True)
     if len(values) <= MAX_HIST:

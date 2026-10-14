@@ -40,8 +40,8 @@ EXPECTED: tuple[type[BaseException], ...] = (
     zipfile.BadZipFile,
 )
 
-# the start of a backtrace that a native library (delta-rs) appends to its message: "0: <unknown>"
-_BACKTRACE = re.compile(r"\n\s*0:\s")
+# the start of the backtrace that delta-rs appends to its message: "   0: <unknown>"
+_BACKTRACE = re.compile(r"\n\s*0:\s+<unknown>")
 
 _NOT_FOUND = re.compile(r"^(?:source|file)\s+not found:\s*(?P<path>.+)$", re.IGNORECASE)
 

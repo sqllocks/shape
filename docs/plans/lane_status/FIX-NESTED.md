@@ -318,3 +318,31 @@ hardening leaked between tests (see Checks), so it was not the commit to judge.
 * Provenance note: the bytes/duration generators and the 20-run Delta test came from a delayed cross-session
   notification (id be055107, shown as from the lead session). The lead did not send it and keeps the commit only if the
   independent review accepts it.
+
+## Independent review of 120d159: findings fixed
+
+Tests first; each was red before (`pytest ... -k` run: 9 failed, 1 passed before the fixes).
+
+1. MEDIUM `profile/nested.py`: a map had no `element_null_rate` (`pc.list_flatten` has no map kernel). Map values are now
+   read per chunk from the offsets (`MapArray.items` is the whole child array, so a slice needs the offsets).
+   Tests: map, sliced and chunked map, list, fixed-size list, and `generate` draws null map values. The review's
+   example `[{a:1}, None, [], [(x,None),(y,2)], [(k,3)], None]` has four entries and one null value, so the rate is
+   0.25, not 0.2; the test says so.
+2. MEDIUM `cli/main.py`: with `--log-json`, `--metrics` or `SHAPE_LOG_JSON`, quick exit was off for the whole run, so a
+   failed cloud Delta read still hung. `main()` now turns quick exit back on once the command, its log line and its
+   metrics file are written, when `deltafs.bridge_in_use` is set. Tests run a simulated bridge read that fails with an
+   `OSError`, with the flag and with the environment variable (hang -> timeout before; exit 2 and one error line after).
+3. LOW `generation/nested.py`: `map<uint64, ...>` keys raised `OverflowError`. Integer keys are now computed in uint64
+   with wrap-around and cut to the key type's width. Test with keys above 2**63.
+4. LOW `generation/nested.py`: cost was rows x longest list. The elements of a chunk are now one column of
+   `sum(lengths)` values whose ids follow the lengths of all earlier rows (summed in blocks of 2**20 rows), so the
+   cost follows the number of elements. 2000-row profile with 1999 lists of length 1 and one of 3000, 100,000 rows
+   generated: was about 10.6 s (the review), the test bounds it at 5 s and it runs in well under a second here.
+   Chunk-size independence is still tested (65,536, 37 and 1 rows). The generated values of a nested column differ
+   from 120d159's (nested generation is unreleased).
+5. LOW `profile/nested.py`: `p50` and `p95` are rounded to 6 places.
+6. NIT `cli/errors.py`: the backtrace cut is anchored on delta-rs's own first frame (`0: <unknown>`); a normal
+   message numbered from 0 is kept (test).
+
+Not added: issue #1 asked for `shape profile --exclude` / `--columns` as a workaround. Nested columns now profile, so
+no option was added.

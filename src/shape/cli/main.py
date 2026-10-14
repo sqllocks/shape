@@ -2312,6 +2312,8 @@ def main(argv=None):
         # Arrow pool thread frees: tearing the interpreter down around it can hang or abort
         # (GitHub issue #1). End the process once all is flushed.
         lifecycle.exit_on_return = True
+        # the log line and the metrics file (the reason quick exit was off) are written by now
+        lifecycle.quick_exit_allowed = argv is None
     if lifecycle.exit_on_return:
         lifecycle.exit_now(code)
     return code
