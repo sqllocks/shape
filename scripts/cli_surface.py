@@ -187,6 +187,10 @@ def _compare_positionals(
             problems.append(f"{where}: positional {o['name']!r} was removed")
             continue
         n = new[i]
+        if o["name"] != n["name"]:
+            problems.append(
+                f"{where}: positional {o['name']!r} was renamed or moved (now {n['name']!r})"
+            )
         if o["nargs"] != n["nargs"]:
             problems.append(f"{where}: positional {o['name']!r} nargs {o['nargs']} -> {n['nargs']}")
         oc, nc = o["choices"], n["choices"]

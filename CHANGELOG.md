@@ -14,6 +14,11 @@ Status: available.
   command list starts empty; no commands are promoted. The plugin CLI promise applies only
   when plugin and core have the same release.
 
+### Fixed
+
+- The CLI surface check now treats a renamed, moved or reordered positional of a stable
+  command as a compatibility problem.
+
 ## 0.9.2
 
 ### Added

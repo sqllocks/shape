@@ -165,7 +165,9 @@ def test_snapshot_loads_both_fabric_spellings_and_setup_rename(listed, host, mon
 
 
 @pytest.mark.parametrize("path", ["publish", "fabric publish"])
-@pytest.mark.parametrize("change", ["flag", "choice", "value", "positional", "command", "demotion"])
+@pytest.mark.parametrize(
+    "change", ["flag", "choice", "value", "positional", "rename", "command", "demotion"]
+)
 def test_each_spelling_rejects_breaking_changes(listed, host, path, change):
     baseline = surface.snapshot_plugins(host)
     live = copy.deepcopy(baseline)
@@ -178,6 +180,8 @@ def test_each_spelling_rejects_breaking_changes(listed, host, path, change):
         command["flags"]["--target"]["takes_value"] = False
     elif change == "positional":
         command["positionals"].pop()
+    elif change == "rename":
+        command["positionals"][0]["name"] = "RENAMED"
     elif change == "command":
         live[DIST]["commands"].pop(path)
     else:

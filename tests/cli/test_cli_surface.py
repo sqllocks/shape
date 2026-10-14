@@ -195,6 +195,42 @@ def test_adding_an_optional_positional_passes_and_a_required_one_breaks() -> Non
     assert problems == ["check: new required positional 'X'"]
 
 
+def test_renaming_a_stable_positional_breaks() -> None:
+    live = copy.deepcopy(BASELINE)
+    old = live["commands"]["check"]["positionals"][0]["name"]
+    live["commands"]["check"]["positionals"][0]["name"] = "RENAMED"
+    problems, _ = surface.compare(BASELINE, live)
+    assert problems == [f"check: positional {old!r} was renamed or moved (now 'RENAMED')"]
+
+
+def test_reordering_stable_positionals_breaks() -> None:
+    live = copy.deepcopy(BASELINE)
+    names = [p["name"] for p in live["commands"]["check"]["positionals"]]
+    assert len(names) >= 2
+    live["commands"]["check"]["positionals"][:2] = reversed(
+        live["commands"]["check"]["positionals"][:2]
+    )
+    problems, _ = surface.compare(BASELINE, live)
+    assert [p for p in problems if "was renamed or moved" in p] == [
+        f"check: positional {names[0]!r} was renamed or moved (now {names[1]!r})",
+        f"check: positional {names[1]!r} was renamed or moved (now {names[0]!r})",
+    ]
+
+
+def test_an_unchanged_positional_surface_is_clean() -> None:
+    assert surface.compare(BASELINE, copy.deepcopy(BASELINE)) == ([], [])
+
+
+def test_renaming_an_experimental_positional_is_not_a_problem() -> None:
+    base = copy.deepcopy(BASELINE)
+    name = next(
+        c for c, v in base["commands"].items() if v["stability"] != "stable" and v["positionals"]
+    )
+    live = copy.deepcopy(base)
+    live["commands"][name]["positionals"][0]["name"] = "RENAMED"
+    assert surface.compare(base, live)[0] == []
+
+
 def test_removing_a_stable_command_or_subcommand_breaks(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
