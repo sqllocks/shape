@@ -20,6 +20,7 @@ cryptography>=50,<51
 
 # Local reference examples, including dbt with DuckDB and maintainer checks.
 dbt-duckdb==1.11.0
+dbt-core==1.12.5
 setuptools==84.0.0
 build==1.6.1
 openpyxl==3.1.5
