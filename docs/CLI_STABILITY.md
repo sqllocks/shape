@@ -16,8 +16,9 @@ this repository, named in [Enforcement](#enforcement).
 ## Which commands are stable
 
 A command is **stable** or **experimental**. Everything not listed as stable is experimental, and
-each experimental command says so: its `--help` starts with `(experimental)`, and so does its line
-in `shape --help`.
+each experimental command says so: its `--help` starts with `(experimental)`. Core commands
+also start their line in `shape --help` with that marker; plugin stubs say
+`(plugin DISTRIBUTION, experimental)`.
 
 | Level | Commands |
 |---|---|
@@ -26,10 +27,33 @@ in `shape --help`.
 
 An experimental command may change or go away in any minor release, without the deprecation
 process below. It is promoted to stable by adding it to the table above and to
-`shape.cli.stability.STABLE`, and nothing is promoted without a release note. A stable command is
+`shape.cli.stability.STABLE` (core) or `shape.cli.stability.STABLE_PLUGIN_COMMANDS` (plugins),
+and nothing is promoted without a release note. A stable command is
 never demoted within 1.x.
 
-Commands that a plugin adds (`shape.commands`) are covered by the plugin promise, not by this one.
+## Stable plugin commands
+
+| Command (both spellings for Fabric) | Distribution |
+|---|---|
+
+No plugin commands are listed yet. Every plugin command remains experimental.
+
+Only first-party commands listed in `STABLE_PLUGIN_COMMANDS` receive this CLI promise. It holds
+with a plugin of the **same release** as the core, including the patch version. A forced version
+mismatch, such as an install with `pip --no-deps`, is outside the promise. The release's lockstep
+check covers each listed distribution and its exact first-party dependency pins.
+
+For a listed Fabric command, **both spellings freeze together**: `shape publish` and
+`shape fabric publish`, for example. `shape setup-fabric` pairs with `shape fabric setup`.
+Removing either spelling is a breaking change. A stable plugin command is never demoted in 1.x.
+A missing listed plugin gives one `shape: error:` line naming the distribution to install and
+exits 2.
+
+The flags and exit classes of listed commands follow this page. Existing `--json` keys are
+covered by the command's own tests; a command without `--json` gains no output-format promise.
+Banners and human-readable output layout are not covered. Other plugin commands stay under the
+[plugin API promise](plugins/stability.md), which covers the `Command` Protocol and loader,
+not their command-line flags or output.
 
 ## What is stable for a stable command
 
@@ -111,6 +135,15 @@ Nothing is deprecated in CLI 1.0.
   flag or choice was removed or renamed without a deprecation entry (naming each one), and 2 on a
   usage error. Additions pass and are reported. `python scripts/cli_surface.py --write` refreshes
   the baseline after an additive change and refuses a breaking one.
+- `python scripts/cli_surface.py --check --plugins` (also in `make check` and CI) loads every
+  listed command through `PluginHost` and compares its configured parser with
+  `tests/cli/cli_surface_plugins_v1.json`. The baseline has one top-level key per distribution;
+  both Fabric spellings are recorded. Missing plugins fail the check. `--write --plugins`
+  refreshes this separate baseline after an additive change and refuses a breaking one.
+- `tests/cli/test_plugin_surface.py` exercises ownership refusal before import, both help
+  spellings, removals and additions, missing plugins, and the bad-input exit class for every
+  listed command and alias. No absent listed distribution is skipped. CI installs the
+  first-party plugins from this checkout.
 - `tests/cli/test_cli_surface.py` tests the check itself (a removed flag exits 1 and is named, an
   added flag exits 0) and that every experimental command says so in its `--help`.
 - `tests/cli/test_exit_code_classes.py` runs one representative command per exit-code class.

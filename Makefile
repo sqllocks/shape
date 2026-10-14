@@ -21,6 +21,7 @@ check:
 	$(PYTHON) scripts/check_release_workflows.py
 	$(PYTHON) scripts/check_conformance_coverage.py
 	$(PYTHON) scripts/cli_surface.py --check
+	$(PYTHON) scripts/cli_surface.py --check --plugins
 	$(PYTHON) scripts/check_v1_done.py
 	pytest -q -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric --ignore=tests/demo/content --cov=shape --cov-fail-under=86
 	pytest -q -m heavy tests/kernel tests/profile tests/streaming

@@ -306,6 +306,8 @@ class PluginHost:
             if rec.status == _LOADED:
                 return rec.obj
             self._load(rec)
+            if rec.status == _BLOCKED:
+                raise PluginBlockedError(rec.error or f"plugin {group}:{name} is blocked")
             if rec.status == _ERROR:
                 raise PluginLoadError(f"plugin {group}:{name} failed to load: {rec.error}")
             return rec.obj
@@ -330,6 +332,18 @@ class PluginHost:
         return self.records(group)
 
     def _load(self, rec: PluginRecord) -> None:
+        if rec.group == "shape.commands":
+            from shape.cli.stability import command_distribution
+
+            owner = command_distribution(rec.name)
+            if owner is not None and (
+                not trust.canonical_name(owner).startswith("sqllocks-shape-")
+                or trust.canonical_name(rec.source) != trust.canonical_name(owner)
+            ):
+                rec.status = _BLOCKED
+                rec.obj = None
+                rec.error = f"command {rec.name!r} requires distribution {owner}; got {rec.source}"
+                return
         try:
             pending = rec.obj if isinstance(rec.obj, _Pending) else None
             if pending is not None:

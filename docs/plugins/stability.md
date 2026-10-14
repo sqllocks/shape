@@ -131,6 +131,24 @@ SHAPE_API = "1.0"   # "MAJOR.MINOR"
 - A new minor is published only for additive changes, and its additions are listed in the release
   notes.
 
+## Stable plugin commands
+
+The [CLI stability promise](../CLI_STABILITY.md#stable-plugin-commands) also covers the flags,
+positionals and exit classes of first-party commands listed by core in `STABLE_PLUGIN_COMMANDS`.
+No plugin commands are listed yet. This promise holds only with a plugin of the **same release**
+as core, including the patch version. Other plugin commands remain experimental.
+
+For Fabric commands, **both spellings freeze together**, including `shape publish` and
+`shape fabric publish`, and `shape setup-fabric` and `shape fabric setup`. The plugin CLI baseline
+records both parsers. A loader refuses a listed command from another distribution before importing
+it; a missing listed plugin exits 2 with one error naming the distribution to install.
+
+This adds no members to the `Command` Protocol and does not change API v1 or its baseline.
+The `check_command` conformance kit is unchanged: the listed-command exit-class harness applies
+only to listed commands, not to all plugins. Third-party commands receive the Protocol and loader
+promise above, without a freeze of their command-line flags. Existing `--json` keys of a listed
+command are covered by that command's tests; banners and other output layout are not covered.
+
 ## Stable plugin options
 
 Options of a first-party plugin that other tools build on are stable in the same way. The

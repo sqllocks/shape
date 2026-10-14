@@ -47,6 +47,26 @@ def render() -> str:
         for code, meaning in exitcodes.codes(info.path).items():
             out.append(f"| {code} | {meaning} |")
         out.append("")
+    from shape.cli.stability import FABRIC_COMMAND_ALIASES, plugin_commands
+
+    paths = plugin_commands()
+    covered: set[str] = set()
+    for path in sorted(paths):
+        if path in covered or path.startswith("fabric "):
+            continue
+        spellings = [path]
+        alias = FABRIC_COMMAND_ALIASES.get(path)
+        if alias in paths:
+            spellings.append(alias)
+        covered.update(spellings)
+        names = " / ".join(f"`shape {n}`" for n in spellings)
+        out.append(f"## {names}\n")
+        out.append(f"Stable plugin command: `{paths[path]}` (same release as core).\n")
+        out.append("| Code | Meaning |\n|---|---|")
+        codes = exitcodes.CODES.get(path, {0: exitcodes.OK, 1: "a check failed", 2: exitcodes.BAD})
+        for code, meaning in sorted(codes.items()):
+            out.append(f"| {code} | {meaning} |")
+        out.append("")
     return "\n".join(out).rstrip("\n") + "\n"
 
 

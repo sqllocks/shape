@@ -125,7 +125,7 @@ def test_builtin_names_win_and_help_lists_plugin_commands(site):
     r = shape(site, "profile", "--help")
     assert r.returncode == 0 and "SRC" in r.stdout  # still the built-in profile
     h = shape(site, "--help")
-    assert "hello" in h.stdout and "(plugin shape-example-plugin)" in h.stdout
+    assert "hello" in h.stdout and "(plugin shape-example-plugin, experimental)" in h.stdout
     assert "shadow" in h.stdout
 
 

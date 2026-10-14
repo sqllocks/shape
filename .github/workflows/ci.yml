@@ -58,6 +58,7 @@ jobs:
       - run: python scripts/check_release_workflows.py
       # W1-10: the CLI surface against its stability baseline, and the v1.0 definition of done
       - run: python scripts/cli_surface.py --check
+      - run: python scripts/cli_surface.py --check --plugins
       - run: python scripts/check_v1_done.py
       # W5-05: the smoke suite of starter scenarios, each against its answer key
       - run: python -m shape suite run smoke --scale small

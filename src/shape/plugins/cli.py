@@ -7,7 +7,7 @@ import argparse
 import inspect
 import json
 import sys
-from typing import Any
+from typing import Any, NoReturn
 
 from shape.plugins import trust
 from shape.plugins.api import v1
@@ -139,25 +139,50 @@ def command_names(host: PluginHost, reserved: set[str]) -> dict[str, PluginRecor
     return {r.name: r for r in host.records(COMMANDS_GROUP) if r.name not in reserved}
 
 
+class _ListedCommandParser(argparse.ArgumentParser):
+    """Stable command input errors use the core's one-line error policy."""
+
+    def error(self, message: str) -> NoReturn:
+        from shape.cli import errors
+
+        raise SystemExit(errors.fail(ValueError(message)))
+
+
 def run_command(host: PluginHost, name: str, argv: list[str]) -> int:
     """Load the plugin command ``name`` and run it with ``argv``.
 
-    A command that cannot load, or that raises, exits 1 with its error on stderr. Argument
-    errors exit 2 (argparse), and ``SystemExit`` from the command is passed through.
+    Unlisted commands keep the plugin API's error policy. Listed commands use the core's
+    one-line bad-input errors (exit 2), including a missing owning distribution. Unexpected
+    plugin failures exit 1, and ``SystemExit`` from the command is passed through.
     """
+    from shape.cli.stability import annotate_plugin, command_distribution, level
+
+    path = f"{name} {argv[0]}" if name == "fabric" and argv else name
+    listed = level(path) == "stable"
+    owner = command_distribution(name)
     try:
         cmd = host.get(COMMANDS_GROUP, name)
     except PluginBlockedError as exc:  # the allow-list's refusal is an input error, not a crash
         print(f"shape: error: {exc}", file=sys.stderr)
         return 2
-    except (PluginLoadError, KeyError) as exc:
+    except KeyError as exc:
+        if owner is not None:
+            from shape import __version__
+            from shape.cli import errors
+
+            return errors.fail(
+                ValueError(f"command {path!r} needs {owner}; install {owner}=={__version__}")
+            )
         print(f"shape: plugin command {name!r} failed to load: {exc}", file=sys.stderr)
         return 1
-    parser = argparse.ArgumentParser(
-        prog=f"shape {name}", description=getattr(cmd, "help", None) or None
-    )
+    except PluginLoadError as exc:
+        print(f"shape: plugin command {name!r} failed to load: {exc}", file=sys.stderr)
+        return 1
+    parser_class = _ListedCommandParser if listed else argparse.ArgumentParser
+    parser = parser_class(prog=f"shape {name}", description=getattr(cmd, "help", None) or None)
     try:
         cmd.configure(parser)
+        annotate_plugin(parser, name)
         ns = parser.parse_args(argv)
         return int(cmd.run(ns) or 0)
     except SystemExit as exc:
@@ -170,6 +195,10 @@ def run_command(host: PluginHost, name: str, argv: list[str]) -> int:
     except Exception as exc:  # a plugin is third-party code: report it, never a traceback
         from shape.cli import errors
 
+        if listed and isinstance(exc, errors.EXPECTED):
+            if errors.debug_enabled():
+                raise
+            return errors.fail(exc)
         if errors.debug_enabled():  # --debug / SHAPE_DEBUG=1 asks for the traceback
             raise
         print(

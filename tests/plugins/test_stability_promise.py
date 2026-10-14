@@ -194,3 +194,17 @@ def test_kit_commands_in_the_page_exist(text: str) -> None:
 def test_page_does_not_name_non_public_things(text: str) -> None:
     low = text.lower()
     assert not names_refengine(low)
+
+
+def test_stable_plugin_commands_are_under_the_cli_promise(text: str) -> None:
+    section = _section(text, "Stable plugin commands")
+    for needle in ("STABLE_PLUGIN_COMMANDS", "same release", "both spellings", "check_command"):
+        assert needle in section
+    cli_page = (ROOT / "docs/CLI_STABILITY.md").read_text()
+    for needle in (
+        "STABLE_PLUGIN_COMMANDS",
+        "same release",
+        "both spellings",
+        "Stable plugin commands",
+    ):
+        assert needle in cli_page

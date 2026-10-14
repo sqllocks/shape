@@ -8,7 +8,9 @@ core command and subcommand of ``shape.cli.main`` with its stability level, its 
 string, whether it takes a value, its choices) and its positionals, as CLI 1.0 shipped them.
 ``compare`` applies the promise in ``docs/CLI_STABILITY.md``: what the baseline holds for a stable
 command must still be there, unless ``shape.cli.stability.DEPRECATIONS`` lists it; additions pass
-and are reported. Plugin commands are not part of the snapshot (see ``docs/plugins/stability.md``).
+and are reported. Listed first-party plugin commands have a separate baseline, selected with
+``--plugins``: ``tests/cli/cli_surface_plugins_v1.json``. Its top-level distribution keys each
+hold a core-shaped surface. Both documented Fabric spellings are captured together.
 
 Exit codes: 0 compatible, 1 a stable command, flag or choice was removed or renamed, 2 usage error.
 """
@@ -24,6 +26,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 BASELINE = ROOT / "tests" / "cli" / "cli_surface_v1.json"
+PLUGIN_BASELINE = ROOT / "tests" / "cli" / "cli_surface_plugins_v1.json"
 FORMAT = "shape-cli-surface"
 VERSION = 1
 
@@ -83,6 +86,52 @@ def snapshot(parser: argparse.ArgumentParser | None = None) -> dict[str, Any]:
         "global_flags": root["flags"],
         "commands": commands,
     }
+
+
+def snapshot_plugins(host: Any = None) -> dict[str, Any]:
+    """Load listed first-party entry points and snapshot every promised spelling.
+
+    An absent or unloadable plugin is an error, even when only an alias needs it.
+    Experimental siblings of a listed Fabric child are outside its freeze.
+    """
+    from shape.cli.stability import command_distribution, plugin_commands
+    from shape.plugins import trust
+    from shape.plugins.host import PluginHost, PluginLoadError
+
+    if host is None:
+        host = PluginHost()
+    live: dict[str, Any] = {
+        "format": FORMAT,
+        "version": VERSION,
+        "global_flags": {},
+        "commands": {},
+    }
+    parsers: dict[str, argparse.ArgumentParser] = {}
+    for path, distribution in sorted(plugin_commands().items()):
+        name, *children = path.split()
+        if name not in parsers:
+            owner = command_distribution(name)
+            rec = host.record("shape.commands", name)
+            if rec is None:
+                raise ValueError(f"{path}: missing plugin; install {distribution}")
+            if owner is None or trust.canonical_name(rec.source) != trust.canonical_name(owner):
+                raise ValueError(f"{path}: requires {distribution}, got {rec.source}")
+            try:
+                command = host.get("shape.commands", name)
+                parser = argparse.ArgumentParser(prog=f"shape {name}")
+                command.configure(parser)
+            except (PluginLoadError, KeyError) as exc:
+                raise ValueError(f"{path}: cannot load {distribution}: {exc}") from exc
+            parsers[name] = parser
+        parser = parsers[name]
+        for child in children:
+            sub = _subparsers(parser)
+            if sub is None or child not in sub.choices:
+                raise ValueError(f"{path}: missing plugin spelling in {distribution}")
+            parser = sub.choices[child]
+        group = live.setdefault(distribution, {"global_flags": {}, "commands": {}})
+        group["commands"][path] = _retag(_node(parser), "stable")
+    return live
 
 
 def _retag(node: dict[str, Any], lvl: str) -> dict[str, Any]:
@@ -193,6 +242,15 @@ def compare(baseline: dict[str, Any], live: dict[str, Any]) -> tuple[list[str], 
         _compare_node(name, old, live_cmd, problems, notes)
     for name in sorted(live["commands"].keys() - baseline["commands"].keys()):
         notes.append(f"{name}: new {live['commands'][name]['stability']} command")
+    metadata_keys = {"format", "version", "global_flags", "commands"}
+    for distribution in sorted(baseline.keys() - metadata_keys):
+        old = baseline[distribution]
+        new = live.get(distribution, {"global_flags": {}, "commands": {}})
+        bad, added = compare(old, new)
+        problems.extend(f"{distribution}: {p}" for p in bad)
+        notes.extend(f"{distribution}: {n}" for n in added)
+    for distribution in sorted(live.keys() - baseline.keys() - metadata_keys):
+        notes.append(f"{distribution}: new plugin distribution")
     return problems, notes
 
 
@@ -210,13 +268,18 @@ def main(argv: list[str] | None = None) -> int:
     mode = ap.add_mutually_exclusive_group(required=True)
     mode.add_argument("--check", action="store_true")
     mode.add_argument("--write", action="store_true")
-    ap.add_argument("--baseline", type=Path, default=BASELINE, help=argparse.SUPPRESS)
+    ap.add_argument(
+        "--plugins", action="store_true", help="check listed first-party plugin commands"
+    )
+    ap.add_argument("--baseline", type=Path, help=argparse.SUPPRESS)
     try:
         ns = ap.parse_args(argv)
     except SystemExit as exc:
         return int(exc.code) if isinstance(exc.code, int) else 2  # argparse: usage error is 2
-    live = snapshot()
+    if ns.baseline is None:
+        ns.baseline = PLUGIN_BASELINE if ns.plugins else BASELINE
     try:
+        live = snapshot_plugins() if ns.plugins else snapshot()
         if ns.write:
             if ns.baseline.exists():
                 problems, _ = compare(load_baseline(ns.baseline), live)

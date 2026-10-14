@@ -2219,9 +2219,9 @@ def _build_parser(plugin_commands=()):
     notify_cli.add_arguments(sub)
     from shape.cli.stability import annotate
 
-    annotate(p)
     for rec in plugin_commands:  # listed in --help only; the plugin loads when it is run
         sub.add_parser(rec.name, help=f"(plugin {rec.source})", add_help=False)
+    annotate(p)
     from shape.cli import exitcodes, machine
 
     machine.install(p)
@@ -2507,7 +2507,9 @@ def _dispatch_command(argv):
         from shape.plugins.host import default_host
 
         plugin_cmds = command_names(default_host(), builtin)
-    if argv[:1] and argv[0] in plugin_cmds:
+    from shape.cli.stability import command_distribution
+
+    if argv[:1] and (argv[0] in plugin_cmds or command_distribution(argv[0]) is not None):
         from shape.plugins.cli import run_command
         from shape.plugins.host import default_host
 

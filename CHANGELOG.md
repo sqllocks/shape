@@ -6,7 +6,13 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+### Added
+
+- Plugin command stability infrastructure for 0.9.4: a core-owned first-party command list,
+  a separate per-distribution CLI surface check covering both Fabric spellings, experimental
+  help markers, ownership checks and a listed-command exit-class harness. The stable plugin
+  command list starts empty; no commands are promoted. The plugin CLI promise applies only
+  when plugin and core have the same release.
 
 ## 0.9.2
 
