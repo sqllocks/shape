@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import importlib
 import json
 import random
 from pathlib import Path
@@ -113,6 +114,73 @@ def test_a_round_that_can_detect_its_injection_exits_zero_and_writes_the_report(
     assert "drift:null_rate_change" in rnd["fired"]
     md = (out / "gameday_report.md").read_text()
     assert "# Game day report" in md and "## nulls: detected" in md
+
+
+@pytest.mark.parametrize("missed", [False, True], ids=["detected", "mixed"])
+def test_markdown_report_shows_the_recorded_run_and_each_round(world, capsys, missed):
+    rounds = [a_round(name="caught")]
+    if missed:
+        rounds.append(a_round(name="missed", checks=[TODAY]))
+    plan = world(*rounds)
+    out = world.root / "out"
+    code, _, err = run(capsys, "gameday", "run", plan, "-o", out, "--seed", 7)
+    assert code == int(missed), err
+    report = json.loads((out / "gameday_report.json").read_text())
+    md = (out / "gameday_report.md").read_text()
+    assert f"Plan: `{report['plan']}`" in md
+    assert f"Data: `{report['data']}`" in md
+    assert f"Seed: {report['seed']}" in md
+    verdict = "a failure was missed" if missed else "every expectation was detected"
+    assert f"Result: **{verdict}**" in md
+    assert md.endswith("\n")
+    headings = []
+    for rnd in report["rounds"]:
+        status = "detected" if rnd["detected"] else "MISSED"
+        heading = f"## {rnd['name']}: {status}"
+        headings.append(md.index(heading))
+        section = md.split(heading, 1)[1].split("\n## ", 1)[0]
+        assert f"Injected `{rnd['inject']}` into {', '.join(rnd['tables'])}" in section
+        for injection in rnd["injected"]:
+            planted = f"- planted `{injection['kind']}` in `{injection['table']}`"
+            if injection["column"]:
+                planted += f".`{injection['column']}`"
+            assert f"{planted} ({injection['rows']} rows)" in section
+        for expectation in rnd["expectations"]:
+            result = "detected" if expectation["detected"] else "MISSED"
+            assert f"| `{expectation['expect']}` | {result} |" in section
+        for check in rnd["checks"]:
+            assert (f"| `{' '.join(check['command'])}` | {check['exit_code']} | ") in section
+    assert headings == sorted(headings)
+
+
+@pytest.mark.parametrize(
+    ("command", "flags"),
+    [
+        ("diff", ["--json", "-"]),
+        ("check", ["--json", "-"]),
+        ("verify", ["--json"]),
+        ("profile", []),
+        ("fidelity", []),
+    ],
+)
+def test_run_check_adds_json_for_detection_commands_only(monkeypatch, command, flags):
+    cli_main = importlib.import_module("shape.cli.main")
+
+    called = []
+
+    def check(argv):
+        called.append(argv)
+        print('{"result": "recorded"}')
+        return 1
+
+    monkeypatch.setattr(cli_main, "main", check)
+    argv = [command, "input"]
+    original = argv.copy()
+    code, stdout, stderr, seconds = gameday.run_check(argv)
+    assert called == [[*original, *flags]]
+    assert argv == original
+    assert code == 1 and json.loads(stdout) == {"result": "recorded"}
+    assert stderr == "" and seconds >= 0
 
 
 def test_the_injection_is_planted_in_the_copy_only(world, capsys):
