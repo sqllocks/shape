@@ -112,11 +112,11 @@ jobs:
                    FABRIC_LAKEHOUSE_ID FABRIC_SQL_ENDPOINT FABRIC_CLASSIC_LAKEHOUSE_TABLES_PATH \
                    FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH FABRIC_EVENTHOUSE_URI \
                    FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING SHAPE_TEST_SYNAPSE_URI \
-                   SHAPE_TEST_SYNAPSE_STAGING SYNAPSE_SUBSCRIPTION_ID; do
+                   SHAPE_TEST_SYNAPSE_STAGING SYNAPSE_SUBSCRIPTION_ID SYNAPSE_WORKSPACE; do
             val="${!v}"
             [ -n "$val" ] || continue
             echo "::add-mask::$val"
-            printf '%s\n' "$val" | grep -oEi '[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}' | sed 's/^/::add-mask::/'
+            printf '%s\n' "$val" | grep -oEi '[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}' | sed 's/^/::add-mask::/' || true
           done
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
@@ -618,8 +618,9 @@ jobs:
           import xml.etree.ElementTree as ET
 
           GUID = re.compile(r"[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}")
+          HOST = re.compile(r"[A-Za-z0-9-]+\.(?:datawarehouse|database)\.fabric\.microsoft\.com")
           # ::add-mask:: does not apply to the step summary, so redact the text itself: the masked
-          # values first (longest first), then every GUID.
+          # values first (longest first), then every host and GUID.
           MASKED = sorted(
               {os.environ[k] for k in (
                   "FABRIC_TENANT_ID", "FABRIC_CLIENT_ID", "FABRIC_WORKSPACE_ID", "FABRIC_GIT_WORKSPACE_ID",
@@ -627,6 +628,7 @@ jobs:
                   "FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH", "FABRIC_EVENTHOUSE_URI", "FABRIC_STAGING_PATH",
                   "FABRIC_SAMPLE_WAREHOUSE_CONNECTION_STRING", "FABRIC_WAREHOUSE_CONNECTION_STRING",
                   "SHAPE_TEST_SYNAPSE_URI", "SHAPE_TEST_SYNAPSE_STAGING", "SYNAPSE_SUBSCRIPTION_ID",
+                  "SYNAPSE_WORKSPACE",
               ) if os.environ.get(k)},
               key=len, reverse=True,
           )
@@ -634,7 +636,7 @@ jobs:
           def redact(text):
               for value in MASKED:
                   text = text.replace(value, "<redacted>")
-              return GUID.sub("<guid>", text)
+              return GUID.sub("<guid>", HOST.sub("<host>", text))
 
           path = "live-junit.xml"
           lines = ["## Fabric live tests", ""]
@@ -692,6 +694,10 @@ jobs:
       FABRIC_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
       FABRIC_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
       FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH: ${{ vars.FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH }}
+      # Not used by the seed scripts: set only so the first step masks them (the SQL endpoint host
+      # is the one the Lakehouse's connection string names).
+      FABRIC_SQL_ENDPOINT: ${{ vars.FABRIC_SQL_ENDPOINT }}
+      SYNAPSE_WORKSPACE: ${{ vars.SYNAPSE_WORKSPACE }}
       AZURE_TENANT_ID: ${{ vars.FABRIC_TENANT_ID }}
       AZURE_CLIENT_ID: ${{ vars.FABRIC_CLIENT_ID }}
       AZURE_CLIENT_SECRET: ${{ secrets.FABRIC_CLIENT_SECRET }}
@@ -705,11 +711,12 @@ jobs:
         # This repository is public: mask every ID-bearing value, and every GUID inside one, before any
         # step prints. Secrets are masked by GitHub already.
         run: |
-          for v in FABRIC_TENANT_ID FABRIC_CLIENT_ID FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH; do
+          for v in FABRIC_TENANT_ID FABRIC_CLIENT_ID FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH \
+                   FABRIC_SQL_ENDPOINT SYNAPSE_WORKSPACE; do
             val="${!v}"
             [ -n "$val" ] || continue
             echo "::add-mask::$val"
-            printf '%s\n' "$val" | grep -oEi '[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}' | sed 's/^/::add-mask::/'
+            printf '%s\n' "$val" | grep -oEi '[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}' | sed 's/^/::add-mask::/' || true
           done
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
@@ -732,15 +739,56 @@ jobs:
       - name: Update the shape_sm semantic model
         if: always() && (steps.seed.outcome == 'success' || inputs.sm_mode == 'inspect')
         run: python -u scripts/fabric_update_shape_sm.py
-      - name: Step summary
+      - name: Step summary - names and counts only (the record itself is in the artifact)
         if: always()
         run: |
-          {
-            echo "## Seed record"
-            echo '```json'
-            cat seed-record.json 2>/dev/null || echo "(no record: the seed step did not finish)"
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY'
+          import json
+          import os
+          import re
+
+          GUID = re.compile(r"[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}")
+          HOST = re.compile(r"[A-Za-z0-9-]+\.(?:datawarehouse|database)\.fabric\.microsoft\.com")
+          # ::add-mask:: does not apply to the step summary: write names and counts, never the record's
+          # IDs or the SQL endpoint listing, and redact even those (the masked values first, longest
+          # first, then every host and GUID).
+          MASKED = sorted(
+              {os.environ[k] for k in (
+                  "FABRIC_TENANT_ID", "FABRIC_CLIENT_ID", "FABRIC_SCHEMA_LAKEHOUSE_TABLES_PATH",
+                  "FABRIC_SQL_ENDPOINT", "SYNAPSE_WORKSPACE",
+              ) if os.environ.get(k)},
+              key=len, reverse=True,
+          )
+
+          def redact(text):
+              for value in MASKED:
+                  text = text.replace(value, "<redacted>")
+              return GUID.sub("<guid>", HOST.sub("<host>", text))
+
+          lines = ["## Seed record", ""]
+          try:
+              with open("seed-record.json", encoding="utf-8") as f:
+                  record = json.load(f)
+          except (OSError, ValueError):
+              lines.append("(no record: the seed step did not finish)")
+          else:
+              counts = record.get("sql_endpoint_counts") or {}
+              lines += [
+                  f"Lakehouse `{record.get('lakehouse')}`, schema `{record.get('schema')}`, "
+                  f"scale `{record.get('scale')}`, seed {record.get('seed')}; the SQL endpoint lists "
+                  f"{len(record.get('sql_endpoint_tables') or [])} table(s).",
+                  "",
+                  "| table | rows written | columns | rows in the SQL endpoint |",
+                  "|---|---:|---:|---:|",
+              ]
+              for name, table in sorted((record.get("tables") or {}).items()):
+                  lines.append(
+                      f"| `{name}` | {table.get('rows')} | {len(table.get('columns') or [])} "
+                      f"| {counts.get(name, 'not listed')} |"
+                  )
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
+              f.write(redact("\n".join(lines)) + "\n")
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:

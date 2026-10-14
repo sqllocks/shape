@@ -13,6 +13,7 @@ import json
 import os
 import sys
 import time
+from pathlib import Path
 
 import pyarrow as pa
 from shape_fabric import LakehouseSource, _tsql, onelake
@@ -21,6 +22,9 @@ from shape_fabric.fabric_api import SCOPE_FABRIC
 from shape.cli.main import main
 from shape.generation.domains import load_domain
 from shape.scale.http import Http
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from ci_redact import hide, redact  # noqa: E402
 
 API = "https://api.fabric.microsoft.com/v1"
 WAIT_SECONDS = 600
@@ -82,6 +86,7 @@ def main_seed() -> int:
             "columns": arrow.column_names,
         }
     props = (item.get("properties") or {}).get("sqlEndpointProperties") or {}
+    hide(props.get("connectionString", ""))
     connection = f"Data Source={props['connectionString']};Initial Catalog={item['displayName']}"
     deadline = time.monotonic() + WAIT_SECONDS
     visible: dict[str, int] = {}
@@ -105,7 +110,7 @@ def main_seed() -> int:
     record["sql_endpoint_tables"] = listing
     record["sql_endpoint_counts"] = visible
     text = json.dumps(record, indent=2)
-    print(text)
+    print(redact(text))  # the log is public; the file keeps the IDs for the run's artifact
     with open(os.environ.get("SEED_RECORD", "seed-record.json"), "w", encoding="utf-8") as f:
         f.write(text)
     missing = [n for n in names if visible.get(n) != record["tables"][n]["rows"]]

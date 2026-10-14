@@ -5,7 +5,9 @@ Run by the dispatch-only ``seed`` job of ``.github/workflows/fabric-live.yml`` a
 lists its parts; ``update`` (default) downloads it, adds the tables and relationships, uploads it
 (``updateDefinition``) and downloads it again to confirm. Every part of the downloaded definition is
 written under ``SM_DIR`` (default ``sm-definition``) for the run's artifact. Every HTTP failure is
-printed with the response body and fails the script: nothing is assumed to have worked.
+printed with the response body and fails the script: nothing is assumed to have worked. The log is
+public: everything printed goes through ``ci_redact.redact`` (GUIDs and the SQL endpoint host
+replaced); the artifact files keep the definition as Fabric returned it.
 
 Tables added: customer, order, order_line, product (Direct Lake on the Lakehouse SQL endpoint,
 schema ``FABRIC_LAKEHOUSE_SCHEMA`` or ``dbo``), with ``order.customer_id -> customer.customer_id``,
@@ -29,6 +31,9 @@ from shape_fabric import _tsql, onelake
 from shape_fabric.fabric_api import SCOPE_FABRIC
 
 from shape.scale.http import Http, HttpError
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from ci_redact import hide, redact  # noqa: E402
 
 API = "https://api.fabric.microsoft.com/v1"
 TABLES = ("customer", "order", "order_line", "product")
@@ -67,7 +72,7 @@ class Fabric:
         try:
             return Http(token).request(method, url, body=body, ok=ok)
         except HttpError as exc:
-            print(f"{method} {url} -> {exc.status}\n{exc.text}")
+            print(redact(f"{method} {url} -> {exc.status}\n{exc.text}"))
             raise
 
     def lro(self, method: str, path: str, body: Any = None, result: bool = True) -> dict[str, Any]:
@@ -85,7 +90,7 @@ class Fabric:
                 fetched = self.call("GET", location.rstrip("/") + "/result", ok=(200, 204))
                 return fetched.json_object() if fetched.status == 200 else {}
             if doc.get("status") in ("Failed", "Cancelled"):
-                raise RuntimeError(f"operation {doc.get('status')}: {json.dumps(doc)}")
+                raise RuntimeError(redact(f"operation {doc.get('status')}: {json.dumps(doc)}"))
             response = state
         raise RuntimeError("operation did not finish in time")
 
@@ -112,7 +117,7 @@ def dump(files: dict[str, str], folder: str) -> None:
         target.write_text(text, encoding="utf-8")
         print(f"--- {folder}/{path} ({len(text)} bytes)")
         if len(text) < 8000:  # small definition parts are printed: the record of what was there
-            print(text)
+            print(redact(text))
 
 
 def expression_source(files: dict[str, str]) -> str:
@@ -214,7 +219,7 @@ def main() -> int:
         print(f"semantic models: {[m.get('displayName') for m in models.get('value', [])]}")
         return 1
     model_id = found[0]["id"]
-    print(f"semantic model {name} = {model_id}")
+    print(redact(f"semantic model {name} = {model_id}"))
     base = f"/workspaces/{where.workspace}/semanticModels/{model_id}"
     got = api.lro("POST", f"{base}/getDefinition?format=TMDL")
     files = decode(got["definition"]["parts"])
@@ -224,10 +229,11 @@ def main() -> int:
 
     item = api.call("GET", f"/workspaces/{where.workspace}/lakehouses/{where.item}").json_object()
     props = item["properties"]["sqlEndpointProperties"]
+    hide(props["connectionString"])
     connection = f"Data Source={props['connectionString']};Initial Catalog={item['displayName']}"
     expression = os.environ.get("SM_EXPRESSION") or expression_source(files)
     expression = expression or "DatabaseQuery"
-    print(f"expression source: {expression}")
+    print(redact(f"expression source: {expression}"))
 
     added: dict[str, list[str]] = {}
     for table in TABLES:
@@ -285,7 +291,7 @@ def main() -> int:
     dump(again, folder + "-after")
     ok = all(f"definition/tables/{t}.tmdl" in again for t in TABLES)
     shown = again.get("definition/relationships.tmdl", "(none)")
-    print(f"tables present after update: {ok}; relationships:\n{shown}")
+    print(redact(f"tables present after update: {ok}; relationships:\n{shown}"))
     return 0 if ok else 1
 
 
