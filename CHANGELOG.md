@@ -6,7 +6,11 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+### Added
+
+- Available documentation promotion checks validate stable commands, claim-to-proof
+  tables, real service evidence, owner notes and release notes. The legacy exemption
+  list can only shrink. Experimental sections render in a warning box.
 
 ## 0.9.2
 

@@ -226,8 +226,32 @@ def rewrite_links(
     return "\n".join(out)
 
 
+def experimental_markdown(markdown: str) -> str:
+    """Render standalone experimental fences as a warning, preserving inline examples."""
+    lines: list[str] = []
+    inside = False
+    for line in markdown.splitlines():
+        if line.strip() == "<!-- experimental:start -->":
+            if inside:
+                raise ValueError("Nested experimental fence")
+            lines.extend(["", '!!! warning "Experimental"', ""])
+            inside = True
+        elif line.strip() == "<!-- experimental:end -->":
+            if not inside:
+                raise ValueError("Unmatched experimental end fence")
+            inside = False
+            lines.append("")
+        else:
+            lines.append("    " + line if inside and line else line)
+    if inside:
+        raise ValueError("Unclosed experimental fence")
+    return "\n".join(lines) + ("\n" if markdown.endswith("\n") else "")
+
+
 def on_page_markdown(markdown: str, page: Any, config: Any, files: Any) -> str:
     """mkdocs hook: point links to files outside the site at the repository."""
+
+    markdown = experimental_markdown(markdown)
 
     def is_site_file(rel: str) -> bool:
         f = files.get_file_from_path(rel)

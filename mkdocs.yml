@@ -200,6 +200,7 @@ nav:
   - Release checklist: RELEASE_CHECKLIST.md
   - Release 0.9.1 tag and digest check: evidence/release-0.9.1-verify.md
   - Definition of done for 1.0: V1_DONE.md
+  - Available feature proofs: AVAILABLE.md
 - Help and trust:
   - Troubleshooting: TROUBLESHOOTING.md
   - FAQ: FAQ.md
