@@ -185,7 +185,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 The S&P 500 constituent list names public companies and their public attributes (ticker, sector,
 headquarters state, website); it is sample data and is not a current or complete index membership.
 
-## Synthetic healthcare and capital-markets reference replacements (0.9.2)
+## Synthetic healthcare and capital-markets reference replacements (0.9.3)
 
 The healthcare procedure catalog uses `SP-01` through `SP-49`, with descriptions
 `Synthetic procedure 01` through `Synthetic procedure 49`. The letters and hyphen

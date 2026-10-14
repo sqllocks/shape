@@ -553,7 +553,7 @@ shape export-model retail --source-type warehouse --source-name Sales -o retail.
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    Shape v0.9.2 — Semantic Model Export
+    Shape v0.9.3 — Semantic Model Export
 
       Domain:        retail
       Source type:   warehouse
@@ -580,7 +580,7 @@ shape known-answer retail --seed 7 --measures measures.json --plant order_line.l
 
     ```text {.expected}
     shape: 125 (measure, slice) pair(s) skipped; see `skipped` in answers.json
-    Shape v0.9.2 — Known-answer dataset
+    Shape v0.9.3 — Known-answer dataset
 
       Domain:   retail
       Scale:    fabric_demo  (seed 42)
@@ -591,7 +591,7 @@ shape known-answer retail --seed 7 --measures measures.json --plant order_line.l
 
     Run queries.dax in a DAX client against the model, save the results, then:
       shape check-answers ka/answers.json RESULTS
-    Shape v0.9.2 — Known-answer dataset
+    Shape v0.9.3 — Known-answer dataset
 
       Domain:   retail
       Scale:    small  (seed 7)

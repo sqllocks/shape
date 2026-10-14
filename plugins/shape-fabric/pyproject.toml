@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sqllocks-shape-fabric"
 # Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
-version = "0.9.2"
+version = "0.9.3"
 description = "Shape plugin: Microsoft Fabric, Synapse and Azure Data Factory pipeline integration"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -21,7 +21,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "Topic :: Database",
 ]
-dependencies = ["sqllocks-shape==0.9.2"]
+dependencies = ["sqllocks-shape==0.9.3"]
 
 [project.urls]
 Homepage = "https://github.com/sqllocks/shape"
@@ -31,14 +31,14 @@ Documentation = "https://github.com/sqllocks/shape/tree/main/plugins/shape-fabri
 
 [project.optional-dependencies]
 # The Eventstream emitter and writer: the Event Hubs plugin (azure-eventhub).
-eventhubs = ["sqllocks-shape-eventhubs==0.9.2"]
+eventhubs = ["sqllocks-shape-eventhubs==0.9.3"]
 # The SQL database, Warehouse, Synapse and SQL Server targets: the SQL Server plugin (pyodbc,
 # which needs unixODBC and the Microsoft ODBC driver on Linux).
-sqlserver = ["sqllocks-shape-sqlserver==0.9.2"]
+sqlserver = ["sqllocks-shape-sqlserver==0.9.3"]
 # Microsoft Entra sign-in to an Eventhouse instead of a bearer token.
 entra = ["azure-identity>=1.16.1"]
 # Reading and writing OneLake / ADLS Gen2 paths (abfss://, onelake://): adlfs and azure-identity.
-onelake = ["sqllocks-shape[azure]==0.9.2"]
+onelake = ["sqllocks-shape[azure]==0.9.3"]
 # Reading a semantic model (semantic-model://, shape profile-model): sempy runs inside a Fabric notebook.
 semantic-link = ["semantic-link-sempy>=0.8"]
 

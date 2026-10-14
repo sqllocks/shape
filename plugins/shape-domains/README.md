@@ -44,7 +44,7 @@ city, state code and county; GeoNames, CC BY 4.0), which `shape profile --refere
 Its version always equals core's (`sqllocks-shape`), and it is released together with core.
 How plugins are written: `docs/plugins/authoring.md` in the repository.
 
-## Synthetic procedure and sector references (0.9.2)
+## Synthetic procedure and sector references (0.9.3)
 
 Healthcare procedure codes are `SP-01` through `SP-49`, with invented descriptions;
 none is a CPT code. The five-character prefix/hyphen format preserves code width.

@@ -4,7 +4,7 @@ Check these constraints before you design a workflow.
 
 Status: available (profiles, contracts and drift); experimental (other surfaces).
 
-Shape is early access 0.9.2. Generation from a profile is available and is being hardened.
+Shape is early access 0.9.3. Generation from a profile is available and is being hardened.
 The 1.x compatibility promises describe future policy.
 
 - `shape generate --from X.shape` writes nothing without `--format`. An output directory alone
@@ -13,8 +13,8 @@ The 1.x compatibility promises describe future policy.
   They come from different adapters: databases writes; integrations reads.
 - Profiles written by 0.9.1 report `raw-string-list` findings under
   `sampling.internal[].columns` on tables wide enough to sample, so `shape profile validate --safe`
-  fails them. Those lists hold column names, not values. Re-profile with 0.9.2, which records the
-  columns by position (`column_indexes`). 0.9.2 still reads the old profiles.
+  fails them. Those lists hold column names, not values. Re-profile with 0.9.3, which records the
+  columns by position (`column_indexes`). 0.9.3 still reads the old profiles.
 - Snowflake and Databricks are write targets. Shape does not profile from them yet.
 - Model queries read model payloads, not saved profile payloads. A profile passed to a query
   is rejected. See [Models](MODELS.md).
@@ -33,7 +33,7 @@ The 1.x compatibility promises describe future policy.
 ## Fabric in 0.9.1
 
 - 0.9.1 emitted the Warehouse primary key inside `CREATE TABLE`, which a Fabric Warehouse rejects
-  with error 24584. Fixed in 0.9.2: the key is added by a separate
+  with error 24584. Fixed in 0.9.3: the key is added by a separate
   `ALTER TABLE ... ADD CONSTRAINT ... PRIMARY KEY NONCLUSTERED (...) NOT ENFORCED` after the table is
   created. On 0.9.1, create the destination tables yourself without inline keys, optionally add that
   `ALTER TABLE`, and write with `--write-mode append`.
@@ -48,7 +48,7 @@ The 1.x compatibility promises describe future policy.
   ([data loading strategies](https://learn.microsoft.com/azure/synapse-analytics/sql-data-warehouse/design-elt-data-loading#3-prepare-the-data-for-loading)).
 - Schema-enabled Lakehouses require `Tables/<schema>/<table>` (normally `dbo`), whereas
   0.9.1's Delta target appended a table directly below the supplied directory, so the tables did
-  not appear in the SQL analytics endpoint or in semantic models. Fixed in 0.9.2: the Delta sink
+  not appear in the SQL analytics endpoint or in semantic models. Fixed in 0.9.3: the Delta sink
   and `fabric_spark` ask Fabric which kind of Lakehouse the target is and write the schema folder
   (`dbo` by default); they stop with a clear error rather than guess. On 0.9.1, target a URI ending
   in `Tables/dbo` (or another existing schema). Files landing zones were never affected. See

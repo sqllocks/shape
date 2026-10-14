@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-VERSION = "0.9.2"
+VERSION = "0.9.3"
 WHEEL = f"sqllocks_shape-{VERSION}-py3-none-any.whl"
 PLATFORM_WHEEL = f"sqllocks_shape-{VERSION}-cp311-abi3-manylinux_2_28_x86_64.whl"
 DOMAINS_WHEEL = f"sqllocks_shape_domains-{VERSION}-py3-none-any.whl"

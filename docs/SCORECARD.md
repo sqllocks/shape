@@ -190,7 +190,7 @@ shape scorecard out/ --schema gates.json --slice-by region --max-slice-gap 10   
 
     **Generated:** 2026-10-09T17:02:17.811415+00:00  
     **Data path:** out/  
-    **Shape version:** 0.9.2  
+    **Shape version:** 0.9.3  
     **Overall:** 100
 
     | Dimension | Score | Trend | Checks | Failing |
@@ -206,7 +206,7 @@ shape scorecard out/ --schema gates.json --slice-by region --max-slice-gap 10   
 
     **Generated:** 2026-10-09T17:02:19.406272+00:00  
     **Data path:** out/  
-    **Shape version:** 0.9.2  
+    **Shape version:** 0.9.3  
     **Overall:** 100
 
     | Dimension | Score | Trend | Checks | Failing |
@@ -221,7 +221,7 @@ shape scorecard out/ --schema gates.json --slice-by region --max-slice-gap 10   
 
     **Generated:** 2026-10-09T17:02:20.186663+00:00  
     **Data path:** out/  
-    **Shape version:** 0.9.2  
+    **Shape version:** 0.9.3  
     **Overall:** 100
 
     | Dimension | Score | Trend | Checks | Failing |
@@ -236,7 +236,7 @@ shape scorecard out/ --schema gates.json --slice-by region --max-slice-gap 10   
 
     **Generated:** 2026-10-09T17:02:21.034444+00:00  
     **Data path:** out/  
-    **Shape version:** 0.9.2  
+    **Shape version:** 0.9.3  
     **Overall:** 100
 
     | Dimension | Score | Trend | Checks | Failing |

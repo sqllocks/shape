@@ -107,7 +107,7 @@ data sizes or core counts; any speed or memory figure for bounded mode or the Ru
 
 ## Wording
 
-Shape 0.9.2 is early access. Profiling, generation and the released sink plugins are
+Shape 0.9.3 is early access. Profiling, generation and the released sink plugins are
 available. Describe only the installed plugins and the behavior demonstrated here.
 
 ## Where things are

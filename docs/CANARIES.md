@@ -124,7 +124,7 @@ shape canary check canary/canary.json --result diff.json --result check.json --r
     shape: note: baseline.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
     bump: none (0 breaking, 0 additive, 0 cosmetic)
     shape: note: today.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
-    Shape 0.9.2 - Verify
+    Shape 0.9.3 - Verify
 
     Data path:   out/
     Schema:      gates.json

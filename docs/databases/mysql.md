@@ -26,7 +26,7 @@ idempotency decision.
 
 Evidence: `plugins/shape-databases/src/shape_databases/mysql.py` and shared adapter helpers.
 Shape writes to MySQL through `shape-databases`; it does not read MySQL
-tables directly in 0.9.2.
+tables directly in 0.9.3.
 
 ## Profile an export
 

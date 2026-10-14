@@ -32,14 +32,14 @@ What you are building:
   *New item*; if it does not, the region or tenant setting is the blocker.
 - Workspace role Contributor or higher; a tenant setting allowing User Data Functions and
   Python notebooks.
-- The Shape wheel `sqllocks_shape-0.9.2-py3-none-any.whl` from DM-03 (the GitHub release,
+- The Shape wheel `sqllocks_shape-0.9.3-py3-none-any.whl` from DM-03 (the GitHub release,
   or `python scripts/build_pure_wheel.py` on the merged branch). The wheel must be under
   28.6 MB and `py3-none-any` for the UDF.
 - **Install the uploaded wheel by its file path, never by name.** PyPI has an older
   `sqllocks-shape` 0.9.1 (without `shape.integrations`), and a requirement by name and version,
-  even `%pip install --find-links builtin "sqllocks-shape==0.9.2"`, can install that one instead
+  even `%pip install --find-links builtin "sqllocks-shape==0.9.3"`, can install that one instead
   (seen in the live dry run: `ModuleNotFoundError: shape.integrations`). Every notebook install
-  cell and this runbook install `builtin/sqllocks_shape-0.9.2-py3-none-any.whl` (and the plugin
+  cell and this runbook install `builtin/sqllocks_shape-0.9.3-py3-none-any.whl` (and the plugin
   wheels) by path; the UDF gets the wheel as a private library uploaded from a file (section 6).
 - The demo data from `demo/make_data.py` (lane L3): Parquet files for day 1 and day 2, and
   `demo/contracts/*.json`. This runbook assumes the layout
@@ -139,17 +139,17 @@ python integrations/fabric/pipelines/build_pipelines.py
 1. Import `shape_profile.ipynb`, attach `shape_demo` as the default lakehouse.
 2. Kernel: **Python 3.11** or **3.12** (bottom-left kernel picker, *not* PySpark).
 3. Open **Resources > builtin** in the notebook's left pane and upload the pure-Python wheel
-   `sqllocks_shape-0.9.2-py3-none-any.whl`. The install cell installs it **by file path**:
+   `sqllocks_shape-0.9.3-py3-none-any.whl`. The install cell installs it **by file path**:
 
    ```
-   %pip install "numpy>=2,<3" "pandas>=2.2.2,<3" builtin/sqllocks_shape-0.9.2-py3-none-any.whl
+   %pip install "numpy>=2,<3" "pandas>=2.2.2,<3" builtin/sqllocks_shape-0.9.3-py3-none-any.whl
    ```
 
    so PyPI's older package of the same name and version can never be installed instead (section
-   1). The printed line `Shape 0.9.2, kernel: python` (and the `kernel` key of the exit value)
+   1). The printed line `Shape 0.9.3, kernel: python` (and the `kernel` key of the exit value)
    confirms it; `ModuleNotFoundError: shape.integrations` means the index copy was installed.
    To run on the Rust kernel, also upload the Linux x86_64 platform wheel
-   `sqllocks_shape-0.9.2-cp311-abi3-manylinux_2_28_x86_64.whl` (from the release) and put its
+   `sqllocks_shape-0.9.3-cp311-abi3-manylinux_2_28_x86_64.whl` (from the release) and put its
    path in place of the pure wheel's in the cell; the line then says `kernel: rust`.
    **numpy and pandas.** The Python 3.11 runtime ships numpy 1.26.4 with pandas 2.1.4 and
    matplotlib 3.8.2, all built for numpy 1. Shape needs numpy 2, so pip upgrades numpy. pandas
@@ -239,7 +239,7 @@ Do not wrap the last cell.
    [`udf/requirements.md`](udf/requirements.md). The runtime is Python 3.11. Public libraries,
    pinned: `numpy` 2.4.6, `pyarrow` 19.0.1 (`fabric-user-data-functions` 1.0.142 requires
    `>=19.0.1,<20`), `pandas` 3.0.6. Shape is a **private library uploaded as a file**
-   (*Add from local*: `sqllocks_shape-0.9.2-py3-none-any.whl`, under 28.6 MB and `py3-none-any`),
+   (*Add from local*: `sqllocks_shape-0.9.3-py3-none-any.whl`, under 28.6 MB and `py3-none-any`),
    never a public library resolved by name: PyPI's `sqllocks-shape` 0.9.0 is an older package
    without `shape.integrations` (section 1).
 4. Open the code editor, replace its content with `udf/function_app.py`, and **Publish**.
@@ -453,7 +453,7 @@ Notebook exit value (compact, well under 1 MB):
 
 | Symptom | Cause and fix |
 |---|---|
-| Exit value says `"kernel": "python"` but you wanted Rust | the install cell names the pure wheel by default: upload the platform wheel (`sqllocks_shape-0.9.2-cp311-abi3-manylinux_2_28_x86_64.whl`, Linux x86_64, Python 3.11+) to *Resources > builtin*, put its path in place of the pure wheel's in the install cell, and rerun it |
+| Exit value says `"kernel": "python"` but you wanted Rust | the install cell names the pure wheel by default: upload the platform wheel (`sqllocks_shape-0.9.3-cp311-abi3-manylinux_2_28_x86_64.whl`, Linux x86_64, Python 3.11+) to *Resources > builtin*, put its path in place of the pure wheel's in the install cell, and rerun it |
 | `ModuleNotFoundError: shape` in a Spark executor (distributed notebook) | Shape is not installed on the executors: attach the Environment and publish it; in Quick mode check the session started after the publish |
 | `ModuleNotFoundError: shape` in the Python notebook | the `%pip install` cell did not run or the wheel is not in *Resources > builtin*; kernel must be Python, not PySpark. In a **pipeline run** inline `%pip` is off unless the notebook activity passes the Boolean parameter `_inlineInstallationEnabled = true` (section 4) |
 | `pip` complains about `pyarrow`/`numpy` versions | Shape needs `numpy>=2,<3` and `pyarrow>=14`. A conflict naming only `matplotlib 3.8.2 requires numpy<2` is expected (section 4, step 3). Otherwise, in the Python notebook `%pip install "pyarrow>=16"` (pyarrow before 16 cannot load with numpy 2) and restart the kernel; in the Environment see `environment.yml` |
@@ -469,7 +469,7 @@ Notebook exit value (compact, well under 1 MB):
 | UDF: parameter rejected | names must be camelCase; `contract` must be a JSON object |
 | Notebook says `No .parquet files under ...` | default lakehouse not attached, or data not under `Files/demo/` |
 | `OSError: Generic LocalFileSystem error: Unable to rename file` writing a Delta table | the write went through the `/lakehouse/default/Tables` mount, which refuses delta-rs's rename. `shape_setup` and `shape_generate` write to the OneLake `abfss://` URI instead (section 3, step 3); if the printed location is a local path, attach the default lakehouse, or set `TABLES_URI` in `shape_setup` |
-| `ModuleNotFoundError: No module named 'shape.integrations'` | PyPI's older `sqllocks-shape` 0.9.0 was installed instead of the uploaded wheel: install the wheel by file path, `builtin/sqllocks_shape-0.9.2-py3-none-any.whl` (section 4, step 3), and restart the session |
+| `ModuleNotFoundError: No module named 'shape.integrations'` | PyPI's older `sqllocks-shape` 0.9.0 was installed instead of the uploaded wheel: install the wheel by file path, `builtin/sqllocks_shape-0.9.3-py3-none-any.whl` (section 4, step 3), and restart the session |
 | `ValueError: numpy.dtype size changed` on `import pandas` or `pyarrow` | numpy 2 with the runtime's pandas 2.1.4: the install cell must also upgrade pandas (`"pandas>=2.2.2,<3"`, section 4, step 3) |
 
 ## 10. Verify in the workspace on first run
@@ -540,23 +540,23 @@ Everything here runs on the generation engine, so what a notebook or function ge
 
 ### 12.1 Install the domains
 
-A domain is a plugin (`sqllocks-shape-domains`): next to the Shape wheel, upload the wheel `sqllocks_shape_domains-0.9.2-py3-none-any.whl`
+A domain is a plugin (`sqllocks-shape-domains`): next to the Shape wheel, upload the wheel `sqllocks_shape_domains-0.9.3-py3-none-any.whl`
 (`pip wheel --no-deps plugins/shape-domains`, or the release) to *Resources > builtin* of each
 notebook (a Python notebook cannot attach an Environment). The install cell of both notebooks
 installs both wheels by file path (section 4, step 3):
 
 ```
-%pip install "numpy>=2,<3" "pandas>=2.2.2,<3" builtin/sqllocks_shape-0.9.2-py3-none-any.whl builtin/sqllocks_shape_domains-0.9.2-py3-none-any.whl
+%pip install "numpy>=2,<3" "pandas>=2.2.2,<3" builtin/sqllocks_shape-0.9.3-py3-none-any.whl builtin/sqllocks_shape_domains-0.9.3-py3-none-any.whl
 ```
 
-The domains wheel requires `sqllocks-shape==0.9.2`; pip takes the Shape wheel given by path for it,
+The domains wheel requires `sqllocks-shape==0.9.3`; pip takes the Shape wheel given by path for it,
 never the index copy. Both notebooks run from the pipeline `shape_generate_gate`, which passes
 `_inlineInstallationEnabled = true` to each of them (inline `%pip` is off in pipeline runs
 otherwise; see section 4). For `generateSample`, upload the same wheel as a **private library**
 of `shape_udf`, next to the Shape wheel (it is `py3-none-any` and about 2 MB, far under the
-28.6 MB limit; [`udf/requirements.md`](udf/requirements.md)). Never list `sqllocks-shape==0.9.2`
+28.6 MB limit; [`udf/requirements.md`](udf/requirements.md)). Never list `sqllocks-shape==0.9.3`
 as a public library: that is PyPI's older package. **[VERIFY LIVE]** that the UDF library
-resolver satisfies the domains wheel's requirement `sqllocks-shape==0.9.2` with the uploaded
+resolver satisfies the domains wheel's requirement `sqllocks-shape==0.9.3` with the uploaded
 private Shape wheel (check in the publish log that no `sqllocks-shape` is downloaded from PyPI).
 
 ### 12.2 `shape_generate`: a domain into Delta tables
@@ -669,7 +669,7 @@ preview (tenant setting "dbt jobs (preview)").
 has *completed*, so a failed dbt test still gives the report) -> `CheckGate` (If Condition on
 `passed`; **False** runs `FailGate`, error code `ShapeDbtGateFailed`).
 
-1. Upload `sqllocks_shape_dbt-0.9.2-py3-none-any.whl` (`pip wheel --no-deps plugins/shape-dbt`) to
+1. Upload `sqllocks_shape_dbt-0.9.3-py3-none-any.whl` (`pip wheel --no-deps plugins/shape-dbt`) to
    *Resources > builtin* next to the Shape wheel; the notebook installs both with `%pip` and the
    pipeline passes `_inlineInstallationEnabled = true` (section 4).
 2. Import `shape_profile_dbt.ipynb`, attach the lakehouse that holds the dbt models' tables.

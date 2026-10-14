@@ -268,7 +268,7 @@ def internal_entry(
 
     ``columns`` are positions in the table's own ``columns`` object, written as
     ``column_indexes``: a list of names would be a list of raw strings, which the leak scanner
-    reads as a value dump. A profile written before 0.9.2 has the names under ``columns``."""
+    reads as a value dump. A profile written before 0.9.3 has the names under ``columns``."""
     spec = INTERNAL[analysis]
     entry: dict[str, Any] = {
         "analysis": analysis,

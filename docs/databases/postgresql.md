@@ -20,7 +20,7 @@ idempotency decision.
 
 Evidence: `plugins/shape-databases/src/shape_databases/postgres.py` and shared adapter helpers.
 Shape writes to PostgreSQL through `shape-databases`; it does not read PostgreSQL
-tables directly in 0.9.2.
+tables directly in 0.9.3.
 
 ## Profile an export
 

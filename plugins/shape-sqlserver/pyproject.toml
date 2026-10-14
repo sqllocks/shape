@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sqllocks-shape-sqlserver"
 # Lockstep with core (T-09): scripts/check_plugin_skeletons.py fails when this drifts.
-version = "0.9.2"
+version = "0.9.3"
 description = "Shape plugin: SQL Server, Azure SQL and Fabric SQL database profiling and source"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -21,7 +21,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "Topic :: Database",
 ]
-dependencies = ["sqllocks-shape==0.9.2", "pyodbc>=5.0"]
+dependencies = ["sqllocks-shape==0.9.3", "pyodbc>=5.0"]
 
 [project.urls]
 Homepage = "https://github.com/sqllocks/shape"

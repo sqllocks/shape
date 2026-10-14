@@ -3,7 +3,7 @@
 The re-record after a TestPyPI publish writes a new store of generation recordings
 (shaped like ``benchmarks/vs_refengine/recorded``: ``MANIFEST.json`` and
 ``generate/<domain>_<scale>.json``).
-Healthcare and capital-markets output changes in 0.9.2 on purpose (synthetic procedure and
+Healthcare and capital-markets output changes in 0.9.3 on purpose (synthetic procedure and
 classification labels), so the Owner reviews exactly those diffs before PyPI. This script prints a
 Markdown report: per domain and scale, per seed, per table, whether rows, columns, dataset id and
 Parquet bytes changed, and whether the identifier forms changed. Exit status 0 always means the
