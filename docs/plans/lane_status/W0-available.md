@@ -1,90 +1,103 @@
 # W0-available status
 
-Blocked before setup or implementation by the instruction to stop on ambiguity.
+Blocked by the instruction to stop on ambiguity. The two earlier lead answers
+are resolved and recorded below. No implementation or setup was started.
 
 ## Exact question
 
-Which immutable baseline must `scripts/check_available.py` compare
-`tests/docs/available_legacy.txt` against to enforce that the list may only
-shrink, including when an addition is already committed? Section 1.3 names
-only the mutable list. Should the check use a pinned initial inventory, a
-specified Git ref/commit, or another approved baseline? Please specify the
-baseline and the behavior when it is unavailable (including fixture trees
-and shallow CI checkouts).
+What exact Markdown syntax must `docs/AVAILABLE.md` use to bind each claim
+row set to a docs page and declare its `since:` version? Section 1.3 says
+“one section per available page” and specifies five row cells, but provides
+no page-key or `since:` syntax. May I implement the canonical form below,
+with a repository-relative page path in the level-two heading and a plain
+`since:` line immediately beneath it?
 
-Without a baseline, adding a newly available page to the list would exempt
-it from P-BAR, violating the shrink-only requirement. Comparing only with
-HEAD would catch uncommitted additions but accept them after commit.
+```markdown
+## docs/CANARIES.md
 
-## Lead answer recorded: P-BAR 5
+since: <version>
 
-- This release is the version read from `pyproject.toml` at check time; do
-  not hard-code the task's target release.
-- Use that version's `## <version>` CHANGELOG section. If it does not
-  exist, use `## Unreleased`.
-- Rule 5 applies only to page row sets with `since:` equal to that version.
-  Another version is not checked by rule 5.
-- Tests must cover the matching version with a Promoted line in the numbered
-  section; the same line in Unreleased when the numbered section is absent;
-  a missing line failing P-BAR 5; and another since version being exempt.
+| Claim | Statement | Proof | Evidence | Status |
+|---|---|---|---|---|
+| AV-CANARIES-01 | claim (short) | `ci:ci.yml/test` | none | done |
+```
 
-## Work and command results
+Please confirm that form or provide the required alternative. This is
+needed to associate rows with page anchors, apply the demotion rule, and
+limit P-BAR 5 to the intended page/version. `docs/V1_DONE.md` has thematic
+section headings and no `since:` field, so it does not establish this syntax.
 
-All repository commands below ran from `/workspace/shape`. Origin was
-confirmed as `https://github.com/sqllocks/shape.git`. The working tree was
-clean before branch setup. No plan branch was merged or committed.
+## Lead answer 1: P-BAR 5
 
-1. `git remote get-url origin && git status --short && git fetch origin`:
-   exit 0. No network retry needed.
-2. `git checkout -B lane/W0-available origin/lane/W0-available`:
-   exit 128; the default fetch refspec fetched only main, so the local
-   remote-tracking lane ref was absent. Subsequent commands in this invocation
-   did not run.
-3. `git config --get-all remote.origin.fetch && git ls-remote --heads origin
-   lane/W0-available && git fetch origin
-   lane/W0-available:refs/remotes/origin/lane/W0-available`: exit 0.
-   Verified the requested remote head `3515d1f4bbf797b69e3d6df9114a4be4c7a20052`.
-   No network retry needed.
-4. `git checkout -B lane/W0-available origin/lane/W0-available && git merge
-   origin/main && cat CLAUDE.md && cat CONTRIBUTING.md && git fetch origin
-   plan/promotion-093:refs/remotes/origin/plan/promotion-093 && git show
-   origin/plan/promotion-093:docs/plans/PROMOTION_PLAN_0.9.3.md >
-   /tmp/PROMOTION_PLAN.md`: exit 0. Merge reported already up to date.
-   No merge commit was necessary. No network retry needed.
-5. Read the plan opening, Decisions and complete section 1.3 using
-   `sed -n '1,240p' /tmp/PROMOTION_PLAN.md`; read the previous lane status,
-   `scripts/check_docs_owners.py` and `scripts/check_v1_done.py` with `cat`:
-   exit 0. No repository AGENTS.md was present (workspace discovery exit 0).
-6. `rg -n 'ratchet|shrink.only|legacy.txt|git show.*HEAD|merge-base' scripts
-   tests/release Makefile`: exit 1 (no existing convention found).
-   Subsequent commands in this invocation did not run.
-7. `cat src/shape/cli/stability.py && sed -n '1,65p' docs/V1_DONE.md &&
-   rg -n 'W0|ratchet|since:' /tmp/PROMOTION_PLAN.md && git log -3
-   --format='%h %s' && git config user.name && git config user.email`:
-   exit 0. Confirmed the plan supplies no comparison baseline.
-8. Python replacement of this status file: exit 0.
+- This release is exactly the version in `pyproject.toml`, read at check time.
+  Do not hard-code the target release.
+- Use the `## <version>` CHANGELOG section; if absent, use `## Unreleased`.
+- Apply rule 5 only to page row sets with `since:` equal to that version.
+- Cover a Promoted line in the numbered section, fallback to Unreleased,
+  a missing line failing P-BAR 5, and another version being exempt.
 
-Before repository work, the uploaded request was downloaded and read,
-workspace instructions were discovered, and the cloud runtime skill and
-network policy were read. Those setup/discovery actions changed no repository
-files. The first upload download attempt failed while the environment was
-starting; it succeeded after the environment became ready.
+## Lead answer 2: shrink-only ratchet
 
-## Checks
+- Generate `tests/docs/available_legacy.txt` once from today's available docs
+  pages, sorted, one path per line. This is the exemption list.
+- Always check exactness without git: each entry exists and still says
+  available. Otherwise fail with `AVAILABLE: <page>: ratchet: no longer
+  available; remove it from tests/docs/available_legacy.txt`. Unlisted
+  available pages must pass rules 1 to 5.
+- Read the same file at `git merge-base HEAD origin/main` using `git show`.
+  A current entry absent from that baseline fails with `AVAILABLE: <page>:
+  ratchet: the legacy list may only shrink`. If the file does not exist at
+  the base, there is no growth check.
+- If git, origin/main, or the merge base is unavailable, print to stderr
+  `AVAILABLE: ratchet growth not checked: no baseline (<reason>)` and pass
+  for that reason by default. `--require-base` makes this an error, exit 2.
+- `make check` uses no flag. Only the CI test job uses `--require-base`
+  and fetches main sufficiently to make the baseline available.
+- Test stale entries, unlisted available pages, growth and removal in a
+  temporary git fixture, no file at base, and unavailable-base behavior
+  both with and without the flag.
+
+## Commands and observed results in this session
+
+All repository shell commands ran from `/workspace/shape` after confirming
+origin as `https://github.com/sqllocks/shape.git`. No plan branch was merged
+or committed. No network operation failed; no retries were needed.
+
+- Before repository work: the first attachment download failed because the
+  workspace was starting. Read the cloud runtime skill, waited for the
+  environment (ready), then downloaded the attachment successfully.
+- Workspace discovery (`pwd; rg --files ... /workspace`): exit 0.
+- Read the uploaded request and attempted `cat /workspace/shape/AGENTS.md`:
+  exit 1 because AGENTS.md is absent; the request was read successfully.
+- Read cloud environment status and networking reference: successful tool
+  results. Read `/etc/codex/network-policy.json`, `git status --short`, and
+  `git branch --show-current`: exit 0, clean tree, initial branch `work`.
+- `cd /workspace/shape; git remote get-url origin; git fetch origin`:
+  exit 0, verified the required repository.
+- Initial branch setup invocation: `git checkout -B lane/W0-available
+  origin/lane/W0-available` failed (exit 128) because the default fetch
+  did not include the lane ref. The following `git merge origin/main`
+  reported already up to date. Fetch of the plan ref and extraction with
+  `git show ... > /tmp/PROMOTION_PLAN.md` succeeded. Invocation exit 0.
+- `git fetch origin lane/W0-available:refs/remotes/origin/lane/W0-available`:
+  exit 0.
+- Repeated checkout of the lane succeeded, merge of origin/main reported
+  already up to date. Read CLAUDE.md, CONTRIBUTING.md, cli_surface.py,
+  stable_api_compat.py and the plan: invocation exit 0 (output truncated).
+- Focused read of the plan opening, Decisions and complete section 1.3,
+  check_v1_done.py, check_docs_owners.py, V1_DONE.md, earlier lane status,
+  and cli/stability.py: exit 0. Section 1.3 was visible in full.
+- `git status --short`, `git log -3 --format=...`, identity reads and
+  focused plan search succeeded. Repository `rg --files -g AGENTS.md ...`
+  found no AGENTS.md (exit 1); invocation exit 1. Tree was clean, lane
+  head was `513ff2e`, identity was configured.
+
+## Checks and changes
 
 - Baseline `make check`: not run; ambiguity requires stopping before setup.
 - Red tests: not written or run.
 - Final `make check`: not run.
-- No implementation, release version, dependency files, regression store,
-  or golden corpus was changed.
-
-## Observed delivery results
-
-- `git diff --check && git add docs/plans/lane_status/W0-available.md &&
-  git commit -s -m 'W0-available: request shrink-only ratchet baseline clarification'
-  && git rev-parse HEAD`: exit 0; commit
-  `73c1eee4a8452123c422f11932291fd2152e2968`.
-- `git push -u origin lane/W0-available`: exit 0; no network retries needed.
-- Python append of these observed results: exit 0. The subsequent signed-off
-  delivery-log commit, verification and push are reported with their observed
-  exit codes in the final chat response.
+- Changed only this lane status file. No version, dependency file,
+  regression store or golden corpus was changed.
+- Delivery commands and their observed results are reported in the final
+  chat response; this avoids claiming results before running them.
