@@ -20,6 +20,9 @@ Status: available.
   table) could hang, or abort with `terminate called without an active exception`, as the process
   ended after a failed read (for example a damaged data file or a nested column). A local table is
   now read through Arrow's own file system.
+- **`shape profile-model` / `semantic-model://`.** A table the semantic model cannot read stops
+  with one error naming the model and table and suggesting a refresh, instead of the raw
+  sempy/ADOMD error.
 
 ## 0.9.2
 

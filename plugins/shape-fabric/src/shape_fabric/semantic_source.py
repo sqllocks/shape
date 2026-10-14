@@ -119,12 +119,23 @@ def _sempy_failed(workspace: str, model: str, exc: BaseException) -> ShapeError:
     )
 
 
-def _frame(fab: Any, name: str, ws: str, model: str, **kw: Any) -> Any:
+def _table_unreadable(workspace: str, model: str, table: str, exc: BaseException) -> ShapeError:
+    return ShapeError(
+        f"semantic model {model} in workspace {workspace}: cannot read table {table}: "
+        f"{_one_line(exc)[:300]}; the semantic model may need a refresh"
+    )
+
+
+def _frame(
+    fab: Any, name: str, ws: str, model: str, *, table_read: str | None = None, **kw: Any
+) -> Any:
     try:
         return getattr(fab, name)(**kw)
     except ShapeError:
         raise
     except Exception as exc:  # noqa: BLE001 - sempy raises its own and HTTP errors
+        if table_read is not None:
+            raise _table_unreadable(ws, model, table_read, exc) from exc
         raise _sempy_failed(ws, model, exc) from exc
 
 
@@ -367,6 +378,7 @@ def read_table(
             "evaluate_dax",
             workspace,
             model,
+            table_read=table,
             dataset=model,
             dax_string=topn_dax(table, [c.name for c in infos], max_rows),
             workspace=workspace,
@@ -377,7 +389,8 @@ def read_table(
         if "mode" not in inspect.signature(fab.read_table).parameters:
             raise ShapeError("this sempy has no read mode; leave mode out")
         kw["mode"] = mode
-    return _to_table(_frame(fab, "read_table", workspace, model, **kw), schema, table)
+    frame = _frame(fab, "read_table", workspace, model, table_read=table, **kw)
+    return _to_table(frame, schema, table)
 
 
 class SemanticModelSource:
