@@ -1,87 +1,88 @@
-# W-gameday-1 — progress and setup blocker
+# W-gameday-1 — action-list question
 
-Scope: 0.9.4 only. No release files, regression data, golden corpus, tests,
-implementation, gates or tolerances changed.
+Scope: 0.9.4. Setup is resolved using the lead-approved virtual environment and
+`make bootstrap`. No source, tests, dependencies, release files, regression data,
+golden corpus, gates or tolerances were changed. Only this lane-status document
+is updated. No plan content was committed or merged.
 
-## Progress after lead follow-up
+## Exact question
 
-The original missing-plan blocker is resolved. Read the plan from the remote
-tracking branch `origin/plan/promotion-093` into `/tmp/PROMOTION_PLAN.md` only;
-no plan content was committed or merged. Read its first paragraph, Decisions
-and section 4.2 in full. Work targets 0.9.4. The lane is already up to date
-with `origin/main` after `git merge origin/main` (exit 0).
+For `gameday run --dry-run --json`, what exact entries must the generic
+`shape-dry-run` document's `actions` list contain: only the output directory,
+or also the report files, round directories, copied tables and check outputs?
 
-Section 4.2 requests the generic `shape-dry-run` document for
-`gameday run --dry-run --json`. The existing helper in
-`src/shape/cli/machine.py` defines that format. No tests or implementation
-have been written; red evidence remains pending tool setup.
+Section 4.2 specifies the generic document but not the action-list contents.
+`machine.dry_run_document` supplies `format`, `version`, `command` and `actions`;
+it accepts the actions from its caller. `gameday run` has a native dry run but
+no entry in `machine.SPECS` or existing action planner. The scenario runner's
+dry-run report contains injection previews, while the actual run writes two
+reports, round directories, copied tables and outputs from the supplied checks.
+Choosing the action granularity would set a new contract without a stated rule.
+Per the task's ambiguity rule, implementation stops here pending the answer.
 
-## Current setup blocker and question
+## Tests-first state
 
-`pip install uv` succeeded, but `uv sync --frozen --group dev` exited 1:
+No tests or implementation have been written, so there is no red evidence.
+The unresolved action list prevents writing the requested shape-and-keys test
+without guessing. The existing tests and all gates remain unchanged.
 
-```text
-error: Unable to find lockfile at `uv.lock`, but `--frozen` was provided. To create a lockfile, run `uv lock` or `uv sync` without the flag.
-```
+## Setup and baseline
 
-Which branch or commit supplies the intended `uv.lock`, or which alternative
-setup command is approved for this checkout? No lockfile was generated and
-no checks were run after the follow-up, because the lead requires the frozen
-setup before any check. Implementation is blocked before the tests-first step.
+- `python -m venv .venv`: exit 0.
+- `. .venv/bin/activate` followed by `make bootstrap`: exit 0; native Rust core
+  and domains plugin built and installed. No toolchain workaround was needed.
+- Baseline `make check`: 2. Full output was captured in
+  `/tmp/W-gameday-1-baseline-check.log` and its exit code in
+  `/tmp/W-gameday-1-baseline-check.exit`.
+  Core pytest: 17 failed, 18,371 passed, 25 skipped, 69 deselected,
+  21,277 warnings and 16 errors in 4,516.73 seconds. The existing skips were
+  not added or changed. Make stopped at the core suite (underlying pytest
+  exit 1), so heavy tests, pure-Python kernel tests and Rust checks did not run.
+  Example baseline failures: the file-sink permission test observed mode 0600;
+  the branded-site test could not import `playwright`; release packaging
+  setup reported `Cargo metadata failed. Do you have cargo in your PATH?`
+  followed by `No such file or directory (os error 2)`.
+  These results precede any repository edit.
+- Checks completed before pytest: Ruff lint, Ruff formatting, mypy, compileall,
+  Vulture, import contracts, requirements, secrets, user-facing wording,
+  generated exit codes, generated failure modes, shipped data, plugin skeletons,
+  versions, release workflows, conformance coverage, CLI surface and v1 checklist.
+  Each exited 0 in this session.
 
-## Earlier validation (before lead follow-up)
+## Session command journal
 
-`make check` exited 2 before running checks because `ruff` is unavailable
-(`make: ruff: No such file or directory`; underlying command error 127).
-No passing checks are claimed.
+All shell invocations ran from `/workspace/shape`, except the first invocation
+which began with `cd /workspace/shape` as requested. Inspection commands are
+grouped below; every invocation listed in a group exited 0 unless stated.
+Polling tool calls read process output and are not additional shell commands.
 
-## Command journal
-
-Commands ran from the repository root unless stated otherwise. Combined shell
-invocations have their overall exit code recorded.
-
-| Command / invocation | Exit |
+| Command or invocation | Exit / result |
 | --- | --- |
-| Workspace discovery: `pwd`; `rg --files` for instruction and promotion-plan files; `cat /etc/codex/network-policy.json` | 0 |
-| `git fetch origin` (initial sandbox attempt; proxy connection failed) | 128 |
-| `git checkout -b lane/W-gameday-1 origin/main` (initial cached base) | 0 |
-| `git status --short`; conditional reads of `/AGENTS.md`, `/workspace/AGENTS.md`, `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, requested promotion plan | 0 |
-| `git fetch origin` (approved network retry) | 0 |
-| `rg --files docs/plans`; `cat docs/CONTRIBUTING.md`; heading search in completion plan; `git remote -v` | 0 |
-| `git checkout --detach origin/main && git branch -d lane/W-gameday-1 && git checkout -b lane/W-gameday-1 origin/main` | 1 |
-| Conditional reads of `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, requested promotion plan on fetched base | 0 |
-| `git branch -D lane/W-gameday-1 && git checkout -b lane/W-gameday-1 origin/main`; instruction/plan file search; `git status --short`; `git rev-parse HEAD`; `git config user.name`; `git config user.email` | 0 |
-| `make check > /tmp/W-gameday-1-make-check.log 2>&1` | 2 |
-| `test -f docs/plans/PROMOTION_PLAN_0.9.3.md`; instruction-file search; `git ls-tree -r --name-only origin/main docs/plans/PROMOTION_PLAN_0.9.3.md` | 0 (file test: 1; tree lookup empty) |
-| `cat /tmp/W-gameday-1-make-check.log`; `test -f docs/plans/PROMOTION_PLAN_0.9.3.md` | 1 |
-| `sed -n '36,184p' docs/plans/COMPLETION_PLAN.md`; `sed -n '565,646p' docs/plans/COMPLETION_PLAN.md` | 0 |
-| `git diff --check && git add docs/plans/lane_status/W-gameday-1.md && git commit -s -m 'W-gameday-1: record missing promotion plan blocker'` | 0 |
-| `git push origin HEAD:refs/heads/lane/W-gameday-1` | 0 |
+| `cd /workspace/shape`; `git remote get-url origin`; `git status --short`; `cat /etc/codex/network-policy.json` | 0; origin is `https://github.com/sqllocks/shape.git`, clean tree |
+| `git fetch origin` (retry loop installed, no retry needed) | 0 |
+| `git checkout -B lane/W-gameday-1 origin/lane/W-gameday-1`; `git merge -m 'W-gameday-1: merge main into task lane' origin/main` | overall 0; checkout 128 because the remote fetch configuration tracked only main; merge 0, already up to date, no commit |
+| `git branch --show-current`; `git config --get-all remote.origin.fetch`; `git ls-remote --heads origin lane/W-gameday-1` | 0; remote lane exists |
+| `git fetch origin refs/heads/lane/W-gameday-1:refs/remotes/origin/lane/W-gameday-1` (retry loop installed, no retry needed) | 0 |
+| `git checkout -B lane/W-gameday-1 origin/lane/W-gameday-1 && git merge -m 'W-gameday-1: merge main into task lane' origin/main` | 0; already up to date, no merge commit needed |
+| `cat CLAUDE.md`; conditional `cat AGENTS.md`; `cat CONTRIBUTING.md` | 0; no repository AGENTS.md |
+| `git fetch origin plan/promotion-093` (retry loop installed, no retry needed) | 0; fetched to FETCH_HEAD only |
+| `git fetch origin refs/heads/plan/promotion-093:refs/remotes/origin/plan/promotion-093` (retry loop installed, no retry needed) | 0 |
+| `git show origin/plan/promotion-093:docs/plans/PROMOTION_PLAN_0.9.3.md > /tmp/PROMOTION_PLAN.md`; Python extract of introduction, Decisions and 4.2; `cat src/shape/cli/machine.py`; instruction/gameday/Makefile file search; read earlier lane-status file | 0 |
+| `python -m venv .venv`; activation; `make bootstrap > /tmp/W-gameday-1-bootstrap.log 2>&1`; log tail; exit with bootstrap code | 0 |
+| `sed` full 4.2; `cat` CLI gameday module, scenario tests and Makefile; `rg` dry-run/report handling in gameday docs, scenario runner and machine module; workspace AGENTS.md file search | 0 |
+| `sed` machine lines 312–404, scenario runner lines 478–520 and gameday docs lines 70–100; `rg` dry_run_document callers; conditional reads of `/workspace/AGENTS.md` and `/AGENTS.md` | 0; ancestor instruction files absent |
+| `sed` emit lines 715–755; `git config user.name`; `git config user.email` | 0 |
+| Bootstrap-log tails; `ps -eo pid,etime,comm` filtered for build processes | 0 |
+| activation; `make check > /tmp/W-gameday-1-baseline-check.log 2>&1`; Python exit-code capture; log tail; exit with check code | 2 |
+| Baseline-log tails; `git status --short` | 0 |
+| Python creation of this status draft in `/tmp/W-gameday-1-status-draft.md` | 0 |
+| Post-baseline `git status --short`; read exit-code file; Python extraction of representative failures | 0; working tree still clean |
+| `sed -n '1,60p' /tmp/W-gameday-1-baseline-check.log`; Python update and copy of status draft | 0 |
 
-Final journal publication uses `git diff --check`, stages only this status file,
-commits with `W-gameday-1: complete blocker command journal` and a DCO sign-off,
-then repeats the same explicit lane-only push. These publication outcomes are
-reported in the session response if unsuccessful.
-
-The locally recreated lane had no changes or task commits before recreation;
-it now starts at the successfully fetched base. No remote branch was deleted
-or force-pushed.
-
-## Follow-up command journal
-
-| Command / invocation | Exit |
-| --- | --- |
-| `git fetch origin` (network succeeded on first attempt) | 0 |
-| `git fetch origin plan/promotion-093 && git show origin/plan/promotion-093:docs/plans/PROMOTION_PLAN_0.9.3.md > /tmp/PROMOTION_PLAN.md` | 128 (fetch: 0; remote tracking ref absent) |
-| `cat /tmp/PROMOTION_PLAN.md`; `git status --short`; `git branch --show-current`; `git merge origin/main` | 0 (already up to date) |
-| `git fetch origin refs/heads/plan/promotion-093:refs/remotes/origin/plan/promotion-093 && git show origin/plan/promotion-093:docs/plans/PROMOTION_PLAN_0.9.3.md > /tmp/PROMOTION_PLAN.md` | 0 |
-| `cat /tmp/PROMOTION_PLAN.md` | 0 |
-| `sed -n '/^### 4.2 /,/^### 4.3 /p' /tmp/PROMOTION_PLAN.md`; `sed -n '1,32p' /tmp/PROMOTION_PLAN.md` | 0 |
-| Searches for existing dry-run format/handling in source, docs and tests; `rg --files -g AGENTS.md` | 0 |
-| `pip install uv && uv sync --frozen --group dev` | 1 (pip: 0; uv: 1) |
-| Read CLI gameday module, scenario tests, machine document/wrapper handling, scenario runner and `scripts/env.sh` | 0 |
-| `python` status-file update (this progress record) | 0 |
-
-Publication stages only this file, commits with the prefix `W-gameday-1:` and
-DCO sign-off, and pushes explicitly to `HEAD:refs/heads/lane/W-gameday-1`.
-Publication failures, if any, are reported in the session response.
+The draft was copied into the lane-status path. `git diff --check` and
+`git diff --stat` exited 0; only this file changed. A final Python journal edit
+exited 0. Publication runs `git diff --check` once more, stages only this path,
+and commits with DCO sign-off and the required task prefix.
+Only `git push -u origin lane/W-gameday-1` will be used; its network-failure retry
+schedule is 2, 4, 8 and 16 seconds. Publication outcomes are reported in the final
+response. No pull request, rebase, tag or force push is used.
