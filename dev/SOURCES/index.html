@@ -1066,6 +1066,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#nested-columns-in-parquet-delta-and-json-lines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nested columns in Parquet, Delta and JSON Lines
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#json-one-document-or-an-array-of-documents" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6312,6 +6323,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#nested-columns-in-parquet-delta-and-json-lines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nested columns in Parquet, Delta and JSON Lines
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#json-one-document-or-an-array-of-documents" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6416,7 +6438,7 @@ your own source is <a href="../plugins/api-v1/">plugins/api-v1.md</a>; the built
 <tr>
 <td><code>parquet</code></td>
 <td><code>.parquet</code>, <code>.pq</code></td>
-<td>one flat table</td>
+<td>one table; list, struct and map columns stay Arrow columns</td>
 </tr>
 <tr>
 <td><code>jsonl</code></td>
@@ -6450,6 +6472,13 @@ your own source is <a href="../plugins/api-v1/">plugins/api-v1.md</a>; the built
 </tr>
 </tbody>
 </table>
+<h3 id="nested-columns-in-parquet-delta-and-json-lines">Nested columns in Parquet, Delta and JSON Lines<a class="headerlink" href="#nested-columns-in-parquet-delta-and-json-lines" title="Permanent link">&para;</a></h3>
+<p>A Parquet file, a Delta table or a JSON Lines file with a list, struct or map column (or one inside another) profiles
+like any other table: <code>shape profile</code> records the column's Arrow type, its null rate and, for a list or a map, the
+distribution of its lengths, and the other columns are profiled as before. The fields inside the values are not profiled.
+JSON Lines has no map type, so an object is a struct. <code>generate --from</code> writes the column back with the same Arrow type.
+<a href="../PROFILING_NOTES/#nested-columns">Profiling notes</a> lists what is recorded and what each command does with it.</p>
+<p>A local Delta table is read through Arrow's own file system, so the process ends when the command does.</p>
 <p>Nested sources add three methods to the Source protocol. <code>schema(uri, **options)</code> and
 <code>read(uri, **options)</code> give ONE table: the root, or the one named by the <code>table</code> option.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">shape.builtins.sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">JsonSource</span>

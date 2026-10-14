@@ -62656,14 +62656,15 @@ list):</p>
 
 
 <h4 id="shape.generation.learn.SchemaBuilder.column_generator" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">column_generator</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">parent_pk</span><span class="p">,</span> <span class="n">fit_threshold</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">column_generator</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">parent_pk</span><span class="p">,</span> <span class="n">fit_threshold</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 <a href="#shape.generation.learn.SchemaBuilder.column_generator" class="headerlink" title="Permanent link">&para;</a></h4>
 
 
     <div class="doc doc-contents ">
 
-        <p>The generator of one column: the first rule that applies.</p>
+        <p>The generator of one column: the first rule that applies. <code>where</code> (<code>table.column</code>)
+names a nested column in the error for a child type that has no generator.</p>
 
 
     </div>

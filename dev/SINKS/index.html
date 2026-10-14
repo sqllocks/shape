@@ -6658,6 +6658,7 @@ MySQL with the system CA store or <code>ssl_ca</code>). Opt out in the URI with 
 <!-- example: 0 -->
 
 <p><strong>Needs a Fabric account. Not run in CI.</strong></p>
+<p>Recorded by a manual <code>workflow_dispatch</code> run against the Fabric test workspace; the angle-bracket values stand for that tenant's identifiers. A write to a remote target needs <code>--yes</code> or <code>SHAPE_CONFIRM_REMOTE=1</code>; the recorded run set the variable. The test tenant has no ADLS Gen2 account, so the recorded run wrote the first two commands to a OneLake Lakehouse instead (<code>ws</code> is the workspace, <code>lh</code> the Lakehouse, folders <code>Files/shape_docs/raw</code> and <code>Files/shape_docs/live</code>); the output below shows those OneLake paths. The third command, <code>delta+abfss://…/Tables</code>, ran as shown.</p>
 <div class="highlight"><pre><span></span><code>shape<span class="w"> </span>generate<span class="w"> </span>retail<span class="w"> </span>--scale<span class="w"> </span>small<span class="w"> </span>--seed<span class="w"> </span><span class="m">7</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--to<span class="w"> </span>abfss://landing@myacct.dfs.core.windows.net/raw<span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>--table-format<span class="w"> </span><span class="nv">store</span><span class="o">=</span>csv<span class="w"> </span>--batch-date<span class="w"> </span><span class="m">2026</span>-10-02
@@ -6667,8 +6668,14 @@ shape<span class="w"> </span>stream<span class="w"> </span>retail<span class="w"
 <span class="w">  </span>--roll-seconds<span class="w"> </span><span class="m">30</span><span class="w"> </span>--realtime<span class="w"> </span>--rate<span class="w"> </span><span class="m">200</span><span class="w"> </span>--checkpoint-seconds<span class="w"> </span><span class="m">30</span>
 shape<span class="w"> </span>generate<span class="w"> </span>retail<span class="w"> </span>--to<span class="w"> </span>delta+abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Tables
 </code></pre></div>
-<!-- owner: Fabric maintainer — supply the transcript for docs/SINKS.md example 0. -->
-
+<details class="info">
+<summary>Output (exit 0)</summary>
+<div class="expected highlight"><pre><span></span><code>Wrote 21,750 rows in 9 tables to abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Files/shape_docs/raw (12.65s)
+shape stream: 5,000 events delivered, offset 5,000 of 5,000, complete, 210 events/s
+Wrote 21,750 rows in 9 tables to delta+abfss://ws@onelake.dfs.fabric.microsoft.com/lh.Lakehouse/Tables (32.39s)
+</code></pre></div>
+</details>
+<p>Evidence: <a href="../evidence/transcripts/docs-transcripts-38398883944-5fb3694b5da5-ubuntu-latest-sinks-onelake.json">run 38398883944, ubuntu-latest, <code>5fb3694b5da5</code></a>.</p>
 <ul>
 <li><strong>Layout.</strong> <code>--path-template</code> (default <code>{table}/ingest_date={date}/{table}_{yyyymmdd}.{ext}</code>;
   with rolling <code>..._{part}.{ext}</code>): Hive-style date partitions. Tokens: <code>{table} {ext} {date}

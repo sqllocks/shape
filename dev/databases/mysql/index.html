@@ -6421,7 +6421,7 @@ you select a destructive mode. A write error can report committed rows, so a ret
 idempotency decision.</p>
 <p>Evidence: <code>plugins/shape-databases/src/shape_databases/mysql.py</code> and shared adapter helpers.
 Shape writes to MySQL through <code>shape-databases</code>; it does not read MySQL
-tables directly in 0.9.2.</p>
+tables directly in 0.9.3.</p>
 <h2 id="profile-an-export">Profile an export<a class="headerlink" href="#profile-an-export" title="Permanent link">&para;</a></h2>
 <p>Export the data to Parquet or CSV, then profile the local file.</p>
 <p>Reading PostgreSQL and MySQL tables directly is planned (W9-01, issue #2).</p>

@@ -6796,7 +6796,7 @@ the values held by the <code>fabric-live</code> environment. Each test is printe
 stays 10 minutes dumps every thread's stack, the step is capped at 50 minutes, and a failed test
 prints its failure at once. After the tests the run lists the items left in the workspace and, for
 the Git workspace, Fabric's answers to <code>git/connection</code>, <code>git/status</code> and <code>git/myGitCredentials</code>
-(read-only). Two dispatch inputs, both off by default, do one-time setup:</p>
+(read-only). Three dispatch inputs, all off by default, do one-time setup or repair:</p>
 <table>
 <thead>
 <tr>
@@ -6808,6 +6808,10 @@ the Git workspace, Fabric's answers to <code>git/connection</code>, <code>git/st
 <tr>
 <td><code>set_git_credentials</code></td>
 <td>As the service principal, sets its own Git credentials on the Git workspace (<code>FABRIC_GIT_WORKSPACE_ID</code>) to the existing GitHub connection <code>shape-fabric-sync-gh</code>: <code>PATCH .../git/myGitCredentials</code> with <code>ConfiguredConnection</code>. It reads the credentials first and changes nothing when they already point at that connection. It prints only the source and the connection id. Timeout: 5 minutes.</td>
+</tr>
+<tr>
+<td><code>refresh_semantic_model</code></td>
+<td>Refreshes the semantic model <code>FABRIC_SEMANTIC_MODEL</code> (<code>POST .../datasets/{id}/refreshes</code>, type <code>full</code>) and waits up to 15 minutes for it to end, so a Direct Lake model reads the Lakehouse tables as they are now. It changes no definition and prints only the refresh status. <strong>The scheduled (nightly) run always does this</strong>, before the tests.</td>
 </tr>
 <tr>
 <td><code>delete_leftover_notebooks</code></td>

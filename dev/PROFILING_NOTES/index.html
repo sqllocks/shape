@@ -1416,6 +1416,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#nested-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nested columns
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#complete-local-run" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6956,6 +6967,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#nested-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nested columns
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#complete-local-run" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7652,6 +7674,82 @@ min_confidence=0.99)</code> returns the same as a list of dicts. The findings:</
 </ul>
 <p>A profile written before type inference was recorded has no <code>type_inference</code>: <code>shape types</code> says so on stderr and compares
 only the contract. The findings become <code>type</code> proposals with <code>shape proposals propose --kinds type</code> (<code>docs/PROPOSALS.md</code>).</p>
+<h2 id="nested-columns">Nested columns<a class="headerlink" href="#nested-columns" title="Permanent link">&para;</a></h2>
+<p>A Parquet file, a Delta table or a JSON Lines file can hold list, struct and map columns, and lists and structs inside
+them. <code>shape profile</code> reads them (Shape 0.9.1 stopped with <code>unhashable type: nested Arrow column</code>). A nested column is
+recorded as a whole. Nothing inside its values is profiled: a struct's fields, a list's elements and a map's keys and
+values have no statistics of their own.</p>
+<p>The column has <code>dtype</code> <code>nested</code> and the usual <code>null_count</code> and <code>null_rate</code>; the table's <code>row_count</code> is the number of rows.
+It has no <code>cardinality</code>, <code>min_value</code>, <code>max_value</code>, <code>mean</code>, <code>pattern</code> or value counts, and it is never a key. Three keys
+only a nested column has:</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>arrow_type</code></td>
+<td>the Arrow type as text, as the reader gave it (<code>list&lt;element: int64&gt;</code>)</td>
+</tr>
+<tr>
+<td><code>arrow_type_spec</code></td>
+<td>the same type exactly, as JSON: field names, nullability, units, time zones and nesting. A leaf is its Arrow name (<code>"int64"</code>) or, when the name does not read back as the same type, an Arrow IPC schema in base64. Field metadata is not kept</td>
+</tr>
+<tr>
+<td><code>nested</code></td>
+<td><code>kind</code> (<code>list</code>, <code>large_list</code>, <code>fixed_size_list</code>, <code>list_view</code>, <code>large_list_view</code>, <code>map</code>, <code>struct</code> or <code>union</code>), <code>rows</code>, <code>non_null</code>, and for a list or a map <code>length</code> and <code>element_null_rate</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>length</code> is the distribution of the lengths of the non-null lists or maps: <code>min</code>, <code>max</code>, <code>mean</code>, <code>std</code> (population), <code>p50</code>,
+<code>p95</code> and <code>hist</code> (length to count, up to 256 distinct lengths; a column with more has no <code>hist</code>). It is absent when no
+value is non-null. <code>element_null_rate</code> is the share of null list elements, or of null map values, among all elements; it
+is absent without an element. A struct has no <code>length</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">"tags"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"dtype"</span><span class="p">:</span><span class="w"> </span><span class="s2">"nested"</span><span class="p">,</span><span class="w"> </span><span class="nt">"null_count"</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="nt">"null_rate"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.2</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"arrow_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"list&lt;element: string&gt;"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"arrow_type_spec"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"list"</span><span class="p">:</span><span class="w"> </span><span class="s2">"list"</span><span class="p">,</span><span class="w"> </span><span class="nt">"item"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"element"</span><span class="p">,</span><span class="w"> </span><span class="nt">"nullable"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">}}},</span>
+<span class="w">  </span><span class="nt">"nested"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"list"</span><span class="p">,</span><span class="w"> </span><span class="nt">"rows"</span><span class="p">:</span><span class="w"> </span><span class="mi">60</span><span class="p">,</span><span class="w"> </span><span class="nt">"non_null"</span><span class="p">:</span><span class="w"> </span><span class="mi">48</span><span class="p">,</span><span class="w"> </span><span class="nt">"element_null_rate"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">             </span><span class="nt">"length"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"min"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="nt">"max"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="nt">"mean"</span><span class="p">:</span><span class="w"> </span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="nt">"std"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.118034</span><span class="p">,</span><span class="w"> </span><span class="nt">"p50"</span><span class="p">:</span><span class="w"> </span><span class="mf">2.5</span><span class="p">,</span><span class="w"> </span><span class="nt">"p95"</span><span class="p">:</span><span class="w"> </span><span class="mf">4.0</span><span class="p">,</span>
+<span class="w">                        </span><span class="nt">"hist"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"1"</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="nt">"2"</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="nt">"3"</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="nt">"4"</span><span class="p">:</span><span class="w"> </span><span class="mi">12</span><span class="p">}}}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>A table without a nested column has none of these keys, and the statistics of its other columns do not depend on a
+nested column being there. Both kernels (<code>SHAPE_KERNEL=rust</code> and <code>python</code>) give the same record.</p>
+<p>What the other commands do with a nested column:</p>
+<ul>
+<li><code>shape diff</code> compares the type by its structure and leaf types (<code>list&lt;int64&gt;</code>): the names Arrow writers give a list's item
+  or a map's entries do not count, a struct's field names do. A different type is a <code>dtype_change</code>, a different null rate is
+  a <code>null_rate_change</code>, and a shift in the mean length is a <code>length_change</code>.</li>
+<li><code>shape check</code> evaluates the contract rules that apply: <code>dtype</code> (<code>nested</code>), <code>nullable</code> and <code>max_null_rate</code>. A rule about
+  values (<code>pattern</code>, <code>distribution</code>) does not hold for a nested column.</li>
+<li><code>shape generate</code> writes the column with the recorded Arrow type, the recorded null rate and, for a list or a map, lengths
+  drawn from <code>length.hist</code> (from <code>mean</code>, <code>std</code>, <code>min</code> and <code>max</code> without a <code>hist</code>). The values inside come from the
+  generator of each leaf type, as for a column about which the profile says nothing, so a nested value has the right shape
+  and types but not the distribution of the original values:</li>
+<li>a nested value inside a nested value has 1 to 3 elements when the profile records no lengths for it, so it is
+    never empty;</li>
+<li>a struct field is never null;</li>
+<li>numbers, booleans, text, dates, times, timestamps, decimals and dictionaries use the defaults of a column without
+    statistics (integers and floats are uniform from 0 to 1);</li>
+<li>the keys of a map are distinct (a text key gets its position appended, an integer key is the first key plus its
+    position; any other key type drops a repeated key, so that map is shorter);</li>
+<li>a binary child is 1 to 16 random bytes (a fixed-size binary has its width) and a duration is uniform over one day, in
+    the type's unit;</li>
+<li>a union, extension, run-end encoded or view type inside a nested column is not generated: <code>generate</code> stops with one
+    <code>shape: error:</code> line that names the table, the column and the type (exit 2). The refusal stops the whole table: there is no option yet to leave a column out.</li>
+</ul>
+<p>CSV, TSV and SQL hold flat values only, so <code>generate</code> refuses a nested column for them by name; use Parquet, JSON Lines,
+  IPC or Delta. <code>shape fidelity</code> compares flat columns and also refuses a nested column by name (exit 2).
+* The bounded profile engine behind <code>shape capture</code> and <code>shape stream-profile</code> records a nested column as kind <code>other</code>,
+  with its Arrow type, counts and nulls but no lengths.
+* <code>shape profile --validate</code> refuses a nested column by name.
+* Profiles of the parts of one table merge when each part holds the same type; the lengths combine exactly when each part
+  kept its <code>hist</code>.</p>
+<p>Profiling the fields inside nested values is not done yet.</p>
 <h2 id="complete-local-run">Complete local run<a class="headerlink" href="#complete-local-run" title="Permanent link">&para;</a></h2>
 <p>Run these commands in order after preparing the fixtures above.</p>
 <p><a id="local-example-0"></a></p>
