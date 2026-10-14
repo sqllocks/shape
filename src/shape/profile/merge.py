@@ -508,9 +508,33 @@ def _merge_column(
     for field, counts in (("nan_count", nans), ("inf_count", infs)):
         if sum(counts):  # absent when zero, as in any profile
             out[field] = sum(counts)
+    if dtype == "nested":
+        _merge_nested(out, where, cols)
     if sketch is not None:
         _apply_sketch(out, sketch, dtype, sum(finite), total_rows, unknown_rates)
     return out
+
+
+def _merge_nested(out: dict[str, Any], where: str, cols: list[dict[str, Any]]) -> None:
+    """The Arrow type and the record of a nested column that is the union of these columns: the
+    parts must hold the same type; the lengths are combined (``shape.profile.nested``)."""
+    from shape.profile.nested import arrow_type_from_spec, merge_nested
+
+    typed = [c for c in cols if c.get("arrow_type_spec")]
+    types: list[Any] = []
+    for c in typed:
+        found = arrow_type_from_spec(c["arrow_type_spec"])
+        if not any(found.equals(t) for t in types):
+            types.append(found)
+    if len(types) > 1:
+        raise MergeError(
+            f"{where}: the nested types differ between the profiles "
+            f"({', '.join(sorted(str(t) for t in types))})"
+        )
+    if typed:
+        out["arrow_type"] = typed[0]["arrow_type"]
+        out["arrow_type_spec"] = typed[0]["arrow_type_spec"]
+        out["nested"] = merge_nested([c["nested"] for c in typed if c.get("nested")])
 
 
 def _shared(cols: list[dict[str, Any]], field: str) -> Any:

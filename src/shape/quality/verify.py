@@ -53,6 +53,18 @@ def _read(path: Path, fmt: str) -> pa.Table:
     return read_table(path)
 
 
+def refuse_nested(tables: dict[str, pa.Table], command: str) -> None:
+    """Raise ``ValueError`` naming the first nested column (list, struct, map, union) of
+    ``tables``: ``command`` compares flat columns only."""
+    for table, data in tables.items():
+        for field in data.schema:
+            if pa.types.is_nested(field.type):
+                raise ValueError(
+                    f"{table}.{field.name} is a nested column ({field.type}) and {command} "
+                    "compares flat columns only: drop it, or compare the flat columns"
+                )
+
+
 def load_tables(path: str | Path, fmt: str = "auto") -> dict[str, pa.Table]:
     """Load a data file, or every data file of a directory, as Arrow tables keyed by file stem.
 

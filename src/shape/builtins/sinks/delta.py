@@ -231,8 +231,17 @@ def _utc_timestamps(schema: pa.Schema) -> pa.Schema:
 def _utc_type(t: pa.DataType) -> pa.DataType:
     if pa.types.is_timestamp(t) and t.tz is None:
         return pa.timestamp(t.unit, tz="UTC")
-    if pa.types.is_list(t) or pa.types.is_large_list(t):
-        return type(t)(t.value_field.with_type(_utc_type(t.value_type)))
+    if pa.types.is_list(t) or pa.types.is_large_list(t) or pa.types.is_fixed_size_list(t):
+        item = t.value_field.with_type(_utc_type(t.value_type))
+        if pa.types.is_large_list(t):
+            return pa.large_list(item)
+        return pa.list_(item, t.list_size) if pa.types.is_fixed_size_list(t) else pa.list_(item)
+    if pa.types.is_map(t):
+        return pa.map_(
+            t.key_field.with_type(_utc_type(t.key_type)),
+            t.item_field.with_type(_utc_type(t.item_type)),
+            keys_sorted=t.keys_sorted,
+        )
     if pa.types.is_struct(t):
         return pa.struct(
             [t.field(i).with_type(_utc_type(t.field(i).type)) for i in range(t.num_fields)]
