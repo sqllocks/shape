@@ -81,7 +81,7 @@ the gate schema and the contract format, with its own `format` and `version`:
 | `distribution_alpha` | `distribution` (`--statistical`) | the p-value below which it warns (default 0.05) |
 | `classifications`, `memorization` | `memorization` (`--source`) | column classifications, and the gate's options (below) |
 | `utility` | `utility` (`--source`) | the model target and the minimum retention (below) |
-| `privacy` | none (`shape report-card` only) | `max_membership_auc` (0 to 1, default 0.6) and `seed` (default 0) of the membership-inference test of [REPORT_CARD.md](REPORT_CARD.md); `shape verify` accepts and ignores it |
+| `privacy` | none | Accepted and validated as configuration, but ignored by `shape verify`; it does not enable a validation gate |
 
 Each gate runs only when its keys are present, with or without `--schema`; the report lists
 the gates that ran. Every key is checked when the file is read: an unknown key, a wrong type,
@@ -372,14 +372,6 @@ components, so Shape refuses any that is not a plain name (letters, digits, `.`,
 `shape verify` also checks signatures (see `docs/SIGNING.md`): when its argument is a `.shape`
 file it verifies that artifact against `--key PUBLIC.pub`, and for any other path it runs the
 gates above.
-
-## Scores by dimension and failing rows
-
-`shape scorecard` runs these gates and scores accuracy, completeness, conformity, consistency,
-timeliness and uniqueness from them, with failing-row samples and an optional flag column. See
-[SCORECARD.md](SCORECARD.md). `--slice-by` scores them per slice; `shape skew` compares serving
-data with training data ([FAIRNESS_AND_SKEW.md](FAIRNESS_AND_SKEW.md)).
-
 
 ## Complete local run
 

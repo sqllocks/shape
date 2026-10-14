@@ -31,6 +31,13 @@ bad suppression file). The command reports quality; it does not fail a build, wi
 exception: `--max-slice-gap G` exits `1` when a dimension's slice gap is above `G` (see
 [FAIRNESS_AND_SKEW.md](FAIRNESS_AND_SKEW.md)). Use `shape verify` for a pass or fail exit code.
 
+## Scores by dimension and failing rows
+
+`shape scorecard` runs the verification gates and scores accuracy, completeness, conformity,
+consistency, timeliness and uniqueness from them, with failing-row samples and an optional flag
+column. `--slice-by` scores them per slice; `shape skew` compares serving data with training
+data ([FAIRNESS_AND_SKEW.md](FAIRNESS_AND_SKEW.md)).
+
 ## The six dimensions and the checks behind them
 
 Each gate scores exactly one dimension. A dimension with no check that ran has no score (`n/a`
