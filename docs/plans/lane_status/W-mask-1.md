@@ -1,96 +1,127 @@
-# W-mask-1 — follow-up blocked before tests
+# W-mask-1 — blocked by the unchanged baseline check
 
-Scope: 0.9.4, section 4.3 items 1–3 only; item 4 excluded. No implementation,
-tests, release files, regression store or golden corpus changed.
+Scope: 0.9.4, promotion-plan section 4.3, Changes before freezing items 1–3 only.
+No implementation, tests, public docs, release files, dependency files, lockfiles,
+regression store, or golden corpus were edited. This status file replaces the
+previous blocker notes.
 
-The missing-plan blocker is resolved. Read the plan from
-`origin/plan/promotion-093` into `/tmp/PROMOTION_PLAN.md`, including Decisions
-and section 4.3. The plan branch was not merged; the temporary file is not committed.
-The existing lane remains on origin/main plus its status commits. Main had not moved.
+The earlier questions are resolved: setup follows CONTRIBUTING.md using venv and
+make bootstrap; --dry-run is absent from mask and remains W-mask-2 work. Item 4
+is excluded. The plan was read from its own branch into /tmp/PROMOTION_PLAN.md;
+that branch and its file were neither merged nor committed.
 
-## Questions required by the stop rule
+## Exact question for the lead
 
-1. Tool setup: this checkout has no `uv.lock`. The requested
-   `uv sync --frozen --group dev` fails with exit 1. Which locked development
-   environment should this lane use, or is installation through the repository's
-   documented development dependencies authorized instead?
-2. Plan/code discrepancy: section 4.3 lists `--dry-run` in the mask frozen surface,
-   but `src/shape/cli/mask.py` does not define it. The same section assigns adding
-   it to W-mask-2. Confirm that W-mask-1 should leave this discrepancy for W-mask-2
-   and implement only items 1–3.
+The required unchanged baseline `make check` deadlocks in
+`tests/profile/test_audit_profile.py::test_concurrent_profiles_on_the_fork_pool_keep_their_own_columns`:
+a fork worker is blocked in `coverage/collector.py:239` (`lock_data`) with
+coverage 7.16.2. Which environment or upstream fix should W-mask-1 use to complete
+the required baseline without changing dependencies, skipping tests, or lowering
+gates?
 
-No red evidence exists yet: stopped before writing tests rather than guessing.
-No checks were run after the failed setup.
+## Baseline evidence
 
-## Follow-up command log
+`make bootstrap` exited 0 and built the native Rust kernel. Its build backend
+supplied Rust stable 1.99.0, meeting the required minimum. No separate toolchain
+installation or kernel workaround was used.
 
-| Command / inspection | Exit |
+`make check` was run before any task edits. Ruff lint and formatting, mypy
+(698 source files), compileall, Vulture, import contracts, requirements, secrets,
+user-facing wording, exit-code and failure-mode generation checks, shipped data,
+plugin skeletons, versions, release workflows, conformance coverage, CLI surface,
+and the v1 definition-of-done check all completed successfully in this session.
+
+The core pytest stage ran with the unchanged 86% coverage gate. Failure, error,
+and existing skip markers appeared before it stalled around 57%; there was no
+completed pytest summary or coverage result. The later heavy, Python-kernel,
+and Rust stages of make check were not reached.
+
+Diagnostic stack output from `py-spy dump --pid 2341`:
+
+```text
+Thread 2341 (idle): MainThread
+    _wait_for_tstate_lock (threading.py:1169)
+    join (threading.py:1149)
+    test_concurrent_profiles_on_the_fork_pool_keep_their_own_columns (test_audit_profile.py:157)
+Thread 37439 (idle): Thread-863 (run)
+    wait (threading.py:355)
+    next (multiprocessing/pool.py:861)
+    _profile_cols (shape/profile/reference/table.py:372)
+```
+
+Diagnostic stack output from `py-spy dump --pid 37442`:
+
+```text
+Thread 37442 (idle): Thread-863 (run)
+    lock_data (coverage/collector.py:239)
+    _fork_task (shape/profile/reference/table.py:304)
+    worker (multiprocessing/pool.py:125)
+```
+
+The other fork worker was idle waiting for multiprocessing queue input. Reading
+the test confirmed its `t.join()` has no timeout. The blocked pytest processes
+were terminated after collecting this evidence. `make check` then exited 2:
+
+```text
+Terminated
+make: *** [Makefile:25: check] Error 143
+```
+
+This is an interrupted, blocked baseline, not a passed check. No test was
+modified, weakened, marked skip/xfail, or removed. Work stopped under the user's
+ambiguity rule rather than selecting an unapproved environment adjustment or
+changing unrelated profiling code.
+
+## Red evidence
+
+None: the required baseline could not complete, so STEP 4 was not started.
+No new failing tests or implementation exist in this session.
+
+## Command log
+
+All shell commands ran from /workspace/shape. Inspection batches are grouped;
+exit codes below distinguish failed subcommands where the shell continued.
+Tool polling is not a separate shell command. Reads are listed without their
+contents to avoid reproducing prohibited historical terminology.
+
+| Command / inspection | Exit / result |
 | --- | --- |
+| `cd /workspace/shape`; `git remote get-url origin`; `git status --short`; `cat /etc/codex/network-policy.json` | 0 each; correct remote, clean checkout |
 | `git fetch origin` | 0, first attempt |
-| `git fetch origin plan/promotion-093` | 0, fetched into FETCH_HEAD only |
-| `git show origin/plan/promotion-093:docs/plans/PROMOTION_PLAN_0.9.3.md > /tmp/PROMOTION_PLAN.md` | 128, remote-tracking ref absent |
-| `cat /tmp/PROMOTION_PLAN.md`; `git status --short`; `git branch --show-current`; `git merge origin/main` | 0 each; already up to date |
-| `git fetch origin plan/promotion-093:refs/remotes/origin/plan/promotion-093` | 0 |
-| `git show origin/plan/promotion-093:docs/plans/PROMOTION_PLAN_0.9.3.md > /tmp/PROMOTION_PLAN.md`; read temporary plan | 0 each |
-| Read plan lines 270–320 and locate section 4.3; `pip install uv && uv sync --frozen --group dev` | setup exit 2; pip succeeded, uv cache directory read-only |
-| Read keyed mask tests, mask docs; search CSV hint and CLI seed/dry-run handling | 0 |
-| `UV_CACHE_DIR=/tmp/w-mask-1-uv-cache uv sync --frozen --group dev` | 1, uv.lock absent |
-| Read plan lines 308–334; search mask/parser/docs dry-run; discover AGENTS.md; read dispatch excerpt | batch exit 0; no AGENTS.md or mask dry-run definition found |
-| Python replacement of this status record | 0 |
+| Initial `git checkout -B lane/W-mask-1 origin/lane/W-mask-1` | 128; checkout fetched only main by default |
+| Initial `git merge origin/main -m 'W-mask-1: merge main into task lane'` | 0; already up to date, no merge commit created |
+| `cat CLAUDE.md`; conditional `cat AGENTS.md`; `cat CONTRIBUTING.md` | 0; no local AGENTS.md present |
+| `git fetch origin plan/promotion-093` | 0; FETCH_HEAD only |
+| Initial `git show origin/plan/promotion-093:docs/plans/PROMOTION_PLAN_0.9.3.md > /tmp/PROMOTION_PLAN.md` | 128; tracking ref absent |
+| `git config --get-all remote.origin.fetch`; `git branch --show-current`; `git status --short`; `git ls-remote --heads origin lane/W-mask-1 plan/promotion-093`; `git log -1 --format='%h %s'` | 0 each; confirmed both remote branches exist and main-only fetch configuration |
+| `git fetch origin refs/heads/lane/W-mask-1:refs/remotes/origin/lane/W-mask-1 refs/heads/plan/promotion-093:refs/remotes/origin/plan/promotion-093` | 0, first attempt |
+| `git checkout -B lane/W-mask-1 origin/lane/W-mask-1` | 0 |
+| `git merge origin/main -m 'W-mask-1: merge main into task lane'` | 0; already up to date, no merge commit created |
+| `git show origin/plan/promotion-093:docs/plans/PROMOTION_PLAN_0.9.3.md > /tmp/PROMOTION_PLAN.md`; Python read of opening paragraph, Decisions, and full section 4.3 | 0 each |
+| `python -m venv .venv`; `. .venv/bin/activate`; `make bootstrap` | 0 each |
+| File discovery for mask tests and lane status; `cat Makefile`; `cat src/shape/cli/mask.py`; `cat docs/MASK.md` | 0 batch |
+| Read keyed mask CLI tests and prior lane status; search seed, output, warning, profiling, dispatch, and argv handling; `git config user.name`; `git config user.email`; discover documentation example scripts | 0 batch |
+| Search CSV warning and profile reader interfaces; read profile package entry point and docs style; inspect MASK fixture setup | 0 batch; searches of nonexistent CSV glob and scenario package paths returned 2, corrected in subsequent reads |
+| Read profile signature, CsvFormat, reader warning, CLI snapshot implementation, empty-output guards, reference-example harness, fixture setup, transcript comparison, and explicit-option action precedent | 0 batches |
+| Discover AGENTS.md with `find /workspace -maxdepth 2 -name AGENTS.md -print` | 0; none applies to this repository |
+| Read canary and gameday output guards, suite conftest, pytest configuration, pyproject.toml, existing built-in mask CLI tests, and CLI error policy | 0 reads |
+| `rustc --version`; `cargo --version` before activating supplied toolchain paths | 127 each; executables absent from shell PATH |
+| `test -f /workspace/AGENTS.md`; `test -f /AGENTS.md` | 1 each; absent |
+| `ls /root/.cargo/bin/rustc` | 2; inaccessible path; no contents read |
+| `readlink /proc/977/exe` | 0; located build backend's supplied cargo |
+| `ls .venv/bin/cargo .venv/bin/rustc` | 2; not installed at those paths |
+| List supplied stable toolchain bin and cargo bin; `ls /home/agent/.cache/puccinialin/cargo/env`; list supplied rustup directory | 0 each |
+| Repeated `git status --short`; `. .venv/bin/activate`; `command -v python`; supplied stable `rustc --version` | 0 each; no task changes; Rust 1.99.0 |
+| Repeated `ps -eo pid,etime,comm`, `ps -eo pid,etime,pcpu,comm` with tail | 0 each; confirmed native build and nested test activity, then idle blocked workers |
+| `. .venv/bin/activate`; baseline `make check` | 0 activation; check exited 2 after diagnostic termination (pytest signal exit 143) |
+| Python inspection of only PYTEST_CURRENT_TEST entries for the three pytest processes | 0; no entries available; no other environment values printed |
+| `. .venv/bin/activate`; `py-spy dump --pid 2341` | 0 each; parent blocked in unbounded thread join |
+| `sed -n '120,180p' tests/profile/test_audit_profile.py`; `. .venv/bin/activate`; `py-spy dump --pid 37441`; `py-spy dump --pid 37442` | 0 each; confirmed queue wait and coverage lock wait |
+| `kill -TERM 2341 37441 37442` | 0; stopped the deadlocked test processes |
+| `. .venv/bin/activate`; `python -m pip show coverage` filtered to package name/version; `git status --short`; `git branch --show-current`; `git remote get-url origin`; `git rev-parse HEAD` | 0 each; coverage 7.16.2, clean lane, base 9cb33b17245e05ff36db025bf2dfed6353eb72c6 |
+| Python replacement and publication-log refinement of this status record; `git diff --check`; `git diff --stat` | 0 each |
 
-Final publication commands stage this status report, commit with prefix W-mask-1,
-and push only HEAD:refs/heads/lane/W-mask-1. Their exit codes are reported in the
-session response, since publication follows writing this file.
-
-## Previous session evidence
-
-# W-mask-1 — blocked
-
-Scope: 0.9.4 shape mask, section 4.3 items 1–3 only. No release, implementation,
-test, corpus, regression-store or public documentation changes were made.
-
-## Question
-
-The required `docs/plans/PROMOTION_PLAN_0.9.3.md` is absent from freshly fetched
-`origin/main` at `c10923be9`. Which commit contains the 0.9.4 plan, including its
-Decisions and section 4.3? Please make that plan available on origin/main or
-identify the intended base. Work stopped before tests or implementation rather
-than guessing the missing decisions. There is no red evidence because the
-required plan could not be read.
-
-## Commands and outcomes
-
-Commands ran from the repository unless a path is shown. Inspection batches are
-recorded together with their shell exit codes. The historical setup read is
-summarized to avoid reproducing the prohibited archived engine name.
-
-| Command / inspection | Exit |
-| --- | --- |
-| Runtime status and network policy inspection; workspace guidance file discovery | 0 |
-| `git fetch origin` (initial attempt) | 128; proxy connection unavailable |
-| `git checkout -b lane/W-mask-1 origin/main` | 0 |
-| `git status --short`; read CLAUDE.md and CONTRIBUTING.md; attempted promotion-plan read; discover mask files | 0 batch; promotion-plan read failed |
-| `git fetch origin` (retry with network access) | 0 |
-| Discover plan files; read docs/CONTRIBUTING.md and historical completion-plan builder/environment sections; locate execution section | 0 |
-| Read historical completion-plan execution rules; `git log -1`; `git status --short` | 0 |
-| `git ls-files` for AGENTS.md; `git remote -v`; `test -f docs/plans/PROMOTION_PLAN_0.9.3.md` | 1 (plan missing); no tracked AGENTS.md |
-| `git reset --hard origin/main`; read current CLAUDE.md and CONTRIBUTING.md; attempted promotion-plan read; discover mask files; read src/shape/cli/mask.py | 0 batch; promotion-plan read failed |
-| `make check` | 2; Ruff executable missing (underlying command exit 127) |
-| `git config user.name`; `git config user.email`; `git status --short`; `git ls-tree -r --name-only origin/main docs/plans/PROMOTION_PLAN_0.9.3.md` | 0; no plan entry |
-| Python write of this status report | 0 |
-
-The branch was moved to the newly fetched base before any files were edited.
-Only this status report is committed. Commit and push outcomes are reported in
-the session response; no PR, tag or force-push is requested or performed.
-
-## Publication evidence
-
-- `git add docs/plans/lane_status/W-mask-1.md`: exit 0.
-- `git commit -s -m 'W-mask-1: record missing promotion plan blocker'`: exit 0,
-  commit `f4feaf5d8`.
-- `git push origin HEAD:refs/heads/lane/W-mask-1`: exit 0; created only the
-  assigned lane branch.
-- Python append of publication evidence: exit 0.
-- Final commands: stage this report, commit with prefix `W-mask-1:`, and push
-  `HEAD:refs/heads/lane/W-mask-1`. Their actual exit codes are reported in the
-  session response because they occur after this report is committed.
+Publication follows this report: stage this file, create a signed-off commit
+whose message starts W-mask-1:, and push only lane/W-mask-1. Actual publication
+exit codes and commit hash are reported in the final response because they occur
+after writing this record. No pull request, tag, force-push, or rebase is used.
