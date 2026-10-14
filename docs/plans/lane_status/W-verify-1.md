@@ -52,7 +52,7 @@ Commands ran in this independent checkout unless explicitly stated. Logs are kep
 | Import core and all five requested plugins, print source paths | 0 | All resolve into this independent checkout. |
 | First `timeout 300 make check` | 2 | Static/repository checks passed. Core tests collected before Fabric editable install completed: two `ModuleNotFoundError: shape_fabric` errors. This was a setup sequencing error, resolved by finishing the install; full check repeated after verification of source paths. |
 
-| `pytest -q tests/fabric/test_lakehouse_tables.py tests/fabric/test_semantic_model.py` (affected collection tests rerun after install) | 0 | 7 passed in 2.37s; see `/tmp/W-verify-1-collection-recheck.log`. |
+| Affected collection tests rerun with pytest after install (exact invocation not retained in the recovered log) | 0 | 7 passed in 2.37s; initial collection errors were in `tests/builtins/test_shape_sm_script.py` and `tests/scale/test_kql_sink_uri.py`; see `/tmp/W-verify-1-collection-recheck.log`. |
 | Second `timeout 300 make check` after complete environment setup | 124 (timeout) | Static and repository checks passed. Core tests reached approximately 14% before termination. One failure marker appeared near 11%; no traceback or final pytest summary was produced before timeout, so its cause is unresolved. Heavy, pure-Python and Rust stages were not reached. |
 | Recovery: inspect git status/diff, prior logs, plan section 4.6, contributor instructions and process list | 0 | Preserved existing checkout and edits. No running lane test/build processes remained; no processes were killed. |
 
