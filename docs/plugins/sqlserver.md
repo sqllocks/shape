@@ -62,7 +62,8 @@ Evidence: [run 38337418136, ubuntu-latest, `de4c1fb12885`](../evidence/transcrip
 |---|---|
 | `--connection-string ODBC` | A full ODBC connection string, or set `SHAPE_SQLSERVER_CONNECTION_STRING` (keeps secrets out of shell history). |
 | `--server`, `--database` | Build the connection string for you (encrypted, certificate validated). |
-| `--auth` | `cli` (default): the Azure CLI's signed-in account. `msi`: managed identity or the default Azure credential chain. `spn`: service principal (`--tenant-id`, `--client-id`, secret in `SHAPE_SQLSERVER_CLIENT_SECRET` or `--client-secret`). `fabric`: the token of the running Fabric notebook. `sql`: the login in the connection string. |
+| `--auth` | `cli` (default): the Azure CLI's signed-in account. `msi`: managed identity or the default Azure credential chain. `spn`: service principal (`--tenant-id`, `--client-id`, secret in `SHAPE_SQLSERVER_CLIENT_SECRET` or `--client-secret REF`). `fabric`: the token of the running Fabric notebook. `sql`: the login in the connection string. |
+| `--client-secret REF` | Service principal secret reference: `env://NAME`, `file://PATH` or `kv://VAULT/NAME`. A literal is refused with exit 2 and one `shape: error:` line that never echoes the value. When omitted, uses `SHAPE_SQLSERVER_CLIENT_SECRET`. |
 | `--schema` | Schema to profile (default `dbo`). |
 | `--tables A,B` | Only these tables. A name the schema does not have, or a schema with no tables, is an error (exit 2) that lists the schema's tables, never an empty profile. |
 | `--sample-rows N` | Rows sampled per table (default 1000). `0` profiles the catalog only. |
@@ -70,6 +71,13 @@ Evidence: [run 38337418136, ubuntu-latest, `de4c1fb12885`](../evidence/transcrip
 
 Exit codes: `0` done; `2` bad input or a failed connection (the message never contains the
 password or token).
+
+For service principal authentication, keep the secret in an environment variable or secret
+store and pass its reference. For example, with `SHAPE_SQLSERVER_CLIENT_SECRET` already set:
+`shape profile-db --server myserver.database.windows.net --database shop --auth spn --tenant-id TENANT --client-id CLIENT --client-secret env://SHAPE_SQLSERVER_CLIENT_SECRET -o shop.shape`.
+References use the same resolver as `shape publish`: `file://` requires a private file
+(mode 600 on POSIX), and `kv://` requires a registered secret-store resolver or the Fabric
+plugin's Azure Key Vault support.
 
 From Python:
 

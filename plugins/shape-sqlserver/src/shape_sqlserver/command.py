@@ -7,6 +7,8 @@ import os
 import sys
 from typing import Any
 
+from shape.security import credrefs
+
 from .auth import AUTH_METHODS, Credentials
 from .sql import (
     DEFAULT_SAMPLE_ROWS,
@@ -46,7 +48,9 @@ class ProfileDbCommand:
         parser.add_argument("--client-id")
         parser.add_argument(
             "--client-secret",
-            help=f"service principal secret (prefer the {ENV_CLIENT_SECRET} variable)",
+            metavar="REF",
+            help="service principal secret reference: env://NAME, file://PATH or kv://VAULT/NAME "
+            f"(no literal values; defaults to the {ENV_CLIENT_SECRET} variable)",
         )
         parser.add_argument("--schema", default=DEFAULT_SCHEMA, help="schema to profile")
         parser.add_argument(
@@ -80,6 +84,13 @@ class ProfileDbCommand:
             return 2
 
     def _run(self, args: Any) -> int:
+        client_secret = os.environ.get(ENV_CLIENT_SECRET)
+        if args.client_secret is not None:
+            if not args.client_secret.startswith(("env://", "file://", "kv://")):
+                raise SqlServerError(
+                    "--client-secret takes a credential reference (env://, file:// or kv://)"
+                )
+            client_secret = credrefs.resolve_reference(args.client_secret)
         if args.sample_rows < 0:
             raise SqlServerError("--sample-rows cannot be negative")
         if not args.output and not args.json:
@@ -92,7 +103,7 @@ class ProfileDbCommand:
             method=args.auth,
             tenant_id=args.tenant_id,
             client_id=args.client_id,
-            client_secret=args.client_secret or os.environ.get(ENV_CLIENT_SECRET),
+            client_secret=client_secret,
         )
         tables = [t.strip() for t in args.tables.split(",") if t.strip()] if args.tables else None
         prof = profile_database(

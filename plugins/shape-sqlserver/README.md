@@ -21,5 +21,11 @@ shape profile-db --server myserver.database.windows.net --database shop --auth c
 You also need the Microsoft ODBC Driver 18 for SQL Server (and unixODBC on Linux).
 The full guide is `docs/plugins/sqlserver.md` in the repository.
 
+For a service principal, use `--auth spn --tenant-id TENANT --client-id CLIENT
+--client-secret env://SHAPE_SQLSERVER_CLIENT_SECRET` with the secret already set in that
+environment variable. `--client-secret REF` accepts only `env://`, `file://` and `kv://`
+references; a literal value is refused with exit 2 without printing it. When the flag is
+omitted, `SHAPE_SQLSERVER_CLIENT_SECRET` remains the fallback.
+
 Its version always equals core's (`sqllocks-shape`), and it is released together with core.
 How plugins are written: `docs/plugins/authoring.md`.

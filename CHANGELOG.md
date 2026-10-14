@@ -6,7 +6,9 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+- `shape profile-db --client-secret REF` now accepts only `env://`, `file://` and `kv://`
+  references, resolved with the same credential resolver as `publish`. Literal values are
+  refused with exit 2 without echoing the value.
 
 ## 0.9.2
 
