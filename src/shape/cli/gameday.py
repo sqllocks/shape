@@ -41,6 +41,8 @@ def add_arguments(sub: Any) -> None:
 def run(a: argparse.Namespace) -> int:
     from shape.scenario import gameday
 
+    if a.dry_run and a.json:
+        return _dry_run_document(a)
     report = gameday.run(a.plan, a.output, seed=a.seed, dry_run=a.dry_run)
     if a.json:
         print(json.dumps(report.to_dict(), indent=2))
@@ -58,3 +60,23 @@ def run(a: argparse.Namespace) -> int:
         return 0
     print(f"report: {a.output}/gameday_report.md")
     return 0 if report.detected else 1
+
+
+def _dry_run_document(a: argparse.Namespace) -> int:
+    """``--dry-run --json``: the generic ``shape-dry-run`` document (the output folder only)."""
+    from shape.cli import errors, machine
+    from shape.scenario import gameday
+    from shape.security.redact import redact_text
+
+    try:
+        gameday.run(a.plan, a.output, seed=a.seed, dry_run=True)
+    except errors.EXPECTED as exc:
+        if errors.debug_enabled():
+            raise
+        code = errors.fail(exc)
+        doc = machine.dry_run_document("gameday run", [], redact_text(errors.describe(exc)))
+        print(json.dumps(doc, sort_keys=True))
+        return code
+    doc = machine.dry_run_document("gameday run", [machine._file_action(a.output)])
+    print(json.dumps(doc, sort_keys=True))
+    return 0

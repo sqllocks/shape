@@ -234,6 +234,29 @@ def test_dry_run_of_a_bad_plan_exits_two(world, capsys):
     assert run(capsys, "gameday", "run", plan, "-o", world.root / "o", "--dry-run")[0] == 2
 
 
+def test_dry_run_json_is_the_generic_dry_run_document(world, capsys):
+    from shape.cli import machine
+
+    out = world.root / "out"
+    code, text, _ = run(capsys, "gameday", "run", world(a_round(checks=[TODAY])), "-o", out,
+                        "--dry-run", "--json")  # fmt: skip
+    doc = json.loads(text)
+    assert code == 0
+    assert sorted(doc) == ["actions", "command", "format", "version"]
+    assert doc["format"] == machine.DRY_RUN_FORMAT and doc["command"] == "gameday run"
+    assert doc["actions"] == [{"action": "create", "target": str(out)}]
+    assert not out.exists()
+
+
+def test_dry_run_json_of_a_bad_plan_exits_two_with_an_error(world, capsys):
+    plan = world(a_round(checks=[["bash", "-c", "x"]]))
+    code, text, _ = run(capsys, "gameday", "run", plan, "-o", world.root / "o", "--dry-run",
+                        "--json")  # fmt: skip
+    doc = json.loads(text)
+    assert code == 2 and doc["command"] == "gameday run" and doc["actions"] == []
+    assert doc["error"]
+
+
 # ---- a malformed plan exits 2 before any round runs -------------------------------------------
 
 

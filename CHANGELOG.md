@@ -6,7 +6,7 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+- `shape gameday run --dry-run --json` now prints the generic `shape-dry-run` document (the output folder as its one action) instead of a report with a meaningless `detected`.
 
 ## 0.9.2
 

@@ -324,7 +324,7 @@ NATIVE_DRY_RUN = frozenset(
 )
 #: Commands with their own ``--dry-run`` that print the ``shape-dry-run`` document themselves
 #: (with their plan under ``plan``), so ``--json`` is not wrapped again.
-NATIVE_DRY_RUN_DOCUMENT = frozenset({"emit", "stream"})
+NATIVE_DRY_RUN_DOCUMENT = frozenset({"emit", "stream", "gameday run"})
 
 
 # ---- parsers -------------------------------------------------------------------------------------
