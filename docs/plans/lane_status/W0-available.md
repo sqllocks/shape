@@ -77,3 +77,14 @@ starting; it succeeded after the environment became ready.
 - Final `make check`: not run.
 - No implementation, release version, dependency files, regression store,
   or golden corpus was changed.
+
+## Observed delivery results
+
+- `git diff --check && git add docs/plans/lane_status/W0-available.md &&
+  git commit -s -m 'W0-available: request shrink-only ratchet baseline clarification'
+  && git rev-parse HEAD`: exit 0; commit
+  `73c1eee4a8452123c422f11932291fd2152e2968`.
+- `git push -u origin lane/W0-available`: exit 0; no network retries needed.
+- Python append of these observed results: exit 0. The subsequent signed-off
+  delivery-log commit, verification and push are reported with their observed
+  exit codes in the final chat response.
