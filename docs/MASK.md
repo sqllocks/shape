@@ -36,8 +36,16 @@ the files can be shared or used for testing. The same code is the `mask` built-i
 | `--exclude COLUMN` | leave this column as it is (repeatable) |
 | `--pii COLUMN=TYPE` | mask this column as `TYPE` even if nothing marks it as personal data (repeatable) |
 | `--json` | print what was masked as JSON |
+| `--dry-run` | check input and output paths and print the planned output action without writing; combine with `--json` for the standard `shape-dry-run` document |
 
 Exit codes: `0` done, `2` the input could not be read or the request is not possible.
+
+A successful dry run exits `0` and leaves the input and output unchanged. For a new `-o DIR`,
+`--dry-run --json` reports `format: "shape-dry-run"`, `version: 1`, `command: "mask"` and one
+`actions` entry with `action: "create"` and `target: "DIR"`. An existing output directory is
+reported as `write`. This is a path preview: it does not run masking, check key permissions,
+detect columns or validate the masking options against the data. Run the command without
+`--dry-run` to perform those checks.
 
 ## What is masked
 
@@ -78,6 +86,14 @@ Types: `email`, `phone`, `first_name`, `last_name`, `name`, `address`, `city`, `
 
 It does not look inside free text: an e-mail address inside a `notes` column is not found. Use
 `--exclude` and `--pii` to adjust the choice of columns, and read the summary it prints.
+
+Both flags take exact column names and apply to every input table containing that name; they
+do not take table-qualified names or select parts of a cell. A name absent from every input
+table is an error (exit `2`). `--exclude` leaves the entire column unchanged, including a
+detected foreign key, and takes precedence over `--pii` for the same column. `--pii` forces the
+whole column to one of the types listed above, subject to the column's type being compatible;
+it does not enable detection or replacement inside free text. Excluding a personal-data column
+can retain real values and break joins to a masked key: review the summary and output before sharing.
 
 ## From Python
 

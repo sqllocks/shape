@@ -92,6 +92,20 @@ Each row: the threat, the control, the test that enforces it.
 | Secrets in errors and logs | connection strings are redacted (quoted values and client secrets included); the run log holds no arguments or URIs; `Credentials.__repr__` masks the secret | `plugins/shape-sqlserver/tests`, `tests/security/test_p7_04_review.py` |
 | Key misuse | AES-256-GCM with a fresh 96-bit nonce and the header as AAD; Ed25519 verification fails closed on any error | `tests/artifact/test_secure.py`, `tests/security/test_crypto.py` |
 
+### Masking keys
+
+| Threat | Control | Test |
+|---|---|---|
+| A masking key copied alongside masked data or printed in the JSON summary | `shape mask` refuses a key file inside the output directory and does not write the key into output files or the summary | `tests/masking/test_mask_keyed_cli.py::test_key_is_not_in_output_and_key_file_inside_output_is_refused` |
+| Another local user reading a masking key file | Group- or world-readable key files are refused on POSIX; the user must keep the key in a private file or secret store | `tests/masking/test_mask_keyed_cli.py::test_a_key_file_readable_by_others_exits_2` |
+| A short key or an unset key environment variable | Key loading requires at least 16 bytes and rejects an unset variable with exit `2` | `tests/masking/test_mask_keyed_cli.py::test_bad_keys_exit_2` |
+
+A holder of the masking key can mask guessed values and compare them with the output; small
+input domains can be searched completely. Key storage, backup, access control and revocation
+are deployment responsibilities. Losing the key prevents matching future extracts; rotating
+it requires re-masking the data. A dry run previews paths and does not validate key handling.
+See [keyed masking](MASK.md#keyed-masking).
+
 ### Privacy of profiles
 
 Raw-value leakage, re-identification and small cells are handled by the safe profile, the leak
