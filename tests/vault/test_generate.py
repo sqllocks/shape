@@ -200,17 +200,19 @@ def test_dry_run_and_plan_mark_vaulted_columns(capsys, workdir):
     flags = ["--vault", str(workdir / "gen.shapevault"), "--kek", str(workdir / "kek.key")]
     code, out, _ = _gen(capsys, workdir, "d", "--dry-run", "--json", *flags)
     assert code == 0 and "vault" in out
-    code, out, _ = run(capsys, "plan", str(workdir / "gen.shape"), *flags)
+    code, out, _ = run(capsys, "plan", "--json", str(workdir / "gen.shape"), *flags)
     doc = json.loads(out)
     vaulted = {i["evidence"] for i in doc["items"] if i["status"] == "vault"}
     assert "gen.status.enum_values" in vaulted and "gen.score.max_value" in vaulted
-    code, out, _ = run(capsys, "plan", str(workdir / "gen.shape"), *flags, "--status", "vault")
+    code, out, _ = run(
+        capsys, "plan", "--json", str(workdir / "gen.shape"), *flags, "--status", "vault"
+    )
     assert {i["status"] for i in json.loads(out)["items"]} == {"vault"}
 
 
 def test_nothing_is_marked_vault_without_the_flags(capsys, workdir):
     _profile(capsys, workdir)
-    _, out, _ = run(capsys, "plan", str(workdir / "gen.shape"))
+    _, out, _ = run(capsys, "plan", "--json", str(workdir / "gen.shape"))
     assert "vault" not in {i["status"] for i in json.loads(out)["items"]}
 
 

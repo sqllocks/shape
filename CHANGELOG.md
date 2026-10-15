@@ -6,7 +6,8 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+- Make `shape plan` human-readable by default while preserving structured output with `--json`.
+
 
 ## 0.9.3
 
