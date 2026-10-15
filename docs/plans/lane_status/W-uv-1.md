@@ -1,158 +1,360 @@
-# W-uv-1 — blocked before implementation
+# W-uv-1 — uv workspace and locked development/CI environment
 
-Date: 2026-10-15. Target: 0.9.4 development work; published versions remain 0.9.3.
-Base: `origin/main` at `a8e476ca910c40e3d8e7dd0dace9c80699237e82`.
-Branch: `lane/W-uv-1`. Origin verified as `https://github.com/sqllocks/shape.git`.
+Date: 2026-10-15. This is 0.9.4 development work; all published project versions remain 0.9.3.
+Branch: `lane/W-uv-1`; verified origin: `https://github.com/sqllocks/shape.git`.
+Metadata baseline: `origin/main` at `9833f8164d6d1ebea83e0bab37ea2faf43ceed74` (includes W-anon-1).
 
-## Result and exact question
+## Merge and history
 
-A universal uv workspace containing core and all 12 plugins cannot resolve the existing
-published dependency constraints. Core requires `numpy>=2.0,<3`. The integrations plugin
-publishes `anonymeter>=1,<2` in its `anonymeter` extra. Available anonymeter versions 1.0.0
-and 1.1.0 require `numpy>=1.22,<1.27`. Those ranges have no intersection.
-uv resolves workspace members' optional dependencies even when an extra is not selected
-for installation. Not selecting the extra in `uv sync` therefore does not solve this.
+`git fetch origin && git merge --no-ff origin/main` returned 0. The merge retained the
+lane's initial blocker-report commit `f0c2fdb607e092a262e830cd1e0cd2b31333487b` and brought
+in the Owner-authorized withdrawal of the incompatible extra. The unpushed merge was
+amended to add the CONTRIBUTING.md-required DCO sign-off and the W-uv-1 message prefix;
+its final SHA is `ac05ca5b5a795e32bcc3816118ac15b5c4adc63a`. Both amend commands returned 0; no rebase or force push.
 
-**Question for the owner/lead:** Should W-uv-1 wait for a separately authorized correction
-to the integrations plugin's published `anonymeter` extra (or a compatible upstream release),
-or may this lane use a specifically approved exception to the complete-workspace lock
-requirement? Which exception is authorized, and what compatibility evidence is required?
+Implementation commit: `d3511c1fb6786f152218af29f524353531ad2559` (signed off, exit 0).
+Dependency-group edits and `uv.lock` are in this same commit. A following signed-off commit
+records this evidence and strengthens the comparison to require whole metadata byte equality.
+The initial blocker and its exact question remain available in the first report's Git history;
+the Owner's W-anon-1 decision resolves that question. No published range was changed here.
 
-The task explicitly says: “If something in scope cannot move to uv without changing
-user-facing behaviour or a published artefact, STOP on that item and write the exact
-question in docs/plans/lane_status/W-uv-1.md (commit and push it) instead of guessing.”
-No dependency override, removal of an extra, workspace exclusion, changed Python support,
-or published metadata change has been assumed. This is a blocker report, not a completed
-migration. Dependent Makefile, CI and contributor-instruction changes are deferred because
-they would otherwise direct contributors to a lock that cannot be produced.
+## What changed
+
+Core remains the maturin root project. `[tool.uv.workspace] members = ["plugins/*"]`
+contains all 12 first-party plugins. Root source mappings and each plugin's core mapping
+resolve first-party packages from the checkout. The 361-package `uv.lock` is universal;
+`requires-python` stays `>=3.11` for core and every plugin. Published dev/docs extras are
+retained byte-for-byte for compatibility; development installs now use PEP 735 groups.
+
+- `dev`: development tools and the local plugin/test dependencies used by CI.
+- `docs`: every former requirements-docs pin, including dbt-core 1.12.5 and dbt-duckdb 1.11.0.
+  This group requires Python 3.12+ because its existing NumPy/pandas/SciPy pins require it.
+- `dbt`: those same dbt pins for the existing Python 3.11 nightly dbt job.
+- `benchmark`: preserves the existing PyArrow 25.0.1 benchmark candidate pin.
+- `fabric-demo`: locks the Fabric test SDK and notebook dependencies.
+- `azure`: optional Azure emulator/live dependencies, selected by the relevant nightly jobs.
+  Keeping these outside default development avoids introducing managed-identity discovery
+  into the signing CLI test when running ordinary core checks.
+
+The Fabric SDK requires PyArrow `<20`; docs/benchmarks require 25.0.1. uv's explicit group
+conflicts represent these existing environment differences in one lock without overrides.
+Consequently **`uv sync --locked --all-groups` intentionally returns 2**: docs/Fabric and
+benchmark/Fabric cannot be installed together. The task permits exact bootstrap groups;
+`make bootstrap` therefore runs:
+
+```sh
+uv sync --locked --group docs --group dbt --group benchmark
+```
+
+The separate Fabric environment uses `uv sync --locked --group fabric-demo` (verified with
+SDK 1.0.142 and PyArrow 19.0.1). Core-only Python 3.11 uses `uv sync --locked`.
+`make lock`, `make lock-check`, the export guard and all check/test tools use uv; the
+original pip editable command is retained as `make bootstrap-pip` in a separate venv.
+No coverage threshold, tolerance, existing marker filter, skip or xfail was changed.
+
+`requirements-docs.txt` remains because scripts/docs_example_setup.py and the out-of-scope
+docs publishing job still consume it. It is generated by `uv export --only-group docs
+--no-emit-workspace --no-hashes --no-header --no-annotate --locked` through
+scripts/check_docs_requirements.py; `make docs-export-check` and CI reject drift.
+Fixture checkouts copy uv.lock. Contributor examples now run through uv, preserve their
+recorded outputs and select the already active harness environment to avoid uv path warnings.
+
+CLAUDE.md, new AGENTS.md, CONTRIBUTING.md and the developer-only addition to docs/INSTALL.md
+specify bootstrap, uv run, deliberate upgrades and committing the lock with dependency edits.
+End-user pip instructions and published ranges remain unchanged. The exact requested
+CHANGELOG line is under Unreleased. `.gitignore` covers the separate fallback/Fabric venvs.
+
+## Tool versions
+
+`[tool.uv] required-version = "==0.8.17"` and every setup-uv step use 0.8.17, as mandated
+by the task and aligned with Premium. The environment initially exposed uv 0.12.23;
+`python3 -m pip install --user "uv==0.8.17"` returned 0 and checks select
+`$HOME/.local/bin` first on PATH. `uv --version` prints `uv 0.8.17`.
+Rust stable 1.99.1 (>=1.85) was installed with rustup's minimal profile (exit 0), followed by
+rustfmt/clippy (exit 0). Bootstrap/native builds use the unchanged maturin backend.
+Python 3.12.14 is used for docs/full development; the floor environment uses 3.11.13.
+Actionlint 1.7.11 was installed from its release archive (exit 0); the environment's Go
+wrapper rejected `go install` (exit 1), so no source installation was used.
+
+setup-uv is pinned to `d0cc045d04ccac9d8b7881df0226f9e82c39688e` with a v6.8.0 comment;
+`git ls-remote` verified that tag/SHA (exit 0). Caching is explicitly enabled. Each action's
+`python-version` matches the existing setup-python selector, preventing a cached managed
+interpreter from changing an OS/Python matrix leg. No activation scripts are used.
+
+## CI conversion and deliberately retained installs
+
+Converted Python environments: ci.yml, nightly.yml, docs.yml verify, docs-links.yml,
+docs-transcripts.yml and security.yml. Each sync uses `--locked`; tools then use
+`uv run --locked --no-sync` to preserve the explicitly selected groups and permit offline
+namespaces. ci.yml has a fast lock-check job that exercises freshness and the metadata comparison guard.
+The cross-branch build comparison is an explicit migration check (run below), rather than a
+permanent CI prohibition on future intentional published version/dependency changes.
+The min-versions job creates a fresh venv and uses **unlocked** `uv pip install` with the
+unchanged ci/constraints-min.txt, then `uv run --no-project --python ...` to preserve floors.
+
+Deliberate pip paths:
+
+- ci.yml build: a clean venv installs the built core/domain wheels with plain pip, runs
+  `shape --version` and the existing five-scenario smoke suite (verified locally).
+- ci.yml pure-wheel: its existing script still tests user wheel installs with plain pip;
+  its driver now comes from a locked uv environment.
+- Published benchmark baseline venvs keep their existing user-install path; only candidate
+  environments move to uv at the exact `$SHAPE_VENV` path the unchanged harness expects.
+- docs.yml publish is byte-for-byte unchanged as a job, including its pip setup and pushes.
+- release.yml, wheels.yml, container.yml, action-selftest.yml, record-baseline-published.yml,
+  fabric-live.yml, publish.yml, Dockerfile and action.yml remain byte-for-byte unchanged.
+  All existing upload steps are unchanged. Rust, npm and compose-only jobs keep their
+  existing non-Python tooling. No runtime source, benchmark or regression-store edits.
+
+The W6-02 offline-lock script is unchanged and runs with pinned uv 0.8.17; generation/check
+passed for all 30 user requirement sets. Its user output format and dependency declarations
+are unchanged. Editable-build tool downloads in docs CI use installed locked versions.
+
+## Validation summary
+
+| Check | Result |
+| --- | --- |
+| Final `uv lock --check` | exit 0, 0.06s |
+| Clean source clone, empty uv cache, exact-group bootstrap | exit 0, 218.99s |
+| Committed-checkout lock check | exit 0, 0.59s |
+| Committed-checkout `uv sync --locked --all-groups` | exit 2, 0.05s — expected group-conflict rejection |
+| Committed-checkout exact-group bootstrap | exit 0, 102.09s |
+| Committed-checkout native kernel and clean Git status | exit 0, 0.68s |
+| Built sdists/wheels: core + 12 plugins on origin/main and lane | exit 0, 358.72s — 26 comparisons, zero differences |
+| Complete METADATA/PKG-INFO byte comparisons | exit 0, 0.09s — all 26 entire files identical |
+| Stronger guard against saved complete metadata | exit 0, 0.06s |
+| Tooling contracts, including stale-lock rejection/failure propagation | exit 0, 1.61s |
+| Final combined packaging/tooling/owner suite | exit 0, 20.19s — 125 passed, 4 subtests |
+| Packaging, release engineering, offline-lock unit tests | exit 0, 18.70s — 114 passed, 4 subtests |
+| Owner/transcript and tooling tests | exit 0, 5.54s — 31 passed, 4 subtests |
+| CONTRIBUTING runnable examples | exit 0, 289.26s — passed, including both 404-case kernel runs |
+| Fresh-venv `make bootstrap-pip` | exit 0, 81.97s |
+| Fresh-venv pip fallback with spaces in its Python path | exit 0, 37.92s |
+| Plain-pip built-wheel version + existing smoke suite | exit 0, 24.66s — five of five scenarios |
+| Fresh unlocked floor install and version assertions | exit 0, 120.48s; exit 0, 0.34s — NumPy 2.3.0 / PyArrow 19.0.1 / Rust kernel |
+| Floor/kernel tests | exit 0, 76.09s — 405 passed, 46 deselected by the existing marker expression |
+| Rust fmt / clippy / test | exit 0, 0.13s; exit 0, 17.96s; exit 0, 71.02s — 36 Rust tests passed |
+| Strict docs build | exit 0, 14.65s |
+| Built-site links, wording and language | exit 0, 13.86s |
+| User offline-lock generation/check | exit 0, 6.51s; exit 0, 0.72s |
+| Actionlint, all six changed workflows | exit 0, 0.01s |
+| Matrix, publishing/upload, source/metadata invariants | exit 0, 0.33s |
+| Full lint/format | exit 0, 0.07s — 2092 files formatted |
+| Bounded `make check` | exit 124, 608.50s — incomplete core suite, not a pass |
+| Isolated umask failure on lane / clean main | exit 1, 1.12s; exit 1, 2.31s — same existing assertion |
+| All five file-sink tests under standard 0022 umask | exit 0, 1.19s; exit 0, 1.06s |
+
+`make check` passed lock/export checks, Ruff lint/format, mypy, compileall, Vulture,
+import-linter, and the requirements/secrets/wording/generated-docs/shipped-data/plugin/
+version/release/conformance/CLI/v1-definition checks. The core suite was still running when
+the 600-second local limit sent SIGINT; timeout returned 124 after cleanup. The final stack
+was in tests/cli/test_profile_sampling_cli.py under coverage. This is a local time limit,
+not a successful full suite. Before interruption pytest reported **1 failed, 3014 passed,
+69 deselected**. The failure was the existing file-sink umask assertion: this host uses 0077,
+so a new file is 0600. The same isolated test fails on clean origin/main under the same
+umask; both trees pass all five file-sink tests with the standard 0022 umask. No runtime
+code or assertion was changed. The baseline reproduction and normal-umask checks are in
+the journal. This is separate from the timeout and does not establish full-suite success. Later heavy/pure-kernel stages were not reached
+through make; kernel and Rust checks above were run separately. Full GitHub CI remains
+for the lead as specified in the task; no workflow was dispatched or PR opened here.
+
+## Timings
+
+Final comparison (same host, fresh venvs and empty Python package caches):
+
+| Setup | Exit | Wall clock |
+| --- | ---: | ---: |
+| Cold origin/main bootstrap (separate empty pip cache and Rust target) | 0 | 239.18s |
+| Cold lane bootstrap (clean source clone and empty uv cache) | 0 | 218.99s |
+| Warm lane locked sync | 0 | 0.09s |
+
+The lane installs more tools/plugins than the old bootstrap. Rust registry downloads and
+host networking were shared; other checks ran concurrently. These are observed setup times,
+not an isolated performance benchmark. The journal also retains preliminary measurements;
+those used different cache states and are superseded by the final comparison.
+
+## Windows/macOS notes
+
+All existing OS/Python matrices are unchanged (asserted against origin/main). Commands
+use uv run without shell activation; existing quoted plugin/artifact paths are retained.
+The lock's win32 branches and its non-win32/non-emscripten branches cover Windows/macOS/Linux
+on 3.11–3.14, verified by evaluating each resolution marker. The latter is the macOS branch;
+no Darwin-only dependency marker is needed. Intel and ARM64 macOS wheel URLs/hashes are
+present. Native Windows/macOS runners were not available locally; their existing CI legs
+remain the native verification. Helper subprocess paths use argument lists, and the Make
+Python executable is quoted for paths containing spaces.
+
+## Red evidence and corrected intermediate failures
+
+Before workspace/Makefile/metadata-helper implementation, the standard-library contract
+suite failed with four failures and two errors (exit 1). It exposed missing tool.uv,
+missing lock targets, old pip/plain-pytest recipes and the missing metadata helper.
+The initial mock-based bootstrap test accidentally invoked the old pip recipe; it was
+terminated and replaced with a safe `make --dry-run` test before proceeding.
+The final portable failure-propagation test injects a quoted Python command returning 23.
+
+```text
+FFFFEE
+======================================================================
+ERROR: test_published_metadata_comparison_detects_changes (__main__.UvEnvironmentTests.test_published_metadata_comparison_detects_changes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shape/tests/tools/test_uv_environment.py", line 60, in test_published_metadata_comparison_detects_changes
+    spec.loader.exec_module(guard)
+  File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1132, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1190, in get_data
+FileNotFoundError: [Errno 2] No such file or directory: '/workspace/shape/scripts/check_published_metadata.py'
+
+======================================================================
+ERROR: test_workspace_and_groups (__main__.UvEnvironmentTests.test_workspace_and_groups)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shape/tests/tools/test_uv_environment.py", line 18, in test_workspace_and_groups
+    self.assertEqual(config["tool"]["uv"]["required-version"], "==0.8.17")
+                     ~~~~~~~~~~~~~~^^^^^^
+KeyError: 'uv'
+
+======================================================================
+FAIL: test_make_commands_and_failure_propagation (__main__.UvEnvironmentTests.test_make_commands_and_failure_propagation) (target='bootstrap')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shape/tests/tools/test_uv_environment.py", line 48, in test_make_commands_and_failure_propagation
+    self.assertEqual(shlex.split(result.stdout), ["uv", *expected])
+AssertionError: Lists differ: ['python', '-m', 'pip', 'install', '-e', '.[33 chars]ins'] != ['uv', 'sync', '--locked', '--all-groups']
+
+First differing element 0:
+'python'
+'uv'
+
+First list contains 4 additional elements.
+First extra element 4:
+'-e'
+
++ ['uv', 'sync', '--locked', '--all-groups']
+- ['python',
+-  '-m',
+-  'pip',
+-  'install',
+-  '-e',
+-  '.[dev]',
+-  '-e',
+-  'plugins/shape-domains']
+
+======================================================================
+FAIL: test_make_commands_and_failure_propagation (__main__.UvEnvironmentTests.test_make_commands_and_failure_propagation) (target='lock')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shape/tests/tools/test_uv_environment.py", line 47, in test_make_commands_and_failure_propagation
+    self.assertEqual(result.returncode, 0, result.stderr)
+AssertionError: 2 != 0 : make: *** No rule to make target 'lock'.  Stop.
+
+
+======================================================================
+FAIL: test_make_commands_and_failure_propagation (__main__.UvEnvironmentTests.test_make_commands_and_failure_propagation) (target='lock-check')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shape/tests/tools/test_uv_environment.py", line 47, in test_make_commands_and_failure_propagation
+    self.assertEqual(result.returncode, 0, result.stderr)
+AssertionError: 2 != 0 : make: *** No rule to make target 'lock-check'.  Stop.
+
+
+======================================================================
+FAIL: test_make_commands_and_failure_propagation (__main__.UvEnvironmentTests.test_make_commands_and_failure_propagation) (target='test')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shape/tests/tools/test_uv_environment.py", line 48, in test_make_commands_and_failure_propagation
+    self.assertEqual(shlex.split(result.stdout), ["uv", *expected])
+AssertionError: Lists differ: ['pytest', '-m', 'not emulator and not live'] != ['uv', 'run', '--locked', 'pytest', '-m', 'not emulator and not live']
+
+First differing element 0:
+'pytest'
+'uv'
+
+Second list contains 3 additional elements.
+First extra element 3:
+'pytest'
+
+- ['pytest', '-m', 'not emulator and not live']
++ ['uv', 'run', '--locked', 'pytest', '-m', 'not emulator and not live']
+?  +++++++++++++++++++++++++
+
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.013s
+
+FAILED (failures=4, errors=2)
+```
+
+The stronger full-byte guard was also written/tested red before implementation:
+
+```text
+.E..
+======================================================================
+ERROR: test_published_metadata_comparison_detects_changes (__main__.UvEnvironmentTests.test_published_metadata_comparison_detects_changes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/shape/tests/tools/test_uv_environment.py", line 110, in test_published_metadata_comparison_detects_changes
+    guard.compare_metadata(baseline, baseline)
+    ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'metadata_guard' has no attribute 'compare_metadata'
+
+----------------------------------------------------------------------
+Ran 4 tests in 1.719s
+
+FAILED (errors=1)
+```
+
+Other intermediate failures are recorded in the journal: the initial unmodeled Fabric/docs
+conflict was fixed with explicit group conflicts; style errors were fixed; an incorrect
+literal Darwin-marker expectation was replaced with semantic platform evaluation; a mistyped
+test filename was corrected; the owner-transcript assertion was updated to require the uv
+launcher; a contributor transcript warning was fixed with `--active`; absolute UV executable
+paths in uv-run children were made deterministic in the Make command test. An early core
+run was interrupted (exit 2) while an unnecessarily installed Azure identity dependency
+retried discovery; the separate azure group fixes this and the isolated signing test passed.
+No runtime changes, suppressed assertions, skips, xfails or reduced gates were used.
 
 ## Files changed
 
-- `docs/plans/lane_status/W-uv-1.md` only.
+- `.github/workflows/ci.yml`
+- `.github/workflows/docs-links.yml`
+- `.github/workflows/docs-transcripts.yml`
+- `.github/workflows/docs.yml`
+- `.github/workflows/nightly.yml`
+- `.github/workflows/security.yml`
+- `.gitignore`
+- `AGENTS.md`
+- `CHANGELOG.md`
+- `CLAUDE.md`
+- `CONTRIBUTING.md`
+- `Makefile`
+- `docs/INSTALL.md`
+- `docs/plans/lane_status/W-uv-1.md`
+- `plugins/shape-behavior/pyproject.toml`
+- `plugins/shape-databases/pyproject.toml`
+- `plugins/shape-dbt/pyproject.toml`
+- `plugins/shape-domains/pyproject.toml`
+- `plugins/shape-eventhubs/pyproject.toml`
+- `plugins/shape-fabric/pyproject.toml`
+- `plugins/shape-healthcare-codes/pyproject.toml`
+- `plugins/shape-healthcare-standards/pyproject.toml`
+- `plugins/shape-integrations/pyproject.toml`
+- `plugins/shape-kafka/pyproject.toml`
+- `plugins/shape-simulation/pyproject.toml`
+- `plugins/shape-sqlserver/pyproject.toml`
+- `pyproject.toml`
+- `requirements-docs.txt`
+- `scripts/check_docs_requirements.py`
+- `scripts/check_published_metadata.py`
+- `scripts/docs_example_setup.py`
+- `tests/docs/test_owner_transcripts.py`
+- `tests/tools/test_uv_environment.py`
+- `uv.lock`
 
-No CHANGELOG migration claim is added because the migration has not happened.
+## Dependabot proposal (no file added)
 
-## Tooling and proposed workspace
-
-The initial `uv --version` was `uv 0.12.23 (x86_64-unknown-linux-gnu)`. Installed the requested
-version with `python3 -m pip install --user "uv==0.8.17"` (exit 0), then selected it using
-`export PATH="$HOME/.local/bin:$PATH"`; `uv --version` prints `uv 0.8.17` (exit 0).
-This is the version mandated by the task and aligned with Premium. This tooling install
-was outside the development environment. Python used by uv was CPython 3.12.14.
-`rustc --version` returned 127 (not installed); no build validation is claimed.
-
-Resolution was probed outside the repository, at
-`/workspace/scratch/W-uv-1-resolution`. It copied all 13 pyproject files, retained all
-`[project]` tables and build backends, and added only uv configuration: root project core,
-`[tool.uv.workspace] members = ["plugins/*"]`, `required-version = "==0.8.17"`, and workspace
-source mappings for local first-party dependencies. Each plugin needs a source mapping
-for core; the root also maps every plugin. The first probe additionally copied the published
-dev extra's requirements to a `dev` group and all non-comment requirements-docs lines to a
-`docs` group. Removing both proposed groups did not eliminate the conflict.
-
-A Python assertion comparing parsed `[project]` tables across origin/main, the checkout,
-and the final probe passed for all 13 distributions (exit 0). This checks the probe's inputs;
-it is **not** a substitute for the requested built wheel/sdist metadata test.
-
-## Red evidence and command results
-
-Commands ran from `/workspace/shape` unless shown otherwise. Read-only inspection commands
-(`cat`, `rg`, `ls`, `sed`, `head`) read the requested source, configuration and workflow files;
-no repository AGENTS.md exists on this base. `CLAUDE.md` points at CONTRIBUTING.md.
-The combined initial tooling/read command ended at missing `rustc` with exit 127.
-A later `ls -la ~/.cargo/bin` returned 2 (directory absent); `df -h /workspace` returned 0
-(30 GiB available). `rg -n 'requirements-docs' --glob '!docs/plans/**'` returned 0 and
-identified `scripts/docs_example_setup.py` as a consumer outside the converted workflows.
-`test ! -f .github/dependabot.yml` returned 0.
-
-| Command / check | Exit | Result |
-| --- | ---: | --- |
-| `git remote get-url origin` and suffix guard | 0 | Correct repository |
-| `git status --short` before branching | 0 | Clean |
-| `git fetch origin` | 0 | Updated origin/main |
-| `git checkout -B lane/W-uv-1 origin/main` | 0 | Correct lane/base |
-| Initial `uv --version` | 0 | 0.12.23; replaced for this task |
-| `python3 -m pip install --user "uv==0.8.17"` | 0 | Installed mandated version |
-| `uv --version` after PATH selection | 0 | 0.8.17 |
-| Initial probe `uv lock --directory /workspace/scratch/W-uv-1-resolution` | 1 | Missing core workspace source mapping; corrected in probe |
-| Probe `uv lock --directory /workspace/scratch/W-uv-1-resolution` with source mappings and groups | 1 | NumPy/anonymeter conflict below |
-| Same `uv lock` after removing both proposed groups | 1 | Same conflict |
-| Two-package `uv pip compile` below | 1 | Confirms incompatibility without workspace/groups |
-| Python assertion of all 13 `[project]` tables | 0 | Identical probe and baseline inputs |
-| `uv lock --check --directory /workspace/scratch/W-uv-1-resolution` | 2 | No lockfile can be checked |
-| `uv sync --locked --all-groups --directory /workspace/scratch/W-uv-1-resolution` | 2 | No lockfile; created only a scratch venv |
-
-Workspace resolver output (exit 1, both with and without proposed groups):
-
-```text
-No solution found when resolving dependencies for split (markers:
-python_full_version >= '3.15' and sys_platform == 'win32'):
-Because anonymeter>=1.0.0 depends on numpy>=1.22,<1.27 and only the
-following versions of anonymeter are available:
-    anonymeter<=1.0.0
-    anonymeter==1.1.0
-we can conclude that anonymeter>=1.0.0 depends on numpy>=1.22,<1.27.
-And because sqllocks-shape-integrations[anonymeter]
-depends on anonymeter>=1 and sqllocks-shape depends on
-numpy>=2.0, we can conclude that sqllocks-shape[advanced] and
-sqllocks-shape-integrations[anonymeter] are incompatible.
-And because your workspace requires sqllocks-shape[advanced] and
-sqllocks-shape-integrations[anonymeter], we can conclude that your
-workspace's requirements are unsatisfiable.
-```
-
-The split shown by uv does not make this merely a Python 3.15 issue: the dependency ranges
-are disjoint regardless of platform/Python. A reduced reproduction was also executed:
-
-```sh
-export PATH="$HOME/.local/bin:$PATH"
-printf '%s\n' 'numpy>=2.0,<3' 'anonymeter>=1,<2' > /workspace/scratch/W-uv-1-incompatible.in
-uv pip compile --universal --python-version 3.11 /workspace/scratch/W-uv-1-incompatible.in
-```
-
-Exit 1:
-
-```text
-warning: The requested Python version 3.11 is not available; 3.12.14 will be used to build dependencies instead.
-No solution found when resolving dependencies:
-Because only the following versions of anonymeter are available:
-    anonymeter<=1.0.0
-    anonymeter==1.1.0
-and anonymeter>=1.0.0 depends on numpy>=1.22,<1.27, we can conclude that
-anonymeter>=1.0.0 depends on numpy>=1.22,<1.27.
-And because you require anonymeter>=1 and numpy>=2.0,<3, we can conclude
-that your requirements are unsatisfiable.
-```
-
-No new behavior was implemented, so no behavioral tests were added, skipped or xfailed.
-The red evidence above is a prerequisite resolver failure, not a test-first implementation
-claim. The metadata-unchanged build test, clean-clone sync, `make check`, fresh-venv pip
-fallback and actionlint were not run: there is no implementation to validate. Rust kernel
-build, Windows/macOS marker verification and platform behavior remain unverified. No CI
-matrix or gate changed. No known sandbox failure has been claimed without reproducing it.
-
-## Timing
-
-Cold origin/main bootstrap, cold lane bootstrap and warm uv sync timings were not measured.
-There is no resolvable lane environment to compare; reporting a timing comparison would
-misrepresent the blocked state.
-
-## Workflows and platform notes
-
-Converted workflows: none. The requested ci.yml, nightly.yml, docs.yml, docs-links.yml,
-docs-transcripts.yml and security.yml remain on their original installs pending the lock
-blocker. The min-versions floor test, wheel/user install tests and offline-lock outputs
-remain unchanged. All OS/Python matrices remain unchanged; Windows path quoting and
-macOS dependency differences have not yet been exercised through uv.
-
-Deliberately out of scope and untouched: release.yml, wheels.yml, container.yml,
-action-selftest.yml, record-baseline-published.yml, fabric-live.yml, Dockerfile, action.yml,
-and all publish/sign/upload steps (including publish.yml and docs publishing).
-
-## Dependabot proposal (not installed)
-
-There is no existing `.github/dependabot.yml`. Per the task, do not add one; the proposed
-configuration for owner review once a workspace lock exists is:
+No existing .github/dependabot.yml was present. Per the task, only propose:
 
 ```yaml
 version: 2
@@ -168,9 +370,150 @@ updates:
           - patch
 ```
 
-## Completion checks
+## Open questions and remaining verification
 
-`git diff --check` returned 0 before staging the report.
+No open scope/dependency questions. The original blocker is resolved. The explicit
+all-groups rejection is documented above; the permitted exact-group workflow passes.
+The full GitHub suite and native Windows/macOS execution remain for the lead; the local
+bounded suite is not claimed as passing.
 
-Pending the owner/lead decision above. Only this blocker report is committed and pushed;
-no PR, tag, force push, main push or other branch push is requested or performed.
+## Complete build/check command journal
+
+Commands ran from /workspace/shape unless they include `cd`. Every row records the actual
+exit code, including red and intermediate attempts. Full stdout/stderr and timing JSON were
+retained under /workspace/scratch/W-uv-1-logs during execution. Earlier completed temporary
+venvs/cache clones were removed to keep sufficient space; metadata archives/logs remain.
+Read-only repository/configuration inspections were also performed before changes.
+
+| Check label | Command | Exit | Seconds |
+| --- | --- | ---: | ---: |
+| red-tests | `python3 tests/tools/test_uv_environment.py` | 1 | 15.21 |
+| red-tests-safe | `python3 tests/tools/test_uv_environment.py` | 1 | 0.10 |
+| lock-initial | `uv lock` | 1 | 2.01 |
+| green-tests | `python3 tests/tools/test_uv_environment.py` | 0 | 0.10 |
+| lock-sdk-marker | `uv lock` | 0 | 5.52 |
+| timing-main | `cd /workspace/scratch/W-uv-1-main && python3 -m venv .venv && export PATH="$PWD/.venv/bin:$PATH" && export UV_CACHE_DIR=/workspace/scratch/W-uv-1-main-cache && make bootstrap` | 0 | 205.90 |
+| export-docs | `python3 scripts/check_docs_requirements.py --write` | 0 | 0.31 |
+| actionlint-initial | `actionlint .github/workflows/ci.yml .github/workflows/nightly.yml .github/workflows/docs.yml .github/workflows/docs-links.yml .github/workflows/docs-transcripts.yml .github/workflows/security.yml` | 0 | 0.03 |
+| lock-groups | `uv lock` | 0 | 5.25 |
+| export-docs-groups | `python3 scripts/check_docs_requirements.py --write` | 0 | 0.32 |
+| sync-root | `uv sync --locked --all-groups` | 0 | 154.18 |
+| red-docs-export | `make docs-export-check` | 2 | 153.48 |
+| lock-final-groups | `uv lock` | 0 | 1.40 |
+| export-final-groups | `python3 scripts/check_docs_requirements.py --write` | 0 | 0.09 |
+| unit-tests | `python3 tests/tools/test_uv_environment.py` | 0 | 0.14 |
+| actionlint-final | `actionlint .github/workflows/ci.yml .github/workflows/nightly.yml .github/workflows/docs.yml .github/workflows/docs-links.yml .github/workflows/docs-transcripts.yml .github/workflows/security.yml` | 0 | 0.01 |
+| lock-drift-tests | `python3 tests/tools/test_uv_environment.py` | 1 | 0.76 |
+| bootstrap-current | `make bootstrap` | 0 | 2.50 |
+| lock-check | `uv lock --check` | 0 | 0.06 |
+| all-groups-explicit | `uv sync --locked --all-groups` | 2 | 0.06 |
+| metadata-builds | `python3 scripts/check_published_metadata.py --base origin/main --out /workspace/scratch/W-uv-1-metadata` | 0 | 315.85 |
+| lock-drift-green | `python3 tests/tools/test_uv_environment.py` | 0 | 1.41 |
+| format-new | `uv run --locked --no-sync ruff check --fix scripts/check_published_metadata.py scripts/check_docs_requirements.py tests/tools/test_uv_environment.py && uv run --locked --no-sync ruff format scripts/check_published_metadata.py scripts/check_docs_requirements.py tests/tools/test_uv_environment.py` | 1 | 0.03 |
+| make-check | `make check` | 2 | 0.58 |
+| python-311 | `uv python install 3.11` | 0 | 2.74 |
+| format-fixed | `uv run --locked --no-sync ruff format scripts/check_published_metadata.py scripts/check_docs_requirements.py tests/tools/test_uv_environment.py && uv run --locked --no-sync ruff check scripts/check_published_metadata.py scripts/check_docs_requirements.py tests/tools/test_uv_environment.py` | 0 | 0.17 |
+| user-wheel-smoke | `python3 -m venv /workspace/scratch/W-uv-1-user && /workspace/scratch/W-uv-1-user/bin/python -m pip install /workspace/scratch/W-uv-1-metadata/lane/core/*.whl /workspace/scratch/W-uv-1-metadata/lane/shape-domains/*.whl && cd /workspace/scratch && /workspace/scratch/W-uv-1-user/bin/shape --version && /workspace/scratch/W-uv-1-user/bin/shape suite run smoke --scale small` | 0 | 24.66 |
+| format-tests-final | `uv run --locked --no-sync ruff format tests/tools/test_uv_environment.py && uv run --locked --no-sync ruff check tests/tools/test_uv_environment.py` | 0 | 0.17 |
+| pip-fallback | `python3 -m venv /workspace/scratch/W-uv-1-pip && make bootstrap-pip PYTHON=/workspace/scratch/W-uv-1-pip/bin/python` | 0 | 81.97 |
+| tooling-final | `uv run --locked --no-sync python tests/tools/test_uv_environment.py` | 1 | 24.00 |
+| tooling-final-2 | `uv run --locked --no-sync python tests/tools/test_uv_environment.py` | 0 | 6.17 |
+| lock-and-export | `make lock-check docs-export-check` | 0 | 0.63 |
+| floors-install | `uv venv --python 3.11 /workspace/scratch/W-uv-1-floors && uv pip install --python /workspace/scratch/W-uv-1-floors/bin/python -e ".[dev,streaming,advanced,docs]" -e plugins/shape-domains -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric -e plugins/shape-kafka -c ci/constraints-min.txt` | 0 | 120.48 |
+| floors-smoke | `uv run --no-project --python /workspace/scratch/W-uv-1-floors/bin/python python -c "import numpy, pyarrow; from shape.kernel import kernel_name; print(numpy.__version__, pyarrow.__version__, kernel_name()); assert numpy.__version__ == \"2.3.0\"; assert pyarrow.__version__ == \"19.0.1\"; assert kernel_name() == \"rust\""` | 0 | 0.34 |
+| timing-lane | `cd /workspace/scratch/W-uv-1-clean && UV_CACHE_DIR=/workspace/scratch/W-uv-1-cold-cache make bootstrap` | 0 | 169.37 |
+| timing-warm | `cd /workspace/scratch/W-uv-1-clean && UV_CACHE_DIR=/workspace/scratch/W-uv-1-cold-cache uv sync --locked --group docs --group dbt --group benchmark` | 0 | 0.10 |
+| actionlint-verified | `actionlint .github/workflows/ci.yml .github/workflows/nightly.yml .github/workflows/docs.yml .github/workflows/docs-links.yml .github/workflows/docs-transcripts.yml .github/workflows/security.yml` | 0 | 0.01 |
+| kernel-built | `uv run --locked --no-sync python -c "import shape; from shape.kernel import kernel_name; import shape._kernel; print(shape.__version__, shape._kernel.version(), kernel_name()); assert kernel_name() == \"rust\""` | 0 | 0.04 |
+| markers | `uv run --locked --no-sync python -c "from pathlib import Path; text=Path(\"uv.lock\").read_text(); assert \"sys_platform == 'win32'\" in text; assert \"darwin\" in text; assert \"macosx_11_0_arm64.whl\" in text; print(\"Windows/macOS markers and macOS arm64 wheels present\")"` | 1 | 0.04 |
+| universal-markers | `uv run --locked --no-sync python /workspace/scratch/W-uv-1-markers.py` | 0 | 0.22 |
+| focused-tests | `uv run --locked --no-sync pytest -q tests/tools/test_uv_environment.py tests/release/test_packaging.py tests/release/test_workflows.py` | 4 | 0.52 |
+| docs-build | `uv run --locked --group docs mkdocs build --strict` | 0 | 14.65 |
+| focused-tests-corrected | `uv run --locked --no-sync pytest -q tests/tools/test_uv_environment.py tests/release/test_packaging.py tests/release/test_release_engineering.py tests/release/test_offline_lock.py` | 0 | 18.70 |
+| rust-components | `rustup component add rustfmt clippy` | 0 | 0.88 |
+| cargo-fmt | `uv run --locked --no-sync cargo fmt --manifest-path rust/shape-kernel/Cargo.toml --check` | 0 | 0.13 |
+| offline-lock-generate | `uv run --locked --no-sync python scripts/offline_lock.py generate /workspace/scratch/W-uv-1-offline` | 0 | 6.51 |
+| offline-lock-check | `uv run --locked --no-sync python scripts/offline_lock.py check /workspace/scratch/W-uv-1-offline` | 0 | 0.72 |
+| doc-checks | `uv run --locked --no-sync python scripts/check_doc_links.py --site site && uv run --locked --no-sync python scripts/check_user_facing.py --site site && uv run --locked --no-sync python scripts/check_docs_language.py --site site` | 0 | 13.86 |
+| docs-and-tooling-tests | `uv run --locked --no-sync pytest -q tests/tools/test_uv_environment.py tests/docs/test_transcripts.py tests/docs/test_owner_services.py tests/docs/test_owner_transcripts.py` | 1 | 3.50 |
+| cargo-clippy | `uv run --locked --no-sync cargo clippy --manifest-path rust/shape-kernel/Cargo.toml --all-targets -- -D warnings` | 0 | 17.96 |
+| clean-kernel | `cd /workspace/scratch/W-uv-1-clean && uv run --locked --no-sync python -c "import shape,shape._kernel; from shape.kernel import kernel_name; print(shape.__file__,shape._kernel.__file__,kernel_name()); assert \"/workspace/scratch/W-uv-1-clean/\" in shape._kernel.__file__; assert kernel_name() == \"rust\""` | 0 | 0.23 |
+| docs-tooling-green | `uv run --locked --no-sync pytest -q tests/tools/test_uv_environment.py tests/docs/test_transcripts.py tests/docs/test_owner_services.py tests/docs/test_owner_transcripts.py` | 0 | 5.54 |
+| core-progress | `uv run --locked --no-sync py-spy dump --pid 9987` | 0 | 0.23 |
+| fabric-environment | `UV_PROJECT_ENVIRONMENT=/workspace/scratch/W-uv-1-fabric uv sync --locked --group fabric-demo` | 0 | 9.72 |
+| fabric-sdk | `UV_PROJECT_ENVIRONMENT=/workspace/scratch/W-uv-1-fabric uv run --locked --no-sync python -c "from importlib.metadata import version; print(version(\"fabric-user-data-functions\"), version(\"pyarrow\")); assert version(\"pyarrow\").startswith(\"19.\")"` | 0 | 0.13 |
+| cargo-tests | `uv run --locked --no-sync cargo test --manifest-path rust/shape-kernel/Cargo.toml` | 0 | 71.02 |
+| floor-tests | `uv run --no-project --python /workspace/scratch/W-uv-1-floors/bin/python python -m pytest -q tests/packaging/test_dependency_floors.py tests/kernel -m "not heavy and not emulator and not live"` | 0 | 76.09 |
+| signing-wait-stack | `uv run --locked --no-sync py-spy dump --pid 10632` | 0 | 0.10 |
+| lock-azure-group | `uv lock` | 0 | 2.44 |
+| docs-export-azure | `python3 scripts/check_docs_requirements.py --write` | 0 | 0.08 |
+| make-check-2 | `make check` | 2 | 504.05 |
+| styling-final | `uv run --locked --no-sync ruff check scripts/check_published_metadata.py scripts/check_docs_requirements.py scripts/docs_example_setup.py tests/tools/test_uv_environment.py tests/docs/test_owner_transcripts.py && uv run --locked --no-sync ruff format --check scripts/check_published_metadata.py scripts/check_docs_requirements.py scripts/docs_example_setup.py tests/tools/test_uv_environment.py tests/docs/test_owner_transcripts.py` | 0 | 0.13 |
+| actionlint-latest | `actionlint .github/workflows/ci.yml .github/workflows/nightly.yml .github/workflows/docs.yml .github/workflows/docs-links.yml .github/workflows/docs-transcripts.yml .github/workflows/security.yml` | 0 | 0.03 |
+| clean-all-groups | `cd /workspace/scratch/W-uv-1-clean-final && uv sync --locked --all-groups` | 2 | 0.19 |
+| contributing-examples | `uv run --locked --no-sync pytest -q tests/docs/test_reference_examples.py -k CONTRIBUTING` | 1 | 153.55 |
+| bootstrap-separated | `make bootstrap` | 0 | 85.07 |
+| signing-no-auth | `uv run --locked --no-sync pytest -q tests/artifact/test_signing_keys.py::test_cli_kv_without_resolver_is_a_clear_error` | 0 | 2.94 |
+| tooling-portable | `uv run --locked --no-sync python tests/tools/test_uv_environment.py` | 0 | 5.28 |
+| cold-final | `cd /workspace/scratch/W-uv-1-clean-final && UV_CACHE_DIR=/workspace/scratch/W-uv-1-final-cache make bootstrap` | 0 | 218.99 |
+| warm-final | `cd /workspace/scratch/W-uv-1-clean-final && UV_CACHE_DIR=/workspace/scratch/W-uv-1-final-cache uv sync --locked --group docs --group dbt --group benchmark` | 0 | 0.09 |
+| docs-export-final-check | `uv run --locked --no-sync python scripts/check_docs_requirements.py` | 0 | 0.16 |
+| final-actionlint | `actionlint .github/workflows/ci.yml .github/workflows/nightly.yml .github/workflows/docs.yml .github/workflows/docs-links.yml .github/workflows/docs-transcripts.yml .github/workflows/security.yml` | 0 | 0.02 |
+| final-diff-check | `git diff --check` | 0 | 0.03 |
+| scope-invariants | `uv run --locked --no-sync python /workspace/scratch/W-uv-1-invariants.py` | 0 | 1.06 |
+| versions | `uv --version && rustc --version && actionlint --version` | 0 | 0.06 |
+| dco-merge | `uv run --locked --no-sync python scripts/check_dco.py origin/main HEAD` | 0 | 0.16 |
+| main-ancestry | `git merge-base --is-ancestor origin/main HEAD` | 0 | 0.01 |
+| metadata-final | `CARGO_TARGET_DIR=/workspace/scratch/W-uv-1-metadata-target uv run --locked --no-sync python scripts/check_published_metadata.py --base origin/main --out /workspace/scratch/W-uv-1-metadata-final` | 0 | 358.72 |
+| contributing-examples-final | `uv run --locked --no-sync pytest -q tests/docs/test_reference_examples.py -k CONTRIBUTING` | 0 | 289.26 |
+| actionlint-python-matrix | `actionlint .github/workflows/ci.yml .github/workflows/nightly.yml .github/workflows/docs.yml .github/workflows/docs-links.yml .github/workflows/docs-transcripts.yml .github/workflows/security.yml` | 0 | 0.01 |
+| invariants-python-matrix | `uv run --locked --no-sync python /workspace/scratch/W-uv-1-invariants.py` | 0 | 0.33 |
+| cold-main-final | `cd /workspace/scratch/W-uv-1-main && python3 -m venv /workspace/scratch/W-uv-1-main-cold-venv && PIP_CACHE_DIR=/workspace/scratch/W-uv-1-main-cold-cache CARGO_TARGET_DIR=/workspace/scratch/W-uv-1-main-cold-target make bootstrap PYTHON=/workspace/scratch/W-uv-1-main-cold-venv/bin/python` | 0 | 239.18 |
+| tooling-latest | `uv run --locked --no-sync python tests/tools/test_uv_environment.py` | 0 | 1.61 |
+| final-lint | `uv run --locked --no-sync ruff check src tests plugins benchmarks/vs_refengine scripts/check_published_metadata.py scripts/check_docs_requirements.py && uv run --locked --no-sync ruff format --check src tests plugins benchmarks/vs_refengine scripts/check_published_metadata.py scripts/check_docs_requirements.py` | 0 | 0.07 |
+| lock-final-check | `uv lock --check` | 0 | 0.06 |
+| make-check-final | `timeout --signal=INT --kill-after=20s 600s make check` | 124 | 608.50 |
+| committed-clone-lock | `cd /workspace/scratch/W-uv-1-committed && git status --porcelain && uv lock --check` | 0 | 0.59 |
+| committed-clone-all-groups | `cd /workspace/scratch/W-uv-1-committed && uv sync --locked --all-groups` | 2 | 0.05 |
+| full-metadata-bytes | `uv run --locked --no-sync python /workspace/scratch/W-uv-1-full-metadata.py` | 0 | 0.09 |
+| metadata-byte-guard-red | `uv run --locked --no-sync python tests/tools/test_uv_environment.py` | 1 | 1.84 |
+| metadata-byte-guard-green | `uv run --locked --no-sync ruff format scripts/check_published_metadata.py tests/tools/test_uv_environment.py && uv run --locked --no-sync ruff check scripts/check_published_metadata.py tests/tools/test_uv_environment.py && uv run --locked --no-sync python tests/tools/test_uv_environment.py` | 0 | 1.87 |
+| full-metadata-guard | `uv run --locked --no-sync python /workspace/scratch/W-uv-1-full-metadata-guard.py` | 0 | 0.06 |
+| committed-clone-bootstrap | `cd /workspace/scratch/W-uv-1-committed && UV_CACHE_DIR=/workspace/scratch/W-uv-1-final-cache make bootstrap` | 0 | 102.09 |
+| committed-clone-kernel | `cd /workspace/scratch/W-uv-1-committed && uv run --locked --no-sync python -c "import shape._kernel; from shape.kernel import kernel_name; print(shape._kernel.__file__,kernel_name()); assert \"/workspace/scratch/W-uv-1-committed/\" in shape._kernel.__file__; assert kernel_name()==\"rust\"" && git status --porcelain` | 0 | 0.68 |
+| status-secrets | `uv run --locked --no-sync python scripts/check_secrets.py` | 0 | 7.13 |
+| status-diff | `git diff --check` | 0 | 0.01 |
+| metadata-final-tests | `uv run --locked --no-sync pytest -q tests/tools/test_uv_environment.py tests/release/test_packaging.py tests/release/test_release_engineering.py tests/release/test_offline_lock.py tests/docs/test_owner_transcripts.py` | 0 | 20.19 |
+| final-source-scope | `uv run --locked --no-sync python /workspace/scratch/W-uv-1-invariants.py` | 0 | 0.32 |
+| umask-host | `umask` | 0 | 0.00 |
+| umask-lane | `uv run --locked --no-sync pytest -q tests/builtins/test_bugs_builtins_file_sink_atomic.py::test_new_file_has_umask_permissions_and_no_temp_left` | 1 | 1.12 |
+| umask-main | `cd /workspace/scratch/W-uv-1-main && /workspace/scratch/W-uv-1-main-cold-venv/bin/python -m pytest -q tests/builtins/test_bugs_builtins_file_sink_atomic.py::test_new_file_has_umask_permissions_and_no_temp_left` | 1 | 2.31 |
+| umask-standard-lane | `umask 0022; uv run --locked --no-sync pytest -q tests/builtins/test_bugs_builtins_file_sink_atomic.py` | 0 | 1.19 |
+| umask-standard-main | `umask 0022; cd /workspace/scratch/W-uv-1-main && /workspace/scratch/W-uv-1-main-cold-venv/bin/python -m pytest -q tests/builtins/test_bugs_builtins_file_sink_atomic.py` | 0 | 1.06 |
+| final-ci-actionlint | `actionlint .github/workflows/ci.yml .github/workflows/nightly.yml .github/workflows/docs.yml .github/workflows/docs-links.yml .github/workflows/docs-transcripts.yml .github/workflows/security.yml` | 0 | 0.01 |
+| dco-implementation | `uv run --locked --no-sync python scripts/check_dco.py origin/main HEAD` | 0 | 0.07 |
+| final-helper-format | `uv run --locked --no-sync ruff check scripts/check_published_metadata.py tests/tools/test_uv_environment.py && uv run --locked --no-sync ruff format --check scripts/check_published_metadata.py tests/tools/test_uv_environment.py` | 0 | 0.06 |
+| pip-fallback-spaces | `python3 -m venv "/workspace/scratch/W-uv-1 fallback" && make bootstrap-pip PYTHON="/workspace/scratch/W-uv-1 fallback/bin/python"` | 0 | 37.92 |
+| final-platform-lock | `uv run --locked --no-sync python /workspace/scratch/W-uv-1-markers.py && uv lock --check` | 0 | 0.31 |
+| final-docs-export | `uv run --locked --no-sync python scripts/check_docs_requirements.py` | 0 | 0.11 |
+| delivery-checks | `uv run --locked --no-sync python scripts/check_secrets.py && uv run --locked --no-sync python scripts/check_user_facing.py && git diff --check` | 2 | 9.28 |
+| delivery-checks-clean | `uv run --locked --no-sync python scripts/check_secrets.py && uv run --locked --no-sync python scripts/check_user_facing.py && git diff --check` | 0 | 9.65 |
+
+Additional setup/delivery commands not launched through the journal wrapper:
+
+| Command | Exit | Notes |
+| --- | ---: | --- |
+| `git remote get-url origin` and suffix guard | 0 | Correct repository, checked before branch work |
+| `git fetch origin && git merge --no-ff origin/main` | 0 | Requested merge, no rebase |
+| `git commit --amend --no-edit --signoff` | 0 | DCO trailer on unpushed merge |
+| `git commit --amend --signoff -m 'W-uv-1: merge origin/main after W-anon-1'` | 0 | Prefix and DCO, no pushed history rewritten |
+| `git worktree add --detach /workspace/scratch/W-uv-1-main origin/main` | 0 | Timing baseline |
+| `git clone --local --no-hardlinks` for each clean source verification | 0 | No generated venv/native artifacts copied |
+| `git clone --local --no-hardlinks --branch lane/W-uv-1 /workspace/shape /workspace/scratch/W-uv-1-committed` | 0 | Actual committed implementation checkout |
+| `git ls-remote https://github.com/astral-sh/setup-uv.git refs/tags/v6.8.0 refs/tags/v6.8.0^{}` | 0 | Verified action pin |
+| `python3 -m pip install --user "uv==0.8.17"` | 0 | Required task tool |
+| `sh /workspace/scratch/W-uv-1-rustup.sh -y --profile minimal --default-toolchain stable` | 0 | Rust >=1.85 |
+| `go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.11` | 1 | Host Go wrapper unsupported; used release archive |
+| Download/extract actionlint 1.7.11 release archive | 0 | Verified executable version in journal |
+| `git diff --cached --check` before implementation commit | 0 | Clean staged diff |
+| `git commit --signoff -m 'W-uv-1: lock developer and CI environments with uv workspace'` | 0 | d3511c1, includes dependency changes and lock together |

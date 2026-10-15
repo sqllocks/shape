@@ -249,5 +249,5 @@ and the checks after an upgrade. `make docs-export-check` validates the generate
 
 Without uv, create a separate venv and run `make bootstrap-pip` with that venv's Python.
 This unsupported-but-working fallback keeps the previous pip editable install; it has no
-lockfile guarantees. See [Contributing](../CONTRIBUTING.md#local-development) for full setup
+lockfile guarantees. Run tools directly in that venv, for example `python -m pytest`. See [Contributing](../CONTRIBUTING.md#local-development) for full setup
 and the separate Fabric SDK group, whose PyArrow requirements conflict with docs/benchmarks.

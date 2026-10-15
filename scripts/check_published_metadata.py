@@ -34,6 +34,17 @@ def published_fields(metadata: bytes) -> bytes:
     return b"".join(selected)
 
 
+def compare_metadata(before: bytes, after: bytes) -> None:
+    """Reject any metadata byte change, including descriptions and unselected headers."""
+    if before != after:
+        detail = (
+            "name, version, requirements or extras"
+            if published_fields(before) != published_fields(after)
+            else "other metadata bytes"
+        )
+        raise ValueError(f"Published metadata changed: {detail}")
+
+
 def archive_metadata(path: Path) -> bytes:
     if path.suffix == ".whl":
         with zipfile.ZipFile(path) as archive:
@@ -86,10 +97,12 @@ def compare(base: str, out: Path) -> None:
                         kind = "wheel" if archive.suffix == ".whl" else "sdist"
                         raw = archive_metadata(archive)
                         (dest / f"{kind}.metadata").write_bytes(raw)
-                        metadata[label][kind] = published_fields(raw)
+                        metadata[label][kind] = raw
                 for kind in ("wheel", "sdist"):
                     before, after = metadata["base"][kind], metadata["lane"][kind]
-                    if before != after:
+                    try:
+                        compare_metadata(before, after)
+                    except ValueError:
                         differences.append(f"{name}/{kind}")
                         print(
                             "".join(

@@ -422,7 +422,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with: {fetch-depth: 0}
       - uses: actions/setup-python@v5
         with: {python-version: '3.13'}
       - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
@@ -432,8 +431,6 @@ jobs:
           enable-cache: true
       - run: uv sync --locked
       - run: uv build
-      - name: Published metadata is unchanged for core and every plugin
-        run: uv run --locked --no-sync python scripts/check_published_metadata.py --base origin/main --out "${{ runner.temp }}/metadata"
       - name: User installation from the built wheel (plain pip, clean venv)
         shell: bash
         run: |

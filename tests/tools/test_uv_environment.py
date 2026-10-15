@@ -107,17 +107,16 @@ class UvEnvironmentTests(unittest.TestCase):
             b"Metadata-Version: 2.4\nName: sample\nVersion: 1\n"
             b"Requires-Dist: a>=1\nProvides-Extra: dev\n\ndescription\n"
         )
-        self.assertEqual(guard.published_fields(baseline), guard.published_fields(baseline))
+        guard.compare_metadata(baseline, baseline)
         for old, new in (
             (b"sample", b"other"),
             (b"Version: 1", b"Version: 2"),
             (b"a>=1", b"a>=2"),
             (b"dev", b"docs"),
+            (b"description", b"changed description"),
         ):
-            self.assertNotEqual(
-                guard.published_fields(baseline),
-                guard.published_fields(baseline.replace(old, new)),
-            )
+            with self.assertRaises(ValueError):
+                guard.compare_metadata(baseline, baseline.replace(old, new))
 
 
 if __name__ == "__main__":
