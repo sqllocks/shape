@@ -232,7 +232,7 @@ a little between runs. A table with one column skips linkability and inference
 and column names, never row values. **What is never sent:** both libraries run in-process;
 nothing leaves the machine.
 
-Anonymeter adapter: **withdrawn in 0.9.4: Anonymeter 1.x requires NumPy < 1.27; Shape requires NumPy >= 2**. The adapter code stays for independently installed Anonymeter in a separate environment. The Anonymeter report becomes available again when Anonymeter supports NumPy 2. Anonymeter measures privacy risk; Shape does not make data anonymous.
+Anonymeter adapter: **withdrawn in 0.9.4: Anonymeter 1.x requires NumPy < 1.27; Shape requires NumPy >= 2**. The adapter code stays for independently installed Anonymeter in a separate environment. The Anonymeter report becomes available again when Anonymeter supports NumPy 2. Anonymeter measures re-identification risk in a dataset; it does not change the data.
 
 ## Ibis and DuckDB
 
