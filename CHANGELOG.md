@@ -10,6 +10,8 @@ No unreleased changes.
 
 ## 0.9.3
 
+**Release date: 2026-10-14**
+
 0.9.2 was published to TestPyPI only and was never released to PyPI; its changes are part of 0.9.3.
 
 ### Added
