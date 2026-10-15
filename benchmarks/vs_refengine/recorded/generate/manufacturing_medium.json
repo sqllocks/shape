@@ -4,7 +4,7 @@
   "inputs": {
     "fixtures/schemas/manufacturing_3nf.json": "aec8420436459ecdeeb16497fabc75bac993447f4547e25b1d07899bc961de9c"
   },
-  "recorded_utc": "2026-10-13T01:47:50Z",
+  "recorded_utc": "2026-10-14T19:31:38Z",
   "seeds": {
     "42": {
       "dataset_id": "sha256:c0b24dba7a149f148d59d31e994ad7b284262b779bb0b9f5af74b4715477847a",
@@ -1632,8 +1632,8 @@
       }
     }
   },
-  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
-  "shape_version": "0.9.1",
+  "shape_commit": "a8e476ca910c40e3d8e7dd0dace9c80699237e82",
+  "shape_version": "0.9.3",
   "version": 1,
   "workload": "generate:manufacturing:medium"
 }

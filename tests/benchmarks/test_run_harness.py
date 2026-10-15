@@ -40,11 +40,11 @@ def _offline(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setattr(run, "BASELINE_PY", fake / "python")
     monkeypatch.setattr(run, "SHAPE_PY", fake / "python")
     monkeypatch.setattr(
-        run, "py_version", lambda py, pkg: "0.9.1" if pkg == "sqllocks-shape" else "0"
+        run, "py_version", lambda py, pkg: "0.9.3" if pkg == "sqllocks-shape" else "0"
     )
     monkeypatch.setattr(run, "py_kernel", lambda py: "rust")
     monkeypatch.setattr(
-        run, "recording_manifest", lambda: {"shape_version": "0.9.1", "shape_commit": "a" * 40}
+        run, "recording_manifest", lambda: {"shape_version": "0.9.3", "shape_commit": "a" * 40}
     )
     monkeypatch.setattr(run, "git_rev", lambda path: "abc")
     monkeypatch.setattr(run, "git_dirty", lambda path: False)
@@ -76,7 +76,7 @@ def test_only_one_family_keeps_the_other_families_already_recorded(monkeypatch, 
         "shape_tree_dirty": False,
         "baseline": {
             "kind": "shape",
-            "version": "0.9.1",
+            "version": "0.9.3",
             "commit": "a" * 40,
             "workloads": {
                 "profile:d1.csv": _record("profile"),

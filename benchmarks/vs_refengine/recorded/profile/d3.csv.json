@@ -23,7 +23,7 @@
         "cardinality_ratio": 0.077356,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": -33.55606304582647,
+          "loc": -33.556063045826356,
           "s": 1.1567518081354853,
           "scale": 2976.257366035455
         },
@@ -12422,9 +12422,9 @@
         "cardinality_ratio": 0.047469,
         "distribution": "lognormal",
         "distribution_params": {
-          "loc": -6807.941650466347,
-          "s": 0.005602814941390749,
-          "scale": 7058.1303243158345
+          "loc": -6807.935164279696,
+          "s": 0.005602820090276594,
+          "scale": 7058.123838027366
         },
         "dow_histogram": null,
         "dtype": "float",
@@ -14564,9 +14564,9 @@
     ],
     "row_count": 5000000
   },
-  "recorded_utc": "2026-10-13T01:47:50Z",
-  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
-  "shape_version": "0.9.1",
+  "recorded_utc": "2026-10-14T19:31:38Z",
+  "shape_commit": "a8e476ca910c40e3d8e7dd0dace9c80699237e82",
+  "shape_version": "0.9.3",
   "version": 1,
   "workload": "profile:d3.csv"
 }

@@ -1,7 +1,7 @@
 # Release regression harness
 
-The baseline is the last published Shape release, initially **Shape 0.9.1**, at the commit
-named by `v0.9.1`. The candidate is the checkout under test. The reference engine is archived
+The baseline is the last published Shape release, currently **Shape 0.9.3**, at the commit
+named by `v0.9.3`. The candidate is the checkout under test. The reference engine is archived
 and is never installed or run. T-20 is historical; T-21 clauses (g) and (h) are retired.
 T-21 (a)–(f), T-22, fixed seeds and all comparator tolerances remain unchanged.
 
@@ -18,7 +18,7 @@ start every command that uses the plan variables with `source scripts/env.sh &&`
 source scripts/env.sh && bash benchmarks/vs_refengine/setup_baseline.sh
 ```
 
-`BASELINE_VERSION` defaults to `0.9.1`; `BASELINE_VENV` defaults to
+`BASELINE_VERSION` defaults to `0.9.3`; `BASELINE_VENV` defaults to
 `$HOME/.venvs/shape-$BASELINE_VERSION`. The installer installs
 `sqllocks-shape==$BASELINE_VERSION`, `sqllocks-shape-domains==$BASELINE_VERSION` and
 `pyarrow==25.0.1`. An optional `BASELINE_INDEX` is a local wheel directory or an HTTP(S)
@@ -94,7 +94,7 @@ times the call through the expected refusal. Unexpected success, another excepti
 or an unrecorded error fails. Both refusal workloads remain in the full timing plan; the
 worker's existing column-count field is zero for a refusal. No result/store format changes.
 
-Alternatively dispatch Nightly with `confirm: record-0.9.1`. The `record-baseline` job
+Alternatively dispatch Nightly with `confirm: record-0.9.3`. The `record-baseline` job
 prepares the server and uploads `recorded-baseline`; it never commits. The lead downloads,
 reviews and commits the artifact, including `baseline_freeze.txt` as evidence, then runs
 FRZ-01's real acceptance. Ordinary CI and Nightly fail closed until that handoff is complete.
@@ -187,7 +187,7 @@ Their offline unit tests retain every assertion and use test-only import stand-i
 raise if an archived runtime is accessed; no archived engine is needed by those assertions.
 
 Until the lead records the release timing snapshot, the performance-page generator shows
-`release timing snapshot pending: recorded/timings_0.9.1.json` and a hidden owner marker.
+`release timing snapshot pending: recorded/timings_0.9.3.json` and a hidden owner marker.
 The unchanged release-mode documentation owner check refuses that pending state. Once the
 snapshot exists, regeneration automatically renders its source link and removes the marker.
 

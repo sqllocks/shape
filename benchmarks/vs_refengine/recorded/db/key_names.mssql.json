@@ -572,9 +572,9 @@
       }
     }
   },
-  "recorded_utc": "2026-10-13T01:47:50Z",
-  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
-  "shape_version": "0.9.1",
+  "recorded_utc": "2026-10-14T19:31:38Z",
+  "shape_commit": "a8e476ca910c40e3d8e7dd0dace9c80699237e82",
+  "shape_version": "0.9.3",
   "table_digests": {
     "scenario/key_names/customer": "sha256:b729a2979b88edf1c0551b783ea43ae19ab8ed9ba2ce160cca463a3a955dc90e",
     "scenario/key_names/invoices": "sha256:e51988e98051a6a15a1235bccdf22487473253c85baef8021bb49760e8511132",

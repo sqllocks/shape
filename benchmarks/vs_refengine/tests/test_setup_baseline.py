@@ -43,9 +43,9 @@ if args[:3]==['-m','pip','install']:
  if os.environ.get('FAIL_INDEX')=='1' and '--find-links' in args:sys.exit(1)
  if os.environ.get('FAIL_ALL')=='1' and not any('.source' in a for a in args):sys.exit(1)
 elif args[:3]==['-m','pip','freeze']:
- print('sqllocks-shape==0.9.1\\nsqllocks-shape-domains==0.9.1\\npyarrow==25.0.1')
+ print('sqllocks-shape==0.9.3\\nsqllocks-shape-domains==0.9.3\\npyarrow==25.0.1')
 elif args[:2]==['doctor','--json']:print(json.dumps({'kernel':os.environ.get('KERNEL','rust')}))
-elif args and args[0]=='-c':print(os.environ.get('FOUND_VERSION','0.9.1'))
+elif args and args[0]=='-c':print(os.environ.get('FOUND_VERSION','0.9.3'))
 """
     )
     worker.chmod(0o755)
@@ -88,7 +88,7 @@ def test_install_routes_and_freeze(tmp_path, mode):
     r = subprocess.run(["bash", str(SCRIPT)], env=env, capture_output=True, text=True)
     assert r.returncode == 0, r.stderr
     freeze = (tmp_path / "out" / "baseline_freeze.txt").read_text()
-    assert "sqllocks-shape==0.9.1" in freeze and "pyarrow==25.0.1" in freeze
+    assert "sqllocks-shape==0.9.3" in freeze and "pyarrow==25.0.1" in freeze
     calls = (tmp_path / "calls").read_text()
     if mode == "directory":
         assert "--find-links" in calls

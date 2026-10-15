@@ -4845,9 +4845,9 @@
             "cardinality_ratio": 0.09935,
             "distribution": "lognormal",
             "distribution_params": {
-              "loc": -12.752738800311517,
-              "s": 0.5598102764809118,
-              "scale": 60.717152029059534
+              "loc": -12.752738800311606,
+              "s": 0.5598102764809109,
+              "scale": 60.71715202905965
             },
             "dow_histogram": null,
             "dtype": "float",
@@ -56154,9 +56154,9 @@
             "cardinality_ratio": 0.91125,
             "distribution": "lognormal",
             "distribution_params": {
-              "loc": -0.2377994279407432,
-              "s": 0.6772068119740813,
-              "scale": 20.734127618304004
+              "loc": -0.23779942794077769,
+              "s": 0.67720681197408,
+              "scale": 20.734127618304033
             },
             "dow_histogram": null,
             "dtype": "float",
@@ -58315,9 +58315,9 @@
       }
     }
   },
-  "recorded_utc": "2026-10-13T01:47:50Z",
-  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
-  "shape_version": "0.9.1",
+  "recorded_utc": "2026-10-14T19:31:38Z",
+  "shape_commit": "a8e476ca910c40e3d8e7dd0dace9c80699237e82",
+  "shape_version": "0.9.3",
   "version": 1,
   "workload": "profile:mt.parquet"
 }

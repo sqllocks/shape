@@ -1,250 +1,1474 @@
 {
   "baseline": {
-    "commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
+    "commit": "a8e476ca910c40e3d8e7dd0dace9c80699237e82",
     "kind": "shape",
-    "version": "0.9.1",
+    "version": "0.9.3",
     "workloads": {
+      "generate:capital_markets:medium": {
+        "domain": "capital_markets",
+        "kind": "generate",
+        "median_s": 0.17317608099983772,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.167,
+          0.183,
+          0.174,
+          0.173,
+          0.17
+        ],
+        "scale": "medium",
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain capital_markets --scale medium --no-generate",
+          "exit_code": 0,
+          "first_run": {
+            "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain capital_markets --scale medium",
+            "exit_code": 0,
+            "status": "pass"
+          },
+          "status": "pass"
+        }
+      },
+      "generate:education:medium": {
+        "domain": "education",
+        "kind": "generate",
+        "median_s": 0.09515492700029426,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.094,
+          0.095,
+          0.095,
+          0.096,
+          0.099
+        ],
+        "scale": "medium",
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain education --scale medium --no-generate",
+          "exit_code": 0,
+          "first_run": {
+            "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain education --scale medium",
+            "exit_code": 0,
+            "status": "pass"
+          },
+          "status": "pass"
+        }
+      },
+      "generate:financial:medium": {
+        "domain": "financial",
+        "kind": "generate",
+        "median_s": 0.4033710499998051,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.403,
+          0.405,
+          0.396,
+          0.402,
+          0.409
+        ],
+        "scale": "medium",
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain financial --scale medium --no-generate",
+          "exit_code": 0,
+          "first_run": {
+            "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain financial --scale medium",
+            "exit_code": 0,
+            "status": "pass"
+          },
+          "status": "pass"
+        }
+      },
+      "generate:healthcare:medium": {
+        "domain": "healthcare",
+        "kind": "generate",
+        "median_s": 0.3241305460001058,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.318,
+          0.324,
+          0.321,
+          0.325,
+          0.326
+        ],
+        "scale": "medium",
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain healthcare --scale medium --no-generate",
+          "exit_code": 0,
+          "first_run": {
+            "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain healthcare --scale medium",
+            "exit_code": 0,
+            "status": "pass"
+          },
+          "status": "pass"
+        }
+      },
+      "generate:hr:medium": {
+        "domain": "hr",
+        "kind": "generate",
+        "median_s": 0.061371347999738646,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.063,
+          0.064,
+          0.059,
+          0.061,
+          0.061
+        ],
+        "scale": "medium",
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain hr --scale medium --no-generate",
+          "exit_code": 0,
+          "first_run": {
+            "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain hr --scale medium",
+            "exit_code": 0,
+            "status": "pass"
+          },
+          "status": "pass"
+        }
+      },
+      "generate:insurance:medium": {
+        "domain": "insurance",
+        "kind": "generate",
+        "median_s": 0.08608172399999603,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.086,
+          0.086,
+          0.087,
+          0.087,
+          0.084
+        ],
+        "scale": "medium",
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain insurance --scale medium --no-generate",
+          "exit_code": 0,
+          "first_run": {
+            "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain insurance --scale medium",
+            "exit_code": 0,
+            "status": "pass"
+          },
+          "status": "pass"
+        }
+      },
+      "generate:iot:medium": {
+        "domain": "iot",
+        "kind": "generate",
+        "median_s": 0.08766365800011044,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.09,
+          0.087,
+          0.088,
+          0.089,
+          0.088
+        ],
+        "scale": "medium",
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain iot --scale medium --no-generate",
+          "exit_code": 0,
+          "first_run": {
+            "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain iot --scale medium",
+            "exit_code": 0,
+            "status": "pass"
+          },
+          "status": "pass"
+        }
+      },
+      "generate:manufacturing:medium": {
+        "domain": "manufacturing",
+        "kind": "generate",
+        "median_s": 0.05099437699982445,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.051,
+          0.049,
+          0.052,
+          0.05,
+          0.051
+        ],
+        "scale": "medium",
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain manufacturing --scale medium --no-generate",
+          "exit_code": 0,
+          "first_run": {
+            "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain manufacturing --scale medium",
+            "exit_code": 0,
+            "status": "pass"
+          },
+          "status": "pass"
+        }
+      },
+      "generate:marketing:medium": {
+        "domain": "marketing",
+        "kind": "generate",
+        "median_s": 0.1547394429999258,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.152,
+          0.157,
+          0.154,
+          0.155,
+          0.162
+        ],
+        "scale": "medium",
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain marketing --scale medium --no-generate",
+          "exit_code": 0,
+          "first_run": {
+            "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain marketing --scale medium",
+            "exit_code": 0,
+            "status": "pass"
+          },
+          "status": "pass"
+        }
+      },
+      "generate:pulse:medium": {
+        "domain": "pulse",
+        "kind": "generate",
+        "median_s": 0.28599159899977167,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.286,
+          0.283,
+          0.279,
+          0.286,
+          0.292
+        ],
+        "scale": "medium",
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain pulse --scale medium --no-generate",
+          "exit_code": 0,
+          "first_run": {
+            "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain pulse --scale medium",
+            "exit_code": 0,
+            "status": "pass"
+          },
+          "status": "pass"
+        }
+      },
+      "generate:real_estate:medium": {
+        "domain": "real_estate",
+        "kind": "generate",
+        "median_s": 0.08646084000019982,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.086,
+          0.085,
+          0.087,
+          0.088,
+          0.086
+        ],
+        "scale": "medium",
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain real_estate --scale medium --no-generate",
+          "exit_code": 0,
+          "first_run": {
+            "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain real_estate --scale medium",
+            "exit_code": 0,
+            "status": "pass"
+          },
+          "status": "pass"
+        }
+      },
+      "generate:retail:large": {
+        "domain": "retail",
+        "kind": "generate",
+        "median_s": 3.5228199869998207,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          3.523,
+          3.566,
+          3.465,
+          3.518,
+          3.527
+        ],
+        "scale": "large",
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain retail --scale large --no-generate",
+          "exit_code": 0,
+          "first_run": {
+            "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain retail --scale large",
+            "exit_code": 0,
+            "status": "pass"
+          },
+          "status": "pass"
+        }
+      },
       "generate:retail:medium": {
         "domain": "retail",
         "kind": "generate",
-        "median_s": null,
+        "median_s": 0.42098354400013704,
         "ratio_vs_baseline": null,
-        "runs_s": [],
+        "runs_s": [
+          0.421,
+          0.42,
+          0.422,
+          0.416,
+          0.421
+        ],
         "scale": "medium",
         "verifier": {
-          "command": "recorded_store.load",
-          "exit_code": 2,
-          "status": "unavailable"
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain retail --scale medium --no-generate",
+          "exit_code": 0,
+          "first_run": {
+            "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain retail --scale medium",
+            "exit_code": 0,
+            "status": "pass"
+          },
+          "status": "pass"
         }
       },
       "generate:retail:small": {
         "domain": "retail",
         "kind": "generate",
-        "median_s": null,
+        "median_s": 0.05578142700005628,
         "ratio_vs_baseline": null,
-        "runs_s": [],
+        "runs_s": [
+          0.055,
+          0.055,
+          0.057,
+          0.056,
+          0.056
+        ],
         "scale": "small",
         "verifier": {
-          "command": "recorded_store.load",
-          "exit_code": 2,
-          "status": "unavailable"
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain retail --scale small --no-generate",
+          "exit_code": 0,
+          "first_run": {
+            "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain retail --scale small",
+            "exit_code": 0,
+            "status": "pass"
+          },
+          "status": "pass"
+        }
+      },
+      "generate:supply_chain:medium": {
+        "domain": "supply_chain",
+        "kind": "generate",
+        "median_s": 0.10868055699984325,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.109,
+          0.108,
+          0.108,
+          0.11,
+          0.109
+        ],
+        "scale": "medium",
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain supply_chain --scale medium --no-generate",
+          "exit_code": 0,
+          "first_run": {
+            "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain supply_chain --scale medium",
+            "exit_code": 0,
+            "status": "pass"
+          },
+          "status": "pass"
+        }
+      },
+      "generate:telecom:medium": {
+        "domain": "telecom",
+        "kind": "generate",
+        "median_s": 0.394247021999945,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.394,
+          0.406,
+          0.39,
+          0.4,
+          0.387
+        ],
+        "scale": "medium",
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain telecom --scale medium --no-generate",
+          "exit_code": 0,
+          "first_run": {
+            "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/domain_1to1/verify.py --impl shape --domain telecom --scale medium",
+            "exit_code": 0,
+            "status": "pass"
+          },
+          "status": "pass"
         }
       },
       "profile:d1.csv": {
         "dataset": "d1.csv",
         "kind": "profile",
-        "median_s": null,
+        "median_s": 0.261282410999911,
         "ratio_vs_baseline": null,
-        "runs_s": [],
+        "runs_s": [
+          0.26000442399981694,
+          0.2555889169998409,
+          0.261282410999911,
+          0.26382688100011364,
+          0.27800752999996803
+        ],
         "verifier": {
-          "command": "recorded_store.load",
-          "exit_code": 2,
-          "status": "unavailable"
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape d1.csv",
+          "exit_code": 0,
+          "status": "pass"
         }
       },
       "profile:d1.parquet": {
         "dataset": "d1.parquet",
         "kind": "profile",
-        "median_s": null,
+        "median_s": 0.11977745199988021,
         "ratio_vs_baseline": null,
-        "runs_s": [],
+        "runs_s": [
+          0.12025133000020105,
+          0.11977745199988021,
+          0.12284212700001262,
+          0.1098160160001953,
+          0.11934159899988117
+        ],
         "verifier": {
-          "command": "recorded_store.load",
-          "exit_code": 2,
-          "status": "unavailable"
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape d1.parquet",
+          "exit_code": 0,
+          "status": "pass"
         }
       },
       "profile:d2.csv": {
         "dataset": "d2.csv",
         "kind": "profile",
-        "median_s": null,
+        "median_s": 2.1960898819997965,
         "ratio_vs_baseline": null,
-        "runs_s": [],
+        "runs_s": [
+          2.1919897769998897,
+          2.2306158449998748,
+          2.1627590739999505,
+          2.1960898819997965,
+          2.2552241659998344
+        ],
         "verifier": {
-          "command": "recorded_store.load",
-          "exit_code": 2,
-          "status": "unavailable"
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape d2.csv",
+          "exit_code": 0,
+          "status": "pass"
         }
       },
       "profile:d2.parquet": {
         "dataset": "d2.parquet",
         "kind": "profile",
-        "median_s": null,
+        "median_s": 1.278933645000052,
         "ratio_vs_baseline": null,
-        "runs_s": [],
+        "runs_s": [
+          1.283998646999862,
+          1.2607946309999534,
+          1.278933645000052,
+          1.2588922820000334,
+          1.2843562580001162
+        ],
         "verifier": {
-          "command": "recorded_store.load",
-          "exit_code": 2,
-          "status": "unavailable"
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape d2.parquet",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:d3.csv": {
+        "dataset": "d3.csv",
+        "kind": "profile",
+        "median_s": 7.749996417000148,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          7.7370918109998,
+          7.711584954000045,
+          7.773221079999985,
+          7.758193139000014,
+          7.749996417000148
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape d3.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:d3.parquet": {
+        "dataset": "d3.parquet",
+        "kind": "profile",
+        "median_s": 4.740464166000038,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          4.699731941999971,
+          4.679950195999936,
+          4.740464166000038,
+          4.777568910999889,
+          4.7848304849999295
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape d3.parquet",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:d4.csv": {
+        "dataset": "d4.csv",
+        "kind": "profile",
+        "median_s": 5.6546540150000055,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          5.615552733999948,
+          5.619212394999977,
+          5.6546540150000055,
+          5.701212313000042,
+          5.664767275000031
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape d4.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:d4.parquet": {
+        "dataset": "d4.parquet",
+        "kind": "profile",
+        "median_s": 4.442553858999872,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          4.4410779939998974,
+          4.442179514000145,
+          4.442553858999872,
+          4.451345856999978,
+          4.473814412000138
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape d4.parquet",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e130.csv": {
+        "dataset": "edge/e130.csv",
+        "kind": "profile",
+        "median_s": 0.11148069199998645,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.11148069199998645,
+          0.11252445899981467,
+          0.10852863099989918,
+          0.10938299000008556,
+          0.11218513900030302
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e130.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e130.parquet": {
+        "dataset": "edge/e130.parquet",
+        "kind": "profile",
+        "median_s": 0.10784305299966945,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.10784305299966945,
+          0.11039051599982486,
+          0.10732454099979805,
+          0.1103815599999507,
+          0.10573536599986255
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e130.parquet",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e130_uuidpk.csv": {
+        "dataset": "edge/e130_uuidpk.csv",
+        "kind": "profile",
+        "median_s": 0.12088333200017587,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.11379776799958563,
+          0.12170513799992477,
+          0.11908243200014113,
+          0.12088333200017587,
+          0.1391595889999735
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e130_uuidpk.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e130_uuidpk.parquet": {
+        "dataset": "edge/e130_uuidpk.parquet",
+        "kind": "profile",
+        "median_s": 0.11451299300006212,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.12011293099976683,
+          0.12295531000017945,
+          0.11451299300006212,
+          0.11119342400024834,
+          0.11392890799970701
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e130_uuidpk.parquet",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e15.csv": {
+        "dataset": "edge/e15.csv",
+        "kind": "profile",
+        "median_s": 0.07861743600005866,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.07861743600005866,
+          0.07896363800000472,
+          0.0789587140002368,
+          0.07824993099984567,
+          0.07510435300036988
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e15.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e15.parquet": {
+        "dataset": "edge/e15.parquet",
+        "kind": "profile",
+        "median_s": 0.08036444399976972,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.08036444399976972,
+          0.08343485800014605,
+          0.08374736699988716,
+          0.08006906700029504,
+          0.07887959199979377
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e15.parquet",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e15_uuidpk.csv": {
+        "dataset": "edge/e15_uuidpk.csv",
+        "kind": "profile",
+        "median_s": 0.07632510999974329,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.07430362400009471,
+          0.07632510999974329,
+          0.07613555599982647,
+          0.07947725500025626,
+          0.07691619699971852
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e15_uuidpk.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e15_uuidpk.parquet": {
+        "dataset": "edge/e15_uuidpk.parquet",
+        "kind": "profile",
+        "median_s": 0.08167661200013754,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.08167661200013754,
+          0.07859360599968568,
+          0.08171077800034254,
+          0.0789185170001474,
+          0.10296855200022037
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e15_uuidpk.parquet",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e3.csv": {
+        "dataset": "edge/e3.csv",
+        "kind": "profile",
+        "median_s": 0.06421861399985573,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.060411035000015545,
+          0.06421861399985573,
+          0.061085571000148775,
+          0.06770955199999662,
+          0.06529615999988891
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e3.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e3.parquet": {
+        "dataset": "edge/e3.parquet",
+        "kind": "profile",
+        "median_s": 0.06721998400007578,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.06999719099985668,
+          0.06706168500022613,
+          0.06724867000002632,
+          0.06721998400007578,
+          0.06618359599997348
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e3.parquet",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e3000.csv": {
+        "dataset": "edge/e3000.csv",
+        "kind": "profile",
+        "median_s": 0.3419478240002718,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.34180791299968405,
+          0.3419478240002718,
+          0.34759903800022585,
+          0.33440855000026204,
+          0.34641410899985203
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e3000.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e3000.parquet": {
+        "dataset": "edge/e3000.parquet",
+        "kind": "profile",
+        "median_s": 0.3400437690002036,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.3400437690002036,
+          0.35857028700002047,
+          0.3369190570001592,
+          0.34451106100004836,
+          0.337261326999851
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e3000.parquet",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e3000_uuidpk.csv": {
+        "dataset": "edge/e3000_uuidpk.csv",
+        "kind": "profile",
+        "median_s": 0.3561179940002148,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.3585766760002116,
+          0.3561179940002148,
+          0.3496108849999473,
+          0.35523449999982404,
+          0.35872292100020786
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e3000_uuidpk.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e3000_uuidpk.parquet": {
+        "dataset": "edge/e3000_uuidpk.parquet",
+        "kind": "profile",
+        "median_s": 0.3636815180002486,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.3812061850003374,
+          0.3636815180002486,
+          0.3522315420000268,
+          0.3578933090002465,
+          0.36903575799988175
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e3000_uuidpk.parquet",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e3_uuidpk.csv": {
+        "dataset": "edge/e3_uuidpk.csv",
+        "kind": "profile",
+        "median_s": 0.06509699599973828,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.064193153999895,
+          0.06730435200006468,
+          0.06693242299979829,
+          0.06484932900002605,
+          0.06509699599973828
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e3_uuidpk.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e3_uuidpk.parquet": {
+        "dataset": "edge/e3_uuidpk.parquet",
+        "kind": "profile",
+        "median_s": 0.06985570300003019,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.06698069899994152,
+          0.08152004599969587,
+          0.06710044199962795,
+          0.06985570300003019,
+          0.08210114799976509
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e3_uuidpk.parquet",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e60.csv": {
+        "dataset": "edge/e60.csv",
+        "kind": "profile",
+        "median_s": 0.10396094100042319,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.10396094100042319,
+          0.10513141100000212,
+          0.10054900700015423,
+          0.10378397800013772,
+          0.11163985000030152
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e60.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e60.parquet": {
+        "dataset": "edge/e60.parquet",
+        "kind": "profile",
+        "median_s": 0.10173330899988287,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.10027104900018458,
+          0.10267393799995261,
+          0.09897529099998792,
+          0.10455173199989076,
+          0.10173330899988287
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e60.parquet",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e60_uuidpk.csv": {
+        "dataset": "edge/e60_uuidpk.csv",
+        "kind": "profile",
+        "median_s": 0.10683711599995149,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.11162480900020455,
+          0.1315519019999556,
+          0.10486144800006514,
+          0.10499777599989102,
+          0.10683711599995149
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e60_uuidpk.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/e60_uuidpk.parquet": {
+        "dataset": "edge/e60_uuidpk.parquet",
+        "kind": "profile",
+        "median_s": 0.10336972000004607,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.10280822000004264,
+          0.10371930600013002,
+          0.10697422499970344,
+          0.10336972000004607,
+          0.10127831599993442
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e60_uuidpk.parquet",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/x_csv_inf.csv": {
+        "dataset": "edge/x_csv_inf.csv",
+        "kind": "profile",
+        "median_s": 0.010280193000198778,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.010414323000077275,
+          0.01065404699966166,
+          0.010008405999997194,
+          0.010280193000198778,
+          0.010169520000090415
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_csv_inf.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/x_csv_mixed_chunks.csv": {
+        "dataset": "edge/x_csv_mixed_chunks.csv",
+        "kind": "profile",
+        "median_s": 0.9100123920002261,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.9169600010000067,
+          0.8919730090001394,
+          0.9132494430000406,
+          0.9100123920002261,
+          0.9056960369998706
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_csv_mixed_chunks.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/x_csv_mixed_tail.csv": {
+        "dataset": "edge/x_csv_mixed_tail.csv",
+        "kind": "profile",
+        "median_s": 0.012805323000065982,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.013104252999710297,
+          0.011417329999858339,
+          0.011119836000034411,
+          0.013159126999653381,
+          0.012805323000065982
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_csv_mixed_tail.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/x_csv_nan_text.csv": {
+        "dataset": "edge/x_csv_nan_text.csv",
+        "kind": "profile",
+        "median_s": 0.01007174500000474,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.010327154000151495,
+          0.009471704999668873,
+          0.00983746500014604,
+          0.010372815000209812,
+          0.01007174500000474
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_csv_nan_text.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/x_csv_numbers.csv": {
+        "dataset": "edge/x_csv_numbers.csv",
+        "kind": "profile",
+        "median_s": 0.09380658899999617,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.09543225800007349,
+          0.09380658899999617,
+          0.11558612799990442,
+          0.09167961499997546,
+          0.09086981899963575
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_csv_numbers.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/x_dates_a.csv": {
+        "dataset": "edge/x_dates_a.csv",
+        "kind": "profile",
+        "median_s": 0.011725092000233417,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.011725092000233417,
+          0.011439270000209945,
+          0.012953794000168273,
+          0.012954946999798267,
+          0.011264085000220803
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_dates_a.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/x_dates_b.csv": {
+        "dataset": "edge/x_dates_b.csv",
+        "kind": "profile",
+        "median_s": 0.012867741999798454,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.01151212700005999,
+          0.013251283000045078,
+          0.012867741999798454,
+          0.013217349000115064,
+          0.011604419000377675
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_dates_b.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/x_dates_bad.csv": {
+        "dataset": "edge/x_dates_bad.csv",
+        "kind": "profile",
+        "median_s": 0.012676129999817931,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.012676129999817931,
+          0.012522787999841967,
+          0.014481291999800305,
+          0.01495234599997275,
+          0.012596506999670964
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_dates_bad.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/x_dates_c.csv": {
+        "dataset": "edge/x_dates_c.csv",
+        "kind": "profile",
+        "median_s": 0.012233175999881496,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.012770447000093554,
+          0.012533981000160566,
+          0.011225620999994135,
+          0.010943810999833659,
+          0.012233175999881496
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_dates_c.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/x_dates_d.csv": {
+        "dataset": "edge/x_dates_d.csv",
+        "kind": "profile",
+        "median_s": 0.012003108000044449,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.012039196999921842,
+          0.010688426999877265,
+          0.012253314000190585,
+          0.01010198899984971,
+          0.012003108000044449
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_dates_d.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/x_dates_mixed_fmt.csv": {
+        "dataset": "edge/x_dates_mixed_fmt.csv",
+        "kind": "profile",
+        "median_s": 0.011617849000231217,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.011617849000231217,
+          0.012249745999724837,
+          0.011512641000081203,
+          0.013233697000032407,
+          0.011379331000171078
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_dates_mixed_fmt.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/x_pq_duration.parquet": {
+        "dataset": "edge/x_pq_duration.parquet",
+        "kind": "profile",
+        "median_s": 0.013990267999815842,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.01438384799985215,
+          0.013869086999875435,
+          0.014860403000056976,
+          0.013990267999815842,
+          0.013964069000394375
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_pq_duration.parquet",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/x_pq_list.parquet": {
+        "dataset": "edge/x_pq_list.parquet",
+        "kind": "profile",
+        "median_s": 0.013481212999977288,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.013499436000074638,
+          0.013964138999654097,
+          0.01340475899996818,
+          0.013481212999977288,
+          0.013168325000151526
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_pq_list.parquet",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/x_pq_nested.parquet": {
+        "dataset": "edge/x_pq_nested.parquet",
+        "kind": "profile",
+        "median_s": 0.012861347999660211,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.012614815000233648,
+          0.013514646999738034,
+          0.013801564999994298,
+          0.012585960999786039,
+          0.012861347999660211
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_pq_nested.parquet",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/x_pq_nulls.parquet": {
+        "dataset": "edge/x_pq_nulls.parquet",
+        "kind": "profile",
+        "median_s": 0.028916611000113335,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.02840664299992568,
+          0.029348441999900388,
+          0.026719314999809285,
+          0.030028088000108255,
+          0.028916611000113335
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_pq_nulls.parquet",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/x_pq_types.parquet": {
+        "dataset": "edge/x_pq_types.parquet",
+        "kind": "profile",
+        "median_s": 0.07614138899998579,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.07561255100017661,
+          0.07375393500024074,
+          0.08042012199985038,
+          0.08185340999989421,
+          0.07614138899998579
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_pq_types.parquet",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/x_pq_u64_big.parquet": {
+        "dataset": "edge/x_pq_u64_big.parquet",
+        "kind": "profile",
+        "median_s": 0.015440366999882826,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.013653407000219886,
+          0.015440366999882826,
+          0.015720061999672907,
+          0.016700264999599312,
+          0.014381595000031666
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_pq_u64_big.parquet",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/x_time_ampm.csv": {
+        "dataset": "edge/x_time_ampm.csv",
+        "kind": "profile",
+        "median_s": 0.010789892000047985,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.010789892000047985,
+          0.010508622000088508,
+          0.010683769000024768,
+          0.012426973999936308,
+          0.011491877000025852
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_time_ampm.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:edge/x_time_only.csv": {
+        "dataset": "edge/x_time_only.csv",
+        "kind": "profile",
+        "median_s": 0.011867477000123472,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.012413020000167307,
+          0.011524173999987397,
+          0.011957642000197666,
+          0.011867477000123472,
+          0.010148257999844645
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_time_only.csv",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:mt": {
+        "dataset": "mt",
+        "kind": "profile",
+        "median_s": 0.279452983000283,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.2753098719999798,
+          0.2799318630000016,
+          0.2817637650000506,
+          0.279452983000283,
+          0.276688280000144
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape mt",
+          "exit_code": 0,
+          "status": "pass"
+        }
+      },
+      "profile:mt.parquet": {
+        "dataset": "mt.parquet",
+        "kind": "profile",
+        "median_s": 0.1578050340003756,
+        "ratio_vs_baseline": null,
+        "runs_s": [
+          0.15743555500012008,
+          0.17146240300007776,
+          0.16999519099999816,
+          0.15737807699997575,
+          0.1578050340003756
+        ],
+        "verifier": {
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape mt.parquet",
+          "exit_code": 0,
+          "status": "pass"
         }
       },
       "stream:retail:order:medium": {
         "domain": "retail",
         "kind": "stream",
-        "median_s": null,
+        "median_s": 0.8136388970001462,
         "ratio_vs_baseline": null,
-        "runs_s": [],
+        "runs_s": [
+          0.823,
+          0.813,
+          0.843,
+          0.814,
+          0.809
+        ],
         "scale": "medium",
         "verifier": {
-          "command": "recorded_store.load",
-          "exit_code": 2,
-          "status": "unavailable"
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/stream_1to1/verify.py --scale medium --no-generate",
+          "exit_code": 0,
+          "first_run": {
+            "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/stream_1to1/verify.py --scale medium",
+            "exit_code": 0,
+            "status": "pass"
+          },
+          "status": "pass"
         }
       },
       "stream:retail:order:small": {
         "domain": "retail",
         "kind": "stream",
-        "median_s": null,
+        "median_s": 0.13326507700003276,
         "ratio_vs_baseline": null,
-        "runs_s": [],
+        "runs_s": [
+          0.131,
+          0.133,
+          0.133,
+          0.134,
+          0.135
+        ],
         "scale": "small",
         "verifier": {
-          "command": "recorded_store.load",
-          "exit_code": 2,
-          "status": "unavailable"
+          "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/stream_1to1/verify.py --scale small --no-generate",
+          "exit_code": 0,
+          "first_run": {
+            "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/stream_1to1/verify.py --scale small",
+            "exit_code": 0,
+            "status": "pass"
+          },
+          "status": "pass"
         }
       }
     }
   },
-  "generated_utc": "2026-10-12T03:39:33Z",
+  "generated_utc": "2026-10-14T19:39:51Z",
   "kernel_microbench": {
-  "measured_utc": "2026-10-01T10:52:13Z",
-  "machine": {
-   "cores": 4,
-   "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
-   "platform": "Linux-6.18.44-fc-v50-x86_64-with-glibc2.39",
-   "python": "3.11.15",
-   "started": "2026-10-01 10:52:13",
-   "loadavg_start": 0.33154296875,
-   "threads": 4
+    "kernels": {
+      "alias_sample": {
+        "baseline_s": 0.051789551999945616,
+        "equivalent_to_reference": true,
+        "native_rows_per_s": 242406906.6579155,
+        "native_s": 0.004125294999994367,
+        "reference_rows_measured": 100000,
+        "reference_s": 0.023818900000378562,
+        "rows": 1000000,
+        "speedup_vs_baseline": 12.554145097506078,
+        "speedup_vs_reference": 5.77386586908599
+      },
+      "join_strings": {
+        "baseline_s": 0.028057288000013614,
+        "equivalent_to_reference": true,
+        "native_rows_per_s": 74664554.5559914,
+        "native_s": 0.013393235999956232,
+        "reference_rows_measured": 100000,
+        "reference_s": 0.9179099499999664,
+        "rows": 1000000,
+        "speedup_vs_baseline": 2.0948849105701792,
+        "speedup_vs_reference": 68.53533753925983
+      },
+      "philox_normal": {
+        "baseline_s": 0.01347615500003485,
+        "equivalent_to_reference": true,
+        "native_rows_per_s": 109779835.44141227,
+        "native_s": 0.009109141000067211,
+        "reference_rows_measured": 100000,
+        "reference_s": 0.037101600000823964,
+        "rows": 1000000,
+        "speedup_vs_baseline": 1.479410078286791,
+        "speedup_vs_reference": 4.073007542703556
+      },
+      "philox_uniform": {
+        "baseline_s": 0.005152933999966081,
+        "equivalent_to_reference": true,
+        "native_rows_per_s": 612376246.4018427,
+        "native_s": 0.0016329830000358925,
+        "reference_rows_measured": 100000,
+        "reference_s": 0.005562829999234964,
+        "rows": 1000000,
+        "speedup_vs_baseline": 3.1555343808556615,
+        "speedup_vs_reference": 3.406544954303073
+      },
+      "philox_words": {
+        "baseline_s": 0.003982077999921785,
+        "equivalent_to_reference": true,
+        "native_rows_per_s": 666192781.5128723,
+        "native_s": 0.001501067000049261,
+        "reference_rows_measured": 100000,
+        "reference_s": 0.004719510000086302,
+        "rows": 1000000,
+        "speedup_vs_baseline": 2.6528316189691092,
+        "speedup_vs_reference": 3.14410349433531
+      },
+      "pool_take": {
+        "baseline_s": 0.005190530999925613,
+        "equivalent_to_reference": true,
+        "native_rows_per_s": 144964281.52714202,
+        "native_s": 0.006898250999938682,
+        "reference_rows_measured": 100000,
+        "reference_s": 0.09441082000080314,
+        "rows": 1000000,
+        "speedup_vs_baseline": 0.7524415971485745,
+        "speedup_vs_reference": 13.686196689804756
+      },
+      "random_strings_len6": {
+        "equivalent_to_reference": true,
+        "native_rows_per_s": 79641327.318495,
+        "native_s": 0.012556294999967577,
+        "reference_rows_measured": 100000,
+        "reference_s": 0.8252841199998785,
+        "rows": 1000000,
+        "speedup_vs_reference": 65.72672273166643
+      },
+      "string_case_title": {
+        "baseline_s": 0.07923315600010028,
+        "equivalent_to_reference": true,
+        "native_rows_per_s": 85209976.55457546,
+        "native_s": 0.011735714999986158,
+        "reference_rows_measured": 100000,
+        "reference_s": 0.7443936200002099,
+        "rows": 1000000,
+        "speedup_vs_baseline": 6.751455365113564,
+        "speedup_vs_reference": 63.42976290759344
+      },
+      "template_strings": {
+        "equivalent_to_reference": true,
+        "native_rows_per_s": 43188917.654710256,
+        "native_s": 0.023154087999955664,
+        "reference_rows_measured": 100000,
+        "reference_s": 1.1898522500007402,
+        "rows": 1000000,
+        "speedup_vs_reference": 51.38843084655369
+      },
+      "temporal_sample": {
+        "equivalent_to_reference": true,
+        "native_rows_per_s": 125224041.46360557,
+        "native_s": 0.00798568699997304,
+        "reference_rows_measured": 100000,
+        "reference_s": 0.07118308000030993,
+        "rows": 1000000,
+        "speedup_vs_reference": 8.913832961465962
+      },
+      "uuid4_strings": {
+        "equivalent_to_reference": true,
+        "native_rows_per_s": 37424578.247513756,
+        "native_s": 0.026720407999960116,
+        "reference_rows_measured": 100000,
+        "reference_s": 0.5183293999994021,
+        "rows": 1000000,
+        "speedup_vs_reference": 19.398259188264483
+      }
+    },
+    "machine": {
+      "cores": 4,
+      "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+      "loadavg_start": 0.33154296875,
+      "platform": "Linux-6.18.44-fc-v50-x86_64-with-glibc2.39",
+      "python": "3.11.15",
+      "started": "2026-10-01 10:52:13",
+      "threads": 4
+    },
+    "measured_utc": "2026-10-01T10:52:13Z",
+    "rows": 1000000,
+    "runs": 5
   },
-  "rows": 1000000,
+  "machine": {
+    "baseline_venv": {
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "python": "3.11.17"
+    },
+    "cores": 4,
+    "cpu": "AMD EPYC 7763 64-Core Processor",
+    "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.11.17",
+    "shape_venv": {
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.1",
+      "python": "3.11.17"
+    },
+    "started": "2026-10-14 19:39:51"
+  },
+  "mode": "full",
   "runs": 5,
-  "kernels": {
-   "philox_words": {
-    "rows": 1000000,
-    "native_s": 0.001501067000049261,
-    "equivalent_to_reference": true,
-    "reference_s": 0.004719510000086302,
-    "reference_rows_measured": 100000,
-    "speedup_vs_reference": 3.14410349433531,
-    "baseline_s": 0.003982077999921785,
-    "speedup_vs_baseline": 2.6528316189691092,
-    "native_rows_per_s": 666192781.5128723
-   },
-   "philox_uniform": {
-    "rows": 1000000,
-    "native_s": 0.0016329830000358925,
-    "equivalent_to_reference": true,
-    "reference_s": 0.005562829999234964,
-    "reference_rows_measured": 100000,
-    "speedup_vs_reference": 3.406544954303073,
-    "baseline_s": 0.005152933999966081,
-    "speedup_vs_baseline": 3.1555343808556615,
-    "native_rows_per_s": 612376246.4018427
-   },
-   "philox_normal": {
-    "rows": 1000000,
-    "native_s": 0.009109141000067211,
-    "equivalent_to_reference": true,
-    "reference_s": 0.037101600000823964,
-    "reference_rows_measured": 100000,
-    "speedup_vs_reference": 4.073007542703556,
-    "baseline_s": 0.01347615500003485,
-    "speedup_vs_baseline": 1.479410078286791,
-    "native_rows_per_s": 109779835.44141227
-   },
-   "alias_sample": {
-    "rows": 1000000,
-    "native_s": 0.004125294999994367,
-    "equivalent_to_reference": true,
-    "reference_s": 0.023818900000378562,
-    "reference_rows_measured": 100000,
-    "speedup_vs_reference": 5.77386586908599,
-    "baseline_s": 0.051789551999945616,
-    "speedup_vs_baseline": 12.554145097506078,
-    "native_rows_per_s": 242406906.6579155
-   },
-   "pool_take": {
-    "rows": 1000000,
-    "native_s": 0.006898250999938682,
-    "equivalent_to_reference": true,
-    "reference_s": 0.09441082000080314,
-    "reference_rows_measured": 100000,
-    "speedup_vs_reference": 13.686196689804756,
-    "baseline_s": 0.005190530999925613,
-    "speedup_vs_baseline": 0.7524415971485745,
-    "native_rows_per_s": 144964281.52714202
-   },
-   "template_strings": {
-    "rows": 1000000,
-    "native_s": 0.023154087999955664,
-    "equivalent_to_reference": true,
-    "reference_s": 1.1898522500007402,
-    "reference_rows_measured": 100000,
-    "speedup_vs_reference": 51.38843084655369,
-    "native_rows_per_s": 43188917.654710256
-   },
-   "join_strings": {
-    "rows": 1000000,
-    "native_s": 0.013393235999956232,
-    "equivalent_to_reference": true,
-    "reference_s": 0.9179099499999664,
-    "reference_rows_measured": 100000,
-    "speedup_vs_reference": 68.53533753925983,
-    "baseline_s": 0.028057288000013614,
-    "speedup_vs_baseline": 2.0948849105701792,
-    "native_rows_per_s": 74664554.5559914
-   },
-   "string_case_title": {
-    "rows": 1000000,
-    "native_s": 0.011735714999986158,
-    "equivalent_to_reference": true,
-    "reference_s": 0.7443936200002099,
-    "reference_rows_measured": 100000,
-    "speedup_vs_reference": 63.42976290759344,
-    "baseline_s": 0.07923315600010028,
-    "speedup_vs_baseline": 6.751455365113564,
-    "native_rows_per_s": 85209976.55457546
-   },
-   "uuid4_strings": {
-    "rows": 1000000,
-    "native_s": 0.026720407999960116,
-    "equivalent_to_reference": true,
-    "reference_s": 0.5183293999994021,
-    "reference_rows_measured": 100000,
-    "speedup_vs_reference": 19.398259188264483,
-    "native_rows_per_s": 37424578.247513756
-   },
-   "random_strings_len6": {
-    "rows": 1000000,
-    "native_s": 0.012556294999967577,
-    "equivalent_to_reference": true,
-    "reference_s": 0.8252841199998785,
-    "reference_rows_measured": 100000,
-    "speedup_vs_reference": 65.72672273166643,
-    "native_rows_per_s": 79641327.318495
-   },
-   "temporal_sample": {
-    "rows": 1000000,
-    "native_s": 0.00798568699997304,
-    "equivalent_to_reference": true,
-    "reference_s": 0.07118308000030993,
-    "reference_rows_measured": 100000,
-    "speedup_vs_reference": 8.913832961465962,
-    "native_rows_per_s": 125224041.46360557
-   }
-  }
- },
-  "machine": {
-    "cores": 5,
-    "cpu": "AMD EPYC 9V74 80-Core Processor",
-    "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
-    "python": "3.11.16",
-    "started": "2026-10-12 03:39:33"
-  },
-  "mode": "quick",
-  "runs": 3,
   "schema_version": 2,
   "selection": {
     "baseline_domains": [
@@ -271,8 +1495,67 @@
         "profile:d1.parquet",
         "profile:d2.csv",
         "profile:d2.parquet",
+        "profile:d3.csv",
+        "profile:d3.parquet",
+        "profile:d4.csv",
+        "profile:d4.parquet",
+        "profile:mt",
+        "profile:mt.parquet",
+        "profile:edge/e3.csv",
+        "profile:edge/e3.parquet",
+        "profile:edge/e3_uuidpk.csv",
+        "profile:edge/e3_uuidpk.parquet",
+        "profile:edge/e15.csv",
+        "profile:edge/e15.parquet",
+        "profile:edge/e15_uuidpk.csv",
+        "profile:edge/e15_uuidpk.parquet",
+        "profile:edge/e60.csv",
+        "profile:edge/e60.parquet",
+        "profile:edge/e60_uuidpk.csv",
+        "profile:edge/e60_uuidpk.parquet",
+        "profile:edge/e130.csv",
+        "profile:edge/e130.parquet",
+        "profile:edge/e130_uuidpk.csv",
+        "profile:edge/e130_uuidpk.parquet",
+        "profile:edge/e3000.csv",
+        "profile:edge/e3000.parquet",
+        "profile:edge/e3000_uuidpk.csv",
+        "profile:edge/e3000_uuidpk.parquet",
+        "profile:edge/x_csv_inf.csv",
+        "profile:edge/x_csv_mixed_chunks.csv",
+        "profile:edge/x_csv_mixed_tail.csv",
+        "profile:edge/x_csv_nan_text.csv",
+        "profile:edge/x_csv_numbers.csv",
+        "profile:edge/x_dates_a.csv",
+        "profile:edge/x_dates_b.csv",
+        "profile:edge/x_dates_bad.csv",
+        "profile:edge/x_dates_c.csv",
+        "profile:edge/x_dates_d.csv",
+        "profile:edge/x_dates_mixed_fmt.csv",
+        "profile:edge/x_pq_duration.parquet",
+        "profile:edge/x_pq_list.parquet",
+        "profile:edge/x_pq_nested.parquet",
+        "profile:edge/x_pq_nulls.parquet",
+        "profile:edge/x_pq_types.parquet",
+        "profile:edge/x_pq_u64_big.parquet",
+        "profile:edge/x_time_ampm.csv",
+        "profile:edge/x_time_only.csv",
+        "generate:capital_markets:medium",
+        "generate:education:medium",
+        "generate:financial:medium",
+        "generate:healthcare:medium",
+        "generate:hr:medium",
+        "generate:insurance:medium",
+        "generate:iot:medium",
+        "generate:manufacturing:medium",
+        "generate:marketing:medium",
+        "generate:pulse:medium",
+        "generate:real_estate:medium",
         "generate:retail:small",
         "generate:retail:medium",
+        "generate:retail:large",
+        "generate:supply_chain:medium",
+        "generate:telecom:medium",
         "stream:retail:order:small",
         "stream:retail:order:medium"
       ]
@@ -281,109 +1564,8 @@
     "shard": null
   },
   "shape": {
-    "workloads": {
-      "generate:retail:medium": {
-        "domain": "retail",
-        "kind": "generate",
-        "median_s": null,
-        "ratio_vs_baseline": null,
-        "runs_s": [],
-        "scale": "medium",
-        "verifier": {
-          "command": "recorded_store.load",
-          "exit_code": 2,
-          "status": "unavailable"
-        }
-      },
-      "generate:retail:small": {
-        "domain": "retail",
-        "kind": "generate",
-        "median_s": null,
-        "ratio_vs_baseline": null,
-        "runs_s": [],
-        "scale": "small",
-        "verifier": {
-          "command": "recorded_store.load",
-          "exit_code": 2,
-          "status": "unavailable"
-        }
-      },
-      "profile:d1.csv": {
-        "dataset": "d1.csv",
-        "kind": "profile",
-        "median_s": null,
-        "ratio_vs_baseline": null,
-        "runs_s": [],
-        "verifier": {
-          "command": "recorded_store.load",
-          "exit_code": 2,
-          "status": "unavailable"
-        }
-      },
-      "profile:d1.parquet": {
-        "dataset": "d1.parquet",
-        "kind": "profile",
-        "median_s": null,
-        "ratio_vs_baseline": null,
-        "runs_s": [],
-        "verifier": {
-          "command": "recorded_store.load",
-          "exit_code": 2,
-          "status": "unavailable"
-        }
-      },
-      "profile:d2.csv": {
-        "dataset": "d2.csv",
-        "kind": "profile",
-        "median_s": null,
-        "ratio_vs_baseline": null,
-        "runs_s": [],
-        "verifier": {
-          "command": "recorded_store.load",
-          "exit_code": 2,
-          "status": "unavailable"
-        }
-      },
-      "profile:d2.parquet": {
-        "dataset": "d2.parquet",
-        "kind": "profile",
-        "median_s": null,
-        "ratio_vs_baseline": null,
-        "runs_s": [],
-        "verifier": {
-          "command": "recorded_store.load",
-          "exit_code": 2,
-          "status": "unavailable"
-        }
-      },
-      "stream:retail:order:medium": {
-        "domain": "retail",
-        "kind": "stream",
-        "median_s": null,
-        "ratio_vs_baseline": null,
-        "runs_s": [],
-        "scale": "medium",
-        "verifier": {
-          "command": "recorded_store.load",
-          "exit_code": 2,
-          "status": "unavailable"
-        }
-      },
-      "stream:retail:order:small": {
-        "domain": "retail",
-        "kind": "stream",
-        "median_s": null,
-        "ratio_vs_baseline": null,
-        "runs_s": [],
-        "scale": "small",
-        "verifier": {
-          "command": "recorded_store.load",
-          "exit_code": 2,
-          "status": "unavailable"
-        }
-      }
-    }
+    "workloads": {}
   },
-  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
+  "shape_commit": "a8e476ca910c40e3d8e7dd0dace9c80699237e82",
   "shape_tree_dirty": true
 }

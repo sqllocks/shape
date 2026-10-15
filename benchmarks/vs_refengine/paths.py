@@ -9,7 +9,7 @@ HERE = Path(__file__).resolve().parent
 SHAPE_ROOT = Path(os.environ.get("SHAPE_ROOT", HERE.parents[1]))
 SHAPE_VENV = Path(os.environ.get("SHAPE_VENV", Path.home() / ".venvs" / "shape"))
 SHAPE_PY = SHAPE_VENV / "bin" / "python"
-BASELINE_VERSION = os.environ.get("BASELINE_VERSION", "0.9.1")
+BASELINE_VERSION = os.environ.get("BASELINE_VERSION", "0.9.3")
 BASELINE_VENV = Path(
     os.environ.get("BASELINE_VENV", Path.home() / ".venvs" / ("shape-" + BASELINE_VERSION))
 )

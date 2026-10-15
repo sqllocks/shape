@@ -11048,7 +11048,7 @@
   "inputs": {
     "fixtures/schemas/education_3nf.json": "9ae9b7261bb541c171bc611802f41afdeae28818edbbf25adb76498558b751c0"
   },
-  "recorded_utc": "2026-10-13T01:47:50Z",
+  "recorded_utc": "2026-10-14T19:31:38Z",
   "seeds": {
     "42": {
       "dataset_id": "sha256:ebf0b023577f24912df28d16f49207d784701856896dc22966e0eee0ebb55e14",
@@ -12656,8 +12656,8 @@
       }
     }
   },
-  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
-  "shape_version": "0.9.1",
+  "shape_commit": "a8e476ca910c40e3d8e7dd0dace9c80699237e82",
+  "shape_version": "0.9.3",
   "version": 1,
   "workload": "generate:education:medium"
 }

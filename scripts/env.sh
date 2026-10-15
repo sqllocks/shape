@@ -1,7 +1,7 @@
 # Source from the repository root: the baseline is the last published Shape release.
 export SHAPE_ROOT="$PWD"
 export SHAPE_VENV="${SHAPE_VENV:-$HOME/.venvs/shape}"
-export BASELINE_VERSION="${BASELINE_VERSION:-0.9.1}"
+export BASELINE_VERSION="${BASELINE_VERSION:-0.9.3}"
 export BASELINE_VENV="${BASELINE_VENV:-$HOME/.venvs/shape-$BASELINE_VERSION}"
 export BASELINE_PY="$BASELINE_VENV/bin/python"
 export BASELINE_SHAPE="$BASELINE_VENV/bin/shape"

@@ -11975,7 +11975,7 @@
   "inputs": {
     "fixtures/schemas/financial_3nf.json": "0db0fb8cbde298eeb5130720bd0400b8ed82fc2ecd3f8fd54e3640a173b3492e"
   },
-  "recorded_utc": "2026-10-13T01:47:50Z",
+  "recorded_utc": "2026-10-14T19:31:38Z",
   "seeds": {
     "42": {
       "dataset_id": "sha256:4f1c8b6c39cdaf209863b719b2a1070ce2f60752df36093b5e0ac959a6e7d130",
@@ -13943,8 +13943,8 @@
       }
     }
   },
-  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
-  "shape_version": "0.9.1",
+  "shape_commit": "a8e476ca910c40e3d8e7dd0dace9c80699237e82",
+  "shape_version": "0.9.3",
   "version": 1,
   "workload": "generate:financial:medium"
 }

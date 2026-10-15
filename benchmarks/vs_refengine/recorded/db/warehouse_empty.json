@@ -425,9 +425,9 @@
       }
     }
   },
-  "recorded_utc": "2026-10-13T01:47:50Z",
-  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
-  "shape_version": "0.9.1",
+  "recorded_utc": "2026-10-14T19:31:38Z",
+  "shape_commit": "a8e476ca910c40e3d8e7dd0dace9c80699237e82",
+  "shape_version": "0.9.3",
   "table_digests": {
     "scenario/warehouse_empty/dimcustomer": "sha256:586316729f3d06125d754542fdfd0bde49a9caf5eb09eccbc3d2df239778eec7",
     "scenario/warehouse_empty/dimproduct": "sha256:d5d541aa6134697b8e819b0d913577ce86e1e3bada013bff98e811eb0ee143c0",

@@ -303,7 +303,7 @@ jobs:
       - run: bash scripts/ci_pure_wheel.sh python
   bench-quick:
     # Verifiers, then the quick benchmark (D1, D2, retail small+medium; 3 runs) against the
-    # Shape 0.9.1. On a private repository the standard runner has 2 vCPUs, so ratios are
+    # Shape 0.9.3. On a private repository the standard runner has 2 vCPUs, so ratios are
     # informational until the repository is public (O-05).
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -313,7 +313,7 @@ jobs:
         with: {fetch-depth: 0}
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - name: Shape 0.9.1 baseline venv
+      - name: Shape 0.9.3 baseline venv
         run: |
           source scripts/env.sh
           bash benchmarks/vs_refengine/setup_baseline.sh

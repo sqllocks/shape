@@ -11975,7 +11975,7 @@
   "inputs": {
     "fixtures/schemas/telecom_3nf.json": "18304a32dd0bbf6f8da533205b0b6dd747340720d40c77ef2aafc49e6ad818e9"
   },
-  "recorded_utc": "2026-10-13T01:47:50Z",
+  "recorded_utc": "2026-10-14T19:31:38Z",
   "seeds": {
     "42": {
       "dataset_id": "sha256:f02b578edb55ff871c850ac29c2743ee5aab09452c5f3a9d4b25426ce7f6f081",
@@ -13603,8 +13603,8 @@
       }
     }
   },
-  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
-  "shape_version": "0.9.1",
+  "shape_commit": "a8e476ca910c40e3d8e7dd0dace9c80699237e82",
+  "shape_version": "0.9.3",
   "version": 1,
   "workload": "generate:telecom:medium"
 }

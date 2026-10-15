@@ -2177,9 +2177,9 @@
     "fixtures/composites/composite_supply_chain-real_estate-manufacturing.json": "67ac027b81c466df9067f1837bbb3352453f5e1d0655771415d84340777607e0",
     "fixtures/composites/composite_telecom_bundle.json": "a742fc2be568d79c3e60de91a4b7d29cf872db2cb698bed882913203a4badca6"
   },
-  "recorded_utc": "2026-10-13T01:47:50Z",
-  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
-  "shape_version": "0.9.1",
+  "recorded_utc": "2026-10-14T19:31:38Z",
+  "shape_commit": "a8e476ca910c40e3d8e7dd0dace9c80699237e82",
+  "shape_version": "0.9.3",
   "version": 1,
   "workload": "plan:composites"
 }

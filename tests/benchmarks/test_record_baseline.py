@@ -23,16 +23,16 @@ def recorder():
 
 def stub(monkeypatch, tmp_path):
     r = recorder()
-    monkeypatch.setattr(r, "check_release", lambda: ("0.9.1", "a" * 40))
+    monkeypatch.setattr(r, "check_release", lambda: ("0.9.3", "a" * 40))
     freeze = tmp_path / "baseline_freeze.txt"
-    freeze.write_text("sqllocks-shape==0.9.1\n")
+    freeze.write_text("sqllocks-shape==0.9.3\n")
     monkeypatch.setattr(r, "FREEZE", freeze)
 
     def collect(kind, identifier, **kw):
         if kind == "timings":
             return {
                 "schema_version": 2,
-                "baseline": {"version": "0.9.1", "commit": "a" * 40, "workloads": {}},
+                "baseline": {"version": "0.9.3", "commit": "a" * 40, "workloads": {}},
                 "shape": {"workloads": {}},
             }
         if kind == "profile":
@@ -63,7 +63,7 @@ def test_all_stub_records_manifest_and_checker(monkeypatch, tmp_path):
     assert r.main(["--all", "--mssql", "stub-server", "--out", str(out)]) == 0
     doc = json.loads((out / "MANIFEST.json").read_text())
     assert set(doc["workloads"]) == set(r.workloads())
-    assert doc["source_release"] == {"version": "0.9.1", "commit": "a" * 40}
+    assert doc["source_release"] == {"version": "0.9.3", "commit": "a" * 40}
     from recorded_store import check_all
 
     assert check_all(out) == []
@@ -79,7 +79,7 @@ def test_recorder_refuses_untrustworthy_or_incomplete_record(monkeypatch, tmp_pa
     if fault == "wrong_version":
         monkeypatch.setattr(r, "check_release", lambda: ("0.9.2", "a" * 40))
     if fault == "missing_tag":
-        monkeypatch.setattr(r, "check_release", lambda: ("0.9.1", ""))
+        monkeypatch.setattr(r, "check_release", lambda: ("0.9.3", ""))
     if fault == "failed_worker":
         monkeypatch.setattr(
             r, "collect", lambda *a, **kw: (_ for _ in ()).throw(ValueError("stub worker failed"))
@@ -111,7 +111,7 @@ def test_recorder_runs_a_tiny_baseline_interpreter_end_to_end(monkeypatch, tmp_p
     package = purelib / "shape"
     package.mkdir()
     guard = "assert 'PYTHONPATH' not in os.environ and 'PYTHONHOME' not in os.environ\n"
-    (package / "__init__.py").write_text("import os\n" + guard + "__version__ = '0.9.1'\n")
+    (package / "__init__.py").write_text("import os\n" + guard + "__version__ = '0.9.3'\n")
     program = tmp_path / "stub_worker.py"
     program.write_text(
         "import json,os\n"
@@ -147,7 +147,7 @@ def test_recorder_runs_a_tiny_baseline_interpreter_end_to_end(monkeypatch, tmp_p
         check=True,
         capture_output=True,
     )
-    subprocess.run(["git", "-C", str(source), "tag", "v0.9.1"], check=True)
+    subprocess.run(["git", "-C", str(source), "tag", "v0.9.3"], check=True)
     monkeypatch.setattr(r, "SHAPE_ROOT", source)
     out = tmp_path / "recorded"
     assert r.main(["--profile", "--out", str(out)]) == 0
@@ -157,7 +157,7 @@ def test_recorder_runs_a_tiny_baseline_interpreter_end_to_end(monkeypatch, tmp_p
     assert len(json.loads((out / "MANIFEST.json").read_text())["files"]) == 49
     assert load("profile", "d1.csv", root=out)["profile"] == {"columns": {}}
 
-    subprocess.run(["git", "-C", str(source), "tag", "-d", "v0.9.1"], check=True)
+    subprocess.run(["git", "-C", str(source), "tag", "-d", "v0.9.3"], check=True)
     assert r.main(["--profile", "--out", str(tmp_path / "missing-tag")]) == 2
     assert not (tmp_path / "missing-tag").exists()
 
@@ -172,13 +172,13 @@ def test_real_recorder_refuses_a_checkout_without_the_release_tag(monkeypatch, t
 
     def release_version_or_real_git(command, **kwargs):
         if command[0] == str(r.BASELINE_PY):
-            return subprocess.CompletedProcess(command, 0, "0.9.1\n", "")
+            return subprocess.CompletedProcess(command, 0, "0.9.3\n", "")
         return run(command, **kwargs)
 
     monkeypatch.setattr(r.subprocess, "run", release_version_or_real_git)
     out = tmp_path / "recorded"
     assert r.main(["--profile", "--out", str(out)]) == 2
-    assert "missing tag v0.9.1" in capsys.readouterr().err
+    assert "missing tag v0.9.3" in capsys.readouterr().err
     assert not out.exists()
 
 
@@ -296,7 +296,7 @@ def test_smoke_starts_each_worker_with_small_inputs_without_publishing(monkeypat
         ("verify_cli", r.cli_cases()[0]),
         ("plan", "composites"),
         ("pools", "retail"),
-        ("timings", "0.9.1"),
+        ("timings", "0.9.3"),
     ]
     assert calls[-1][2]["smoke"] is True
     assert not out.exists()

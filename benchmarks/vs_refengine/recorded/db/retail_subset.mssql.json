@@ -720,9 +720,9 @@
       }
     }
   },
-  "recorded_utc": "2026-10-13T01:47:50Z",
-  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
-  "shape_version": "0.9.1",
+  "recorded_utc": "2026-10-14T19:31:38Z",
+  "shape_commit": "a8e476ca910c40e3d8e7dd0dace9c80699237e82",
+  "shape_version": "0.9.3",
   "table_digests": {
     "scenario/retail/audit_log": "sha256:54e4b0acc30ec1d3cf757e92539a2dae94a1546e10f8225743a7a1000050368c",
     "scenario/retail/config": "sha256:daa78c8760d37dd39d966d5cb4731e34b4135186820abc55c260e821fdea13bf",

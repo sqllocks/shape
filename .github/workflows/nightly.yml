@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: 'Lead-only recording: enter record-0.9.1'
+        description: 'Lead-only recording: enter record-0.9.3'
         required: false
         type: string
 permissions: {contents: read}
@@ -27,7 +27,7 @@ jobs:
         with: {fetch-depth: 0}
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - name: Shape 0.9.1 baseline venv
+      - name: Shape 0.9.3 baseline venv
         run: |
           source scripts/env.sh
           bash benchmarks/vs_refengine/setup_baseline.sh
@@ -587,7 +587,7 @@ jobs:
 
   record-baseline:
     # Lead downloads and reviews this artifact; the workflow never commits it.
-    if: github.event_name == 'workflow_dispatch' && inputs.confirm == 'record-0.9.1'
+    if: github.event_name == 'workflow_dispatch' && inputs.confirm == 'record-0.9.3'
     runs-on: ubuntu-latest
     timeout-minutes: 350
     env:
@@ -609,7 +609,7 @@ jobs:
         run: |
           source scripts/env.sh
           bash benchmarks/vs_refengine/setup_baseline.sh
-          "$BASELINE_PY" -m pip install 'sqllocks-shape-sqlserver==0.9.1' 'pandas>=2' 'scipy>=1.11'
+          "$BASELINE_PY" -m pip install 'sqllocks-shape-sqlserver==0.9.3' 'pandas>=2' 'scipy>=1.11'
           "$BASELINE_PY" -m pip freeze > "$BENCH_OUT_DIR/baseline_freeze.txt"
           python -m venv "$SHAPE_VENV"
           "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-sqlserver 'pyarrow==25.0.1'

@@ -11975,10 +11975,10 @@
   "inputs": {
     "fixtures/schemas/healthcare_3nf.json": "d3e293f8895b42da80c81c7e708c389108ea23a91f7d91a8f1d5db69c7471587"
   },
-  "recorded_utc": "2026-10-13T01:47:50Z",
+  "recorded_utc": "2026-10-14T19:31:38Z",
   "seeds": {
     "42": {
-      "dataset_id": "sha256:42140842a44577a305415f5b4614f13f827e78da41477b3cfcaec7fe869091eb",
+      "dataset_id": "sha256:8e6a907787ee40b704d8dbeef6c24ddd1dd1b40275f40c5d44d8a1b2a0bc8139",
       "tables": {
         "claim": {
           "columns": [
@@ -12063,9 +12063,9 @@
               "type": "double"
             }
           ],
-          "dataset_id": "sha256:a7153fbc4a2507ee154561f66c753d33e70cd3ab219b33ba3025ecc47dc2d03a",
-          "parquet_bytes": 8065066,
-          "parquet_sha256": "58872ef947e3cdce56643ce944af703c27f3e30bce958148184427301bce0777",
+          "dataset_id": "sha256:61a41e0c6a433bdd07c91215e02bd1f12ba7cf5cf789bfbf5ca745b49dd8afec",
+          "parquet_bytes": 8064862,
+          "parquet_sha256": "f32235a9f899fda028e3d297cceb2cd95f8bbda57d0843f229a2fc659d3032e0",
           "rows": 356250
         },
         "diagnosis": {
@@ -12331,9 +12331,9 @@
               "type": "double"
             }
           ],
-          "dataset_id": "sha256:921e8574da58ab00c60b14eccbb951e0769d25e6d30a29a6ff73be1f8fa0590a",
-          "parquet_bytes": 2320765,
-          "parquet_sha256": "fbd41404093698a6ccad2d47d24964cc7f10997d1631514997f728f12dd2c7b4",
+          "dataset_id": "sha256:4a1e79d4e31fc71b0b16b8049e0a894e86d260c640d9ac4529afb9c5cacadd0c",
+          "parquet_bytes": 2319348,
+          "parquet_sha256": "bb4650f9667b94de59708aedfc2724f1ea4bbf66ed3ff23b05dc47469de26a55",
           "rows": 180000
         },
         "provider": {
@@ -12375,7 +12375,7 @@
       }
     },
     "43": {
-      "dataset_id": "sha256:ddd7e15cbc1c731e0b5905ecafac45ed2fb44b2be7f00384682515794bacb89c",
+      "dataset_id": "sha256:e48b7d6b3c293c84880457343c5789db848c3b24358475ad4c287a448dd45e32",
       "tables": {
         "claim": {
           "columns": [
@@ -12460,9 +12460,9 @@
               "type": "double"
             }
           ],
-          "dataset_id": "sha256:c27bff84353e929697e8ba68681840d41bc9b53769a8a6599f6c7e19940753bc",
-          "parquet_bytes": 8036735,
-          "parquet_sha256": "74d3595a68ef6d452cc71a52edcc96d188df07c8f7048b07a878d175f539904c",
+          "dataset_id": "sha256:5576d02a4dde20ac1e63593c3ecccaf7d46feccbc6d0c17c0f4bd384f349c6e2",
+          "parquet_bytes": 8036516,
+          "parquet_sha256": "9c12a0347cdf4f81baed13cb56a042c3ede4361afe9b391bcbf8e9fe0a94e326",
           "rows": 356250
         },
         "diagnosis": {
@@ -12728,9 +12728,9 @@
               "type": "double"
             }
           ],
-          "dataset_id": "sha256:a59c6b3e6a64bfc14dd1871f3b7b40f324c630580b1ee09f24ee5713d2519f77",
-          "parquet_bytes": 2309770,
-          "parquet_sha256": "0718c71ae53db5bbbc870ce4a34580879fc08827ff201d38502e8960e1dee49a",
+          "dataset_id": "sha256:a8d2c110d355707239a45cc289f5e5d4f42cf934f91c7232ea8928966a38d895",
+          "parquet_bytes": 2308370,
+          "parquet_sha256": "e89ec909a2c386a83ef692ad317cb4447abce6ecb1532cd83cbf5bd0b28b341f",
           "rows": 180000
         },
         "provider": {
@@ -12772,7 +12772,7 @@
       }
     },
     "44": {
-      "dataset_id": "sha256:7f108a605043009d2b9d91db4ee589a02b7c0709f6499a75b51cbfa587616eb8",
+      "dataset_id": "sha256:65bb6a3fbcb979c942681483ee73d2849617236b89db573ce69eca026b8744c8",
       "tables": {
         "claim": {
           "columns": [
@@ -12857,9 +12857,9 @@
               "type": "double"
             }
           ],
-          "dataset_id": "sha256:a02a3edd2306d5bcd8edc99db764b49b9c5f3213d4b3e73d7cccc660a2444757",
-          "parquet_bytes": 8388047,
-          "parquet_sha256": "748cf529b5ee00a2fd3bec417f27bff1f533763653c7c269b30d652ecb3fffb2",
+          "dataset_id": "sha256:88cb3530802ef66e625909053bd14ba5d5258ce2db4ec209a0527fd9869d919e",
+          "parquet_bytes": 8387850,
+          "parquet_sha256": "d2b6298d7e989c215925116d2046531ce47b6742ae6efd3c902edbc58b7f437f",
           "rows": 356250
         },
         "diagnosis": {
@@ -13125,9 +13125,9 @@
               "type": "double"
             }
           ],
-          "dataset_id": "sha256:5eb7344f90e890af25d942b99bbcccd4f639300f11be0cfe8032cc2a07151eac",
-          "parquet_bytes": 2314118,
-          "parquet_sha256": "910c7ba6efd8cee9a7a372544a18da08d3fd258b80df5b250c976570bc1968d1",
+          "dataset_id": "sha256:817f3235d24987ef7767084f5b4dc3f4096d7886b2dd4b825616209dbc978af6",
+          "parquet_bytes": 2312840,
+          "parquet_sha256": "2088e15c7eaea83313f69d01ca27c407eb334e15a06e1ddb5b18fe994032a022",
           "rows": 180000
         },
         "provider": {
@@ -13169,7 +13169,7 @@
       }
     },
     "45": {
-      "dataset_id": "sha256:53ce9443308154bf0c8a612e75b17600d0be1ad79a64d8d734c2b1d74cbdcc56",
+      "dataset_id": "sha256:25c51024fed2f0811125d8e5f2d7f50a2df7c5867b39833bc772bbcc033825d0",
       "tables": {
         "claim": {
           "columns": [
@@ -13254,9 +13254,9 @@
               "type": "double"
             }
           ],
-          "dataset_id": "sha256:f7d1bc6a56a302b21fccaed8abb5a059d5616d45832d861838410bcd2bc19ce3",
-          "parquet_bytes": 8057611,
-          "parquet_sha256": "7719b6f14cbc3e01f8d3a73356fdd4e18099b5f6ad695b2f66c80f90ae0b7199",
+          "dataset_id": "sha256:3dd37aa1263c15b8d7fa8fe3466f40700916730e42511c974af47927372f096f",
+          "parquet_bytes": 8057411,
+          "parquet_sha256": "c13920e60e7918c46609f82b290aaae6f1016268fce8cc64059d96693ac45328",
           "rows": 356250
         },
         "diagnosis": {
@@ -13522,9 +13522,9 @@
               "type": "double"
             }
           ],
-          "dataset_id": "sha256:a6c816a776ae5b5f934c6d97ffbcbaf851675bf4280fa311590c260ce8503646",
-          "parquet_bytes": 2311538,
-          "parquet_sha256": "4af702633514bedb1515e580eb850fbb33d1dfbbda07556f174ccdd05a16b55a",
+          "dataset_id": "sha256:4272c51ac2479e247f47681ee85b93095bd0813115798e33f907e541551e550f",
+          "parquet_bytes": 2310257,
+          "parquet_sha256": "c9e3a9a63df794558b427c110ebca67a857960468601f7a902b9d4c34fe66f29",
           "rows": 180000
         },
         "provider": {
@@ -13566,7 +13566,7 @@
       }
     },
     "46": {
-      "dataset_id": "sha256:9b9286d35aabadf27ec1a02fc7a84c83643fdb8c27cd1ad2ecb10e1c0550415d",
+      "dataset_id": "sha256:1b0ee684fecb9414a523b74c52c9a51fb076cec1817252c60aee785c779229b3",
       "tables": {
         "claim": {
           "columns": [
@@ -13651,9 +13651,9 @@
               "type": "double"
             }
           ],
-          "dataset_id": "sha256:6b820ffb9041ba80bfa45ed203e1abe0584111259c19814ab0b03c556ad2cc26",
-          "parquet_bytes": 8365661,
-          "parquet_sha256": "05c7be02dffe13d8fa5ba4de9d293d0dd41bbe6635001d7cdf537920b305e839",
+          "dataset_id": "sha256:9463a7d022cb4bb9fc5a75302d60659961338cddfd0869fb509acab96c172ee0",
+          "parquet_bytes": 8365446,
+          "parquet_sha256": "84ab44e55dacee1456c7a0e4b97b7798954a262adadf65a6b92dc9063ff73caa",
           "rows": 356250
         },
         "diagnosis": {
@@ -13919,9 +13919,9 @@
               "type": "double"
             }
           ],
-          "dataset_id": "sha256:fa2dec8f3a84edfee31f310776e3113ddd4419170a51ab560702745040bae17e",
-          "parquet_bytes": 2309726,
-          "parquet_sha256": "164ec26dbdf85f2123c260eba84fc961372b0b53a0157005b6a0a79f3ffd1c08",
+          "dataset_id": "sha256:281de6e5d75b41c41fcd6ecc6e17f3612b0e50cee402c3e36ab6e908e32aa5f1",
+          "parquet_bytes": 2308446,
+          "parquet_sha256": "385e5927bbcc5a9d8c856237d1566f4faf202106b722f8a738c2cffd04ccecc3",
           "rows": 180000
         },
         "provider": {
@@ -13963,8 +13963,8 @@
       }
     }
   },
-  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
-  "shape_version": "0.9.1",
+  "shape_commit": "a8e476ca910c40e3d8e7dd0dace9c80699237e82",
+  "shape_version": "0.9.3",
   "version": 1,
   "workload": "generate:healthcare:medium"
 }

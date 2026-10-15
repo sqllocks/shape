@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Install the declared published Shape release in an isolated environment.
 set -euo pipefail
-BASELINE_VERSION="${BASELINE_VERSION:-0.9.1}"
+BASELINE_VERSION="${BASELINE_VERSION:-0.9.3}"
 BASELINE_VENV="${BASELINE_VENV:-$HOME/.venvs/shape-$BASELINE_VERSION}"
 BASELINE_PY="$BASELINE_VENV/bin/python"
 BENCH_OUT_DIR="${BENCH_OUT_DIR:-$HOME/bench-out}"

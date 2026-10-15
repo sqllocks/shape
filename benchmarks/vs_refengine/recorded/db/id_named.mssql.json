@@ -234,9 +234,9 @@
       }
     }
   },
-  "recorded_utc": "2026-10-13T01:47:50Z",
-  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
-  "shape_version": "0.9.1",
+  "recorded_utc": "2026-10-14T19:31:38Z",
+  "shape_commit": "a8e476ca910c40e3d8e7dd0dace9c80699237e82",
+  "shape_version": "0.9.3",
   "table_digests": {
     "scenario/id_named/customer": "sha256:f74b0f480a09b9cf1b6d5e675d5acf09b859e531471404803f2653316155f44a",
     "scenario/id_named/orders": "sha256:d386802b0117f82d7a364a9af7eb141808d49c45fea09fdd12bf43ee01d3c4ae"

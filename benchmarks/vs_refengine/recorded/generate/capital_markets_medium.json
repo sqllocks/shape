@@ -4,10 +4,10 @@
   "inputs": {
     "fixtures/schemas/capital_markets_3nf.json": "41107a78b33990d4fdb65d29928faa659f0a46b1b402a663f166035a2fdc4a2d"
   },
-  "recorded_utc": "2026-10-13T01:47:50Z",
+  "recorded_utc": "2026-10-14T19:31:38Z",
   "seeds": {
     "42": {
-      "dataset_id": "sha256:4b5476c3ff8c34ca5ed0f647e2fa8c7492bc3e0e96bddf3b393e3e3b3fe4ae6c",
+      "dataset_id": "sha256:e7722f288955e1e45e1eea08900df326e60c582d86134d69774eb3242ac86f17",
       "tables": {
         "company": {
           "columns": [
@@ -52,9 +52,9 @@
               "type": "string"
             }
           ],
-          "dataset_id": "sha256:7222e643b07e42eff41f49ea9a212dc1cff82da9ef12c97d14d4ca72f92d7078",
-          "parquet_bytes": 13134,
-          "parquet_sha256": "c596b7fd37508538ed53affa47c70e869209077c93620bdd9c142ca4b4280ae6",
+          "dataset_id": "sha256:6a142930fd5294a59b802ba15dfd41dc3e088f9fcd185c62388cfc601ce37ce0",
+          "parquet_bytes": 12472,
+          "parquet_sha256": "767290ae8ab8898a1584e88d4ecdefee34f88fe876c0dc25f2a9da95f321df77",
           "rows": 500
         },
         "daily_price": {
@@ -280,9 +280,9 @@
               "type": "string"
             }
           ],
-          "dataset_id": "sha256:49e51a6612e2032648df1d062295432c2d081b4ed33f7704eb0b7bf042bee678",
-          "parquet_bytes": 1284,
-          "parquet_sha256": "f8d8ea340a4401a8dfb42cc6debfc90e3da4ebac60752a51b841c7165319c467",
+          "dataset_id": "sha256:fdc3760a73cdf6fb7b8dfed802459337d1887a8941f07a9f490711869b7d6f25",
+          "parquet_bytes": 1205,
+          "parquet_sha256": "272cbf0033a2b72ee5256cbd96d112a3ec77ea08d784238709b9e904e047c306",
           "rows": 11
         },
         "split": {
@@ -348,7 +348,7 @@
       }
     },
     "43": {
-      "dataset_id": "sha256:7a673bfe824beb79457866b85fa6b4029cd9fb2a148b1a4d72974703c569db7c",
+      "dataset_id": "sha256:cac6855d3ea6bb00d3bcf6b09d1c487dc256a9a7545a55635cbb62306f6ed393",
       "tables": {
         "company": {
           "columns": [
@@ -393,9 +393,9 @@
               "type": "string"
             }
           ],
-          "dataset_id": "sha256:1306b7299d1f1589ce8e677b23316256524cde490ebd5df9ca45f85003c73835",
-          "parquet_bytes": 12954,
-          "parquet_sha256": "06b53cdf3fd5e8e6265e069f78293b80391d9fa7dc35521060352da609b92f71",
+          "dataset_id": "sha256:1ef6df3a325da351e5d8b93c02c302c5081c43ad6ef529a5c062580e64b8cc9b",
+          "parquet_bytes": 12272,
+          "parquet_sha256": "1f22feffc660d2de54954d265f6e4ac483903746481672b66f0873acf20ed1da",
           "rows": 500
         },
         "daily_price": {
@@ -621,9 +621,9 @@
               "type": "string"
             }
           ],
-          "dataset_id": "sha256:6ab91059e1579a25112207250a40f52dfada5861b7d89ad37caf52c31bd7c6ad",
-          "parquet_bytes": 1285,
-          "parquet_sha256": "e17e876dfea91ededbb85087b87a189d7cc4660b37b9e94581262fda1058eb5a",
+          "dataset_id": "sha256:510c460e18229759ac36a7c76671ca8d15a7b0020bc4f3fab2bbeca6bc3f1f8a",
+          "parquet_bytes": 1217,
+          "parquet_sha256": "25adb62d04ab85bc5befa93d4d27b6ab90c06cc732cfcbab3fbcd379848bf70f",
           "rows": 11
         },
         "split": {
@@ -689,7 +689,7 @@
       }
     },
     "44": {
-      "dataset_id": "sha256:05937bb4a21a0ce1c5558eef34cdfce68987c93fe9d9a606cf5fd5a468684ea4",
+      "dataset_id": "sha256:d45d0cafde462fc2f32f218f4bcc66c999137ab5dae4ca9260e69f9eec3cc3ca",
       "tables": {
         "company": {
           "columns": [
@@ -734,9 +734,9 @@
               "type": "string"
             }
           ],
-          "dataset_id": "sha256:4c69bd209d69885173413faf901f61cf8329661ead1105982aae4a491e800b00",
-          "parquet_bytes": 13021,
-          "parquet_sha256": "dc4b3ae683d8be0b6461a88d5b3bbde2c394596a635a1dd2f8444e780fa2a9a1",
+          "dataset_id": "sha256:b46a792a37b39fdce7a9e2cbebe88162692412082cdd5dfd04b9f99e1a742b70",
+          "parquet_bytes": 12266,
+          "parquet_sha256": "cae3bd0f4ce42bc6e04b024b124881bab0895499938ee5ef996d4ef57683f264",
           "rows": 500
         },
         "daily_price": {
@@ -962,9 +962,9 @@
               "type": "string"
             }
           ],
-          "dataset_id": "sha256:76ad0cafc6c14cc9795ab0fd73854932be8b2ab7ee7db1228b6cda506fa1d11e",
-          "parquet_bytes": 1277,
-          "parquet_sha256": "c4d5011d5b5094c8293237bda3a55a0dd407dfdcc164f3fe532f8277f2150852",
+          "dataset_id": "sha256:bc828831d0ef1f3047104f393dd7aed97e2df22c7e3d1d121bbbec88a37bfbfb",
+          "parquet_bytes": 1205,
+          "parquet_sha256": "9aa6b45278bf2b407eb4abe36d2e9f632fd904e74281361a354e2f811e5fd9fc",
           "rows": 11
         },
         "split": {
@@ -1030,7 +1030,7 @@
       }
     },
     "45": {
-      "dataset_id": "sha256:6b50b8a0ec68aaa3ac292c0beceb45ce6bc9312286932ee2c5afa515d3d80cb9",
+      "dataset_id": "sha256:630cea8be13895a9ded672b848a65a7b7a52f16ff1780ee175a899a1c5b20183",
       "tables": {
         "company": {
           "columns": [
@@ -1075,9 +1075,9 @@
               "type": "string"
             }
           ],
-          "dataset_id": "sha256:6d88b39d16bfbeeb0c5c6ef93cbf520b8a93de55303b92ab6c63f099da8cbd36",
-          "parquet_bytes": 13172,
-          "parquet_sha256": "1bf4fe9c2ea39259811757f9981fba07022f47d6d8179fe7bc61b37f3ec0f5af",
+          "dataset_id": "sha256:9177151d0ee1c0cb9e289f32bd2d3ecd8ca2120572ade0ea8c4e5bf341ef1da8",
+          "parquet_bytes": 12486,
+          "parquet_sha256": "6012ab1091b9a920b4631679871d4dcca339ede15da55ac38a41d368bd228e8a",
           "rows": 500
         },
         "daily_price": {
@@ -1303,9 +1303,9 @@
               "type": "string"
             }
           ],
-          "dataset_id": "sha256:6548cfa074b9b54489b2b477a36d6d1a2bc89a5d7f5b15c1924d6bb36f383674",
-          "parquet_bytes": 1231,
-          "parquet_sha256": "067dd781013b2d38a2bb0cdf1aa23fef064afd4952c4fedb3aa44eb1e9e4fa2b",
+          "dataset_id": "sha256:e4a028cb4477b1bea191634b3b5b1b57d9b3512b009880f0d57e8b368625cc58",
+          "parquet_bytes": 1186,
+          "parquet_sha256": "ff5c42bb7ad6739436d5fd326a2f1fa2b721830093a79eb65f2eac6b8c3d6252",
           "rows": 11
         },
         "split": {
@@ -1371,7 +1371,7 @@
       }
     },
     "46": {
-      "dataset_id": "sha256:81e14c626a86cd796433631a9586bab2617634f6dad591ca3a72dc12c897a5b1",
+      "dataset_id": "sha256:39606323aa8d6775c8601c81efeb3ec97194aa3f84e67a2e0d46fb6017bf2667",
       "tables": {
         "company": {
           "columns": [
@@ -1416,9 +1416,9 @@
               "type": "string"
             }
           ],
-          "dataset_id": "sha256:a7dc0b73e620d69557af6b49b01e660dd17f44510dca995f4a56b66de0f9e83d",
-          "parquet_bytes": 13003,
-          "parquet_sha256": "bb74e9a7a3ecc745026a8d79c589a99f04785bf9a977492785a324d3d03cc8b8",
+          "dataset_id": "sha256:30cd4595009557e2404df3f58bac7aa4deca2a952a1ce61f985a5f8d40d378f4",
+          "parquet_bytes": 12345,
+          "parquet_sha256": "efbca62f041aa966e8d3b352571b7bf9838a102ca002d99e62cb5df20556dba2",
           "rows": 500
         },
         "daily_price": {
@@ -1644,9 +1644,9 @@
               "type": "string"
             }
           ],
-          "dataset_id": "sha256:7e6391e951f79f7ddf66925f753257a49b36d7bcab039fde947dc6781d2392e7",
-          "parquet_bytes": 1281,
-          "parquet_sha256": "30ee7a14450f6b1a04f4b17732db88a96ca02ecfc6c9385297507a44fdb738f5",
+          "dataset_id": "sha256:1774da2725cfe8e9cd54726dbecac74bea008f2ce9c3af15be5c8f2b55c91b36",
+          "parquet_bytes": 1201,
+          "parquet_sha256": "e648884f6d8c04c2901161108ba69620f88637e395332ca3f1d6482b931b3c03",
           "rows": 11
         },
         "split": {
@@ -1712,8 +1712,8 @@
       }
     }
   },
-  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
-  "shape_version": "0.9.1",
+  "shape_commit": "a8e476ca910c40e3d8e7dd0dace9c80699237e82",
+  "shape_version": "0.9.3",
   "version": 1,
   "workload": "generate:capital_markets:medium"
 }

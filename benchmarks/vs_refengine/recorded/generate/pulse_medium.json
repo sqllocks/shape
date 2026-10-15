@@ -11975,7 +11975,7 @@
   "inputs": {
     "fixtures/schemas/pulse_3nf.json": "c56989db3fbbdb37f9e470cdb8bc5b838930f50abc4172641e2b895abea952c7"
   },
-  "recorded_utc": "2026-10-13T01:47:50Z",
+  "recorded_utc": "2026-10-14T19:31:38Z",
   "seeds": {
     "42": {
       "dataset_id": "sha256:a52aef1a5c0428811e12f8dbfa55aafbfb9bc2342f8cb30e832d6f6327352032",
@@ -12963,8 +12963,8 @@
       }
     }
   },
-  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
-  "shape_version": "0.9.1",
+  "shape_commit": "a8e476ca910c40e3d8e7dd0dace9c80699237e82",
+  "shape_version": "0.9.3",
   "version": 1,
   "workload": "generate:pulse:medium"
 }

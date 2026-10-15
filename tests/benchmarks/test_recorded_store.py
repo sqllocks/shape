@@ -26,7 +26,7 @@ def fixture(tmp_path):
         "format": "shape-profile-record",
         "version": 1,
         "workload": "profile:d1.csv",
-        "shape_version": "0.9.1",
+        "shape_version": "0.9.3",
         "shape_commit": "a" * 40,
         "recorded_utc": "2026-10-11T00:00:00Z",
         "inputs": {"profile/d1.csv": "b" * 64},
@@ -36,9 +36,9 @@ def fixture(tmp_path):
     manifest = {
         "format": "shape-baseline-record",
         "version": 1,
-        "shape_version": "0.9.1",
+        "shape_version": "0.9.3",
         "shape_commit": "a" * 40,
-        "source_release": {"version": "0.9.1", "commit": "a" * 40},
+        "source_release": {"version": "0.9.3", "commit": "a" * 40},
         "recorded_utc": "2026-10-11T00:00:00Z",
         "machine": {"cores": 4},
         "baseline_freeze_sha256": "c" * 64,
@@ -56,7 +56,7 @@ def fixture(tmp_path):
 
 
 def test_timing_filename_matches_the_root_snapshot():
-    assert module().filename("timings", "timings:0.9.1") == "timings_0.9.1.json"
+    assert module().filename("timings", "timings:0.9.3") == "timings_0.9.3.json"
 
 
 def test_store_budget_includes_the_manifest(tmp_path, monkeypatch):

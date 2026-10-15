@@ -1,24 +1,24 @@
 {
   "format": "shape-timings-record",
   "inputs": {},
-  "recorded_utc": "2026-10-13T01:47:50Z",
+  "recorded_utc": "2026-10-14T19:31:38Z",
   "results": {
     "baseline": {
-      "commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
+      "commit": "a8e476ca910c40e3d8e7dd0dace9c80699237e82",
       "kind": "shape",
-      "version": "0.9.1",
+      "version": "0.9.3",
       "workloads": {
         "generate:capital_markets:medium": {
           "domain": "capital_markets",
           "kind": "generate",
-          "median_s": 0.10959663099993122,
+          "median_s": 0.17317608099983772,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.106,
-            0.11,
-            0.11,
-            0.103,
-            0.111
+            0.167,
+            0.183,
+            0.174,
+            0.173,
+            0.17
           ],
           "scale": "medium",
           "verifier": {
@@ -35,14 +35,14 @@
         "generate:education:medium": {
           "domain": "education",
           "kind": "generate",
-          "median_s": 0.056459445999962554,
+          "median_s": 0.09515492700029426,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.057,
-            0.056,
-            0.058,
-            0.056,
-            0.056
+            0.094,
+            0.095,
+            0.095,
+            0.096,
+            0.099
           ],
           "scale": "medium",
           "verifier": {
@@ -59,14 +59,14 @@
         "generate:financial:medium": {
           "domain": "financial",
           "kind": "generate",
-          "median_s": 0.24725901299984798,
+          "median_s": 0.4033710499998051,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.247,
-            0.251,
-            0.255,
-            0.245,
-            0.247
+            0.403,
+            0.405,
+            0.396,
+            0.402,
+            0.409
           ],
           "scale": "medium",
           "verifier": {
@@ -83,14 +83,14 @@
         "generate:healthcare:medium": {
           "domain": "healthcare",
           "kind": "generate",
-          "median_s": 0.20220878500003892,
+          "median_s": 0.3241305460001058,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.205,
-            0.203,
-            0.195,
-            0.202,
-            0.198
+            0.318,
+            0.324,
+            0.321,
+            0.325,
+            0.326
           ],
           "scale": "medium",
           "verifier": {
@@ -107,14 +107,14 @@
         "generate:hr:medium": {
           "domain": "hr",
           "kind": "generate",
-          "median_s": 0.03538740199996937,
+          "median_s": 0.061371347999738646,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.035,
-            0.033,
-            0.036,
-            0.035,
-            0.036
+            0.063,
+            0.064,
+            0.059,
+            0.061,
+            0.061
           ],
           "scale": "medium",
           "verifier": {
@@ -131,14 +131,14 @@
         "generate:insurance:medium": {
           "domain": "insurance",
           "kind": "generate",
-          "median_s": 0.050495270000055825,
+          "median_s": 0.08608172399999603,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.052,
-            0.05,
-            0.055,
-            0.048,
-            0.048
+            0.086,
+            0.086,
+            0.087,
+            0.087,
+            0.084
           ],
           "scale": "medium",
           "verifier": {
@@ -155,14 +155,14 @@
         "generate:iot:medium": {
           "domain": "iot",
           "kind": "generate",
-          "median_s": 0.052509666000105426,
+          "median_s": 0.08766365800011044,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.053,
-            0.053,
-            0.052,
-            0.054,
-            0.052
+            0.09,
+            0.087,
+            0.088,
+            0.089,
+            0.088
           ],
           "scale": "medium",
           "verifier": {
@@ -179,14 +179,14 @@
         "generate:manufacturing:medium": {
           "domain": "manufacturing",
           "kind": "generate",
-          "median_s": 0.029265917999964586,
+          "median_s": 0.05099437699982445,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.034,
-            0.029,
-            0.029,
-            0.03,
-            0.028
+            0.051,
+            0.049,
+            0.052,
+            0.05,
+            0.051
           ],
           "scale": "medium",
           "verifier": {
@@ -203,14 +203,14 @@
         "generate:marketing:medium": {
           "domain": "marketing",
           "kind": "generate",
-          "median_s": 0.09184909299983701,
+          "median_s": 0.1547394429999258,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.104,
-            0.09,
-            0.092,
-            0.091,
-            0.092
+            0.152,
+            0.157,
+            0.154,
+            0.155,
+            0.162
           ],
           "scale": "medium",
           "verifier": {
@@ -227,14 +227,14 @@
         "generate:pulse:medium": {
           "domain": "pulse",
           "kind": "generate",
-          "median_s": 0.18678127700013647,
+          "median_s": 0.28599159899977167,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.184,
-            0.185,
-            0.187,
-            0.188,
-            0.187
+            0.286,
+            0.283,
+            0.279,
+            0.286,
+            0.292
           ],
           "scale": "medium",
           "verifier": {
@@ -251,14 +251,14 @@
         "generate:real_estate:medium": {
           "domain": "real_estate",
           "kind": "generate",
-          "median_s": 0.0543778389999261,
+          "median_s": 0.08646084000019982,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.054,
-            0.055,
-            0.054,
-            0.075,
-            0.053
+            0.086,
+            0.085,
+            0.087,
+            0.088,
+            0.086
           ],
           "scale": "medium",
           "verifier": {
@@ -275,14 +275,14 @@
         "generate:retail:large": {
           "domain": "retail",
           "kind": "generate",
-          "median_s": 2.286767477000012,
+          "median_s": 3.5228199869998207,
           "ratio_vs_baseline": null,
           "runs_s": [
-            2.293,
-            2.216,
-            2.287,
-            2.261,
-            2.294
+            3.523,
+            3.566,
+            3.465,
+            3.518,
+            3.527
           ],
           "scale": "large",
           "verifier": {
@@ -299,14 +299,14 @@
         "generate:retail:medium": {
           "domain": "retail",
           "kind": "generate",
-          "median_s": 0.26554082999996353,
+          "median_s": 0.42098354400013704,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.266,
-            0.261,
-            0.277,
-            0.27,
-            0.265
+            0.421,
+            0.42,
+            0.422,
+            0.416,
+            0.421
           ],
           "scale": "medium",
           "verifier": {
@@ -323,14 +323,14 @@
         "generate:retail:small": {
           "domain": "retail",
           "kind": "generate",
-          "median_s": 0.03232746399999087,
+          "median_s": 0.05578142700005628,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.032,
-            0.032,
-            0.033,
-            0.032,
-            0.04
+            0.055,
+            0.055,
+            0.057,
+            0.056,
+            0.056
           ],
           "scale": "small",
           "verifier": {
@@ -347,14 +347,14 @@
         "generate:supply_chain:medium": {
           "domain": "supply_chain",
           "kind": "generate",
-          "median_s": 0.07387095300009605,
+          "median_s": 0.10868055699984325,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.075,
-            0.072,
-            0.074,
-            0.073,
-            0.091
+            0.109,
+            0.108,
+            0.108,
+            0.11,
+            0.109
           ],
           "scale": "medium",
           "verifier": {
@@ -371,14 +371,14 @@
         "generate:telecom:medium": {
           "domain": "telecom",
           "kind": "generate",
-          "median_s": 0.25931599099976665,
+          "median_s": 0.394247021999945,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.258,
-            0.255,
-            0.29,
-            0.276,
-            0.259
+            0.394,
+            0.406,
+            0.39,
+            0.4,
+            0.387
           ],
           "scale": "medium",
           "verifier": {
@@ -395,14 +395,14 @@
         "profile:d1.csv": {
           "dataset": "d1.csv",
           "kind": "profile",
-          "median_s": 0.1465184279998084,
+          "median_s": 0.261282410999911,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.14593456600005084,
-            0.14213396299987835,
-            0.15755745199999183,
-            0.14854951000006622,
-            0.1465184279998084
+            0.26000442399981694,
+            0.2555889169998409,
+            0.261282410999911,
+            0.26382688100011364,
+            0.27800752999996803
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape d1.csv",
@@ -413,14 +413,14 @@
         "profile:d1.parquet": {
           "dataset": "d1.parquet",
           "kind": "profile",
-          "median_s": 0.07497905799982618,
+          "median_s": 0.11977745199988021,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.07117471799983832,
-            0.07616820699990967,
-            0.06964749500002654,
-            0.07514219300014702,
-            0.07497905799982618
+            0.12025133000020105,
+            0.11977745199988021,
+            0.12284212700001262,
+            0.1098160160001953,
+            0.11934159899988117
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape d1.parquet",
@@ -431,14 +431,14 @@
         "profile:d2.csv": {
           "dataset": "d2.csv",
           "kind": "profile",
-          "median_s": 1.3627875829999994,
+          "median_s": 2.1960898819997965,
           "ratio_vs_baseline": null,
           "runs_s": [
-            1.2898805059999177,
-            1.3627875829999994,
-            1.3580827460000364,
-            1.413588713000081,
-            1.4320919950000643
+            2.1919897769998897,
+            2.2306158449998748,
+            2.1627590739999505,
+            2.1960898819997965,
+            2.2552241659998344
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape d2.csv",
@@ -449,14 +449,14 @@
         "profile:d2.parquet": {
           "dataset": "d2.parquet",
           "kind": "profile",
-          "median_s": 0.8567070649999096,
+          "median_s": 1.278933645000052,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.8267823650000992,
-            0.8617615680000199,
-            0.8307366630001525,
-            0.8567070649999096,
-            0.912819109000111
+            1.283998646999862,
+            1.2607946309999534,
+            1.278933645000052,
+            1.2588922820000334,
+            1.2843562580001162
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape d2.parquet",
@@ -467,14 +467,14 @@
         "profile:d3.csv": {
           "dataset": "d3.csv",
           "kind": "profile",
-          "median_s": 3.7985703540000486,
+          "median_s": 7.749996417000148,
           "ratio_vs_baseline": null,
           "runs_s": [
-            3.7320841610001025,
-            3.8077804189999824,
-            3.8079928279998967,
-            3.7458325760001117,
-            3.7985703540000486
+            7.7370918109998,
+            7.711584954000045,
+            7.773221079999985,
+            7.758193139000014,
+            7.749996417000148
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape d3.csv",
@@ -485,14 +485,14 @@
         "profile:d3.parquet": {
           "dataset": "d3.parquet",
           "kind": "profile",
-          "median_s": 2.0346071689998553,
+          "median_s": 4.740464166000038,
           "ratio_vs_baseline": null,
           "runs_s": [
-            2.043543426000042,
-            2.0346071689998553,
-            1.980309649000219,
-            2.0602791829999205,
-            1.9893562589998055
+            4.699731941999971,
+            4.679950195999936,
+            4.740464166000038,
+            4.777568910999889,
+            4.7848304849999295
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape d3.parquet",
@@ -503,14 +503,14 @@
         "profile:d4.csv": {
           "dataset": "d4.csv",
           "kind": "profile",
-          "median_s": 2.076929891999953,
+          "median_s": 5.6546540150000055,
           "ratio_vs_baseline": null,
           "runs_s": [
-            2.0334890629999336,
-            2.0991658539999207,
-            2.061993478999966,
-            2.134846570000036,
-            2.076929891999953
+            5.615552733999948,
+            5.619212394999977,
+            5.6546540150000055,
+            5.701212313000042,
+            5.664767275000031
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape d4.csv",
@@ -521,14 +521,14 @@
         "profile:d4.parquet": {
           "dataset": "d4.parquet",
           "kind": "profile",
-          "median_s": 1.3049108269999579,
+          "median_s": 4.442553858999872,
           "ratio_vs_baseline": null,
           "runs_s": [
-            1.3049108269999579,
-            1.3113279019999027,
-            1.2998727829999552,
-            1.290502786999923,
-            1.33708151299993
+            4.4410779939998974,
+            4.442179514000145,
+            4.442553858999872,
+            4.451345856999978,
+            4.473814412000138
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape d4.parquet",
@@ -539,14 +539,14 @@
         "profile:edge/e130.csv": {
           "dataset": "edge/e130.csv",
           "kind": "profile",
-          "median_s": 0.06393668900000193,
+          "median_s": 0.11148069199998645,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.06463798899994799,
-            0.062225579000141806,
-            0.06015220900007989,
-            0.06393668900000193,
-            0.06452188299999762
+            0.11148069199998645,
+            0.11252445899981467,
+            0.10852863099989918,
+            0.10938299000008556,
+            0.11218513900030302
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e130.csv",
@@ -557,14 +557,14 @@
         "profile:edge/e130.parquet": {
           "dataset": "edge/e130.parquet",
           "kind": "profile",
-          "median_s": 0.06579122700009066,
+          "median_s": 0.10784305299966945,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.06575973500002874,
-            0.06993285999988075,
-            0.0654901240000072,
-            0.06663193700001102,
-            0.06579122700009066
+            0.10784305299966945,
+            0.11039051599982486,
+            0.10732454099979805,
+            0.1103815599999507,
+            0.10573536599986255
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e130.parquet",
@@ -575,14 +575,14 @@
         "profile:edge/e130_uuidpk.csv": {
           "dataset": "edge/e130_uuidpk.csv",
           "kind": "profile",
-          "median_s": 0.0672790730000088,
+          "median_s": 0.12088333200017587,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.06821667999997771,
-            0.06802485999992314,
-            0.0672790730000088,
-            0.06666202699989299,
-            0.0628195560000222
+            0.11379776799958563,
+            0.12170513799992477,
+            0.11908243200014113,
+            0.12088333200017587,
+            0.1391595889999735
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e130_uuidpk.csv",
@@ -593,14 +593,14 @@
         "profile:edge/e130_uuidpk.parquet": {
           "dataset": "edge/e130_uuidpk.parquet",
           "kind": "profile",
-          "median_s": 0.06749364000006608,
+          "median_s": 0.11451299300006212,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.06749364000006608,
-            0.06799062799996136,
-            0.06165734100000009,
-            0.06472002800001064,
-            0.0675025729999561
+            0.12011293099976683,
+            0.12295531000017945,
+            0.11451299300006212,
+            0.11119342400024834,
+            0.11392890799970701
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e130_uuidpk.parquet",
@@ -611,14 +611,14 @@
         "profile:edge/e15.csv": {
           "dataset": "edge/e15.csv",
           "kind": "profile",
-          "median_s": 0.04600851400005013,
+          "median_s": 0.07861743600005866,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.04554739199988944,
-            0.047881509000035294,
-            0.04523262799989425,
-            0.04600851400005013,
-            0.06955521800000497
+            0.07861743600005866,
+            0.07896363800000472,
+            0.0789587140002368,
+            0.07824993099984567,
+            0.07510435300036988
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e15.csv",
@@ -629,14 +629,14 @@
         "profile:edge/e15.parquet": {
           "dataset": "edge/e15.parquet",
           "kind": "profile",
-          "median_s": 0.05102359099987552,
+          "median_s": 0.08036444399976972,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.04940817200008496,
-            0.053840648000004876,
-            0.06499191499983681,
-            0.05102359099987552,
-            0.04721385800007738
+            0.08036444399976972,
+            0.08343485800014605,
+            0.08374736699988716,
+            0.08006906700029504,
+            0.07887959199979377
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e15.parquet",
@@ -647,14 +647,14 @@
         "profile:edge/e15_uuidpk.csv": {
           "dataset": "edge/e15_uuidpk.csv",
           "kind": "profile",
-          "median_s": 0.0467822990001423,
+          "median_s": 0.07632510999974329,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.0467822990001423,
-            0.04865846699999565,
-            0.04624575399998321,
-            0.04672269600018808,
-            0.04719323700010136
+            0.07430362400009471,
+            0.07632510999974329,
+            0.07613555599982647,
+            0.07947725500025626,
+            0.07691619699971852
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e15_uuidpk.csv",
@@ -665,14 +665,14 @@
         "profile:edge/e15_uuidpk.parquet": {
           "dataset": "edge/e15_uuidpk.parquet",
           "kind": "profile",
-          "median_s": 0.05112223899982382,
+          "median_s": 0.08167661200013754,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.05112223899982382,
-            0.051915223999912996,
-            0.05029010700013714,
-            0.04892849200018645,
-            0.051489686000195434
+            0.08167661200013754,
+            0.07859360599968568,
+            0.08171077800034254,
+            0.0789185170001474,
+            0.10296855200022037
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e15_uuidpk.parquet",
@@ -683,14 +683,14 @@
         "profile:edge/e3.csv": {
           "dataset": "edge/e3.csv",
           "kind": "profile",
-          "median_s": 0.041498081999861824,
+          "median_s": 0.06421861399985573,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.04015025700005026,
-            0.04008991099999548,
-            0.04581262799979413,
-            0.041498752000052264,
-            0.041498081999861824
+            0.060411035000015545,
+            0.06421861399985573,
+            0.061085571000148775,
+            0.06770955199999662,
+            0.06529615999988891
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e3.csv",
@@ -701,14 +701,14 @@
         "profile:edge/e3.parquet": {
           "dataset": "edge/e3.parquet",
           "kind": "profile",
-          "median_s": 0.04506451299994296,
+          "median_s": 0.06721998400007578,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.04506451299994296,
-            0.04355916500003332,
-            0.04442780099998345,
-            0.046892216000060216,
-            0.045413882999810085
+            0.06999719099985668,
+            0.06706168500022613,
+            0.06724867000002632,
+            0.06721998400007578,
+            0.06618359599997348
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e3.parquet",
@@ -719,14 +719,14 @@
         "profile:edge/e3000.csv": {
           "dataset": "edge/e3000.csv",
           "kind": "profile",
-          "median_s": 0.17238148799992814,
+          "median_s": 0.3419478240002718,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.1700255420000758,
-            0.17443063399991843,
-            0.17149984800016682,
-            0.17238148799992814,
-            0.1727401949999603
+            0.34180791299968405,
+            0.3419478240002718,
+            0.34759903800022585,
+            0.33440855000026204,
+            0.34641410899985203
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e3000.csv",
@@ -737,14 +737,14 @@
         "profile:edge/e3000.parquet": {
           "dataset": "edge/e3000.parquet",
           "kind": "profile",
-          "median_s": 0.1745413109999845,
+          "median_s": 0.3400437690002036,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.169885056999874,
-            0.2072169269999904,
-            0.16875565400005144,
-            0.18116336399998545,
-            0.1745413109999845
+            0.3400437690002036,
+            0.35857028700002047,
+            0.3369190570001592,
+            0.34451106100004836,
+            0.337261326999851
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e3000.parquet",
@@ -755,14 +755,14 @@
         "profile:edge/e3000_uuidpk.csv": {
           "dataset": "edge/e3000_uuidpk.csv",
           "kind": "profile",
-          "median_s": 0.18116039500000625,
+          "median_s": 0.3561179940002148,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.20141370799979086,
-            0.18050391500014484,
-            0.1786377870000706,
-            0.18116039500000625,
-            0.18212749200006328
+            0.3585766760002116,
+            0.3561179940002148,
+            0.3496108849999473,
+            0.35523449999982404,
+            0.35872292100020786
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e3000_uuidpk.csv",
@@ -773,14 +773,14 @@
         "profile:edge/e3000_uuidpk.parquet": {
           "dataset": "edge/e3000_uuidpk.parquet",
           "kind": "profile",
-          "median_s": 0.17900261900012993,
+          "median_s": 0.3636815180002486,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.18051728399996136,
-            0.1778490540000348,
-            0.18088275500008422,
-            0.17744441499985442,
-            0.17900261900012993
+            0.3812061850003374,
+            0.3636815180002486,
+            0.3522315420000268,
+            0.3578933090002465,
+            0.36903575799988175
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e3000_uuidpk.parquet",
@@ -791,14 +791,14 @@
         "profile:edge/e3_uuidpk.csv": {
           "dataset": "edge/e3_uuidpk.csv",
           "kind": "profile",
-          "median_s": 0.04033031099993423,
+          "median_s": 0.06509699599973828,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.04014191399983247,
-            0.04156900899988614,
-            0.043393801000092935,
-            0.04033031099993423,
-            0.03983262399992782
+            0.064193153999895,
+            0.06730435200006468,
+            0.06693242299979829,
+            0.06484932900002605,
+            0.06509699599973828
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e3_uuidpk.csv",
@@ -809,14 +809,14 @@
         "profile:edge/e3_uuidpk.parquet": {
           "dataset": "edge/e3_uuidpk.parquet",
           "kind": "profile",
-          "median_s": 0.043811940000068716,
+          "median_s": 0.06985570300003019,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.044173593999857985,
-            0.043811940000068716,
-            0.042587025999864636,
-            0.042691989999866564,
-            0.043884000999923956
+            0.06698069899994152,
+            0.08152004599969587,
+            0.06710044199962795,
+            0.06985570300003019,
+            0.08210114799976509
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e3_uuidpk.parquet",
@@ -827,14 +827,14 @@
         "profile:edge/e60.csv": {
           "dataset": "edge/e60.csv",
           "kind": "profile",
-          "median_s": 0.057264154999984385,
+          "median_s": 0.10396094100042319,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.05714366799998061,
-            0.057264154999984385,
-            0.060691247000022486,
-            0.05672149499991974,
-            0.0587126799998714
+            0.10396094100042319,
+            0.10513141100000212,
+            0.10054900700015423,
+            0.10378397800013772,
+            0.11163985000030152
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e60.csv",
@@ -845,14 +845,14 @@
         "profile:edge/e60.parquet": {
           "dataset": "edge/e60.parquet",
           "kind": "profile",
-          "median_s": 0.060948659000132466,
+          "median_s": 0.10173330899988287,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.0596096540000417,
-            0.061167291999936424,
-            0.06136699299986503,
-            0.0599812360001124,
-            0.060948659000132466
+            0.10027104900018458,
+            0.10267393799995261,
+            0.09897529099998792,
+            0.10455173199989076,
+            0.10173330899988287
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e60.parquet",
@@ -863,14 +863,14 @@
         "profile:edge/e60_uuidpk.csv": {
           "dataset": "edge/e60_uuidpk.csv",
           "kind": "profile",
-          "median_s": 0.06025826499990217,
+          "median_s": 0.10683711599995149,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.05751555200004077,
-            0.06124718399996709,
-            0.06025826499990217,
-            0.056744544000139285,
-            0.06124677299999348
+            0.11162480900020455,
+            0.1315519019999556,
+            0.10486144800006514,
+            0.10499777599989102,
+            0.10683711599995149
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e60_uuidpk.csv",
@@ -881,14 +881,14 @@
         "profile:edge/e60_uuidpk.parquet": {
           "dataset": "edge/e60_uuidpk.parquet",
           "kind": "profile",
-          "median_s": 0.06020525100007035,
+          "median_s": 0.10336972000004607,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.05865740900003402,
-            0.06249599800003125,
-            0.06378335299996252,
-            0.05929634500012071,
-            0.06020525100007035
+            0.10280822000004264,
+            0.10371930600013002,
+            0.10697422499970344,
+            0.10336972000004607,
+            0.10127831599993442
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/e60_uuidpk.parquet",
@@ -899,14 +899,14 @@
         "profile:edge/x_csv_inf.csv": {
           "dataset": "edge/x_csv_inf.csv",
           "kind": "profile",
-          "median_s": 0.006421068000008745,
+          "median_s": 0.010280193000198778,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.006091007000122772,
-            0.006189357999801359,
-            0.006421068000008745,
-            0.006474888999946415,
-            0.00644564200001696
+            0.010414323000077275,
+            0.01065404699966166,
+            0.010008405999997194,
+            0.010280193000198778,
+            0.010169520000090415
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_csv_inf.csv",
@@ -917,14 +917,14 @@
         "profile:edge/x_csv_mixed_chunks.csv": {
           "dataset": "edge/x_csv_mixed_chunks.csv",
           "kind": "profile",
-          "median_s": 0.506247065000025,
+          "median_s": 0.9100123920002261,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.506247065000025,
-            0.49575168499995925,
-            0.5033711329999733,
-            0.5093692939999528,
-            0.5193843380000089
+            0.9169600010000067,
+            0.8919730090001394,
+            0.9132494430000406,
+            0.9100123920002261,
+            0.9056960369998706
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_csv_mixed_chunks.csv",
@@ -935,14 +935,14 @@
         "profile:edge/x_csv_mixed_tail.csv": {
           "dataset": "edge/x_csv_mixed_tail.csv",
           "kind": "profile",
-          "median_s": 0.007395022999844514,
+          "median_s": 0.012805323000065982,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.007395022999844514,
-            0.007037132000050406,
-            0.007137073999956556,
-            0.00787275600009707,
-            0.007590318999973533
+            0.013104252999710297,
+            0.011417329999858339,
+            0.011119836000034411,
+            0.013159126999653381,
+            0.012805323000065982
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_csv_mixed_tail.csv",
@@ -953,14 +953,14 @@
         "profile:edge/x_csv_nan_text.csv": {
           "dataset": "edge/x_csv_nan_text.csv",
           "kind": "profile",
-          "median_s": 0.006041678999963551,
+          "median_s": 0.01007174500000474,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.00542810299998564,
-            0.00598412899989853,
-            0.006111390999876676,
-            0.006041678999963551,
-            0.0062908520001201396
+            0.010327154000151495,
+            0.009471704999668873,
+            0.00983746500014604,
+            0.010372815000209812,
+            0.01007174500000474
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_csv_nan_text.csv",
@@ -971,14 +971,14 @@
         "profile:edge/x_csv_numbers.csv": {
           "dataset": "edge/x_csv_numbers.csv",
           "kind": "profile",
-          "median_s": 0.05282945799990557,
+          "median_s": 0.09380658899999617,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.05415852199985238,
-            0.05282945799990557,
-            0.053042894000100205,
-            0.05259790700006306,
-            0.052124315999890314
+            0.09543225800007349,
+            0.09380658899999617,
+            0.11558612799990442,
+            0.09167961499997546,
+            0.09086981899963575
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_csv_numbers.csv",
@@ -989,14 +989,14 @@
         "profile:edge/x_dates_a.csv": {
           "dataset": "edge/x_dates_a.csv",
           "kind": "profile",
-          "median_s": 0.006991726000023846,
+          "median_s": 0.011725092000233417,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.006878762000042116,
-            0.007510699000022214,
-            0.007086596999897665,
-            0.006978492999905939,
-            0.006991726000023846
+            0.011725092000233417,
+            0.011439270000209945,
+            0.012953794000168273,
+            0.012954946999798267,
+            0.011264085000220803
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_dates_a.csv",
@@ -1007,14 +1007,14 @@
         "profile:edge/x_dates_b.csv": {
           "dataset": "edge/x_dates_b.csv",
           "kind": "profile",
-          "median_s": 0.0076116440000078,
+          "median_s": 0.012867741999798454,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.00794899099992108,
-            0.007225706000099308,
-            0.007783780999943701,
-            0.0076116440000078,
-            0.0070767299998806266
+            0.01151212700005999,
+            0.013251283000045078,
+            0.012867741999798454,
+            0.013217349000115064,
+            0.011604419000377675
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_dates_b.csv",
@@ -1025,14 +1025,14 @@
         "profile:edge/x_dates_bad.csv": {
           "dataset": "edge/x_dates_bad.csv",
           "kind": "profile",
-          "median_s": 0.008269595999990997,
+          "median_s": 0.012676129999817931,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.007773188000101072,
-            0.00767676800001027,
-            0.008269595999990997,
-            0.008501317000082054,
-            0.00837927500015212
+            0.012676129999817931,
+            0.012522787999841967,
+            0.014481291999800305,
+            0.01495234599997275,
+            0.012596506999670964
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_dates_bad.csv",
@@ -1043,14 +1043,14 @@
         "profile:edge/x_dates_c.csv": {
           "dataset": "edge/x_dates_c.csv",
           "kind": "profile",
-          "median_s": 0.007270604999803254,
+          "median_s": 0.012233175999881496,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.008245049000151994,
-            0.0068581599998651654,
-            0.007270604999803254,
-            0.007344070000044667,
-            0.0070870770000510674
+            0.012770447000093554,
+            0.012533981000160566,
+            0.011225620999994135,
+            0.010943810999833659,
+            0.012233175999881496
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_dates_c.csv",
@@ -1061,14 +1061,14 @@
         "profile:edge/x_dates_d.csv": {
           "dataset": "edge/x_dates_d.csv",
           "kind": "profile",
-          "median_s": 0.006751128000132667,
+          "median_s": 0.012003108000044449,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.006711776999964059,
-            0.00674296600004709,
-            0.006751128000132667,
-            0.007432684000150402,
-            0.007295446000171069
+            0.012039196999921842,
+            0.010688426999877265,
+            0.012253314000190585,
+            0.01010198899984971,
+            0.012003108000044449
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_dates_d.csv",
@@ -1079,14 +1079,14 @@
         "profile:edge/x_dates_mixed_fmt.csv": {
           "dataset": "edge/x_dates_mixed_fmt.csv",
           "kind": "profile",
-          "median_s": 0.0074566160001268145,
+          "median_s": 0.011617849000231217,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.007308041000214871,
-            0.0074566160001268145,
-            0.007875964000049862,
-            0.007812951999994766,
-            0.007367851000026349
+            0.011617849000231217,
+            0.012249745999724837,
+            0.011512641000081203,
+            0.013233697000032407,
+            0.011379331000171078
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_dates_mixed_fmt.csv",
@@ -1097,14 +1097,14 @@
         "profile:edge/x_pq_duration.parquet": {
           "dataset": "edge/x_pq_duration.parquet",
           "kind": "profile",
-          "median_s": 0.009104229000058695,
+          "median_s": 0.013990267999815842,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.009150509999926726,
-            0.009104229000058695,
-            0.009119241000007605,
-            0.008759746999885465,
-            0.009050056999967637
+            0.01438384799985215,
+            0.013869086999875435,
+            0.014860403000056976,
+            0.013990267999815842,
+            0.013964069000394375
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_pq_duration.parquet",
@@ -1115,14 +1115,14 @@
         "profile:edge/x_pq_list.parquet": {
           "dataset": "edge/x_pq_list.parquet",
           "kind": "profile",
-          "median_s": 0.004578048999974271,
+          "median_s": 0.013481212999977288,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.00482374099988192,
-            0.004509374999997817,
-            0.004583156999842686,
-            0.004578048999974271,
-            0.004522124999994048
+            0.013499436000074638,
+            0.013964138999654097,
+            0.01340475899996818,
+            0.013481212999977288,
+            0.013168325000151526
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_pq_list.parquet",
@@ -1133,14 +1133,14 @@
         "profile:edge/x_pq_nested.parquet": {
           "dataset": "edge/x_pq_nested.parquet",
           "kind": "profile",
-          "median_s": 0.004649577000009231,
+          "median_s": 0.012861347999660211,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.004702537999946799,
-            0.004649577000009231,
-            0.004755488000000696,
-            0.00450944499993966,
-            0.004608124000014868
+            0.012614815000233648,
+            0.013514646999738034,
+            0.013801564999994298,
+            0.012585960999786039,
+            0.012861347999660211
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_pq_nested.parquet",
@@ -1151,14 +1151,14 @@
         "profile:edge/x_pq_nulls.parquet": {
           "dataset": "edge/x_pq_nulls.parquet",
           "kind": "profile",
-          "median_s": 0.01709486800018567,
+          "median_s": 0.028916611000113335,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.017930949999936274,
-            0.016794913000012457,
-            0.01709486800018567,
-            0.017536461999952735,
-            0.01694066599998223
+            0.02840664299992568,
+            0.029348441999900388,
+            0.026719314999809285,
+            0.030028088000108255,
+            0.028916611000113335
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_pq_nulls.parquet",
@@ -1169,14 +1169,14 @@
         "profile:edge/x_pq_types.parquet": {
           "dataset": "edge/x_pq_types.parquet",
           "kind": "profile",
-          "median_s": 0.04908770299994103,
+          "median_s": 0.07614138899998579,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.048938088000113567,
-            0.048873339000010674,
-            0.049225152999952115,
-            0.04908770299994103,
-            0.05017589199997019
+            0.07561255100017661,
+            0.07375393500024074,
+            0.08042012199985038,
+            0.08185340999989421,
+            0.07614138899998579
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_pq_types.parquet",
@@ -1187,14 +1187,14 @@
         "profile:edge/x_pq_u64_big.parquet": {
           "dataset": "edge/x_pq_u64_big.parquet",
           "kind": "profile",
-          "median_s": 0.009755605000009382,
+          "median_s": 0.015440366999882826,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.009610475000044971,
-            0.009755605000009382,
-            0.009911932000022716,
-            0.009985412999867549,
-            0.009749005000003308
+            0.013653407000219886,
+            0.015440366999882826,
+            0.015720061999672907,
+            0.016700264999599312,
+            0.014381595000031666
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_pq_u64_big.parquet",
@@ -1205,14 +1205,14 @@
         "profile:edge/x_time_ampm.csv": {
           "dataset": "edge/x_time_ampm.csv",
           "kind": "profile",
-          "median_s": 0.007290904999990744,
+          "median_s": 0.010789892000047985,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.007065714000191292,
-            0.007711211000014373,
-            0.007290904999990744,
-            0.007062049000069237,
-            0.007544619000100283
+            0.010789892000047985,
+            0.010508622000088508,
+            0.010683769000024768,
+            0.012426973999936308,
+            0.011491877000025852
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_time_ampm.csv",
@@ -1223,14 +1223,14 @@
         "profile:edge/x_time_only.csv": {
           "dataset": "edge/x_time_only.csv",
           "kind": "profile",
-          "median_s": 0.007113839999874472,
+          "median_s": 0.011867477000123472,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.007113839999874472,
-            0.007292824999922232,
-            0.006613710000010542,
-            0.0069684489999417565,
-            0.007343103000039264
+            0.012413020000167307,
+            0.011524173999987397,
+            0.011957642000197666,
+            0.011867477000123472,
+            0.010148257999844645
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape edge/x_time_only.csv",
@@ -1241,14 +1241,14 @@
         "profile:mt": {
           "dataset": "mt",
           "kind": "profile",
-          "median_s": 0.15395626200006518,
+          "median_s": 0.279452983000283,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.15765705399985563,
-            0.15121382100005576,
-            0.1585606490000373,
-            0.15278179799997815,
-            0.15395626200006518
+            0.2753098719999798,
+            0.2799318630000016,
+            0.2817637650000506,
+            0.279452983000283,
+            0.276688280000144
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape mt",
@@ -1259,14 +1259,14 @@
         "profile:mt.parquet": {
           "dataset": "mt.parquet",
           "kind": "profile",
-          "median_s": 0.08185694200005855,
+          "median_s": 0.1578050340003756,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.08178707699994447,
-            0.07985956799984706,
-            0.08185694200005855,
-            0.08249632699994436,
-            0.08499324900003558
+            0.15743555500012008,
+            0.17146240300007776,
+            0.16999519099999816,
+            0.15737807699997575,
+            0.1578050340003756
           ],
           "verifier": {
             "command": "$SHAPE_VENV/bin/python $SHAPE_ROOT/benchmarks/vs_refengine/profile_1to1/verify.py --impl shape mt.parquet",
@@ -1277,14 +1277,14 @@
         "stream:retail:order:medium": {
           "domain": "retail",
           "kind": "stream",
-          "median_s": 0.5162912410000899,
+          "median_s": 0.8136388970001462,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.52,
-            0.516,
-            0.519,
-            0.511,
-            0.514
+            0.823,
+            0.813,
+            0.843,
+            0.814,
+            0.809
           ],
           "scale": "medium",
           "verifier": {
@@ -1301,14 +1301,14 @@
         "stream:retail:order:small": {
           "domain": "retail",
           "kind": "stream",
-          "median_s": 0.07496792499978255,
+          "median_s": 0.13326507700003276,
           "ratio_vs_baseline": null,
           "runs_s": [
-            0.074,
-            0.075,
-            0.074,
-            0.081,
-            0.081
+            0.131,
+            0.133,
+            0.133,
+            0.134,
+            0.135
           ],
           "scale": "small",
           "verifier": {
@@ -1324,7 +1324,7 @@
         }
       }
     },
-    "generated_utc": "2026-10-13T01:53:14Z",
+    "generated_utc": "2026-10-14T19:39:51Z",
     "machine": {
       "baseline_venv": {
         "numpy": "2.4.6",
@@ -1332,7 +1332,7 @@
         "python": "3.11.17"
       },
       "cores": 4,
-      "cpu": "AMD EPYC 9V45 96-Core Processor",
+      "cpu": "AMD EPYC 7763 64-Core Processor",
       "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
       "python": "3.11.17",
       "shape_venv": {
@@ -1340,7 +1340,7 @@
         "pyarrow": "25.0.1",
         "python": "3.11.17"
       },
-      "started": "2026-10-13 01:53:14"
+      "started": "2026-10-14 19:39:51"
     },
     "mode": "full",
     "runs": 5,
@@ -1441,11 +1441,11 @@
     "shape": {
       "workloads": {}
     },
-    "shape_commit": "e41a67eab08beed36804bf3a84db83fb7f2595f6",
+    "shape_commit": "a8e476ca910c40e3d8e7dd0dace9c80699237e82",
     "shape_tree_dirty": true
   },
-  "shape_commit": "d09731e59b630fac11b7127c812c47ccca8ab64f",
-  "shape_version": "0.9.1",
+  "shape_commit": "a8e476ca910c40e3d8e7dd0dace9c80699237e82",
+  "shape_version": "0.9.3",
   "version": 1,
-  "workload": "timings:0.9.1"
+  "workload": "timings:0.9.3"
 }
