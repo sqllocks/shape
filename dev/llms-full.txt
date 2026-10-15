@@ -6320,6 +6320,7 @@ Early access 0.9.3.
 Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 Unreleased
 ¶
+Docs: README and Quickstart link to the Shape Playground (a recorded 0.9.3 session in the browser).
 Integrations: the
 anonymeter
 extra of sqllocks-shape-integrations is withdrawn; Anonymeter 1.x requires NumPy < 1.27 and Shape requires NumPy >= 2, so the extra could not be installed. The adapter stays and explains this when Anonymeter is missing.
@@ -56841,6 +56842,9 @@ https://docs.shapedata.ai/dev/QUICKSTART/
 Quickstart
 ¶
 Follow one short route from local rows to a reviewed baseline and generated data.
+Try it first, with no install: the
+Shape Playground
+replays a recorded Shape 0.9.3 session in your browser.
 Status: available.
 Run the local examples
 ¶
@@ -74273,6 +74277,9 @@ flowchart LR
     P --> C[Check a contract]
     C --> D[Diff against a baseline]
     D --> G[Generate development data]
+Try it first, with no install: the
+Shape Playground
+replays a recorded Shape 0.9.3 session in your browser.
 Start with
 your first profile
 . You create a local CSV,
