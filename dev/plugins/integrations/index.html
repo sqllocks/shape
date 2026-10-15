@@ -6496,7 +6496,7 @@
 <p><code>sqllocks-shape-integrations</code> is one first-party plugin with a thin adapter for each tool a team
 may already use. Its version equals core's and it is released with core. It is built only on
 <a href="../api-v1/">plugin API v1</a> and the run manifest, and core never depends on any of the tools:
-each one is an <strong>extra</strong> you install on its own.</p>
+available integrations are <strong>extras</strong> you install on their own; the Anonymeter extra is withdrawn.</p>
 <table>
 <thead>
 <tr>
@@ -6533,7 +6533,7 @@ each one is an <strong>extra</strong> you install on its own.</p>
 </tr>
 <tr>
 <td>Anonymeter</td>
-<td><code>anonymeter</code></td>
+<td>withdrawn in 0.9.4 (see below)</td>
 <td><code>shape evaluate anonymeter</code></td>
 <td>privacy-risk report of synthetic against real</td>
 </tr>
@@ -6547,7 +6547,8 @@ each one is an <strong>extra</strong> you install on its own.</p>
 </table>
 <p>Use <a href="../../TUTORIAL/">the tested starters</a> for local commands and complete output.</p>
 <p>Importing <code>shape_integrations</code> imports none of these libraries. Using an adapter whose library
-is missing exits with code 2 and says how to install it:</p>
+is missing exits with code 2 and says how to install it, except Anonymeter, which explains
+why its extra was withdrawn:</p>
 <div class="highlight"><pre><span></span><code>OpenLineage needs the 'openlineage' extra: pip install 'sqllocks-shape-integrations[openlineage]'
 </code></pre></div>
 <p>The adapters run <strong>after the fact</strong>, on files you give them. Nothing hooks into other Shape
@@ -6718,13 +6719,7 @@ a little between runs. A table with one column skips linkability and inference
 <p><strong>What is written:</strong> only the report file you name, or standard output. It holds scores, counts
 and column names, never row values. <strong>What is never sent:</strong> both libraries run in-process;
 nothing leaves the machine.</p>
-<p><strong>Anonymeter install note.</strong> Anonymeter 1.1.0 declares <code>numpy&lt;1.27</code> and <code>pyarrow&lt;22</code>, while Shape
-requires <code>numpy&gt;=2</code>, so <code>pip</code> cannot resolve <code>sqllocks-shape-integrations[anonymeter]</code> today. The
-library itself runs under NumPy 2 (the integration tests run it that way). Until Anonymeter
-publishes a release for NumPy 2, install it without its pins:</p>
-<p>Use <a href="../../TUTORIAL/">the tested starters</a> for local commands and complete output.</p>
-<p>The <code>anonymeter</code> extra is declared so that the install command in every message stays the same
-once that release exists.</p>
+<p>Anonymeter adapter: <strong>withdrawn in 0.9.4: Anonymeter 1.x requires NumPy &lt; 1.27; Shape requires NumPy &gt;= 2</strong>. The adapter code stays for independently installed Anonymeter in a separate environment. The Anonymeter report becomes available again when Anonymeter supports NumPy 2. Anonymeter measures re-identification risk in a dataset; it does not change the data.</p>
 <h2 id="ibis-and-duckdb">Ibis and DuckDB<a class="headerlink" href="#ibis-and-duckdb" title="Permanent link">&para;</a></h2>
 <p><strong>Install:</strong> <code>pip install 'sqllocks-shape-integrations[ibis]'</code> (<code>ibis-framework[duckdb]</code> 12.x and
 <code>duckdb</code> 1.x).</p>
