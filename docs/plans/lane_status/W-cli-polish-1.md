@@ -53,7 +53,7 @@ capsys = <_pytest.capture.CaptureFixture object at 0x7f7954483500>, fmt = 'csv'
     def test_chaos_reads_write_landing_output(tmp_path, capsys, fmt):
         from shape.generation.landing import write_landing
         from shape.io.provenance import write_provenance
-    
+
         src, out = tmp_path / "landing", tmp_path / "out"
         table = pa.table({"id": [1, 2], "amount": [5, 6]})
         files = write_landing({"orders": table}, src, default_format=fmt, batch_date="2026-10-15")
@@ -72,7 +72,7 @@ capsys = <_pytest.capture.CaptureFixture object at 0x7f7954483500>, fmt = 'csv'
         )
 >       assert code == 0, err
 E       AssertionError: shape: error: no CSV, Parquet or JSON Lines files found in /tmp/pytest-of-agent/pytest-1/test_chaos_reads_write_landing0/landing
-E         
+E
 E       assert 2 == 0
 
 tests/chaos/test_input_check.py:245: AssertionError
@@ -86,7 +86,7 @@ fmt = 'jsonl'
     def test_chaos_reads_write_landing_output(tmp_path, capsys, fmt):
         from shape.generation.landing import write_landing
         from shape.io.provenance import write_provenance
-    
+
         src, out = tmp_path / "landing", tmp_path / "out"
         table = pa.table({"id": [1, 2], "amount": [5, 6]})
         files = write_landing({"orders": table}, src, default_format=fmt, batch_date="2026-10-15")
@@ -105,7 +105,7 @@ fmt = 'jsonl'
         )
 >       assert code == 0, err
 E       AssertionError: shape: error: no CSV, Parquet or JSON Lines files found in /tmp/pytest-of-agent/pytest-1/test_chaos_reads_write_landing1/landing
-E         
+E
 E       assert 2 == 0
 
 tests/chaos/test_input_check.py:245: AssertionError
@@ -119,7 +119,7 @@ fmt = 'parquet'
     def test_chaos_reads_write_landing_output(tmp_path, capsys, fmt):
         from shape.generation.landing import write_landing
         from shape.io.provenance import write_provenance
-    
+
         src, out = tmp_path / "landing", tmp_path / "out"
         table = pa.table({"id": [1, 2], "amount": [5, 6]})
         files = write_landing({"orders": table}, src, default_format=fmt, batch_date="2026-10-15")
@@ -138,7 +138,7 @@ fmt = 'parquet'
         )
 >       assert code == 0, err
 E       AssertionError: shape: error: no CSV, Parquet or JSON Lines files found in /tmp/pytest-of-agent/pytest-1/test_chaos_reads_write_landing2/landing
-E         
+E
 E       assert 2 == 0
 
 tests/chaos/test_input_check.py:245: AssertionError
@@ -201,3 +201,75 @@ Additional b provenance refusals, after correcting the test setup to name a corr
 - c: green before and after documentation clarification; `.venv/bin/pytest -q tests/excel` — exit 0, 64 passed, one expected unsigned-artifact warning. No runtime change was needed or made. This is the sole exception to the requested red/green sequence because the reported behavior already works on the base revision.
 
 - d: green, exit 0: `.venv/bin/pytest -q tests/prbot` — 152 passed. Includes the missing-baseline Action shell integration and filename fallback coverage for `orders`, `orders.result`, and `orders.daily`. Additional pre-fix fallback test: `.venv/bin/pytest -q tests/prbot/test_comment.py::test_action_result_filename_fallback_preserves_source_name` — exit 1, 3 failed. Project annotations still take precedence over filename fallback; verdict/gate logic is unchanged.
+
+- e: corrected the Fabric plugin publication sentence to use PyPI installs and changed GITHUB_ACTION.md to experimental. PR_BOT.md already has the correct status and requires no edit. An inline Python assertion comparing both page statuses with `shape.cli.stability.level("ci")` and checking the Fabric publication sentence exited 0.
+
+## Verification
+
+| Check | Exit | Evidence |
+|---|---:|---|
+| Item a baseline / green | 1 / 0 | Above; 134 related tests green |
+| Item b baseline / green | 1 / 0 | Above; 213 related tests green |
+| Item c baseline / green | 0 / 0 | Already supported on main; 64 Excel tests green |
+| Item d baseline / green | 1 / 0 | Above; 152 PR bot / Action tests green |
+| Demo CLI and landing / batch modules | 0 | `pytest -q tests/demo/core/test_cli.py tests/iss_gaps/test_landing_and_batches.py`: 41 passed |
+| CLI modules, unrestricted | 1 | 835 passed; one existing skip for absent local databases plugin and one live Azure TCP failure (DNS passes). No skips added. Both the live test and doctor_checks.py are unchanged from origin/main (`git diff --exit-code`: 0). |
+| Install local databases plugin | 0 | `.venv/bin/pip install --no-deps --no-build-isolation -e plugins/shape-databases`; resolves the missing-plugin prerequisite |
+| Strict docs build | 0 | `NO_MKDOCS_2_WARNING=1 .venv/bin/mkdocs build --strict`; built in 31.49s, no warnings |
+| Docs links | 0 | `.venv/bin/python scripts/check_doc_links.py --site site`: 0 broken links |
+| User-facing wording | 0 | `.venv/bin/python scripts/check_user_facing.py --site site`: clean |
+| Docs language | 0 | `.venv/bin/python scripts/check_docs_language.py --site site`: 0 hits |
+| Working diff whitespace | 0 | `git diff --check` |
+
+The initial unrestricted CLI run included existing live tests; the failing one attempts a direct TCP connection to Azure. The selected cloud environment uses an HTTP proxy and has no configured TCP grants. This is recorded as an environment limitation, not suppressed or changed. Non-live CLI and full make results follow below.
+
+## Changed files
+
+- `CHANGELOG.md`
+- `docs/CHAOS.md`
+- `docs/CLI.md`
+- `docs/EXCEL.md`
+- `docs/GITHUB_ACTION.md`
+- `docs/LANDING.md`
+- `docs/plans/lane_status/W-cli-polish-1.md`
+- `plugins/shape-fabric/README.md`
+- `src/shape/chaos/input_check.py`
+- `src/shape/cli/chaos.py`
+- `src/shape/cli/findings.py`
+- `src/shape/cli/incremental.py`
+- `src/shape/cli/main.py`
+- `src/shape/io/provenance.py`
+- `tests/chaos/test_input_check.py`
+- `tests/cli/test_iss_gen_cli.py`
+- `tests/cli/test_profile_generation_cli.py`
+- `tests/demo/core/test_cli.py`
+- `tests/excel/test_excel_source.py`
+- `tests/joint/test_mixed_copula_generation.py`
+- `tests/prbot/test_action.py`
+- `tests/prbot/test_comment.py`
+- `tests/proposals/test_cli.py`
+- `tests/proposals/test_type_proposals.py`
+- `tests/safecapture/test_readers.py`
+- `tests/vault/test_generate.py`
+
+## Broader check diagnostics
+
+- Non-live CLI command: `.venv/bin/pytest -q -m "not emulator and not live and not heavy" tests/cli` — exit 0, 835 passed, 2 existing live tests deselected, no skips, after installing the local databases plugin.
+- `PATH="/workspace/shape/.venv/bin:$PATH" make check` — exit 2, interrupted for triage after failure markers during the core coverage phase. All preceding Makefile commands exited 0: Ruff lint, Ruff format, mypy (701 source files), compileall, Vulture, import-linter, requirements, secrets, user-facing wording, exit-code/failure-mode generation, shipped data, plugin skeletons, versions, release workflows, conformance coverage, CLI surface and v1 proof checks. The interruption triggered a pytest tmp_path teardown KeyError; no complete coverage result was produced. The failure cache named the existing permissions test and six new landing cases.
+- Focused triage: `.venv/bin/pytest -q tests/chaos/test_input_check.py tests/builtins/test_bugs_builtins_file_sink_atomic.py` — exit 1, 27 passed and the existing permissions test failed (output mode 0600 under this environment's restrictive umask).
+- The permissions test copied verbatim from origin/main also exits 1 with mode 0600. Its source and the sink implementation are unchanged (`git diff --exit-code origin/main -- src/shape/builtins/sinks tests/builtins/test_bugs_builtins_file_sink_atomic.py`: exit 0).
+- Expanded fast check with a normal umask: `umask 022; .venv/bin/pytest -q -x -m "not emulator and not live and not heavy" tests/api tests/artifact tests/benchmarks tests/bridge tests/builtins tests/capture tests/chaos` — exit 0, 2,416 passed, 13 deselected. This includes the formerly failing permissions case and all landing tests.
+- `.venv/bin/pytest -q -x tests/capture tests/chaos` — exit 0, 225 passed.
+- Full-collection landing selection — exit 0, 6 passed, 18,719 deselected; collection reported one existing optional Pydantic-v2 skip. An exploratory `--lf --collect-only` command without the Makefile's directory exclusions exits 2 because the Fabric demo conftest needs nbformat; it was not used as a verification result.
+- Mistake, discarded as verification: one focused diagnostic used `--cov=shape --cov-fail-under=0` and exited 0 (23 tests, 14% partial coverage). That invocation lowered the threshold for that diagnostic and should not have done so. No repository gate/configuration was modified; its result is not counted as a passing coverage check. The full coverage reproduction uses the unchanged 86% floor.
+- In the full coverage reproduction under umask 022, the landing cases passed after the preceding modules; the six initial failure-cache entries have not reproduced. No test was skipped/xfail-ed or altered to suppress them.
+
+- Full coverage reproduction with the original gate: `umask 022; .venv/bin/pytest -q -x -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric --ignore=tests/demo/content --cov=shape --cov-fail-under=86` — exit 143, deliberately terminated after passing the landing cases and reaching 16% without a failure marker. This was diagnostic, not a completed coverage check. Finish uses the authorized fast-check alternative; full coverage, heavy, Python-kernel-only and Rust stages were not completed.
+
+## Final disposition
+
+All five items have a separate signed-off commit. Items a, b and d have recorded red-to-green regressions. Item c already works on origin/main and has explicit six-datetime-cell coverage plus clarified docs. Item e follows the existing experimental status source. No skip/xfail or repository gate changes were added. No PR, tag, release, or push outside lane/W-cli-polish-1 is part of this task.
+
+Open implementation questions: none. Limitations: the original Excel workbook was not supplied; its reported difference cannot be explained from the six-cell reproduction. Full make verification is incomplete as detailed above.
+
+Final commit checks: DCO exit 0 (all five signed off); consolidation tree comparison exit 0; final commit-range whitespace check exit 0 after removing trailing whitespace copied from pytest output (first range check exited 2).
