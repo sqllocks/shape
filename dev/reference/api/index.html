@@ -43759,7 +43759,9 @@ written first, and the artifact's manifest names it by <code>vault_id</code> and
     <div class="doc doc-contents first">
 
         <p>Compare two profiles with the documented defaults (<code>docs/DRIFT.md</code>).</p>
-<p><code>baseline</code> and <code>current</code> are profiles; a window of the stream profiler works too. A
+<p><code>baseline</code> and <code>current</code> are profiles; a window of the stream profiler works too.
+Share-safe exports (<code>shape-safe-profile</code>) raise <code>ValueError</code>: diff the <code>.shape</code>
+captures instead. A
 comparison that needs a value a safe capture left out (see <code>shape.save(capture=)</code>) is listed
 in <code>not_evaluable</code> and never counted as drift.
 <code>thresholds</code> overrides the defaults for every column, <code>column_thresholds</code> for the columns

@@ -1554,10 +1554,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-cannot-be-compared-safe-captures" class="md-nav__link">
+  <a href="#share-safe-json-exports-cannot-be-diffed" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What cannot be compared: safe captures
+        Share-safe JSON exports cannot be diffed
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comparisons-withheld-by-safe-captures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparisons withheld by safe captures
       
     </span>
   </a>
@@ -6428,10 +6439,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-cannot-be-compared-safe-captures" class="md-nav__link">
+  <a href="#share-safe-json-exports-cannot-be-diffed" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What cannot be compared: safe captures
+        Share-safe JSON exports cannot be diffed
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comparisons-withheld-by-safe-captures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparisons withheld by safe captures
       
     </span>
   </a>
@@ -6631,7 +6653,13 @@ same change is the same answer everywhere.</p>
 <p>A change is reported only when it passes its threshold, so a stable column produces no record.
 <code>severity</code> is fixed per kind. <code>score</code> is the size of the change from 0 to 1: a structural change
 (column added, dtype changed) scores 1, the others their natural distance (see the table).</p>
-<h2 id="what-cannot-be-compared-safe-captures">What cannot be compared: safe captures<a class="headerlink" href="#what-cannot-be-compared-safe-captures" title="Permanent link">&para;</a></h2>
+<h2 id="share-safe-json-exports-cannot-be-diffed">Share-safe JSON exports cannot be diffed<a class="headerlink" href="#share-safe-json-exports-cannot-be-diffed" title="Permanent link">&para;</a></h2>
+<p><code>shape diff</code> refuses either input when it is a <code>shape-safe-profile</code> JSON export, including
+exports from <code>shape profile safe</code>. It names the safe input, says to diff the <code>.shape</code> captures
+instead, and exits 2 (unusable input), with or without <code>--fail-on-drift</code>. <code>shape.diff</code> raises
+<code>ValueError</code> identifying the baseline or current safe input with the same guidance. This is
+the share-safe baseline refusal described in <code>docs/PROJECT.md</code>.</p>
+<h2 id="comparisons-withheld-by-safe-captures">Comparisons withheld by safe captures<a class="headerlink" href="#comparisons-withheld-by-safe-captures" title="Permanent link">&para;</a></h2>
 <p><code>shape profile</code> writes the safe capture by default (<code>docs/PRIVACY_MODEL.md</code>): a sensitive column
 has no raw minimum or maximum, no distribution fit that names the minimum, no placeholder values,
 and categories below <code>k</code> rows are folded into <code>__OTHER__</code>. <code>shape diff</code> compares what both sides
