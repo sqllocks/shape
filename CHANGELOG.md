@@ -6,6 +6,8 @@ Status: available.
 
 ## Unreleased
 
+- Read standard dated landing layouts in `shape chaos --input`, preserving table names and provenance checks.
+
 - Make `shape plan` human-readable by default while preserving structured output with `--json`.
 
 

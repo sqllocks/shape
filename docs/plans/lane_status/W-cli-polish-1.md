@@ -193,3 +193,7 @@ FAILED tests/prbot/test_action.py::test_missing_baseline_comment_keeps_the_sourc
 ## Item results
 
 - a: green, exit 0: 134 tests across the profile generation and schema CLI, vault, proposals, safe capture and mixed copula modules. Command: `.venv/bin/pytest -q tests/cli/test_profile_generation_cli.py tests/cli/test_iss_gen_cli.py tests/vault/test_generate.py tests/proposals/test_type_proposals.py tests/proposals/test_cli.py tests/safecapture/test_readers.py tests/joint/test_mixed_copula_generation.py`. Default text covers profile, evidence and generation-schema paths; semantic JSON tests now request `--json` explicitly. JSON structure and status filtering are preserved.
+
+Additional b provenance refusals, after correcting the test setup to name a corruption, before implementation: `.venv/bin/pytest -q tests/chaos/test_input_check.py -k nested_landing` — exit 1, 2 failed (expected marked/hash diagnostics, got no data files).
+
+- b: green, exit 0: `.venv/bin/pytest -q tests/chaos tests/io/test_provenance.py tests/cli/test_incremental_cli.py` — 213 passed. Covers all three `write_landing` formats, nested provenance verification/refusal, multi-date concatenation, deterministic path order, ground-truth-log exclusion, and reading chaos landing output again. Single-file Parquet reads preserve the data schema without an inferred partition column.

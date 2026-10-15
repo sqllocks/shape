@@ -76,6 +76,13 @@ ParquetSink().write("landing/", "orders", batches,
                     batch_date="2026-08-04")
 ```
 
+`shape chaos --input landing/` reads the standard `<table>/ingest_date=YYYY-MM-DD/<file>`
+layout for CSV, Parquet and JSON Lines. Table names come from the table directories;
+several dates are concatenated in path order and must have matching schemas. The root's
+`_shape_provenance.json` must list each input file with its matching hash, or each Parquet
+file must carry the synthetic marker (see [chaos input checks](CHAOS.md#chaos-only-corrupts-data-shape-wrote)).
+Other custom path templates are not inferred by this reader.
+
 ## What this does not do
 
 - **Cloud targets** (ADLS Gen2, OneLake Files) are not written by the local file sinks above:

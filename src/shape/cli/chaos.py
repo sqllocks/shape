@@ -37,7 +37,11 @@ def add_arguments(sub: Any) -> None:
     )
     ch.add_argument("target", nargs="?", metavar="DOMAIN|SCHEMA.json", help=_TARGET_HELP)
     ch.add_argument("--mode", choices=("3nf", "star"), help="the schema mode of a domain")
-    ch.add_argument("--input", metavar="DIR", help="the tables to corrupt, one file per table")
+    ch.add_argument(
+        "--input",
+        metavar="DIR",
+        help="the tables to corrupt, flat files or <table>/ingest_date=YYYY-MM-DD/<file>",
+    )
     ch.add_argument("-o", "--output", required=True, metavar="DIR", help="where the files go")
     ch.add_argument(
         "--corrupt",
@@ -126,7 +130,7 @@ def cmd_chaos(a: argparse.Namespace) -> int:
         input_provenance = verify_chaos_input(a.input, allow_real_input=a.allow_real_input)
         if input_provenance == "unverified":
             print(OVERRIDE_WARNING, file=sys.stderr)
-        tables = read_tables(a.input)
+        tables = read_tables(a.input, landing=True)
     elif schema is not None:
         from shape.generation.engine import Engine
 

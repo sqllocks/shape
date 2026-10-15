@@ -219,3 +219,99 @@ def test_a_sidecar_from_a_newer_shape_is_an_input_error(
     side.write_text(json.dumps(doc))
     code, _, err = run(capsys, "chaos", "--input", src, "-o", out, "--corrupt", "duplicates=0.05")
     assert code == 2 and "newer Shape" in err and not out.exists()
+
+
+@pytest.mark.parametrize("fmt", ["csv", "jsonl", "parquet"])
+def test_chaos_reads_write_landing_output(tmp_path, capsys, fmt):
+    from shape.generation.landing import write_landing
+    from shape.io.provenance import write_provenance
+
+    src, out = tmp_path / "landing", tmp_path / "out"
+    table = pa.table({"id": [1, 2], "amount": [5, 6]})
+    files = write_landing({"orders": table}, src, default_format=fmt, batch_date="2026-10-15")
+    write_provenance(src, [(f.path, f.rows) for f in files], seed=42)
+    code, _, err = run(
+        capsys,
+        "chaos",
+        "--input",
+        src,
+        "-o",
+        out,
+        "--corrupt",
+        "duplicates=0.5@orders",
+        "-f",
+        "parquet",
+    )
+    assert code == 0, err
+    result = pq.read_table(out / "orders.parquet")
+    assert result.column_names == table.column_names
+    assert result.num_rows == 3
+    assert log_header(out / "_chaos_ground_truth.jsonl")["input_provenance"] == "verified"
+
+
+def test_unmarked_nested_landing_input_is_refused(tmp_path, capsys):
+    from shape.generation.landing import write_landing
+
+    src, out = tmp_path / "landing", tmp_path / "out"
+    files = write_landing({"orders": pa.table({"id": [1, 2]})}, src, batch_date="2026-10-15")
+    code, _, err = run(capsys, "chaos", "--input", src, "-o", out, "--corrupt", "duplicates=0.5")
+    assert code == 2 and "not marked as Shape-generated" in err
+    assert str(files[0].path) in err
+    assert not out.exists()
+
+
+def test_changed_nested_landing_input_is_refused(tmp_path, capsys):
+    from shape.generation.landing import write_landing
+    from shape.io.provenance import write_provenance
+
+    src, out = tmp_path / "landing", tmp_path / "out"
+    files = write_landing({"orders": pa.table({"id": [1, 2]})}, src, batch_date="2026-10-15")
+    write_provenance(src, [(f.path, f.rows) for f in files], seed=42)
+    files[0].path.write_text("id\n3\n4\n")
+    code, _, err = run(capsys, "chaos", "--input", src, "-o", out, "--corrupt", "duplicates=0.5")
+    assert code == 2 and "sha256 differs" in err
+    assert not out.exists()
+
+
+def test_landing_dates_are_concatenated_and_chaos_output_reads_back(tmp_path, capsys):
+    from shape.generation.landing import write_landing
+    from shape.io.provenance import write_provenance
+
+    src, first, second = tmp_path / "landing", tmp_path / "first", tmp_path / "second"
+    for day, ids in [("2026-10-15", [3, 4]), ("2026-10-14", [1, 2])]:
+        files = write_landing(
+            {"orders": pa.table({"id": ids})}, src, default_format="parquet", batch_date=day
+        )
+        write_provenance(src, [(f.path, f.rows) for f in files], seed=42)
+    # A log is not a table and needs no table provenance.
+    (src / "_chaos_ground_truth_20261015.jsonl").write_text('{"record":"run"}\n')
+    code, _, err = run(
+        capsys,
+        "chaos",
+        "--input",
+        src,
+        "-o",
+        first,
+        "--corrupt",
+        "duplicates=0.5@orders",
+        "--batch-date",
+        "2026-10-16",
+    )
+    assert code == 0, err
+    code, _, err = run(
+        capsys,
+        "chaos",
+        "--input",
+        first,
+        "-o",
+        second,
+        "--corrupt",
+        "duplicates=0.5@orders",
+        "-f",
+        "parquet",
+    )
+    assert code == 0, err
+    table = pq.read_table(second / "orders.parquet")
+    assert table.num_rows == 9 and table.column_names == ["id"]
+    assert table["id"].to_pylist()[:4] == [1, 2, 3, 4]
+    assert log_header(second / "_chaos_ground_truth.jsonl")["input_provenance"] == "verified"
