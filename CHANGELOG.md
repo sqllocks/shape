@@ -10,7 +10,7 @@ Status: available.
 - Keep the GitHub Action comment source label when a missing baseline leaves no project annotation in the result.
 - Clarify that Excel sentinel findings include typed date/datetime cells and cover six `9999-12-31` datetime cells with a regression test.
 - Read standard dated landing layouts in `shape chaos --input`, preserving table names and provenance checks.
-- Make `shape plan` human-readable by default while preserving structured output with `--json`.
+- Changed: `shape plan` now prints human-readable text by default; scripts that parse its output must add `--json` (the JSON keys are unchanged).
 
 ## 0.9.3
 
