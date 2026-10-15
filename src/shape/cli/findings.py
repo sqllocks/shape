@@ -156,7 +156,14 @@ def load(path: str | os.PathLike[str]) -> Result:
     exit_code = doc.get("exit_code")
     if not isinstance(exit_code, int) or isinstance(exit_code, bool):
         raise ResultError(f"{where}: exit_code must be an integer")
-    return result_from(doc, where.stem)
+    # The Action writes <source>.result.json, including when diff fails before it can
+    # annotate the result with project.source. Remove only the known filename suffix.
+    fallback = (
+        where.name.removesuffix(".result.json")
+        if where.name.endswith(".result.json")
+        else where.stem
+    )
+    return result_from(doc, fallback)
 
 
 def load_all(paths: Sequence[str | os.PathLike[str]]) -> list[Result]:

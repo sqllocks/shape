@@ -6,6 +6,8 @@ Status: available.
 
 ## Unreleased
 
+- Keep the GitHub Action comment source label when a missing baseline leaves no project annotation in the result.
+
 - Clarify that Excel sentinel findings include typed date/datetime cells and cover six `9999-12-31` datetime cells with a regression test.
 
 - Read standard dated landing layouts in `shape chaos --input`, preserving table names and provenance checks.

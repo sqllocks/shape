@@ -455,3 +455,14 @@ def test_installed_uses_the_shape_that_is_there(tmp_path):
         text=True,
     )
     assert done.returncode == 0 and done.stdout.startswith("shape ")
+
+
+def test_missing_baseline_comment_keeps_the_source_name(tmp_path):
+    project = tmp_path / "project"
+    shutil.copytree(FIXTURES / "pass", project)
+    (project / "baseline" / "orders.shape").unlink()
+    ran = _run_action(tmp_path, str(project))
+    assert ran["code"] == 0 and ran["gate"] == 1
+    assert "### Source: orders\n" in ran["summary"]
+    assert "Source: orders.result" not in ran["summary"]
+    assert "command exited with code 2" in ran["summary"]
