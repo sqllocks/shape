@@ -6,7 +6,7 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+Docs: README and Quickstart link to the Shape Playground (a recorded 0.9.3 session in the browser).
 
 ## 0.9.3
 
