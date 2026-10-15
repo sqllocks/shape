@@ -41,3 +41,6 @@ kafka = "shape_kafka:KafkaEmitter"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.uv.sources]
+sqllocks-shape = { workspace = true }

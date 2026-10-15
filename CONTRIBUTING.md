@@ -39,16 +39,45 @@ and conformance tests for new normative behavior. Document the changed behavior.
 
 ## Local development
 
-You need Python 3.11 or newer and Rust stable 1.85 or newer to build the native kernel.
-Create a virtual environment and install the development dependencies and domains plugin:
+Published packages support Python 3.11 or newer. The complete development and documentation
+environment needs Python 3.12 or newer and Rust stable 1.85 or newer to build the native kernel.
+Install the pinned uv version and bootstrap the locked workspace:
 
 ```bash
-python -m venv .venv
-. .venv/bin/activate
+python3 -m pip install --user "uv==0.8.17"
 make bootstrap
 ```
 
-After changing Rust code, run `maturin develop --release` to rebuild `shape._kernel`.
+Bootstrap runs `uv sync --locked --group docs --group dbt --group benchmark`; core remains the
+maturin root project and the 12 first-party plugins are editable workspace members. No shell
+activation is needed. For core-only work on Python 3.11, use `uv sync --locked`.
+Run tools with `uv run --locked`, adding `--group docs` for documentation tools. Never run
+`pip install` in the uv development environment. After changing Rust code, run
+`uv run --locked maturin develop --release` to rebuild `shape._kernel`.
+
+Edit development dependencies in `[dependency-groups]` in `pyproject.toml`, run `make lock`
+(`uv lock`), and commit `uv.lock` in the same commit. `make lock-check` rejects a stale lock.
+To deliberately upgrade one dependency, run `uv lock --upgrade-package X`, review the lock
+changes and run `make bootstrap` and the checks again. Published extras are retained for
+compatibility; do not change their ranges when editing development groups.
+
+The Fabric SDK requires PyArrow below 20 while docs and benchmarks pin 25.0.1. These groups
+are explicitly incompatible in the universal lock. Run Fabric tests in a separate environment:
+`UV_PROJECT_ENVIRONMENT=.venv-fabric uv sync --locked --group fabric-demo`, then use the same
+variable with `uv run --locked --no-sync`. Do not combine `fabric-demo` with `docs` or
+`benchmark`. Bootstrap selects the groups needed by `make check`.
+
+Without uv, the unsupported-but-working fallback is a separate virtual environment:
+
+```bash
+python -m venv .venv-pip
+. .venv-pip/bin/activate
+make bootstrap-pip
+```
+
+On Windows, select `.venv-pip/Scripts/python.exe` with `make bootstrap-pip PYTHON=...`.
+The fallback uses the previous pip editable install and does not provide lockfile guarantees.
+
 Before submitting a change, run the repository checks:
 
 ```bash
@@ -63,8 +92,8 @@ checks cover requirements, secrets, user-facing wording, shipped data, plugin
 skeletons, versions and conformance coverage. For a quicker local run:
 
 ```bash
-pytest -m "not emulator and not live"
-SHAPE_KERNEL=python pytest -m "not emulator and not live"
+uv run --locked pytest -m "not emulator and not live"
+SHAPE_KERNEL=python uv run --locked pytest -m "not emulator and not live"
 ```
 
 Tests marked `emulator` need their local services; tests marked `live` need configured
@@ -114,8 +143,11 @@ See [scope and limits](docs/NOT_BUILDING.md) before proposing a new feature,
 
 ## Documentation site
 
-Install the full requirements from `requirements-docs.txt` with Python 3.12 or newer
-and the core and first-party plugins from this checkout. The site reads `mkdocs.yml`;
+Run `make bootstrap` with Python 3.12 or newer. `requirements-docs.txt` is a generated
+compatibility export of the `docs` group for the example harness and pip consumers;
+`make docs-export-check` checks it against the lock. Regenerate it with
+`uv run --locked python scripts/check_docs_requirements.py --write` after changing the lock.
+The site reads `mkdocs.yml`;
 its hooks generate the CLI reference from the parser, the API reference from exported
 names and the performance reference from committed, verified benchmark results.
 Do not edit generated output by hand.
@@ -126,9 +158,9 @@ outside `docs/` are rewritten to their repository locations when the site is bui
 Before submitting docs changes, run:
 
 ```bash
-mkdocs build --strict
-python scripts/check_doc_links.py --site site
-python scripts/check_user_facing.py --site site
+uv run --locked --group docs mkdocs build --strict
+uv run --locked --group docs python scripts/check_doc_links.py --site site
+uv run --locked --group docs python scripts/check_user_facing.py --site site
 ```
 
 Warnings fail the strict build. The link check validates source and site links;
@@ -148,42 +180,40 @@ issues through [the security policy](SECURITY.md).
 
 ## Development command examples
 
-The source-test environment prepares the inputs for these commands. The bootstrap uses
-already installed development dependencies. The dry run previews the local test
+The source-test environment prepares the inputs for these commands. The bootstrap preview
+prints the locked setup command. The dry run previews the local test
 command without running it; use `make check` above for the complete verification.
 The kernel examples give you a smaller local test target.
 
 <!-- example: 0 -->
 
 ```bash {.runnable-reference}
-python -m venv --copies --system-site-packages contributor-env
-. contributor-env/bin/activate
-PIP_NO_DEPS=1 PIP_QUIET=1 make --silent bootstrap
+make --silent --dry-run bootstrap UV=uv
 ```
 
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    (no output)
+    uv sync --locked --group docs --group dbt --group benchmark
     ```
 
 <!-- example: 1 -->
 
 ```bash {.runnable-reference}
-make --silent --dry-run test
+make --silent --dry-run test UV=uv
 ```
 
 ??? info "Output (exit 0)"
 
     ```text {.expected}
-    pytest -m "not emulator and not live"
+    uv run --locked --group docs --group dbt --group benchmark pytest -m "not emulator and not live"
     ```
 
 <!-- example: 2 -->
 
 ```bash {.runnable-reference}
-pytest -q -p no:warnings -m "not emulator and not live and not heavy" tests/kernel
-SHAPE_KERNEL=python pytest -q -p no:warnings -m "not emulator and not live and not heavy" tests/kernel
+uv run --active --locked --no-sync pytest -q -p no:warnings -m "not emulator and not live and not heavy" tests/kernel
+SHAPE_KERNEL=python uv run --active --locked --no-sync pytest -q -p no:warnings -m "not emulator and not live and not heavy" tests/kernel
 ```
 
 ??? info "Output (exit 0)"
@@ -206,9 +236,9 @@ SHAPE_KERNEL=python pytest -q -p no:warnings -m "not emulator and not live and n
 <!-- example: 3 -->
 
 ```bash {.runnable-reference}
-NO_MKDOCS_2_WARNING=1 mkdocs build --strict              # any warning fails the build
-python scripts/check_doc_links.py --site site           # every link and anchor resolves
-python scripts/check_user_facing.py --site site
+NO_MKDOCS_2_WARNING=1 uv run --active --locked --no-sync --group docs mkdocs build --strict              # any warning fails the build
+uv run --active --locked --no-sync --group docs python scripts/check_doc_links.py --site site           # every link and anchor resolves
+uv run --active --locked --no-sync --group docs python scripts/check_user_facing.py --site site
 ```
 
 ??? info "Output (exit 0)"

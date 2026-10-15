@@ -72,20 +72,21 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.12"
+          enable-cache: true
       - uses: dtolnay/rust-toolchain@stable
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - name: Install the checkout and documentation environment
         run: |
-          python -m venv .venv
-          echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
-          .venv/bin/pip install -r requirements-docs.txt
-          .venv/bin/pip install --no-deps -e . $(for plugin in plugins/*/pyproject.toml; do printf ' -e %s' "${plugin%/pyproject.toml}"; done)
-          .venv/bin/pip install 'psycopg[binary]>=3.1,<4' 'confluent-kafka>=2.3' 'fastavro>=1.9' 'pyodbc>=5'
+          uv sync --locked --group docs
       - name: Validate transcript harness
         run: |
-          python -m pytest -q tests/docs/test_owner_services.py tests/docs/test_owner_transcripts.py tests/docs/test_transcripts.py
+          uv run --locked --no-sync python -m pytest -q tests/docs/test_owner_services.py tests/docs/test_owner_transcripts.py tests/docs/test_transcripts.py
           node tests/docs/vscode_wait.test.cjs
       - name: Microsoft ODBC driver and editor libraries
         run: |
@@ -96,7 +97,7 @@ jobs:
       - name: Require authenticated Schema Registry
         env:
           SHAPE_DOCS_DOCKER_NETWORK: ${{ job.services.kafka.network }}
-        run: python scripts/docs_owner_services.py
+        run: uv run --locked --no-sync python scripts/docs_owner_services.py
       - name: Build VSIX and prepare isolated VS Code
         run: |
           cd editors/vscode
@@ -118,7 +119,7 @@ jobs:
           JS
       - name: Run page commands verbatim and capture real receipts
         run: |
-          if python scripts/docs_owner_transcripts.py; then
+          if uv run --locked --no-sync python scripts/docs_owner_transcripts.py; then
             echo 'CAPTURE_EXIT=0' >> "$GITHUB_ENV"
           else
             echo 'CAPTURE_EXIT=1' >> "$GITHUB_ENV"

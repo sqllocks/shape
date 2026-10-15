@@ -6,6 +6,8 @@ Status: available.
 
 ## Unreleased
 
+Development: the dev and CI environment is now locked with uv; user installs are unchanged.
+
 Integrations: the `anonymeter` extra of sqllocks-shape-integrations is withdrawn; Anonymeter 1.x requires NumPy < 1.27 and Shape requires NumPy >= 2, so the extra could not be installed. The adapter stays and explains this when Anonymeter is missing.
 
 ## 0.9.3

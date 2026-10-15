@@ -124,7 +124,7 @@ def test_workflow_has_services_write_permissions_and_branch_guard():
     registry = next(
         step for step in job["steps"] if step.get("name") == "Require authenticated Schema Registry"
     )
-    assert registry["run"] == "python scripts/docs_owner_services.py"
+    assert registry["run"] == "uv run --locked --no-sync python scripts/docs_owner_services.py"
     assert registry["env"]["SHAPE_DOCS_DOCKER_NETWORK"] == "${{ job.services.kafka.network }}"
     assert "github.ref == 'refs/heads/docs/transcripts-ci'" in job["if"]
     assert any(

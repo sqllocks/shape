@@ -11,6 +11,18 @@ concurrency:
   cancel-in-progress: true
 permissions: {contents: read}
 jobs:
+  lock-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv lock --check
+      - run: uv run --no-project python tests/tools/test_uv_environment.py
+      - run: uv run --no-project python scripts/check_docs_requirements.py
   test:
     # T-06: the full Python 3.11-3.14 matrix on Linux; 3.11 and 3.14 on macOS and Windows.
     strategy:
@@ -31,36 +43,40 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '${{ matrix.python }}', allow-prereleases: true}
-      - run: python -m pip install -U pip
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "${{ matrix.python }}"
+          enable-cache: true
       # shape-fabric (with the sqlserver and eventhubs plugins it requires): `shape demo`'s
       # semantic_model output (tests/demo_cmd) needs it; shape-kafka: the dry run of a kafka://
       # sink (tests/cli/test_dry_run.py, W1-14 x W2-09); the plan's environment (§1) installs the
       # first-party plugins.
-      - run: pip install -e '.[dev,streaming,advanced,docs]' -e plugins/shape-domains -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric -e plugins/shape-kafka
+      - run: uv sync --locked
       # T-27 scope: src tests plugins benchmarks/vs_refengine rust (only the paths that exist yet).
-      - run: ruff check src tests plugins benchmarks/vs_refengine
-      - run: ruff format --check src tests plugins benchmarks/vs_refengine
+      - run: uv run --locked --no-sync ruff check src tests plugins benchmarks/vs_refengine
+      - run: uv run --locked --no-sync ruff format --check src tests plugins benchmarks/vs_refengine
       # [tool.mypy] targets python_version 3.11. On 3.12+ legs pip installs a numpy whose
       # stubs use 3.12-only syntax (`type` statements), which mypy rejects under a 3.11
       # target, so the type check runs on the 3.11 legs (every OS).
       - if: matrix.python == '3.11'
-        run: mypy
-      - run: python -m compileall -q src/shape
-      - run: vulture src/shape scripts/vulture_whitelist.py --min-confidence 80
-      - run: lint-imports
-      - run: python scripts/check_conformance_coverage.py
-      - run: python scripts/check_user_facing.py
+        run: uv run --locked --no-sync mypy
+      - run: uv run --locked --no-sync python -m compileall -q src/shape
+      - run: uv run --locked --no-sync vulture src/shape scripts/vulture_whitelist.py --min-confidence 80
+      - run: uv run --locked --no-sync lint-imports
+      - run: uv run --locked --no-sync python scripts/check_conformance_coverage.py
+      - run: uv run --locked --no-sync python scripts/check_user_facing.py
       # W1-14: docs/EXIT_CODES.md is what the command table generates
-      - run: python scripts/gen_exit_codes.py --check
-      - run: python scripts/check_plugin_skeletons.py
+      - run: uv run --locked --no-sync python scripts/gen_exit_codes.py --check
+      - run: uv run --locked --no-sync python scripts/check_plugin_skeletons.py
       # P8-04: every release version location agrees, and the release workflows keep T-25
-      - run: python scripts/check_versions.py
-      - run: python scripts/check_release_workflows.py
+      - run: uv run --locked --no-sync python scripts/check_versions.py
+      - run: uv run --locked --no-sync python scripts/check_release_workflows.py
       # W1-10: the CLI surface against its stability baseline, and the v1.0 definition of done
-      - run: python scripts/cli_surface.py --check
-      - run: python scripts/check_v1_done.py
+      - run: uv run --locked --no-sync python scripts/cli_surface.py --check
+      - run: uv run --locked --no-sync python scripts/check_v1_done.py
       # W5-05: the smoke suite of starter scenarios, each against its answer key
-      - run: python -m shape suite run smoke --scale small
+      - run: uv run --locked --no-sync python -m shape suite run smoke --scale small
       # The Fabric demo tests need Java, PySpark and unixODBC; they and the demo content tests
       # run in the fabric-demo job below.
       # --cov-fail-under is the measured coverage (86.55% on P0-06), rounded down.
@@ -68,23 +84,23 @@ jobs:
       # (marker "realtime") run on Linux only; the macOS and Windows hosted runners freeze the
       # whole process (20-90 ms on macOS, 4-5.6 s on Windows).
       - run: >-
-          python -m pytest -q -p pytest_annotate -m "not emulator and not live and not heavy and not nightly${{ matrix.os != 'ubuntu-latest' && ' and not realtime' || '' }}"
+          uv run --locked --no-sync python -m pytest -q -p pytest_annotate -m "not emulator and not live and not heavy and not nightly${{ matrix.os != 'ubuntu-latest' && ' and not realtime' || '' }}"
           --ignore=tests/demo/fabric --ignore=tests/demo/content --ignore=tests/docs
           --cov=shape --cov-fail-under=86
       # million-value differential and property tests: run without coverage tracing (10x faster)
       # Keep passing peak-RSS diagnostics visible, including the allocator and startup peak.
-      - run: python -m pytest -q -rP -m "heavy${{ matrix.os != 'ubuntu-latest' && ' and not realtime' || '' }}" tests/kernel tests/profile tests/streaming
+      - run: uv run --locked --no-sync python -m pytest -q -rP -m "heavy${{ matrix.os != 'ubuntu-latest' && ' and not realtime' || '' }}" tests/kernel tests/profile tests/streaming
       # The pure-Python reference twin must pass on its own (SHAPE_KERNEL=python), and the
       # native kernel must be the one in use by default (SHAPE_KERNEL=rust fails loudly if not).
-      - run: python -m pytest -q tests/kernel
+      - run: uv run --locked --no-sync python -m pytest -q tests/kernel
         env: {SHAPE_KERNEL: python}
-      - run: python -m pytest -q tests/kernel
+      - run: uv run --locked --no-sync python -m pytest -q tests/kernel
         env: {SHAPE_KERNEL: rust}
       # W1-08: the planted-drift sweep at its fast size, once per kernel (a change that misses
       # planted drift, or makes a same-distribution pair drift, fails here)
-      - run: python -m pytest -q tests/diff/test_drift_sweep.py
+      - run: uv run --locked --no-sync python -m pytest -q tests/diff/test_drift_sweep.py
         env: {SHAPE_KERNEL: python, SHAPE_DRIFT_SWEEP: fast}
-      - run: python -m pytest -q tests/diff/test_drift_sweep.py
+      - run: uv run --locked --no-sync python -m pytest -q tests/diff/test_drift_sweep.py
         env: {SHAPE_KERNEL: rust, SHAPE_DRIFT_SWEEP: fast}
   min-versions:
     # BF-76: the core runtime floors in pyproject.toml must actually work (ci/constraints-min.txt).
@@ -96,14 +112,19 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: python -m pip install -U pip
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
+      - run: uv venv .venv
       # the first-party plugins the test job installs (tests/demo_cmd needs shape-fabric, the dry-run
       # tests a kafka:// sink)
-      - run: pip install -e '.[dev,streaming,advanced,docs]' -e plugins/shape-domains -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric -e plugins/shape-kafka -c ci/constraints-min.txt
-      - run: python -c "import numpy, pyarrow; print(numpy.__version__, pyarrow.__version__)"
-      - run: python -m pytest -q -p pytest_annotate -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric --ignore=tests/demo/content --ignore=tests/docs
+      - run: uv pip install --python .venv/bin/python -e '.[dev,streaming,advanced,docs]' -e plugins/shape-domains -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric -e plugins/shape-kafka -c ci/constraints-min.txt
+      - run: uv run --no-project --python .venv/bin/python python -c "import numpy, pyarrow; print(numpy.__version__, pyarrow.__version__)"
+      - run: uv run --no-project --python .venv/bin/python python -m pytest -q -p pytest_annotate -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric --ignore=tests/demo/content --ignore=tests/docs
         env: {SHAPE_KERNEL: rust}
-      - run: python -m pytest -q -p pytest_annotate -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric --ignore=tests/demo/content --ignore=tests/docs
+      - run: uv run --no-project --python .venv/bin/python python -m pytest -q -p pytest_annotate -m "not emulator and not live and not heavy" --ignore=tests/demo/fabric --ignore=tests/demo/content --ignore=tests/docs
         env: {SHAPE_KERNEL: python}
   zero-network:
     # W6-02: every test that needs no network (all but `emulator` and `live`) runs again with
@@ -115,12 +136,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: python -m pip install -U pip
-      - run: pip install -e '.[dev,streaming,advanced,docs]' -e plugins/shape-domains -e plugins/shape-sqlserver -e plugins/shape-eventhubs -e plugins/shape-fabric -e plugins/shape-kafka
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
+      - run: uv sync --locked
       # DuckDB downloads its delta extension on first use; fetch it now, as the user the tests
       # run as, so the delta-fallback and fingerprint tests load it from the local cache offline.
       - name: DuckDB delta extension, installed before the network is removed
-        run: sudo env "PATH=$PATH" python -c "import duckdb; duckdb.sql('INSTALL delta')"
+        run: sudo env "PATH=$PATH" uv run --locked --no-sync python -c "import duckdb; duckdb.sql('INSTALL delta')"
       # The sdist tests (tests/packaging, tests/release) run `maturin sdist`, which reads the
       # kernel's crate metadata: fetch the locked crates now, and run the tests with the runner's
       # rustup toolchain and cargo cache (root has neither), offline.
@@ -129,13 +154,13 @@ jobs:
       - name: Prove the namespace has no route out
         run: |
           sudo env "PATH=$PATH" unshare --net -- sh -c 'ip link set lo up
-          if python -c "import socket; socket.create_connection((\"1.1.1.1\", 53), 3)"; then
+          if uv run --locked --no-sync python -c "import socket; socket.create_connection((\"1.1.1.1\", 53), 3)"; then
             echo "network reachable inside the namespace"; exit 1
           fi'
       - name: Tests marked zero_network, networking disabled
         run: |
           sudo env "PATH=$PATH" "RUSTUP_HOME=${RUSTUP_HOME:-$HOME/.rustup}" "CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}" CARGO_NET_OFFLINE=true PYTHONPATH=ci unshare --net -- sh -c 'ip link set lo up
-          python -m pytest -q -p no:cacheprovider -p pytest_annotate -m "zero_network and not heavy" --ignore=tests/demo/fabric --ignore=tests/demo/content --ignore=tests/docs'
+          uv run --locked --no-sync python -m pytest -q -p no:cacheprovider -p pytest_annotate -m "zero_network and not heavy" --ignore=tests/demo/fabric --ignore=tests/demo/content --ignore=tests/docs'
   docs-test:
     # Runnable documentation uses Linux shell/container tools and its pinned Python 3.12
     # environment. Every tests/docs case runs here; docs_site remains in every core leg.
@@ -148,49 +173,57 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.12"
+          enable-cache: true
       - uses: dtolnay/rust-toolchain@stable
       - name: Documentation dependency caches
         run: |
           echo "SHAPE_DOCS_DBT_PACKAGES=$RUNNER_TEMP/docs-dbt-packages" >> "$GITHUB_ENV"
           echo "PIP_FIND_LINKS=$RUNNER_TEMP/docs-build-wheels" >> "$GITHUB_ENV"
-      - run: python -m pip install -U pip
-      - run: python -m pip install -r requirements-docs.txt
-      - name: Core and all released plugins from this checkout
-        shell: bash
-        run: |
-          args=()
-          for plugin in plugins/*/pyproject.toml; do args+=(-e "${plugin%/pyproject.toml}"); done
-          python -m pip install -r requirements-docs.txt -e '.[dev,streaming,advanced]' "${args[@]}"
-          python -m pip check
+      - run: uv sync --locked --group docs
+      - run: uv run --locked --no-sync python scripts/check_docs_requirements.py
       - name: SQL Server client runtime
         run: sudo apt-get install -y unixodbc
       - name: Browser and local dbt packages
         run: |
-          python -m playwright install --with-deps chromium
-          python scripts/docs_dbt_packages.py --directory "$SHAPE_DOCS_DBT_PACKAGES"
+          uv run --locked --no-sync python -m playwright install --with-deps chromium
+          uv run --locked --no-sync python scripts/docs_dbt_packages.py --directory "$SHAPE_DOCS_DBT_PACKAGES"
       - name: Editable-build tools and locked kernel crates before networking is removed
         run: |
-          python -m pip download --no-deps --dest "$PIP_FIND_LINKS" 'maturin>=1.15,<2' 'setuptools>=69' wheel
+          uv run --locked --no-sync python - <<'PY'
+          import os
+          import subprocess
+          import sys
+          from importlib.metadata import version
+
+          subprocess.run([
+              sys.executable, "-m", "pip", "download", "--no-deps", "--dest", os.environ["PIP_FIND_LINKS"],
+              *[f"{name}=={version(name)}" for name in ("maturin", "setuptools", "wheel")],
+          ], check=True)
+          PY
           cargo fetch --locked --manifest-path rust/shape-kernel/Cargo.toml
       - name: Prepare the container example's exact fixture build cache
         env: {SHAPE_DOCS_REPO: '${{ github.workspace }}'}
         run: |
           mkdir -p "$RUNNER_TEMP/docs-container"
           cd "$RUNNER_TEMP/docs-container"
-          python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" CONTAINER
+          uv run --project "$SHAPE_DOCS_REPO" --locked --no-sync python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" CONTAINER
           docker pull python:3.11-slim
           docker build --add-host "proxy:$DOCS_PROXY_IP" --quiet --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --secret id=proxy_ca,src="$DOCS_CA_BUNDLE" -t shape-docs-examples .
       - name: Prove the namespace has no route out
         run: |
           sudo env "PATH=$PATH" unshare --net -- sh -c 'ip link set lo up
-          if python -c "import socket; socket.create_connection((\"1.1.1.1\", 53), 3)"; then
+          if uv run --locked --no-sync python -c "import socket; socket.create_connection((\"1.1.1.1\", 53), 3)"; then
             echo "network reachable inside the namespace"; exit 1
           fi'
       - name: All documentation tests, networking disabled
         run: |
           sudo env "PATH=$PATH" "HOME=$HOME" "RUSTUP_HOME=${RUSTUP_HOME:-$HOME/.rustup}" "CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}" CARGO_NET_OFFLINE=true PIP_NO_INDEX=1 PIP_ROOT_USER_ACTION=ignore "PIP_FIND_LINKS=$PIP_FIND_LINKS" "SHAPE_DOCS_DBT_PACKAGES=$SHAPE_DOCS_DBT_PACKAGES" "DOCS_CA_BUNDLE=$DOCS_CA_BUNDLE" "DOCS_PROXY_IP=$DOCS_PROXY_IP" PYTHONPATH=ci unshare --net -- sh -c 'ip link set lo up
-          python -m pytest -q -p no:cacheprovider -p pytest_annotate -m "zero_network and not heavy" -n 4 -o tmp_path_retention_policy=failed tests/docs'
-      - run: mkdocs build --strict
+          uv run --locked --no-sync python -m pytest -q -p no:cacheprovider -p pytest_annotate -m "zero_network and not heavy" -n 4 -o tmp_path_retention_policy=failed tests/docs'
+      - run: uv run --locked --no-sync mkdocs build --strict
   offline-lock:
     # W6-02: pinned, hashed requirements for core and each extra, built here (a network is
     # needed to resolve) and checked against pyproject.toml. See docs/INSTALL.md.
@@ -199,9 +232,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: python -m pip install -U pip uv packaging
-      - run: python scripts/offline_lock.py generate "$RUNNER_TEMP/offline-lock"
-      - run: python scripts/offline_lock.py check "$RUNNER_TEMP/offline-lock"
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run --locked --no-sync python scripts/offline_lock.py generate "$RUNNER_TEMP/offline-lock"
+      - run: uv run --locked --no-sync python scripts/offline_lock.py check "$RUNNER_TEMP/offline-lock"
       - uses: actions/upload-artifact@v4
         with: {name: offline-lock, path: '${{ runner.temp }}/offline-lock/requirements-*.txt'}
   plugin-skeletons:
@@ -216,15 +254,19 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: python -m pip install -U pip
-      - run: pip install -e '.[dev]'
-      - run: python scripts/check_plugin_skeletons.py --build "${{ runner.temp }}/skeleton-wheels"
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run --locked --no-sync python scripts/check_plugin_skeletons.py --build "${{ runner.temp }}/skeleton-wheels"
       - shell: bash
         run: |
           args=()
           for w in "$RUNNER_TEMP"/skeleton-wheels/*.whl; do args+=(--wheel "$w"); done
-          python scripts/check_user_facing.py "${args[@]}"
-      - run: python -m pytest -q tests/plugins/test_kit.py tests/plugins/test_plugin_kit_install.py
+          uv run --locked --no-sync python scripts/check_user_facing.py "${args[@]}"
+      - run: uv run --locked --no-sync python -m pytest -q tests/plugins/test_kit.py tests/plugins/test_plugin_kit_install.py
   stream-plugins:
     # P3-04, P5-02, P6-07a, P6-08: the Kafka, Event Hubs, SQL Server and Fabric plugins' contract tests.
     # PLUG-INT: also the dbt, behavior, healthcare-codes and healthcare-standards plugins' fast tests.
@@ -237,11 +279,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: python -m pip install -U pip
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
       # shape-databases: the fabric write-path tests check that another database's sink refuses upsert (W2-10)
-      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-databases -e plugins/shape-kafka -e plugins/shape-eventhubs -e plugins/shape-sqlserver -e plugins/shape-fabric -e plugins/shape-dbt -e plugins/shape-behavior -e plugins/shape-healthcare-codes -e 'plugins/shape-healthcare-standards[test]'
+      - run: uv sync --locked
       # The plugins' contract tests (no external service); emulator, live and dbt-build runs are nightly.
-      - run: python -m pytest -q -m "not emulator and not live and not dbt" plugins/shape-kafka/tests plugins/shape-eventhubs/tests plugins/shape-sqlserver/tests plugins/shape-fabric/tests plugins/shape-dbt/tests plugins/shape-behavior/tests plugins/shape-healthcare-codes/tests plugins/shape-healthcare-standards/tests
+      - run: uv run --locked --no-sync python -m pytest -q -m "not emulator and not live and not dbt" plugins/shape-kafka/tests plugins/shape-eventhubs/tests plugins/shape-sqlserver/tests plugins/shape-fabric/tests plugins/shape-dbt/tests plugins/shape-behavior/tests plugins/shape-healthcare-codes/tests plugins/shape-healthcare-standards/tests
   database-plugins:
     # ISS2-sinks: the PostgreSQL and MySQL sinks, contract tests against an in-memory server
     # (no driver is installed: the sinks load psycopg / PyMySQL only when they connect).
@@ -253,12 +299,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
-      - run: python -m pip install -U pip
-      - run: pip install -e '.[dev]' -e plugins/shape-domains -e plugins/shape-databases
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
+      - run: uv sync --locked
       # #334: the two tests in tests/ that need shape-databases run here, the only job with it
       # (they generate from an installed domain, hence shape-domains).
-      - run: python -m pytest -q -m "not emulator and not live" plugins/shape-databases/tests tests/cli/test_generate_to.py tests/streaming/emit/test_table_sink.py
-      - run: python -m shape.plugins.kit sqllocks-shape-databases
+      - run: uv run --locked --no-sync python -m pytest -q -m "not emulator and not live" plugins/shape-databases/tests tests/cli/test_generate_to.py tests/streaming/emit/test_table_sink.py
+      - run: uv run --locked --no-sync python -m shape.plugins.kit sqllocks-shape-databases
   rust:
     # T-27: cargo fmt / clippy -D warnings / cargo test for rust/shape-kernel.
     runs-on: ubuntu-latest
@@ -275,21 +325,29 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.13'}
-      - run: python -m pip install -U pip
-      - run: pip install -e '.[dev,streaming]'
-      - run: pip-audit --skip-editable
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run --locked --no-sync pip-audit --skip-editable
   fabric-demo:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
       - uses: actions/setup-java@v4
         with: {distribution: temurin, java-version: '17'}
       - run: sudo apt-get update -q && sudo apt-get install -y -q unixodbc
-      - run: python -m pip install -U pip
-      - run: pip install -e '.[dev]' -e plugins/shape-dbt -r tests/demo/fabric/requirements.txt
-      - run: python -m pytest -q tests/demo/fabric tests/demo/content
+      - run: uv sync --locked --group fabric-demo
+      - run: uv run --locked --no-sync python -m pytest -q tests/demo/fabric tests/demo/content
   pure-wheel:
     # PF-03: the T-29 pure wheel is py3-none-any and under 28.6 MB, and the UDF helpers and
     # function_app.py pass on Python 3.11 with only PyPI numpy, pyarrow and pandas under them
@@ -299,8 +357,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
       - run: sudo apt-get update -q && sudo apt-get install -y -q unixodbc
-      - run: bash scripts/ci_pure_wheel.sh python
+      - run: uv sync --locked
+      - run: uv run --locked --no-sync bash scripts/ci_pure_wheel.sh python
   bench-quick:
     # Verifiers, then the quick benchmark (D1, D2, retail small+medium; 3 runs) against the
     # Shape 0.9.1. On a private repository the standard runner has 2 vCPUs, so ratios are
@@ -313,6 +377,11 @@ jobs:
         with: {fetch-depth: 0}
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.11"
+          enable-cache: true
       - name: Shape 0.9.1 baseline venv
         run: |
           source scripts/env.sh
@@ -322,26 +391,25 @@ jobs:
       - name: Shape venv (same PyArrow as the release baseline)
         run: |
           source scripts/env.sh
-          python -m venv "$SHAPE_VENV"
-          "$SHAPE_VENV/bin/pip" install -U pip
-          "$SHAPE_VENV/bin/pip" install -e '.[dev]' -e plugins/shape-domains 'pyarrow==25.0.1'
+
+          UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv sync --locked --group benchmark
       - name: Published baseline setup contract
-        run: source scripts/env.sh && "$SHAPE_VENV/bin/python" -m pytest -q benchmarks/vs_refengine/tests/test_setup_baseline.py
-      - run: source scripts/env.sh && python benchmarks/vs_refengine/recorded/check.py
+        run: source scripts/env.sh && UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv run --locked --no-sync python -m pytest -q benchmarks/vs_refengine/tests/test_setup_baseline.py
+      - run: source scripts/env.sh && UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv run --locked --no-sync python benchmarks/vs_refengine/recorded/check.py
       # P6-01e: the committed baseline fixtures (schemas, plans, composites) still equal the pinned
       # baseline's output, and every domain and composite has the baseline's row counts at every scale.
       - run: |
           source scripts/env.sh
-          "$SHAPE_VENV/bin/pip" install -e plugins/shape-domains
-          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/recorded/check.py
-          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/domain_1to1/rowcounts.py
-      - run: source scripts/env.sh && python benchmarks/vs_refengine/run.py --quick --out "$BENCH_OUT_DIR/results.json"
+          UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv sync --locked --group benchmark
+          UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv run --locked --no-sync python benchmarks/vs_refengine/recorded/check.py
+          UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv run --locked --no-sync python benchmarks/vs_refengine/domain_1to1/rowcounts.py
+      - run: source scripts/env.sh && UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv run --locked --no-sync python benchmarks/vs_refengine/run.py --quick --out "$BENCH_OUT_DIR/results.json"
       # P6-09: `shape verify` against the baseline's `verify` on retail small (internal harness).
       - run: |
           source scripts/env.sh
           "$BASELINE_PY" benchmarks/vs_refengine/domain_1to1/generate.py --impl shape --domain retail --scale small --seed 42
-          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/domain_1to1/generate.py --impl shape --domain retail --scale small --seed 1042
-          "$SHAPE_VENV/bin/python" benchmarks/vs_refengine/verify_1to1/verify.py
+          UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv run --locked --no-sync python benchmarks/vs_refengine/domain_1to1/generate.py --impl shape --domain retail --scale small --seed 1042
+          UV_PROJECT_ENVIRONMENT="$SHAPE_VENV" uv run --locked --no-sync python benchmarks/vs_refengine/verify_1to1/verify.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -354,17 +422,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
       - uses: actions/setup-python@v5
         with: {python-version: '3.13'}
-      - run: pip install build twine pip-audit
-      - run: python -m pip install --upgrade pip
-      - run: pip install .
-      - run: python -m build
-      - run: python -m twine check dist/*
-      - run: python scripts/check_user_facing.py --wheel dist/*.whl
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.8.17"
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv build
+      - name: Published metadata is unchanged for core and every plugin
+        run: uv run --locked --no-sync python scripts/check_published_metadata.py --base origin/main --out "${{ runner.temp }}/metadata"
+      - name: User installation from the built wheel (plain pip, clean venv)
+        shell: bash
+        run: |
+          python -m venv "$RUNNER_TEMP/user-install"
+          "$RUNNER_TEMP/user-install/bin/python" -m pip install dist/*.whl
+          uv build --no-sources --project plugins/shape-domains --wheel --out-dir "$RUNNER_TEMP/user-plugins"
+          "$RUNNER_TEMP/user-install/bin/python" -m pip install "$RUNNER_TEMP"/user-plugins/*.whl
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/user-install/bin/shape" --version
+          "$RUNNER_TEMP/user-install/bin/shape" suite run smoke --scale small
+      - run: uv run --locked --no-sync python -m twine check dist/*
+      - run: uv run --locked --no-sync python scripts/check_user_facing.py --wheel dist/*.whl
       # W6-02: every reference data file is inside the wheel; nothing downloads at run time.
-      - run: python scripts/check_shipped_data.py --wheel dist/*.whl
-      - run: pip-audit
+      - run: uv run --locked --no-sync python scripts/check_shipped_data.py --wheel dist/*.whl
+      - run: uv run --locked --no-sync pip-audit
       - uses: actions/upload-artifact@v4
         with: {name: distributions, path: dist/*}
   vscode-extension:
