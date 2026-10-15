@@ -14,6 +14,8 @@ flowchart LR
     D --> G[Generate development data]
 ```
 
+Try it first, with no install: the [Shape Playground](https://sqlbites.net/shape/playground/) replays a recorded Shape 0.9.3 session in your browser.
+
 Start with [your first profile](tutorials/01-first-profile.md). You create a local CSV,
 save a `.shape` file and read its report. No cloud account is needed.
 Then [write a contract](tutorials/04-contract.md),

@@ -9,7 +9,7 @@ from __future__ import annotations
 import importlib
 from types import ModuleType
 
-EXTRAS = ("openlineage", "mlflow", "presidio", "sdmetrics", "anonymeter", "ibis")
+EXTRAS = ("openlineage", "mlflow", "presidio", "sdmetrics", "ibis")
 
 
 class MissingExtraError(ImportError):
@@ -18,9 +18,18 @@ class MissingExtraError(ImportError):
     def __init__(self, name: str, extra: str) -> None:
         self.name = name
         self.extra = extra
-        super().__init__(
-            f"{name} needs the '{extra}' extra: pip install 'sqllocks-shape-integrations[{extra}]'"
-        )
+        if extra == "anonymeter":
+            message = (
+                "The 'anonymeter' extra was withdrawn in 0.9.4 because "
+                "Anonymeter 1.x requires NumPy < 1.27 and Shape requires NumPy >= 2. "
+                "The Anonymeter report becomes available again when Anonymeter supports NumPy 2."
+            )
+        else:
+            message = (
+                f"{name} needs the '{extra}' extra: "
+                f"pip install 'sqllocks-shape-integrations[{extra}]'"
+            )
+        super().__init__(message)
 
 
 def require(module: str, extra: str, *, name: str | None = None) -> ModuleType:

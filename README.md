@@ -12,6 +12,8 @@ data behaves, not merely its schema.
 Install with `pip install "sqllocks-shape[domains]"`. Python imports use `import shape`, the
 command is `shape`, and artifacts use the `.shape` extension.
 
+Try it first, with no install: the [Shape Playground](https://sqlbites.net/shape/playground/) replays a recorded Shape 0.9.3 session in your browser.
+
 ## Quick start
 
 Follow profile → check → diff → generate with local files.

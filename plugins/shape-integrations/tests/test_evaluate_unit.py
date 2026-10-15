@@ -214,14 +214,20 @@ def test_a_missing_control_table_exits_2(dirs, tmp_path, capsys):
     ("tool", "library", "extra_args"),
     [("sdmetrics", "sdmetrics", []), ("anonymeter", "anonymeter", ["--control", "C"])],
 )
-def test_without_the_library_the_command_exits_2_with_the_pip_command(
+def test_without_the_library_the_command_exits_2_with_actionable_message(
     dirs, capsys, hide_library, tool, library, extra_args
 ):
     hide_library(library)
     args = [a if a != "C" else dirs[2] for a in extra_args]
     assert run(tool, dirs[0], dirs[1], *args) == 2
-    name = {"sdmetrics": "SDMetrics", "anonymeter": "Anonymeter"}[tool]
-    assert capsys.readouterr().err.strip() == (
-        f"shape: error: {name} needs the '{library}' extra: "
-        f"pip install 'sqllocks-shape-integrations[{library}]'"
-    )
+    if tool == "anonymeter":
+        assert capsys.readouterr().err.strip() == (
+            "shape: error: The 'anonymeter' extra was withdrawn in 0.9.4 because "
+            "Anonymeter 1.x requires NumPy < 1.27 and Shape requires NumPy >= 2. "
+            "The Anonymeter report becomes available again when Anonymeter supports NumPy 2."
+        )
+    else:
+        assert capsys.readouterr().err.strip() == (
+            "shape: error: SDMetrics needs the 'sdmetrics' extra: "
+            "pip install 'sqllocks-shape-integrations[sdmetrics]'"
+        )
