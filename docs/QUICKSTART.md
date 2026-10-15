@@ -2,6 +2,8 @@
 
 Follow one short route from local rows to a reviewed baseline and generated data.
 
+Try it first, with no install: the [Shape Playground](https://sqlbites.net/shape/playground/) replays a recorded Shape 0.9.3 session in your browser.
+
 Status: available.
 
 ## Run the local examples

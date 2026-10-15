@@ -6,6 +6,10 @@ Status: available.
 
 ## Unreleased
 
+Docs: README and Quickstart link to the Shape Playground (a recorded 0.9.3 session in the browser).
+
+Integrations: the `anonymeter` extra of sqllocks-shape-integrations is withdrawn; Anonymeter 1.x requires NumPy < 1.27 and Shape requires NumPy >= 2, so the extra could not be installed. The adapter stays and explains this when Anonymeter is missing.
+
 - Correct Fabric plugin PyPI installation guidance and align GitHub Action status with the experimental CI capability.
 - Keep the GitHub Action comment source label when a missing baseline leaves no project annotation in the result.
 - Clarify that Excel sentinel findings include typed date/datetime cells and cover six `9999-12-31` datetime cells with a regression test.

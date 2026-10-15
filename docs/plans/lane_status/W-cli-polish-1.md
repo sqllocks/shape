@@ -273,3 +273,88 @@ All five items have a separate signed-off commit. Items a, b and d have recorded
 Open implementation questions: none. Limitations: the original Excel workbook was not supplied; its reported difference cannot be explained from the six-cell reproduction. Full make verification is incomplete as detailed above.
 
 Final commit checks: DCO exit 0 (all five signed off); consolidation tree comparison exit 0; final commit-range whitespace check exit 0 after removing trailing whitespace copied from pytest output (first range check exited 2).
+
+## Main merge — 2026-10-15
+
+Merged `origin/main` at `2d4e86e06f1f3ff90aae65aeefa54820a3f5bd3e` (including W-play-1 and W-anon-1) into the lane starting at `a8a5cb0519bed45b8b47d02d3179d66eabf70ef7`. This is a merge, with no rebase or force-push.
+
+Only CHANGELOG.md conflicted. The resolution preserves main's Playground and integration entries and all five lane entries under Unreleased, including the exact explicit migration wording for `shape plan`. A comparison against origin/main of all other files changed by main exited 0: main's versions were retained. The merge-resolution changes are limited to CHANGELOG.md and this status file.
+
+| Merge / resolution command | Exit | Result |
+|---|---:|---|
+| `git remote get-url origin` | 0 | Verified sqllocks/shape.git |
+| `git branch --show-current` / `git status --short` | 0 / 0 | lane/W-cli-polish-1; initially clean |
+| `git fetch origin` | 0 | Updated origin/main |
+| `git merge --no-ff --no-commit origin/main` | 1 | Expected CHANGELOG.md conflict; resolved before committing |
+| Python conflict resolution; `git add CHANGELOG.md` | 0 / 0 | Preserved both sets of Unreleased entries |
+| Compare main's other changed files with origin/main | 0 | No differences |
+| `git diff --cached --check` | 0 | No whitespace errors after resolution |
+
+### Check environment and initial results
+
+The first lane run passed 1,407 tests (2 existing live tests deselected), and every static/build/wording/link check passed. The first complete docs/release run exited 1: 541 passed, 16 failed, 3 errors. Failures included missing Playwright, missing source plugins, missing Cargo on PATH, differing NumPy/PyArrow/tzdata versions, and absent local dbt fixtures. Full results were retained while preparing the documented environment.
+
+Installed requirements-docs.txt, all twelve first-party plugins from this checkout with --no-deps, a task-local minimal stable Rust toolchain, and the three pinned local dbt dependency repositories. The prepared commands inherit PATH entries for the lane's .venv and task-local Cargo, task-local RUSTUP_HOME/CARGO_HOME/CARGO_TARGET_DIR, SHAPE_DOCS_DBT_PACKAGES, a DOCS_PROXY_IP resolved from the environment's configured proxy and the system CA bundle. TLS verification remains enabled. A normal umask 022 is used. No test, gate, transcript, or main-owned file was changed to pass checks.
+
+The managed Docker daemon check exited 0. One Cargo version probe without the task-local RUSTUP_HOME exited 1; the correctly configured probe exited 0 (Cargo 1.99.1). An exploratory transcript comparison using system Python exited 1 (pytest unavailable there); rerunning it with .venv Python exited 0. The original test workspaces were removed after preserving their transcripts to recover temporary disk space.
+
+### Commands and exit codes
+
+All commands below ran from /workspace/shape. Prepared checks use the environment described above. The eighteen `static-NN` entries were run twice (before and after preparation); both runs exited 0 for every entry. Their initial outputs are also preserved in the tool history.
+
+| Run | Command | Exit |
+|---|---|---:|
+| cleanup-first-run | `.venv/bin/python /tmp/W-cli-polish-1-merge/cleanup.py` | 0 |
+| cleanup-prepared-run | `.venv/bin/python /tmp/W-cli-polish-1-merge/cleanup-prepared.py` | 0 |
+| dbt-packages | `.venv/bin/python scripts/docs_dbt_packages.py --directory /tmp/docs-dbt-packages` | 0 |
+| dco | `.venv/bin/python scripts/check_dco.py origin/main HEAD` | 0 |
+| docs-bootstrap-isolated | `.venv/bin/pytest -q 'tests/docs/test_reference_examples.py::test_reference_page[CONTRIBUTING]'` | 0 |
+| docs-build-prepared | `env NO_MKDOCS_2_WARNING=1 .venv/bin/mkdocs build --strict` | 0 |
+| docs-build | `env NO_MKDOCS_2_WARNING=1 .venv/bin/mkdocs build --strict` | 0 |
+| docs-deps-dry-run | `.venv/bin/pip install --dry-run -r requirements-docs.txt` | 0 |
+| docs-deps-install | `.venv/bin/pip install -r requirements-docs.txt` | 0 |
+| docs-links-prepared | `.venv/bin/python scripts/check_doc_links.py --site site` | 0 |
+| docs-links | `.venv/bin/python scripts/check_doc_links.py --site site` | 0 |
+| docs-release-prepared | `.venv/bin/pytest -q -n 3 tests/docs tests/release` | 1 |
+| docs-release | `.venv/bin/pytest -q tests/docs tests/release` | 1 |
+| docs-user-facing-prepared | `.venv/bin/python scripts/check_user_facing.py --site site` | 0 |
+| docs-user-facing | `.venv/bin/python scripts/check_user_facing.py --site site` | 0 |
+| docs-wording-prepared | `.venv/bin/python scripts/check_docs_language.py --site site` | 0 |
+| docs-wording | `.venv/bin/python scripts/check_docs_language.py --site site` | 0 |
+| final-merge-proof | `.venv/bin/python /tmp/W-cli-polish-1-merge/proof.py` | 0 |
+| lane-tests-prepared | `.venv/bin/pytest -q -m 'not emulator and not live and not heavy' tests/cli tests/chaos tests/excel tests/prbot tests/io/test_provenance.py tests/vault/test_generate.py tests/proposals/test_type_proposals.py tests/proposals/test_cli.py tests/safecapture/test_readers.py tests/joint/test_mixed_copula_generation.py tests/demo/core/test_cli.py tests/iss_gaps/test_landing_and_batches.py` | 0 |
+| lane-tests | `.venv/bin/pytest -q -m 'not emulator and not live and not heavy' tests/cli tests/chaos tests/excel tests/prbot tests/io/test_provenance.py tests/vault/test_generate.py tests/proposals/test_type_proposals.py tests/proposals/test_cli.py tests/safecapture/test_readers.py tests/joint/test_mixed_copula_generation.py tests/demo/core/test_cli.py tests/iss_gaps/test_landing_and_batches.py` | 0 |
+| main-build-inputs | `git diff --exit-code origin/main -- CONTRIBUTING.md Makefile pyproject.toml rust/shape-kernel` | 0 |
+| rust-install | `env RUSTUP_HOME=/tmp/W-cli-polish-1-merge/rustup CARGO_HOME=/tmp/W-cli-polish-1-merge/cargo sh /tmp/W-cli-polish-1-merge/rustup-init.sh -y --profile minimal --default-toolchain stable --no-modify-path` | 0 |
+| source-plugins | `.venv/bin/pip install --no-deps --no-build-isolation -e plugins/shape-behavior -e plugins/shape-databases -e plugins/shape-dbt -e plugins/shape-domains -e plugins/shape-eventhubs -e plugins/shape-fabric -e plugins/shape-healthcare-codes -e plugins/shape-healthcare-standards -e plugins/shape-integrations -e plugins/shape-kafka -e plugins/shape-simulation -e plugins/shape-sqlserver` | 0 |
+| static-00 | `ruff check src tests plugins benchmarks/vs_refengine` | 0 |
+| static-01 | `ruff format --check src tests plugins benchmarks/vs_refengine` | 0 |
+| static-02 | `mypy` | 0 |
+| static-03 | `/workspace/shape/.venv/bin/python -m compileall -q src/shape` | 0 |
+| static-04 | `vulture src/shape scripts/vulture_whitelist.py --min-confidence 80` | 0 |
+| static-05 | `lint-imports` | 0 |
+| static-06 | `/workspace/shape/.venv/bin/python scripts/check_requirements.py` | 0 |
+| static-07 | `/workspace/shape/.venv/bin/python scripts/check_secrets.py` | 0 |
+| static-08 | `/workspace/shape/.venv/bin/python scripts/check_user_facing.py` | 0 |
+| static-09 | `/workspace/shape/.venv/bin/python scripts/gen_exit_codes.py --check` | 0 |
+| static-10 | `/workspace/shape/.venv/bin/python scripts/gen_failure_modes.py --check` | 0 |
+| static-11 | `/workspace/shape/.venv/bin/python scripts/check_shipped_data.py` | 0 |
+| static-12 | `/workspace/shape/.venv/bin/python scripts/check_plugin_skeletons.py` | 0 |
+| static-13 | `/workspace/shape/.venv/bin/python scripts/check_versions.py` | 0 |
+| static-14 | `/workspace/shape/.venv/bin/python scripts/check_release_workflows.py` | 0 |
+| static-15 | `/workspace/shape/.venv/bin/python scripts/check_conformance_coverage.py` | 0 |
+| static-16 | `/workspace/shape/.venv/bin/python scripts/cli_surface.py --check` | 0 |
+| static-17 | `/workspace/shape/.venv/bin/python scripts/check_v1_done.py` | 0 |
+| static-prepared | `.venv/bin/python /tmp/W-cli-polish-1-merge/static.py` | 0 |
+| whitespace-index | `git diff --cached --check` | 0 |
+| whitespace-worktree | `git diff --check` | 0 |
+
+### Final merge verification results
+
+- Prepared lane suite: exit 0, 1,407 passed, 2 existing live tests deselected, 34 warnings.
+- All eighteen static checks: exit 0 on both runs. Strict docs build, docs language, user-facing wording and source/site links: exit 0 on both runs.
+- Complete prepared docs/release suite: exit 1, 559 passed, 1 failed, 2 warnings. Its only failure was `tests/docs/test_reference_examples.py::test_reference_page[CONTRIBUTING]`: pip reported `BadZipFile` reading the editable wheel while parallel bootstrap builds shared CARGO_TARGET_DIR.
+- Isolated serial retry of that exact failed node: exit 0, 1 passed in 258.69 seconds. For this retry CARGO_TARGET_DIR was a separate task-local directory (`/tmp/W-cli-polish-1-merge/cargo-target-bootstrap`), avoiding concurrent wheel-output writes. No source, test, transcript, gate, or assertion was changed. Every docs/release test therefore has a passing execution; the full parallel command's exit 1 remains recorded, not presented as a clean full-suite pass.
+- Final merge proof, whitespace checks and existing lane DCO check: exit 0. Both complete pre-merge Unreleased blocks are present verbatim, no conflicts remain, and no differences from main occur outside the existing lane scope. CONTRIBUTING.md and all core build/Rust inputs equal main.
+
+Ready to create the signed-off merge commit with the W-cli-polish-1 prefix and push only refs/heads/lane/W-cli-polish-1. The merge preserves main's files outside lane scope. No rebase, force-push, new PR or tag was used. This round used the existing fast-check alternative for the lane; full make/coverage/heavy/kernel-only/Rust check stages were not rerun.
