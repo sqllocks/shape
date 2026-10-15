@@ -19,7 +19,7 @@ python "$SHAPE_DOCS_REPO/scripts/docs_example_setup.py" PRIVACY_MODEL
     ```
 
 
-A safe capture is data minimisation, not anonymisation. Aggregates, rare categories, small
+A safe capture applies data minimization. Aggregates, rare categories, small
 cohorts, geography, history and differencing can disclose sensitive facts. Apply cohort
 thresholds, sensitivity controls and release review before sharing.
 
@@ -105,7 +105,7 @@ only); re-profile with --capture full`, lists it under `not_evaluable`, and exit
 is also violated). `shape generate --from` and `shape plan` generate a sensitive column from its
 pattern and length distribution and mark what was left out `approximate` in the plan.
 
-This is data minimisation, not anonymisation: a safe capture still holds statistics of the data,
+A safe capture still holds statistics of the data,
 and the limits listed under "Minimum cohort and small cells" apply to it.
 
 **The vault: the alternative to `--capture full`.** When generation needs the exact values (the
@@ -130,7 +130,16 @@ A full profile holds value-bearing evidence (exact minimum and maximum, every en
 - literal category labels are kept only for a low-entropy set of letters-only labels; numeric and date categories become a coarse histogram, and anything else gets hashed keys;
 - a column whose detected pattern is personal data (email, SSN, card, phone, IP, IBAN, postal code), or that has nearly one distinct value per row, keeps its pattern and length distribution only. Detection is by value and is defence in depth, not a completeness guarantee; the profile also records, per text column, the share of values that are wholly an SSN, email, IP or IBAN, or the detected pattern (`pattern_rates`) and the share that contain an SSN, email address or card number inside text (`pattern_contains_rates`), measured on every distinct value (up to 50,000 per column, then an evenly spaced sample of them), and a column where any of those families (SSN, email, card, IP, IBAN) reaches 0.1% (`pii_pattern_floor`) is pattern-only too, however few the values are;
 - a column with fewer non-null rows than its `k` releases no value statistic: `mean`, `std`, `quantiles`, `bounds` and `distribution_params` are null (with one row the mean would be the value);
-- a `redaction_manifest` records, per column, what was actually suppressed.
+- sensitive columns follow the same fitted-distribution policy as safe capture, whether built
+  from an in-memory profile, a full capture or a safe capture: fits other than normal have
+  `distribution` and `distribution_params` set to null, even without quantiles; a normal fit
+  retains only mean and spread, subject to the minimum cohort rule;
+- a `redaction_manifest` records, per retained column, what was actually suppressed.
+
+`shape profile safe PROFILE.shape --exclude COLUMN -o SAFE.json` removes the column's
+name and statistics from the safe JSON, including its redaction manifest, keys, correlations and relationships.
+`--columns` applies the same rule to columns it leaves out. Selection does not modify the input
+capture: remove sensitive names before writing a capture that you intend to share.
 
 `--unsafe-full-fidelity` is the one opt-out: it turns the controls off and stamps the artifact `unsafe`.
 
