@@ -457,3 +457,52 @@ FAILED tests/docs/test_reference_examples.py::test_reference_page[simulation]
 Final verification after recording results: `python scripts/check_docs_language.py`
 exit 0 (0 hits); `git diff --check` exit 0; `git diff origin/main --name-only`
 exit 0 (the original six lane files only). Baseline worktree cleanup: exit 0.
+
+## Approved REGISTRY transcript correction (2026-10-15)
+
+The lead explicitly approved updating example 2's two content IDs to reflect the
+intended removal of sensitive fitted distributions. The recorded registry-output
+question above is resolved by that approval.
+
+Inspected `tests/docs/test_reference_examples.py`, `scripts/docs_transcripts.py`,
+and the owner/Fabric transcript capture scripts. The local reference-page harness
+records real merged stdout/stderr in `.doc-output-N.txt`; the separate capture
+scripts handle different example markers and provide no generic local-page refresh.
+Used the repository's existing reference-page test harness for the real replay,
+then copied its exact example-2 output into the expected block.
+
+- `.venv/bin/python /tmp/W-safe-leak-1-refresh-registry.py`: exit 0. It invoked
+  `.venv/bin/python -m pytest -q --tb=short --basetemp <fresh-owned-temporary-directory>
+  'tests/docs/test_reference_examples.py::test_reference_page[REGISTRY]'` on the
+  unchanged page: exit 1, the expected old-ID mismatch. Raw example output was
+  captured at `/tmp/W-safe-leak-1-registry-example-2-real.txt` and copied verbatim.
+  The script asserted the complete page differed only by the two approved IDs.
+- Added the lead's exact compatibility sentence immediately under this lane's
+  Unreleased changelog entry; other Unreleased entries are unchanged.
+
+### Verification
+
+| Command | Exit code | Result |
+| --- | --- | --- |
+| `pytest -q --tb=short 'tests/docs/test_reference_examples.py::test_reference_page[REGISTRY]'` | 0 | 1 passed in 3.80s |
+| `pytest -q --tb=short --disable-warnings tests/privacy tests/safecapture tests/artifact/test_aud_privacy.py tests/security/test_aud_privacy.py tests/registry/test_aud_privacy.py tests/benchmarks/test_safe_profile_verify.py tests/benchmarks/test_safe_profile_validators.py tests/benchmarks/test_safe_profile_small_cohort.py` | 0 | 508 passed, 69 warnings in 8.97s |
+| `python scripts/check_docs_language.py` | 0 | 0 wording hits |
+
+Complete-page comparison against HEAD: exit 0; only the two example-2 content-ID
+lines changed in docs/REGISTRY.md. Changed-file scope assertion: exit 0; this update
+contains only CHANGELOG.md, docs/REGISTRY.md and this status file. `git diff --check`:
+exit 0. No source, test, format version, golden or corpus file changed. No outstanding
+question about the approved registry transcript. Earlier unrelated full-gate and
+docs/release environment limitations remain documented above; those broad checks
+were not rerun for this narrowly requested transcript correction.
+
+Exact example-2 output copied from the fresh run:
+
+```text
+shape: note: cust.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+{"content_id": "32ec6a4ddb4a7cf575fa0847d4d85297259a5b8539cf7334b6cb9e6f85249b5f"}
+shape: note: cust.shape is not signed: its origin is not verified (check it with --verify PUBKEY)
+{"unsafe": false, "written": "cust.safe.json"}
+{"content_id": "32ec6a4ddb4a7cf575fa0847d4d85297259a5b8539cf7334b6cb9e6f85249b5f"}
+CLEAN: no leaks found in cust.safe.json
+```

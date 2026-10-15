@@ -12,6 +12,8 @@ Integrations: the `anonymeter` extra of sqllocks-shape-integrations is withdrawn
 
 Fix (privacy): safe profiles no longer keep an excluded column's name or a sensitive column's fitted distribution, whatever path built them.
 
+Converting a full capture to the safe form now gives a different content ID when the profile has sensitive columns, because their fitted distributions are no longer kept.
+
 ## 0.9.3
 
 0.9.2 was published to TestPyPI only and was never released to PyPI; its changes are part of 0.9.3.
