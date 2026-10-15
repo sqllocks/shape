@@ -133,3 +133,129 @@ Open questions: none.
 
 Publication target: `lane/W-contract-1`, with a signed-off `W-contract-1:` commit.
 No PR, tag, force push or push to another branch is part of this lane.
+
+
+## Main integration follow-up (2026-10-15)
+
+Merged main after W-play-1 and W-anon-1. The lane started at
+`92c44ebedbe68cce73bbca4bbd4a9da021c424b5`; the fetched main / merge parent is
+`2d4e86e06f1f3ff90aae65aeefa54820a3f5bd3e` (PR #23).
+The existing lane PR is #27. No new PR is created.
+
+`git fetch origin && git merge --no-ff origin/main` exited **1** because
+CHANGELOG.md was the only conflict. Resolved it by retaining main's Playground
+and integrations entries verbatim, then the lane's contract fix under the single
+`## Unreleased` heading. Every one of the other 13 main-changed files matches
+origin/main exactly. No lane implementation or test changed during resolution.
+The merge is being completed with a signed-off `W-contract-1:` commit, without
+rebase or force-push, and will be pushed only to `lane/W-contract-1`.
+
+Checks below use `.venv/bin` tools and the same permitted fast-check scope as the
+original lane. `PATH="$PWD/.venv/bin:$PATH"` supplies the existing environment
+where commands or tests start subprocesses. W-uv-1 is still absent from main.
+
+| Command | Exit | Result |
+|---|---:|---|
+| `git remote get-url origin` | 0 | Required sqllocks/shape remote confirmed |
+| `git fetch origin && git merge --no-ff origin/main` | 1 | Fetched main successfully; expected CHANGELOG.md conflict resolved |
+| `git add CHANGELOG.md` | 0 | Resolved conflict staged |
+| Main-preservation comparison of all main-changed files except CHANGELOG.md | 0 | All 13 files match main exactly |
+| `git diff --cached origin/main --name-only` | 0 | Only the original 12 lane files differ from main |
+| `NO_MKDOCS_2_WARNING=1 mkdocs build --strict` | 0 | Built successfully in 14.94s |
+| `python scripts/check_doc_links.py --site site` | 0 | 0 broken links |
+| `python scripts/check_user_facing.py --site site` | 0 | Clean |
+| `python scripts/check_docs_language.py --site site` | 0 | 0 wording hits |
+| `git diff --check` and `git diff --cached --check` | 0 / 0 | Clean |
+
+Final lane-suite and docs/release results are listed below.
+
+Static fast checks on the merged tree (commands from `make -n check`, up to pytest):
+
+| Command | Exit |
+|---|---:|
+| `ruff check src tests plugins benchmarks/vs_refengine` | 0 |
+| `ruff format --check src tests plugins benchmarks/vs_refengine` | 0 |
+| `mypy` | 0 |
+| `python -m compileall -q src/shape` | 0 |
+| `vulture src/shape scripts/vulture_whitelist.py --min-confidence 80` | 0 |
+| `lint-imports` | 0 |
+| `python scripts/check_requirements.py` | 0 |
+| `python scripts/check_secrets.py` | 0 |
+| `python scripts/check_user_facing.py` | 0 |
+| `python scripts/gen_exit_codes.py --check` | 0 |
+| `python scripts/gen_failure_modes.py --check` | 0 |
+| `python scripts/check_shipped_data.py` | 0 |
+| `python scripts/check_plugin_skeletons.py` | 0 |
+| `python scripts/check_versions.py` | 0 |
+| `python scripts/check_release_workflows.py` | 0 |
+| `python scripts/check_conformance_coverage.py` | 0 |
+| `python scripts/cli_surface.py --check` | 0 |
+| `python scripts/check_v1_done.py` | 0 |
+
+
+| Post-merge test command | Exit | Result |
+|---|---:|---|
+| `pytest -q -m 'not emulator and not live' tests/contracts tests/cli tests/bridge tests/project/test_cli.py tests/quality/test_timeseries.py tests/quality/test_reconcile.py` | 0 | 2700 passed, 19 existing optional-dependency skips, 2 live cases deselected in 228.97s |
+| Untouched main: `pytest -q tests/docs/test_brand.py` | 1 | Missing Playwright; 1 failed in 18.10s |
+| Untouched main: `pytest -q tests/release/test_packaging.py` | 1 | Cargo unavailable; 32 passed, 3 sdist-fixture errors in 11.57s |
+
+Baseline comparisons use a detached worktree of the fetched main at
+`/tmp/shape-W-contract-1-merge-main`, the lane's existing `.venv/bin` tools on PATH,
+and `PYTHONPATH=/tmp/shape-W-contract-1-merge-main/src` to load main's core source.
+The Playwright import and Cargo failures are environment prerequisites, not merge
+conflicts. Source, tests and gates outside this lane remain main's versions.
+
+
+| Additional baseline comparison | Exit | Result |
+|---|---:|---|
+| Untouched main: `pytest -q tests/release` | 1 | 391 passed, 3 errors in 44.96s; all three are the core sdist fixture requiring Cargo |
+
+
+| Required additional command | Exit | Result |
+|---|---:|---|
+| `pytest -q tests/docs tests/release` | 1 | 540 passed, 17 failed, 3 errors in 525.09s; complete unfiltered run, no skips added |
+
+The release errors are the same three Cargo-dependent sdist fixtures that fail on
+untouched main. All 17 failing docs cases also reproduce on that same main
+worktree (17 failed in 84.15s, exit 1). No test, gate, transcript, dependency or source outside
+this lane is changed to make these checks pass.
+
+
+| Final comparison / verification | Exit | Result |
+|---|---:|---|
+| Untouched main: `pytest -q` with all 17 failing docs node IDs below | 1 | The identical 17 tests failed in 84.15s |
+| Failure-ID comparison between merged tree and untouched main | 0 | All 17 docs failures and all 3 release errors match |
+| `git ls-remote --heads origin refs/heads/main refs/heads/lane/W-contract-1` | 0 | Main still 2d4e86e; remote lane still the original 92c44eb before publication |
+
+Exact docs baseline selection (run in the main worktree with the PATH/PYTHONPATH
+settings described above; exit **1**):
+
+```sh
+pytest -q \
+  tests/docs/test_brand.py::test_branded_site \
+  'tests/docs/test_launch_tutorials.py::test_tutorial[06-domain-duckdb]' \
+  'tests/docs/test_reference_examples.py::test_reference_page[CLI]' \
+  'tests/docs/test_reference_examples.py::test_reference_page[CONTAINER]' \
+  'tests/docs/test_reference_examples.py::test_reference_page[CONTRIBUTING]' \
+  'tests/docs/test_reference_examples.py::test_reference_page[DBT]' \
+  'tests/docs/test_reference_examples.py::test_reference_page[IMPORTERS]' \
+  'tests/docs/test_reference_examples.py::test_reference_page[INSTALL]' \
+  'tests/docs/test_reference_examples.py::test_reference_page[PROJECT]' \
+  'tests/docs/test_reference_examples.py::test_reference_page[SIGNING]' \
+  'tests/docs/test_reference_examples.py::test_reference_page[SIMULATION_FILES_EVENTS]' \
+  'tests/docs/test_reference_examples.py::test_reference_page[SINKS]' \
+  'tests/docs/test_reference_examples.py::test_reference_page[TESTING_WITH_SHAPE]' \
+  'tests/docs/test_reference_examples.py::test_reference_page[authoring]' \
+  'tests/docs/test_reference_examples.py::test_reference_page[behavior]' \
+  'tests/docs/test_reference_examples.py::test_reference_page[healthcare-codes]' \
+  'tests/docs/test_reference_examples.py::test_reference_page[simulation]'
+```
+
+The combined docs/release check is not claimed as green. Pre-existing failures
+include missing Playwright and optional plugin/dependency/service prerequisites,
+recorded-transcript mismatches, and missing Cargo for sdist generation. They were
+not hidden, skipped, xfailed or fixed outside the lane's scope. The complete
+post-merge lane suite and all 18 static checks pass. No conflict markers remain.
+
+Open questions: none. The merge commit uses the lane prefix and is published to
+`lane/W-contract-1` with a normal push; no rebase, force-push, tag or new PR.
