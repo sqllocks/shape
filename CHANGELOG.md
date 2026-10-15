@@ -6,7 +6,7 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+Fix: `shape validate` accepts v1 contracts; unknown contract rules are now errors instead of being ignored; CONTRACTS.md lists every rule (including valid_as).
 
 ## 0.9.3
 

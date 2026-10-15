@@ -58,7 +58,10 @@ _EXTRA: dict[str, dict[int, str]] = {
     "from-ddl": {},
     "keygen": {},
     "sign": {},
-    "validate": {1: "the schema or contract is not valid"},
+    "validate": {
+        1: "the schema or contract structure is not valid",
+        2: "an unknown contract rule or malformed rule value, or " + BAD,
+    },
     "verify": {
         1: "a validation gate failed that is enforced (a warning too with `--strict`), or "
         "the `.shape` file's signature is invalid"
