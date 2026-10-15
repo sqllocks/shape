@@ -419,3 +419,14 @@ def test_the_share_safe_form_carries_no_findings(workbook, tmp_path):
     text = safe.read_text()
     assert "02134" not in text and "findings" not in text  # raw cell values never leave
     assert _shape("profile", "validate", "--safe", safe, cwd=tmp_path).returncode == 0
+
+
+def test_six_datetime_sentinel_cells_are_reported(workbook):
+    rows = [["end"]] + [[dt.datetime(9999, 12, 31)] for _ in range(6)]
+    rows += [[dt.datetime(2024, 1, 1)], [None]]
+    prof = shape.profile(f"{workbook({'T': rows})}#T")
+    (finding,) = _findings(prof, "sentinel_values", "end")
+    assert finding["value"] == "9999-12-31"
+    assert finding["count"] == 6 and finding["share"] == pytest.approx(6 / 7)
+    assert finding["cells"] == [f"A{i}" for i in range(2, 8)]
+    assert finding["examples"] == ["9999-12-31T00:00:00"] * 5

@@ -197,3 +197,5 @@ FAILED tests/prbot/test_action.py::test_missing_baseline_comment_keeps_the_sourc
 Additional b provenance refusals, after correcting the test setup to name a corruption, before implementation: `.venv/bin/pytest -q tests/chaos/test_input_check.py -k nested_landing` — exit 1, 2 failed (expected marked/hash diagnostics, got no data files).
 
 - b: green, exit 0: `.venv/bin/pytest -q tests/chaos tests/io/test_provenance.py tests/cli/test_incremental_cli.py` — 213 passed. Covers all three `write_landing` formats, nested provenance verification/refusal, multi-date concatenation, deterministic path order, ground-truth-log exclusion, and reading chaos landing output again. Single-file Parquet reads preserve the data schema without an inferred partition column.
+
+- c: green before and after documentation clarification; `.venv/bin/pytest -q tests/excel` — exit 0, 64 passed, one expected unsigned-artifact warning. No runtime change was needed or made. This is the sole exception to the requested red/green sequence because the reported behavior already works on the base revision.
