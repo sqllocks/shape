@@ -8,6 +8,8 @@ Status: available.
 
 Docs: README and Quickstart link to the Shape Playground (a recorded 0.9.3 session in the browser).
 
+Integrations: the `anonymeter` extra of sqllocks-shape-integrations is withdrawn; Anonymeter 1.x requires NumPy < 1.27 and Shape requires NumPy >= 2, so the extra could not be installed. The adapter stays and explains this when Anonymeter is missing.
+
 ## 0.9.3
 
 0.9.2 was published to TestPyPI only and was never released to PyPI; its changes are part of 0.9.3.

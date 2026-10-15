@@ -41,3 +41,23 @@ The signed-off commit containing this file uses the prefix `W-play-1:`.
 ## Open questions
 
 None.
+
+## Main integration follow-up
+
+Merged `origin/main` at `9833f8164d6d1ebea83e0bab37ea2faf43ceed74`
+(W-anon-1) into `lane/W-play-1` with `git merge --no-ff origin/main`.
+Resolved the CHANGELOG.md conflict by retaining both the integrations entry and
+the Playground entry under `## Unreleased`. No rebase or force-push was used.
+
+Checks used `. .venv/bin/activate`:
+
+| Command | Exit code | Result |
+| --- | --- | --- |
+| `git fetch origin` | 0 | Fetched main through W-anon-1. |
+| `git merge --no-ff origin/main` | 1 | Expected CHANGELOG.md conflict; resolved with both entries retained. |
+| `mkdocs build --strict` | 0 | Site built successfully. |
+| `pytest -q tests/docs_site tests/release/test_docs.py tests/release/test_check_user_facing.py tests/docs/test_launch_site.py tests/docs/test_launch_api.py tests/docs/test_owner_notes.py tests/docs/test_transcripts.py tests/docs/test_fabric_platform.py 'tests/docs/test_reference_examples.py::test_reference_page[README]' 'tests/docs/test_reference_examples.py::test_reference_page[QUICKSTART]' tests/docs/test_reference_examples.py::test_restored_example_inventory` | 0 | 292 passed; one unsigned-profile warning. |
+| `git diff --check` | 0 | No whitespace errors. |
+| `git diff --stat origin/main` | 0 | Only the five W-play-1 files differ from main. |
+
+Open questions: none.
