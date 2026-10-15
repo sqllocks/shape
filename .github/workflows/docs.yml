@@ -30,7 +30,7 @@ jobs:
       - run: uv run --locked --no-sync python scripts/docs_dbt_packages.py --directory "$SHAPE_DOCS_DBT_PACKAGES"
       - name: Block release documentation with unresolved owner notes
         if: github.ref_type == 'tag'
-        run: uv run --locked --no-sync python scripts/check_docs_owners.py --release
+        run: python scripts/check_docs_owners.py --release
       - run: uv run --locked --no-sync pytest -q -n 3 -o tmp_path_retention_policy=failed tests/docs/test_launch_tutorials.py tests/docs/test_launch_api.py tests/docs/test_launch_site.py tests/docs/test_reference_examples.py tests/docs/test_owner_notes.py tests/docs/test_brand.py tests/docs/test_transcripts.py
       - run: uv run --locked --no-sync mkdocs build --strict
       - run: uv run --locked --no-sync python scripts/check_doc_links.py --site site

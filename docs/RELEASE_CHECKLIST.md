@@ -319,7 +319,7 @@ documentation fixture, and require every gate to pass.
 ```bash {.runnable-reference}
 python scripts/check_versions.py --release --expect 1.0.0
    python scripts/check_plugin_skeletons.py
-   make --silent --dry-run test
+   make --silent --dry-run test UV=uv
 ```
 
 ??? info "Output (exit 0)"
@@ -327,7 +327,7 @@ python scripts/check_versions.py --release --expect 1.0.0
     ```text {.expected}
     FAIL CHANGELOG.md has no '## 1.0.0' section
     plugin skeletons OK (12 distributions, version 1.0.0)
-    pytest -m "not emulator and not live"
+    uv run --locked --group docs --group dbt --group benchmark pytest -m "not emulator and not live"
     ```
 
 This command exits nonzero. Read the diagnostic; this transcript shows a refusal or failed check, not a passing gate.

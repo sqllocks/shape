@@ -75,7 +75,7 @@ python -m venv .venv-pip
 make bootstrap-pip
 ```
 
-On Windows, select `.venv-pip/Scripts/python.exe` with `make bootstrap-pip PYTHON=...`.
+On Windows, run `make bootstrap-pip` with the venv’s Python supplied through `PYTHON`.
 The fallback uses the previous pip editable install and does not provide lockfile guarantees.
 Run tools directly in that venv, for example `python -m pytest`; the other Make targets require uv.
 

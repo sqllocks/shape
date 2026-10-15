@@ -517,3 +517,138 @@ Additional setup/delivery commands not launched through the journal wrapper:
 | Download/extract actionlint 1.7.11 release archive | 0 | Verified executable version in journal |
 | `git diff --cached --check` before implementation commit | 0 | Clean staged diff |
 | `git commit --signoff -m 'W-uv-1: lock developer and CI environments with uv workspace'` | 0 | d3511c1, includes dependency changes and lock together |
+
+
+## PR #24 CI follow-up (2026-10-15)
+
+Starting head: `46ec7a23667792955ad5d8c69cbfc38bda562108`. This follow-up fixes all four
+reported failures in one fix commit and one normal push to `lane/W-uv-1`. No rebase,
+force-push, skip, xfail or relaxed assertion is used.
+
+- RELEASE_CHECKLIST uses `make --silent --dry-run test UV=uv` and records the exact
+  locked uv command printed by the current Makefile. The override makes the transcript
+  independent of uv's absolute `UV` environment variable.
+- The docs verification job again runs the exact release-owner guard
+  `python scripts/check_docs_owners.py --release`.
+- CONTRIBUTING describes selecting the Windows venv's Python through `PYTHON`,
+  without presenting its generated interpreter as an existing repository path.
+  The release documentation test is unchanged.
+- Fabric runbook section 2 gives CI's exact `uv sync --locked --group fabric-demo`
+  command and uses a separate environment. The helper reads that step from the
+  `fabric-demo` job and still requires the identical command in section 2. All other
+  runbook tests are unchanged.
+
+Dependency coverage was checked against the environment produced by that exact CI
+sync (exit 0): numpy 2.4.6 (>=2), pandas 3.0.6, PyArrow 19.0.1 (>=14), deltalake 1.6.6,
+nbformat 5.11.1, IPython 9.17.1, jsonschema 4.26.0, fsspec 2026.9.0, PySpark 4.2.0
+(>=4), delta-spark 4.4.1 (>=4), fabric-user-data-functions 1.0.142, pytest 9.1.1,
+and sqllocks-shape-domains 0.9.3 installed editably from this checkout. Every
+requirements entry's version constraint and the editable direct URL were asserted.
+No dependency declaration, lock entry or published metadata changes in this follow-up.
+
+The requested suites use standard umask 0022 (the earlier host-umask issue is
+documented above). Docs/release uses the existing locked docs environment;
+Fabric/content uses the exact CI Fabric environment on Python 3.11. The complete
+suite uses a separate locked Python 3.12 environment with `fabric-demo` and `dbt`
+so both SDK imports and dbt are available without combining incompatible groups.
+
+Main advanced to `2d4e86e06f1f3ff90aae65aeefa54820a3f5bd3e` (W-play-1) during
+this follow-up. Its README additions also appear in wheel METADATA and sdist
+PKG-INFO, so a normal no-ff merge preserves the byte comparison against current
+`origin/main`. Merge `2cea9c1c1bc272c216bda4cf061ff3202743db81` retains both
+Unreleased changelog entries. The initial merge returned 1 for that changelog
+conflict; the resolution and signed merge commit returned 0. No history was rewritten.
+
+The metadata guard against current `origin/main` (2d4e86e) returned 0: all 26
+complete wheel METADATA / sdist PKG-INFO comparisons are byte-identical, zero
+differences. Archives and full metadata remain in
+`/workspace/scratch/W-uv-1-metadata-pr24`.
+
+The four reported regressions passed together (exit 0: three docs/release tests,
+then all four runbook tests), and passed again after this merge. The post-merge
+strict MkDocs build also returned 0. Ruff lint/format, actionlint, documentation
+wording (0 hits), user-facing checks, secret checks and diff whitespace checks
+returned 0.
+
+Requested suite results so far:
+
+| Command | Exit | Result |
+| --- | ---: | --- |
+| `pytest tests/docs tests/release` | 1 | 558 passed; CONTAINER and DBT reference pages failed local setup |
+| Same two reference pages after fixture setup | 0 | 2 passed; no repository changes needed |
+| `pytest tests/demo/fabric tests/demo/content` (initial) | 1 | 275 passed, 38 Spark setup errors: Java lacked the session proxy |
+| Same Fabric/content command with Java proxy configured | 0 | 313 passed, no skips |
+| `pytest -m "not emulator and not live"` | 1 | Exited at 54% after 2571.14 s; closed stderr capture stream, no final summary |
+
+The docs setup corrections were to prepare `/tmp/docs-dbt-packages` with
+`scripts/docs_dbt_packages.py` (the same fixture-preparation step as CI), and set
+`DOCS_PROXY_IP` to the resolved session-proxy address for nested Docker builds.
+Both reference pages then passed unchanged. A Java proxy configuration downloaded
+the declared Delta jars with certificate verification enabled; a two-row Spark
+smoke returned 0, then every Fabric/content test passed. The first combined targeted
+probe returned 4 because it collected Fabric tests in the docs environment without
+nbformat; it was rerun in the correct separate Fabric environment and passed.
+
+The Fabric/dbt environment used for the complete suite lacks Playwright (confirmed by an import
+probe, exit 0). Its branding test fails there, whereas the requested docs/release
+suite passes the same test. A focused run in the Fabric/dbt environment with
+`uv run --with playwright==1.63.0 --with pyee==13.0.1 --with greenlet==3.5.6`
+(the three versions in the committed lock) passes, exit 0; no dependency files or
+tests were changed for this local tooling setup.
+
+Full command output is retained locally under
+`/workspace/scratch/W-uv-1-logs/pr24-*.log`; the command journal below will include
+all follow-up checks and their exit codes.
+
+
+The full command collected 19,038 tests, selected 19,022 and deselected only the
+16 tests excluded by the requested marker expression. It showed the browser and
+container setup failures described above, then exited while reporting
+`tests/plugins/test_scaffold.py::test_the_installed_plugin_is_found_by_the_host_and_listed`
+with `ValueError('I/O operation on closed file.')` and `lost sys.stderr`. There is
+no aggregate pass/fail summary; the remaining tests after that point were not executed. This is a red,
+incomplete full-suite result. The unchanged scaffold node passes alone with both
+default capture (exit 0, 1 passed) and system capture (exit 0, 1 passed). No test or
+runtime code was changed to suppress the capture failure.
+
+An AST comparison confirms that every runbook `test_*` function is identical to
+starting head 46ec7a2. The CI-command helper is the only changed test code; runtime
+sources, dependency declarations and the lock also match that starting head
+(scope check exit 0). No skip, xfail or assertion relaxation was introduced.
+
+### Follow-up command journal
+
+Each identifier names its corresponding local `pr24-*.log`; exact commands are
+also stored in the local `commands.jsonl`. Long stdin programs are summarized
+here; their assertions and outcomes are described above.
+
+| Check | Command / purpose | Exit | Seconds |
+| --- | --- | ---: | ---: |
+| pr24-targeted | `uv run --locked --no-sync pytest -q tests/docs/test_owner_notes.py tests/release/test_docs.py tests/demo/fabric/test_runbook_setup.py` | 4 | 0.36 |
+| pr24-fabric-sync | `UV_PROJECT_ENVIRONMENT=/workspace/scratch/W-uv-1-fabric uv sync --locked --group fabric-demo --group dbt` | 0 | 0.33 |
+| pr24-fabric-ci-sync | `UV_PROJECT_ENVIRONMENT=/workspace/scratch/W-uv-1-fabric uv sync --locked --group fabric-demo` | 0 | 0.22 |
+| pr24-fabric-requirements | `Python: assert every requirements version and editable domain direct URL in exact CI Fabric environment` | 0 | 0.11 |
+| pr24-full-sync | `UV_PROJECT_ENVIRONMENT=/workspace/scratch/W-uv-1-full uv sync --locked --python 3.12 --group fabric-demo --group dbt` | 0 | 3.1 |
+| pr24-static | `uv run --locked --no-sync ruff check tests/demo/fabric/test_runbook_setup.py && uv run --locked --no-sync ruff format --check tests/demo/fabric/test_runbook_setup.py && actionlint .github/workflows/docs.yml && git diff --check` | 0 | 0.09 |
+| pr24-regressions | `uv run --locked --no-sync pytest -q "tests/docs/test_reference_examples.py::test_reference_page[RELEASE_CHECKLIST]" tests/docs/test_owner_notes.py::test_release_guard_and_workflow tests/release/test_docs.py::test_the_contributing_guide_names_the_checks_ci_runs && UV_PROJECT_ENVIRONMENT=/workspace/scratch/W-uv-1-fabric uv run --locked --no-sync pytest -q tests/demo/fabric/test_runbook_setup.py` | 0 | 9.7 |
+| pr24-helper-format | `uv run --locked --no-sync ruff check tests/demo/fabric/test_runbook_setup.py && uv run --locked --no-sync ruff format --check tests/demo/fabric/test_runbook_setup.py` | 0 | 0.05 |
+| pr24-final-runbook | `UV_PROJECT_ENVIRONMENT=/workspace/scratch/W-uv-1-fabric uv run --locked --no-sync pytest -q tests/demo/fabric/test_runbook_setup.py && uv run --locked --no-sync ruff check tests/demo/fabric/test_runbook_setup.py && uv run --locked --no-sync ruff format --check tests/demo/fabric/test_runbook_setup.py && git diff --check` | 0 | 1.56 |
+| pr24-fabric-content | `umask 0022; UV_PROJECT_ENVIRONMENT=/workspace/scratch/W-uv-1-fabric uv run --locked --no-sync pytest tests/demo/fabric tests/demo/content` | 1 | 133.44 |
+| pr24-spark-proxy | `Java proxy configured; create Delta Spark session and assert two-row count` | 0 | 31.16 |
+| pr24-docs-diagnostics | `uv run --locked --no-sync pytest -q "tests/docs/test_reference_examples.py::test_reference_page[CONTAINER]" "tests/docs/test_reference_examples.py::test_reference_page[DBT]"` | 1 | 15.91 |
+| pr24-dbt-fixtures | `uv run --locked --no-sync python scripts/docs_dbt_packages.py --directory /tmp/docs-dbt-packages` | 0 | 2.41 |
+| pr24-docs-lint | `uv run --locked --no-sync python scripts/check_docs_language.py && uv run --locked --no-sync python scripts/check_user_facing.py && uv run --locked --no-sync python scripts/check_secrets.py && actionlint .github/workflows/docs.yml && git diff --check` | 0 | 18.88 |
+| pr24-docs-fixtures-corrected | `DOCS_PROXY_IP=172.31.2.93 uv run --locked --no-sync pytest -q "tests/docs/test_reference_examples.py::test_reference_page[CONTAINER]" "tests/docs/test_reference_examples.py::test_reference_page[DBT]"` | 0 | 414.8 |
+| pr24-fabric-content-proxy | `umask 0022; JAVA_TOOL_OPTIONS="-Dhttps.proxyHost=proxy -Dhttps.proxyPort=8080 -Dhttp.proxyHost=proxy -Dhttp.proxyPort=8080 -Dhttp.nonProxyHosts=localhost\|127.*" UV_PROJECT_ENVIRONMENT=/workspace/scratch/W-uv-1-fabric uv run --locked --no-sync pytest tests/demo/fabric tests/demo/content` | 0 | 754.34 |
+| pr24-docs-release | `umask 0022; uv run --locked --no-sync pytest tests/docs tests/release` | 1 | 1062.09 |
+| pr24-merge-main | `git merge --no-ff --signoff -m "W-uv-1: merge origin/main to align published README metadata" origin/main` | 1 | 0.07 |
+| pr24-merge-resolved | `git add CHANGELOG.md && git diff --cached --check && git commit --no-edit --signoff` | 0 | 0.04 |
+| pr24-after-merge | `uv run --locked --no-sync pytest -q "tests/docs/test_reference_examples.py::test_reference_page[RELEASE_CHECKLIST]" tests/docs/test_owner_notes.py::test_release_guard_and_workflow tests/release/test_docs.py::test_the_contributing_guide_names_the_checks_ci_runs && UV_PROJECT_ENVIRONMENT=/workspace/scratch/W-uv-1-fabric uv run --locked --no-sync pytest -q tests/demo/fabric/test_runbook_setup.py && uv run --locked --no-sync mkdocs build --strict` | 0 | 39.25 |
+| pr24-browser-setup-diagnostic | `Python: confirm Playwright absent from full Fabric/dbt environment` | 0 | 0.02 |
+| pr24-metadata | `uv run --locked --no-sync python scripts/check_published_metadata.py --base origin/main --out /workspace/scratch/W-uv-1-metadata-pr24` | 0 | 317.16 |
+| pr24-browser-locked-tools | `UV_PROJECT_ENVIRONMENT=/workspace/scratch/W-uv-1-full uv run --locked --no-sync --with playwright==1.63.0 --with pyee==13.0.1 --with greenlet==3.5.6 pytest -q tests/docs/test_brand.py` | 0 | 35.52 |
+| pr24-scope-check | `AST equality for all runbook test functions; only helper changed; runtime/dependencies/lock unchanged` | 0 | 0.05 |
+| pr24-full-suite | `umask 0022; UV_PROJECT_ENVIRONMENT=/workspace/scratch/W-uv-1-full uv run --locked --no-sync pytest -m "not emulator and not live"` | 1 | 2571.14 |
+| pr24-scaffold-diagnostic | `UV_PROJECT_ENVIRONMENT=/workspace/scratch/W-uv-1-full uv run --locked --no-sync pytest -vv --capture=sys tests/plugins/test_scaffold.py::test_the_installed_plugin_is_found_by_the_host_and_listed` | 0 | 3.8 |
+| pr24-scaffold-default-capture | `UV_PROJECT_ENVIRONMENT=/workspace/scratch/W-uv-1-full uv run --locked --no-sync pytest -q tests/plugins/test_scaffold.py::test_the_installed_plugin_is_found_by_the_host_and_listed` | 0 | 2.53 |
+| pr24-delivery-checks | `uv run --locked --no-sync ruff check tests/demo/fabric/test_runbook_setup.py && uv run --locked --no-sync ruff format --check tests/demo/fabric/test_runbook_setup.py && actionlint .github/workflows/docs.yml && uv run --locked --no-sync python scripts/check_docs_language.py && uv run --locked --no-sync python scripts/check_user_facing.py && uv run --locked --no-sync python scripts/check_secrets.py && git diff --check` | 0 | 9.87 |
