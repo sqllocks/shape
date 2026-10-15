@@ -214,7 +214,7 @@ is [streaming.md](streaming.md). The guides of the later four are [DBT.md](../DB
 [behavior.md](behavior.md), [healthcare-codes.md](healthcare-codes.md) and the README of
 `plugins/shape-healthcare-standards` (X12, FHIR and OMOP writers).
 `shape-integrations` (OpenLineage, MLflow, Presidio, SDMetrics, Anonymeter, Ibis and DuckDB, one
-extra each) is described in [integrations.md](integrations.md).
+extra each except Anonymeter, whose extra was withdrawn in 0.9.4) is described in [integrations.md](integrations.md).
 
 Rules that `python scripts/check_plugin_skeletons.py` enforces (and CI runs):
 
