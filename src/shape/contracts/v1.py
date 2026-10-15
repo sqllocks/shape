@@ -883,7 +883,9 @@ def diff(
 ) -> DiffResult:
     """Compare two profiles with the documented defaults (``docs/DRIFT.md``).
 
-    ``baseline`` and ``current`` are profiles; a window of the stream profiler works too. A
+    ``baseline`` and ``current`` are profiles; a window of the stream profiler works too.
+    Share-safe exports (``shape-safe-profile``) raise ``ValueError``: diff the ``.shape``
+    captures instead. A
     comparison that needs a value a safe capture left out (see ``shape.save(capture=)``) is listed
     in ``not_evaluable`` and never counted as drift.
     ``thresholds`` overrides the defaults for every column, ``column_thresholds`` for the columns
@@ -903,7 +905,11 @@ def diff(
     ``class`` change them (``docs/DRIFT.md``). ``fail_on`` (one of those classes) sets
     ``DiffResult.failed`` when an unplanned change of that class or a stricter one is reported.
     """
+    from shape.diff._inputs import refuse_safe_profile
     from shape.project.changes import coerce
+
+    refuse_safe_profile(baseline, "baseline")
+    refuse_safe_profile(current, "current")
 
     if fail_on is not None:
         check_fail_on(fail_on)

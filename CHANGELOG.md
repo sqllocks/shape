@@ -6,7 +6,7 @@ Status: available.
 
 ## Unreleased
 
-No unreleased changes.
+Fix: `shape diff` now refuses safe profiles instead of reporting no changes (they cannot be diffed, as docs/PROJECT.md states).
 
 ## 0.9.3
 

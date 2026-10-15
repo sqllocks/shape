@@ -41,7 +41,15 @@ A change is reported only when it passes its threshold, so a stable column produ
 `severity` is fixed per kind. `score` is the size of the change from 0 to 1: a structural change
 (column added, dtype changed) scores 1, the others their natural distance (see the table).
 
-## What cannot be compared: safe captures
+## Share-safe JSON exports cannot be diffed
+
+`shape diff` refuses either input when it is a `shape-safe-profile` JSON export, including
+exports from `shape profile safe`. It names the safe input, says to diff the `.shape` captures
+instead, and exits 2 (unusable input), with or without `--fail-on-drift`. `shape.diff` raises
+`ValueError` identifying the baseline or current safe input with the same guidance. This is
+the share-safe baseline refusal described in `docs/PROJECT.md`.
+
+## Comparisons withheld by safe captures
 
 `shape profile` writes the safe capture by default (`docs/PRIVACY_MODEL.md`): a sensitive column
 has no raw minimum or maximum, no distribution fit that names the minimum, no placeholder values,
