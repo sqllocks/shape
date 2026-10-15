@@ -328,3 +328,132 @@ explicitly excluded from this task by the user.
 
 Commit uses the requested prefix and DCO sign-off. Push is restricted to
 `refs/heads/lane/W-safe-leak-1`; no PR, tag, force-push or other-branch push.
+
+## Merge main after W-play-1 (2026-10-15)
+
+- `git remote get-url origin`: exit 0, expected sqllocks/shape remote.
+- `git branch --show-current`: exit 0, `lane/W-safe-leak-1`.
+- `git status --short`: exit 0, clean before merge.
+- `git fetch origin && git merge --no-ff origin/main`: exit 1 at the merge;
+  fetch succeeded (exit 0), origin/main is `2d4e86e06f1f3ff90aae65aeefa54820a3f5bd3e`.
+  The only conflict was CHANGELOG.md. Kept main's entire Unreleased content and
+  the lane's privacy fix entry under the existing Unreleased heading. All other
+  incoming files retain main's content. No rebase or force-push.
+- Conflict resolution and `git add CHANGELOG.md`: exit 0.
+- `git diff --name-only --diff-filter=U`: exit 0, empty (all conflicts resolved).
+- `git diff origin/main --name-only`: exit 0; only the six original lane files
+  differ from main. No changes outside this lane's scope.
+- `gh pr list --repo sqllocks/shape --head lane/W-safe-leak-1 --state open --json number,url`:
+  exit 0; existing PR is #25. No new PR was created.
+
+Post-merge checks use the existing .venv and inherited umask 0077. Command logs
+and exit receipts are saved locally under `/tmp/W-safe-leak-1-merge-*`.
+The full-gate rerun keeps the same fail-fast option as the prior lane check;
+no checks or coverage floor are disabled. Results follow when commands complete.
+
+### Completed post-merge checks
+
+| Command | Exit code | Result |
+| --- | --- | --- |
+| `pytest -q --tb=short --disable-warnings tests/privacy/test_safe_path_parity.py` | 0 | 13 passed |
+| `pytest -q --tb=short --disable-warnings tests/privacy tests/safecapture tests/profile tests/timecapsule` | 0 | 1565 passed, including frozen corpus |
+| `pytest -q --tb=short --disable-warnings plugins/shape-fabric/tests/test_profile_model.py plugins/shape-sqlserver/tests/test_owner_profile_findings.py plugins/shape-sqlserver/tests/test_profiler.py tests/artifact/test_aud_privacy.py tests/benchmarks/test_profile_cli_recorded.py tests/benchmarks/test_profile_timing_recorded.py tests/benchmarks/test_profile_verify_recorded.py tests/benchmarks/test_safe_profile_small_cohort.py tests/benchmarks/test_safe_profile_validators.py tests/benchmarks/test_safe_profile_verify.py tests/bridge/test_profile_concurrency.py tests/cli/test_profile_cli.py tests/cli/test_profile_dataset_cli.py tests/cli/test_profile_generation_cli.py tests/cli/test_profile_registry_cli.py tests/cli/test_profile_sampling_cli.py tests/demo/core/test_generate_from_profile.py tests/demo/core/test_profile.py tests/joint/test_multivariate_profile.py tests/joint/test_profile_joint.py tests/kernel/test_profile_kernel.py tests/kernel/test_profile_snapshot.py tests/registry/test_aud_privacy.py tests/registry/test_raw_profile_bomb.py tests/regressions/test_iss_profile_registry_safe.py tests/regressions/test_issue_1_nested_profile.py tests/security/test_aud_privacy.py` | 0 | 549 passed across 27 additional modules |
+| `python scripts/check_docs_language.py` | 0 | 0 hits |
+| `mkdocs build --strict` | 0 | strict build passed |
+| `python scripts/check_doc_links.py --site site` | 0 | 0 broken links |
+| `python scripts/check_user_facing.py --site site` | 0 | clean |
+| `PYTEST_ADDOPTS='--maxfail=1 --tb=short' make check` | 2 | 2066 passed; stopped at the inherited umask-dependent file-permission test |
+
+Merge-scope Python assertions and `git diff --check`: exit 0. Assertions verify
+main's versions outside the six lane files, unchanged lane implementation and
+no unresolved conflicts. The previous red-test evidence remains above; this merge
+did not alter the fix or its tests. No format/version or golden/corpus changes.
+
+The post-merge make failure is the same sandbox umask issue already reproduced
+on untouched main above (umask 0077, output mode 0600). The retry's pytest result
+was exit 1: 1 failed, 2066 passed, 1 existing Pydantic-v2 dependency skip,
+69 deselected, 260 warnings in 239.02s. Make returned 2. All preceding static
+stages passed. Subsequent make stages were not reached; no full-gate pass is claimed.
+No new skip, xfail or gate reduction was added.
+
+`pytest tests/docs tests/release -q --tb=short` has completed; its final result
+and diagnostics follow below.
+
+### Docs/release result and diagnostics
+
+- `pytest tests/docs tests/release -q --tb=short`: **exit 1**, 18 failed,
+  539 passed, 3 setup errors, 2 warnings in 560.01s. The complete suite ran;
+  no cases were skipped or marked xfail by this lane.
+- `pytest --collect-only -q tests/docs tests/release`: exit 0, 560 collected
+  (used to identify progress while recorded examples ran).
+- `git worktree add --detach /tmp/W-safe-leak-1-merge-base origin/main`:
+  exit 0. Baseline source import assertion: exit 0, verified the main worktree's
+  `src/shape/__init__.py`, with `SHAPE_KERNEL=python`.
+- On that untouched main worktree, `pytest -q --tb=short
+  'tests/docs/test_reference_examples.py::test_reference_page[REGISTRY]'`:
+  **exit 0**, 1 passed in 4.46s. The same case fails on this lane.
+
+Confirmed environment/setup failures, separately from the lane-related mismatch:
+
+- Browser branding: Playwright is not installed.
+- Core sdist setup (3 errors): maturin cannot find Cargo on PATH.
+- CONTRIBUTING/INSTALL/PROJECT/SIGNING/TESTING_WITH_SHAPE: editable build setup
+  fails because the Rust toolchain and its bootstrap dependencies are unavailable
+  (reported missing httpx or puccinialin).
+- CLI/INSTALL doctor transcripts: installed NumPy 2.5.4 and PyArrow 26.0.0 differ
+  from recorded 2.5.3 and 25.0.1; tzdata is absent.
+- CONTAINER: apt-get build step exits 100; the expected local image is then absent.
+- DuckDB tutorial and SINKS: the DuckDB sink plugin is not installed.
+- DBT: `/tmp/docs-dbt-packages` fixture directory is absent; plugin authoring also
+  reports the dbt distribution is not installed.
+- IMPORTERS: Pydantic v2 is not installed.
+- Behavior, simulation and healthcare-code examples: their required plugin commands
+  or modules are unavailable.
+
+### Recorded registry-output question (left unchanged)
+
+The REGISTRY example 2 content-ID mismatch is **lane-related**, not classified as
+an environment failure: it passes on untouched main and fails with this privacy fix.
+It converts a full capture to the safe form, so removing the sensitive fitted
+distributions changes the safe JSON bytes and therefore the registry's content ID.
+
+Exact question: May the two recorded content IDs in `docs/REGISTRY.md` example 2
+be updated from `c73143ec0c6e14d854a8c348d1e591bc702ed514d34f3b685ca31ec0ab060f6b`
+to `32ec6a4ddb4a7cf575fa0847d4d85297259a5b8539cf7334b6cb9e6f85249b5f`
+to reflect the intended removal of sensitive fitted distributions?
+
+Main's version of that transcript is retained under the current merge instructions.
+No recorded output, golden/corpus file or safe-profile version was regenerated or
+changed. The frozen-corpus checks pass. This status records the explicit open question for review and does not claim
+a clean docs/release or full-gate result.
+
+Complete failing-case inventory from the suite:
+
+```text
+ERROR tests/release/test_packaging.py::test_core_sdist_holds_only_build_inputs_and_user_files
+ERROR tests/release/test_packaging.py::test_core_sdist_has_what_a_build_needs
+ERROR tests/release/test_packaging.py::test_core_sdist_passes_the_user_facing_check
+FAILED tests/docs/test_brand.py::test_branded_site - ModuleNotFoundError: No ...
+FAILED tests/docs/test_launch_tutorials.py::test_tutorial[06-domain-duckdb]
+FAILED tests/docs/test_reference_examples.py::test_reference_page[CONTRIBUTING]
+FAILED tests/docs/test_reference_examples.py::test_reference_page[CLI] - Fail...
+FAILED tests/docs/test_reference_examples.py::test_reference_page[CONTAINER]
+FAILED tests/docs/test_reference_examples.py::test_reference_page[DBT] - Asse...
+FAILED tests/docs/test_reference_examples.py::test_reference_page[IMPORTERS]
+FAILED tests/docs/test_reference_examples.py::test_reference_page[INSTALL] - ...
+FAILED tests/docs/test_reference_examples.py::test_reference_page[PROJECT] - ...
+FAILED tests/docs/test_reference_examples.py::test_reference_page[REGISTRY]
+FAILED tests/docs/test_reference_examples.py::test_reference_page[SIGNING] - ...
+FAILED tests/docs/test_reference_examples.py::test_reference_page[SIMULATION_FILES_EVENTS]
+FAILED tests/docs/test_reference_examples.py::test_reference_page[SINKS] - As...
+FAILED tests/docs/test_reference_examples.py::test_reference_page[TESTING_WITH_SHAPE]
+FAILED tests/docs/test_reference_examples.py::test_reference_page[authoring]
+FAILED tests/docs/test_reference_examples.py::test_reference_page[behavior]
+FAILED tests/docs/test_reference_examples.py::test_reference_page[healthcare-codes]
+FAILED tests/docs/test_reference_examples.py::test_reference_page[simulation]
+18 failed, 539 passed, 2 warnings, 3 errors in 560.01s (0:09:20)
+```
+
+Final verification after recording results: `python scripts/check_docs_language.py`
+exit 0 (0 hits); `git diff --check` exit 0; `git diff origin/main --name-only`
+exit 0 (the original six lane files only). Baseline worktree cleanup: exit 0.

@@ -36,7 +36,6 @@ openlineage = ["openlineage-python>=1.20,<2"]
 mlflow = ["mlflow>=3,<4"]
 presidio = ["presidio-analyzer>=2.2,<3"]
 sdmetrics = ["sdmetrics>=0.18,<1"]
-anonymeter = ["anonymeter>=1,<2"]
 ibis = ["ibis-framework[duckdb]>=12,<13", "duckdb>=1.2,<2"]
 
 [project.entry-points."shape.commands"]
