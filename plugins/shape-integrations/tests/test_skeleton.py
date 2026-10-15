@@ -41,24 +41,16 @@ def test_version_equals_core_and_pins_it():
     assert len(proj["dependencies"]) == 1  # every third-party library is an extra
 
 
-def test_one_extra_per_integration_each_pins_a_major_range():
+def test_published_extras_withdraw_anonymeter_and_preserve_other_requirements():
     extras = _project()["optional-dependencies"]
-    assert (
-        set(extras)
-        == set(EXTRAS)
-        == {
-            "openlineage",
-            "mlflow",
-            "presidio",
-            "sdmetrics",
-            "anonymeter",
-            "ibis",
-        }
-    )
-    for name, reqs in extras.items():
-        assert reqs, name
-        for req in reqs:
-            assert "<" in req and ">=" in req, f"{name}: {req} must pin a version range"
+    assert extras == {
+        "openlineage": ["openlineage-python>=1.20,<2"],
+        "mlflow": ["mlflow>=3,<4"],
+        "presidio": ["presidio-analyzer>=2.2,<3"],
+        "sdmetrics": ["sdmetrics>=0.18,<1"],
+        "ibis": ["ibis-framework[duckdb]>=12,<13", "duckdb>=1.2,<2"],
+    }
+    assert set(extras) == set(EXTRAS)
 
 
 def test_entry_points_cover_commands_detector_and_source():
@@ -112,3 +104,10 @@ def test_the_installed_distribution_passes_the_conformance_kit_for_every_entry_p
         "shape.sources:duckdb",
     ):
         assert ref in joined
+
+
+def test_missing_anonymeter_keeps_the_error_type_and_extra():
+    with pytest.raises(MissingExtraError) as info:
+        require("shape_integrations_no_such_library", "anonymeter", name="Anonymeter")
+    assert info.value.extra == "anonymeter"
+    assert "withdrawn in 0.9.4" in str(info.value)
