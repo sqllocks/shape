@@ -6320,6 +6320,7 @@ Early access 0.9.3.
 Profiling, contracts and drift are available and supported. Generation from a profile is available and is being hardened. Other surfaces are experimental unless labelled available. The 1.x promises describe future policy.
 Unreleased
 ¶
+Development: the dev and CI environment is now locked with uv; user installs are unchanged.
 Docs: README and Quickstart link to the Shape Playground (a recorded 0.9.3 session in the browser).
 Integrations: the
 anonymeter
@@ -19206,21 +19207,88 @@ provenance propagation, and fail-closed input handling. Core must not gain a man
 and conformance tests for new normative behavior. Document the changed behavior.
 Local development
 ¶
-You need Python 3.11 or newer and Rust stable 1.85 or newer to build the native kernel.
-Create a virtual environment and install the development dependencies and domains plugin:
-python
+Published packages support Python 3.11 or newer. The complete development and documentation
+environment needs Python 3.12 or newer and Rust stable 1.85 or newer to build the native kernel.
+Install the pinned uv version and bootstrap the locked workspace:
+python3
 -m
-venv
-.venv
-.
-.venv/bin/activate
+pip
+install
+--user
+"uv==0.8.17"
 make
 bootstrap
-After changing Rust code, run
-maturin develop --release
+Bootstrap runs
+uv sync --locked --group docs --group dbt --group benchmark
+; core remains the
+maturin root project and the 12 first-party plugins are editable workspace members. No shell
+activation is needed. For core-only work on Python 3.11, use
+uv sync --locked
+.
+Run tools with
+uv run --locked
+, adding
+--group docs
+for documentation tools. Never run
+pip install
+in the uv development environment. After changing Rust code, run
+uv run --locked maturin develop --release
 to rebuild
 shape._kernel
 .
+Edit development dependencies in
+[dependency-groups]
+in
+pyproject.toml
+, run
+make lock
+(
+uv lock
+), and commit
+uv.lock
+in the same commit.
+make lock-check
+rejects a stale lock.
+To deliberately upgrade one dependency, run
+uv lock --upgrade-package X
+, review the lock
+changes and run
+make bootstrap
+and the checks again. Published extras are retained for
+compatibility; do not change their ranges when editing development groups.
+The Fabric SDK requires PyArrow below 20 while docs and benchmarks pin 25.0.1. These groups
+are explicitly incompatible in the universal lock. Run Fabric tests in a separate environment:
+UV_PROJECT_ENVIRONMENT=.venv-fabric uv sync --locked --group fabric-demo
+, then use the same
+variable with
+uv run --locked --no-sync
+. Do not combine
+fabric-demo
+with
+docs
+or
+benchmark
+. Bootstrap selects the groups needed by
+make check
+.
+Without uv, the unsupported-but-working fallback is a separate virtual environment:
+python
+-m
+venv
+.venv-pip
+.
+.venv-pip/bin/activate
+make
+bootstrap-pip
+On Windows, run
+make bootstrap-pip
+with the venv’s Python supplied through
+PYTHON
+.
+The fallback uses the previous pip editable install and does not provide lockfile guarantees.
+Run tools directly in that venv, for example
+python -m pytest
+; the other Make targets require uv.
 Before submitting a change, run the repository checks:
 make
 check
@@ -19237,12 +19305,18 @@ scripts/
 the pure-Python kernel tests, and Rust formatting, clippy and tests. The repository
 checks cover requirements, secrets, user-facing wording, shipped data, plugin
 skeletons, versions and conformance coverage. For a quicker local run:
+uv
+run
+--locked
 pytest
 -m
 "not emulator and not live"
 SHAPE_KERNEL
 =
 python
+uv
+run
+--locked
 pytest
 -m
 "not emulator and not live"
@@ -19323,10 +19397,19 @@ the 1.0 checklist
 for the release requirements.
 Documentation site
 ¶
-Install the full requirements from
+Run
+make bootstrap
+with Python 3.12 or newer.
 requirements-docs.txt
-with Python 3.12 or newer
-and the core and first-party plugins from this checkout. The site reads
+is a generated
+compatibility export of the
+docs
+group for the example harness and pip consumers;
+make docs-export-check
+checks it against the lock. Regenerate it with
+uv run --locked python scripts/check_docs_requirements.py --write
+after changing the lock.
+The site reads
 mkdocs.yml
 ;
 its hooks generate the CLI reference from the parser, the API reference from exported
@@ -19341,13 +19424,28 @@ outside
 docs/
 are rewritten to their repository locations when the site is built.
 Before submitting docs changes, run:
+uv
+run
+--locked
+--group
+docs
 mkdocs
 build
 --strict
+uv
+run
+--locked
+--group
+docs
 python
 scripts/check_doc_links.py
 --site
 site
+uv
+run
+--locked
+--group
+docs
 python
 scripts/check_user_facing.py
 --site
@@ -19373,37 +19471,35 @@ Future CLI policy
 Future API policy
 Development command examples
 ¶
-The source-test environment prepares the inputs for these commands. The bootstrap uses
-already installed development dependencies. The dry run previews the local test
+The source-test environment prepares the inputs for these commands. The bootstrap preview
+prints the locked setup command. The dry run previews the local test
 command without running it; use
 make check
 above for the complete verification.
 The kernel examples give you a smaller local test target.
-python
--m
-venv
---copies
---system-site-packages
-contributor-env
-.
-contributor-env/bin/activate
-PIP_NO_DEPS
-=
-1
-PIP_QUIET
-=
-1
 make
 --silent
+--dry-run
 bootstrap
+UV
+=
+uv
 Output (exit 0)
-(no output)
+uv sync --locked --group docs --group dbt --group benchmark
 make
 --silent
 --dry-run
 test
+UV
+=
+uv
 Output (exit 0)
-pytest -m "not emulator and not live"
+uv run --locked --group docs --group dbt --group benchmark pytest -m "not emulator and not live"
+uv
+run
+--active
+--locked
+--no-sync
 pytest
 -q
 -p
@@ -19414,6 +19510,11 @@ tests/kernel
 SHAPE_KERNEL
 =
 python
+uv
+run
+--active
+--locked
+--no-sync
 pytest
 -q
 -p
@@ -19437,15 +19538,36 @@ Output (exit 0)
 NO_MKDOCS_2_WARNING
 =
 1
+uv
+run
+--active
+--locked
+--no-sync
+--group
+docs
 mkdocs
 build
 --strict
 # any warning fails the build
+uv
+run
+--active
+--locked
+--no-sync
+--group
+docs
 python
 scripts/check_doc_links.py
 --site
 site
 # every link and anchor resolves
+uv
+run
+--active
+--locked
+--no-sync
+--group
+docs
 python
 scripts/check_user_facing.py
 --site
@@ -46932,6 +47054,50 @@ wheels
 "sqllocks-shape-fabric[sqlserver,eventhubs]"
 Output (exit 0)
 (no output)
+Developer checkout
+¶
+End-user installs above continue to use pip. To work on Shape itself, install Python 3.12+
+(for docs), Rust 1.85+ and uv 0.8.17 (
+python3 -m pip install --user "uv==0.8.17"
+), then run
+make bootstrap
+. This installs the locked core and 12 plugin workspace with maturin's Rust
+kernel build. Run tools with
+uv run --locked
+; use
+--group docs
+for docs tools.
+Python 3.11 core-only development can use
+uv sync --locked
+.
+Never install packages with pip into the uv development environment. Edit
+pyproject.toml
+,
+run
+uv lock
+and commit
+uv.lock
+in the same commit.
+make lock-check
+checks freshness;
+uv lock --upgrade-package X
+upgrades one dependency deliberately. Run
+make bootstrap
+and the checks after an upgrade.
+make docs-export-check
+validates the generated
+requirements-docs.txt
+compatibility export against the lock.
+Without uv, create a separate venv and run
+make bootstrap-pip
+with that venv's Python.
+This unsupported-but-working fallback keeps the previous pip editable install; it has no
+lockfile guarantees. Run tools directly in that venv, for example
+python -m pytest
+. See
+Contributing
+for full setup
+and the separate Fabric SDK group, whose PyArrow requirements conflict with docs/benchmarks.
 Report a problem with this page
 
 ## Joint distributions and plausibility
@@ -59209,10 +59375,13 @@ make
 --silent
 --dry-run
 test
+UV
+=
+uv
 Output (exit 0)
 FAIL CHANGELOG.md has no '## 1.0.0' section
 plugin skeletons OK (12 distributions, version 1.0.0)
-pytest -m "not emulator and not live"
+uv run --locked --group docs --group dbt --group benchmark pytest -m "not emulator and not live"
 This command exits nonzero. Read the diagnostic; this transcript shows a refusal or failed check, not a passing gate.
 Report a problem with this page
 

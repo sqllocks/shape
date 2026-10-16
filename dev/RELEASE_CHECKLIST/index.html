@@ -6894,13 +6894,13 @@ documentation fixture, and require every gate to pass.</p>
 
 <div class="runnable-reference highlight"><pre><span></span><code>python<span class="w"> </span>scripts/check_versions.py<span class="w"> </span>--release<span class="w"> </span>--expect<span class="w"> </span><span class="m">1</span>.0.0
 <span class="w">   </span>python<span class="w"> </span>scripts/check_plugin_skeletons.py
-<span class="w">   </span>make<span class="w"> </span>--silent<span class="w"> </span>--dry-run<span class="w"> </span><span class="nb">test</span>
+<span class="w">   </span>make<span class="w"> </span>--silent<span class="w"> </span>--dry-run<span class="w"> </span><span class="nb">test</span><span class="w"> </span><span class="nv">UV</span><span class="o">=</span>uv
 </code></pre></div>
 <details class="info">
 <summary>Output (exit 0)</summary>
 <div class="expected highlight"><pre><span></span><code>FAIL CHANGELOG.md has no '## 1.0.0' section
 plugin skeletons OK (12 distributions, version 1.0.0)
-pytest -m "not emulator and not live"
+uv run --locked --group docs --group dbt --group benchmark pytest -m "not emulator and not live"
 </code></pre></div>
 </details>
 <p>This command exits nonzero. Read the diagnostic; this transcript shows a refusal or failed check, not a passing gate.</p>

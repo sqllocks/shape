@@ -6470,14 +6470,37 @@ review behavior against specifications and conformance tests. See <a href="../GO
 provenance propagation, and fail-closed input handling. Core must not gain a mandatory network dependency. Add a regression test for a bug
 and conformance tests for new normative behavior. Document the changed behavior.</p>
 <h2 id="local-development">Local development<a class="headerlink" href="#local-development" title="Permanent link">&para;</a></h2>
-<p>You need Python 3.11 or newer and Rust stable 1.85 or newer to build the native kernel.
-Create a virtual environment and install the development dependencies and domains plugin:</p>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
-.<span class="w"> </span>.venv/bin/activate
+<p>Published packages support Python 3.11 or newer. The complete development and documentation
+environment needs Python 3.12 or newer and Rust stable 1.85 or newer to build the native kernel.
+Install the pinned uv version and bootstrap the locked workspace:</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span><span class="s2">"uv==0.8.17"</span>
 make<span class="w"> </span>bootstrap
 </code></pre></div>
-<p>After changing Rust code, run <code>maturin develop --release</code> to rebuild <code>shape._kernel</code>.
-Before submitting a change, run the repository checks:</p>
+<p>Bootstrap runs <code>uv sync --locked --group docs --group dbt --group benchmark</code>; core remains the
+maturin root project and the 12 first-party plugins are editable workspace members. No shell
+activation is needed. For core-only work on Python 3.11, use <code>uv sync --locked</code>.
+Run tools with <code>uv run --locked</code>, adding <code>--group docs</code> for documentation tools. Never run
+<code>pip install</code> in the uv development environment. After changing Rust code, run
+<code>uv run --locked maturin develop --release</code> to rebuild <code>shape._kernel</code>.</p>
+<p>Edit development dependencies in <code>[dependency-groups]</code> in <code>pyproject.toml</code>, run <code>make lock</code>
+(<code>uv lock</code>), and commit <code>uv.lock</code> in the same commit. <code>make lock-check</code> rejects a stale lock.
+To deliberately upgrade one dependency, run <code>uv lock --upgrade-package X</code>, review the lock
+changes and run <code>make bootstrap</code> and the checks again. Published extras are retained for
+compatibility; do not change their ranges when editing development groups.</p>
+<p>The Fabric SDK requires PyArrow below 20 while docs and benchmarks pin 25.0.1. These groups
+are explicitly incompatible in the universal lock. Run Fabric tests in a separate environment:
+<code>UV_PROJECT_ENVIRONMENT=.venv-fabric uv sync --locked --group fabric-demo</code>, then use the same
+variable with <code>uv run --locked --no-sync</code>. Do not combine <code>fabric-demo</code> with <code>docs</code> or
+<code>benchmark</code>. Bootstrap selects the groups needed by <code>make check</code>.</p>
+<p>Without uv, the unsupported-but-working fallback is a separate virtual environment:</p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv-pip
+.<span class="w"> </span>.venv-pip/bin/activate
+make<span class="w"> </span>bootstrap-pip
+</code></pre></div>
+<p>On Windows, run <code>make bootstrap-pip</code> with the venv’s Python supplied through <code>PYTHON</code>.
+The fallback uses the previous pip editable install and does not provide lockfile guarantees.
+Run tools directly in that venv, for example <code>python -m pytest</code>; the other Make targets require uv.</p>
+<p>Before submitting a change, run the repository checks:</p>
 <div class="highlight"><pre><span></span><code>make<span class="w"> </span>check
 </code></pre></div>
 <p>The target runs Ruff lint and format checks on <code>src/</code>, <code>tests/</code>, <code>plugins/</code> and the
@@ -6486,8 +6509,8 @@ benchmark harness, strict mypy, Vulture, import checks and the repository checks
 the pure-Python kernel tests, and Rust formatting, clippy and tests. The repository
 checks cover requirements, secrets, user-facing wording, shipped data, plugin
 skeletons, versions and conformance coverage. For a quicker local run:</p>
-<div class="highlight"><pre><span></span><code>pytest<span class="w"> </span>-m<span class="w"> </span><span class="s2">"not emulator and not live"</span>
-<span class="nv">SHAPE_KERNEL</span><span class="o">=</span>python<span class="w"> </span>pytest<span class="w"> </span>-m<span class="w"> </span><span class="s2">"not emulator and not live"</span>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>--locked<span class="w"> </span>pytest<span class="w"> </span>-m<span class="w"> </span><span class="s2">"not emulator and not live"</span>
+<span class="nv">SHAPE_KERNEL</span><span class="o">=</span>python<span class="w"> </span>uv<span class="w"> </span>run<span class="w"> </span>--locked<span class="w"> </span>pytest<span class="w"> </span>-m<span class="w"> </span><span class="s2">"not emulator and not live"</span>
 </code></pre></div>
 <p>Tests marked <code>emulator</code> need their local services; tests marked <code>live</code> need configured
 accounts. Their CI and Nightly jobs prepare those prerequisites. Performance-sensitive
@@ -6528,8 +6551,11 @@ compatibility baseline in <code>tests/api/stable_api_baseline.json</code>, descr
 <a href="../CLI_STABILITY/">the CLI policy</a> for command stability and
 <a href="../V1_DONE/">the 1.0 checklist</a> for the release requirements.</p>
 <h2 id="documentation-site">Documentation site<a class="headerlink" href="#documentation-site" title="Permanent link">&para;</a></h2>
-<p>Install the full requirements from <code>requirements-docs.txt</code> with Python 3.12 or newer
-and the core and first-party plugins from this checkout. The site reads <code>mkdocs.yml</code>;
+<p>Run <code>make bootstrap</code> with Python 3.12 or newer. <code>requirements-docs.txt</code> is a generated
+compatibility export of the <code>docs</code> group for the example harness and pip consumers;
+<code>make docs-export-check</code> checks it against the lock. Regenerate it with
+<code>uv run --locked python scripts/check_docs_requirements.py --write</code> after changing the lock.
+The site reads <code>mkdocs.yml</code>;
 its hooks generate the CLI reference from the parser, the API reference from exported
 names and the performance reference from committed, verified benchmark results.
 Do not edit generated output by hand.</p>
@@ -6537,9 +6563,9 @@ Do not edit generated output by hand.</p>
 <code>docs/talks/</code> stays outside the public site. Links to source files and examples
 outside <code>docs/</code> are rewritten to their repository locations when the site is built.
 Before submitting docs changes, run:</p>
-<div class="highlight"><pre><span></span><code>mkdocs<span class="w"> </span>build<span class="w"> </span>--strict
-python<span class="w"> </span>scripts/check_doc_links.py<span class="w"> </span>--site<span class="w"> </span>site
-python<span class="w"> </span>scripts/check_user_facing.py<span class="w"> </span>--site<span class="w"> </span>site
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>--locked<span class="w"> </span>--group<span class="w"> </span>docs<span class="w"> </span>mkdocs<span class="w"> </span>build<span class="w"> </span>--strict
+uv<span class="w"> </span>run<span class="w"> </span>--locked<span class="w"> </span>--group<span class="w"> </span>docs<span class="w"> </span>python<span class="w"> </span>scripts/check_doc_links.py<span class="w"> </span>--site<span class="w"> </span>site
+uv<span class="w"> </span>run<span class="w"> </span>--locked<span class="w"> </span>--group<span class="w"> </span>docs<span class="w"> </span>python<span class="w"> </span>scripts/check_user_facing.py<span class="w"> </span>--site<span class="w"> </span>site
 </code></pre></div>
 <p>Warnings fail the strict build. The link check validates source and site links;
 the wording check validates the public source and rendered pages.</p>
@@ -6552,34 +6578,32 @@ issues through <a href="../SECURITY/">the security policy</a>.</p>
 <p><a href="../contributing/DOCS_STYLE/">Documentation style</a> · <a href="../GOVERNANCE/">Governance</a> ·
 <a href="../CLI_STABILITY/">Future CLI policy</a> · <a href="../API_STABILITY/">Future API policy</a></p>
 <h2 id="development-command-examples">Development command examples<a class="headerlink" href="#development-command-examples" title="Permanent link">&para;</a></h2>
-<p>The source-test environment prepares the inputs for these commands. The bootstrap uses
-already installed development dependencies. The dry run previews the local test
+<p>The source-test environment prepares the inputs for these commands. The bootstrap preview
+prints the locked setup command. The dry run previews the local test
 command without running it; use <code>make check</code> above for the complete verification.
 The kernel examples give you a smaller local test target.</p>
 <!-- example: 0 -->
 
-<div class="runnable-reference highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>--copies<span class="w"> </span>--system-site-packages<span class="w"> </span>contributor-env
-.<span class="w"> </span>contributor-env/bin/activate
-<span class="nv">PIP_NO_DEPS</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="nv">PIP_QUIET</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>make<span class="w"> </span>--silent<span class="w"> </span>bootstrap
+<div class="runnable-reference highlight"><pre><span></span><code>make<span class="w"> </span>--silent<span class="w"> </span>--dry-run<span class="w"> </span>bootstrap<span class="w"> </span><span class="nv">UV</span><span class="o">=</span>uv
 </code></pre></div>
 <details class="info">
 <summary>Output (exit 0)</summary>
-<div class="expected highlight"><pre><span></span><code>(no output)
+<div class="expected highlight"><pre><span></span><code>uv sync --locked --group docs --group dbt --group benchmark
 </code></pre></div>
 </details>
 <!-- example: 1 -->
 
-<div class="runnable-reference highlight"><pre><span></span><code>make<span class="w"> </span>--silent<span class="w"> </span>--dry-run<span class="w"> </span><span class="nb">test</span>
+<div class="runnable-reference highlight"><pre><span></span><code>make<span class="w"> </span>--silent<span class="w"> </span>--dry-run<span class="w"> </span><span class="nb">test</span><span class="w"> </span><span class="nv">UV</span><span class="o">=</span>uv
 </code></pre></div>
 <details class="info">
 <summary>Output (exit 0)</summary>
-<div class="expected highlight"><pre><span></span><code>pytest -m "not emulator and not live"
+<div class="expected highlight"><pre><span></span><code>uv run --locked --group docs --group dbt --group benchmark pytest -m "not emulator and not live"
 </code></pre></div>
 </details>
 <!-- example: 2 -->
 
-<div class="runnable-reference highlight"><pre><span></span><code>pytest<span class="w"> </span>-q<span class="w"> </span>-p<span class="w"> </span>no:warnings<span class="w"> </span>-m<span class="w"> </span><span class="s2">"not emulator and not live and not heavy"</span><span class="w"> </span>tests/kernel
-<span class="nv">SHAPE_KERNEL</span><span class="o">=</span>python<span class="w"> </span>pytest<span class="w"> </span>-q<span class="w"> </span>-p<span class="w"> </span>no:warnings<span class="w"> </span>-m<span class="w"> </span><span class="s2">"not emulator and not live and not heavy"</span><span class="w"> </span>tests/kernel
+<div class="runnable-reference highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>--active<span class="w"> </span>--locked<span class="w"> </span>--no-sync<span class="w"> </span>pytest<span class="w"> </span>-q<span class="w"> </span>-p<span class="w"> </span>no:warnings<span class="w"> </span>-m<span class="w"> </span><span class="s2">"not emulator and not live and not heavy"</span><span class="w"> </span>tests/kernel
+<span class="nv">SHAPE_KERNEL</span><span class="o">=</span>python<span class="w"> </span>uv<span class="w"> </span>run<span class="w"> </span>--active<span class="w"> </span>--locked<span class="w"> </span>--no-sync<span class="w"> </span>pytest<span class="w"> </span>-q<span class="w"> </span>-p<span class="w"> </span>no:warnings<span class="w"> </span>-m<span class="w"> </span><span class="s2">"not emulator and not live and not heavy"</span><span class="w"> </span>tests/kernel
 </code></pre></div>
 <details class="info">
 <summary>Output (exit 0)</summary>
@@ -6599,9 +6623,9 @@ The kernel examples give you a smaller local test target.</p>
 </details>
 <!-- example: 3 -->
 
-<div class="runnable-reference highlight"><pre><span></span><code><span class="nv">NO_MKDOCS_2_WARNING</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>mkdocs<span class="w"> </span>build<span class="w"> </span>--strict<span class="w">              </span><span class="c1"># any warning fails the build</span>
-python<span class="w"> </span>scripts/check_doc_links.py<span class="w"> </span>--site<span class="w"> </span>site<span class="w">           </span><span class="c1"># every link and anchor resolves</span>
-python<span class="w"> </span>scripts/check_user_facing.py<span class="w"> </span>--site<span class="w"> </span>site
+<div class="runnable-reference highlight"><pre><span></span><code><span class="nv">NO_MKDOCS_2_WARNING</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>uv<span class="w"> </span>run<span class="w"> </span>--active<span class="w"> </span>--locked<span class="w"> </span>--no-sync<span class="w"> </span>--group<span class="w"> </span>docs<span class="w"> </span>mkdocs<span class="w"> </span>build<span class="w"> </span>--strict<span class="w">              </span><span class="c1"># any warning fails the build</span>
+uv<span class="w"> </span>run<span class="w"> </span>--active<span class="w"> </span>--locked<span class="w"> </span>--no-sync<span class="w"> </span>--group<span class="w"> </span>docs<span class="w"> </span>python<span class="w"> </span>scripts/check_doc_links.py<span class="w"> </span>--site<span class="w"> </span>site<span class="w">           </span><span class="c1"># every link and anchor resolves</span>
+uv<span class="w"> </span>run<span class="w"> </span>--active<span class="w"> </span>--locked<span class="w"> </span>--no-sync<span class="w"> </span>--group<span class="w"> </span>docs<span class="w"> </span>python<span class="w"> </span>scripts/check_user_facing.py<span class="w"> </span>--site<span class="w"> </span>site
 </code></pre></div>
 <details class="info">
 <summary>Output (exit 0)</summary>

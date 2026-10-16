@@ -2,698 +2,698 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://docs.shapedata.ai/dev/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/ANATOMY/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/API/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/API_STABILITY/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/BRANDING/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/BRIDGE/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/CANARIES/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/CHAOS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/CI/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/CLI/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/CLI_STABILITY/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/CONCEPTS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/CONSUMER_CONTRACTS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/CONTAINER/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/CONTRACTS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/CONTRACT_EMIT/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/DATASET_LIBRARY/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/DBT/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/DECISIONS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/DEMO/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/DESIGN/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/DETECTIVE/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/DETERMINISM/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/DICTIONARY/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/DRIFT/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/DRIFT_RED/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/DRIFT_REPORT/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/EMIT/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/EXCEL/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/EXIT_CODES/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/EXPLAIN/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/EXTERNAL_REFERENCE_ASSETS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/FABRIC_MIRROR/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/FABRIC_PLATFORM/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/FAILURE_MODES/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/FAIRNESS_AND_SKEW/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/FAQ/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/FIDELITY/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/FIDELITY_TIERS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/FINGERPRINT/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/GAMEDAY/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/GENERATION_CALENDARS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/GENERATION_ENGINE/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/GENERATION_KERNEL/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/GENERATION_SPEC/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/GENERATION_STABILITY/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/GENERATION_STRATEGIES/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/GITHUB_ACTION/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/GLOSSARY/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/HISTORY/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/IMPORTERS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/INCREMENTAL/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/INSTALL/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/JOINT/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/KNOWN_LIMITATIONS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/LANDING/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/LEARNING_PATHS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/LICENSING/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/LOCALES/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/LOCATION_AS_CODE/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/MASK/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/MODELS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/NOTIFICATIONS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/NOT_BUILDING/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/PARITY/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/PERFORMANCE/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/PLANNED_CHANGES/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/POSTS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/PRIVACY_MODEL/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/PRODUCT_ARCHITECTURE/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/PROFILE_MERGE/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/PROFILE_REGISTRY/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/PROFILING_NOTES/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/PROJECT/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/PROPOSALS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/PR_BOT/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/QUICKSTART/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/READ_REPORT/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/REFERENCE_PACKS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/REGISTRY/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/RELEASE_CHECKLIST/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/RELEASE_POLICY/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/REPORT_CARD/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/REPRODUCIBILITY/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/RESOLVE/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/RULES_TESTING/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/SCALE/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/SCENARIO_LIBRARY/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/SCENARIO_PACKS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/SCORECARD/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/SECURITY_SPECIFICATION/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/SHAPE_MANIFESTO/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/SHARE_BUNDLE/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/SIGNING/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/SIMULATION_FILES_EVENTS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/SINKS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/SOURCES/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/TESTING_WITH_SHAPE/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/THREAT_MODEL/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/TRANSFORMS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/TROUBLESHOOTING/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/TUTORIAL/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/V1_DONE/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/VAULT/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/VERIFY/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/VSCODE/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/WHAT_LEAVES/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/contributing/DOCS_STYLE/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/contributing/EXAMPLES/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/databases/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/databases/databricks/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/databases/duckdb/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/databases/mysql/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/databases/postgresql/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/databases/snowflake/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/evidence/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/evidence/allocator-measurement/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/evidence/databricks-write/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/evidence/delta-extension-fallback/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/evidence/doctor-additional-environments/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/evidence/github-action-drift/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/evidence/github-action-pass/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/evidence/github-action-ruleset/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/evidence/kerberos-live/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/evidence/live-fidelity-measurement/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/evidence/local-delta-doctor/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/evidence/mysql-export-profile/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/evidence/mysql-live/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/evidence/postgresql-export-profile/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/evidence/postgresql-live/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/evidence/release-0.9.1-verify/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/evidence/semantic-model-notebook/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/evidence/snowflake-write/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/evidence/vscode-install/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/plugins/api-v1/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/plugins/authoring/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/plugins/behavior/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/plugins/builtins/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/plugins/cloud-sources/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/plugins/fabric-auth/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/plugins/fabric-commands/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/plugins/fabric-writers/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/plugins/healthcare-codes/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/plugins/healthcare-standards/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/plugins/host/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/plugins/integrations/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/plugins/simulation/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/plugins/sqlserver/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/plugins/stability/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/plugins/streaming/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/plugins/trust-model/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/specs/LOCATION_SPEC/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/specs/ONE_ZERO_CONTRACT/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/specs/PACK_SPEC/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/specs/SHAPE_1_0/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/specs/SHAPE_2/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/specs/SHAPE_ARTIFACT_SPEC/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/specs/SHAPE_MODEL_V2/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/specs/STATE_AND_COMPATIBILITY/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/specs/STREAMING_SEMANTICS/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/tutorials/01-first-profile/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/tutorials/02-read-report/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/tutorials/03-drift/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/tutorials/04-contract/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/tutorials/05-generate-profile/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/tutorials/06-domain-duckdb/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/reference/api/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/reference/cli/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/reference/performance/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/CONTRIBUTING/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/GOVERNANCE/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/SECURITY/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/CODE_OF_CONDUCT/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
     <url>
          <loc>https://docs.shapedata.ai/dev/CHANGELOG/</loc>
-         <lastmod>2026-10-15</lastmod>
+         <lastmod>2026-10-16</lastmod>
     </url>
 </urlset>

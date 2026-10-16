@@ -545,6 +545,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#developer-checkout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Developer checkout
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -6592,6 +6603,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#developer-checkout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Developer checkout
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -6777,6 +6799,21 @@ checks passed: tag py3-none-any, &lt; 28,600,000 bytes, no compiled code, RECORD
 <div class="expected highlight"><pre><span></span><code>(no output)
 </code></pre></div>
 </details>
+<h2 id="developer-checkout">Developer checkout<a class="headerlink" href="#developer-checkout" title="Permanent link">&para;</a></h2>
+<p>End-user installs above continue to use pip. To work on Shape itself, install Python 3.12+
+(for docs), Rust 1.85+ and uv 0.8.17 (<code>python3 -m pip install --user "uv==0.8.17"</code>), then run
+<code>make bootstrap</code>. This installs the locked core and 12 plugin workspace with maturin's Rust
+kernel build. Run tools with <code>uv run --locked</code>; use <code>--group docs</code> for docs tools.
+Python 3.11 core-only development can use <code>uv sync --locked</code>.</p>
+<p>Never install packages with pip into the uv development environment. Edit <code>pyproject.toml</code>,
+run <code>uv lock</code> and commit <code>uv.lock</code> in the same commit. <code>make lock-check</code> checks freshness;
+<code>uv lock --upgrade-package X</code> upgrades one dependency deliberately. Run <code>make bootstrap</code>
+and the checks after an upgrade. <code>make docs-export-check</code> validates the generated
+<code>requirements-docs.txt</code> compatibility export against the lock.</p>
+<p>Without uv, create a separate venv and run <code>make bootstrap-pip</code> with that venv's Python.
+This unsupported-but-working fallback keeps the previous pip editable install; it has no
+lockfile guarantees. Run tools directly in that venv, for example <code>python -m pytest</code>. See <a href="https://github.com/sqllocks/shape/blob/main/CONTRIBUTING.md#local-development">Contributing</a> for full setup
+and the separate Fabric SDK group, whose PyArrow requirements conflict with docs/benchmarks.</p>
 <p><a class="docs-problem" href="https://github.com/sqllocks/shape/issues/new?template=docs-problem.yml&amp;title=Docs+problem%3A+Install&amp;page-url=https%3A%2F%2Fdocs.shapedata.ai%2Fdev%2FINSTALL%2F">Report a problem with this page</a></p>
 
 
