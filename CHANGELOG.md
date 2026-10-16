@@ -10,6 +10,8 @@ Docs: README and Quickstart link to the Shape Playground (a recorded 0.9.3 sessi
 
 Integrations: the `anonymeter` extra of sqllocks-shape-integrations is withdrawn; Anonymeter 1.x requires NumPy < 1.27 and Shape requires NumPy >= 2, so the extra could not be installed. The adapter stays and explains this when Anonymeter is missing.
 
+Fix: `shape diff` now refuses safe profiles instead of reporting no changes (they cannot be diffed, as docs/PROJECT.md states).
+
 Fix: `shape validate` accepts v1 contracts; unknown contract rules are now errors instead of being ignored; CONTRACTS.md lists every rule (including valid_as).
 
 ## 0.9.3

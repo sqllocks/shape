@@ -120,7 +120,7 @@ parse, and 130 when a scale run is interrupted. See `docs/CLI.md` and `docs/CI.m
 |---|---|
 | 0 | ok |
 | 1 | drift was found (with `--fail-on-drift`), or a `--verify` public key does not verify an input, or an input's signature is invalid |
-| 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+| 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument; a safe profile (`shape-safe-profile`) cannot be diffed: diff the `.shape` captures instead |
 
 ## `shape explain`
 
