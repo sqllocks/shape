@@ -6328,6 +6328,9 @@ extra of sqllocks-shape-integrations is withdrawn; Anonymeter 1.x requires NumPy
 Fix:
 shape diff
 now refuses safe profiles instead of reporting no changes (they cannot be diffed, as docs/PROJECT.md states).
+Fix:
+shape validate
+accepts v1 contracts; unknown contract rules are now errors instead of being ignored; CONTRACTS.md lists every rule (including valid_as).
 0.9.3
 ¶
 0.9.2 was published to TestPyPI only and was never released to PyPI; its changes are part of 0.9.3.
@@ -14996,6 +14999,11 @@ profile validate --safe
 write CI reports. See
 docs/CI.md
 .
+shape validate FILE
+also accepts v1 profile contracts (including dataset contracts).
+It exits 1 for structural errors and 2 for unknown rules or malformed rule values.
+shape check --dry-run
+validates the contract using the same rules as a real check.
 Errors
 ¶
 An expected error is one line on stderr and exit code 2:
@@ -17691,6 +17699,10 @@ min_true_rate
 max_true_rate
 ,
 no_placeholder
+,
+valid_as
+,
+strength
 required_columns
 ,
 allow_extra_columns
@@ -17704,6 +17716,16 @@ reference_pair
 max_implausible_rate
 rules on the joint analysis (
 docs/JOINT.md
+)
+tables
+maps each table name in a dataset profile to its own contract
+timeseries
+,
+reconcile
+time-series and reconciliation rules;
+shape check --data DATA
+supplies the data (
+Verification
 )
 drift
 the drift policy;
@@ -17720,6 +17742,19 @@ when no rule that counts as failing is broken,
 when one is,
 2
 when the contract itself is malformed (an unknown key, rule or strength).
+The contract keys and column-rule list above are checked against the v1 registries in the contract tests.
+valid_as
+checks a code validator's measured valid rate; see
+Reference packs
+.
+shape validate CONTRACT.json
+validates v1 contracts without a profile: structural errors exit 1;
+unknown rules and malformed rule values exit 2, as in
+shape check
+and
+shape check --dry-run
+.
+The dry run validates the contract without evaluating its rules or writing reports.
 Rule strength
 ¶
 A rule may say how much it matters with the optional key
@@ -28894,9 +28929,9 @@ Meaning
 0
 ok
 1
-the schema or contract is not valid
+the schema or contract structure is not valid
 2
-bad input: a missing or unreadable file, the wrong kind of file, or a bad argument
+an unknown contract rule or malformed rule value, or bad input: a missing or unreadable file, the wrong kind of file, or a bad argument
 shape verify
 ¶
 Code
@@ -93548,7 +93583,11 @@ inputs
 'shape'
 ,
 'contract'
-)),
+),
+plan
+=
+_plan_check
+),
 'verify'
 :
 Spec
@@ -111170,9 +111209,10 @@ options:
 
 Exit codes:
   0   ok
-  1   the schema or contract is not valid
-  2   bad input: a missing or unreadable file, the wrong kind of file,
-      or a bad argument
+  1   the schema or contract structure is not valid
+  2   an unknown contract rule or malformed rule value, or bad input:
+      a missing or unreadable file, the wrong kind of file, or a bad
+      argument
 shape verify
 ¶
 Stability:

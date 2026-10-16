@@ -6346,7 +6346,7 @@ object that maps each table name to a contract of its own.</p>
 </tr>
 <tr>
 <td><code>columns</code></td>
-<td>per column: <code>dtype</code>, <code>nullable</code>, <code>unique</code>, <code>max_null_rate</code>, <code>pattern</code>, <code>allowed_values</code>, <code>min</code>, <code>max</code>, <code>distribution</code>, <code>min_true_rate</code>, <code>max_true_rate</code>, <code>no_placeholder</code></td>
+<td>per column: <code>dtype</code>, <code>nullable</code>, <code>unique</code>, <code>max_null_rate</code>, <code>pattern</code>, <code>allowed_values</code>, <code>min</code>, <code>max</code>, <code>distribution</code>, <code>min_true_rate</code>, <code>max_true_rate</code>, <code>no_placeholder</code>, <code>valid_as</code>, <code>strength</code></td>
 </tr>
 <tr>
 <td><code>required_columns</code>, <code>allow_extra_columns</code></td>
@@ -6357,6 +6357,14 @@ object that maps each table name to a contract of its own.</p>
 <td>rules on the joint analysis (<code>docs/JOINT.md</code>)</td>
 </tr>
 <tr>
+<td><code>tables</code></td>
+<td>maps each table name in a dataset profile to its own contract</td>
+</tr>
+<tr>
+<td><code>timeseries</code>, <code>reconcile</code></td>
+<td>time-series and reconciliation rules; <code>shape check --data DATA</code> supplies the data (<a href="../VERIFY/">Verification</a>)</td>
+</tr>
+<tr>
 <td><code>drift</code></td>
 <td>the drift policy; <code>shape check</code> ignores it (<code>docs/DRIFT.md</code>)</td>
 </tr>
@@ -6364,6 +6372,11 @@ object that maps each table name to a contract of its own.</p>
 </table>
 <p>Exit codes of <code>shape check</code>: <strong>0</strong> when no rule that counts as failing is broken, <strong>1</strong> when one is,
 <strong>2</strong> when the contract itself is malformed (an unknown key, rule or strength).</p>
+<p>The contract keys and column-rule list above are checked against the v1 registries in the contract tests.
+<code>valid_as</code> checks a code validator's measured valid rate; see <a href="../REFERENCE_PACKS/#column-validators">Reference packs</a>.
+<code>shape validate CONTRACT.json</code> validates v1 contracts without a profile: structural errors exit 1;
+unknown rules and malformed rule values exit 2, as in <code>shape check</code> and <code>shape check --dry-run</code>.
+The dry run validates the contract without evaluating its rules or writing reports.</p>
 <h2 id="rule-strength">Rule strength<a class="headerlink" href="#rule-strength" title="Permanent link">&para;</a></h2>
 <p>A rule may say how much it matters with the optional key <code>strength</code>:</p>
 <table>

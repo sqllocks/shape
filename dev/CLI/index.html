@@ -7012,6 +7012,9 @@ Where <code>--json</code> takes a file (<code>profile</code>, <code>diff</code>,
 prints what would be written or sent (<code>format: "shape-dry-run"</code> with <code>--json</code>), writes nothing and
 exits 0, or 2 for invalid input. <code>--junit FILE</code> and <code>--sarif FILE</code> on <code>diff</code>, <code>check</code>, <code>verify</code>,
 <code>fidelity</code> and <code>profile validate --safe</code> write CI reports. See <code>docs/CI.md</code>.</p>
+<p><code>shape validate FILE</code> also accepts v1 profile contracts (including dataset contracts).
+It exits 1 for structural errors and 2 for unknown rules or malformed rule values.
+<code>shape check --dry-run</code> validates the contract using the same rules as a real check.</p>
 <h2 id="errors">Errors<a class="headerlink" href="#errors" title="Permanent link">&para;</a></h2>
 <p>An expected error is one line on stderr and exit code 2:</p>
 <p><a href="#local-example-0">Run this example</a>.</p>
