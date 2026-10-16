@@ -14,6 +14,8 @@ Integrations: the `anonymeter` extra of sqllocks-shape-integrations is withdrawn
 
 Fix: `shape diff` now refuses safe profiles instead of reporting no changes (they cannot be diffed, as docs/PROJECT.md states).
 
+Fix: `shape validate` accepts v1 contracts; unknown contract rules are now errors instead of being ignored; CONTRACTS.md lists every rule (including valid_as).
+
 ## 0.9.3
 
 0.9.2 was published to TestPyPI only and was never released to PyPI; its changes are part of 0.9.3.

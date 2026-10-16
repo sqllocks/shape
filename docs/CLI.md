@@ -48,6 +48,10 @@ prints what would be written or sent (`format: "shape-dry-run"` with `--json`), 
 exits 0, or 2 for invalid input. `--junit FILE` and `--sarif FILE` on `diff`, `check`, `verify`,
 `fidelity` and `profile validate --safe` write CI reports. See `docs/CI.md`.
 
+`shape validate FILE` also accepts v1 profile contracts (including dataset contracts).
+It exits 1 for structural errors and 2 for unknown rules or malformed rule values.
+`shape check --dry-run` validates the contract using the same rules as a real check.
+
 ## Errors
 
 An expected error is one line on stderr and exit code 2:

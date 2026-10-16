@@ -105,6 +105,28 @@ def _plan_git_setup(a: argparse.Namespace, out: list[dict[str, str]]) -> None:
     out.append(_file_action(top / ".gitattributes"))
 
 
+def _plan_check(a: argparse.Namespace, out: list[dict[str, str]]) -> None:
+    """Validate a profile contract without evaluating its rules or writing reports."""
+    import shape
+    from shape.cli import project as project_cli
+    from shape.cli.main import _is_profile_or_missing
+    from shape.contracts.v1 import _load_contract, validate_contract
+
+    if not _is_profile_or_missing(a.shape):
+        return  # captured evidence uses its own contract vocabulary, as in the real command
+    contract = a.contract
+    if contract is None:
+        profile = shape.load(a.shape)
+        ctx = project_cli.context(a, profile.name)
+        contract = ctx.source.contract if ctx and ctx.source else None
+    if contract is None:
+        raise ValueError(
+            "shape check needs CONTRACT.json: pass one, or set `contract` on the source in "
+            "shape.yml"
+        )
+    validate_contract(_load_contract(contract))
+
+
 def _plan_checkpoint(a: argparse.Namespace, out: list[dict[str, str]]) -> None:
     """A file sink keeps a checkpoint next to its output unless ``--checkpoint`` names one."""
     if not getattr(a, "checkpoint", None) and a.output and getattr(a, "sink", None) == "file":
@@ -223,7 +245,7 @@ SPECS: dict[str, Spec] = {
     "profile": Spec(inputs=("src",), outputs=("output", "html"), sources=True),
     "stream-profile": Spec(outputs=("output", "checkpoint")),
     "diff": Spec(inputs=("before", "after")),
-    "check": Spec(inputs=("shape", "contract")),
+    "check": Spec(inputs=("shape", "contract"), plan=_plan_check),
     "verify": Spec(
         inputs=("shape", "schema", "config", "source"), outputs=("output",), sources=True
     ),
