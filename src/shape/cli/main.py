@@ -36,7 +36,7 @@ def _artifact_kind(path):
         return None
 
 
-def _is_profile_or_missing(path):
+def _is_profile_or_missing(path: str) -> bool:
     """Route to the section 12.2 check/diff (exit 2 on input errors) for profile artifacts,
     and for a path that does not exist, which no legacy command can read either."""
     return _artifact_kind(path) == "profile" or not os.path.exists(path)

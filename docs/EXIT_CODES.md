@@ -241,8 +241,8 @@ parse, and 130 when a scale run is interrupted. See `docs/CLI.md` and `docs/CI.m
 | Code | Meaning |
 |---|---|
 | 0 | ok |
-| 1 | the schema or contract is not valid |
-| 2 | bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
+| 1 | the schema or contract structure is not valid |
+| 2 | an unknown contract rule or malformed rule value, or bad input: a missing or unreadable file, the wrong kind of file, or a bad argument |
 
 ## `shape verify`
 

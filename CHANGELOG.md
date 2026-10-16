@@ -14,6 +14,8 @@ Integrations: the `anonymeter` extra of sqllocks-shape-integrations is withdrawn
 
 Fix: `shape diff` now refuses safe profiles instead of reporting no changes (they cannot be diffed, as docs/PROJECT.md states).
 
+Fix: `shape validate` accepts v1 contracts; unknown contract rules are now errors instead of being ignored; CONTRACTS.md lists every rule (including valid_as).
+
 - Correct Fabric plugin PyPI installation guidance and align GitHub Action status with the experimental CI capability.
 - Keep the GitHub Action comment source label when a missing baseline leaves no project annotation in the result.
 - Clarify that Excel sentinel findings include typed date/datetime cells and cover six `9999-12-31` datetime cells with a regression test.

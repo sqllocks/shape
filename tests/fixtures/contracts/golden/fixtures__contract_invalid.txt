@@ -1,1 +1,1 @@
-ContractError: unknown rules for column 'id': ['colour']
+ContractRuleError: unknown rules for column 'id': ['colour']
