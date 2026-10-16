@@ -191,11 +191,12 @@ def _redact_column(
             bounds = _winsorized_bounds(quantiles, _GATE)
             if bounds is not None:
                 c["bounds"] = bounds
-            if c.get("distribution") not in (None, "normal"):
-                # uniform, exponential and lognormal fits name the minimum (and the range)
-                for key in ("distribution", "distribution_params", "fit_score"):
-                    c[key] = None
-                suppressed.setdefault("distribution_params", SENSITIVE)
+        if c.get("distribution") not in (None, "normal"):
+            # Only a normal fit describes mean and spread without naming raw extremes.
+            # Missing quantiles do not make another fitted distribution safe.
+            for key in ("distribution", "distribution_params", "fit_score"):
+                c[key] = None
+            suppressed.setdefault("distribution_params", SENSITIVE)
     else:
         released_real: dict[str, float] = {}
         if isinstance(enum, Mapping) and enum:

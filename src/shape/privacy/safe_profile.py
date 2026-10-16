@@ -21,6 +21,7 @@ rejects such an artifact.
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import math
@@ -374,6 +375,7 @@ class SafeColumnProfile:
         name = str(col["name"])
         dtype = str(col["dtype"])
         quantiles = _opt_dict(col.get("quantiles"))
+        distribution = col.get("distribution")
         distribution_params = _opt_dict(col.get("distribution_params"))
         bounds = _winsorized_bounds(quantiles, cfg)
         cardinality = int(col.get("cardinality") or 0)
@@ -394,6 +396,11 @@ class SafeColumnProfile:
             length_dist = _length_dist(string_length)
             weights = None
             suppressed = None
+            # Match safe capture: only a normal fit describes mean and spread without
+            # naming raw extremes. This policy also applies without a quantile fingerprint.
+            if distribution != "normal":
+                distribution = None
+                distribution_params = None
 
         histogram: dict[str, Any] | None = None
         histogram_routed = False
@@ -449,7 +456,7 @@ class SafeColumnProfile:
             mean=mean,
             std=std,
             quantiles=quantiles,
-            distribution=col.get("distribution"),
+            distribution=distribution,
             distribution_params=distribution_params,
             bounds=bounds,
             categorical_weights=weights,
@@ -618,16 +625,22 @@ class SafeProfile:
         self, include: Sequence[str] | None = None, exclude: Sequence[str] | None = None
     ) -> SafeProfile:
         """A copy with only the columns that match ``include`` (names or ``*`` patterns; all when
-        empty) and do not match ``exclude``; correlation entries of dropped columns go too."""
+        empty) and do not match ``exclude``; their manifest, key, correlation and relationship
+        entries go too."""
 
         def wanted(col: str) -> bool:
             if include and not any(fnmatchcase(col, pat) for pat in include):
                 return False
             return not (exclude and any(fnmatchcase(col, pat) for pat in exclude))
 
-        out = SafeProfile.from_dict(self.to_dict())
-        for table in out.tables.values():
+        out = SafeProfile.from_dict(copy.deepcopy(self.to_dict()))
+        for tname, table in out.tables.items():
             table.columns = {n: c for n, c in table.columns.items() if wanted(n)}
+            manifest_tables = out.redaction_manifest.get("tables", {})
+            if tname in manifest_tables:
+                manifest_tables[tname] = {
+                    n: entry for n, entry in manifest_tables[tname].items() if n in table.columns
+                }
             table.primary_key = [c for c in table.primary_key if c in table.columns]
             table.detected_fks = {c: r for c, r in table.detected_fks.items() if c in table.columns}
             if table.correlation_matrix:
@@ -637,6 +650,18 @@ class SafeProfile:
                     if a in table.columns
                 }
                 table.correlation_matrix = {a: row for a, row in kept.items() if row} or None
+        # Relationship names also contain column names; discard the whole relationship
+        # when either endpoint lost a column rather than retaining a partial key.
+        out.relationships = [
+            rel
+            for rel in out.relationships
+            if all(
+                table_name not in out.tables
+                or all(c in out.tables[table_name].columns for c in rel.get(f"{side}_columns", []))
+                for side in ("parent", "child")
+                for table_name in [rel.get(side)]
+            )
+        ]
         return out
 
     @classmethod

@@ -16,6 +16,10 @@ Fix: `shape diff` now refuses safe profiles instead of reporting no changes (the
 
 Fix: `shape validate` accepts v1 contracts; unknown contract rules are now errors instead of being ignored; CONTRACTS.md lists every rule (including valid_as).
 
+Fix (privacy): safe profiles no longer keep an excluded column's name or a sensitive column's fitted distribution, whatever path built them.
+
+Converting a full capture to the safe form now gives a different content ID when the profile has sensitive columns, because their fitted distributions are no longer kept.
+
 - Correct Fabric plugin PyPI installation guidance and align GitHub Action status with the experimental CI capability.
 - Keep the GitHub Action comment source label when a missing baseline leaves no project annotation in the result.
 - Clarify that Excel sentinel findings include typed date/datetime cells and cover six `9999-12-31` datetime cells with a regression test.
