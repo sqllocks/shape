@@ -12597,7 +12597,7 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   --mode {3nf,star}     the schema mode of a domain
-  --input DIR           the tables to corrupt, one file per table
+  --input DIR           the tables to corrupt, flat files or &lt;table&gt;/ingest_date=YYYY-MM-DD/&lt;file&gt;
   -o DIR, --output DIR  where the files go
   --corrupt KIND[=RATE][@TABLE[.COLUMN]][:OPT=V,...]
                         a corruption (repeatable), e.g. duplicates=0.02
@@ -14739,7 +14739,8 @@ Exit codes:
 
 Fit the generation schema of a profile (`shape generate --from`) and list, for every field of the
 profile, whether generated data keeps it: preserved, approximate, or not_modelled (with the
-reason). Evidence documents are checked against what the generator can build from them.
+reason). Evidence documents are checked against what the generator can build from them. Prints
+human-readable text by default; use --json for a structured result.
 
 positional arguments:
   PROFILE.shape

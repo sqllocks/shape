@@ -6617,7 +6617,9 @@ corruptions, each with a rate, and the <strong>ground-truth log</strong> they wr
 <p><a href="#local-example-1">Run this example</a>.</p>
 <p>writes the corrupted tables to <code>corrupted/</code> and the log to <code>corrupted/_chaos_ground_truth.jsonl</code>.
 The tables are generated, or read from <code>--input DIR</code> (the files <code>shape generate</code> writes, or the
-output of an earlier <code>shape chaos</code> run: its ground-truth logs are not read as tables); the same
+output of an earlier <code>shape chaos</code> run: its ground-truth logs are not read as tables).
+Input also accepts <code>&lt;table&gt;/ingest_date=YYYY-MM-DD/&lt;file&gt;</code>: the table directory supplies
+the name, and files for several dates are concatenated in path order with matching schemas; the same
 landing options as <code>shape generate</code> (<code>--path-template</code>, <code>--batch-date</code>, <code>--table-format</code>, see
 <a href="../LANDING/">LANDING.md</a>) write them in a dated layout, and then the log is
 <code>_chaos_ground_truth_YYYYMMDD.jsonl</code>. <code>--start-date D0 --batch-date D</code> sets the batch number to the

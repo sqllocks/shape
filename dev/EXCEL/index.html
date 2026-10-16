@@ -6615,6 +6615,9 @@ there is something to report. A profile of any other source has no <code>finding
 </tr>
 </tbody>
 </table>
+<p>Sentinel dates are checked in both text cells and typed Excel date/datetime cells. A typed
+<code>9999-12-31</code> cell therefore contributes to <code>sentinel_values</code>, with its sheet coordinate and an
+ISO-formatted example, just as a text cell does.</p>
 <p><code>shape profile --json</code> includes the findings in the summary. The share-safe form (<code>shape profile safe</code>) leaves them out,
 because their examples are cell values.</p>
 <h2 id="writing-a-workbook">Writing a workbook<a class="headerlink" href="#writing-a-workbook" title="Permanent link">&para;</a></h2>

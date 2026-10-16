@@ -6333,6 +6333,19 @@ shape validate
 accepts v1 contracts; unknown contract rules are now errors instead of being ignored; CONTRACTS.md lists every rule (including valid_as).
 Fix (privacy): safe profiles no longer keep an excluded column's name or a sensitive column's fitted distribution, whatever path built them.
 Converting a full capture to the safe form now gives a different content ID when the profile has sensitive columns, because their fitted distributions are no longer kept.
+Correct Fabric plugin PyPI installation guidance and align GitHub Action status with the experimental CI capability.
+Keep the GitHub Action comment source label when a missing baseline leaves no project annotation in the result.
+Clarify that Excel sentinel findings include typed date/datetime cells and cover six
+9999-12-31
+datetime cells with a regression test.
+Read standard dated landing layouts in
+shape chaos --input
+, preserving table names and provenance checks.
+Changed:
+shape plan
+now prints human-readable text by default; scripts that parse its output must add
+--json
+(the JSON keys are unchanged).
 0.9.3
 ¶
 0.9.2 was published to TestPyPI only and was never released to PyPI; its changes are part of 0.9.3.
@@ -13195,7 +13208,11 @@ shape generate
 writes, or the
 output of an earlier
 shape chaos
-run: its ground-truth logs are not read as tables); the same
+run: its ground-truth logs are not read as tables).
+Input also accepts
+<table>/ingest_date=YYYY-MM-DD/<file>
+: the table directory supplies
+the name, and files for several dates are concatenated in path order with matching schemas; the same
 landing options as
 shape generate
 (
@@ -15228,6 +15245,10 @@ shape.types_report(profile, contract, min_confidence)
 ). See
 PROFILING_NOTES.md
 .
+shape plan
+prints a human-readable plan by default;
+--json
+prints the structured result.
 shape check
 ,
 shape diff
@@ -28411,6 +28432,12 @@ mixed_types
 a column that mixes text with numbers or dates (
 types
 )
+Sentinel dates are checked in both text cells and typed Excel date/datetime cells. A typed
+9999-12-31
+cell therefore contributes to
+sentinel_values
+, with its sheet coordinate and an
+ISO-formatted example, just as a text cell does.
 shape profile --json
 includes the findings in the summary. The share-safe form (
 shape profile safe
@@ -44235,7 +44262,7 @@ https://docs.shapedata.ai/dev/GITHUB_ACTION/
 GitHub Action walkthrough
 ¶
 Gate a pull request on a project's current data matching its baseline.
-Status: available.
+Status: experimental.
 The shipped composite
 action.yml
 profiles each named source, compares it with its baseline,
@@ -48259,6 +48286,17 @@ batch_date
 =
 "2026-08-04"
 )
+shape chaos --input landing/
+reads the standard
+<table>/ingest_date=YYYY-MM-DD/<file>
+layout for CSV, Parquet and JSON Lines. Table names come from the table directories;
+several dates are concatenated in path order and must have matching schemas. The root's
+_shape_provenance.json
+must list each input file with its matching hash, or each Parquet
+file must carry the synthetic marker (see
+chaos input checks
+).
+Other custom path templates are not inferred by this reader.
 What this does not do
 ¶
 Cloud targets
@@ -93073,7 +93111,9 @@ reads from
 directory
 (the sidecar and
 _SUCCESS
-are not tables).
+and ground-truth logs are not tables). The standard landing layout
+<table>/ingest_date=<date>/<file>
+is included.
 verify_chaos_input
 (
 directory
@@ -93362,6 +93402,12 @@ on the subparsers.
 read_tables
 (
 directory
+,
+*
+,
+landing
+=
+False
 )
 ¶
 Every CSV, Parquet and JSON Lines file of
@@ -93374,7 +93420,12 @@ shape chaos
 are skipped; a file that cannot be read as a
 table is a
 ValueError
-that names it.
+that names it. With
+landing
+, also read the standard
+<table>/ingest_date=<date>/<file>
+layout, naming by the table directory and
+concatenating dates in path order.
 run
 (
 a
@@ -101029,6 +101080,12 @@ Return the SHA-256 hex digest of a file read in bounded chunks.
 verify_file
 (
 path
+,
+*
+,
+folder
+=
+None
 )
 ¶
 :data:
@@ -101044,6 +101101,9 @@ when it is listed but
 its bytes differ; :data:
 UNMARKED
 otherwise.
+folder
+selects a landing root whose
+sidecar lists nested files by their relative paths.
 write_provenance
 (
 folder
@@ -112530,7 +112590,7 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   --mode {3nf,star}     the schema mode of a domain
-  --input DIR           the tables to corrupt, one file per table
+  --input DIR           the tables to corrupt, flat files or <table>/ingest_date=YYYY-MM-DD/<file>
   -o DIR, --output DIR  where the files go
   --corrupt KIND[=RATE][@TABLE[.COLUMN]][:OPT=V,...]
                         a corruption (repeatable), e.g. duplicates=0.02
@@ -114826,7 +114886,8 @@ usage: shape plan [-h] [--status {preserved,approximate,not_modelled,unavailable
 
 Fit the generation schema of a profile (`shape generate --from`) and list, for every field of the
 profile, whether generated data keeps it: preserved, approximate, or not_modelled (with the
-reason). Evidence documents are checked against what the generator can build from them.
+reason). Evidence documents are checked against what the generator can build from them. Prints
+human-readable text by default; use --json for a structured result.
 
 positional arguments:
   PROFILE.shape

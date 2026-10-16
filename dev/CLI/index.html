@@ -7109,6 +7109,7 @@ the policy.</p>
   0 with no findings, 1 with findings, 2 for bad input; <code>--json</code> prints the findings as a list
   (the same as <code>shape.types_report(profile, contract, min_confidence)</code>). See
   <a href="../PROFILING_NOTES/#type-inference">PROFILING_NOTES.md</a>.</li>
+<li><code>shape plan</code> prints a human-readable plan by default; <code>--json</code> prints the structured result.</li>
 <li><code>shape check</code>, <code>shape diff</code>, <code>shape plan</code>, <code>shape generate --from</code> read profiles, safe captures
   included. <code>shape diff</code> lists a comparison a safe capture makes impossible under
   <code>not_evaluable</code> and does not count it as drift. <code>shape check</code> exits 0 when every rule passes, 1

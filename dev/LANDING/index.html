@@ -6484,6 +6484,12 @@ produces: only the path differs.</p>
                     <span class="n">path_template</span><span class="o">=</span><span class="s2">"</span><span class="si">{table}</span><span class="s2">/ingest_date=</span><span class="si">{date}</span><span class="s2">/</span><span class="si">{table}</span><span class="s2">_</span><span class="si">{yyyymmdd}</span><span class="s2">.</span><span class="si">{ext}</span><span class="s2">"</span><span class="p">,</span>
                     <span class="n">batch_date</span><span class="o">=</span><span class="s2">"2026-08-04"</span><span class="p">)</span>
 </code></pre></div>
+<p><code>shape chaos --input landing/</code> reads the standard <code>&lt;table&gt;/ingest_date=YYYY-MM-DD/&lt;file&gt;</code>
+layout for CSV, Parquet and JSON Lines. Table names come from the table directories;
+several dates are concatenated in path order and must have matching schemas. The root's
+<code>_shape_provenance.json</code> must list each input file with its matching hash, or each Parquet
+file must carry the synthetic marker (see <a href="../CHAOS/#chaos-only-corrupts-data-shape-wrote">chaos input checks</a>).
+Other custom path templates are not inferred by this reader.</p>
 <h2 id="what-this-does-not-do">What this does not do<a class="headerlink" href="#what-this-does-not-do" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Cloud targets</strong> (ADLS Gen2, OneLake Files) are not written by the local file sinks above:
