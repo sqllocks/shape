@@ -53,3 +53,6 @@ fhir = "shape_healthcare_standards.emitters:FhirEmitter"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.uv.sources]
+sqllocks-shape = { workspace = true }

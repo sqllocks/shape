@@ -47,3 +47,6 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 shape_healthcare_codes = ["data/*.arrow", "data/*.json", "py.typed"]
+
+[tool.uv.sources]
+sqllocks-shape = { workspace = true }

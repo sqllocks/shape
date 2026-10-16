@@ -41,3 +41,6 @@ eventhubs = "shape_eventhubs:EventHubsEmitter"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.uv.sources]
+sqllocks-shape = { workspace = true }

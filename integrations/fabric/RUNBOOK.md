@@ -74,24 +74,24 @@ timeout.
 
 ## 2. Dry-run every local step first (no Fabric needed)
 
-From the repo root, in a **new** Python 3.11 virtual environment, with the system packages the
+From the repo root, with uv 0.8.17, Python 3.11 and the system packages the
 tests need (the same steps as CI's `fabric-demo` job, `.github/workflows/ci.yml`):
 
 ```bash
 sudo apt-get install -y unixodbc        # libodbc.so.2: fabric-user-data-functions imports pyodbc
 # Java 17 for the PySpark tests (CI: actions/setup-java, temurin 17); Rust stable for the editable
 # install of Shape (COMPLETION_PLAN section 1.1)
-python3.11 -m venv .venv-fabric && . .venv-fabric/bin/activate
-python -m pip install -U pip
-pip install -e '.[dev]' -e plugins/shape-dbt -r tests/demo/fabric/requirements.txt
-pytest tests/demo/fabric -q
+export UV_PYTHON=3.11
+export UV_PROJECT_ENVIRONMENT=.venv-fabric
+uv sync --locked --group fabric-demo
+uv run --locked --no-sync python -m pytest -q tests/demo/fabric tests/demo/content
 ```
 
-Install exactly this: `tests/demo/fabric/requirements.txt` is the list the tests need (it adds
-`fsspec`, which the ADF gate script imports: the hand-picked list this section used to give lacked
-it, so `test_adf.py` and `test_generate_adf.py` failed with `ModuleNotFoundError: No module named
-'fsspec'`, 28 failed and 4 errors in the live dry run), and `plugins/shape-dbt` is needed by
-`test_dbt.py`.
+The locked `fabric-demo` environment includes every dependency in
+`tests/demo/fabric/requirements.txt`, including `fsspec` for the ADF gate script and
+the editable domains plugin. The default development group also installs the dbt plugin
+needed by `test_dbt.py`. Keep this environment separate from the incompatible docs and
+benchmark groups, which require a newer PyArrow than the Fabric SDK supports.
 
 Expected: all tests pass. The header line `fabric lane: shape API under test = real|stub`
 tells you whether the real Shape API was used. Before the merge of lane L1 it says `stub`
