@@ -54,3 +54,6 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 shape_integrations = ["schemas/*.json"]
+
+[tool.uv.sources]
+sqllocks-shape = { workspace = true }

@@ -2744,6 +2744,12 @@ def _route(a):
         return _run(_cmd_stream_profile, a)
     if a.cmd == "check" and _is_profile_or_missing(a.shape):
         return _run(_cmd_check, a)
+    if a.cmd == "diff":
+        from shape.diff._inputs import refuse_safe_profile
+
+        for path in (a.before, a.after):
+            if path is not None and not _is_profile_or_missing(path):
+                refuse_safe_profile(_load_document(path), path)
     if a.cmd == "diff" and _is_profile_or_missing(a.before):
         return _run(_cmd_diff, a)
     if a.cmd == "explain":

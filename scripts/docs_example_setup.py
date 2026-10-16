@@ -315,6 +315,7 @@ def prepare(page: str) -> None:
             )
         for name in (
             "pyproject.toml",
+            "uv.lock",
             "README.md",
             "LICENSE",
             "THIRD_PARTY_NOTICES.md",
@@ -553,6 +554,7 @@ def prepare(page: str) -> None:
             "Dockerfile",
             ".dockerignore",
             "pyproject.toml",
+            "uv.lock",
             "README.md",
             "LICENSE",
             "THIRD_PARTY_NOTICES.md",
@@ -646,6 +648,7 @@ def prepare(page: str) -> None:
             )
         for name in (
             "pyproject.toml",
+            "uv.lock",
             "README.md",
             "LICENSE",
             "THIRD_PARTY_NOTICES.md",

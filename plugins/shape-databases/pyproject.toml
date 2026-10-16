@@ -49,3 +49,6 @@ duckdb = "shape_databases:DuckDbSink"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.uv.sources]
+sqllocks-shape = { workspace = true }
