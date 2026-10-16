@@ -14,6 +14,8 @@ Integrations: the `anonymeter` extra of sqllocks-shape-integrations is withdrawn
 
 Fix: `shape diff` now refuses safe profiles instead of reporting no changes (they cannot be diffed, as docs/PROJECT.md states).
 
+Fix: `shape validate` accepts v1 contracts; unknown contract rules are now errors instead of being ignored; CONTRACTS.md lists every rule (including valid_as).
+
 Fix (privacy): safe profiles no longer keep an excluded column's name or a sensitive column's fitted distribution, whatever path built them.
 
 Converting a full capture to the safe form now gives a different content ID when the profile has sensitive columns, because their fitted distributions are no longer kept.
