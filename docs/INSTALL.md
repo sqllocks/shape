@@ -232,3 +232,22 @@ pip install --quiet --no-deps --find-links wheels "sqllocks-shape-fabric[sqlserv
     ```text {.expected}
     (no output)
     ```
+
+## Developer checkout
+
+End-user installs above continue to use pip. To work on Shape itself, install Python 3.12+
+(for docs), Rust 1.85+ and uv 0.8.17 (`python3 -m pip install --user "uv==0.8.17"`), then run
+`make bootstrap`. This installs the locked core and 12 plugin workspace with maturin's Rust
+kernel build. Run tools with `uv run --locked`; use `--group docs` for docs tools.
+Python 3.11 core-only development can use `uv sync --locked`.
+
+Never install packages with pip into the uv development environment. Edit `pyproject.toml`,
+run `uv lock` and commit `uv.lock` in the same commit. `make lock-check` checks freshness;
+`uv lock --upgrade-package X` upgrades one dependency deliberately. Run `make bootstrap`
+and the checks after an upgrade. `make docs-export-check` validates the generated
+`requirements-docs.txt` compatibility export against the lock.
+
+Without uv, create a separate venv and run `make bootstrap-pip` with that venv's Python.
+This unsupported-but-working fallback keeps the previous pip editable install; it has no
+lockfile guarantees. Run tools directly in that venv, for example `python -m pytest`. See [Contributing](../CONTRIBUTING.md#local-development) for full setup
+and the separate Fabric SDK group, whose PyArrow requirements conflict with docs/benchmarks.

@@ -48,3 +48,6 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 shape_behavior = ["examples/*.json"]
+
+[tool.uv.sources]
+sqllocks-shape = { workspace = true }

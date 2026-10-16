@@ -36,3 +36,6 @@ simulate = "shape_simulation.cli:SimulateCommand"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.uv.sources]
+sqllocks-shape = { workspace = true }

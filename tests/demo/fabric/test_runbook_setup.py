@@ -25,8 +25,10 @@ def _section_2() -> str:
 
 def _ci_fabric_demo_install() -> str:
     text = CI.read_text(encoding="utf-8")
-    job = text[text.index("  fabric-demo:") :]
-    return re.search(r"- run: (pip install -e .*requirements\.txt)", job).group(1)
+    job = re.split(r"\n  [\w-]+:", text[text.index("  fabric-demo:") :], maxsplit=1)[0]
+    install = re.search(r"(?m)^      - run: (uv sync --locked --group fabric-demo)$", job)
+    assert install is not None, "fabric-demo must have a locked uv install step"
+    return install.group(1)
 
 
 def test_section_2_installs_exactly_what_ci_installs():
