@@ -137,11 +137,13 @@ def _dump(obj: Any) -> None:
 _CHAOS_LOG_PREFIX = "_chaos_ground_truth"
 
 
-def read_tables(directory: str | Path) -> dict[str, pa.Table]:
+def read_tables(directory: str | Path, *, landing: bool = False) -> dict[str, pa.Table]:
     """Every CSV, Parquet and JSON Lines file of ``directory`` as a table named by its stem (a
     later format replaces an earlier one of the same name). The provenance sidecar, ``_SUCCESS``
     and the ground-truth logs of ``shape chaos`` are skipped; a file that cannot be read as a
-    table is a ``ValueError`` that names it."""
+    table is a ``ValueError`` that names it. With ``landing``, also read the standard
+    ``<table>/ingest_date=<date>/<file>`` layout, naming by the table directory and
+    concatenating dates in path order."""
     path = Path(directory)
     if not path.is_dir():
         raise ValueError(f"input directory not found: {directory}")
@@ -150,16 +152,36 @@ def read_tables(directory: str | Path) -> dict[str, pa.Table]:
     tables: dict[str, pa.Table] = {}
     from shape.io.provenance import is_ignored
 
-    for pattern, fmt in _READ_PATTERNS:
-        for file in sorted(path.glob(pattern)):
-            if is_ignored(file):  # _shape_provenance.json and _SUCCESS are not tables
-                continue
-            if fmt == "jsonl" and file.stem.startswith(_CHAOS_LOG_PREFIX):
-                continue
-            try:
-                tables[file.stem] = _read_table(file, fmt)
-            except pa.ArrowException as exc:
-                raise ValueError(f"{file}: cannot be read as a {fmt} table: {exc}") from exc
+    if landing:
+        from shape.chaos.input_check import table_files
+
+        files = table_files(path)
+        inputs = [
+            (file, fmt)
+            for _, fmt in _READ_PATTERNS
+            for file in files
+            if file.parent == path and file.suffix == f".{fmt}"
+        ] + [(file, file.suffix[1:]) for file in files if file.parent != path]
+    else:
+        inputs = [
+            (file, fmt) for pattern, fmt in _READ_PATTERNS for file in sorted(path.glob(pattern))
+        ]
+    for file, fmt in inputs:
+        if is_ignored(file):  # _shape_provenance.json and _SUCCESS are not tables
+            continue
+        if fmt == "jsonl" and file.stem.startswith(_CHAOS_LOG_PREFIX):
+            continue
+        try:
+            relative = file.relative_to(path)
+            name = relative.parts[0] if landing and len(relative.parts) == 3 else file.stem
+            table = _read_table(file, fmt)
+            tables[name] = (
+                pa.concat_tables([tables[name], table])
+                if landing and len(relative.parts) == 3 and name in tables
+                else table
+            )
+        except pa.ArrowException as exc:
+            raise ValueError(f"{file}: cannot be read as a {fmt} table: {exc}") from exc
     if not tables:
         raise ValueError(f"no CSV, Parquet or JSON Lines files found in {directory}")
     return tables
@@ -173,7 +195,7 @@ def _read_table(file: Path, fmt: str) -> pa.Table:
     if fmt == "parquet":
         import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
-        return pq.read_table(file)
+        return pq.ParquetFile(file).read()
     import pyarrow.json as pajson  # type: ignore[import-untyped]
 
     from shape.security.jsondepth import check_json_file

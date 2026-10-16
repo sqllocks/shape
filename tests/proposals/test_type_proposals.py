@@ -347,7 +347,7 @@ def test_plan_and_generate_apply_accepted_types(
     dec = tmp_path / "d.json"
     run(capsys, "proposals", "propose", str(saved), "--kinds", "type", "-d", str(dec))
     run(capsys, "proposals", "decide", "-d", str(dec), "type:bad.zip", "accept", "--actor", "ana")
-    code, out, _ = run(capsys, "plan", str(saved), "--decisions", str(dec))
+    code, out, _ = run(capsys, "plan", "--json", str(saved), "--decisions", str(dec))
     assert code == 0 and "bad.zip" in out
     plan = json.loads(out)
     assert any("bad.zip" in i["evidence"] for i in plan["items"])

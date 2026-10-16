@@ -14,7 +14,8 @@ pip install 'sqllocks-shape-fabric[sqlserver,eventhubs]'  # + SQL targets and th
 `[sqlserver]` brings the SQL Server plugin (and `pyodbc`) for the `sqlserver`, `warehouse` and
 `synapse` sinks and the SQL database writer; `[eventhubs]` brings the Event Hubs plugin for the
 `eventstream` emitter and writer. Without one, that part says which extra to install. The plugins
-are not on PyPI yet: install from the release's wheels with `--find-links` (docs/INSTALL.md).
+are published on PyPI: install the extras above, or install `sqllocks-shape-fabric` directly
+(see [installation](../../docs/INSTALL.md)).
 
 ## `eventstream://`: a Fabric Eventstream
 

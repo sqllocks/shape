@@ -86,6 +86,10 @@ there is something to report. A profile of any other source has no `findings` ke
 | `merged_cells` | merged ranges (`ranges`, `cells`, `count`, `blank_cells`): the value is the top-left cell's, the rest are blank |
 | `mixed_types` | a column that mixes text with numbers or dates (`types`) |
 
+Sentinel dates are checked in both text cells and typed Excel date/datetime cells. A typed
+`9999-12-31` cell therefore contributes to `sentinel_values`, with its sheet coordinate and an
+ISO-formatted example, just as a text cell does.
+
 `shape profile --json` includes the findings in the summary. The share-safe form (`shape profile safe`) leaves them out,
 because their examples are cell values.
 

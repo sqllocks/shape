@@ -320,3 +320,11 @@ def test_a_real_diff_result_is_read(tmp_path, capsys):
     assert loaded.verdict == "drift" and loaded.findings
     assert main(["ci", "comment", str(result), "-o", str(tmp_path / "c.md")]) == 0
     assert "**Verdict: drift**" in (tmp_path / "c.md").read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("name", ["orders", "orders.result", "orders.daily"])
+def test_action_result_filename_fallback_preserves_source_name(tmp_path, name):
+    path = _write(tmp_path, f"{name}.result", [], code=2)
+    text = prbot.render([findings.load(path)], version="0.0.0")
+    assert f"### Source: {name}\n" in text
+    assert "**Verdict: fail**" in text

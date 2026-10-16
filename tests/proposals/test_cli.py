@@ -73,7 +73,7 @@ def test_propose_list_decide_and_generate_through_the_cli(workdir, capsys):
     code, out, _ = run(capsys, *gen)
     assert code == 0
     assert json.loads(out)  # a plan, not an error
-    code, out, _ = run(capsys, "plan", str(prof), "--decisions", str(dec))
+    code, out, _ = run(capsys, "plan", "--json", str(prof), "--decisions", str(dec))
     assert code == 0 and "relationship:fk_orders_customer_id" in out
 
 

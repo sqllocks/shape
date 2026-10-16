@@ -621,8 +621,19 @@ def _cmd_plan_profile(a):
     out = plan.to_dict()
     if a.status:
         out["items"] = [x for x in out["items"] if x["status"] in a.status]
-    _dump(out)
+    _print_reconstruction_plan(a, out)
     return 0
+
+
+def _print_reconstruction_plan(a, out):
+    if a.json:
+        _dump(out)
+        return
+    print("Executable: " + ("yes" if out["executable"] else "no"))
+    print("Summary: " + ", ".join(f"{status}: {count}" for status, count in out["counts"].items()))
+    print(f"{'Status':<16} {'Evidence':<48} Reason")
+    for item in out["items"]:
+        print(f"{item['status']:<16} {item['evidence']:<48} {item['reason']}")
 
 
 def _cmd_stream_profile(a):
@@ -2160,7 +2171,8 @@ def _build_parser(plugin_commands=()):
         description="Fit the generation schema of a profile (`shape generate --from`) and list, "
         "for every field of the profile, whether generated data keeps it: preserved, "
         "approximate, or not_modelled (with the reason). Evidence documents are checked "
-        "against what the generator can build from them.",
+        "against what the generator can build from them. Prints human-readable text by default; "
+        "use --json for a structured result.",
     )
     gp.add_argument("shape", metavar="PROFILE.shape")
     gp.add_argument(
@@ -2433,11 +2445,15 @@ def _cmd_evidence(a):
             from shape.generation.engine import Engine
             from shape.generation.schema import GenSchema
 
-            _dump(Engine(GenSchema.from_dict(s)).dry_run().to_dict())
+            plan = Engine(GenSchema.from_dict(s)).dry_run()
+            if a.json:
+                _dump(plan.to_dict())
+            else:
+                print(plan.render())
             return 0
         from shape.generation.fidelity import plan_reconstruction
 
-        _dump(plan_reconstruction(s).to_dict())
+        _print_reconstruction_plan(a, plan_reconstruction(s).to_dict())
         return 0
     from shape.contracts import evaluate_contract
 

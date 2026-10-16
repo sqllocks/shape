@@ -142,7 +142,7 @@ def test_generate_from_rows_dry_run_and_errors(
 def test_plan_lists_every_field_and_filters_by_status(
     sales_profile: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    code, out, _ = run(capsys, "plan", sales_profile)
+    code, out, _ = run(capsys, "plan", sales_profile, "--json")
     assert code == 0
     plan = json.loads(out)
     assert plan["executable"] is True
@@ -153,11 +153,11 @@ def test_plan_lists_every_field_and_filters_by_status(
         "sales.qty.dtype",
     } <= evidence
     assert {"dataset.missingness_joint", "sales.row_count"} <= evidence
-    code, out, _ = run(capsys, "plan", sales_profile, "--status", "not_modelled")
+    code, out, _ = run(capsys, "plan", sales_profile, "--json", "--status", "not_modelled")
     flagged = json.loads(out)["items"]
     assert flagged and {i["status"] for i in flagged} == {"not_modelled"}
     assert "dataset.missingness_joint" in {i["evidence"] for i in flagged}
-    code, out, _ = run(capsys, "plan", sales_profile, "--rows", 10)
+    code, out, _ = run(capsys, "plan", sales_profile, "--json", "--rows", 10)
     statuses = {i["evidence"]: i["status"] for i in json.loads(out)["items"]}
     assert statuses["sales.sale_id.cardinality"] == "approximate"
 
@@ -169,7 +169,28 @@ def test_plan_still_reads_a_captured_shape(
     evidence.write_text(
         json.dumps({"columns": {"name": {"kind": "text"}, "x": {"kind": "numeric", "mean": 1}}})
     )
-    code, out, _ = run(capsys, "plan", evidence)
+    code, out, _ = run(capsys, "plan", evidence, "--json")
     assert code == 0
     items = {i["evidence"]: i["status"] for i in json.loads(out)["items"]}
     assert items == {"column:name": "not_modelled", "column:x": "approximate"}
+
+
+def test_plan_defaults_to_text_and_json_remains_structured(sales_profile, capsys):
+    code, out, _ = run(capsys, "plan", sales_profile, "--status", "not_modelled")
+    assert code == 0
+    assert not out.lstrip().startswith("{")
+    assert "not_modelled" in out and "dataset.missingness_joint" in out
+    code, out, _ = run(capsys, "plan", sales_profile, "--json")
+    assert code == 0
+    doc = json.loads(out)
+    assert doc["format"] == "shape-result" and doc["command"] == "plan"
+    assert doc["executable"] is True and doc["items"] and doc["counts"]
+
+
+def test_evidence_plan_defaults_to_text(tmp_path, capsys):
+    evidence = tmp_path / "evidence.json"
+    evidence.write_text(json.dumps({"columns": {"x": {"kind": "numeric", "mean": 1}}}))
+    code, out, _ = run(capsys, "plan", evidence)
+    assert code == 0
+    assert not out.lstrip().startswith("{")
+    assert "column:x" in out and "approximate" in out

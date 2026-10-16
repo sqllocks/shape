@@ -2,7 +2,7 @@
 
 Gate a pull request on a project's current data matching its baseline.
 
-Status: available.
+Status: experimental.
 
 The shipped composite `action.yml` profiles each named source, compares it with its baseline,
 collects result documents and produces a verdict. `fail-on: drift` fails for drift or a command

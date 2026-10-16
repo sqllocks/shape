@@ -34,6 +34,10 @@ def test_plan_reads_the_schema_from_ddl_writes(
     """#26: ``shape plan`` crashed with ``AttributeError: 'list' object has no attribute 'get'``."""
     capsys.readouterr()
     assert main(["plan", str(ddl_schema)]) == 0
+    text = capsys.readouterr().out
+    assert not text.lstrip().startswith("{")
+    assert "customer" in text and "orders" in text
+    assert main(["plan", str(ddl_schema), "--json"]) == 0
     out = json.loads(capsys.readouterr().out)
     assert out["total_rows"] > 0 and set(out["order"]) == {"customer", "orders"}
 

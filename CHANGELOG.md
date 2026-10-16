@@ -20,6 +20,12 @@ Fix (privacy): safe profiles no longer keep an excluded column's name or a sensi
 
 Converting a full capture to the safe form now gives a different content ID when the profile has sensitive columns, because their fitted distributions are no longer kept.
 
+- Correct Fabric plugin PyPI installation guidance and align GitHub Action status with the experimental CI capability.
+- Keep the GitHub Action comment source label when a missing baseline leaves no project annotation in the result.
+- Clarify that Excel sentinel findings include typed date/datetime cells and cover six `9999-12-31` datetime cells with a regression test.
+- Read standard dated landing layouts in `shape chaos --input`, preserving table names and provenance checks.
+- Changed: `shape plan` now prints human-readable text by default; scripts that parse its output must add `--json` (the JSON keys are unchanged).
+
 ## 0.9.3
 
 0.9.2 was published to TestPyPI only and was never released to PyPI; its changes are part of 0.9.3.
