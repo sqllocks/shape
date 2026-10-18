@@ -197,3 +197,27 @@ Cycle18:12UTC: connector fetched Icebergzero-network job117740425942 successfull
 - `python - <<'PY' from pathlib import Path paths=['/tmp/w9-08-ledger.log','/tmp/w9-09-ledger.md','/tmp/w9-10-ledger.md','/tmp/w9-11-ledger.md','/tmp/w9-16-ledger.md','/workspace/shape-w9-12/docs/plans/lane_status/W9-12-commands.md'] for f in paths:  p=Path(f);print(f,p.stat().st_size if p.exists() else 'missing') PY` — exit 0.
 
 - `python - <<'PY' from pathlib import Path import os,re,shutil base=Path('/workspace/shape/docs/plans/lane_status/public-b-2026-10-18/evidence');base.mkdir(exist_ok=True) items={'W9-08-commands.md':'/tmp/w9-08-ledger.log','W9-09-commands.md':'/tmp/w9-09-ledger.md','W9-10-commands.md':'/tmp/w9-10-ledger.md','W9-11-commands.md':'/tmp/w9-11-ledger.md','W9-12-commands.md':'/workspace/shape-w9-12/docs/plans/lane_status/W9-12-commands.md','W9-16-commands.md':'/tmp/w9-16-ledger.md'} for dest,src in items.items():  s=Path(src).read_text();risky=bool(re.search(r'gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|[?&](?:X-Amz-Signature|sig|token)=',s,re.I));banned=os.getenv('REFENGINE_NAME','');assert not risky and not (banned and banned in s), 'Ledger requires redaction before persistence: '+dest  (base/dest).write_text(s);print(dest,len(s)) PY` — exit 0.
+
+- `git add docs/plans/lane_status/public-b-2026-10-18 && git commit -s -m 'Public B: persist independent lane command ledgers' && git push origin lead/public-b-2026-10-18` — exit 0.
+
+- `date -u && tail -c 450 /tmp/w9-11-detached-core-rust.log && df -h /workspace && gh pr view 33 --json headRefOid,statusCheckRollup | python -c 'import sys,json,collections;d=json.load(sys.stdin);c=d["statusCheckRollup"];print({"head":d["headRefOid"][:8],"counts":dict(collections.Counter(x.get("conclusion") or x.get("status") for x in c)),"failures":[(x["name"],x["detailsUrl"]) for x in c if x.get("conclusion") in ("FAILURE","CANCELLED","TIMED_OUT")]})'` — exit 0.
+
+- `python - <<'PY' import subprocess,json,re for issue in (9,10,11,12,13,17):  d=json.loads(subprocess.check_output(['gh','issue','view',str(issue),'--json','body,title'],text=True));lines=d['body'].splitlines();found=[]  for i,line in enumerate(lines):   if re.search(r'depend|builds on|prerequis|blocked|W[0-9]-[0-9]',line,re.I):found.extend(lines[max(0,i-1):min(len(lines),i+2)])  print(json.dumps({'issue':issue,'title':d['title'],'dependencies':list(dict.fromkeys(found))})) PY` — exit 0.
+
+- `date -u && tail -c 350 /tmp/w9-11-detached-core-rust.log && df -h /workspace /tmp && ps -eo stat | rg -c '^Z'` — exit 0.
+
+- `python - <<'PY' from pathlib import Path import os,shutil,tarfile p=Path('/tmp/pytest-of-agent/pytest-106');active=[] for proc in Path('/proc').iterdir():  if proc.name.isdigit():   try:    cwd=Path(os.readlink(proc/'cwd'))    if cwd==p or p in cwd.parents:active.append(proc.name)   except OSError:pass assert not active,'Old root still active' if p.exists():  with tarfile.open('/tmp/public-b-pytest-106-diagnostics.tar.gz','w:gz') as archive:   for q in p.rglob('*'):    if q.is_file() and (q.name.startswith('.doc-output') or q.suffix in ('.txt','.log')) and q.stat().st_size<10000000:archive.add(q,arcname=q.relative_to(p))  shutil.rmtree(p);print('Removed completed invalid-run generated output; text diagnostics archived') PY df -h /workspace /tmp` — exit 0.
+
+- `du -hd1 /tmp /tmp/pytest-of-agent 2>/dev/null | sort -h | tail -n 16 && python - <<'PY' from pathlib import Path import os for p in Path('/proc').iterdir():  if p.name.isdigit():   try:    cwd=os.readlink(p/'cwd')    if cwd.startswith('/tmp/pytest-of-agent'):print(p.name,cwd)   except OSError:pass PY` — exit 0.
+
+- `du -hd1 /tmp/pytest-of-agent 2>/dev/null | sort -h | tail -n 12 && ps -eo pid,ppid,stat,etime,comm | rg 'pytest|pip|uv|mkdocs|dbt' | tail -n 15` — exit 0.
+
+- `rg -n 'tmp_path_retention|PYTEST_ADDOPTS' tests conftest.py .github/workflows/ci.yml && tail -n 12 /tmp/public-b-test-env.sh` — exit 2.
+
+- `tail -n 12 /tmp/public-b-test-env.sh && rg -n 'tmp_path_retention' tests/conftest.py tests -g '*.py' || test $? = 1` — exit 0.
+
+- `python - <<'PY' from pathlib import Path p=Path('/tmp/public-b-test-env.sh');s=p.read_text();needle='export PYTEST_ADDOPTS=';assert needle not in s s+='\n# Same successful-temp cleanup policy used by the existing docs CI.\nexport PYTEST_ADDOPTS="${PYTEST_ADDOPTS-} -o tmp_path_retention_policy=failed"\n';p.write_text(s) print('Task-local pytest retention only; no test selection or repository changes') PY` — exit 0.
+
+- `date -u && tail -c 450 /tmp/w9-11-detached-core-rust.log && df -h /workspace /tmp && ps -eo stat | rg -c '^Z'` — exit 0.
+
+Storage policy cycle: own6issue dependencybody reads exit0 each; active6depend onlyalreadymerged W2-06/W8-07, #14stillmissingSQLsourcedependency. First retention search exit2 because nonexistentrootconftest.py (subsequentread/searchcorrected exit0, no matchingretentionassertions). Sharedtaskruntime env write exit0 adds PYTEST_ADDOPTS storageonly failed-retention; no repo/harness/testselection edits. Oldroot106 processsafetycheck exit0, directoryalreadyautoexpired(no filesremoved); subsequentdu/activecwd/df reads exit0, all6.2GB belonged active117; noactivefilesdeleted byroot. Agentformats externalrunnercompile1 caughtquoteerror thencompile0 andsafewaitingrestart178847 beforetests. Savedresource/currentsemanticPR reads exit0, semantic12success12queued8running2structural skips/no failure. Focused commandledgers copiedaftertoken/banned-name scans exit0 andsignedscratch0354bdd pushedexit0.
