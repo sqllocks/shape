@@ -557,3 +557,71 @@ def test_singular_literals_cannot_introduce_jinja(dialect, value):
     """SHAPE-DBT-001: emitted SQL treats contract values as data."""
     with pytest.raises(DbtProjectError, match="Jinja"):
         compile_tests({"columns": {"value": {"min": value}}}, model="orders", dialect=dialect)
+
+
+@pytest.mark.parametrize("mapped", [False, True])
+def test_impact_ratio_metrics_and_metric_semantic_exposures(mapped):
+    from shape_dbt.semantic import impact
+
+    def reference(name):
+        return {"name": name} if mapped else name
+
+    manifest = {
+        "nodes": {
+            "model.p.orders": {"name": "orders", "columns": {"amount": {}, "id": {}}},
+        },
+        "semantic_models": {
+            "semantic_model.p.orders": {
+                "name": "orders_semantic",
+                "model": "ref('orders')",
+                "depends_on": {"nodes": ["model.p.orders"]},
+                "measures": [
+                    {"name": "revenue_measure", "expr": "amount"},
+                    {"name": "orders_measure", "expr": "id"},
+                ],
+            },
+        },
+        "metrics": {
+            "metric.p.revenue": {
+                "name": "revenue",
+                "type_params": {"measure": "revenue_measure"},
+            },
+            "metric.p.order_count": {
+                "name": "order_count",
+                "type_params": {"measure": "orders_measure"},
+            },
+            "metric.p.average": {
+                "name": "average",
+                "type": "ratio",
+                "type_params": {
+                    "numerator": reference("revenue"),
+                    "denominator": reference("order_count"),
+                },
+                "depends_on": {"nodes": ["metric.p.cycle"]},
+            },
+            "metric.p.cycle": {
+                "name": "cycle",
+                "type_params": {"metrics": [reference("average")]},
+            },
+        },
+        "exposures": {
+            "exposure.p.metric": {
+                "name": "metric_dashboard",
+                "depends_on": {"nodes": ["metric.p.average"]},
+            },
+            "exposure.p.semantic": {
+                "name": "semantic_dashboard",
+                "depends_on": {"nodes": ["semantic_model.p.orders"]},
+            },
+        },
+    }
+    result = impact(manifest, ["orders.amount", "orders.id", "unknown.value"])["columns"]
+    assert result["orders.amount"] == {
+        "metrics": ["average", "cycle", "revenue"],
+        "exposures": ["metric_dashboard", "semantic_dashboard"],
+    }
+    assert result["orders.id"] == {
+        "metrics": ["average", "cycle", "order_count"],
+        "exposures": ["metric_dashboard", "semantic_dashboard"],
+    }
+    assert result["unknown.value"] == {"metrics": [], "exposures": []}

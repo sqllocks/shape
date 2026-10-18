@@ -178,6 +178,16 @@ def impact(manifest: Mapping[str, Any], columns: Sequence[str]) -> dict[str, Any
                 )
     metric_columns: dict[str, set[str]] = {}
 
+    def metric_dependencies(node: Mapping[str, Any]) -> list[str]:
+        params = node.get("type_params") or {}
+        dependencies = list((node.get("depends_on") or {}).get("nodes") or [])
+        named = list(params.get("metrics") or [])
+        named.extend(params[key] for key in ("numerator", "denominator") if params.get(key))
+        for item in named:
+            name = item.get("name") if isinstance(item, Mapping) else item
+            dependencies.extend(key for key, value in metrics.items() if value.get("name") == name)
+        return dependencies
+
     def metric_deps(uid: str, visited: set[str]) -> set[str]:
         if uid in visited:
             return set()
@@ -191,11 +201,7 @@ def impact(manifest: Mapping[str, Any], columns: Sequence[str]) -> dict[str, Any
         for item in named:
             name = item.get("name") if isinstance(item, Mapping) else item
             out.update(measures.get(str(name), set()))
-        dependencies = list((node.get("depends_on") or {}).get("nodes") or [])
-        for item in params.get("metrics") or []:
-            name = item.get("name") if isinstance(item, Mapping) else item
-            dependencies += [key for key, value in metrics.items() if value.get("name") == name]
-        for dep in dependencies:
+        for dep in metric_dependencies(node):
             if dep in metrics:
                 out.update(metric_deps(dep, visited))
         return out
@@ -207,9 +213,17 @@ def impact(manifest: Mapping[str, Any], columns: Sequence[str]) -> dict[str, Any
         if uid in seen:
             return set()
         seen.add(uid)
-        node = nodes.get(uid) or {}
+        node = nodes.get(uid) or semantic.get(uid) or metrics.get(uid) or {}
         result = {str(node.get("name") or uid.rsplit(".", 1)[-1])}
-        for dep in (node.get("depends_on") or {}).get("nodes") or []:
+        dependencies = list((node.get("depends_on") or {}).get("nodes") or [])
+        if uid in metrics:
+            dependencies = metric_dependencies(node)
+            result.update(column.rsplit(".", 1)[0] for column in metric_deps(uid, set()))
+        if uid in semantic:
+            target = ref_target(node.get("model"))
+            if target:
+                result.add(target[0])
+        for dep in dependencies:
             result.update(upstream(dep, seen))
         return result
 

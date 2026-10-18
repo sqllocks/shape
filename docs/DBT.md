@@ -749,7 +749,8 @@ including with `--merge`; unrelated SQL files are kept. Contract rules remain in
 `shape dbt-report` adds an `impact` object (`format: shape-dbt-impact`, integer
 `version: 1`) with `columns`, keyed by `model.column`. Each column has sorted
 `metrics` and `exposures` lists. Metrics follow declared measure names and metric
-dependencies; exposures walk transitive model `depends_on` edges. This reports
+dependencies, including ratio numerators and denominators; exposures walk
+transitive `depends_on` edges through models, semantic models and metrics. This reports
 file-declared dependencies. Computed measures use an identifier lexer against
 the model's declared columns, excluding string literals, comments, function names
 and unknown identifiers; model SQL and singular test SQL are never parsed. Missing
@@ -764,5 +765,5 @@ components, using the selected dialect, and nullable foreign tuples evaluate to
 NULL. Parent and child keys share an entity name and component order. The semantic
 file is generated deterministically on each run.
 The example project includes an orders semantic model, revenue metric, dashboard
-exposure, and a singular amount test. Neither dbt nor MetricFlow is run by these
+exposure, a singular amount test and the daily calendar required by dbt's semantic layer. Neither dbt nor MetricFlow is run by these
 commands.

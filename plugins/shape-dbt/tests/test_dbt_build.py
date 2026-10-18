@@ -171,10 +171,14 @@ def test_the_seeds_carry_a_block_of_column_types(built):
 def test_dbt_build_passes_every_seed_model_and_test(built):
     results = run_results(built["project"])["results"]
     statuses = [r["status"] for r in results]
-    assert len(results) == 32  # 3 seeds, 3 views, 2 tables, 24 tests
-    assert set(statuses) <= {"success", "pass"}, statuses
+    assert len(results) == 34  # 3 seeds, 3 views, 3 tables, 24 tests, 1 exposure
     assert statuses.count("pass") == 24
+    assert statuses.count("success") == 9
+    assert [r["unique_id"] for r in results if r["status"] == "no-op"] == [
+        "exposure.jaffle_shop.orders_dashboard"
+    ]
     assert any("orders__amount__min" in r["unique_id"] for r in results)
+    assert any("metricflow_time_spine" in r["unique_id"] for r in results)
     assert "Completed successfully" in built["build"].stdout
 
 
