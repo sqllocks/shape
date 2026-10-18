@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import base64
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlparse
-from urllib.request import url2pathname
 
 import pyarrow as pa  # type: ignore[import-untyped]
 
@@ -25,6 +25,14 @@ def dependency() -> Any:
     return pyiceberg.catalog
 
 
+def _file_path(path: str) -> str:
+    if os.name == "nt":
+        from nturl2path import url2pathname
+
+        return url2pathname(path)
+    return unquote(path)
+
+
 def parse(uri: str, *, writing: bool = False) -> tuple[str, tuple[str, ...], Path | None]:
     parsed = urlparse(uri)
     if parsed.username or parsed.password or parsed.query or parsed.fragment:
@@ -36,7 +44,7 @@ def parse(uri: str, *, writing: bool = False) -> tuple[str, tuple[str, ...], Pat
         return parsed.netloc, parts, None
     if parsed.scheme != "iceberg+file" or parsed.netloc not in ("", "localhost"):
         raise ValueError("Iceberg needs iceberg:// or a local iceberg+file:// URI")
-    path = Path(url2pathname(parsed.path)).resolve()
+    path = Path(_file_path(parsed.path)).resolve()
     warehouse = next((p for p in path.parents if (p / "catalog.db").is_file()), None)
     if warehouse is None:
         if not writing:
