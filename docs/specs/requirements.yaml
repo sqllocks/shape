@@ -717,3 +717,12 @@ requirements:
   text: "Security claims distinguish technical capability from external certification/accreditation."
   verify: [specification-review]
   status: registered-not-independently-certified
+
+- id: SHAPE-SEMANTIC-METADATA-001
+  title: Semantic model metadata and native role reads
+  level: L2
+  milestone: M5
+  priority: MUST
+  text: Semantic model profiles preserve declared measures, read-only roles and hidden columns; role reads use native DAX filters, profile exports retain metadata, and metadata diffs do not contribute to numeric gates.
+  verify: [unit, conformance, roundtrip]
+  owner: fabric
