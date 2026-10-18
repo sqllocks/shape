@@ -158,9 +158,12 @@ def cmd_profile(args: dict[str, Any], ctx: Context) -> dict[str, Any]:
     source = _profile_source(  # type: ignore[no-untyped-call]
         argparse.Namespace(src=args["source"], dataset=bool(args.get("dataset")))
     )
-    prof = shape.profile(
-        source, name=args.get("name"), version=args.get("version"), as_of=args.get("as_of")
-    )
+    from shape.profile.reference.sources import source_options
+
+    with source_options(**dict(args.get("source_options") or {})):
+        prof = shape.profile(
+            source, name=args.get("name"), version=args.get("version"), as_of=args.get("as_of")
+        )
     empty = [n for n, t in prof.tables.items() if not t["row_count"]]
     if empty:
         message = (
@@ -368,6 +371,11 @@ COMMANDS = [
                 "string", "a Delta table: the newest version at or before this ISO-8601 time"
             ),
             "fail_on_empty": Arg("boolean", "fail instead of warning when a table has 0 rows"),
+            "source_options": Arg(
+                "object",
+                "source options; Iceberg catalog and snapshot_id, credential references only",
+                since="1.2",
+            ),
         },
         obj(
             {

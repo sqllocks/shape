@@ -47,6 +47,11 @@
           "x-path": "read",
           "x-since": "1.0"
         },
+        "source_options": {
+          "description": "source options; Iceberg catalog and snapshot_id, credential references only",
+          "type": "object",
+          "x-since": "1.2"
+        },
         "version": {
           "description": "a Delta table: profile this version",
           "minimum": 0,

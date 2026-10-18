@@ -191,7 +191,10 @@ def test_what_1_2_adds_to_a_1_1_command_is_marked_and_nothing_else_changed():
     assert "rule" not in old_kinds["items"]["enum"] and "type" not in old_kinds["items"]["enum"]
     # The optional arguments 1.2 adds to a 1.1 command, each marked since 1.2 (W8-06: the
     # identifier run switch of `generate`).
-    added = {"generate": {"identifiers"}}
+    added = {
+        "generate": {"identifiers", "to", "sink_options", "confirm_remote"},
+        "profile": {"source_options"},
+    }
     for name, entry in frozen_index()["commands"].items():
         now = schemas[entry["request"]]["properties"]["args"]["properties"]
         before = frozen(entry["request"])["properties"]["args"]["properties"]
